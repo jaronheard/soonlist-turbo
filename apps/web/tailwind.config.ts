@@ -1,5 +1,8 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+import type { Config } from "tailwindcss";
+import tailwindTypography from "@tailwindcss/typography";
+import tailwindcssAnimate from "tailwindcss-animate";
+
+export default {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -85,12 +88,12 @@ module.exports = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: 0 },
+          from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: 0 },
+          to: { height: "0" },
         },
       },
       animation: {
@@ -118,12 +121,12 @@ module.exports = {
       fontSize: {
         "2.5xl": "1.75rem",
       },
-      hyphens: { 
-        'hyphens-none': 'none',
-        'hyphens-manual': 'manual',
-        'hyphens-auto': 'auto',
-      }
+      hyphens: {
+        "hyphens-none": "none",
+        "hyphens-manual": "manual",
+        "hyphens-auto": "auto",
+      },
     },
+    plugins: [tailwindcssAnimate, tailwindTypography],
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
-};
+} satisfies Config;
