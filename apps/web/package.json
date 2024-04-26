@@ -63,6 +63,7 @@
     "drizzle-zod": "^0.5.1",
     "lucide-react": "^0.373.0",
     "mysql2": "^3.7.1",
+    "nanoid": "^5.0.7",
     "next": "^14.2.1",
     "next-themes": "^0.3.0",
     "openai": "^4.24.7",
@@ -82,6 +83,7 @@
     "svix": "^1.15.0",
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
+    "timezone-soft": "^1.5.2",
     "use-local-storage": "^3.0.0",
     "uuid": "^9.0.1",
     "zod": "^3.22.4"
