@@ -329,13 +329,13 @@ importers:
     dependencies:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.2.1
-        version: 4.2.1(@vue/compiler-sfc@3.4.25)(prettier@3.2.5)
+        version: 4.2.1(prettier@3.2.5)
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
       prettier-plugin-tailwindcss:
         specifier: ^0.5.13
-        version: 0.5.14(@ianvs/prettier-plugin-sort-imports@4.2.1(@vue/compiler-sfc@3.4.25)(prettier@3.2.5))(prettier@3.2.5)
+        version: 0.5.14(@ianvs/prettier-plugin-sort-imports@4.2.1(prettier@3.2.5))(prettier@3.2.5)
     devDependencies:
       '@soonlist/tsconfig':
         specifier: workspace:*
@@ -5507,7 +5507,7 @@ snapshots:
 
   '@humanwhocodes/object-schema@2.0.3': {}
 
-  '@ianvs/prettier-plugin-sort-imports@4.2.1(@vue/compiler-sfc@3.4.25)(prettier@3.2.5)':
+  '@ianvs/prettier-plugin-sort-imports@4.2.1(prettier@3.2.5)':
     dependencies:
       '@babel/core': 7.24.4
       '@babel/generator': 7.24.4
@@ -5516,8 +5516,6 @@ snapshots:
       '@babel/types': 7.24.0
       prettier: 3.2.5
       semver: 7.6.0
-    optionalDependencies:
-      '@vue/compiler-sfc': 3.4.25
     transitivePeerDependencies:
       - supports-color
 
@@ -9266,11 +9264,11 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-tailwindcss@0.5.14(@ianvs/prettier-plugin-sort-imports@4.2.1(@vue/compiler-sfc@3.4.25)(prettier@3.2.5))(prettier@3.2.5):
+  prettier-plugin-tailwindcss@0.5.14(@ianvs/prettier-plugin-sort-imports@4.2.1(prettier@3.2.5))(prettier@3.2.5):
     dependencies:
       prettier: 3.2.5
     optionalDependencies:
-      '@ianvs/prettier-plugin-sort-imports': 4.2.1(@vue/compiler-sfc@3.4.25)(prettier@3.2.5)
+      '@ianvs/prettier-plugin-sort-imports': 4.2.1(prettier@3.2.5)
 
   prettier@3.2.5: {}
 
