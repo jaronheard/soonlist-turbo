@@ -1,14 +1,14 @@
-import { z } from "zod";
-
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
+import { z } from "zod";
+
+import { generatePublicId } from "~/lib/utils";
 import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
 import { listFollows, lists, users } from "~/server/db/schema";
-import { generatePublicId } from "~/lib/utils";
 
 export const listRouter = createTRPCRouter({
   getAllForUser: publicProcedure
@@ -59,8 +59,8 @@ export const listRouter = createTRPCRouter({
           },
         },
       });
-      return followLists.then(
-        (followList) => followList.map((item) => item.list) || null
+      return followLists.then((followList) =>
+        followList.map((item) => item.list),
       );
     }),
   get: publicProcedure
@@ -120,8 +120,8 @@ export const listRouter = createTRPCRouter({
         .where(
           and(
             eq(listFollows.userId, userId),
-            eq(listFollows.listId, input.listId)
-          )
+            eq(listFollows.listId, input.listId),
+          ),
         );
     }),
   create: protectedProcedure
@@ -129,7 +129,7 @@ export const listRouter = createTRPCRouter({
       z.object({
         name: z.string(),
         description: z.string(),
-      })
+      }),
     )
     .mutation(({ ctx, input }) => {
       const { userId } = ctx.auth;
@@ -158,7 +158,7 @@ export const listRouter = createTRPCRouter({
         listId: z.string(),
         name: z.string(),
         description: z.string(),
-      })
+      }),
     )
     .mutation(({ ctx, input }) => {
       const { userId } = ctx.auth;

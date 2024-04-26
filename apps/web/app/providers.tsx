@@ -1,13 +1,14 @@
 "use client";
 
-import { posthog } from "posthog-js";
-import { PostHogProvider, usePostHog } from "posthog-js/react";
-import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ClerkProvider, useUser } from "@clerk/nextjs";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { IntercomProvider } from "~/lib/intercom/IntercomProvider";
+import { posthog } from "posthog-js";
+import { PostHogProvider, usePostHog } from "posthog-js/react";
+
 import ContextProvider from "~/context/ContextProvider";
+import { IntercomProvider } from "~/lib/intercom/IntercomProvider";
 
 if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "", {
@@ -36,7 +37,7 @@ export function PostHogPageview(): JSX.Element {
 }
 
 export function PHProvider({ children }: { children: React.ReactNode }) {
-  if ([process.env.NODE_ENV !== "production"]) {
+  if (process.env.NODE_ENV !== "production") {
     return <>{children}</>;
   }
   return <PostHogProvider client={posthog}>{children}</PostHogProvider>;

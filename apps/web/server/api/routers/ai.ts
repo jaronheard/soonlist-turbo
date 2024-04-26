@@ -1,11 +1,12 @@
-import { z } from "zod";
 import { OpenAI } from "openai";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { z } from "zod";
+
 import {
   addCommonAddToCalendarPropsFromResponse,
   getPrompt,
   getSystemMessage,
 } from "~/lib/prompts";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 // Create an OpenAI API client (that's edge friendly!)
 const config = {
@@ -19,9 +20,9 @@ export const aiRouter = createTRPCRouter({
       z.object({
         rawText: z.string(),
         timezone: z.string(),
-      })
+      }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const system = getSystemMessage();
       const prompt = getPrompt(input.timezone);
       // Ask OpenAI for a streaming completion given the prompt
@@ -60,9 +61,9 @@ export const aiRouter = createTRPCRouter({
       z.object({
         imageUrl: z.string(),
         timezone: z.string(),
-      })
+      }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const system = getSystemMessage();
       const prompt = getPrompt(input.timezone);
 

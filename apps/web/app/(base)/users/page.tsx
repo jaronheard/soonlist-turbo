@@ -1,5 +1,6 @@
 // import { Suspense } from "react";
-import type {Metadata, ResolvingMetadata} from "next/types";
+import type { Metadata, ResolvingMetadata } from "next/types";
+
 import { UserInfo } from "~/components/UserInfo";
 // import Leaderboard from "~/components/Leaderboard";
 // import LeaderboardSkeleton from "~/components/LeaderboardSkeleton";
@@ -13,8 +14,8 @@ import { UserInfo } from "~/components/UserInfo";
 import { api } from "~/trpc/server";
 
 export async function generateMetadata(
-  {},
-  parent: ResolvingMetadata
+  _unused = {},
+  parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const previousImages = (await parent).openGraph?.images || [];
 

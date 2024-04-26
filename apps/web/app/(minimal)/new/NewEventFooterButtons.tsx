@@ -1,14 +1,14 @@
 "use client";
 
+import { SaveButton } from "~/components/SaveButton";
 import { Button } from "~/components/ui/button";
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
+import { useNewEventContext } from "~/context/NewEventContext";
 import {
   Mode,
   Status,
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
-import { useNewEventContext } from "~/context/NewEventContext";
-import { SaveButton } from "~/components/SaveButton";
-import { useCroppedImageContext } from "~/context/CroppedImageContext";
 
 export function NewEventFooterButtons({
   onClickNextOrganize,
@@ -22,14 +22,12 @@ export function NewEventFooterButtons({
   const otherMode = mode === Mode.Edit ? Mode.View : Mode.Edit;
 
   const hasFilePath = croppedImagesUrls.filePath;
-  const matchesFilePath = true;
   const hasAllAspectRatios =
     croppedImagesUrls.cropped &&
     croppedImagesUrls.square &&
     croppedImagesUrls.fourThree &&
     croppedImagesUrls.sixteenNine;
-  const validImagesFromContext =
-    hasFilePath && matchesFilePath && hasAllAspectRatios;
+  const validImagesFromContext = hasFilePath && hasAllAspectRatios;
 
   const imagesFromContext = validImagesFromContext
     ? [

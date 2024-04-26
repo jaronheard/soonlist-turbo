@@ -168,7 +168,7 @@ export const addCommonAddToCalendarProps = (events: Event[]) => {
       startTime: event.startTime || undefined,
       endTime: event.endTime || undefined,
       timeZone: event.timeZone,
-      eventMetadata: event.eventMetadata || undefined,
+      eventMetadata: event.eventMetadata,
     };
   });
 };

@@ -1,18 +1,18 @@
-import {
-  mysqlTable,
-  index,
-  primaryKey,
-  varchar,
-  mediumtext,
-  datetime,
-  json,
-  mysqlEnum,
-  int,
-  unique,
-  timestamp,
-  serial,
-} from "drizzle-orm/mysql-core";
 import { relations, sql } from "drizzle-orm";
+import {
+  datetime,
+  index,
+  int,
+  json,
+  mediumtext,
+  mysqlEnum,
+  mysqlTable,
+  primaryKey,
+  serial,
+  timestamp,
+  unique,
+  varchar,
+} from "drizzle-orm/mysql-core";
 
 // note about the table names here -- they are all not pluralized because that's how i set them up AND
 // i'm running into a bug when i try to rename and push the changes to planetscale
@@ -35,7 +35,7 @@ export const comments = mysqlTable(
       eventIdIdx: index("Comments_eventId_idx").on(table.eventId),
       userIdIdx: index("Comments_userId_idx").on(table.userId),
     };
-  }
+  },
 );
 
 export const commentsRelations = relations(comments, ({ one }) => ({
@@ -69,7 +69,7 @@ export const events = mysqlTable(
     return {
       userIdIdx: index("Events_userId_idx").on(table.userId),
     };
-  }
+  },
 );
 
 export const eventsRelations = relations(events, ({ one, many }) => ({
@@ -89,7 +89,7 @@ export const eventToLists = mysqlTable(
     return {
       pk: primaryKey({ columns: [table.eventId, table.listId] }),
     };
-  }
+  },
 );
 
 export const eventToListsRelations = relations(eventToLists, ({ one }) => ({
@@ -110,7 +110,7 @@ export const eventFollows = mysqlTable(
     return {
       pk: primaryKey({ columns: [table.userId, table.eventId] }),
     };
-  }
+  },
 );
 
 export const eventFollowsRelations = relations(eventFollows, ({ one }) => ({
@@ -134,7 +134,7 @@ export const listFollows = mysqlTable(
     return {
       pk: primaryKey({ columns: [table.userId, table.listId] }),
     };
-  }
+  },
 );
 
 export const listFollowsRelations = relations(listFollows, ({ one }) => ({
@@ -152,7 +152,7 @@ export const userFollows = mysqlTable(
     return {
       pk: primaryKey({ columns: [table.followerId, table.followingId] }),
     };
-  }
+  },
 );
 
 export const userFollowsRelations = relations(userFollows, ({ one }) => ({
@@ -184,7 +184,7 @@ export const lists = mysqlTable(
     return {
       userIdIdx: index("List_userId_idx").on(table.userId),
     };
-  }
+  },
 );
 
 export const listsRelations = relations(lists, ({ one, many }) => ({
@@ -210,9 +210,9 @@ export const requestResponses = mysqlTable(
     modelCompletionTime: int("modelCompletionTime"),
     parsedOutput: json("parsedOutput"),
   },
-  (table) => {
+  () => {
     return {};
-  }
+  },
 );
 
 export const users = mysqlTable(
@@ -238,10 +238,10 @@ export const users = mysqlTable(
       userUsernameKey: unique("Users_username_key").on(table.username),
       userEmailKey: unique("Users_email_key").on(table.email),
     };
-  }
+  },
 );
 
-export const usersRelations = relations(users, ({ one, many }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
   events: many(events),
   eventFollows: many(eventFollows),
   listFollows: many(listFollows),
@@ -262,7 +262,7 @@ export const waitlistSubmissions = mysqlTable(
     updatedAt: timestamp("updatedAt").onUpdateNow(),
     why: varchar("why", { length: 191 }).notNull(),
   },
-  (table) => {
+  () => {
     return {};
-  }
+  },
 );

@@ -1,11 +1,10 @@
-import { comment } from "postcss";
-import { UserInfo } from "~/components/UserInfo";
+import type { EventMetadata } from "~/lib/prompts";
+import type { AddToCalendarButtonProps } from "~/types";
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
-import type {AddToCalendarButtonProps} from "~/types";
 import { ImageUpload } from "~/components/ImageUpload";
+import { UserInfo } from "~/components/UserInfo";
 import { YourDetails } from "~/components/YourDetails";
 import { api } from "~/trpc/server";
-import type {EventMetadata} from "~/lib/prompts";
 
 export default async function Page({
   params,
