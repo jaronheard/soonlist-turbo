@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const dotenvExpand = require("dotenv-expand");
-
-dotenvExpand.expand({ parsed: { ...process.env } });
+import { withSentryConfig } from "@sentry/nextjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -65,9 +62,7 @@ const nextConfig = {
 };
 
 // Injected content via Sentry wizard below
-const { withSentryConfig } = require("@sentry/nextjs");
-
-module.exports = withSentryConfig(
+const nextConfigWithSentry = withSentryConfig(
   nextConfig,
   {
     // For all available options, see:
@@ -101,3 +96,5 @@ module.exports = withSentryConfig(
     automaticVercelMonitors: true,
   },
 );
+
+export default nextConfigWithSentry;
