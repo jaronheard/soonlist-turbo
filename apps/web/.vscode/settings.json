@@ -3,7 +3,6 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
   "editor.tabSize": 2,
   "editor.detectIndentation": false
 }
