@@ -1,7 +1,8 @@
-import { differenceInMinutes } from "date-fns";
+import { Temporal } from "@js-temporal/polyfill";
+
+import { type EventWithUser } from "~/components/EventList";
 import { type Event } from "~/server/db/types";
 import { type AddToCalendarButtonProps } from "~/types";
-import { type EventWithUser } from "~/components/EventList";
 
 // Cosine Similarity Functions
 function textToVector(text: string): Map<string, number> {
@@ -17,10 +18,10 @@ function textToVector(text: string): Map<string, number> {
 
 function cosineSimilarity(
   vector1: Map<string, number>,
-  vector2: Map<string, number>
+  vector2: Map<string, number>,
 ): number {
   const intersection = new Set(
-    [...vector1.keys()].filter((x) => vector2.has(x))
+    [...vector1.keys()].filter((x) => vector2.has(x)),
   );
   let dotProduct = 0;
   intersection.forEach((word) => {
@@ -49,7 +50,7 @@ function isEventSimilar(
   endTimeThreshold: number,
   nameThreshold: number,
   descriptionThreshold: number,
-  locationThreshold: number
+  locationThreshold: number,
 ): {
   isSimilar: boolean;
   startTimeDifference: number;
@@ -62,24 +63,29 @@ function isEventSimilar(
   const event2Data = event2?.event as AddToCalendarButtonProps;
 
   const startTimeDifference = Math.abs(
-    differenceInMinutes(event1.startDateTime, event2.startDateTime)
+    Temporal.Instant.from(event1.startDateTime)
+      .until(Temporal.Instant.from(event2.startDateTime))
+      .total("minutes"),
   );
+
   const endTimeDifference = Math.abs(
-    differenceInMinutes(event1.endDateTime, event2.endDateTime)
+    Temporal.Instant.from(event1.endDateTime)
+      .until(Temporal.Instant.from(event2.endDateTime))
+      .total("minutes"),
   );
 
   // Text and Location Similarity
   const nameSimilarity = cosineSimilarity(
     textToVector(event1Data.name || ""),
-    textToVector(event2Data.name || "")
+    textToVector(event2Data.name || ""),
   );
   const descriptionSimilarity = cosineSimilarity(
     textToVector(event1Data.description || ""),
-    textToVector(event2Data.description || "")
+    textToVector(event2Data.description || ""),
   );
   const locationSimilarity = cosineSimilarity(
     textToVector(event1Data.location || ""),
-    textToVector(event2Data.location || "")
+    textToVector(event2Data.location || ""),
   );
 
   const isSimilar =
@@ -134,7 +140,7 @@ function collapseSimilarEvents(events: EventWithUser[]) {
           endTimeThreshold,
           nameThreshold,
           descriptionThreshold,
-          locationThreshold
+          locationThreshold,
         );
         if (similarityDetails.isSimilar) {
           similarityData.push({ event: otherEvent, similarityDetails });
