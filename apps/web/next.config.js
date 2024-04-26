@@ -33,16 +33,20 @@ const nextConfig = {
   },
   async rewrites() {
     return process.env.NODE_ENV === "production"
-      ? {
-          beforeFiles: [
-            {
-              source: "/ingest/:path*",
-              destination: "https://app.posthog.com/:path*",
-            },
-          ],
-        }
-      : {};
+      ? [
+          {
+            source: "/ingest/static/:path*",
+            destination: "https://us-assets.i.posthog.com/static/:path*",
+          },
+          {
+            source: "/ingest/:path*",
+            destination: "https://us.i.posthog.com/:path*",
+          },
+        ]
+      : [];
   },
+  // This is required to support PostHog trailing slash API requests
+  skipTrailingSlashRedirect: true,
   async headers() {
     const headers = [];
     if (process.env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
