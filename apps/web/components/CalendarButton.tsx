@@ -1,10 +1,11 @@
 "use client";
 
-import { atcb_action } from "add-to-calendar-button";
+import { atcb_action } from "add-to-calendar-button-react";
 import { CalendarPlus } from "lucide-react";
+
+import { type AddToCalendarButtonPropsRestricted } from "~/types";
 import { DropdownMenuItem } from "./DropdownMenu";
 import { Button } from "./ui/button";
-import { type AddToCalendarButtonPropsRestricted } from "~/types";
 
 type CalendarButtonProps = {
   event: AddToCalendarButtonPropsRestricted;
