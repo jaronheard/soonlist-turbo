@@ -1,0 +1,688 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "5",
+  "dialect": "mysql",
+  "tables": {
+    "Comment": {
+      "name": "Comment",
+      "columns": {
+        "id": {
+          "autoincrement": false,
+          "name": "id",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "autoincrement": false,
+          "name": "content",
+          "type": "mediumtext",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eventId": {
+          "autoincrement": false,
+          "name": "eventId",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "autoincrement": false,
+          "name": "userId",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "default": "CURRENT_TIMESTAMP(3)",
+          "autoincrement": false,
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "autoincrement": false,
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "Comment_id": {
+          "name": "Comment_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {
+        "Comment_eventId_idx": {
+          "name": "Comment_eventId_idx",
+          "columns": [
+            "eventId"
+          ],
+          "isUnique": false
+        },
+        "Comment_userId_idx": {
+          "name": "Comment_userId_idx",
+          "columns": [
+            "userId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "uniqueConstraints": {}
+    },
+    "Event": {
+      "name": "Event",
+      "columns": {
+        "createdAt": {
+          "default": "CURRENT_TIMESTAMP(3)",
+          "autoincrement": false,
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "autoincrement": false,
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event": {
+          "autoincrement": false,
+          "name": "event",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "autoincrement": false,
+          "name": "userId",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endDateTime": {
+          "default": "CURRENT_TIMESTAMP(3)",
+          "autoincrement": false,
+          "name": "endDateTime",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "startDateTime": {
+          "default": "CURRENT_TIMESTAMP(3)",
+          "autoincrement": false,
+          "name": "startDateTime",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cuid": {
+          "autoincrement": false,
+          "name": "cuid",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visibility": {
+          "default": "'public'",
+          "autoincrement": false,
+          "name": "visibility",
+          "type": "enum('public','private')",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "Event_cuid": {
+          "name": "Event_cuid",
+          "columns": [
+            "cuid"
+          ]
+        }
+      },
+      "indexes": {
+        "Event_userId_idx": {
+          "name": "Event_userId_idx",
+          "columns": [
+            "userId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "uniqueConstraints": {}
+    },
+    "FollowEvent": {
+      "name": "FollowEvent",
+      "columns": {
+        "userId": {
+          "autoincrement": false,
+          "name": "userId",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eventId": {
+          "autoincrement": false,
+          "name": "eventId",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "default": "CURRENT_TIMESTAMP(3)",
+          "autoincrement": false,
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "autoincrement": false,
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "FollowEvent_userId_eventId": {
+          "name": "FollowEvent_userId_eventId",
+          "columns": [
+            "userId",
+            "eventId"
+          ]
+        }
+      },
+      "indexes": {
+        "FollowEvent_userId_idx": {
+          "name": "FollowEvent_userId_idx",
+          "columns": [
+            "userId"
+          ],
+          "isUnique": false
+        },
+        "FollowEvent_eventId_idx": {
+          "name": "FollowEvent_eventId_idx",
+          "columns": [
+            "eventId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "uniqueConstraints": {}
+    },
+    "FollowList": {
+      "name": "FollowList",
+      "columns": {
+        "userId": {
+          "autoincrement": false,
+          "name": "userId",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "listId": {
+          "autoincrement": false,
+          "name": "listId",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "default": "CURRENT_TIMESTAMP(3)",
+          "autoincrement": false,
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "autoincrement": false,
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "FollowList_userId_listId": {
+          "name": "FollowList_userId_listId",
+          "columns": [
+            "userId",
+            "listId"
+          ]
+        }
+      },
+      "indexes": {
+        "FollowList_userId_idx": {
+          "name": "FollowList_userId_idx",
+          "columns": [
+            "userId"
+          ],
+          "isUnique": false
+        },
+        "FollowList_listId_idx": {
+          "name": "FollowList_listId_idx",
+          "columns": [
+            "listId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "uniqueConstraints": {}
+    },
+    "FollowUser": {
+      "name": "FollowUser",
+      "columns": {
+        "createdAt": {
+          "default": "CURRENT_TIMESTAMP(3)",
+          "autoincrement": false,
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "autoincrement": false,
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "followerId": {
+          "autoincrement": false,
+          "name": "followerId",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "followingId": {
+          "autoincrement": false,
+          "name": "followingId",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "FollowUser_followerId_followingId": {
+          "name": "FollowUser_followerId_followingId",
+          "columns": [
+            "followerId",
+            "followingId"
+          ]
+        }
+      },
+      "indexes": {
+        "FollowUser_followerId_idx": {
+          "name": "FollowUser_followerId_idx",
+          "columns": [
+            "followerId"
+          ],
+          "isUnique": false
+        },
+        "FollowUser_followingId_idx": {
+          "name": "FollowUser_followingId_idx",
+          "columns": [
+            "followingId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "uniqueConstraints": {}
+    },
+    "List": {
+      "name": "List",
+      "columns": {
+        "name": {
+          "autoincrement": false,
+          "name": "name",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "autoincrement": false,
+          "name": "description",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "default": "CURRENT_TIMESTAMP(3)",
+          "autoincrement": false,
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "autoincrement": false,
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "autoincrement": false,
+          "name": "id",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "autoincrement": false,
+          "name": "userId",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "List_id": {
+          "name": "List_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {
+        "List_userId_idx": {
+          "name": "List_userId_idx",
+          "columns": [
+            "userId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "uniqueConstraints": {}
+    },
+    "RequestResponse": {
+      "name": "RequestResponse",
+      "columns": {
+        "id": {
+          "autoincrement": false,
+          "name": "id",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "default": "CURRENT_TIMESTAMP(3)",
+          "autoincrement": false,
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "autoincrement": false,
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "modelOutput": {
+          "autoincrement": false,
+          "name": "modelOutput",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "modelInput": {
+          "autoincrement": false,
+          "name": "modelInput",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "modelStatus": {
+          "default": "'idle'",
+          "autoincrement": false,
+          "name": "modelStatus",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "default": "'unknown'",
+          "autoincrement": false,
+          "name": "source",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "modelCompletionTime": {
+          "autoincrement": false,
+          "name": "modelCompletionTime",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parsedOutput": {
+          "autoincrement": false,
+          "name": "parsedOutput",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {
+        "RequestResponse_id": {
+          "name": "RequestResponse_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {}
+    },
+    "User": {
+      "name": "User",
+      "columns": {
+        "id": {
+          "autoincrement": false,
+          "name": "id",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "autoincrement": false,
+          "name": "username",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "autoincrement": false,
+          "name": "email",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "displayName": {
+          "autoincrement": false,
+          "name": "displayName",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userImage": {
+          "autoincrement": false,
+          "name": "userImage",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "default": "CURRENT_TIMESTAMP(3)",
+          "autoincrement": false,
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "autoincrement": false,
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "User_id": {
+          "name": "User_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "User_username_key": {
+          "name": "User_username_key",
+          "columns": [
+            "username"
+          ]
+        },
+        "User_email_key": {
+          "name": "User_email_key",
+          "columns": [
+            "email"
+          ]
+        }
+      }
+    },
+    "Waitlist": {
+      "name": "Waitlist",
+      "columns": {
+        "id": {
+          "autoincrement": false,
+          "name": "id",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "autoincrement": false,
+          "name": "email",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "zipcode": {
+          "autoincrement": false,
+          "name": "zipcode",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "default": "CURRENT_TIMESTAMP(3)",
+          "autoincrement": false,
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "autoincrement": false,
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "why": {
+          "autoincrement": false,
+          "name": "why",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "Waitlist_id": {
+          "name": "Waitlist_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "Waitlist_email_key": {
+          "name": "Waitlist_email_key",
+          "columns": [
+            "email"
+          ]
+        }
+      }
+    },
+    "_EventToList": {
+      "name": "_EventToList",
+      "columns": {
+        "A": {
+          "autoincrement": false,
+          "name": "A",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "B": {
+          "autoincrement": false,
+          "name": "B",
+          "type": "varchar(191)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {},
+      "indexes": {
+        "_EventToList_B_index": {
+          "name": "_EventToList_B_index",
+          "columns": [
+            "B"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "uniqueConstraints": {
+        "_EventToList_AB_unique": {
+          "name": "_EventToList_AB_unique",
+          "columns": [
+            "A",
+            "B"
+          ]
+        }
+      }
+    }
+  },
+  "schemas": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}
