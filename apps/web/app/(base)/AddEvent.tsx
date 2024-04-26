@@ -1,14 +1,13 @@
 "use client";
 
-import { type AddToCalendarButtonType } from "add-to-calendar-button-react";
-import { useChat } from "ai/react";
+import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import { useContext, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useChat } from "ai/react";
 import { Download, Share, Sparkles } from "lucide-react";
-import { UploadImageForProcessingButton } from "./UploadImageForProcessingButton";
+import { toast } from "sonner";
+
 import { Form } from "~/components/Form";
 import { Output } from "~/components/Output";
-import { cn, getLastMessages } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -21,6 +20,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { addCommonAddToCalendarPropsFromResponse } from "~/lib/prompts";
+import { cn, getLastMessages } from "~/lib/utils";
+import { UploadImageForProcessingButton } from "./UploadImageForProcessingButton";
 
 function Code({
   children,
@@ -32,8 +33,8 @@ function Code({
   return (
     <code
       className={cn(
-        "bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold",
-        className
+        "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold",
+        className,
       )}
     >
       {children}
@@ -81,11 +82,10 @@ export function AddEvent() {
       updatedEvents && setEvents(updatedEvents);
       if (!(events && events.length > 0)) {
         toast.error(
-          "Something went wrong. Add you event manually or try again."
+          "Something went wrong. Add you event manually or try again.",
         );
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished]);
 
   return (

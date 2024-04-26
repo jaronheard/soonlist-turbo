@@ -285,7 +285,7 @@ const UserMenu = () => {
       <DropdownMenuTrigger className="hidden py-2 lg:block">
         <Image
           alt={"User"}
-          src={user?.imageUrl}
+          src={user.imageUrl}
           width={32}
           height={32}
           className="rounded-full border border-gray-200 drop-shadow-sm"
@@ -391,7 +391,7 @@ export function MobileNav() {
               {user?.imageUrl ? (
                 <Image
                   alt={"User"}
-                  src={user?.imageUrl}
+                  src={user.imageUrl}
                   width={32}
                   height={32}
                   className="size-8 rounded-full"
@@ -416,7 +416,7 @@ export function MobileNav() {
           </SignedIn>
           <Separator className="my-3" />
           <div className="flex flex-col space-y-3">
-            {mainNav?.map(
+            {mainNav.map(
               (item) =>
                 item.href && (
                   <MobileLink
@@ -435,7 +435,7 @@ export function MobileNav() {
                 <div className="text-neutral-2 text-lg font-medium">
                   {item.title}
                 </div>
-                {item?.items?.length &&
+                {item.items.length &&
                   item.items.map((item) => (
                     <React.Fragment key={item.href}>
                       {item.href ? (
@@ -487,14 +487,14 @@ export function MobileNav() {
   );
 }
 
-type MobileLinkProps = {
+interface MobileLinkProps {
   href: string;
   onOpenChange?: (open: boolean) => void;
   children: React.ReactNode;
   className?: string;
   signedInOnly?: boolean;
   signedOutOnly?: boolean;
-};
+}
 
 function MobileLink({
   href,

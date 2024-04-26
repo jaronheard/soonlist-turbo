@@ -1,6 +1,6 @@
 import { Button } from "~/components/ui/button";
 
-/* eslint-disable react/no-unescaped-entities */
+ 
 export const metadata = {
   title: "Early Access | Soonlist",
   openGraph: {

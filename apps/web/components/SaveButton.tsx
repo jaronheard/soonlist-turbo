@@ -1,21 +1,21 @@
 "use client";
 
 import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
-import { type AddToCalendarButtonType } from "add-to-calendar-button-react";
+import type {AddToCalendarButtonType} from "add-to-calendar-button-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, UploadCloud } from "lucide-react";
 import { Button } from "./ui/button";
 import { api } from "~/trpc/react";
-import { type EventMetadataLoose } from "~/lib/prompts";
+import type {EventMetadataLoose} from "~/lib/prompts";
 
-type SaveButtonProps = {
+interface SaveButtonProps {
   event: AddToCalendarButtonType;
   eventMetadata?: EventMetadataLoose;
   notes?: string;
   visibility: "public" | "private";
   lists: Record<string, string>[];
-};
+}
 
 export function SaveButton(props: SaveButtonProps) {
   const router = useRouter();

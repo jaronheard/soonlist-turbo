@@ -9,10 +9,11 @@ import { UploadButton } from "@bytescale/upload-widget-react";
 import { Dialog } from "@headlessui/react";
 import {
   ReactCrop,
-  type Crop,
+  
   centerCrop,
-  makeAspectCrop,
+  makeAspectCrop
 } from "react-image-crop";
+import type {Crop} from "react-image-crop";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { cn, extractFilePath } from "~/lib/utils";
@@ -242,7 +243,7 @@ export function ImageCropperSmall({
       });
       setCroppedImagesUrls(cropUrls);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isImageLoading, hasNaturalDimensions]);
 
   const onCropComplete = (crop: Crop, percentageCrop: Crop) => {
@@ -268,7 +269,7 @@ export function ImageCropperSmall({
     (url) => url.includes(filePath)
   );
   const showCroppedImage =
-    croppedImagesMatchFilePath && croppedImagesUrls?.cropped;
+    croppedImagesMatchFilePath && croppedImagesUrls.cropped;
 
   return (
     <div className="flex items-center justify-center gap-4">
@@ -298,7 +299,7 @@ export function ImageCropperSmall({
               />
 
               <img
-                src={croppedImagesUrls?.cropped}
+                src={croppedImagesUrls.cropped}
                 alt="Cropped Preview"
                 className={cn(
                   "mx-auto block h-40 overflow-hidden object-cover",

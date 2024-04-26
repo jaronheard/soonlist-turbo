@@ -15,7 +15,7 @@ import { Logo } from "~/components/Logo";
 
 export const maxDuration = 60;
 
-type Props = {
+interface Props {
   searchParams: {
     rawText?: string;
     saveIntent?: boolean;
@@ -23,7 +23,7 @@ type Props = {
     timezone?: string;
     edit?: boolean;
   };
-};
+}
 
 export default async function Page({ searchParams }: Props) {
   const user = await currentUser();

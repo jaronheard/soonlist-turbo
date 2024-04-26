@@ -34,7 +34,7 @@ export function ListCard(props: {
       )}
     >
       <Link
-        href={props?.id ? `/list/${props.id}` : `/${props.username}/events`}
+        href={props.id ? `/list/${props.id}` : `/${props.username}/events`}
         className={clsx(
           getRainbowColorFromString(props.name),
           "size-[5.375rem] flex-shrink-0 items-center justify-center rounded-l-md text-4xl font-bold font-heading leading-none text-white flex pt-1"
@@ -44,7 +44,7 @@ export function ListCard(props: {
       </Link>
       <div className="flex min-w-0 grow flex-col gap-1 p-5">
         <Link
-          href={props?.id ? `/list/${props.id}` : `/${props.username}/events`}
+          href={props.id ? `/list/${props.id}` : `/${props.username}/events`}
           className="flex justify-between"
         >
           <div className="truncate text-xl font-bold leading-6 tracking-wide text-interactive-1">
@@ -53,7 +53,7 @@ export function ListCard(props: {
           <SquareStack className="ml-4 size-6 text-interactive-1" />
         </Link>
         <div className="truncate text-lg font-medium leading-none text-neutral-2">
-          {props?.id ? "curated by " : "by "}
+          {props.id ? "curated by " : "by "}
           <Link
             className="font-semibold text-interactive-1"
             href={`/${props.username}/events`}

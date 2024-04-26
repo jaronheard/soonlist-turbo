@@ -54,7 +54,7 @@ export function EventsFromImage({
   if (events.length >= 0) {
     return (
       <div className="flex flex-wrap items-center gap-8">
-        {events?.map((props) => (
+        {events.map((props) => (
           <NewEventPreview key={props.name} {...props} />
         ))}
       </div>

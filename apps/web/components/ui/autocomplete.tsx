@@ -1,5 +1,5 @@
 import React from "react";
-import { type Tag as TagType } from "./tag-input";
+import type {Tag as TagType} from "./tag-input";
 import {
   Command,
   CommandList,
@@ -8,7 +8,7 @@ import {
   CommandEmpty,
 } from "~/components/ui/command";
 
-type AutocompleteProps = {
+interface AutocompleteProps {
   tags: TagType[];
   setTags: React.Dispatch<React.SetStateAction<TagType[]>>;
   autocompleteOptions: TagType[];
@@ -16,7 +16,7 @@ type AutocompleteProps = {
   onTagAdd?: (tag: string) => void;
   allowDuplicates: boolean;
   children: React.ReactNode;
-};
+}
 
 export const Autocomplete: React.FC<AutocompleteProps> = ({
   tags,

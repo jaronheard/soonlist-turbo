@@ -3,7 +3,7 @@ import { EventListItem } from "./EventDisplays";
 import { ListCard } from "./ListCard";
 import { UserAllEventsCard } from "./UserAllEventsCard";
 import { api } from "~/trpc/server";
-import { type AddToCalendarButtonPropsRestricted } from "~/types";
+import type {AddToCalendarButtonPropsRestricted} from "~/types";
 
 export async function SampleEvent({ eventId }: { eventId: string }) {
   const event = await api.event.get.query({
@@ -11,10 +11,10 @@ export async function SampleEvent({ eventId }: { eventId: string }) {
   });
 
   const eventData = event?.event as AddToCalendarButtonPropsRestricted;
-  const fullImageUrl = eventData?.images?.[3];
+  const fullImageUrl = eventData.images?.[3];
   const eventDataNoImage = event?.event as AddToCalendarButtonPropsRestricted;
   eventDataNoImage.images = undefined;
-  const list = event?.eventToLists?.[0]?.list;
+  const list = event?.eventToLists[0]?.list;
 
   if (!event || !eventData) {
     return null;
@@ -39,10 +39,10 @@ export async function SampleEvent({ eventId }: { eventId: string }) {
       <div className="flex flex-col items-center">
         {list?.name && (
           <ListCard
-            name={list?.name}
+            name={list.name}
             username={event.user.username}
             className="w-full"
-            id={list?.id}
+            id={list.id}
           />
         )}
         {!list?.name && (

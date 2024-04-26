@@ -1,8 +1,8 @@
-type ContactUsProps = {
+interface ContactUsProps {
   children: React.ReactNode;
   email?: string;
   title?: string;
-};
+}
 
 export const ContactUs = ({
   children,

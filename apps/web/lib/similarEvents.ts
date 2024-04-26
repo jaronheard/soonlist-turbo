@@ -1,8 +1,8 @@
 import { differenceInMinutes } from "date-fns";
 
-import { type EventWithUser } from "~/components/EventList";
-import { type Event } from "~/server/db/types";
-import { type AddToCalendarButtonProps } from "~/types";
+import type {EventWithUser} from "~/components/EventList";
+import type {Event} from "~/server/db/types";
+import type {AddToCalendarButtonProps} from "~/types";
 
 // Cosine Similarity Functions
 function textToVector(text: string): Map<string, number> {
@@ -59,8 +59,8 @@ function isEventSimilar(
   descriptionSimilarity: number;
   locationSimilarity: number;
 } {
-  const event1Data = event1?.event as AddToCalendarButtonProps;
-  const event2Data = event2?.event as AddToCalendarButtonProps;
+  const event1Data = event1.event as AddToCalendarButtonProps;
+  const event2Data = event2.event as AddToCalendarButtonProps;
 
   const startTimeDifference = Math.abs(
     differenceInMinutes(event1.startDateTime, event2.startDateTime),
@@ -107,10 +107,10 @@ export type SimilarEvents = {
   similarityDetails: SimilarityDetails;
 }[];
 // Structure to store similarity info
-export type EventWithSimilarity = {
+export interface EventWithSimilarity {
   event: EventWithUser;
   similarEvents: SimilarEvents;
-};
+}
 
 function collapseSimilarEvents(events: EventWithUser[]) {
   // Define thresholds

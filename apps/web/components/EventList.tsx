@@ -1,10 +1,5 @@
 import { clsx } from "clsx";
-import {
-  type User,
-  type EventFollow,
-  type Event,
-  type Comment,
-} from "~/server/db/types";
+import type {User, EventFollow, Event, Comment} from "~/server/db/types";
 import { EventListItem } from "~/components/EventDisplays";
 import {
   Accordion,
@@ -12,7 +7,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "~/components/Accordian";
-import { type AddToCalendarButtonPropsRestricted } from "~/types";
+import type {AddToCalendarButtonPropsRestricted} from "~/types";
 import { collapseSimilarEvents } from "~/lib/similarEvents";
 
 function ListContainer({

@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { type Metadata, type ResolvingMetadata } from "next/types";
+import type {Metadata, ResolvingMetadata} from "next/types";
 import { UserInfo } from "~/components/UserInfo";
 import { EventList } from "~/components/EventList";
 import { api } from "~/trpc/server";
 
-type Props = { params: { userName: string } };
+interface Props { params: { userName: string } }
 
 export async function generateMetadata(
   { params }: Props,

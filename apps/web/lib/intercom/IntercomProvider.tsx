@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { useEffect  } from "react";
+import type {ReactNode} from "react";
 
 import { useUser } from "@clerk/nextjs";
 import {

@@ -1,11 +1,11 @@
 import { comment } from "postcss";
 import { UserInfo } from "~/components/UserInfo";
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
-import { type AddToCalendarButtonProps } from "~/types";
+import type {AddToCalendarButtonProps} from "~/types";
 import { ImageUpload } from "~/components/ImageUpload";
 import { YourDetails } from "~/components/YourDetails";
 import { api } from "~/trpc/server";
-import { type EventMetadata } from "~/lib/prompts";
+import type {EventMetadata} from "~/lib/prompts";
 
 export default async function Page({
   params,
@@ -21,12 +21,12 @@ export default async function Page({
   const eventData = event.event as AddToCalendarButtonProps;
   const eventMetadata = event.eventMetadata as EventMetadata;
   const mostRecentComment = event.comments
-    ?.filter((comment) => comment?.content)
+    .filter((comment) => comment.content)
     .pop()?.content;
-  const eventLists = event.eventToLists?.map((eventToList) => eventToList.list);
+  const eventLists = event.eventToLists.map((eventToList) => eventToList.list);
   return (
     <div className="flex flex-col items-center">
-      {event?.event ? (
+      {event.event ? (
         <>
           <YourDetails
             lists={event.user.lists || undefined}

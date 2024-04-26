@@ -1,16 +1,17 @@
-import { type InferInsertModel, type InferSelectModel } from "drizzle-orm";
+import type {InferInsertModel, InferSelectModel} from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import {
-  type comments,
-  type eventToLists,
-  type events,
-  type eventFollows,
-  type listFollows,
-  type userFollows,
-  type lists,
-  requestResponses,
-  type users,
+  
+  
+  
+  
+  
+  
+  
+  requestResponses
+  
 } from "./schema";
+import type {comments, eventToLists, events, eventFollows, listFollows, userFollows, lists, users} from "./schema";
 
 export type Comment = InferSelectModel<typeof comments>;
 export type NewComment = InferInsertModel<typeof comments>;

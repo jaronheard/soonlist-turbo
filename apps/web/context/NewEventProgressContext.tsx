@@ -4,9 +4,10 @@
 import React, {
   useState,
   createContext,
-  type ReactNode,
-  useContext,
+  
+  useContext
 } from "react";
+import type {ReactNode} from "react";
 
 // Define the type of the context state
 export enum Mode {

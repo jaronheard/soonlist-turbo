@@ -1,9 +1,10 @@
-import { type Message } from "ai";
-import { type ClassValue, clsx } from "clsx";
+import type {Message} from "ai";
+import {  clsx } from "clsx";
+import type {ClassValue} from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Temporal } from "@js-temporal/polyfill";
 import { customAlphabet } from "nanoid";
-import { type AddToCalendarButtonProps } from "~/types";
+import type {AddToCalendarButtonProps} from "~/types";
 
 export const blankEvent = {
   options: [
@@ -71,7 +72,7 @@ const monthNames = [
   "December",
 ];
 
-export type DateInfo = {
+export interface DateInfo {
   month: number;
   day: number;
   year: number;
@@ -79,7 +80,7 @@ export type DateInfo = {
   monthName: string;
   hour: number;
   minute: number;
-};
+}
 
 export function getDateTimeInfo(
   dateString: string,
@@ -357,11 +358,11 @@ export const getLastMessages = (messages: Message[]) => {
   );
 
   const lastUserMessage =
-    userMessages?.[userMessages.length - 1]?.content || "";
+    userMessages[userMessages.length - 1]?.content || "";
   // const lastAssistantMessage =
   //   assistantMessages?.[userMessages.length - 1]?.content || null;
   const lastAssistantMessage =
-    assistantMessages?.[userMessages.length - 1]?.content || "";
+    assistantMessages[userMessages.length - 1]?.content || "";
 
   return { lastUserMessage, lastAssistantMessage };
 };

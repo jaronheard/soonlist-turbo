@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Shapes, Text } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import { type AddToCalendarButtonType } from "add-to-calendar-button-react";
+import type {AddToCalendarButtonType} from "add-to-calendar-button-react";
 import { SaveButton } from "./SaveButton";
 import { UpdateButton } from "./UpdateButton";
 import { Label } from "./ui/label";
@@ -27,11 +27,12 @@ import { useNewEventContext } from "~/context/NewEventContext";
 import {
   EVENT_CATEGORIES,
   EVENT_TYPES,
-  type EventMetadata,
+  
   // PLATFORMS,
   PRICE_TYPE,
-  ACCESSIBILITY_TYPES_OPTIONS,
+  ACCESSIBILITY_TYPES_OPTIONS
 } from "~/lib/prompts";
+import type {EventMetadata} from "~/lib/prompts";
 import { feedback } from "~/lib/intercom/intercom";
 
 export type AddToCalendarCardProps = AddToCalendarButtonType & {
@@ -91,16 +92,16 @@ export function AddToCalendarCard({
   );
   const [link, setLink] = useState<string>("");
   const [mentions] = useState<string[]>(
-    initialProps?.eventMetadata?.mentions || []
+    initialProps.eventMetadata?.mentions || []
   );
   const [source] = useState<string>(
-    initialProps?.eventMetadata?.source || "unknown"
+    initialProps.eventMetadata?.source || "unknown"
   );
   const [priceMin, setPriceMin] = useState<number>(
-    initialProps?.eventMetadata?.priceMin || 0
+    initialProps.eventMetadata?.priceMin || 0
   );
   const [priceMax, setPriceMax] = useState<number>(
-    initialProps?.eventMetadata?.priceMax || 0
+    initialProps.eventMetadata?.priceMax || 0
   );
   const [priceType, setPriceType] = useState<string>(
     initialProps.eventMetadata?.priceType || "unknown"
@@ -109,18 +110,18 @@ export function AddToCalendarCard({
     (initialProps.eventMetadata?.ageRestriction || "none") as string
   );
   const [category, setCategory] = useState(
-    (initialProps?.eventMetadata?.category || "unknown") as string
+    (initialProps.eventMetadata?.category || "unknown") as string
   );
   const [type, setType] = useState(
-    initialProps?.eventMetadata?.type || "event"
+    initialProps.eventMetadata?.type || "event"
   );
   const [performers, setPerformers] = useState(
-    initialProps?.eventMetadata?.performers || []
+    initialProps.eventMetadata?.performers || []
   );
   const [accessibility, setAccessibility] = useState<
     Record<"value" | "label", string>[]
   >(
-    initialProps?.eventMetadata?.accessibility
+    initialProps.eventMetadata?.accessibility
       ? initialProps.eventMetadata.accessibility.map(
           (value) =>
             ACCESSIBILITY_TYPES_OPTIONS.find(

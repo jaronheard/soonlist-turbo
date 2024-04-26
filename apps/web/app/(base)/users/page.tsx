@@ -1,5 +1,5 @@
 // import { Suspense } from "react";
-import { type Metadata, type ResolvingMetadata } from "next/types";
+import type {Metadata, ResolvingMetadata} from "next/types";
 import { UserInfo } from "~/components/UserInfo";
 // import Leaderboard from "~/components/Leaderboard";
 // import LeaderboardSkeleton from "~/components/LeaderboardSkeleton";

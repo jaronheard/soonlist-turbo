@@ -1,4 +1,4 @@
-import { type Metadata } from "next";
+import type {Metadata} from "next";
 import "~/styles/globals.css";
 import { cookies } from "next/headers";
 import dynamic from "next/dynamic";

@@ -8,12 +8,12 @@ import { Button } from "./ui/button";
 import { CardDescription } from "./ui/card";
 import { api } from "~/trpc/react";
 
-type ListUpdateButtonProps = {
+interface ListUpdateButtonProps {
   id: string;
   name: string;
   description: string;
   afterSuccess?: string;
-};
+}
 
 export function ListUpdateButton(props: ListUpdateButtonProps) {
   const router = useRouter();

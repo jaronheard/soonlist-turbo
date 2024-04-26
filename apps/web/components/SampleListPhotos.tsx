@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { ArrowBigRight } from "lucide-react";
 import { api } from "~/trpc/server";
-import { type AddToCalendarButtonProps } from "~/types";
+import type {AddToCalendarButtonProps} from "~/types";
 
 export async function SampleListPhotos({ listId }: { listId: string }) {
   const list = await api.list.get.query({ listId });
@@ -14,7 +14,7 @@ export async function SampleListPhotos({ listId }: { listId: string }) {
   const events = list.eventToLists
     .map((item) => item.event)
     // filter out null events
-    .filter((event) => event?.startDateTime)
+    .filter((event) => event.startDateTime)
     // sort by startDateTime
     .sort(
       (a, b) =>

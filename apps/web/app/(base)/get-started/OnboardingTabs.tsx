@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { type z } from "zod";
+import type {z} from "zod";
 import { TabsTrigger, TabsList, TabsContent, Tabs } from "~/components/ui/tabs";
 import {
   CardTitle,

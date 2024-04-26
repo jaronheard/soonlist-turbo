@@ -6,14 +6,14 @@ import { ListUpdateButton } from "./ListUpdateButton";
 import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
 
-type AddListCardProps = {
+interface AddListCardProps {
   name: string;
   description: string;
   update?: boolean;
   updateId?: string;
   afterSuccess?: string;
   afterSuccessFunction?: () => void;
-};
+}
 
 export function AddListCard({ ...initialProps }: AddListCardProps) {
   const [name, setName] = useState(initialProps.name);

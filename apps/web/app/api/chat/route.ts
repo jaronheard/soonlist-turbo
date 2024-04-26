@@ -1,7 +1,7 @@
 import { Configuration, OpenAIApi } from "openai-edge";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { z } from "zod";
-import { type RequestResponse } from "~/server/db/types";
+import type {RequestResponse} from "~/server/db/types";
 import { getPrompt, getSystemMessage } from "~/lib/prompts";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     (message: { role: string }) => message.role === "user"
   );
   const lastUserMessage =
-    userMessages?.[userMessages.length - 1]?.content || undefined;
+    userMessages[userMessages.length - 1]?.content || undefined;
 
   const requestData = {
     modelInput: {

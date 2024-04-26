@@ -1,4 +1,4 @@
-export type AddToCalendarButtonPropsBase = {
+export interface AddToCalendarButtonPropsBase {
   proKey?: string;
   name?: string;
   dates?: {
@@ -119,7 +119,7 @@ export type AddToCalendarButtonPropsBase = {
   pastDateHandling?: string;
   proxy?: boolean;
   forceOverlay?: boolean;
-};
+}
 
 export type AddToCalendarButtonProps = AddToCalendarButtonPropsBase & {
   listStyle?:

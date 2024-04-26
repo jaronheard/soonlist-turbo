@@ -6,7 +6,7 @@ import { createTRPCReact } from "@trpc/react-query";
 import { useState } from "react";
 
 import { getUrl, transformer } from "./shared";
-import { type AppRouter } from "~/server/api/root";
+import type {AppRouter} from "~/server/api/root";
 
 export const api = createTRPCReact<AppRouter>();
 

@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import {
-  AddToCalendarCard,
-  type AddToCalendarCardProps,
+  AddToCalendarCard
+  
 } from "~/components/AddToCalendarCard";
+import type {AddToCalendarCardProps} from "~/components/AddToCalendarCard";
 import { EventPreview } from "~/components/EventDisplays";
 import {
   Mode,

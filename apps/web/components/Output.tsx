@@ -1,5 +1,5 @@
 "use client";
-import { type AddToCalendarButtonType } from "add-to-calendar-button-react";
+import type {AddToCalendarButtonType} from "add-to-calendar-button-react";
 import { useEffect, useRef } from "react";
 import { AddToCalendarCard } from "./AddToCalendarCard";
 import { blankEvent } from "~/lib/utils";
@@ -31,7 +31,7 @@ export function Output({
         <>
           {eventsAreValid && (
             <div className="flex flex-wrap justify-center gap-4">
-              {events?.map((props, index) => (
+              {events.map((props, index) => (
                 <AddToCalendarCard
                   {...props}
                   key={props.name}
@@ -48,7 +48,7 @@ export function Output({
           )}
           {!eventsAreValid && (
             <div className="flex flex-wrap justify-center gap-4">
-              {blankEvents?.map((props, index) => (
+              {blankEvents.map((props, index) => (
                 <AddToCalendarCard
                   {...props}
                   key={props.name}

@@ -6,11 +6,11 @@ import { Pencil } from "lucide-react";
 import { DropdownMenuItem } from "./DropdownMenu";
 import { Button } from "./ui/button";
 
-export type EditButtonProps = {
+export interface EditButtonProps {
   userId: string;
   id: string;
   type: "icon" | "button" | "dropdown";
-};
+}
 
 export function EditButton(props: EditButtonProps) {
   const { user } = useUser();

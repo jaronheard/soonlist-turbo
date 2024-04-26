@@ -8,12 +8,12 @@ import { Button } from "./ui/button";
 import { CardDescription } from "./ui/card";
 import { api } from "~/trpc/react";
 
-type ListSaveButtonProps = {
+interface ListSaveButtonProps {
   name: string;
   description: string;
   afterSuccess?: string;
   afterSuccessFunction?: () => void;
-};
+}
 
 export function ListSaveButton(props: ListSaveButtonProps) {
   const router = useRouter();

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { type SubmitHandler, useForm } from "react-hook-form";
+import {  useForm } from "react-hook-form";
+import type {SubmitHandler} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type z } from "zod";
+import type {z} from "zod";
 import { ChevronLeft, X } from "lucide-react";
 import Link from "next/link";
 import { Organize } from "./Organize";
@@ -14,7 +15,7 @@ import {
   Status,
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
-import { type List } from "~/server/db/types";
+import type {List} from "~/server/db/types";
 import { useNewEventContext } from "~/context/NewEventContext";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";

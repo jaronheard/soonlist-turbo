@@ -7,10 +7,10 @@ import { Loader2, Trash } from "lucide-react";
 import { Button } from "./ui/button";
 import { api } from "~/trpc/react";
 
-type ListDeleteButtonProps = {
+interface ListDeleteButtonProps {
   listUserId: string;
   listId: string;
-};
+}
 
 export function ListDeleteButton(props: ListDeleteButtonProps) {
   const router = useRouter();

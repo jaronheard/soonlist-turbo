@@ -16,7 +16,7 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
   integrations: [
     new posthog.SentryIntegration(posthog, "soonlist", 4506458761396224),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+     
     Sentry.replayIntegration({
       // Additional SDK configuration goes in here, for example:
       // maskAllText: true,

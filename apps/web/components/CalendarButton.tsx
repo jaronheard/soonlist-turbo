@@ -3,16 +3,16 @@
 import { atcb_action } from "add-to-calendar-button-react";
 import { CalendarPlus } from "lucide-react";
 
-import { type AddToCalendarButtonPropsRestricted } from "~/types";
+import type {AddToCalendarButtonPropsRestricted} from "~/types";
 import { DropdownMenuItem } from "./DropdownMenu";
 import { Button } from "./ui/button";
 
-type CalendarButtonProps = {
+interface CalendarButtonProps {
   event: AddToCalendarButtonPropsRestricted;
   id?: string;
   username?: string;
   type: "button" | "dropdown" | "icon";
-};
+}
 
 export function CalendarButton(props: CalendarButtonProps) {
   const eventForCalendar = { ...props.event };

@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { type DropdownMenuCheckboxItemProps } from "@radix-ui/react-dropdown-menu";
+import type {DropdownMenuCheckboxItemProps} from "@radix-ui/react-dropdown-menu";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { type List } from "~/server/db/types";
+import type {List} from "~/server/db/types";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -18,11 +18,11 @@ import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 type Checked = DropdownMenuCheckboxItemProps["checked"];
-type EventListsButtonProps = {
+interface EventListsButtonProps {
   userLists: List[];
   eventId: string;
   eventLists: List[];
-};
+}
 
 export function EventListsButton({
   userLists,

@@ -1,7 +1,7 @@
 import { UserInfo } from "~/components/UserInfo";
 import { api } from "~/trpc/server";
 
-type Props = { params: { userName: string } };
+interface Props { params: { userName: string } }
 
 export default async function Page({ params }: Props) {
   const users = await api.user.getFollowing.query({

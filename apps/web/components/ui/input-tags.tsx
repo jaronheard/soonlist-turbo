@@ -1,13 +1,15 @@
 import { XIcon } from "lucide-react";
 import {
-  type Dispatch,
-  type SetStateAction,
+  
+  
   forwardRef,
-  useState,
+  useState
 } from "react";
+import type {Dispatch, SetStateAction} from "react";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { Input, type InputProps } from "~/components/ui/input";
+import { Input  } from "~/components/ui/input";
+import type {InputProps} from "~/components/ui/input";
 
 type OverrideInputProps = Omit<InputProps, "onChange">;
 // initial source: https://github.com/JaleelB/shadcn-tag-input

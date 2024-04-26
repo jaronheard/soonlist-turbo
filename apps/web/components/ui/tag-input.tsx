@@ -1,16 +1,16 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+ 
+ 
 "use client";
 
 import React, { forwardRef, useRef, useState } from "react";
-import { type VariantProps } from "class-variance-authority";
+import type {VariantProps} from "class-variance-authority";
 import { v4 as uuid } from "uuid";
 import { toast } from "../ui/use-toast";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { TagPopover } from "./tag-popover";
 import { TagList } from "./tag-list";
-import { type tagVariants } from "./tag";
+import type {tagVariants} from "./tag";
 import { Autocomplete } from "./autocomplete";
 import { CommandInput } from "~/components/ui/command";
 
@@ -25,10 +25,10 @@ type OmittedInputProps = Omit<
   "size" | "value"
 >;
 
-export type Tag = {
+export interface Tag {
   id: string;
   text: string;
-};
+}
 
 export interface TagInputProps
   extends OmittedInputProps,
@@ -165,7 +165,7 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>((props) => {
 
       // Validate maxLength
       if (maxLength && newTagText.length > maxLength) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+         
         toast({
           title: "Tag is too long",
           description: "Please enter a tag with less characters",
@@ -222,7 +222,7 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>((props) => {
     ? tags.map((tag) => ({
         id: tag.id,
         text:
-          tag.text?.length > truncate
+          tag.text.length > truncate
             ? `${tag.text.substring(0, truncate)}...`
             : tag.text,
       }))

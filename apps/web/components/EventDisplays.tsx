@@ -22,22 +22,17 @@ import { DeleteButton } from "./DeleteButton";
 import { EditButton } from "./EditButton";
 import { CalendarButton } from "./CalendarButton";
 import { ShareButton } from "./ShareButton";
-import { type EventWithUser } from "./EventList";
+import type {EventWithUser} from "./EventList";
 import { buttonVariants } from "./ui/button";
 import { Label } from "./ui/label";
-import { type AddToCalendarCardProps } from "./AddToCalendarCard";
+import type {AddToCalendarCardProps} from "./AddToCalendarCard";
 import { Badge } from "./ui/badge";
 import { PersonalNote } from "./PersonalNote";
 import { UserAllEventsCard } from "./UserAllEventsCard";
 import { ListCard } from "./ListCard";
 import { FollowEventButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
-import {
-  type User,
-  type EventFollow,
-  type Comment,
-  type List,
-} from "~/server/db/types";
+import type {User, EventFollow, Comment, List} from "~/server/db/types";
 import {
   translateToHtml,
   getDateInfoUTC,
@@ -48,13 +43,13 @@ import {
   getDateTimeInfo,
   timeFormatDateInfo,
 } from "~/lib/utils";
-import { type AddToCalendarButtonPropsRestricted } from "~/types";
-import { type SimilarityDetails } from "~/lib/similarEvents";
+import type {AddToCalendarButtonPropsRestricted} from "~/types";
+import type {SimilarityDetails} from "~/lib/similarEvents";
 import { TimezoneContext } from "~/context/TimezoneContext";
-import { type EventMetadata as EventMetadataDisplay } from "~/lib/prompts";
+import type {EventMetadata as EventMetadataDisplay} from "~/lib/prompts";
 import { feedback } from "~/lib/intercom/intercom";
 
-type EventListItemProps = {
+interface EventListItemProps {
   variant?: "card";
   user?: User;
   eventFollows: EventFollow[];
@@ -70,9 +65,9 @@ type EventListItemProps = {
     similarityDetails: SimilarityDetails;
   }[];
   filePath?: string;
-};
+}
 
-type EventPageProps = {
+interface EventPageProps {
   user?: User;
   eventFollows: EventFollow[];
   comments: Comment[];
@@ -91,7 +86,7 @@ type EventPageProps = {
   lists?: List[];
   children?: React.ReactNode;
   eventMetadata?: EventMetadataDisplay;
-};
+}
 
 function EventDateDisplaySimple({
   startDate,
@@ -202,10 +197,10 @@ function EventDetailsCard({
         {isClient && eventTimesAreDefined(startTime, endTime) && (
           <>
             <div className="flex-wrap text-neutral-2">
-              {startDateInfo?.dayOfWeek.substring(0, 3)}
+              {startDateInfo.dayOfWeek.substring(0, 3)}
               {", "}
-              {startDateInfo?.month}/{startDateInfo?.day}/
-              {startDateInfo?.year.toString().substring(2, 4)}{" "}
+              {startDateInfo.month}/{startDateInfo.day}/
+              {startDateInfo.year.toString().substring(2, 4)}{" "}
               <span className="text-neutral-3">{"//"}</span>{" "}
               {timeFormatDateInfo(startDateInfo)}-
               {timeFormatDateInfo(endDateInfo)}
@@ -308,7 +303,7 @@ function EventMetadataDisplay({
     (metadata?.priceMin && metadata.priceMin > 0) || metadata?.priceMin === 0;
   const hasPriceMax = metadata?.priceMax && metadata.priceMax > 0;
   const hasPrices = hasPriceMin && hasPriceMax;
-  const isPriceRange = hasPrices && metadata?.priceMin !== metadata?.priceMax;
+  const isPriceRange = hasPrices && metadata.priceMin !== metadata.priceMax;
   const singlePriceText = `$${metadata?.priceMin}`;
   const priceRangeText = `$${metadata?.priceMin}-$${metadata?.priceMax}`;
   const priceText = isPriceRange ? priceRangeText : singlePriceText;
@@ -490,10 +485,10 @@ function EventDetails({
         {isClient && eventTimesAreDefined(startTime, endTime) && (
           <>
             <div className="flex-wrap text-neutral-2">
-              {startDateInfo?.dayOfWeek.substring(0, 3)}
+              {startDateInfo.dayOfWeek.substring(0, 3)}
               {", "}
-              {startDateInfo?.month}/{startDateInfo?.day}/
-              {startDateInfo?.year.toString().substring(2, 4)}{" "}
+              {startDateInfo.month}/{startDateInfo.day}/
+              {startDateInfo.year.toString().substring(2, 4)}{" "}
               <span className="text-neutral-3">{"//"}</span>{" "}
               {timeFormatDateInfo(startDateInfo)}-
               {timeFormatDateInfo(endDateInfo)}
@@ -855,7 +850,7 @@ export function EventPage(props: EventPageProps) {
       clerkUser?.id === item.userId || clerkUser?.externalId === item.userId
   );
   const comment = props.comments
-    ?.filter((item) => user?.id === item.userId)
+    .filter((item) => user?.id === item.userId)
     .pop();
   const hasLists = user && lists && lists.length > 0;
 
@@ -908,10 +903,10 @@ export function EventPage(props: EventPageProps) {
               {isClient && eventTimesAreDefined(startTime, endTime) && (
                 <>
                   <div className="shrink-0 text-neutral-2">
-                    {startDateInfo?.dayOfWeek.substring(0, 3)}
+                    {startDateInfo.dayOfWeek.substring(0, 3)}
                     {", "}
-                    {startDateInfo?.month}/{startDateInfo?.day}/
-                    {startDateInfo?.year.toString().substring(2, 4)}{" "}
+                    {startDateInfo.month}/{startDateInfo.day}/
+                    {startDateInfo.year.toString().substring(2, 4)}{" "}
                     <span className="text-neutral-3">{"//"}</span>{" "}
                     {timeFormatDateInfo(startDateInfo)}-
                     {timeFormatDateInfo(endDateInfo)}
@@ -945,7 +940,7 @@ export function EventPage(props: EventPageProps) {
                 <ListCard
                   key={list.id}
                   name={list.name}
-                  username={user?.username}
+                  username={user.username}
                   id={list.id}
                 />
               ))}

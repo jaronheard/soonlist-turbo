@@ -3,11 +3,12 @@
 import React, {
   createContext,
   useContext,
-  useState,
-  type ReactNode,
+  useState
+  
 } from "react";
+import type {ReactNode} from "react";
 
-type CroppedImagesUrls = {
+interface CroppedImagesUrls {
   original?: string;
   square?: string;
   fourThree?: string;
@@ -15,11 +16,11 @@ type CroppedImagesUrls = {
   cropped?: string;
   filePath?: string;
   deleted?: string;
-};
-type CroppedImageContextType = {
+}
+interface CroppedImageContextType {
   croppedImagesUrls: CroppedImagesUrls;
   setCroppedImagesUrls: (urls: CroppedImagesUrls) => void;
-};
+}
 
 // Create context with a default value
 const defaultValue: CroppedImageContextType = {

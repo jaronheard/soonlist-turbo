@@ -1,4 +1,4 @@
-import { type Metadata, type ResolvingMetadata } from "next/types";
+import type {Metadata, ResolvingMetadata} from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
 import { UserInfo } from "~/components/UserInfo";
 import { ListEditButton } from "~/components/ListEditButton";
@@ -7,7 +7,7 @@ import { EventList } from "~/components/EventList";
 import { FollowListButton } from "~/components/FollowButtons";
 import { api } from "~/trpc/server";
 
-type Props = { params: { listId: string } };
+interface Props { params: { listId: string } }
 
 export async function generateMetadata(
   { params }: Props,
@@ -24,7 +24,7 @@ export async function generateMetadata(
   const events = list.eventToLists
     .map((item) => item.event)
     // filter out null events
-    .filter((event) => event?.startDateTime)
+    .filter((event) => event.startDateTime)
     // sort by startDateTime
     .sort(
       (a, b) =>
@@ -61,7 +61,7 @@ export default async function Page({ params }: Props) {
   const events = list.eventToLists
     .map((item) => item.event)
     // filter out null events
-    .filter((event) => event?.startDateTime)
+    .filter((event) => event.startDateTime)
     // sort by startDateTime
     .sort(
       (a, b) =>

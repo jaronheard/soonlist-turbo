@@ -5,10 +5,10 @@ import Link from "next/link";
 import { Edit } from "lucide-react";
 import { buttonVariants } from "./ui/button";
 
-type ListEditButtonProps = {
+interface ListEditButtonProps {
   listUserId: string;
   listId: string;
-};
+}
 
 export function ListEditButton(props: ListEditButtonProps) {
   const { user } = useUser();

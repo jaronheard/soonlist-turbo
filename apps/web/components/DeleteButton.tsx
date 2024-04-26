@@ -8,11 +8,11 @@ import { DropdownMenuItem } from "./DropdownMenu";
 import { Button } from "./ui/button";
 import { api } from "~/trpc/react";
 
-export type DeleteButtonProps = {
+export interface DeleteButtonProps {
   userId: string;
   id: string;
   type: "icon" | "button" | "dropdown";
-};
+}
 
 export function DeleteButton(props: DeleteButtonProps) {
   const { user } = useUser();

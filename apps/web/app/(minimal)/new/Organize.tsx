@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { type useForm } from "react-hook-form";
+import type {useForm} from "react-hook-form";
 import { SignedIn } from "@clerk/nextjs";
 import { ListIcon, Plus } from "lucide-react";
-import { type z } from "zod";
-import { type organizeFormSchema } from "~/components/YourDetails";
-import { type List } from "~/server/db/types";
+import type {z} from "zod";
+import type {organizeFormSchema} from "~/components/YourDetails";
+import type {List} from "~/server/db/types";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import {
   FormLabel,

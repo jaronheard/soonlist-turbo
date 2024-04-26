@@ -1,21 +1,19 @@
-import { type Metadata, type ResolvingMetadata } from "next/types";
+import type {Metadata, ResolvingMetadata} from "next/types";
 import { ResetNewEventContext } from "./ResetNewEventContext";
 import { EventPage } from "~/components/EventDisplays";
 import { UserInfo } from "~/components/UserInfo";
-import {
-  type AddToCalendarButtonPropsRestricted,
-  type AddToCalendarButtonProps,
-} from "~/types";
+import type {AddToCalendarButtonPropsRestricted, AddToCalendarButtonProps} from "~/types";
 import { collapseSimilarEvents } from "~/lib/similarEvents";
-import { type EventWithUser, EventList } from "~/components/EventList";
+import {  EventList } from "~/components/EventList";
+import type {EventWithUser} from "~/components/EventList";
 import { api } from "~/trpc/server";
-import { type EventMetadata } from "~/lib/prompts";
+import type {EventMetadata} from "~/lib/prompts";
 
-type Props = {
+interface Props {
   params: {
     eventId: string;
   };
-};
+}
 
 export async function generateMetadata(
   { params }: Props,
@@ -63,8 +61,8 @@ export default async function Page({ params }: Props) {
     .filter((item) => item.id !== event.id)
     .slice(0, 3);
 
-  const eventData = event?.event as AddToCalendarButtonPropsRestricted;
-  const eventMetadata = event?.eventMetadata as EventMetadata;
+  const eventData = event.event as AddToCalendarButtonPropsRestricted;
+  const eventMetadata = event.eventMetadata as EventMetadata;
   const fullImageUrl = eventData.images?.[3];
 
   const possibleDuplicateEvents = (await api.event.getPossibleDuplicates.query({

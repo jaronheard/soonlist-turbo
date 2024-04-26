@@ -60,7 +60,7 @@ export const listRouter = createTRPCRouter({
         },
       });
       return followLists.then(
-        (followList) => followList?.map((item) => item.list) || null
+        (followList) => followList.map((item) => item.list) || null
       );
     }),
   get: publicProcedure

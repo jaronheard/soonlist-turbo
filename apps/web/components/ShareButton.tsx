@@ -4,13 +4,13 @@ import { Share } from "lucide-react";
 import { toast } from "sonner";
 import { DropdownMenuItem } from "./DropdownMenu";
 import { Button } from "./ui/button";
-import { type AddToCalendarButtonProps } from "~/types";
+import type {AddToCalendarButtonProps} from "~/types";
 
-export type ShareButtonProps = {
+export interface ShareButtonProps {
   id: string;
   event: AddToCalendarButtonProps;
   type: "button" | "dropdown" | "icon";
-};
+}
 
 export function ShareButton(props: ShareButtonProps) {
   // TODO: Add support for all day events

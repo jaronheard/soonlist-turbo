@@ -10,5 +10,12 @@ export default [
   ...baseConfig,
   ...reactConfig,
   ...nextjsConfig,
-  ...restrictEnvAccess,
+  // ...restrictEnvAccess,
+  // https://github.com/t3-oss/create-t3-turbo/issues/984#issuecomment-2049759032
+  {
+    ignores: [".next/**"],
+    rules: {
+      "react-hooks/exhaustive-deps": "off",
+    },
+  },
 ];

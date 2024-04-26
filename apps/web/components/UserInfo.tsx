@@ -8,11 +8,11 @@ import { api } from "~/trpc/server";
 
 const SAMPLE_BIO = `I haven't written a bio yet... you'll have to find me at one of my events!`;
 
-type UserInfoProps = {
+interface UserInfoProps {
   userId?: string;
   userName?: string;
   variant?: "default" | "icon" | "description";
-};
+}
 
 function formatUserWebsiteForLink(website: string) {
   if (website.startsWith("http")) {

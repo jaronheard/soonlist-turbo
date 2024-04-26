@@ -1,7 +1,7 @@
 "use client";
 
 import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
-import { type AddToCalendarButtonType } from "add-to-calendar-button-react";
+import type {AddToCalendarButtonType} from "add-to-calendar-button-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
@@ -9,9 +9,9 @@ import { Button } from "./ui/button";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import { api } from "~/trpc/react";
-import { type EventMetadataLoose } from "~/lib/prompts";
+import type {EventMetadataLoose} from "~/lib/prompts";
 
-type UpdateButtonProps = {
+interface UpdateButtonProps {
   event: AddToCalendarButtonType;
   eventMetadata?: EventMetadataLoose;
   id: string;
@@ -19,7 +19,7 @@ type UpdateButtonProps = {
   notes?: string;
   visibility: "public" | "private";
   lists: Record<string, string>[];
-};
+}
 
 export function UpdateButton(props: UpdateButtonProps) {
   const router = useRouter();

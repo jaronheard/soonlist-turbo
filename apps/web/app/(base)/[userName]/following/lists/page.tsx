@@ -1,10 +1,10 @@
-import { type Metadata, type ResolvingMetadata } from "next/types";
+import type {Metadata, ResolvingMetadata} from "next/types";
 import { UserInfo } from "~/components/UserInfo";
 import { ListCard } from "~/components/ListCard";
 import { FollowListButton } from "~/components/FollowButtons";
 import { api } from "~/trpc/server";
 
-type Props = { params: { userName: string } };
+interface Props { params: { userName: string } }
 
 export async function generateMetadata(
   { params }: Props,

@@ -3,10 +3,10 @@ import { ListCard } from "./ListCard";
 import { ListCardAdd } from "./ListCardAdd";
 import { api } from "~/trpc/server";
 
-type ListCardsForUserProps = {
+interface ListCardsForUserProps {
   userName: string;
   limit: number;
-};
+}
 
 export async function ListCardsForUser({
   userName,

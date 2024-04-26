@@ -3,12 +3,13 @@
 import React, {
   createContext,
   useState,
-  useContext,
-  type ReactNode,
+  useContext
+  
 } from "react";
+import type {ReactNode} from "react";
 import type * as z from "zod";
-import { type organizeFormSchema } from "~/components/YourDetails";
-import { type AddToCalendarCardProps } from "~/components/AddToCalendarCard";
+import type {organizeFormSchema} from "~/components/YourDetails";
+import type {AddToCalendarCardProps} from "~/components/AddToCalendarCard";
 
 // Define the type of the context state
 interface NewEventContextState {

@@ -16,12 +16,7 @@ import {
   comments,
   eventToLists,
 } from "~/server/db/schema";
-import {
-  type NewComment,
-  type NewEvent,
-  type NewEventToLists,
-  type UpdateEvent,
-} from "~/server/db/types";
+import type {NewComment, NewEvent, NewEventToLists, UpdateEvent} from "~/server/db/types";
 import { AddToCalendarButtonPropsSchema } from "~/types/zodSchema";
 import { EventMetadataSchemaLoose } from "~/lib/prompts";
 
@@ -192,7 +187,7 @@ export const eventRouter = createTRPCRouter({
         },
       });
       return (
-        userWithEventFollows?.[0]?.eventFollows
+        userWithEventFollows[0]?.eventFollows
           .map((eventFollow) => eventFollow.event)
           .sort(
             (a, b) =>
@@ -265,7 +260,7 @@ export const eventRouter = createTRPCRouter({
     )
     .query(({ ctx, input }) => {
       return ctx.db.query.events.findMany({
-        where: input?.excludeCurrent
+        where: input.excludeCurrent
           ? gte(events.endDateTime, new Date())
           : gte(events.startDateTime, new Date()),
         with: {
@@ -274,7 +269,7 @@ export const eventRouter = createTRPCRouter({
           comments: true,
         },
         orderBy: [asc(events.startDateTime)],
-        limit: input?.limit,
+        limit: input.limit,
       });
     }),
   delete: protectedProcedure.input(eventIdSchema).mutation(({ ctx, input }) => {
@@ -287,7 +282,7 @@ export const eventRouter = createTRPCRouter({
     }
 
     const roles = sessionClaims?.roles || [];
-    const isAdmin = roles?.includes("admin");
+    const isAdmin = roles.includes("admin");
 
     return ctx.db.query.events
       .findMany({
@@ -321,7 +316,7 @@ export const eventRouter = createTRPCRouter({
       }
 
       const roles = sessionClaims?.roles || [];
-      const isAdmin = roles?.includes("admin");
+      const isAdmin = roles.includes("admin");
 
       const { event, eventMetadata } = input;
       const hasComment = input.comment && input.comment.length > 0;
@@ -432,7 +427,7 @@ export const eventRouter = createTRPCRouter({
     .input(eventCreateSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.auth.userId;
-      const username = ctx.currentUser?.username;
+      const username = ctx.currentUser.username;
       if (!userId) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

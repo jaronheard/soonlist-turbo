@@ -1,6 +1,7 @@
 import React from "react";
-import { type Tag as TagType } from "./tag-input";
-import { TagList, type TagListProps } from "./tag-list";
+import type {Tag as TagType} from "./tag-input";
+import { TagList  } from "./tag-list";
+import type {TagListProps} from "./tag-list";
 import {
   Popover,
   PopoverContent,
