@@ -6,8 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, UploadCloud } from "lucide-react";
 import { Button } from "./ui/button";
-import { api } from "@/trpc/react";
-import { type EventMetadataLoose } from "@/lib/prompts";
+import { api } from "~/trpc/react";
+import { type EventMetadataLoose } from "~/lib/prompts";
 
 type SaveButtonProps = {
   event: AddToCalendarButtonType;

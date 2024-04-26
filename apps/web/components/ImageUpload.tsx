@@ -13,9 +13,9 @@ import {
   centerCrop,
   makeAspectCrop,
 } from "react-image-crop";
-import { Button } from "@/components/ui/button";
-import { useCroppedImageContext } from "@/context/CroppedImageContext";
-import { cn, extractFilePath } from "@/lib/utils";
+import { Button } from "~/components/ui/button";
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
+import { cn, extractFilePath } from "~/lib/utils";
 
 export function buildDefaultUrl(filePath: string) {
   return Bytescale.UrlBuilder.url({

@@ -6,7 +6,7 @@ import {
   CommandItem,
   CommandGroup,
   CommandEmpty,
-} from "@/components/ui/command";
+} from "~/components/ui/command";
 
 type AutocompleteProps = {
   tags: TagType[];

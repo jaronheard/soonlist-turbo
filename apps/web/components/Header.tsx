@@ -35,7 +35,7 @@ import { TimezoneSelect } from "./TimezoneSelect";
 import { Button, buttonVariants } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { ScrollArea } from "./ui/scroll-area";
-import { cn } from "@/lib/utils";
+import { cn } from "~/lib/utils";
 
 const newEvent: { title: string; href: string; description: string }[] = [
   {
@@ -81,7 +81,7 @@ const allUsers: { title: string; href: string; description: string }[] = [
 
 export function Header() {
   return (
-    <div className="sticky top-0 z-50 bg-interactive-3">
+    <div className="bg-interactive-3 sticky top-0 z-50">
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
         <div className="flex items-center sm:grow sm:gap-0">
           <NavigationMenu>
@@ -249,15 +249,15 @@ const ListItem = React.forwardRef<
           ref={ref}
           href={href!}
           className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+            "hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors",
             className
           )}
           {...props}
         >
-          <div className="text-lg font-medium leading-none text-foreground">
+          <div className="text-foreground text-lg font-medium leading-none">
             {title}
           </div>
-          <p className="line-clamp-3 text-lg leading-snug text-muted-foreground">
+          <p className="text-muted-foreground line-clamp-3 text-lg leading-snug">
             {children}
           </p>
         </Link>
@@ -369,7 +369,7 @@ export function MobileNav() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" className="block lg:hidden">
-          <Menu className="size-6 text-interactive-1" />
+          <Menu className="text-interactive-1 size-6" />
           <span className="sr-only">Toggle Menu</span>
         </Button>
       </SheetTrigger>
@@ -399,7 +399,7 @@ export function MobileNav() {
               ) : (
                 <div className="size-8 rounded-full bg-gray-100"></div>
               )}
-              <div className="text-lg font-medium text-neutral-2">
+              <div className="text-neutral-2 text-lg font-medium">
                 @{user?.username}
               </div>
             </div>
@@ -432,7 +432,7 @@ export function MobileNav() {
           <div className="flex flex-col space-y-2">
             {sideNav(user?.username).map((item, index) => (
               <div key={index} className="flex flex-col space-y-3 pt-6">
-                <div className="text-lg font-medium text-neutral-2">
+                <div className="text-neutral-2 text-lg font-medium">
                   {item.title}
                 </div>
                 {item?.items?.length &&
@@ -515,7 +515,7 @@ function MobileLink({
           }}
           className={cn(
             className,
-            "text-lg font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring text-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
           )}
           {...props}
         >
@@ -534,7 +534,7 @@ function MobileLink({
           }}
           className={cn(
             className,
-            "text-lg font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring text-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
           )}
           {...props}
         >
@@ -551,7 +551,7 @@ function MobileLink({
       }}
       className={cn(
         className,
-        "text-lg font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring text-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
       )}
       {...props}
     >
@@ -574,7 +574,7 @@ function MobileButton({
         onOpenChange?.(false);
       }}
       variant={"ghost"}
-      className={cn(className, "text-lg font-medium text-neutral-1")}
+      className={cn(className, "text-neutral-1 text-lg font-medium")}
       {...props}
     >
       {children}

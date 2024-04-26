@@ -6,12 +6,12 @@ import { ProgressStages } from "./ProgressStages";
 import { EventsFromRawText } from "./EventsFromRawText";
 import { EventsFromImage } from "./EventsFromImage";
 import { EventsFromSaved } from "./EventsFromSaved";
-import { ImageUpload } from "@/components/ImageUpload";
-import { YourDetails } from "@/components/YourDetails";
-import { AddEvent } from "@/app/(base)/AddEvent";
-import { api } from "@/trpc/server";
-import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/Logo";
+import { ImageUpload } from "~/components/ImageUpload";
+import { YourDetails } from "~/components/YourDetails";
+import { AddEvent } from "~/app/(base)/AddEvent";
+import { api } from "~/trpc/server";
+import { Button } from "~/components/ui/button";
+import { Logo } from "~/components/Logo";
 
 export const maxDuration = 60;
 
@@ -96,7 +96,7 @@ export default async function Page({ searchParams }: Props) {
         </Button>
         <div className="absolute top-0 z-20 flex flex-col items-center">
           <Logo className="origin-top scale-50" />
-          <h1 className="-mt-2 hidden font-heading text-2.5xl font-bold leading-9 tracking-wide text-gray-700 lg:block">
+          <h1 className="font-heading text-2.5xl -mt-2 hidden font-bold leading-9 tracking-wide text-gray-700 lg:block">
             Add Event
           </h1>
         </div>

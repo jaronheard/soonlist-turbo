@@ -5,9 +5,9 @@ import {
   forwardRef,
   useState,
 } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input, type InputProps } from "@/components/ui/input";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import { Input, type InputProps } from "~/components/ui/input";
 
 type OverrideInputProps = Omit<InputProps, "onChange">;
 // initial source: https://github.com/JaleelB/shadcn-tag-input

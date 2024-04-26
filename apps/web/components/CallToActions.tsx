@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { CalendarPlus, Star } from "lucide-react";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
+import { Button } from "~/components/ui/button";
 
 export function CTAButton() {
   return (

@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "~/components/ui/button";
 import {
   Mode,
   Status,
   useNewEventProgressContext,
-} from "@/context/NewEventProgressContext";
-import { useNewEventContext } from "@/context/NewEventContext";
-import { SaveButton } from "@/components/SaveButton";
-import { useCroppedImageContext } from "@/context/CroppedImageContext";
+} from "~/context/NewEventProgressContext";
+import { useNewEventContext } from "~/context/NewEventContext";
+import { SaveButton } from "~/components/SaveButton";
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
 
 export function NewEventFooterButtons({
   onClickNextOrganize,

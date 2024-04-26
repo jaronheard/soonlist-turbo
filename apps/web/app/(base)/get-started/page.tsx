@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { OnboardingTabs } from "./OnboardingTabs";
-import { api } from "@/trpc/server";
+import { api } from "~/trpc/server";
 
 export const metadata = {
   title: "Get Started | Soonlist",

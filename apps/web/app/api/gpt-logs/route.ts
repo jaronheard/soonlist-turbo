@@ -1,6 +1,6 @@
-import { db } from "@/server/db";
-import { requestResponses } from "@/server/db/schema";
-import { insertRequestResponseSchema } from "@/server/db/types";
+import { db } from "~/server/db";
+import { requestResponses } from "~/server/db/schema";
+import { insertRequestResponseSchema } from "~/server/db/types";
 
 export const dynamic = "force-dynamic";
 

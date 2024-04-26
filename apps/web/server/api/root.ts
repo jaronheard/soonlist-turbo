@@ -3,7 +3,7 @@ import { listRouter } from "./routers/list";
 import { eventRouter } from "./routers/event";
 import { waitlistRouter } from "./routers/waitlist";
 import { aiRouter } from "./routers/ai";
-import { createTRPCRouter } from "@/server/api/trpc";
+import { createTRPCRouter } from "~/server/api/trpc";
 
 /**
  * This is the primary router for your server.

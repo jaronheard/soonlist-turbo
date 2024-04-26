@@ -12,7 +12,7 @@ import { TagPopover } from "./tag-popover";
 import { TagList } from "./tag-list";
 import { type tagVariants } from "./tag";
 import { Autocomplete } from "./autocomplete";
-import { CommandInput } from "@/components/ui/command";
+import { CommandInput } from "~/components/ui/command";
 
 export enum Delimiter {
   Comma = ",",

@@ -3,9 +3,9 @@
 import { EventsError } from "./EventsError";
 import { NewEventPreview } from "./NewEventPreview";
 import { EventPreviewLoadingSpinner } from "./EventPreviewLoadingSpinner";
-import { api } from "@/trpc/react";
-import { AddToCalendarCard } from "@/components/AddToCalendarCard";
-import { blankEvent } from "@/lib/utils";
+import { api } from "~/trpc/react";
+import { AddToCalendarCard } from "~/components/AddToCalendarCard";
+import { blankEvent } from "~/lib/utils";
 
 const queryOptions = {
   // don't refetch on mount, window focus, or reconnect

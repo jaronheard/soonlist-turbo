@@ -3,7 +3,7 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { db } from "@/server/db";
+import { db } from "~/server/db";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = auth();

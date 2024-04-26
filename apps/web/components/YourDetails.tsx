@@ -16,8 +16,8 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { AddListCard } from "./AddListCard";
-import { type List } from "@/server/db/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { type List } from "~/server/db/types";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import {
   FormLabel,
   Form,
@@ -26,17 +26,17 @@ import {
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form";
+} from "~/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useNewEventContext } from "@/context/NewEventContext";
-import { MultiSelect } from "@/components/ui/multiselect";
+} from "~/components/ui/select";
+import { Textarea } from "~/components/ui/textarea";
+import { useNewEventContext } from "~/context/NewEventContext";
+import { MultiSelect } from "~/components/ui/multiselect";
 
 export const organizeFormSchema = z.object({
   notes: z.string().optional(),

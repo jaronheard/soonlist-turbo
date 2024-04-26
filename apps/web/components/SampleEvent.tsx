@@ -2,8 +2,8 @@ import Image from "next/image";
 import { EventListItem } from "./EventDisplays";
 import { ListCard } from "./ListCard";
 import { UserAllEventsCard } from "./UserAllEventsCard";
-import { api } from "@/trpc/server";
-import { type AddToCalendarButtonPropsRestricted } from "@/types";
+import { api } from "~/trpc/server";
+import { type AddToCalendarButtonPropsRestricted } from "~/types";
 
 export async function SampleEvent({ eventId }: { eventId: string }) {
   const event = await api.event.get.query({

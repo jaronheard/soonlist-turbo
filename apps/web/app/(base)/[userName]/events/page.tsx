@@ -1,9 +1,9 @@
 import { type Metadata, type ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
-import { UserInfo } from "@/components/UserInfo";
-import { ListCardsForUser } from "@/components/ListCardsForUser";
-import { EventList } from "@/components/EventList";
-import { api } from "@/trpc/server";
+import { UserInfo } from "~/components/UserInfo";
+import { ListCardsForUser } from "~/components/ListCardsForUser";
+import { EventList } from "~/components/EventList";
+import { api } from "~/trpc/server";
 
 type Props = { params: { userName: string } };
 

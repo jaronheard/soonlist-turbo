@@ -37,7 +37,7 @@ import {
   type EventFollow,
   type Comment,
   type List,
-} from "@/server/db/types";
+} from "~/server/db/types";
 import {
   translateToHtml,
   getDateInfoUTC,
@@ -47,12 +47,12 @@ import {
   eventTimesAreDefined,
   getDateTimeInfo,
   timeFormatDateInfo,
-} from "@/lib/utils";
-import { type AddToCalendarButtonPropsRestricted } from "@/types";
-import { type SimilarityDetails } from "@/lib/similarEvents";
-import { TimezoneContext } from "@/context/TimezoneContext";
-import { type EventMetadata as EventMetadataDisplay } from "@/lib/prompts";
-import { feedback } from "@/lib/intercom/intercom";
+} from "~/lib/utils";
+import { type AddToCalendarButtonPropsRestricted } from "~/types";
+import { type SimilarityDetails } from "~/lib/similarEvents";
+import { TimezoneContext } from "~/context/TimezoneContext";
+import { type EventMetadata as EventMetadataDisplay } from "~/lib/prompts";
+import { feedback } from "~/lib/intercom/intercom";
 
 type EventListItemProps = {
   variant?: "card";

@@ -6,8 +6,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { ClerkProvider, useUser } from "@clerk/nextjs";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { IntercomProvider } from "@/lib/intercom/IntercomProvider";
-import ContextProvider from "@/context/ContextProvider";
+import { IntercomProvider } from "~/lib/intercom/IntercomProvider";
+import ContextProvider from "~/context/ContextProvider";
 
 if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "", {

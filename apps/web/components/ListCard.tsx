@@ -1,7 +1,7 @@
 import { clsx } from "clsx";
 import { SquareStack } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn } from "~/lib/utils";
 
 const colors = [
   // "bg-accent-blue",

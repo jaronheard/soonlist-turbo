@@ -5,7 +5,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/Accordian";
+} from "~/components/Accordian";
 
 export function EventsError({
   rawText,

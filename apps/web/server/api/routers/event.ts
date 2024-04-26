@@ -7,23 +7,23 @@ import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
-} from "@/server/api/trpc";
-import { filterDuplicates, generatePublicId } from "@/lib/utils";
+} from "~/server/api/trpc";
+import { filterDuplicates, generatePublicId } from "~/lib/utils";
 import {
   events,
   eventFollows,
   users,
   comments,
   eventToLists,
-} from "@/server/db/schema";
+} from "~/server/db/schema";
 import {
   type NewComment,
   type NewEvent,
   type NewEventToLists,
   type UpdateEvent,
-} from "@/server/db/types";
-import { AddToCalendarButtonPropsSchema } from "@/types/zodSchema";
-import { EventMetadataSchemaLoose } from "@/lib/prompts";
+} from "~/server/db/types";
+import { AddToCalendarButtonPropsSchema } from "~/types/zodSchema";
+import { EventMetadataSchemaLoose } from "~/lib/prompts";
 
 const eventCreateSchema = z.object({
   event: AddToCalendarButtonPropsSchema,

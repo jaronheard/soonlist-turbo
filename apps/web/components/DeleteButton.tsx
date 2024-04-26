@@ -6,7 +6,7 @@ import { SignedIn, useUser } from "@clerk/nextjs";
 import { TrashIcon } from "@heroicons/react/24/solid";
 import { DropdownMenuItem } from "./DropdownMenu";
 import { Button } from "./ui/button";
-import { api } from "@/trpc/react";
+import { api } from "~/trpc/react";
 
 export type DeleteButtonProps = {
   userId: string;

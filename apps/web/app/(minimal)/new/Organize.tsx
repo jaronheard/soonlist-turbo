@@ -5,9 +5,9 @@ import { type useForm } from "react-hook-form";
 import { SignedIn } from "@clerk/nextjs";
 import { ListIcon, Plus } from "lucide-react";
 import { type z } from "zod";
-import { type organizeFormSchema } from "@/components/YourDetails";
-import { type List } from "@/server/db/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { type organizeFormSchema } from "~/components/YourDetails";
+import { type List } from "~/server/db/types";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import {
   FormLabel,
   Form,
@@ -16,17 +16,17 @@ import {
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form";
+} from "~/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { MultiSelect } from "@/components/ui/multiselect";
-import { Button } from "@/components/ui/button";
+} from "~/components/ui/select";
+import { Textarea } from "~/components/ui/textarea";
+import { MultiSelect } from "~/components/ui/multiselect";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -34,8 +34,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { AddListCard } from "@/components/AddListCard";
+} from "~/components/ui/dialog";
+import { AddListCard } from "~/components/AddListCard";
 
 export function Organize({
   form,

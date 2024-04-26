@@ -3,22 +3,22 @@
 import * as React from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { ScrollArea } from "./scroll-area";
-import { cn } from "@/lib/utils";
+import { cn } from "~/lib/utils";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-} from "@/components/ui/command";
+} from "~/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "~/components/ui/popover";
 
 export type OptionType = Record<"value" | "label", string>;
 

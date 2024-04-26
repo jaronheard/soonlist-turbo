@@ -2,7 +2,7 @@
 import { type AddToCalendarButtonType } from "add-to-calendar-button-react";
 import { useEffect, useRef } from "react";
 import { AddToCalendarCard } from "./AddToCalendarCard";
-import { blankEvent } from "@/lib/utils";
+import { blankEvent } from "~/lib/utils";
 
 export function Output({
   events,

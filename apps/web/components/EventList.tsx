@@ -4,16 +4,16 @@ import {
   type EventFollow,
   type Event,
   type Comment,
-} from "@/server/db/types";
-import { EventListItem } from "@/components/EventDisplays";
+} from "~/server/db/types";
+import { EventListItem } from "~/components/EventDisplays";
 import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-} from "@/components/Accordian";
-import { type AddToCalendarButtonPropsRestricted } from "@/types";
-import { collapseSimilarEvents } from "@/lib/similarEvents";
+} from "~/components/Accordian";
+import { type AddToCalendarButtonPropsRestricted } from "~/types";
+import { collapseSimilarEvents } from "~/lib/similarEvents";
 
 function ListContainer({
   children,

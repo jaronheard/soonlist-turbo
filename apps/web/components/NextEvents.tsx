@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "./ui/button";
-import { EventList } from "@/components/EventList";
-import { api } from "@/trpc/server";
+import { EventList } from "~/components/EventList";
+import { api } from "~/trpc/server";
 
 export async function NextEvents({ limit = 5, upcoming = false } = {}) {
   const excludeCurrent = !upcoming;

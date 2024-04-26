@@ -6,10 +6,10 @@ import { useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Download, Share, Sparkles } from "lucide-react";
 import { UploadImageForProcessingButton } from "./UploadImageForProcessingButton";
-import { Form } from "@/components/Form";
-import { Output } from "@/components/Output";
-import { cn, getLastMessages } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Form } from "~/components/Form";
+import { Output } from "~/components/Output";
+import { cn, getLastMessages } from "~/lib/utils";
+import { Button } from "~/components/ui/button";
 import {
   Card,
   CardContent,
@@ -17,10 +17,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TimezoneContext } from "@/context/TimezoneContext";
-import { addCommonAddToCalendarPropsFromResponse } from "@/lib/prompts";
+} from "~/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { TimezoneContext } from "~/context/TimezoneContext";
+import { addCommonAddToCalendarPropsFromResponse } from "~/lib/prompts";
 
 function Code({
   children,
@@ -32,7 +32,7 @@ function Code({
   return (
     <code
       className={cn(
-        "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold",
+        "bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold",
         className
       )}
     >

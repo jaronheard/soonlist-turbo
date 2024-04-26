@@ -4,7 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { Instagram, LinkIcon, Mail, MessageSquare } from "lucide-react";
 import { FollowUserButton } from "./FollowButtons";
 import { Button, buttonVariants } from "./ui/button";
-import { api } from "@/trpc/server";
+import { api } from "~/trpc/server";
 
 const SAMPLE_BIO = `I haven't written a bio yet... you'll have to find me at one of my events!`;
 

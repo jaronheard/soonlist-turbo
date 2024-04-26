@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { ListCard } from "./ListCard";
 import { ListCardAdd } from "./ListCardAdd";
-import { api } from "@/trpc/server";
+import { api } from "~/trpc/server";
 
 type ListCardsForUserProps = {
   userName: string;

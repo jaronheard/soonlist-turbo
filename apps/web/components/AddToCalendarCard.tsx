@@ -21,8 +21,8 @@ import {
 import { InputTags } from "./ui/input-tags";
 import { MultiSelect } from "./ui/multiselect";
 import { Button } from "./ui/button";
-import { useCroppedImageContext } from "@/context/CroppedImageContext";
-import { useNewEventContext } from "@/context/NewEventContext";
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
+import { useNewEventContext } from "~/context/NewEventContext";
 
 import {
   EVENT_CATEGORIES,
@@ -31,8 +31,8 @@ import {
   // PLATFORMS,
   PRICE_TYPE,
   ACCESSIBILITY_TYPES_OPTIONS,
-} from "@/lib/prompts";
-import { feedback } from "@/lib/intercom/intercom";
+} from "~/lib/prompts";
+import { feedback } from "~/lib/intercom/intercom";
 
 export type AddToCalendarCardProps = AddToCalendarButtonType & {
   update?: boolean;

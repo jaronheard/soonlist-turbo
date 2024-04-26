@@ -1,16 +1,16 @@
 // import { Suspense } from "react";
 import { type Metadata, type ResolvingMetadata } from "next/types";
-import { UserInfo } from "@/components/UserInfo";
-// import Leaderboard from "@/components/Leaderboard";
-// import LeaderboardSkeleton from "@/components/LeaderboardSkeleton";
+import { UserInfo } from "~/components/UserInfo";
+// import Leaderboard from "~/components/Leaderboard";
+// import LeaderboardSkeleton from "~/components/LeaderboardSkeleton";
 // import {
 //   Card,
 //   CardHeader,
 //   CardTitle,
 //   CardDescription,
 //   CardContent,
-// } from "@/components/ui/card";
-import { api } from "@/trpc/server";
+// } from "~/components/ui/card";
+import { api } from "~/trpc/server";
 
 export async function generateMetadata(
   {},
@@ -48,7 +48,7 @@ export default async function Page() {
       </Card>
       <div className="p-4"></div> */}
       <div className="flex place-items-center">
-        <p className="font-heading text-5xl font-bold leading-[3.5rem] tracking-tight text-neutral-1">
+        <p className="font-heading text-neutral-1 text-5xl font-bold leading-[3.5rem] tracking-tight">
           All users
         </p>
       </div>

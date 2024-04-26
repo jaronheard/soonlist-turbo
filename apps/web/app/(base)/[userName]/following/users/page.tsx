@@ -1,5 +1,5 @@
-import { UserInfo } from "@/components/UserInfo";
-import { api } from "@/trpc/server";
+import { UserInfo } from "~/components/UserInfo";
+import { api } from "~/trpc/server";
 
 type Props = { params: { userName: string } };
 
@@ -11,10 +11,10 @@ export default async function Page({ params }: Props) {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="flex place-items-center gap-2">
-        <p className="font-heading text-5xl font-bold leading-[3.5rem] tracking-tight text-neutral-1">
+        <p className="font-heading text-neutral-1 text-5xl font-bold leading-[3.5rem] tracking-tight">
           Users followed by
         </p>
-        <p className="font-heading text-5xl font-bold leading-[3.5rem] tracking-tight text-neutral-1">
+        <p className="font-heading text-neutral-1 text-5xl font-bold leading-[3.5rem] tracking-tight">
           @{params.userName}
         </p>
       </div>

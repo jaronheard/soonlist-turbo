@@ -1,8 +1,8 @@
 import { Configuration, OpenAIApi } from "openai-edge";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { z } from "zod";
-import { type RequestResponse } from "@/server/db/types";
-import { getPrompt, getSystemMessage } from "@/lib/prompts";
+import { type RequestResponse } from "~/server/db/types";
+import { getPrompt, getSystemMessage } from "~/lib/prompts";
 
 export const dynamic = "force-dynamic";
 export const runtime = "edge";

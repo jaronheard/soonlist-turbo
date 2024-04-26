@@ -1,5 +1,5 @@
-import { AddListCard } from "@/components/AddListCard";
-import { api } from "@/trpc/server";
+import { AddListCard } from "~/components/AddListCard";
+import { api } from "~/trpc/server";
 
 export default async function Page({ params }: { params: { listId: string } }) {
   const list = await api.list.get.query({ listId: params.listId });

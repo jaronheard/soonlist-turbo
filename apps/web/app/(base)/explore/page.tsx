@@ -1,5 +1,5 @@
-import { EventList } from "@/components/EventList";
-import { api } from "@/trpc/server";
+import { EventList } from "~/components/EventList";
+import { api } from "~/trpc/server";
 
 export default async function Page() {
   const events = await api.event.getNext.query({ limit: 50 });
@@ -15,7 +15,7 @@ export default async function Page() {
   return (
     <>
       <div className="p-4"></div>
-      <h1 className="font-heading text-6xl font-bold leading-[0.875] tracking-tighterish text-gray-700 md:text-8xl md:leading-[0.875]">
+      <h1 className="font-heading tracking-tighterish text-6xl font-bold leading-[0.875] text-gray-700 md:text-8xl md:leading-[0.875]">
         Discover
       </h1>
       <p className="mt-6 max-w-[30rem] text-2xl leading-9 text-gray-400">

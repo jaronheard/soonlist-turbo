@@ -1,15 +1,15 @@
 import { type Metadata, type ResolvingMetadata } from "next/types";
 import { ResetNewEventContext } from "./ResetNewEventContext";
-import { EventPage } from "@/components/EventDisplays";
-import { UserInfo } from "@/components/UserInfo";
+import { EventPage } from "~/components/EventDisplays";
+import { UserInfo } from "~/components/UserInfo";
 import {
   type AddToCalendarButtonPropsRestricted,
   type AddToCalendarButtonProps,
-} from "@/types";
-import { collapseSimilarEvents } from "@/lib/similarEvents";
-import { type EventWithUser, EventList } from "@/components/EventList";
-import { api } from "@/trpc/server";
-import { type EventMetadata } from "@/lib/prompts";
+} from "~/types";
+import { collapseSimilarEvents } from "~/lib/similarEvents";
+import { type EventWithUser, EventList } from "~/components/EventList";
+import { api } from "~/trpc/server";
+import { type EventMetadata } from "~/lib/prompts";
 
 type Props = {
   params: {
@@ -97,7 +97,7 @@ export default async function Page({ params }: Props) {
         hideCurator
         lists={lists}
       />
-      <div className="w-full border-b border-neutral-3 pt-16 sm:pt-24"></div>
+      <div className="border-neutral-3 w-full border-b pt-16 sm:pt-24"></div>
       <div className="w-full pt-16 sm:pt-24"></div>
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
         <UserInfo userId={event.userId} variant="description" />

@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
 import { Button } from "./ui/button";
-import { useCroppedImageContext } from "@/context/CroppedImageContext";
-import { useNewEventContext } from "@/context/NewEventContext";
-import { api } from "@/trpc/react";
-import { type EventMetadataLoose } from "@/lib/prompts";
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
+import { useNewEventContext } from "~/context/NewEventContext";
+import { api } from "~/trpc/react";
+import { type EventMetadataLoose } from "~/lib/prompts";
 
 type UpdateButtonProps = {
   event: AddToCalendarButtonType;

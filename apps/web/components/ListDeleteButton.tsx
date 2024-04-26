@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Trash } from "lucide-react";
 import { Button } from "./ui/button";
-import { api } from "@/trpc/react";
+import { api } from "~/trpc/react";
 
 type ListDeleteButtonProps = {
   listUserId: string;

@@ -15,17 +15,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { type z } from "zod";
-import { TabsTrigger, TabsList, TabsContent, Tabs } from "@/components/ui/tabs";
+import { TabsTrigger, TabsList, TabsContent, Tabs } from "~/components/ui/tabs";
 import {
   CardTitle,
   CardDescription,
   CardHeader,
   CardContent,
   Card,
-} from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from "~/components/ui/card";
+import { Textarea } from "~/components/ui/textarea";
+import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/button";
 import {
   Form,
   FormControl,
@@ -34,10 +34,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { api } from "@/trpc/react";
-import { userAdditionalInfoSchema } from "@/lib/schemas";
-import { cn } from "@/lib/utils";
+} from "~/components/ui/form";
+import { api } from "~/trpc/react";
+import { userAdditionalInfoSchema } from "~/lib/schemas";
+import { cn } from "~/lib/utils";
 
 export function OnboardingTabs({
   additionalInfo,

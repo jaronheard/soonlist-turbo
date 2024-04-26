@@ -2,8 +2,8 @@
 import { UploadDropzone } from "@bytescale/upload-widget-react";
 import { useRouter } from "next/navigation";
 import { useContext } from "react";
-import { TimezoneContext } from "@/context/TimezoneContext";
-import { bytescaleWidgetOptions } from "@/components/ImageUpload";
+import { TimezoneContext } from "~/context/TimezoneContext";
+import { bytescaleWidgetOptions } from "~/components/ImageUpload";
 
 const widgetOptions = { ...bytescaleWidgetOptions };
 

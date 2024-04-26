@@ -13,13 +13,13 @@ import {
   centerCrop,
   makeAspectCrop,
 } from "react-image-crop";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { useCroppedImageContext } from "@/context/CroppedImageContext";
-import { cn, extractFilePath } from "@/lib/utils";
+import { Button, buttonVariants } from "~/components/ui/button";
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
+import { cn, extractFilePath } from "~/lib/utils";
 import {
   buildDefaultUrl,
   bytescaleWidgetOptions,
-} from "@/components/ImageUpload";
+} from "~/components/ImageUpload";
 
 const buildCroppedUrl = (
   filePath: string,
@@ -311,7 +311,7 @@ export function ImageCropperSmall({
                 <div
                   className={cn(
                     buttonVariants({ size: "icon", variant: "secondary" }),
-                    "absolute -bottom-2 left-1/2 -translate-x-1/2 scale-150 hover:bg-secondary"
+                    "hover:bg-secondary absolute -bottom-2 left-1/2 -translate-x-1/2 scale-150"
                   )}
                 >
                   <PencilIcon className="size-6" />

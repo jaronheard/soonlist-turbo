@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Check, Loader2, Plus } from "lucide-react";
 import { Button } from "./ui/button";
 import { DropdownMenuItem } from "./DropdownMenu";
-import { api } from "@/trpc/react";
+import { api } from "~/trpc/react";
 
 export function FollowEventDropdownButton({
   eventId,

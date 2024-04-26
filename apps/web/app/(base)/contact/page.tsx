@@ -1,5 +1,5 @@
 import React from "react";
-import { ContactUs } from "@/components/ContactUs";
+import { ContactUs } from "~/components/ContactUs";
 
 export const metadata = {
   title: "Contact | Soonlist",
@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <div className="prose mx-auto sm:prose-lg lg:prose-xl xl:prose-2xl 2xl:prose-2xl">
+    <div className="prose sm:prose-lg lg:prose-xl xl:prose-2xl 2xl:prose-2xl mx-auto">
       <h1 className="font-heading">Welcome to Soonlist</h1>
       <h2 className="font-heading">Get in touch</h2>
       <h3>Support</h3>

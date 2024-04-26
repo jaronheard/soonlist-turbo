@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
-import { waitlistSubmissions } from "@/server/db/schema";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { waitlistSubmissions } from "~/server/db/schema";
 
 export const waitlistRouter = createTRPCRouter({
   // This is a public procedure, meaning it can be called by anyone

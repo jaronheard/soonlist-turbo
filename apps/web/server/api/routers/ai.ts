@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { OpenAI } from "openai";
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import {
   addCommonAddToCalendarPropsFromResponse,
   getPrompt,
   getSystemMessage,
-} from "@/lib/prompts";
+} from "~/lib/prompts";
 
 // Create an OpenAI API client (that's edge friendly!)
 const config = {

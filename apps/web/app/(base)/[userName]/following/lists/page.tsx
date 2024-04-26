@@ -1,8 +1,8 @@
 import { type Metadata, type ResolvingMetadata } from "next/types";
-import { UserInfo } from "@/components/UserInfo";
-import { ListCard } from "@/components/ListCard";
-import { FollowListButton } from "@/components/FollowButtons";
-import { api } from "@/trpc/server";
+import { UserInfo } from "~/components/UserInfo";
+import { ListCard } from "~/components/ListCard";
+import { FollowListButton } from "~/components/FollowButtons";
+import { api } from "~/trpc/server";
 
 type Props = { params: { userName: string } };
 

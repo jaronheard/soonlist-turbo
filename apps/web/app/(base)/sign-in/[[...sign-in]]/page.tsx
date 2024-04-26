@@ -1,5 +1,5 @@
 import { SignIn } from "@clerk/nextjs";
-import { ScrollToTop } from "@/components/ScrollToTop";
+import { ScrollToTop } from "~/components/ScrollToTop";
 
 export default function Page() {
   return (

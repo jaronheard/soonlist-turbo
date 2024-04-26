@@ -1,5 +1,5 @@
 // import { Badge } from "./ui/badge";
-// import { api } from "@/trpc/server";
+// import { api } from "~/trpc/server";
 
 // export default async function Leaderboard() {
 //   const leaderboardUsers = await api.user.getTopUsersByUpcomingEvents.query({

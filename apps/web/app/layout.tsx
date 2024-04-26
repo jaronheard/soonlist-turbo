@@ -1,10 +1,10 @@
 import { type Metadata } from "next";
-import "@/styles/globals.css";
+import "~/styles/globals.css";
 import { cookies } from "next/headers";
 import dynamic from "next/dynamic";
 import { Kalam, IBM_Plex_Sans } from "next/font/google";
 import { PHProvider, Providers } from "./providers";
-import { TRPCReactProvider } from "@/trpc/react";
+import { TRPCReactProvider } from "~/trpc/react";
 
 // edge causes sigkill on vercel about 50% of the time
 // workaround is to use VERCEL_FORCE_NO_BUILD_CACHE=1

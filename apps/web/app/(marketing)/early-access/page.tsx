@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "~/components/ui/button";
 
 /* eslint-disable react/no-unescaped-entities */
 export const metadata = {
@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <div className="prose mx-auto px-8 py-12 sm:prose-lg lg:prose-xl xl:prose-2xl 2xl:prose-2xl">
+    <div className="prose sm:prose-lg lg:prose-xl xl:prose-2xl 2xl:prose-2xl mx-auto px-8 py-12">
       <h1 className="font-heading">Seeking Portland Event List Makers</h1>
       <h2 className="font-heading">Events For Everybody</h2>
       <p>

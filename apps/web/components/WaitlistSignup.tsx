@@ -6,7 +6,7 @@ import * as z from "zod";
 
 import { toast } from "sonner";
 import { ClipboardList } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "~/components/ui/button";
 import {
   Form,
   FormControl,
@@ -15,9 +15,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { api } from "@/trpc/react";
+} from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
+import { api } from "~/trpc/react";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -55,7 +55,7 @@ export function WaitlistSignup() {
 
   return (
     <>
-      <div className="text-center font-heading text-4xl font-bold leading-[1.0833] tracking-tight text-gray-900 sm:text-5xl">
+      <div className="font-heading text-center text-4xl font-bold leading-[1.0833] tracking-tight text-gray-900 sm:text-5xl">
         Get early access
       </div>
       <p className="mx-auto mt-6 max-w-3xl text-center text-2xl leading-9 text-gray-400">
@@ -73,7 +73,7 @@ export function WaitlistSignup() {
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem className="max-w-48 sm:max-w-[36rem]">
+                <FormItem className="max-w-48 sm:max-w-xl">
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input placeholder="" {...field} />

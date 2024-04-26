@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
 import { Button } from "./ui/button";
 import { CardDescription } from "./ui/card";
-import { api } from "@/trpc/react";
+import { api } from "~/trpc/react";
 
 type ListSaveButtonProps = {
   name: string;

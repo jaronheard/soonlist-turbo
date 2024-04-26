@@ -3,10 +3,10 @@
 import { EventsError } from "./EventsError";
 import { EventPreviewLoadingSpinner } from "./EventPreviewLoadingSpinner";
 import { NewEventPreview } from "./NewEventPreview";
-import { AddToCalendarCard } from "@/components/AddToCalendarCard";
-import { blankEvent } from "@/lib/utils";
-import { buildDefaultUrl } from "@/components/ImageUpload";
-import { api } from "@/trpc/react";
+import { AddToCalendarCard } from "~/components/AddToCalendarCard";
+import { blankEvent } from "~/lib/utils";
+import { buildDefaultUrl } from "~/components/ImageUpload";
+import { api } from "~/trpc/react";
 
 const queryOptions = {
   // don't refetch on mount, window focus, or reconnect

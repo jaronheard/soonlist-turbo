@@ -3,7 +3,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Temporal } from "@js-temporal/polyfill";
 import { customAlphabet } from "nanoid";
-import { type AddToCalendarButtonProps } from "@/types";
+import { type AddToCalendarButtonProps } from "~/types";
 
 export const blankEvent = {
   options: [

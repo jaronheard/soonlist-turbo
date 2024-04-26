@@ -1,4 +1,4 @@
-import { FullPageLoadingSpinner } from "@/components/FullPageLoadingSpinner";
+import { FullPageLoadingSpinner } from "~/components/FullPageLoadingSpinner";
 
 export default function Loading() {
   return <FullPageLoadingSpinner />;

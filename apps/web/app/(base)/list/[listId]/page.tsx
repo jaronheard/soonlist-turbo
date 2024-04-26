@@ -1,11 +1,11 @@
 import { type Metadata, type ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
-import { UserInfo } from "@/components/UserInfo";
-import { ListEditButton } from "@/components/ListEditButton";
-import { ListDeleteButton } from "@/components/ListDeleteButton";
-import { EventList } from "@/components/EventList";
-import { FollowListButton } from "@/components/FollowButtons";
-import { api } from "@/trpc/server";
+import { UserInfo } from "~/components/UserInfo";
+import { ListEditButton } from "~/components/ListEditButton";
+import { ListDeleteButton } from "~/components/ListDeleteButton";
+import { EventList } from "~/components/EventList";
+import { FollowListButton } from "~/components/FollowButtons";
+import { api } from "~/trpc/server";
 
 type Props = { params: { listId: string } };
 
@@ -85,7 +85,7 @@ export default async function Page({ params }: Props) {
   return (
     <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
       <div className="flex flex-col gap-4 lg:sticky lg:top-32 lg:self-start">
-        <p className="font-heading text-5xl font-bold leading-[3.5rem] tracking-tight text-neutral-1">
+        <p className="font-heading text-neutral-1 text-5xl font-bold leading-[3.5rem] tracking-tight">
           {list.name}
         </p>
         <div className="flex gap-6">
@@ -94,7 +94,7 @@ export default async function Page({ params }: Props) {
           </p>
           <UserInfo userId={list.user.id} />
         </div>
-        <div className="text-2xl text-neutral-2">{list.description}</div>
+        <div className="text-neutral-2 text-2xl">{list.description}</div>
         <div className="flex place-items-center gap-4">
           {!self && (
             <>

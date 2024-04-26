@@ -6,9 +6,9 @@ import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
-} from "@/server/api/trpc";
-import { listFollows, lists, users } from "@/server/db/schema";
-import { generatePublicId } from "@/lib/utils";
+} from "~/server/api/trpc";
+import { listFollows, lists, users } from "~/server/db/schema";
+import { generatePublicId } from "~/lib/utils";
 
 export const listRouter = createTRPCRouter({
   getAllForUser: publicProcedure

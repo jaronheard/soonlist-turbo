@@ -1,15 +1,15 @@
 import React from "react";
 import { CheckCircleIcon, CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import Link from "next/link";
-import { CTAButton } from "@/components/CallToActions";
+import { CTAButton } from "~/components/CallToActions";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/Accordian";
-import { Button } from "@/components/ui/button";
-import { ContactUs } from "@/components/ContactUs";
+} from "~/components/Accordian";
+import { Button } from "~/components/ui/button";
+import { ContactUs } from "~/components/ContactUs";
 
 export const metadata = {
   title: "Get Started | Soonlist",
@@ -23,7 +23,7 @@ export const metadata = {
 export default function Page() {
   return (
     <div>
-      <div className="prose mx-auto sm:prose-lg lg:prose-xl xl:prose-2xl 2xl:prose-2xl">
+      <div className="prose sm:prose-lg lg:prose-xl xl:prose-2xl 2xl:prose-2xl mx-auto">
         <h1 className="font-heading">Welcome to Soonlist</h1>
         <h2 className="font-heading">Our Vision</h2>
         <p className="">
@@ -44,7 +44,7 @@ export default function Page() {
             <li className="">
               <div className="flex gap-x-3">
                 <CheckCircleIcon
-                  className="mt-1.5 size-6 flex-none text-neutral-1"
+                  className="text-neutral-1 mt-1.5 size-6 flex-none"
                   aria-hidden="true"
                 />
                 <span>
@@ -99,7 +99,7 @@ export default function Page() {
 
             <li className="flex gap-x-3">
               <CheckCircleIcon
-                className="mt-1.5 size-6 flex-none text-neutral-1"
+                className="text-neutral-1 mt-1.5 size-6 flex-none"
                 aria-hidden="true"
               />
               <span>
@@ -116,7 +116,7 @@ export default function Page() {
           <ul role="list" className="">
             <li className="flex gap-x-3">
               <CheckCircleIcon
-                className="mt-1.5 size-6 flex-none text-neutral-1"
+                className="text-neutral-1 mt-1.5 size-6 flex-none"
                 aria-hidden="true"
               />
               <span>
@@ -130,7 +130,7 @@ export default function Page() {
             </li>
             <li className="flex gap-x-3">
               <CheckCircleIcon
-                className="mt-1.5 size-6 flex-none text-neutral-1"
+                className="text-neutral-1 mt-1.5 size-6 flex-none"
                 aria-hidden="true"
               />
               <span>
@@ -142,7 +142,7 @@ export default function Page() {
             </li>
             <li className="flex gap-x-3">
               <CheckCircleIcon
-                className="mt-1.5 size-6 flex-none text-neutral-1"
+                className="text-neutral-1 mt-1.5 size-6 flex-none"
                 aria-hidden="true"
               />
               <span>
@@ -172,7 +172,7 @@ export default function Page() {
             <ul role="list" className="">
               <li className="flex gap-x-3">
                 <CurrencyDollarIcon
-                  className="mt-1.5 size-6 flex-none text-neutral-1"
+                  className="text-neutral-1 mt-1.5 size-6 flex-none"
                   aria-hidden="true"
                 />
                 <span>
@@ -186,7 +186,7 @@ export default function Page() {
               </li>
               <li className="flex gap-x-3">
                 <CurrencyDollarIcon
-                  className="mt-1.5 size-6 flex-none text-neutral-1"
+                  className="text-neutral-1 mt-1.5 size-6 flex-none"
                   aria-hidden="true"
                 />
                 <span>
@@ -200,7 +200,7 @@ export default function Page() {
               </li>
               <li className="flex gap-x-3">
                 <CurrencyDollarIcon
-                  className="mt-1.5 size-6 flex-none text-neutral-1"
+                  className="text-neutral-1 mt-1.5 size-6 flex-none"
                   aria-hidden="true"
                 />
                 <span>

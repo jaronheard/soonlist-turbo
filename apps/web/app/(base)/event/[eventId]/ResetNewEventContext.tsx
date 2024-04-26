@@ -2,13 +2,13 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useCroppedImageContext } from "@/context/CroppedImageContext";
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import {
   Mode,
   Status,
   useNewEventProgressContext,
-} from "@/context/NewEventProgressContext";
-import { useNewEventContext } from "@/context/NewEventContext";
+} from "~/context/NewEventProgressContext";
+import { useNewEventContext } from "~/context/NewEventContext";
 
 export function ResetNewEventContext() {
   const pathName = usePathname();

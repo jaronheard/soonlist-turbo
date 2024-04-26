@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import SortableList, { SortableItem } from "react-easy-sort";
 import { type Tag as TagType } from "./tag-input";
 import { Tag, type TagProps } from "./tag";
-import { cn } from "@/lib/utils";
+import { cn } from "~/lib/utils";
 
 export type TagListProps = {
   tags: TagType[];
