@@ -4,16 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbo",
-    "debug": "NODE_OPTIONS='--inspect' next dev --turbo",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint --fix",
-    "sync-users": "node scripts/sync-users.mjs",
+    "build": "pnpm with-env next build",
+    "clean": "git clean -xdf .next .turbo node_modules",
+    "db:dr": "pscale dr create timetime dev",
     "db:push": "drizzle-kit push:mysql --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio",
-    "db:dr": "pscale dr create timetime dev",
-    "tunnel": "lt --port 3000 --subdomain soonlist"
+    "dev": "pnpm with-env next dev",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint",
+    "start": "pnpm with-env next start",
+    "sync-users": "node scripts/sync-users.mjs",
+    "tunnel": "lt --port 3000 --subdomain soonlist",
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "@bytescale/sdk": "^3.26.0",
