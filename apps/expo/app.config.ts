@@ -2,41 +2,57 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "expo",
-  slug: "expo",
-  scheme: "expo",
-  version: "0.1.0",
+  name: "Soonlist",
+  slug: "timetimecc",
+  scheme: "soonlist",
+  version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
-  userInterfaceStyle: "automatic",
+  userInterfaceStyle: "light",
   splash: {
-    image: "./assets/icon.png",
+    image: "./assets/splash.png",
     resizeMode: "contain",
-    backgroundColor: "#1F104A",
-  },
-  updates: {
-    fallbackToCacheTimeout: 0,
+    backgroundColor: "#ffffff",
   },
   assetBundlePatterns: ["**/*"],
+  plugins: [
+    [
+      "expo-share-intent",
+      {
+        iosActivationRules: {
+          NSExtensionActivationSupportsText: true,
+          NSExtensionActivationSupportsWebURLWithMaxCount: 1,
+          NSExtensionActivationSupportsWebPageWithMaxCount: 1,
+          NSExtensionActivationSupportsImageWithMaxCount: 2,
+          NSExtensionActivationSupportsMovieWithMaxCount: 1,
+          NSExtensionActivationSupportsFileWithMaxCount: 1,
+        },
+        androidIntentFilters: ["text/*", "image/*"],
+        androidMultiIntentFilters: ["image/*"],
+      },
+    ],
+    "expo-updates",
+  ],
   ios: {
-    bundleIdentifier: "your.bundle.identifier",
     supportsTablet: true,
+    bundleIdentifier: "soonlist.soonlist",
+    buildNumber: "2",
   },
   android: {
-    package: "your.bundle.identifier",
+    package: "soonlist.soonlist",
     adaptiveIcon: {
-      foregroundImage: "./assets/icon.png",
-      backgroundColor: "#1F104A",
+      foregroundImage: "./assets/adaptive-icon.png",
+      backgroundColor: "#ffffff",
     },
   },
   // extra: {
   //   eas: {
-  //     projectId: "your-eas-project-id",
+  //     projectId: "a8acc202-ed8c-48ed-9e5a-2570f510fe8a",
   //   },
   // },
   experiments: {
     tsconfigPaths: true,
-    typedRoutes: true,
+    // typedRoutes: true,
   },
-  plugins: ["expo-router"],
+  // plugins: ["expo-router"],
 });
