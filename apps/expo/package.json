@@ -2,7 +2,7 @@
   "name": "@soonlist/expo",
   "version": "0.1.0",
   "private": true,
-  "main": "expo-router/entry",
+  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "clean": "git clean -xdf .expo .turbo node_modules",
     "dev": "expo start",
@@ -12,7 +12,8 @@
     "ios": "expo run:ios",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@bytescale/sdk": "^3.34.0",
@@ -48,7 +49,6 @@
     "superjson": "2.2.1"
   },
   "devDependencies": {
-    "@soonlist/api": "workspace:*",
     "@soonlist/eslint-config": "workspace:*",
     "@soonlist/prettier-config": "workspace:*",
     "@soonlist/tailwind-config": "workspace:*",
@@ -57,8 +57,8 @@
     "@babel/preset-env": "^7.24.4",
     "@babel/runtime": "^7.24.4",
     "@types/babel__core": "^7.20.5",
-    "@types/react": "^18.2.77",
-    "eslint": "^9.0.0",
+    "@types/react": "18.3.0",
+    "eslint": "^9.1.1",
     "prettier": "^3.2.5",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5"
