@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run tunnel\" \"next dev --turbo\"",
+    "dev": "next dev --turbo",
     "debug": "NODE_OPTIONS='--inspect' next dev --turbo",
     "build": "next build",
     "start": "next start",
