@@ -9,7 +9,7 @@
     "db:dr": "pscale dr create timetime dev",
     "db:push": "drizzle-kit push:mysql --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio",
-    "dev": "pnpm with-env next dev",
+    "dev": "pnpm with-env next dev --turbo",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "start": "pnpm with-env next start",
