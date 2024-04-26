@@ -1,4 +1,4 @@
-import { Temporal } from "@js-temporal/polyfill";
+import { differenceInMinutes } from "date-fns";
 
 import { type EventWithUser } from "~/components/EventList";
 import { type Event } from "~/server/db/types";
@@ -63,15 +63,10 @@ function isEventSimilar(
   const event2Data = event2?.event as AddToCalendarButtonProps;
 
   const startTimeDifference = Math.abs(
-    Temporal.Instant.from(event1.startDateTime)
-      .until(Temporal.Instant.from(event2.startDateTime))
-      .total("minutes"),
+    differenceInMinutes(event1.startDateTime, event2.startDateTime),
   );
-
   const endTimeDifference = Math.abs(
-    Temporal.Instant.from(event1.endDateTime)
-      .until(Temporal.Instant.from(event2.endDateTime))
-      .total("minutes"),
+    differenceInMinutes(event1.endDateTime, event2.endDateTime),
   );
 
   // Text and Location Similarity
