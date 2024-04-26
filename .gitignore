@@ -41,3 +41,15 @@ next-env.d.ts
 
 # Sentry Config File
 .sentryclirc
+
+# expo
+.expo/
+expo-env.d.ts
+apps/expo/.gitignore
+
+# typescript
+*.tsbuildinfo
+dist/
+
+# turbo
+.turbo
