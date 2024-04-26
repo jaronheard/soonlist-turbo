@@ -1,5 +1,8 @@
 {
+  "name": "@soonlist/web",
+  "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbo",
     "debug": "NODE_OPTIONS='--inspect' next dev --turbo",
