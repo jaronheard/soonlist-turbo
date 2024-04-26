@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --accent-1: 254 234 159;
+    --accent-2: 255 209 186;
+    --accent-3: 122 206 252;
+    --accent-4: 196 218 157;
+    --interactive-1: 90 50 251;
+    --interactive-2: 224 217 255;
+    --interactive-3: 244 241 255;
+    --neutral-0: 22 33 53;
+    --neutral-1: 52 67 95;
+    --neutral-2: 98 116 150;
+    --neutral-3: 220 224 232;
+    --background: 0deg 0% 96.86%;
+    --foreground: 218.71deg 41.33% 14.71%;
+    --card: 0deg 0% 100%;
+    --card-foreground: 218.71deg 41.33% 14.71%;
+    --popover: 0deg 0% 100%;
+    --popover-foreground: 218.71deg 41.33% 14.71%;
+    --primary: 251.94deg 96.17% 59.02%;
+    --primary-foreground: 0deg 0% 100%;
+    --secondary: 251.05deg 100% 92.55%;
+    --secondary-foreground: 251.94deg 96.17% 59.02%;
+    --muted: 220deg 20.69% 88.63%;
+    --muted-foreground: 219.23deg 20.97% 48.63%;
+    --accent: 252.86deg 100% 97.25%;
+    --accent-foreground: 251.94deg 96.17% 59.02%;
+    --destructive: 0deg 65.33% 44.12%;
+    --destructive-foreground: 0deg 0% 96.86%;
+    --border: 220deg 20.69% 88.63%;
+    --input: 220deg 20.69% 88.63%;
+    --ring: 219.23deg 20.97% 48.63%;
+    --radius: 2rem;
+    --tw-prose-body: var(--neutral-1);
+    --tw-prose-headings: var(--neutral-0);
+    --tw-prose-lead: var(--neutral-2);
+    --tw-prose-links: var(--neutral-0);
+    --tw-prose-bold: var(--neutral-0);
+    --tw-prose-counters:var(--neutral-3);
+    --tw-prose-bullets: var(--neutral-3);
+    --tw-prose-hr: var(--neutral-3);
+    --tw-prose-quotes: var(--neutral-0);
+    --tw-prose-quote-borders: var(--neutral-3);
+    --tw-prose-captions: var(--neutral-2);
+    --tw-prose-kbd: var(--neutral-0);
+    --tw-prose-kbd-shadows: 17 24 39;
+    --tw-prose-code: var(--neutral-0);
+    --tw-prose-pre-code: var(--neutral-3);
+    --tw-prose-pre-bg: var(--neutral-0);
+    --tw-prose-th-borders: var(--neutral-3);
+    --tw-prose-td-borders: var(--neutral-3);
+  }
+
+  /* not updated */
+  .dark {
+    --background: 224deg 71.4% 4.1%;
+    --foreground: 210deg 20% 98%;
+    --card: 224deg 71.4% 4.1%;
+    --card-foreground: 210deg 20% 98%;
+    --popover: 224deg 71.4% 4.1%;
+    --popover-foreground: 210deg 20% 98%;
+    --primary: 263.4deg 70% 50.4%;
+    --primary-foreground: 210deg 20% 98%;
+    --secondary: 215deg 27.9% 16.9%;
+    --secondary-foreground: 210deg 20% 98%;
+    --muted: 215deg 27.9% 16.9%;
+    --muted-foreground: 217.9deg 10.6% 64.9%;
+    --accent: 215deg 27.9% 16.9%;
+    --accent-foreground: 210deg 20% 98%;
+    --destructive: 0deg 62.8% 30.6%;
+    --destructive-foreground: 210deg 20% 98%;
+    --border: 215deg 27.9% 16.9%;
+    --input: 215deg 27.9% 16.9%;
+    --ring: 263.4deg 70% 50.4%;
+  }
+}
