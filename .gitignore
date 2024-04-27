@@ -47,6 +47,10 @@ next-env.d.ts
 expo-env.d.ts
 apps/expo/.gitignore
 
+# expo managed workflow
+ios/
+android/
+
 # typescript
 *.tsbuildinfo
 dist/
