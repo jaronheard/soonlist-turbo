@@ -14,9 +14,10 @@
       "developmentClient": true,
       "distribution": "internal"
     },
-    "preview": {
+    "development-device": {
       "extends": "base",
       "distribution": "internal",
+      "developmentClient": true,
       "ios": {
         "simulator": true
       }
