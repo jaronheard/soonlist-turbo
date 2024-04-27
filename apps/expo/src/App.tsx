@@ -1,10 +1,10 @@
-import { Image, Linking, Platform, StyleSheet, Text, View } from "react-native";
-import * as WebBrowser from "expo-web-browser";
-
-import { useShareIntent, ShareIntentFile } from "expo-share-intent";
 import { useEffect, useState } from "react";
-import * as Bytescale from "@bytescale/sdk";
+import { Image, Linking, Platform, StyleSheet, Text, View } from "react-native";
 import MLKit from "react-native-mlkit-ocr";
+import { ShareIntentFile, useShareIntent } from "expo-share-intent";
+import * as WebBrowser from "expo-web-browser";
+import * as Bytescale from "@bytescale/sdk";
+
 import { useWarmUpBrowser } from "./hooks/useWarmUpBrowser";
 
 function guidGenerator() {
@@ -185,7 +185,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Image
-        source={require("./assets/icon.png")}
+        source={require("../assets/icon.png")}
         style={[styles.logo, styles.gap]}
       />
       <Text style={[styles.gap, styles.large]}>
