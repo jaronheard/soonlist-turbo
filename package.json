@@ -17,7 +17,6 @@
     "lint": "turbo lint --continue -- --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:ws": "pnpm dlx sherif@latest",
-    "postinstall": "pnpm lint:ws",
     "typecheck": "turbo typecheck",
     "ui-add": "pnpm -F ui ui-add"
   },
@@ -28,5 +27,10 @@
     "turbo": "^1.13.3",
     "typescript": "^5.4.5"
   },
-  "prettier": "@soonlist/prettier-config"
+  "prettier": "@soonlist/prettier-config",
+  "pnpm": {
+    "patchedDependencies": {
+      "xcode@3.0.1": "patches/xcode@3.0.1.patch"
+    }
+  }
 }
