@@ -1,11 +1,57 @@
 import { useEffect, useState } from "react";
-import { Image, Linking, Platform, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Linking,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import MLKit from "react-native-mlkit-ocr";
+import Constants from "expo-constants";
+import * as SecureStore from "expo-secure-store";
 import { ShareIntentFile, useShareIntent } from "expo-share-intent";
 import * as WebBrowser from "expo-web-browser";
 import * as Bytescale from "@bytescale/sdk";
+import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-expo";
 
+import SignInWithOAuth from "./components/SignInWithOAuth";
 import { useWarmUpBrowser } from "./hooks/useWarmUpBrowser";
+
+const tokenCache = {
+  async getToken(key: string) {
+    try {
+      return SecureStore.getItemAsync(key);
+    } catch (err) {
+      return null;
+    }
+  },
+  async saveToken(key: string, value: string) {
+    try {
+      return SecureStore.setItemAsync(key, value);
+    } catch (err) {
+      return;
+    }
+  },
+};
+
+const SignOut = () => {
+  const { isLoaded, signOut } = useAuth();
+  if (!isLoaded) {
+    return null;
+  }
+  return (
+    <View>
+      <Button
+        title="Sign Out"
+        onPress={() => {
+          signOut();
+        }}
+      />
+    </View>
+  );
+};
 
 function guidGenerator() {
   const S4 = function () {
@@ -182,22 +228,43 @@ export default function App() {
     return null; // Return null to prevent rendering the rest of the component
   }
 
+  if (!Constants?.expoConfig?.extra?.clerkPublishableKey) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.error}>
+          Please set the Clerk publishable key in app.config.ts
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Image
-        source={require("../assets/icon.png")}
-        style={[styles.logo, styles.gap]}
-      />
-      <Text style={[styles.gap, styles.large]}>
-        Share a screenshot or image to Soonlist...
-      </Text>
-      <Text
-        style={[styles.gap, styles.bold, styles.interactive]}
-        onPress={() => Linking.openURL("https://www.soonlist.com")}
-      >
-        View events
-      </Text>
-    </View>
+    <ClerkProvider
+      publishableKey={Constants.expoConfig.extra.clerkPublishableKey}
+      tokenCache={tokenCache}
+    >
+      <SafeAreaView style={styles.container}>
+        <SignedOut>
+          <SignInWithOAuth />
+        </SignedOut>
+        <SignedIn>
+          <Image
+            source={require("../assets/icon.png")}
+            style={[styles.logo, styles.gap]}
+          />
+          <Text style={[styles.gap, styles.large]}>
+            Share a screenshot or image to Soonlist...
+          </Text>
+          <Text
+            style={[styles.gap, styles.bold, styles.interactive]}
+            onPress={() => Linking.openURL("https://www.soonlist.com")}
+          >
+            View events
+          </Text>
+          <SignOut />
+        </SignedIn>
+      </SafeAreaView>
+    </ClerkProvider>
   );
 }
 

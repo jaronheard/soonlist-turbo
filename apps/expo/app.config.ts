@@ -59,5 +59,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "a8acc202-ed8c-48ed-9e5a-2570f510fe8a",
     },
+    clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY,
   },
 });
