@@ -1,6 +1,6 @@
-# soonlist-web
+# soonlist
 
-This is the web app for Soonlist.
+This is the monorepo for Soonlist.
 
 For more info, visit soonlist.com
 

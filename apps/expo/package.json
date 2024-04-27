@@ -12,6 +12,8 @@
     "ios": "expo run:ios",
     "debug": "open 'rndebugger://set-debugger-loc?host=localhost&port=19000'",
     "debug.eas": "open 'rndebugger://set-debugger-loc?host=localhost&port=8081'",
+    "eas:install.sim.latest.ios": "eas build:run -p ios --latest",
+    "eas:install.sim.latest.android": "eas build:run -p android --latest",
     "eas:build.dev.sim.ios": "eas build --profile development --platform ios",
     "eas:build.dev.device.ios": "eas build --profile development-device --platform ios",
     "eas:build.dev.sim.android": "eas build --profile development --platform android",
