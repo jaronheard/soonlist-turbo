@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  Button,
   Image,
   Linking,
   Platform,
@@ -14,7 +15,7 @@ import * as SecureStore from "expo-secure-store";
 import { ShareIntentFile, useShareIntent } from "expo-share-intent";
 import * as WebBrowser from "expo-web-browser";
 import * as Bytescale from "@bytescale/sdk";
-import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-expo";
+import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
 
 import SignInWithOAuth from "./components/SignInWithOAuth";
 import { useWarmUpBrowser } from "./hooks/useWarmUpBrowser";
@@ -127,7 +128,7 @@ const _getTextFromImage = async (file: ShareIntentFile) => {
     const textFromFile = resultFromFile.map((block) => block.text).join("");
     return textFromFile;
   } catch (e: any) {
-    alert(`Error:\n${e.message}`);
+    console.log(`Error:\n${e.message}`);
   }
 };
 
@@ -229,10 +230,11 @@ export default function App() {
   }
 
   if (!Constants?.expoConfig?.extra?.clerkPublishableKey) {
+    console.log(Constants.expoConfig);
     return (
       <SafeAreaView style={styles.container}>
         <Text style={styles.error}>
-          Please set the Clerk publishable key in app.config.ts
+          No Clerk Publishable Key found. Please check your environment.
         </Text>
       </SafeAreaView>
     );

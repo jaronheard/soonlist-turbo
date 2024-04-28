@@ -2,7 +2,7 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "Soonlist",
+  name: "expo",
   slug: "timetimecc",
   scheme: "soonlist",
   version: "1.0.0",
@@ -59,6 +59,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "a8acc202-ed8c-48ed-9e5a-2570f510fe8a",
     },
-    clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+    clerkPublishableKey:
+      process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+      "pk_test_dGlnaHQtbW9uZ3JlbC01LmNsZXJrLmFjY291bnRzLmRldiQ",
   },
 });
