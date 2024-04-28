@@ -21,7 +21,7 @@
     "development-device": {
       "extends": "base",
       "distribution": "internal",
-      "developmentClient": true,
+      "developmentClient": true
     },
     "production": {
       "extends": "base"
