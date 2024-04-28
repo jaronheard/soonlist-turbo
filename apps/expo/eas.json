@@ -13,15 +13,15 @@
     "development": {
       "extends": "base",
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
     },
     "development-device": {
       "extends": "base",
       "distribution": "internal",
       "developmentClient": true,
-      "ios": {
-        "simulator": true
-      }
     },
     "production": {
       "extends": "base"
