@@ -14,6 +14,7 @@ import { UserInfo } from "~/components/UserInfo";
 import { api } from "~/trpc/server";
 
 export async function generateMetadata(
+  // eslint-disable-next-line no-empty-pattern
   {},
   parent: ResolvingMetadata,
 ): Promise<Metadata> {

@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { X } from "lucide-react";

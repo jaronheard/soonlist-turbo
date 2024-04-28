@@ -1,7 +1,7 @@
 "use client";
 
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
@@ -20,8 +20,6 @@ interface SaveButtonProps {
 
 export function SaveButton(props: SaveButtonProps) {
   const router = useRouter();
-  const params = useSearchParams();
-  const filePath = params.get("filePath") || "";
   const updateEvent = api.event.create.useMutation({
     onError: () => {
       toast.error("Your event was not saved. Please try again.");
