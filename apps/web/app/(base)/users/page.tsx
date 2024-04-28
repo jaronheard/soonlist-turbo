@@ -14,7 +14,7 @@ import { UserInfo } from "~/components/UserInfo";
 import { api } from "~/trpc/server";
 
 export async function generateMetadata(
-  _unused = {},
+  {},
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const previousImages = (await parent).openGraph?.images || [];
