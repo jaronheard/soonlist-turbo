@@ -1,28 +1,19 @@
 "use client";
 
+import * as React from "react";
+import Image from "next/image";
+import Link from "next/link";
 import {
-  SignInButton,
   SignedIn,
   SignedOut,
+  SignInButton,
   useClerk,
   useUser,
 } from "@clerk/nextjs";
-import Link from "next/link";
-import Image from "next/image";
 import { CalendarPlus, Menu, Star } from "lucide-react";
-import * as React from "react";
 import { toast } from "sonner";
-import { Logo } from "./Logo";
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  navigationMenuTriggerStyle,
-  NavigationMenuContent,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "./ui/navigation-menu";
-import { Separator } from "./ui/separator";
+
+import { cn } from "~/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,11 +22,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./DropdownMenu";
+import { Logo } from "./Logo";
 import { TimezoneSelect } from "./TimezoneSelect";
 import { Button, buttonVariants } from "./ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "./ui/navigation-menu";
 import { ScrollArea } from "./ui/scroll-area";
-import { cn } from "~/lib/utils";
+import { Separator } from "./ui/separator";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 
 const newEvent: { title: string; href: string; description: string }[] = [
   {
@@ -188,9 +189,7 @@ export function Nav() {
         </NavigationMenuItem>
         <SignedOut>
           <NavigationMenuItem className="hidden lg:block">
-            <SignInButton
-              afterSignUpUrl={`${process.env.NEXT_PUBLIC_URL}/get-started`}
-            >
+            <SignInButton>
               <Button variant="secondary">Log In</Button>
             </SignInButton>
           </NavigationMenuItem>
@@ -249,15 +248,15 @@ const ListItem = React.forwardRef<
           ref={ref}
           href={href!}
           className={cn(
-            "hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors",
-            className
+            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+            className,
           )}
           {...props}
         >
-          <div className="text-foreground text-lg font-medium leading-none">
+          <div className="text-lg font-medium leading-none text-foreground">
             {title}
           </div>
-          <p className="text-muted-foreground line-clamp-3 text-lg leading-snug">
+          <p className="line-clamp-3 text-lg leading-snug text-muted-foreground">
             {children}
           </p>
         </Link>
@@ -426,7 +425,7 @@ export function MobileNav() {
                   >
                     {item.title}
                   </MobileLink>
-                )
+                ),
             )}
           </div>
           <div className="flex flex-col space-y-2">
@@ -452,9 +451,7 @@ export function MobileNav() {
           </div>
           <Separator className="my-3" />
           <SignedOut>
-            <SignInButton
-              afterSignUpUrl={`${process.env.NEXT_PUBLIC_URL}/get-started`}
-            >
+            <SignInButton>
               <Button
                 variant="secondary"
                 className="w-full"
@@ -515,7 +512,7 @@ function MobileLink({
           }}
           className={cn(
             className,
-            "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring text-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            "text-lg font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
           )}
           {...props}
         >
@@ -534,7 +531,7 @@ function MobileLink({
           }}
           className={cn(
             className,
-            "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring text-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            "text-lg font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
           )}
           {...props}
         >
@@ -551,7 +548,7 @@ function MobileLink({
       }}
       className={cn(
         className,
-        "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring text-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        "text-lg font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
       )}
       {...props}
     >

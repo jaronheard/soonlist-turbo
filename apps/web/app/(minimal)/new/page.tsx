@@ -1,17 +1,15 @@
 import { Suspense } from "react";
-import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { currentUser } from "@clerk/nextjs/server";
 import { X } from "lucide-react";
-import { ProgressStages } from "./ProgressStages";
-import { EventsFromRawText } from "./EventsFromRawText";
-import { EventsFromImage } from "./EventsFromImage";
-import { EventsFromSaved } from "./EventsFromSaved";
-import { ImageUpload } from "~/components/ImageUpload";
-import { YourDetails } from "~/components/YourDetails";
+
 import { AddEvent } from "~/app/(base)/AddEvent";
-import { api } from "~/trpc/server";
-import { Button } from "~/components/ui/button";
 import { Logo } from "~/components/Logo";
+import { Button } from "~/components/ui/button";
+import { api } from "~/trpc/server";
+import { EventsFromImage } from "./EventsFromImage";
+import { EventsFromRawText } from "./EventsFromRawText";
+import { ProgressStages } from "./ProgressStages";
 
 export const maxDuration = 60;
 
@@ -34,20 +32,6 @@ export default async function Page({ searchParams }: Props) {
       userName: username,
     }));
   const timezone = searchParams.timezone || "America/Los_Angeles";
-
-  // saved event
-  if (searchParams.saveIntent) {
-    return (
-      <Suspense>
-        <div className="flex w-full flex-col items-center gap-8">
-          <YourDetails lists={lists || undefined} />
-          <ImageUpload filePath={searchParams.filePath} />
-          <EventsFromSaved />
-        </div>
-      </Suspense>
-    );
-  }
-
   // image only
   if (searchParams.filePath && !searchParams.rawText) {
     return (

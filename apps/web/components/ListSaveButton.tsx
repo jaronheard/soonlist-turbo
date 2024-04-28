@@ -1,12 +1,13 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Loader2, Save } from "lucide-react";
+import { toast } from "sonner";
+
+import { api } from "~/trpc/react";
 import { Button } from "./ui/button";
 import { CardDescription } from "./ui/card";
-import { api } from "~/trpc/react";
 
 interface ListSaveButtonProps {
   name: string;
@@ -54,10 +55,7 @@ export function ListSaveButton(props: ListSaveButtonProps) {
       </SignedIn>
       <SignedOut>
         {/* TODO: Redirect somewhere meaningful */}
-        <SignInButton
-          afterSignInUrl={`${process.env.NEXT_PUBLIC_URL}/`}
-          afterSignUpUrl={`${process.env.NEXT_PUBLIC_URL}/get-started`}
-        >
+        <SignInButton>
           <Button>Sign in to save</Button>
         </SignInButton>
         <CardDescription className="italic">

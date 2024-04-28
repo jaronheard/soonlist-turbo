@@ -51,7 +51,7 @@
     "@trpc/react-query": "^10.45.0",
     "@trpc/server": "^10.45.0",
     "@vercel/speed-insights": "^1.0.5",
-    "add-to-calendar-button-react": "2.6.13",
+    "add-to-calendar-button-react": "^2.6.13",
     "ai": "^2.2.31",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
@@ -85,7 +85,6 @@
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
     "timezone-soft": "^1.5.2",
-    "use-local-storage": "^3.0.0",
     "uuid": "^9.0.1",
     "zod": "^3.22.4"
   },

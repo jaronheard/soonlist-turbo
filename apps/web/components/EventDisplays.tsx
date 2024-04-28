@@ -1,53 +1,57 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { SignedIn, useUser } from "@clerk/nextjs";
 import { useContext, useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { SignedIn, useUser } from "@clerk/nextjs";
 import {
+  Accessibility,
   ArrowRight,
   CalendarIcon,
+  Ear,
   EyeOff,
   GlobeIcon,
+  MessageSquareIcon,
   Mic,
   PersonStanding,
   ShieldPlus,
-  TagIcon,
-  Ear,
-  Accessibility,
   Sparkles,
-  MessageSquareIcon,
+  TagIcon,
 } from "lucide-react";
-import { DeleteButton } from "./DeleteButton";
-import { EditButton } from "./EditButton";
-import { CalendarButton } from "./CalendarButton";
-import { ShareButton } from "./ShareButton";
-import type {EventWithUser} from "./EventList";
-import { buttonVariants } from "./ui/button";
-import { Label } from "./ui/label";
-import type {AddToCalendarCardProps} from "./AddToCalendarCard";
-import { Badge } from "./ui/badge";
-import { PersonalNote } from "./PersonalNote";
-import { UserAllEventsCard } from "./UserAllEventsCard";
-import { ListCard } from "./ListCard";
-import { FollowEventButton } from "./FollowButtons";
-import { buildDefaultUrl } from "./ImageUpload";
-import type {User, EventFollow, Comment, List} from "~/server/db/types";
+
+import type { AddToCalendarCardProps } from "./AddToCalendarCard";
+import type { EventWithUser } from "./EventList";
+import type { EventMetadata as EventMetadataDisplay } from "~/lib/prompts";
+import type { SimilarityDetails } from "~/lib/similarEvents";
+import type { Comment, EventFollow, List, User } from "~/server/db/types";
+import type {
+  AddToCalendarButtonPropsRestricted,
+  ATCBActionEventConfig,
+} from "~/types";
+import { TimezoneContext } from "~/context/TimezoneContext";
+import { feedback } from "~/lib/intercom/intercom";
 import {
-  translateToHtml,
-  getDateInfoUTC,
   cn,
   // showMultipleDays,
   // endsNextDayBeforeMorning,
   eventTimesAreDefined,
+  getDateInfoUTC,
   getDateTimeInfo,
   timeFormatDateInfo,
+  translateToHtml,
 } from "~/lib/utils";
-import type {AddToCalendarButtonPropsRestricted} from "~/types";
-import type {SimilarityDetails} from "~/lib/similarEvents";
-import { TimezoneContext } from "~/context/TimezoneContext";
-import type {EventMetadata as EventMetadataDisplay} from "~/lib/prompts";
-import { feedback } from "~/lib/intercom/intercom";
+import { CalendarButton } from "./CalendarButton";
+import { DeleteButton } from "./DeleteButton";
+import { EditButton } from "./EditButton";
+import { FollowEventButton } from "./FollowButtons";
+import { buildDefaultUrl } from "./ImageUpload";
+import { ListCard } from "./ListCard";
+import { PersonalNote } from "./PersonalNote";
+import { ShareButton } from "./ShareButton";
+import { Badge } from "./ui/badge";
+import { buttonVariants } from "./ui/button";
+import { Label } from "./ui/label";
+import { UserAllEventsCard } from "./UserAllEventsCard";
 
 interface EventListItemProps {
   variant?: "card";
@@ -124,10 +128,10 @@ function EventDateDisplaySimple({
 
   return (
     <div className="flex flex-col items-center justify-center gap-3">
-      <div className="text-lg font-semibold uppercase leading-none text-neutral-2">
+      <div className="text-neutral-2 text-lg font-semibold uppercase leading-none">
         {startDateInfo?.monthName.substring(0, 3)}
       </div>
-      <div className="font-heading text-4xl font-bold leading-none tracking-tighter text-neutral-1">
+      <div className="font-heading text-neutral-1 text-4xl font-bold leading-none tracking-tighter">
         {startDateInfo?.day}
       </div>
     </div>
@@ -196,7 +200,7 @@ function EventDetailsCard({
       <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
         {isClient && eventTimesAreDefined(startTime, endTime) && (
           <>
-            <div className="flex-wrap text-neutral-2">
+            <div className="text-neutral-2 flex-wrap">
               {startDateInfo.dayOfWeek.substring(0, 3)}
               {", "}
               {startDateInfo.month}/{startDateInfo.day}/
@@ -213,7 +217,7 @@ function EventDetailsCard({
         <Link
           href={`/event/${id}`}
           className={
-            "line-clamp-3 pr-12 text-2xl font-bold leading-9 tracking-wide text-interactive-1"
+            "text-interactive-1 line-clamp-3 pr-12 text-2xl font-bold leading-9 tracking-wide"
           }
         >
           {name}
@@ -222,7 +226,7 @@ function EventDetailsCard({
           {location && (
             <Link
               href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-              className={"line-clamp-1 shrink break-all text-neutral-2"}
+              className={"text-neutral-2 line-clamp-1 shrink break-all"}
             >
               {location}
             </Link>
@@ -241,7 +245,7 @@ function EventAccessibility({ metadata }: { metadata?: EventMetadataDisplay }) {
         Accessibility
       </Label>
       <div
-        className="flex flex-wrap gap-1 text-sm capitalize text-neutral-1"
+        className="text-neutral-1 flex flex-wrap gap-1 text-sm capitalize"
         id="accessibility"
       >
         {(metadata?.accessibility?.length === 0 ||
@@ -321,7 +325,7 @@ function EventMetadataDisplay({
     performersCharacterLength && performersCharacterLength > 15;
 
   return (
-    <div className="relative -m-2 my-3 grid grid-cols-2 gap-x-1 gap-y-3 rounded-2xl border border-interactive-2 p-4 py-6 text-neutral-2 md:grid-cols-4">
+    <div className="border-interactive-2 text-neutral-2 relative -m-2 my-3 grid grid-cols-2 gap-x-1 gap-y-3 rounded-2xl border p-4 py-6 md:grid-cols-4">
       <Badge
         className="absolute -top-3 left-1/2 -translate-x-1/2 hover:cursor-pointer"
         variant={"secondary"}
@@ -345,7 +349,7 @@ function EventMetadataDisplay({
           <CalendarIcon className="mr-1.5 size-4" />
           Category
         </Label>
-        <p className="text-sm capitalize text-neutral-1" id="category">
+        <p className="text-neutral-1 text-sm capitalize" id="category">
           {metadata?.category}
         </p>
       </div>
@@ -354,7 +358,7 @@ function EventMetadataDisplay({
           <GlobeIcon className="mr-1.5 size-4" />
           Type
         </Label>
-        <p className="text-sm capitalize text-neutral-1" id="type">
+        <p className="text-neutral-1 text-sm capitalize" id="type">
           {metadata?.type}
         </p>
       </div>
@@ -363,7 +367,7 @@ function EventMetadataDisplay({
           <TagIcon className="mr-1.5 size-4" />
           Price
         </Label>
-        <p className="text-sm capitalize text-neutral-1" id="price">
+        <p className="text-neutral-1 text-sm capitalize" id="price">
           {`${showPrice ? priceText : ""}${showSpace ? ", " : ""}`}
           {showPriceType && (
             <div className="inline capitalize">{priceTypeText}</div>
@@ -375,7 +379,7 @@ function EventMetadataDisplay({
           <PersonStanding className="mr-1.5 size-4" />
           Ages
         </Label>
-        <p className="text-sm capitalize text-neutral-1" id="age-restriction">
+        <p className="text-neutral-1 text-sm capitalize" id="age-restriction">
           {metadata?.ageRestriction}
         </p>
       </div>
@@ -389,7 +393,7 @@ function EventMetadataDisplay({
           <Mic className="mr-1.5 size-4" />
           Performers
         </Label>
-        <p className="text-sm text-neutral-1" id="performers">
+        <p className="text-neutral-1 text-sm" id="performers">
           {metadata?.performers?.join(", ")}
         </p>
       </div>
@@ -484,7 +488,7 @@ function EventDetails({
       <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
         {isClient && eventTimesAreDefined(startTime, endTime) && (
           <>
-            <div className="flex-wrap text-neutral-2">
+            <div className="text-neutral-2 flex-wrap">
               {startDateInfo.dayOfWeek.substring(0, 3)}
               {", "}
               {startDateInfo.month}/{startDateInfo.day}/
@@ -501,7 +505,7 @@ function EventDetails({
         <Link
           href={preview ? "" : `/event/${id}`}
           className={
-            "line-clamp-3 pr-12 text-2.5xl font-bold leading-9 tracking-[0.56px] text-neutral-1"
+            "text-2.5xl text-neutral-1 line-clamp-3 pr-12 font-bold leading-9 tracking-[0.56px]"
           }
         >
           {name}
@@ -510,7 +514,7 @@ function EventDetails({
           {location && (
             <Link
               href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-              className={"line-clamp-1 shrink break-all text-neutral-2"}
+              className={"text-neutral-2 line-clamp-1 shrink break-all"}
             >
               {location}
             </Link>
@@ -536,11 +540,11 @@ function EventDetails({
             href={`/event/${id}`}
             className={cn(
               buttonVariants({ variant: "link" }),
-              "group h-full p-0"
+              "group h-full p-0",
             )}
           >
             Learn more{" "}
-            <ArrowRight className="ml-1 size-4 text-interactive-2 " />
+            <ArrowRight className="text-interactive-2 ml-1 size-4 " />
           </Link>
         )}
         {preview && (
@@ -566,7 +570,7 @@ function EventDescription({
 }) {
   return (
     <div
-      className={cn("text-lg leading-7 text-neutral-1", {
+      className={cn("text-neutral-1 text-lg leading-7", {
         "line-clamp-3": truncate,
       })}
     >
@@ -603,20 +607,20 @@ function EventActionButtons({
       <div className="flex grow items-center justify-between">
         {visibility !== "private" && (
           <Link
-            className="text-lg font-medium leading-none text-neutral-2"
+            className="text-neutral-2 text-lg font-medium leading-none"
             href={`/${user.username}/events`}
           >
             added by @{user.username}
           </Link>
         )}
         {visibility === "private" && (
-          <div className="text-lg font-medium leading-none text-neutral-1">
+          <div className="text-neutral-1 text-lg font-medium leading-none">
             <EyeOff className="mr-2 inline" /> Unlisted event
           </div>
         )}
         <Link
           href={`/${user.username}/events`}
-          className="box-content block size-[2.625rem] shrink-0 rounded-full border-4 border-accent-yellow"
+          className="border-accent-yellow box-content block size-[2.625rem] shrink-0 rounded-full border-4"
         >
           <Image
             className="rounded-full"
@@ -630,7 +634,7 @@ function EventActionButtons({
       <ShareButton type="icon" event={event} id={id} />
       <CalendarButton
         type="icon"
-        event={event}
+        event={event as ATCBActionEventConfig}
         id={id}
         username={user.username}
       />
@@ -677,8 +681,8 @@ export function EventListItem(props: EventListItemProps) {
         )}
         <li
           className={cn(
-            "relative grid overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
-            { "lg:pl-16": !!image }
+            "after:border-neutral-3 relative grid overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:shadow-sm",
+            { "lg:pl-16": !!image },
           )}
         >
           {/* {visibility === "private" && (
@@ -689,7 +693,7 @@ export function EventListItem(props: EventListItemProps) {
             <div className="p-1"></div>
           </>
         )} */}
-          <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
+          <div className="bg-interactive-3 absolute -right-24 -top-20 size-44 overflow-hidden rounded-full"></div>
           <div className="absolute right-0 top-0 p-3">
             <EventDateDisplaySimple
               startDate={event.startDate}
@@ -731,7 +735,7 @@ export function EventListItem(props: EventListItemProps) {
   return (
     <li
       className={cn(
-        "relative h-full overflow-hidden rounded-xl bg-white shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm"
+        "after:border-neutral-3 relative h-full overflow-hidden rounded-xl bg-white shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:shadow-sm",
       )}
     >
       {image && (
@@ -746,10 +750,10 @@ export function EventListItem(props: EventListItemProps) {
         </div>
       )}
       {!image && (
-        <div className="relative h-44 w-full grow bg-accent-yellow"></div>
+        <div className="bg-accent-yellow relative h-44 w-full grow"></div>
       )}
       <div className="relative overflow-hidden">
-        <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
+        <div className="bg-interactive-3 absolute -right-24 -top-20 size-44 overflow-hidden rounded-full"></div>
         <div className="absolute right-0 top-0 p-3">
           <EventDateDisplaySimple
             startDate={event.startDate}
@@ -781,17 +785,17 @@ export function EventListItem(props: EventListItemProps) {
 }
 
 export function EventPreview(
-  props: EventListItemProps & { event: AddToCalendarCardProps }
+  props: EventListItemProps & { event: AddToCalendarCardProps },
 ) {
   const { id, event } = props;
 
   return (
     <div
       className={cn(
-        "relative grid max-w-xl overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm"
+        "after:border-neutral-3 relative grid max-w-xl overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:shadow-sm",
       )}
     >
-      <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
+      <div className="bg-interactive-3 absolute -right-24 -top-20 size-44 overflow-hidden rounded-full"></div>
       <div className="absolute right-0 top-0 p-3">
         <EventDateDisplaySimple
           startDate={event.startDate}
@@ -839,15 +843,13 @@ export function EventPage(props: EventPageProps) {
     lists,
     eventMetadata,
   } = props;
-  console.log("eventMetadata", eventMetadata);
-  console.log("event", event);
   const roles = clerkUser?.unsafeMetadata.roles as string[] | undefined;
   const isSelf =
     clerkUser?.id === user?.id || clerkUser?.externalId === user?.id;
   const isOwner = isSelf || roles?.includes("admin");
   const isFollowing = !!eventFollows.find(
     (item) =>
-      clerkUser?.id === item.userId || clerkUser?.externalId === item.userId
+      clerkUser?.id === item.userId || clerkUser?.externalId === item.userId,
   );
   const comment = props.comments
     .filter((item) => user?.id === item.userId)
@@ -902,7 +904,7 @@ export function EventPage(props: EventPageProps) {
             <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
               {isClient && eventTimesAreDefined(startTime, endTime) && (
                 <>
-                  <div className="shrink-0 text-neutral-2">
+                  <div className="text-neutral-2 shrink-0">
                     {startDateInfo.dayOfWeek.substring(0, 3)}
                     {", "}
                     {startDateInfo.month}/{startDateInfo.day}/
@@ -922,7 +924,7 @@ export function EventPage(props: EventPageProps) {
               {location && (
                 <Link
                   href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-                  className={"line-clamp-1 shrink break-all text-neutral-2"}
+                  className={"text-neutral-2 line-clamp-1 shrink break-all"}
                 >
                   {location}
                 </Link>
@@ -960,7 +962,7 @@ export function EventPage(props: EventPageProps) {
                 <ShareButton type="button" event={event} id={id} />
                 <CalendarButton
                   type="button"
-                  event={event}
+                  event={event as ATCBActionEventConfig}
                   id={id}
                   username={user?.username}
                 />

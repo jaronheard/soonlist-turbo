@@ -1,12 +1,13 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+import { api } from "~/trpc/react";
 import { Button } from "./ui/button";
 import { CardDescription } from "./ui/card";
-import { api } from "~/trpc/react";
 
 interface ListUpdateButtonProps {
   id: string;
@@ -53,10 +54,7 @@ export function ListUpdateButton(props: ListUpdateButtonProps) {
       </SignedIn>
       <SignedOut>
         {/* TODO: Redirect somewhere meaningful */}
-        <SignInButton
-          afterSignInUrl={`${process.env.NEXT_PUBLIC_URL}/`}
-          afterSignUpUrl={`${process.env.NEXT_PUBLIC_URL}/get-started`}
-        >
+        <SignInButton>
           <Button>Sign in to update</Button>
         </SignInButton>
         <CardDescription className="italic">
