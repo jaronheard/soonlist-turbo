@@ -384,6 +384,12 @@ importers:
         specifier: ^3.22.4
         version: 3.23.4
     devDependencies:
+      '@clerk/clerk-sdk-node':
+        specifier: ^5.0.2
+        version: 5.0.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@soonlist/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
       '@soonlist/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -1331,6 +1337,10 @@ packages:
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
+
+  '@clerk/clerk-sdk-node@5.0.2':
+    resolution: {integrity: sha512-qeW3W3mQoaEvMPZ/d+IPyEly1OnVVBjewUPJQzmVNHKJKdXxrJRnYI5UieEjigveCIkrh1hR5ydN9GdazYvP7A==}
+    engines: {node: '>=18.17.0'}
 
   '@clerk/localizations@2.2.0':
     resolution: {integrity: sha512-QTcvHl1Uhe0AfKQQb+rs88RHte96GXIvDUzBk1fwhb3qOdzBlITTq6RsJV2GYRzJWB6MiAHdmae1cusCGLmYBQ==}
@@ -9244,6 +9254,15 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
       - typescript
+
+  '@clerk/clerk-sdk-node@5.0.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
+    dependencies:
+      '@clerk/backend': 1.1.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@clerk/shared': 2.0.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      tslib: 2.4.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
 
   '@clerk/localizations@2.2.0': {}
 

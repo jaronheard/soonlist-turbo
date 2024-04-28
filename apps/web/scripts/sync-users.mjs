@@ -3,11 +3,15 @@ import "dotenv/config";
 // Import the necessary libraries
 import crypto from "crypto";
 import fs from "fs";
-import { Clerk } from "@clerk/clerk-sdk-node";
+import { createClerkClient } from "@clerk/clerk-sdk-node";
 
 // Set up Clerk client with your Clerk Backend API key
-const clerkProd = Clerk({ secretKey: process.env.CLERK_SECRET_KEY_PROD });
-const clerkDev = Clerk({ secretKey: process.env.CLERK_SECRET_KEY_DEV });
+const clerkProd = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY_PROD,
+});
+const clerkDev = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY_DEV,
+});
 
 async function getClerkUsersProd() {
   try {
@@ -40,6 +44,9 @@ async function deleteAllClerkUsersDev() {
   }
 }
 
+/**
+ * @param {string | any[]} users
+ */
 async function saveUsersToFile(users) {
   try {
     const usersJson = JSON.stringify(users);
@@ -51,13 +58,16 @@ async function saveUsersToFile(users) {
   }
 }
 
+/**
+ * @param {import("@clerk/clerk-sdk-node").User[]} users
+ */
 async function addUsersDev(users) {
   let addedUserCount = 0; // Initialize as let to increment it.
   try {
     for (const user of users) {
       const hasPhoneNumber = user.phoneNumbers.length > 0;
       const phoneNumbers = hasPhoneNumber
-        ? [user.phoneNumbers[0].phoneNumber]
+        ? [user.phoneNumbers[0]?.phoneNumber || ""]
         : undefined;
 
       const userToCreate = {

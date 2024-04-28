@@ -1,13 +1,14 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
-import type {AddToCalendarButtonType} from "add-to-calendar-button-react";
+import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Loader2, UploadCloud } from "lucide-react";
-import { Button } from "./ui/button";
+import { toast } from "sonner";
+
+import type { EventMetadataLoose } from "~/lib/prompts";
 import { api } from "~/trpc/react";
-import type {EventMetadataLoose} from "~/lib/prompts";
+import { Button } from "./ui/button";
 
 interface SaveButtonProps {
   event: AddToCalendarButtonType;
@@ -61,10 +62,7 @@ export function SaveButton(props: SaveButtonProps) {
       </SignedIn>
       <SignedOut>
         {/* TODO: instead convert from the AddToCalendarButtonProps */}
-        <SignInButton
-          afterSignInUrl={`${process.env.NEXT_PUBLIC_URL}/new?saveIntent=true&filePath=${filePath}`}
-          afterSignUpUrl={`${process.env.NEXT_PUBLIC_URL}/new?saveIntent=true&filePath=${filePath}`}
-        >
+        <SignInButton>
           <Button
             onClick={() => {
               console.log("props", props);

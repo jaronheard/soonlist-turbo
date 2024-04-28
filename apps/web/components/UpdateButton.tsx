@@ -1,15 +1,16 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
-import type {AddToCalendarButtonType} from "add-to-calendar-button-react";
+import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Loader2, Save } from "lucide-react";
-import { Button } from "./ui/button";
+import { toast } from "sonner";
+
+import type { EventMetadataLoose } from "~/lib/prompts";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import { api } from "~/trpc/react";
-import type {EventMetadataLoose} from "~/lib/prompts";
+import { Button } from "./ui/button";
 
 interface UpdateButtonProps {
   event: AddToCalendarButtonType;
@@ -71,10 +72,7 @@ export function UpdateButton(props: UpdateButtonProps) {
       </SignedIn>
       <SignedOut>
         {/* TODO: Does this show up anywhere? */}
-        <SignInButton
-          afterSignInUrl={`${process.env.NEXT_PUBLIC_URL}/`}
-          afterSignUpUrl={`${process.env.NEXT_PUBLIC_URL}/get-started`}
-        >
+        <SignInButton>
           <Button>Sign in to update</Button>
         </SignInButton>
       </SignedOut>

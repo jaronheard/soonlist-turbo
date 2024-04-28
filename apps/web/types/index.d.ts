@@ -1,21 +1,23 @@
 export interface AddToCalendarButtonPropsBase {
   proKey?: string;
   name?: string;
-  dates?: {
-    name?: string;
-    description?: string;
-    startDate?: string;
-    startTime?: string;
-    endDate?: string;
-    endTime?: string;
-    timeZone?: string;
-    location?: string;
-    status?: "TENTATIVE" | "CONFIRMED" | "CANCELLED";
-    sequence?: number;
-    uid?: string;
-    organizer?: string;
-    attendee?: string;
-  }[];
+  dates?:
+    | {
+        name?: string;
+        description?: string;
+        startDate?: string;
+        startTime?: string;
+        endDate?: string;
+        endTime?: string;
+        timeZone?: string;
+        location?: string;
+        status?: "TENTATIVE" | "CONFIRMED" | "CANCELLED";
+        sequence?: number | string;
+        uid?: string;
+        organizer?: string;
+        attendee?: string;
+      }[]
+    | string;
   description?: string;
   startDate?: string;
   startTime?: string;
@@ -24,16 +26,16 @@ export interface AddToCalendarButtonPropsBase {
   timeZone?: string;
   location?: string;
   status?: "TENTATIVE" | "CONFIRMED" | "CANCELLED";
-  sequence?: number;
+  sequence?: number | string;
   uid?: string;
   organizer?: string;
   attendee?: string;
   icsFile?: string;
   images?: string[] | string;
   recurrence?: string;
-  recurrence_interval?: number;
+  recurrence_interval?: number | string;
   recurrence_until?: string;
-  recurrence_count?: number;
+  recurrence_count?: number | string;
   recurrence_byDay?: string;
   recurrence_byMonth?: string;
   recurrence_byMonthDay?: string;
@@ -42,16 +44,18 @@ export interface AddToCalendarButtonPropsBase {
   created?: string;
   updated?: string;
   identifier?: string;
-  subscribe?: boolean;
-  options?: (
-    | "Apple"
-    | "Google"
-    | "iCal"
-    | "Microsoft365"
-    | "MicrosoftTeams"
-    | "Outlook.com"
-    | "Yahoo"
-  )[];
+  subscribe?: boolean | string;
+  options?:
+    | (
+        | "Apple"
+        | "Google"
+        | "iCal"
+        | "Microsoft365"
+        | "MicrosoftTeams"
+        | "Outlook.com"
+        | "Yahoo"
+      )[]
+    | string;
   iCalFileName?: string;
   buttonStyle?:
     | "default"
@@ -64,17 +68,17 @@ export interface AddToCalendarButtonPropsBase {
     | "custom"
     | "none";
   trigger?: "hover" | "click";
-  inline?: boolean;
-  buttonsList?: boolean;
-  hideIconButton?: boolean;
-  hideIconList?: boolean;
-  hideIconModal?: boolean;
-  hideTextLabelButton?: boolean;
-  hideTextLabelList?: boolean;
-  hideBackground?: boolean;
-  hideCheckmark?: boolean;
-  hideBranding?: boolean;
-  hideButton?: boolean;
+  inline?: boolean | string;
+  buttonsList?: boolean | string;
+  hideIconButton?: boolean | string;
+  hideIconList?: boolean | string;
+  hideIconModal?: boolean | string;
+  hideTextLabelButton?: boolean | string;
+  hideTextLabelList?: boolean | string;
+  hideBackground?: boolean | string;
+  hideCheckmark?: boolean | string;
+  hideBranding?: boolean | string;
+  hideButton?: boolean | string;
   size?: string;
   label?: string;
   inlineRsvp?: string;
@@ -105,20 +109,20 @@ export interface AddToCalendarButtonPropsBase {
     | "it"
     | "ko"
     | "vi";
-  hideRichData?: boolean;
+  hideRichData?: boolean | string;
   ty?: object;
   rsvp?: object;
-  bypassWebViewCheck?: boolean;
-  debug?: boolean;
+  bypassWebViewCheck?: boolean | string;
+  debug?: boolean | string;
   cspnonce?: string;
-  blockInteraction?: boolean;
+  blockInteraction?: boolean | string;
   styleLight?: string;
   styleDark?: string;
-  disabled?: boolean;
-  hidden?: boolean;
+  disabled?: boolean | string;
+  hidden?: boolean | string;
   pastDateHandling?: string;
-  proxy?: boolean;
-  forceOverlay?: boolean;
+  proxy?: boolean | string;
+  forceOverlay?: boolean | string;
 }
 
 export type AddToCalendarButtonProps = AddToCalendarButtonPropsBase & {

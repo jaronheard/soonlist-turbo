@@ -90,6 +90,8 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@clerk/clerk-sdk-node": "^5.0.2",
+    "@soonlist/eslint-config": "workspace:*",
     "@soonlist/tsconfig": "workspace:*",
     "@tailwindcss/typography": "^0.5.10",
     "@types/node": "20.12.7",

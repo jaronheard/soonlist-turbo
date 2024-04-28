@@ -93,6 +93,7 @@ const _uploadImage = async (
         xhr.onload = function () {
           const blob = new Blob([xhr.response], {
             type: `image/${mimeTypeExtension}`,
+            lastModified: Date.now(),
           });
           resolve(blob);
         };
@@ -184,7 +185,7 @@ export default function App() {
         setState((prev) => ({ ...prev, textFromImage: text })),
       );
       setState((prev) => ({ ...prev, uploading: true }));
-      _uploadImage(file.path, state.path, mimeTypeExtension).then(() =>
+      _uploadImage(file.path, state.path, mimeTypeExtension || "jpg").then(() =>
         setState((prev) => ({ ...prev, uploading: false })),
       );
     }
