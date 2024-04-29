@@ -127,6 +127,6 @@ export default {
         "hyphens-auto": "auto",
       },
     },
-    plugins: [tailwindcssAnimate, tailwindTypography],
   },
+  plugins: [tailwindcssAnimate, tailwindTypography],
 } satisfies Config;
