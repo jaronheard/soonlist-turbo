@@ -1,9 +1,10 @@
 import Image from "next/image";
+
+import type { AddToCalendarButtonPropsRestricted } from "~/types";
+import { api } from "~/trpc/server";
 import { EventListItem } from "./EventDisplays";
 import { ListCard } from "./ListCard";
 import { UserAllEventsCard } from "./UserAllEventsCard";
-import { api } from "~/trpc/server";
-import type {AddToCalendarButtonPropsRestricted} from "~/types";
 
 export async function SampleEvent({ eventId }: { eventId: string }) {
   const event = await api.event.get.query({
@@ -11,6 +12,10 @@ export async function SampleEvent({ eventId }: { eventId: string }) {
   });
 
   const eventData = event?.event as AddToCalendarButtonPropsRestricted;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!eventData) {
+    return null;
+  }
   const fullImageUrl = eventData.images?.[3];
   const eventDataNoImage = event?.event as AddToCalendarButtonPropsRestricted;
   eventDataNoImage.images = undefined;
@@ -23,7 +28,7 @@ export async function SampleEvent({ eventId }: { eventId: string }) {
   return (
     <div className="flex flex-row gap-8 lg:flex-row">
       <div className="hidden flex-col items-center lg:flex">
-        <div className="relative size-24 overflow-hidden rounded-xl border-[6px] border-accent-yellow lg:size-44">
+        <div className="border-accent-yellow relative size-24 overflow-hidden rounded-xl border-[6px] lg:size-44">
           <Image
             src={fullImageUrl!}
             fill
@@ -53,7 +58,7 @@ export async function SampleEvent({ eventId }: { eventId: string }) {
         )}
         <div className="pt-6 lg:hidden"></div>
         <div className="flex items-center lg:hidden">
-          <div className="relative size-24 overflow-hidden rounded-xl border-[6px] border-accent-yellow lg:size-44">
+          <div className="border-accent-yellow relative size-24 overflow-hidden rounded-xl border-[6px] lg:size-44">
             <Image
               src={fullImageUrl!}
               fill
