@@ -59,7 +59,7 @@ export function Output({
                   setAddToCalendarButtonProps={(
                     props: AddToCalendarButtonType,
                   ) => {
-                    const newArray = [blankEvents[0]];
+                    const newArray = [blankEvent];
                     newArray[index] = props;
                     setEvents(newArray);
                   }}
