@@ -1,10 +1,12 @@
 "use client";
 
-import { SignedIn, useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { SignedIn, useUser } from "@clerk/nextjs";
 import { Pencil } from "lucide-react";
+
+import { Button } from "@soonlist/ui/button";
+
 import { DropdownMenuItem } from "./DropdownMenu";
-import { Button } from "./ui/button";
 
 export interface EditButtonProps {
   userId: string;

@@ -1,4 +1,4 @@
-// import { Badge } from "./ui/badge";
+// import { Badge } from "@soonlist/ui/badge";
 // import { api } from "~/trpc/server";
 
 // export default async function Leaderboard() {

@@ -7,7 +7,16 @@ import { PenSquare, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@soonlist/ui/dialog";
 import {
   Form,
   FormControl,
@@ -30,15 +39,6 @@ import { Textarea } from "@soonlist/ui/textarea";
 import type { List } from "~/server/db/types";
 import { useNewEventContext } from "~/context/NewEventContext";
 import { AddListCard } from "./AddListCard";
-import { Button } from "./ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
 
 export const organizeFormSchema = z.object({
   notes: z.string().optional(),

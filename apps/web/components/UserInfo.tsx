@@ -2,9 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { Instagram, LinkIcon, Mail, MessageSquare } from "lucide-react";
-import { FollowUserButton } from "./FollowButtons";
-import { Button, buttonVariants } from "./ui/button";
+
+import { Button, buttonVariants } from "@soonlist/ui/button";
+
 import { api } from "~/trpc/server";
+import { FollowUserButton } from "./FollowButtons";
 
 const SAMPLE_BIO = `I haven't written a bio yet... you'll have to find me at one of my events!`;
 
@@ -51,7 +53,7 @@ export async function UserInfo(props: UserInfoProps) {
     return (
       <Link href={`/${user.username}/events`} className="group">
         <Image
-          className="size-[2.625rem] rounded-full border-8 border-accent-yellow"
+          className="border-accent-yellow size-[2.625rem] rounded-full border-8"
           src={user.userImage}
           alt=""
           width={375}
@@ -67,7 +69,7 @@ export async function UserInfo(props: UserInfoProps) {
         <div className="flex gap-6">
           <Link href={`/${user.username}/events`}>
             <Image
-              className="content-box size-20 rounded-full border-8 border-accent-yellow"
+              className="content-box border-accent-yellow size-20 rounded-full border-8"
               src={user.userImage}
               alt=""
               width={375}
@@ -76,7 +78,7 @@ export async function UserInfo(props: UserInfoProps) {
           </Link>
           <div className="flex flex-col">
             <Link href={`/${user.username}/events`}>
-              <p className="font-heading text-5xl font-bold leading-[3.5rem] tracking-tight text-neutral-1">
+              <p className="font-heading text-neutral-1 text-5xl font-bold leading-[3.5rem] tracking-tight">
                 {user.displayName}
               </p>
               <p className="text-2xl font-bold leading-normal tracking-wide">
@@ -119,7 +121,7 @@ export async function UserInfo(props: UserInfoProps) {
             </a>
           )}
         </div>
-        <div className="text-2xl text-neutral-2">{user.bio || SAMPLE_BIO}</div>
+        <div className="text-neutral-2 text-2xl">{user.bio || SAMPLE_BIO}</div>
         {self && (
           <Button size={"sm"} asChild>
             <Link href={`/get-started`}>Edit Profile</Link>

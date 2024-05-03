@@ -13,6 +13,20 @@ import {
 import { CalendarPlus, Menu, Star } from "lucide-react";
 import { toast } from "sonner";
 
+import { Button, buttonVariants } from "@soonlist/ui/button";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@soonlist/ui/navigation-menu";
+import { ScrollArea } from "@soonlist/ui/scroll-area";
+import { Separator } from "@soonlist/ui/separator";
+import { Sheet, SheetContent, SheetTrigger } from "@soonlist/ui/sheet";
+
 import { cn } from "~/lib/utils";
 import {
   DropdownMenu,
@@ -24,19 +38,6 @@ import {
 } from "./DropdownMenu";
 import { Logo } from "./Logo";
 import { TimezoneSelect } from "./TimezoneSelect";
-import { Button, buttonVariants } from "./ui/button";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "./ui/navigation-menu";
-import { ScrollArea } from "./ui/scroll-area";
-import { Separator } from "./ui/separator";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 
 const newEvent: { title: string; href: string; description: string }[] = [
   {

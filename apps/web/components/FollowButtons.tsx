@@ -1,12 +1,14 @@
 "use client";
 
-import { SignedIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { SignedIn } from "@clerk/nextjs";
 import { Check, Loader2, Plus } from "lucide-react";
-import { Button } from "./ui/button";
-import { DropdownMenuItem } from "./DropdownMenu";
+import { toast } from "sonner";
+
+import { Button } from "@soonlist/ui/button";
+
 import { api } from "~/trpc/react";
+import { DropdownMenuItem } from "./DropdownMenu";
 
 export function FollowEventDropdownButton({
   eventId,

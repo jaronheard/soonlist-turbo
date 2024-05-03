@@ -5,9 +5,10 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { Button } from "@soonlist/ui/button";
+import { CardDescription } from "@soonlist/ui/card";
+
 import { api } from "~/trpc/react";
-import { Button } from "./ui/button";
-import { CardDescription } from "./ui/card";
 
 interface ListUpdateButtonProps {
   id: string;

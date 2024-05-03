@@ -1,8 +1,9 @@
 import { Loader2, Text } from "lucide-react";
-import { InputDescription } from "./ui/input";
-import { Card, CardContent, CardTitle } from "./ui/card";
-import { Skeleton } from "./ui/skeleton";
-import { Label } from "./ui/label";
+
+import { Card, CardContent, CardTitle } from "@soonlist/ui/card";
+import { InputDescription } from "@soonlist/ui/input";
+import { Label } from "@soonlist/ui/label";
+import { Skeleton } from "@soonlist/ui/skeleton";
 
 export function AddToCalendarCardSkeleton() {
   return (

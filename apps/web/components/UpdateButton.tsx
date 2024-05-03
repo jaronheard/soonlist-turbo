@@ -6,11 +6,12 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 
+import { Button } from "@soonlist/ui/button";
+
 import type { EventMetadataLoose } from "~/lib/prompts";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import { api } from "~/trpc/react";
-import { Button } from "./ui/button";
 
 interface UpdateButtonProps {
   event: AddToCalendarButtonType;
