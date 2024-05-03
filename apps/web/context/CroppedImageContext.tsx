@@ -1,12 +1,7 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState
-  
-} from "react";
-import type {ReactNode} from "react";
+import type { ReactNode } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 interface CroppedImagesUrls {
   original?: string;
@@ -36,7 +31,7 @@ const CroppedImageContext =
 // Create a provider component
 export const CroppedImageProvider = ({ children }: { children: ReactNode }) => {
   const [croppedImagesUrls, setCroppedImagesUrls] = useState<CroppedImagesUrls>(
-    {}
+    {},
   );
 
   return (

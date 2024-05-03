@@ -43,9 +43,7 @@ const PROGRESS_TEXTS = [
 ];
 
 export function EventLoadingText() {
-  const [loadingText, setLoadingText] = useState(
-    "Moments away..."
-  );
+  const [loadingText, setLoadingText] = useState("Moments away...");
   const [randomLoadingText, setRandomLoadingText] = useState("");
 
   useEffect(() => {
@@ -66,8 +64,8 @@ export function EventLoadingText() {
 
   return (
     <div className="text-center">
-      <p className="font-semibold text-neutral-1">🪄 {randomLoadingText} ✨</p>
-      <p className="text-sm text-neutral-2">{loadingText}</p>
+      <p className="text-neutral-1 font-semibold">🪄 {randomLoadingText} ✨</p>
+      <p className="text-neutral-2 text-sm">{loadingText}</p>
     </div>
   );
 }

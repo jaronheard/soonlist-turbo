@@ -1,5 +1,5 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 
 export function UserAllEventsCard(props: {
   username: string;
@@ -10,7 +10,7 @@ export function UserAllEventsCard(props: {
   return (
     <Link
       href={`/${username}/events`}
-      className="item-center flex overflow-hidden rounded-xl border-[5px] border-accent-yellow bg-interactive-2"
+      className="item-center border-accent-yellow bg-interactive-2 flex overflow-hidden rounded-xl border-[5px]"
     >
       <Image
         src={userImage}
@@ -20,12 +20,12 @@ export function UserAllEventsCard(props: {
         className="size-[5.375rem]"
       />
       <div className="flex flex-col gap-1 p-5">
-        <div className="text-xl font-bold leading-6 tracking-wide text-interactive-1">
+        <div className="text-interactive-1 text-xl font-bold leading-6 tracking-wide">
           All Events
         </div>
-        <div className="text-lg font-medium leading-none text-neutral-2">
+        <div className="text-neutral-2 text-lg font-medium leading-none">
           by{" "}
-          <span className="font-semibold text-interactive-1">@{username}</span>
+          <span className="text-interactive-1 font-semibold">@{username}</span>
         </div>
       </div>
     </Link>

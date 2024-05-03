@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+
 import { AddListCard } from "~/components/AddListCard";
 
 export default function Page() {

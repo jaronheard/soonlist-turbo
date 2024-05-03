@@ -1,10 +1,10 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect  } from "react";
-import type {ReactNode} from "react";
-
 import { useUser } from "@clerk/nextjs";
+
 import {
   boot as bootIntercom,
   load as loadIntercom,

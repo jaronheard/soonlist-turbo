@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, {
-  useState,
-  createContext,
-  
-  useContext
-} from "react";
-import type {ReactNode} from "react";
+import type { ReactNode } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 // Define the type of the context state
 export enum Mode {
