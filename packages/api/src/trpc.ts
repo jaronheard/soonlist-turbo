@@ -36,7 +36,7 @@ interface AuthContextProps {
   user: User | null;
 }
 
-export const createContextInner = async ({ auth, user }: AuthContextProps) => {
+export const createContextInner = ({ auth, user }: AuthContextProps) => {
   // const session = getAuth(opts)
 
   const externalId = auth.sessionClaims?.externalId as string | undefined;
@@ -61,7 +61,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   console.log(">>> tRPC Request from", source);
   const user = await currentUser();
 
-  return await createContextInner({
+  return createContextInner({
     auth: auth(),
     user: user,
   });
@@ -120,7 +120,7 @@ export const publicProcedure = t.procedure;
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
+export const protectedProcedure = t.procedure.use(async ({ next }) => {
   console.log("TRPC Protected: ");
   const session = auth();
   const user = await currentUser();

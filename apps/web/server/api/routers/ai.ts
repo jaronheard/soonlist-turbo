@@ -5,7 +5,8 @@ import {
   addCommonAddToCalendarPropsFromResponse,
   getPrompt,
   getSystemMessage,
-} from "~/lib/prompts";
+} from "@soonlist/cal";
+
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 // Create an OpenAI API client (that's edge friendly!)
