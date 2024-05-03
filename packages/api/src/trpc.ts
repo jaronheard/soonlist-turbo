@@ -6,11 +6,11 @@
  * tl;dr - this is where all the tRPC server stuff is created and plugged in.
  * The pieces you will need to use are documented accordingly near the end
  */
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import type { Session } from "@soonlist/auth";
 import { db } from "@soonlist/db";
 
 /**
@@ -25,17 +25,12 @@ import { db } from "@soonlist/db";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = (opts: {
-  headers: Headers;
-  session: Session | null;
-}) => {
-  const session = opts.session;
+export const createTRPCContext = (opts: { headers: Headers }) => {
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
 
-  console.log(">>> tRPC Request from", source, "by", session?.user);
+  console.log(">>> tRPC Request from", source);
 
   return {
-    session,
     db,
   };
 };
@@ -93,14 +88,24 @@ export const publicProcedure = t.procedure;
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.session?.user) {
+export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
+  console.log("TRPC Protected: ");
+  const session = auth();
+  const user = await currentUser();
+  if (!user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
+
+  const externalId = session.sessionClaims?.externalId as string | undefined;
+  // const authToUse = externalId ? { ...session, userId: externalId } : session;
+  const userToUse = { ...user };
+  if (externalId) {
+    userToUse.id = externalId;
+  }
+
   return next({
     ctx: {
-      // infers the `session` as non-nullable
-      session: { ...ctx.session, user: ctx.session.user },
+      user: user,
     },
   });
 });
