@@ -7,6 +7,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
+    },
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "default": "./src/schema.ts"
+    },
+    "./types": {
+      "types": "./dist/schema/types.d.ts",
+      "default": "./src/schema/types.ts"
     }
   },
   "license": "MIT",
