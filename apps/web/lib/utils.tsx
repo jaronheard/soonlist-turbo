@@ -90,10 +90,6 @@ export function extractFilePath(url: string) {
   return match ? match[0] : "";
 }
 
-export function filterDuplicates<T extends { id: unknown }>(objects: T[]): T[] {
-  return Array.from(new Map(objects.map((obj) => [obj.id, obj])).values());
-}
-
 export function valueToOption(value: string): { value: string; label: string } {
   return { value, label: value };
 }
