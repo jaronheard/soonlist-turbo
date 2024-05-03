@@ -1,3 +1,5 @@
+import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowRight,
   Calendar,
@@ -7,10 +9,10 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+
+import { buttonVariants } from "@soonlist/ui/button";
+
 import { CTAButton } from "~/components/CallToActions";
-import { buttonVariants } from "~/components/ui/button";
 import { SampleEvent } from "~/components/SampleEvent";
 import { SampleList } from "~/components/SampleList";
 

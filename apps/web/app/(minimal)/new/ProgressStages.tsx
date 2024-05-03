@@ -1,25 +1,27 @@
 "use client";
 
+import type { SubmitHandler } from "react-hook-form";
+import type { z } from "zod";
 import { useState } from "react";
-import {  useForm } from "react-hook-form";
-import type {SubmitHandler} from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type {z} from "zod";
-import { ChevronLeft, X } from "lucide-react";
 import Link from "next/link";
-import { Organize } from "./Organize";
-import { NewEventFooterButtons } from "./NewEventFooterButtons";
-import { ImageCropperSmall } from "./ImageCropperSmall";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ChevronLeft, X } from "lucide-react";
+import { useForm } from "react-hook-form";
+
+import { Button } from "@soonlist/ui/button";
+
+import type { List } from "~/server/db/types";
+import { Logo } from "~/components/Logo";
 import { organizeFormSchema } from "~/components/YourDetails";
+import { useNewEventContext } from "~/context/NewEventContext";
 import {
   Status,
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
-import type {List} from "~/server/db/types";
-import { useNewEventContext } from "~/context/NewEventContext";
-import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
-import { Logo } from "~/components/Logo";
+import { ImageCropperSmall } from "./ImageCropperSmall";
+import { NewEventFooterButtons } from "./NewEventFooterButtons";
+import { Organize } from "./Organize";
 
 function ProgressStagesWrapper({
   filePath,
@@ -60,7 +62,7 @@ function ProgressStagesWrapper({
         <button
           className={cn("relative z-30 origin-top", {
             "scale-50 hover:opacity-60": !showCropActions,
-            "bg-secondary -mt-2 pt-2 px-4 pb-4 rounded-b-2xl": showCropActions,
+            "-mt-2 rounded-b-2xl bg-secondary px-4 pb-4 pt-2": showCropActions,
           })}
           onClick={() => {
             !showCropActions && setShowCropActions(true);
@@ -106,7 +108,7 @@ export function ProgressStages({
   });
 
   const onSubmit: SubmitHandler<z.infer<typeof organizeFormSchema>> = (
-    data
+    data,
   ) => {
     setOrganizeData(data);
     goToNextStatus();

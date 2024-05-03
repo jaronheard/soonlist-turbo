@@ -10,7 +10,7 @@ import { UserInfo } from "~/components/UserInfo";
 //   CardTitle,
 //   CardDescription,
 //   CardContent,
-// } from "~/components/ui/card";
+// } from "@soonlist/ui/card";
 import { api } from "~/trpc/server";
 
 export async function generateMetadata(

@@ -2,9 +2,10 @@ import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { X } from "lucide-react";
 
+import { Button } from "@soonlist/ui/button";
+
 import { AddEvent } from "~/app/(base)/AddEvent";
 import { Logo } from "~/components/Logo";
-import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/server";
 import { EventsFromImage } from "./EventsFromImage";
 import { EventsFromRawText } from "./EventsFromRawText";

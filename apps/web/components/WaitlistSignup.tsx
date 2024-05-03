@@ -1,12 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ClipboardList } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 
-import { toast } from "sonner";
-import { ClipboardList } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import { Button } from "@soonlist/ui/button";
 import {
   Form,
   FormControl,
@@ -15,8 +15,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
+} from "@soonlist/ui/form";
+import { Input } from "@soonlist/ui/input";
+
 import { api } from "~/trpc/react";
 
 const formSchema = z.object({

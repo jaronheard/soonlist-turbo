@@ -1,14 +1,16 @@
 import React from "react";
-import { CheckCircleIcon, CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import Link from "next/link";
-import { CTAButton } from "~/components/CallToActions";
+import { CheckCircleIcon, CurrencyDollarIcon } from "@heroicons/react/20/solid";
+
+import { Button } from "@soonlist/ui/button";
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "~/components/Accordian";
-import { Button } from "~/components/ui/button";
+import { CTAButton } from "~/components/CallToActions";
 import { ContactUs } from "~/components/ContactUs";
 
 export const metadata = {

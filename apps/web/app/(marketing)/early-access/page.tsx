@@ -1,6 +1,5 @@
-import { Button } from "~/components/ui/button";
+import { Button } from "@soonlist/ui/button";
 
- 
 export const metadata = {
   title: "Early Access | Soonlist",
   openGraph: {
