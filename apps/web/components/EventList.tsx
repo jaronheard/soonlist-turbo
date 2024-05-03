@@ -1,8 +1,9 @@
 import { clsx } from "clsx";
 
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { Comment, Event, EventFollow, User } from "@soonlist/db/types";
+import { collapseSimilarEvents } from "@soonlist/cal";
 
-import type { AddToCalendarButtonPropsRestricted } from "~/types";
 import {
   Accordion,
   AccordionContent,
@@ -10,7 +11,6 @@ import {
   AccordionTrigger,
 } from "~/components/Accordian";
 import { EventListItem } from "~/components/EventDisplays";
-import { collapseSimilarEvents } from "~/lib/similarEvents";
 
 function ListContainer({
   children,

@@ -6,6 +6,7 @@ import { useUser } from "@clerk/nextjs";
 import { Shapes, Text } from "lucide-react";
 
 import type { EventMetadata } from "@soonlist/cal";
+import type { ATCBActionEventConfig } from "@soonlist/cal/types";
 import {
   ACCESSIBILITY_TYPES_OPTIONS,
   EVENT_CATEGORIES,
@@ -28,7 +29,6 @@ import {
 } from "@soonlist/ui/select";
 import { Textarea } from "@soonlist/ui/textarea";
 
-import type { ATCBActionEventConfig } from "~/types";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import { feedback } from "~/lib/intercom/intercom";

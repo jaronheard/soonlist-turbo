@@ -1,6 +1,6 @@
 import type { EventMetadata } from "@soonlist/cal";
+import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 
-import type { AddToCalendarButtonProps } from "~/types";
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
 import { ImageUpload } from "~/components/ImageUpload";
 import { UserInfo } from "~/components/UserInfo";

@@ -1,12 +1,13 @@
 "use client";
 
-import { EventsError } from "./EventsError";
-import { EventPreviewLoadingSpinner } from "./EventPreviewLoadingSpinner";
-import { NewEventPreview } from "./NewEventPreview";
+import { blankEvent } from "@soonlist/cal";
+
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
-import { blankEvent } from "~/lib/utils";
 import { buildDefaultUrl } from "~/components/ImageUpload";
 import { api } from "~/trpc/react";
+import { EventPreviewLoadingSpinner } from "./EventPreviewLoadingSpinner";
+import { EventsError } from "./EventsError";
+import { NewEventPreview } from "./NewEventPreview";
 
 const queryOptions = {
   // don't refetch on mount, window focus, or reconnect
@@ -29,7 +30,7 @@ export function EventsFromImage({
       imageUrl: buildDefaultUrl(filePath),
       timezone,
     },
-    queryOptions
+    queryOptions,
   );
 
   const { events, response } = fromImage.data ?? {};

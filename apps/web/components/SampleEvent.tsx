@@ -1,6 +1,7 @@
 import Image from "next/image";
 
-import type { AddToCalendarButtonPropsRestricted } from "~/types";
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+
 import { api } from "~/trpc/server";
 import { EventListItem } from "./EventDisplays";
 import { ListCard } from "./ListCard";

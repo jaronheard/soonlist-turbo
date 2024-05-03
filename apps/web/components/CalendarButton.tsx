@@ -3,9 +3,9 @@
 import { atcb_action } from "add-to-calendar-button-react";
 import { CalendarPlus } from "lucide-react";
 
+import type { ATCBActionEventConfig } from "@soonlist/cal/types";
 import { Button } from "@soonlist/ui/button";
 
-import type { ATCBActionEventConfig } from "~/types";
 import { DropdownMenuItem } from "./DropdownMenu";
 
 interface CalendarButtonProps {

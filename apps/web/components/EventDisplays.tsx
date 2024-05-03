@@ -19,31 +19,30 @@ import {
   TagIcon,
 } from "lucide-react";
 
-import type { EventMetadata as EventMetadataDisplay } from "@soonlist/cal";
+import type {
+  EventMetadata as EventMetadataDisplay,
+  SimilarityDetails,
+} from "@soonlist/cal";
+import type {
+  AddToCalendarButtonPropsRestricted,
+  ATCBActionEventConfig,
+} from "@soonlist/cal/types";
 import type { Comment, EventFollow, List, User } from "@soonlist/db/types";
+import {
+  eventTimesAreDefined,
+  getDateInfoUTC,
+  getDateTimeInfo,
+  timeFormatDateInfo,
+} from "@soonlist/cal";
 import { Badge } from "@soonlist/ui/badge";
 import { buttonVariants } from "@soonlist/ui/button";
 import { Label } from "@soonlist/ui/label";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
-import type { SimilarityDetails } from "~/lib/similarEvents";
-import type {
-  AddToCalendarButtonPropsRestricted,
-  ATCBActionEventConfig,
-} from "~/types";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { feedback } from "~/lib/intercom/intercom";
-import {
-  cn,
-  // showMultipleDays,
-  // endsNextDayBeforeMorning,
-  eventTimesAreDefined,
-  getDateInfoUTC,
-  getDateTimeInfo,
-  timeFormatDateInfo,
-  translateToHtml,
-} from "~/lib/utils";
+import { cn, translateToHtml } from "~/lib/utils";
 import { CalendarButton } from "./CalendarButton";
 import { DeleteButton } from "./DeleteButton";
 import { EditButton } from "./EditButton";
@@ -950,7 +949,7 @@ export function EventPage(props: EventPageProps) {
           </div>
           <div className="flex flex-col gap-8 pt-8">
             <EventDescription
-              description={event.description!}
+              description={event.description}
               singleEvent={singleEvent}
             />
             {eventMetadata && (

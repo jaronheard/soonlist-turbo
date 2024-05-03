@@ -1,8 +1,11 @@
 "use client";
-import type {AddToCalendarButtonType} from "add-to-calendar-button-react";
+
+import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import { useEffect, useRef } from "react";
+
+import { blankEvent } from "@soonlist/cal";
+
 import { AddToCalendarCard } from "./AddToCalendarCard";
-import { blankEvent } from "~/lib/utils";
 
 export function Output({
   events,

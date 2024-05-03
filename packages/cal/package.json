@@ -7,6 +7,9 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
+    },
+    "./types": {
+      "types": "./src/types/index.d.ts"
     }
   },
   "license": "MIT",

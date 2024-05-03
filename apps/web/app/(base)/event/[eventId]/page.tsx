@@ -1,16 +1,16 @@
 import type { Metadata, ResolvingMetadata } from "next/types";
 
 import type { EventMetadata } from "@soonlist/cal";
-
-import type { EventWithUser } from "~/components/EventList";
 import type {
   AddToCalendarButtonProps,
   AddToCalendarButtonPropsRestricted,
-} from "~/types";
+} from "@soonlist/cal/types";
+import { collapseSimilarEvents } from "@soonlist/cal";
+
+import type { EventWithUser } from "~/components/EventList";
 import { EventPage } from "~/components/EventDisplays";
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
-import { collapseSimilarEvents } from "~/lib/similarEvents";
 import { api } from "~/trpc/server";
 import { ResetNewEventContext } from "./ResetNewEventContext";
 

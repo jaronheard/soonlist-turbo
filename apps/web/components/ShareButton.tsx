@@ -3,9 +3,9 @@
 import { Share } from "lucide-react";
 import { toast } from "sonner";
 
+import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 import { Button } from "@soonlist/ui/button";
 
-import type { AddToCalendarButtonProps } from "~/types";
 import { DropdownMenuItem } from "./DropdownMenu";
 
 export interface ShareButtonProps {
