@@ -438,6 +438,9 @@ importers:
 
   packages/api:
     dependencies:
+      '@clerk/nextjs':
+        specifier: ^5.0.0-beta.43
+        version: 5.0.3(eslint@9.1.1)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.4.5)
       '@soonlist/auth':
         specifier: workspace:*
         version: link:../auth
@@ -9536,6 +9539,16 @@ snapshots:
       - react
       - react-dom
 
+  '@clerk/backend@1.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@clerk/shared': 2.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      cookie: 0.5.0
+      snakecase-keys: 5.4.4
+      tslib: 2.4.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
   '@clerk/clerk-expo@1.0.2(@types/react@18.3.0)(eslint@9.1.1)(expo-application@5.8.4(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo-auth-session@5.4.0(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo-constants@15.4.6(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo-web-browser@12.8.2(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(react-dom@18.2.0(react@18.2.0))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.2.0))(react@18.2.0)(typescript@5.4.5)':
     dependencies:
       '@clerk/clerk-js': 5.1.1(@types/react@18.3.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9595,6 +9608,20 @@ snapshots:
       - supports-color
       - typescript
 
+  '@clerk/clerk-react@5.0.1(eslint@9.1.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.4.5)':
+    dependencies:
+      '@clerk/shared': 2.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@clerk/types': 4.1.0
+      eslint-config-custom: 0.0.0(eslint@9.1.1)(typescript@5.4.5)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      tslib: 2.4.1
+    transitivePeerDependencies:
+      - eslint
+      - eslint-import-resolver-webpack
+      - supports-color
+      - typescript
+
   '@clerk/clerk-sdk-node@5.0.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
       '@clerk/backend': 1.1.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9623,6 +9650,23 @@ snapshots:
       - supports-color
       - typescript
 
+  '@clerk/nextjs@5.0.3(eslint@9.1.1)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.4.5)':
+    dependencies:
+      '@clerk/backend': 1.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@clerk/clerk-react': 5.0.1(eslint@9.1.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.4.5)
+      '@clerk/shared': 2.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      crypto-js: 4.2.0
+      next: 14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      path-to-regexp: 6.2.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      tslib: 2.4.1
+    transitivePeerDependencies:
+      - eslint
+      - eslint-import-resolver-webpack
+      - supports-color
+      - typescript
+
   '@clerk/shared@2.0.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
       glob-to-regexp: 0.4.1
@@ -9632,6 +9676,16 @@ snapshots:
     optionalDependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
+
+  '@clerk/shared@2.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      glob-to-regexp: 0.4.1
+      js-cookie: 3.0.1
+      std-env: 3.7.0
+      swr: 2.2.0(react@18.3.1)
+    optionalDependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@clerk/types@4.1.0':
     dependencies:
@@ -17428,6 +17482,11 @@ snapshots:
       react: 18.2.0
       use-sync-external-store: 1.2.2(react@18.2.0)
 
+  swr@2.2.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+      use-sync-external-store: 1.2.2(react@18.3.1)
+
   swrev@4.0.0: {}
 
   swrv@1.0.4(vue@3.4.25(typescript@5.4.5)):
@@ -17852,6 +17911,10 @@ snapshots:
   use-sync-external-store@1.2.2(react@18.2.0):
     dependencies:
       react: 18.2.0
+
+  use-sync-external-store@1.2.2(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   util-deprecate@1.0.2: {}
 

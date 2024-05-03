@@ -35,7 +35,7 @@
     "@soonlist/tailwind-config": "workspace:*",
     "@soonlist/tsconfig": "workspace:*",
     "@types/react": "^18.3.1",
-    "eslint": "^9.0.0",
+    "eslint": "^9.1.1",
     "prettier": "^3.2.5",
     "react": "18.3.1",
     "tailwindcss": "^3.4.3",
