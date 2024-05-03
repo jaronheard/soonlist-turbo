@@ -215,6 +215,9 @@ importers:
       '@soonlist/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@soonlist/validators':
+        specifier: workspace:*
+        version: link:../../packages/validators
       '@tailwindcss/forms':
         specifier: ^0.5.7
         version: 0.5.7(tailwindcss@3.4.3(ts-node@10.9.2(@types/node@20.12.7)(typescript@5.4.5)))

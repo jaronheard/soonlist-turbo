@@ -36,8 +36,8 @@ import {
 import { Input } from "@soonlist/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 import { Textarea } from "@soonlist/ui/textarea";
+import { userAdditionalInfoSchema } from "@soonlist/validators";
 
-import { userAdditionalInfoSchema } from "~/lib/schemas";
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
