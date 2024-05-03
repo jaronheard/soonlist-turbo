@@ -4,7 +4,6 @@ import "~/styles/globals.css";
 
 import dynamic from "next/dynamic";
 import { IBM_Plex_Sans, Kalam } from "next/font/google";
-import { cookies } from "next/headers";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { PHProvider, Providers } from "./providers";
