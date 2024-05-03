@@ -1,14 +1,10 @@
-import { z } from "zod";
-import { eq, asc, and, inArray } from "drizzle-orm";
-
 import { TRPCError } from "@trpc/server";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "~/server/api/trpc";
-import { userFollows, users } from "~/server/db/schema";
+import { and, asc, eq, inArray } from "drizzle-orm";
+import { z } from "zod";
+
 import { userAdditionalInfoSchema } from "~/lib/schemas";
+import { userFollows, users } from "~/server/db/schema";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 export const userRouter = createTRPCRouter({
   getById: publicProcedure
@@ -60,7 +56,7 @@ export const userRouter = createTRPCRouter({
         },
       });
       const followingIds = userFollowRecords.map(
-        (userFollowRecord) => userFollowRecord.followingId
+        (userFollowRecord) => userFollowRecord.followingId,
       );
       if (!followingIds.length || followingIds.length === 0) {
         return [];
@@ -80,8 +76,8 @@ export const userRouter = createTRPCRouter({
         .where(
           and(
             eq(userFollows.followerId, input.followerId),
-            eq(userFollows.followingId, input.followingId)
-          )
+            eq(userFollows.followingId, input.followingId),
+          ),
         );
       return userFollowsRecords.length > 0;
     }),
@@ -115,8 +111,8 @@ export const userRouter = createTRPCRouter({
         .where(
           and(
             eq(userFollows.followerId, userId),
-            eq(userFollows.followingId, input.followingId)
-          )
+            eq(userFollows.followingId, input.followingId),
+          ),
         );
     }),
   updateAdditionalInfo: protectedProcedure

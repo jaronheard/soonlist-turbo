@@ -3,12 +3,8 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { generatePublicId } from "~/lib/utils";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "~/server/api/trpc";
 import { listFollows, lists, users } from "~/server/db/schema";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 export const listRouter = createTRPCRouter({
   getAllForUser: publicProcedure

@@ -1,24 +1,26 @@
-import { z } from "zod";
-
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "~/server/api/trpc";
+import { z } from "zod";
+
+import { EventMetadataSchemaLoose } from "@soonlist/cal";
+
+import type {
+  NewComment,
+  NewEvent,
+  NewEventToLists,
+  UpdateEvent,
+} from "~/server/db/types";
 import { filterDuplicates, generatePublicId } from "~/lib/utils";
 import {
-  events,
-  eventFollows,
-  users,
   comments,
+  eventFollows,
+  events,
   eventToLists,
+  users,
 } from "~/server/db/schema";
-import type {NewComment, NewEvent, NewEventToLists, UpdateEvent} from "~/server/db/types";
 import { AddToCalendarButtonPropsSchema } from "~/types/zodSchema";
-import { EventMetadataSchemaLoose } from "~/lib/prompts";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 const eventCreateSchema = z.object({
   event: AddToCalendarButtonPropsSchema,
@@ -140,17 +142,17 @@ export const eventRouter = createTRPCRouter({
         },
       });
       const followedEvents = following.flatMap((user) =>
-        user.eventFollows.map((eventFollow) => eventFollow.event)
+        user.eventFollows.map((eventFollow) => eventFollow.event),
       );
       const followedEventsFromLists = following.flatMap((user) =>
         user.listFollows.flatMap((listFollow) =>
           listFollow.list.eventToLists.flatMap(
-            (eventToList) => eventToList.event
-          )
-        )
+            (eventToList) => eventToList.event,
+          ),
+        ),
       );
       const followedEventsFromUsers = following.flatMap((user) =>
-        user.following.flatMap((userFollow) => userFollow.following.events)
+        user.following.flatMap((userFollow) => userFollow.following.events),
       );
       const followedEventsFromEventsAndLists = [
         ...followedEvents,
@@ -158,12 +160,12 @@ export const eventRouter = createTRPCRouter({
         ...followedEventsFromUsers,
       ];
       const allFollowedEvents = filterDuplicates(
-        followedEventsFromEventsAndLists
+        followedEventsFromEventsAndLists,
       );
       const sortedFollowedEvents = allFollowedEvents.sort(
         (a, b) =>
           new Date(a.startDateTime).getTime() -
-          new Date(b.startDateTime).getTime()
+          new Date(b.startDateTime).getTime(),
       );
       return sortedFollowedEvents;
     }),
@@ -192,7 +194,7 @@ export const eventRouter = createTRPCRouter({
           .sort(
             (a, b) =>
               new Date(a.startDateTime).getTime() -
-              new Date(b.startDateTime).getTime()
+              new Date(b.startDateTime).getTime(),
           ) || []
       );
     }),
@@ -208,7 +210,7 @@ export const eventRouter = createTRPCRouter({
       const possibleDuplicateEvents = ctx.db.query.events.findMany({
         where: and(
           gte(events.startDateTime, startDateTimeLowerBound),
-          lte(events.startDateTime, startDateTimeUpperBound)
+          lte(events.startDateTime, startDateTimeUpperBound),
         ),
         with: {
           user: true,
@@ -256,7 +258,7 @@ export const eventRouter = createTRPCRouter({
       z.object({
         limit: z.number().optional(),
         excludeCurrent: z.boolean().optional(),
-      })
+      }),
     )
     .query(({ ctx, input }) => {
       return ctx.db.query.events.findMany({
@@ -342,10 +344,10 @@ export const eventRouter = createTRPCRouter({
       }
 
       const start = Temporal.ZonedDateTime.from(
-        `${event.startDate}T${startTime}[${timeZone}]`
+        `${event.startDate}T${startTime}[${timeZone}]`,
       );
       const end = Temporal.ZonedDateTime.from(
-        `${event.endDate}T${endTime}[${timeZone}]`
+        `${event.endDate}T${endTime}[${timeZone}]`,
       );
       const startUtcDate = new Date(start.epochMilliseconds);
       const endUtcDate = new Date(end.epochMilliseconds);
@@ -394,7 +396,7 @@ export const eventRouter = createTRPCRouter({
                 visibility: input.visibility,
               }),
             },
-            input.id
+            input.id,
           );
           if (hasComment) {
             await insertComment({
@@ -413,7 +415,7 @@ export const eventRouter = createTRPCRouter({
               input.lists.map((list) => ({
                 eventId: input.id,
                 listId: list.value!,
-              }))
+              })),
             );
           } else {
             await ctx.db
@@ -466,10 +468,10 @@ export const eventRouter = createTRPCRouter({
       }
 
       const start = Temporal.ZonedDateTime.from(
-        `${event.startDate}T${startTime}[${timeZone}]`
+        `${event.startDate}T${startTime}[${timeZone}]`,
       );
       const end = Temporal.ZonedDateTime.from(
-        `${event.endDate}T${endTime}[${timeZone}]`
+        `${event.endDate}T${endTime}[${timeZone}]`,
       );
       const startUtcDate = new Date(start.epochMilliseconds);
       const endUtcDate = new Date(end.epochMilliseconds);
@@ -517,7 +519,7 @@ export const eventRouter = createTRPCRouter({
               input.lists.map((list) => ({
                 eventId: eventid,
                 listId: list.value!,
-              }))
+              })),
             );
           } else {
             // no need to insert event to list if there is no list
@@ -583,8 +585,8 @@ export const eventRouter = createTRPCRouter({
         .where(
           and(
             eq(eventToLists.eventId, input.eventId),
-            eq(eventToLists.listId, input.listId)
-          )
+            eq(eventToLists.listId, input.listId),
+          ),
         );
     }),
 });

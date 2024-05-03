@@ -1,7 +1,6 @@
 import type { Message } from "ai";
 import type { ClassValue } from "clsx";
 import { clsx } from "clsx";
-import { customAlphabet } from "nanoid";
 import { twMerge } from "tailwind-merge";
 
 export const translateToHtml = (input: string): string => {
@@ -89,15 +88,6 @@ export function cn(...inputs: ClassValue[]) {
 export function extractFilePath(url: string) {
   const match = url.match(/\/uploads\/\d{4}\/\d{2}\/\d{2}\/[^?]+/);
   return match ? match[0] : "";
-}
-
-const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
-const length = 12;
-
-const nanoid = customAlphabet(alphabet, length);
-
-export function generatePublicId() {
-  return nanoid();
 }
 
 export function filterDuplicates<T extends { id: unknown }>(objects: T[]): T[] {
