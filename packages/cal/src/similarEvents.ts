@@ -1,8 +1,14 @@
 import { differenceInMinutes } from "date-fns";
 
-import type { EventWithUser } from "~/components/EventList";
-import type { Event } from "~/server/db/types";
-import type { AddToCalendarButtonProps } from "~/types";
+import type { Comment, Event, EventFollow, User } from "@soonlist/db/types";
+
+import type { AddToCalendarButtonProps } from "./types";
+
+export type EventWithUser = Event & {
+  user: User;
+  eventFollows: EventFollow[];
+  comments: Comment[];
+};
 
 // Cosine Similarity Functions
 function textToVector(text: string): Map<string, number> {

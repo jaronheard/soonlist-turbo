@@ -418,6 +418,12 @@ importers:
 
   packages/cal:
     dependencies:
+      '@js-temporal/polyfill':
+        specifier: ^0.4.4
+        version: 0.4.4
+      '@soonlist/db':
+        specifier: workspace:*
+        version: link:../db
       zod:
         specifier: ^3.23.0
         version: 3.23.4
