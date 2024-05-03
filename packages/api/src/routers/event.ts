@@ -22,6 +22,8 @@ import { AddToCalendarButtonPropsSchema } from "@soonlist/validators";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { filterDuplicates, generatePublicId } from "../utils";
 
+const stringArraySchema = z.array(z.string());
+
 const eventCreateSchema = z.object({
   event: AddToCalendarButtonPropsSchema,
   eventMetadata: EventMetadataSchemaLoose.optional(),
@@ -283,7 +285,7 @@ export const eventRouter = createTRPCRouter({
       });
     }
 
-    const roles = sessionClaims?.roles || [];
+    const roles = stringArraySchema.safeParse(sessionClaims?.roles).data || [];
     const isAdmin = roles.includes("admin");
 
     return ctx.db.query.events
@@ -317,7 +319,8 @@ export const eventRouter = createTRPCRouter({
         });
       }
 
-      const roles = sessionClaims?.roles || [];
+      const roles =
+        stringArraySchema.safeParse(sessionClaims?.roles).data || [];
       const isAdmin = roles.includes("admin");
 
       const { event, eventMetadata } = input;
@@ -429,7 +432,7 @@ export const eventRouter = createTRPCRouter({
     .input(eventCreateSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.auth.userId;
-      const username = ctx.currentUser.username;
+      const username = ctx.currentUser?.username;
       if (!userId) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
