@@ -949,7 +949,7 @@ export function EventPage(props: EventPageProps) {
           </div>
           <div className="flex flex-col gap-8 pt-8">
             <EventDescription
-              description={event.description}
+              description={event.description || ""}
               singleEvent={singleEvent}
             />
             {eventMetadata && (
