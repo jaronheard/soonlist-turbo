@@ -3,9 +3,9 @@ import * as WebBrowser from "expo-web-browser";
 
 export const useWarmUpBrowser = () => {
   useEffect(() => {
-    WebBrowser.warmUpAsync();
+    void WebBrowser.warmUpAsync();
     return () => {
-      WebBrowser.coolDownAsync();
+      void WebBrowser.coolDownAsync();
     };
   }, []);
 };
