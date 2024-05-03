@@ -3,24 +3,24 @@ import { TRPCError } from "@trpc/server";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 
-import { EventMetadataSchemaLoose } from "@soonlist/cal";
-
 import type {
   NewComment,
   NewEvent,
   NewEventToLists,
   UpdateEvent,
-} from "~/server/db/types";
-import { filterDuplicates, generatePublicId } from "~/lib/utils";
+} from "@soonlist/db/types";
+import { EventMetadataSchemaLoose } from "@soonlist/cal";
 import {
   comments,
   eventFollows,
   events,
   eventToLists,
   users,
-} from "~/server/db/schema";
-import { AddToCalendarButtonPropsSchema } from "~/types/zodSchema";
+} from "@soonlist/db/schema";
+import { AddToCalendarButtonPropsSchema } from "@soonlist/validators";
+
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { filterDuplicates, generatePublicId } from "../utils";
 
 const eventCreateSchema = z.object({
   event: AddToCalendarButtonPropsSchema,

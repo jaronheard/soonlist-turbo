@@ -2,9 +2,10 @@ import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { generatePublicId } from "~/lib/utils";
-import { listFollows, lists, users } from "~/server/db/schema";
+import { listFollows, lists, users } from "@soonlist/db/schema";
+
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { generatePublicId } from "../utils";
 
 export const listRouter = createTRPCRouter({
   getAllForUser: publicProcedure

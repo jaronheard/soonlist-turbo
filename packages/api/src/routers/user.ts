@@ -2,8 +2,9 @@ import { TRPCError } from "@trpc/server";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
-import { userAdditionalInfoSchema } from "~/lib/schemas";
-import { userFollows, users } from "~/server/db/schema";
+import { userFollows, users } from "@soonlist/db/schema";
+import { userAdditionalInfoSchema } from "@soonlist/validators";
+
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 export const userRouter = createTRPCRouter({

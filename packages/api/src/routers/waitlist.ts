@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-import { waitlistSubmissions } from "~/server/db/schema";
+import { waitlistSubmissions } from "@soonlist/db/schema";
+
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
 export const waitlistRouter = createTRPCRouter({
