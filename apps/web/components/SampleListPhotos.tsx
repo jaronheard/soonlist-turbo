@@ -16,7 +16,8 @@ export async function SampleListPhotos({ listId }: { listId: string }) {
   const events = list.eventToLists
     .map((item) => item.event)
     // filter out null events
-    .filter((event) => event.startDateTime)
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    .filter((event) => event?.startDateTime)
     // sort by startDateTime
     .sort(
       (a, b) =>
