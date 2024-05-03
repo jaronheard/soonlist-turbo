@@ -10,13 +10,6 @@
     "types": ["nativewind/types"],
     "checkJs": false
   },
-  "include": [
-    "src",
-    "*.ts",
-    "*.js",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "eslint.config.mjs"
-  ],
+  "include": ["src", "*.ts", "*.js", "eslint.config.mjs"],
   "exclude": ["node_modules"]
 }
