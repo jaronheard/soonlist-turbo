@@ -7,6 +7,7 @@ import { PenSquare, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import type { List } from "@soonlist/db/types";
 import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 import {
@@ -36,7 +37,6 @@ import {
 } from "@soonlist/ui/select";
 import { Textarea } from "@soonlist/ui/textarea";
 
-import type { List } from "~/server/db/types";
 import { useNewEventContext } from "~/context/NewEventContext";
 import { AddListCard } from "./AddListCard";
 

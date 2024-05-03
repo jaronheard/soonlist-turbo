@@ -1,13 +1,15 @@
 import { clsx } from "clsx";
-import type {User, EventFollow, Event, Comment} from "~/server/db/types";
-import { EventListItem } from "~/components/EventDisplays";
+
+import type { Comment, Event, EventFollow, User } from "@soonlist/db/types";
+
+import type { AddToCalendarButtonPropsRestricted } from "~/types";
 import {
   Accordion,
+  AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  AccordionContent,
 } from "~/components/Accordian";
-import type {AddToCalendarButtonPropsRestricted} from "~/types";
+import { EventListItem } from "~/components/EventDisplays";
 import { collapseSimilarEvents } from "~/lib/similarEvents";
 
 function ListContainer({
@@ -62,16 +64,16 @@ export function EventList({
 }) {
   function getVisibleEvents(events: EventWithUser[]) {
     return events.filter(
-      (item) => showPrivateEvents || item.visibility === "public"
+      (item) => showPrivateEvents || item.visibility === "public",
     );
   }
 
   const currentEventsToUse = collapseSimilarEvents(
-    getVisibleEvents(currentEvents)
+    getVisibleEvents(currentEvents),
   );
   const pastEventsToUse = collapseSimilarEvents(getVisibleEvents(pastEvents));
   const futureEventsToUse = collapseSimilarEvents(
-    getVisibleEvents(futureEvents)
+    getVisibleEvents(futureEvents),
   );
   const showPastEvents =
     variant !== "future-minimal" && pastEventsToUse.length > 0;
@@ -89,7 +91,7 @@ export function EventList({
           <AccordionTrigger>
             <div className="flex w-full items-center justify-between">
               Past events
-              <span className="inline-flex items-center justify-center rounded-full bg-interactive-1 px-2 py-1 text-lg font-semibold leading-none text-white">
+              <span className="bg-interactive-1 inline-flex items-center justify-center rounded-full px-2 py-1 text-lg font-semibold leading-none text-white">
                 {pastEventsToUse.length}
               </span>
             </div>
@@ -125,7 +127,7 @@ export function EventList({
           <AccordionTrigger className="-mx-6 px-6">
             <div className="flex w-full items-center justify-between">
               Happening now
-              <span className="inline-flex items-center justify-center rounded-full bg-interactive-1 px-2 py-1 text-lg font-semibold leading-none text-white">
+              <span className="bg-interactive-1 inline-flex items-center justify-center rounded-full px-2 py-1 text-lg font-semibold leading-none text-white">
                 {currentEventsToUse.length}
               </span>
             </div>
@@ -165,7 +167,7 @@ export function EventList({
           <AccordionTrigger>
             <div className="flex w-full items-center justify-between">
               Upcoming events
-              <span className="inline-flex items-center justify-center rounded-full bg-interactive-1 px-2 py-1 text-lg font-semibold leading-none text-white">
+              <span className="bg-interactive-1 inline-flex items-center justify-center rounded-full px-2 py-1 text-lg font-semibold leading-none text-white">
                 {futureEventsToUse.length}
               </span>
             </div>

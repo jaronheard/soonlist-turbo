@@ -1,4 +1,5 @@
-import type { EventMetadata } from "~/lib/prompts";
+import type { EventMetadata } from "@soonlist/cal";
+
 import type { AddToCalendarButtonProps } from "~/types";
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
 import { ImageUpload } from "~/components/ImageUpload";

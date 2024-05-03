@@ -8,9 +8,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
+import type { List } from "@soonlist/db/types";
 import { Button } from "@soonlist/ui/button";
 
-import type { List } from "~/server/db/types";
 import { Logo } from "~/components/Logo";
 import { organizeFormSchema } from "~/components/YourDetails";
 import { useNewEventContext } from "~/context/NewEventContext";

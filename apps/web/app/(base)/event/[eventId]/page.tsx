@@ -1,13 +1,18 @@
-import type {Metadata, ResolvingMetadata} from "next/types";
-import { ResetNewEventContext } from "./ResetNewEventContext";
+import type { Metadata, ResolvingMetadata } from "next/types";
+
+import type { EventMetadata } from "@soonlist/cal";
+
+import type { EventWithUser } from "~/components/EventList";
+import type {
+  AddToCalendarButtonProps,
+  AddToCalendarButtonPropsRestricted,
+} from "~/types";
 import { EventPage } from "~/components/EventDisplays";
+import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
-import type {AddToCalendarButtonPropsRestricted, AddToCalendarButtonProps} from "~/types";
 import { collapseSimilarEvents } from "~/lib/similarEvents";
-import {  EventList } from "~/components/EventList";
-import type {EventWithUser} from "~/components/EventList";
 import { api } from "~/trpc/server";
-import type {EventMetadata} from "~/lib/prompts";
+import { ResetNewEventContext } from "./ResetNewEventContext";
 
 interface Props {
   params: {
@@ -17,7 +22,7 @@ interface Props {
 
 export async function generateMetadata(
   { params }: Props,
-  parent: ResolvingMetadata
+  parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const event = await api.event.get.query({ eventId: params.eventId });
   if (!event) {
@@ -71,7 +76,7 @@ export default async function Page({ params }: Props) {
 
   // find the event that matches the current event
   const similarEvents = collapseSimilarEvents(possibleDuplicateEvents).find(
-    (similarEvent) => similarEvent.event.id === event.id
+    (similarEvent) => similarEvent.event.id === event.id,
   )?.similarEvents;
 
   const lists = event.eventToLists.map((list) => list.list);

@@ -6,9 +6,9 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 
+import type { EventMetadataLoose } from "@soonlist/cal";
 import { Button } from "@soonlist/ui/button";
 
-import type { EventMetadataLoose } from "~/lib/prompts";
 import { api } from "~/trpc/react";
 
 interface SaveButtonProps {

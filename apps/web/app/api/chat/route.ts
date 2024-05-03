@@ -1,8 +1,9 @@
-import { Configuration, OpenAIApi } from "openai-edge";
 import { OpenAIStream, StreamingTextResponse } from "ai";
+import { Configuration, OpenAIApi } from "openai-edge";
 import { z } from "zod";
-import type {RequestResponse} from "~/server/db/types";
-import { getPrompt, getSystemMessage } from "~/lib/prompts";
+
+import type { RequestResponse } from "@soonlist/db/types";
+import { getPrompt, getSystemMessage } from "@soonlist/cal";
 
 export const dynamic = "force-dynamic";
 export const runtime = "edge";
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
   const prompt = getPrompt(timezone);
 
   const userMessages = messages.filter(
-    (message: { role: string }) => message.role === "user"
+    (message: { role: string }) => message.role === "user",
   );
   const lastUserMessage =
     userMessages[userMessages.length - 1]?.content || undefined;

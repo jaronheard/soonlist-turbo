@@ -19,15 +19,15 @@ import {
   TagIcon,
 } from "lucide-react";
 
+import type { EventMetadata as EventMetadataDisplay } from "@soonlist/cal";
+import type { Comment, EventFollow, List, User } from "@soonlist/db/types";
 import { Badge } from "@soonlist/ui/badge";
 import { buttonVariants } from "@soonlist/ui/button";
 import { Label } from "@soonlist/ui/label";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
-import type { EventMetadata as EventMetadataDisplay } from "~/lib/prompts";
 import type { SimilarityDetails } from "~/lib/similarEvents";
-import type { Comment, EventFollow, List, User } from "~/server/db/types";
 import type {
   AddToCalendarButtonPropsRestricted,
   ATCBActionEventConfig,

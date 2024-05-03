@@ -6,6 +6,7 @@ import { useChat } from "ai/react";
 import { Download, Share, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
+import { addCommonAddToCalendarPropsFromResponse } from "@soonlist/cal";
 import { Button } from "@soonlist/ui/button";
 import {
   Card,
@@ -20,7 +21,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 import { Form } from "~/components/Form";
 import { Output } from "~/components/Output";
 import { TimezoneContext } from "~/context/TimezoneContext";
-import { addCommonAddToCalendarPropsFromResponse } from "~/lib/prompts";
 import { cn, getLastMessages } from "~/lib/utils";
 import { UploadImageForProcessingButton } from "./UploadImageForProcessingButton";
 

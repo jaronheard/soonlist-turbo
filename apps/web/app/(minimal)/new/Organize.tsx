@@ -6,6 +6,7 @@ import * as React from "react";
 import { SignedIn } from "@clerk/nextjs";
 import { ListIcon, Plus } from "lucide-react";
 
+import type { List } from "@soonlist/db/types";
 import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 import {
@@ -36,7 +37,6 @@ import {
 import { Textarea } from "@soonlist/ui/textarea";
 
 import type { organizeFormSchema } from "~/components/YourDetails";
-import type { List } from "~/server/db/types";
 import { AddListCard } from "~/components/AddListCard";
 
 export function Organize({

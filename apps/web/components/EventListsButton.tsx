@@ -1,10 +1,12 @@
 "use client";
 
+import type { DropdownMenuCheckboxItemProps } from "@radix-ui/react-dropdown-menu";
 import * as React from "react";
-import type {DropdownMenuCheckboxItemProps} from "@radix-ui/react-dropdown-menu";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import type {List} from "~/server/db/types";
+
+import type { List } from "@soonlist/db/types";
+
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -35,7 +37,7 @@ export function EventListsButton({
     return eventLists.includes(list);
   });
   const [selectedLists, setSelectedLists] = React.useState<Checked[]>(
-    listsCheckedInitialState
+    listsCheckedInitialState,
   );
 
   const handleSuccess = (toAdd: boolean) => {
@@ -89,7 +91,7 @@ export function EventListsButton({
             "mt-8 w-full rounded-xl bg-foreground px-4 py-2 font-medium text-white hover:bg-foreground/80 sm:mt-10",
             {
               "cursor-not-allowed opacity-60": isLoading,
-            }
+            },
           )}
         >
           {isLoading ? (
