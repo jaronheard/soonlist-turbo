@@ -1,10 +1,13 @@
-import type {Metadata} from "next";
+import type { Metadata } from "next";
+
 import "~/styles/globals.css";
-import { cookies } from "next/headers";
+
 import dynamic from "next/dynamic";
-import { Kalam, IBM_Plex_Sans } from "next/font/google";
-import { PHProvider, Providers } from "./providers";
+import { IBM_Plex_Sans, Kalam } from "next/font/google";
+import { cookies } from "next/headers";
+
 import { TRPCReactProvider } from "~/trpc/react";
+import { PHProvider, Providers } from "./providers";
 
 // edge causes sigkill on vercel about 50% of the time
 // workaround is to use VERCEL_FORCE_NO_BUILD_CACHE=1
@@ -73,7 +76,7 @@ export default function RootLayout({
       <PHProvider>
         <body>
           <PostHogPageView />
-          <TRPCReactProvider cookies={cookies().toString()}>
+          <TRPCReactProvider>
             <Providers>{children}</Providers>
           </TRPCReactProvider>
         </body>
