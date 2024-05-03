@@ -36,7 +36,7 @@ export async function generateMetadata(
     );
 
   const futureEvents = events.filter(
-    (event) => event.startDateTime >= new Date(),
+    (event) => event.startDateTime && event.startDateTime >= new Date(),
   );
   const futureEventsCount = futureEvents.length;
   // optionally access and extend (rather than replace) parent metadata
