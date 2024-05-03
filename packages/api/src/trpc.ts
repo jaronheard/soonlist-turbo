@@ -6,6 +6,11 @@
  * tl;dr - this is where all the tRPC server stuff is created and plugged in.
  * The pieces you will need to use are documented accordingly near the end
  */
+import type {
+  SignedInAuthObject,
+  SignedOutAuthObject,
+} from "@clerk/backend/internal";
+import type { User } from "@clerk/nextjs/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
@@ -25,14 +30,41 @@ import { db } from "@soonlist/db";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = (opts: { headers: Headers }) => {
-  const source = opts.headers.get("x-trpc-source") ?? "unknown";
 
-  console.log(">>> tRPC Request from", source);
+interface AuthContextProps {
+  auth: SignedInAuthObject | SignedOutAuthObject;
+  user: User | null;
+}
+
+export const createContextInner = async ({ auth, user }: AuthContextProps) => {
+  // const session = getAuth(opts)
+
+  const externalId = auth.sessionClaims?.externalId as string | undefined;
+  const authToUse = externalId ? { ...auth, userId: externalId } : auth;
+  const userToUse = user !== null ? { ...user } : null;
+  if (externalId && userToUse) {
+    userToUse.id = externalId;
+  }
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  const currentUser = userToUse as User | null;
 
   return {
     db,
+    auth: authToUse,
+    currentUser: currentUser,
   };
+};
+
+export const createTRPCContext = async (opts: { headers: Headers }) => {
+  const source = opts.headers.get("x-trpc-source") ?? "unknown";
+
+  console.log(">>> tRPC Request from", source);
+  const user = await currentUser();
+
+  return await createContextInner({
+    auth: auth(),
+    user: user,
+  });
 };
 
 /**
