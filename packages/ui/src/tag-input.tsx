@@ -6,12 +6,12 @@ import { v4 as uuid } from "uuid";
 
 import type { tagVariants } from "./tag";
 import { Autocomplete } from "./autocomplete";
+import { Button } from "./button";
 import { CommandInput } from "./command";
+import { Input } from "./input";
 import { TagList } from "./tag-list";
 import { TagPopover } from "./tag-popover";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { toast } from "./ui/use-toast";
+import { toast } from "./use-toast";
 
 export enum Delimiter {
   Comma = ",",

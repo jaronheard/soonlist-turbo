@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 
 import type { TagInputProps, Tag as TagType } from "./tag-input";
 import { cn } from ".";
-import { Button } from "./ui/button";
+import { Button } from "./button";
 
 export const tagVariants = cva(
   "inline-flex items-center rounded-md border pl-2 text-sm transition-all",
