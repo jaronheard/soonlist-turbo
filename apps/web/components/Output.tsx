@@ -51,13 +51,15 @@ export function Output({
           )}
           {!eventsAreValid && (
             <div className="flex flex-wrap justify-center gap-4">
-              {blankEvents.map((props, index) => (
+              {blankEvents.map((props: AddToCalendarButtonType, index) => (
                 <AddToCalendarCard
                   {...props}
                   key={props.name}
                   firstInputRef={index === 0 ? firstInputRef : undefined}
-                  setAddToCalendarButtonProps={(props) => {
-                    const newArray = [...blankEvents];
+                  setAddToCalendarButtonProps={(
+                    props: AddToCalendarButtonType,
+                  ) => {
+                    const newArray = [blankEvents[0]];
                     newArray[index] = props;
                     setEvents(newArray);
                   }}
