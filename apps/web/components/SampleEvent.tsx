@@ -8,7 +8,7 @@ import { ListCard } from "./ListCard";
 import { UserAllEventsCard } from "./UserAllEventsCard";
 
 export async function SampleEvent({ eventId }: { eventId: string }) {
-  const event = await api.event.get.query({
+  const event = await api.event.get({
     eventId,
   });
 

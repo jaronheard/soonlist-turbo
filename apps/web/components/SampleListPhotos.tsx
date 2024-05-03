@@ -6,7 +6,7 @@ import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 import { api } from "~/trpc/server";
 
 export async function SampleListPhotos({ listId }: { listId: string }) {
-  const list = await api.list.get.query({ listId });
+  const list = await api.list.get({ listId });
 
   if (!list) {
     return <> </>;

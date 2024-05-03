@@ -31,9 +31,9 @@ export async function UserInfo(props: UserInfoProps) {
 
   let user;
   if (props.userId) {
-    user = await api.user.getById.query({ id: props.userId });
+    user = await api.user.getById({ id: props.userId });
   } else if (props.userName) {
-    user = await api.user.getByUsername.query({ userName: props.userName });
+    user = await api.user.getByUsername({ userName: props.userName });
   }
 
   if (!user) {
@@ -44,7 +44,7 @@ export async function UserInfo(props: UserInfoProps) {
 
   const following =
     activeUser?.id &&
-    (await api.user.getIfFollowing.query({
+    (await api.user.getIfFollowing({
       followerId: activeUser.id,
       followingId: user.id,
     }));

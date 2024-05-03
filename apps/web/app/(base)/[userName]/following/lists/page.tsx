@@ -13,7 +13,7 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const lists = await api.list.getFollowing.query({
+  const lists = await api.list.getFollowing({
     userName: params.userName,
   });
   const listCount = lists.length;
@@ -32,7 +32,7 @@ export async function generateMetadata(
 }
 
 export default async function Page({ params }: Props) {
-  const lists = await api.list.getFollowing.query({
+  const lists = await api.list.getFollowing({
     userName: params.userName,
   });
 

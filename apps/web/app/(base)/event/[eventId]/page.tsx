@@ -24,7 +24,7 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const event = await api.event.get.query({ eventId: params.eventId });
+  const event = await api.event.get({ eventId: params.eventId });
   if (!event) {
     return {
       title: "No event found | Soonlist",
@@ -53,11 +53,11 @@ export async function generateMetadata(
 }
 
 export default async function Page({ params }: Props) {
-  const event = await api.event.get.query({ eventId: params.eventId });
+  const event = await api.event.get({ eventId: params.eventId });
   if (!event) {
     return <p className="text-lg text-gray-500">No event found.</p>;
   }
-  const otherEvents = await api.event.getCreatedForUser.query({
+  const otherEvents = await api.event.getCreatedForUser({
     userName: event.user.username,
   });
 
@@ -70,7 +70,7 @@ export default async function Page({ params }: Props) {
   const eventMetadata = event.eventMetadata as EventMetadata;
   const fullImageUrl = eventData.images?.[3];
 
-  const possibleDuplicateEvents = (await api.event.getPossibleDuplicates.query({
+  const possibleDuplicateEvents = (await api.event.getPossibleDuplicates({
     startDateTime: event.startDateTime,
   })) as EventWithUser[];
 

@@ -2,15 +2,15 @@ import { EventList } from "~/components/EventList";
 import { api } from "~/trpc/server";
 
 export default async function Page() {
-  const events = await api.event.getAll.query();
+  const events = await api.event.getAll();
 
   const pastEvents = events.filter((item) => item.endDateTime < new Date());
 
   const currentEvents = events.filter(
-    (item) => item.startDateTime < new Date() && item.endDateTime > new Date()
+    (item) => item.startDateTime < new Date() && item.endDateTime > new Date(),
   );
   const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date()
+    (item) => item.startDateTime >= new Date(),
   );
 
   return (

@@ -1,7 +1,8 @@
 import { currentUser } from "@clerk/nextjs/server";
+
+import { api } from "~/trpc/server";
 import { ListCard } from "./ListCard";
 import { ListCardAdd } from "./ListCardAdd";
-import { api } from "~/trpc/server";
 
 interface ListCardsForUserProps {
   userName: string;
@@ -12,7 +13,7 @@ export async function ListCardsForUser({
   userName,
 }: // TODO: implement limit
 ListCardsForUserProps) {
-  const lists = await api.list.getAllForUser.query({
+  const lists = await api.list.getAllForUser({
     userName,
   });
 

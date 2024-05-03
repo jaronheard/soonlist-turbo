@@ -33,7 +33,7 @@ export async function generateMetadata(
 }
 
 export default async function Page() {
-  const users = await api.user.getAll.query();
+  const users = await api.user.getAll();
 
   return (
     <div className="mx-auto max-w-2xl">

@@ -2,7 +2,7 @@
 // import { api } from "~/trpc/server";
 
 // export default async function Leaderboard() {
-//   const leaderboardUsers = await api.user.getTopUsersByUpcomingEvents.query({
+//   const leaderboardUsers = await api.user.getTopUsersByUpcomingEvents({
 //     limit: 5,
 //   });
 

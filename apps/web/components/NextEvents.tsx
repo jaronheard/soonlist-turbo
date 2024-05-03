@@ -7,7 +7,7 @@ import { api } from "~/trpc/server";
 
 export async function NextEvents({ limit = 5, upcoming = false } = {}) {
   const excludeCurrent = !upcoming;
-  const events = await api.event.getNext.query({ limit, excludeCurrent });
+  const events = await api.event.getNext({ limit, excludeCurrent });
 
   const pastEvents = events.filter((item) => item.endDateTime < new Date());
 

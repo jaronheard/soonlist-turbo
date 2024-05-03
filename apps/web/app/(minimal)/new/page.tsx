@@ -28,7 +28,7 @@ export default async function Page({ searchParams }: Props) {
   const username = user?.username;
   const lists =
     username &&
-    (await api.list.getAllForUser.query({
+    (await api.list.getAllForUser({
       userName: username,
     }));
   const timezone = searchParams.timezone || "America/Los_Angeles";
