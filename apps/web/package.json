@@ -23,6 +23,7 @@
     "@soonlist/db": "workspace:*",
     "@soonlist/ui": "workspace:*",
     "@soonlist/validators": "workspace:*",
+    "@soonlist/tailwind-config": "workspace:*",
     "@bytescale/sdk": "^3.34.0",
     "@bytescale/upload-widget-react": "^4.16.0",
     "@clerk/nextjs": "^5.0.0-beta.43",

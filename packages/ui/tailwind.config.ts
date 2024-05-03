@@ -4,9 +4,9 @@
  */
 import type { Config } from "tailwindcss";
 
-import baseConfig from "@soonlist/tailwind-config/web";
+import base from "@soonlist/tailwind-config/web";
 
 export default {
-  content: ["./src/**/*.tsx"],
-  presets: [baseConfig],
+  content: ["./src/**/*.{ts,tsx}"],
+  presets: [base],
 } satisfies Config;

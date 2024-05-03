@@ -212,6 +212,9 @@ importers:
       '@soonlist/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@soonlist/tailwind-config':
+        specifier: workspace:*
+        version: link:../../tooling/tailwind
       '@soonlist/ui':
         specifier: workspace:*
         version: link:../../packages/ui
