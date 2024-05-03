@@ -38,13 +38,13 @@ export function ListDeleteButton(props: ListDeleteButtonProps) {
 
   return (
     <SignedIn>
-      {deleteList.isLoading && (
+      {deleteList.isPending && (
         <Button variant={"destructive"} disabled>
           <Loader2 className="mr-2 size-4 animate-spin" />
           Please wait
         </Button>
       )}
-      {!deleteList.isLoading && (
+      {!deleteList.isPending && (
         <Button
           variant={"destructive"}
           onClick={() =>

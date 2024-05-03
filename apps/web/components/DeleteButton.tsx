@@ -62,7 +62,7 @@ export function DeleteButton(props: DeleteButtonProps) {
         onSelect={() => {
           deleteEvent.mutate({ id: props.id });
         }}
-        disabled={deleteEvent.isLoading}
+        disabled={deleteEvent.isPending}
         className="text-red-600"
       >
         <TrashIcon className="mr-2 size-4" />

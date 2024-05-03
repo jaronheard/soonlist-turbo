@@ -41,9 +41,9 @@ export function ListUpdateButton(props: ListUpdateButtonProps) {
               description: props.description,
             })
           }
-          disabled={updateList.isLoading}
+          disabled={updateList.isPending}
         >
-          {updateList.isLoading ? (
+          {updateList.isPending ? (
             <>
               <Loader2 className="mr-2 size-4 animate-spin" />
               Please wait

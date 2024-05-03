@@ -35,7 +35,7 @@ export function EventsFromImage({
 
   const { events, response } = fromImage.data ?? {};
 
-  if (fromImage.isLoading) {
+  if (fromImage.isPending) {
     return <EventPreviewLoadingSpinner className="h-64" />;
   }
 

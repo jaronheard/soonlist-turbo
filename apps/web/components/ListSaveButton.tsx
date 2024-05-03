@@ -35,13 +35,13 @@ export function ListSaveButton(props: ListSaveButtonProps) {
   return (
     <>
       <SignedIn>
-        {createList.isLoading && (
+        {createList.isPending && (
           <Button disabled>
             <Loader2 className="mr-2 size-4 animate-spin" />
             Please wait
           </Button>
         )}
-        {!createList.isLoading && (
+        {!createList.isPending && (
           <Button
             onClick={() =>
               createList.mutate({

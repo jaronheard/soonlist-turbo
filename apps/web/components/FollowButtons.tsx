@@ -36,7 +36,7 @@ export function FollowEventDropdownButton({
       router.refresh();
     },
   });
-  const isLoading = follow.isLoading || unfollow.isLoading;
+  const isLoading = follow.isPending || unfollow.isPending;
 
   return (
     <SignedIn>
@@ -97,7 +97,7 @@ export function FollowEventButton({
       router.refresh();
     },
   });
-  const isLoading = follow.isLoading || unfollow.isLoading;
+  const isLoading = follow.isPending || unfollow.isPending;
 
   return (
     <SignedIn>
@@ -159,7 +159,7 @@ export function FollowUserButton({
       router.refresh();
     },
   });
-  const isLoading = follow.isLoading || unfollow.isLoading;
+  const isLoading = follow.isPending || unfollow.isPending;
   return (
     <SignedIn>
       {isLoading && (
@@ -221,7 +221,7 @@ export function FollowListButton({
       router.refresh();
     },
   });
-  const isLoading = follow.isLoading || unfollow.isLoading;
+  const isLoading = follow.isPending || unfollow.isPending;
 
   return (
     <SignedIn>

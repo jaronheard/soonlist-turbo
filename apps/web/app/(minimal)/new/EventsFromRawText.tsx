@@ -34,7 +34,7 @@ export function EventsFromRawText({
 
   const { events, response } = fromRawText.data ?? {};
 
-  if (fromRawText.isLoading) {
+  if (fromRawText.isPending) {
     return <EventPreviewLoadingSpinner className="h-64" />;
   }
 

@@ -81,7 +81,7 @@ export function EventListsButton({
     mutation.mutate({ eventId, listId });
   }
 
-  const isLoading = addEventToList.isLoading || removeEventFromList.isLoading;
+  const isLoading = addEventToList.isPending || removeEventFromList.isPending;
 
   return (
     <DropdownMenu>
