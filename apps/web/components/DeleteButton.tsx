@@ -1,12 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { SignedIn, useUser } from "@clerk/nextjs";
 import { TrashIcon } from "@heroicons/react/24/solid";
-import { DropdownMenuItem } from "./DropdownMenu";
-import { Button } from "./ui/button";
+import { toast } from "sonner";
+
+import { Button } from "@soonlist/ui/button";
+
 import { api } from "~/trpc/react";
+import { DropdownMenuItem } from "./DropdownMenu";
 
 export interface DeleteButtonProps {
   userId: string;
@@ -60,7 +62,7 @@ export function DeleteButton(props: DeleteButtonProps) {
         onSelect={() => {
           deleteEvent.mutate({ id: props.id });
         }}
-        disabled={deleteEvent.isLoading}
+        disabled={deleteEvent.isPending}
         className="text-red-600"
       >
         <TrashIcon className="mr-2 size-4" />

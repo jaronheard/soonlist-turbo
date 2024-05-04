@@ -1,4 +1,4 @@
-import { Toaster } from "~/components/ui/sonner";
+import { Toaster } from "@soonlist/ui/sonner";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

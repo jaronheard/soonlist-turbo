@@ -1,4 +1,3 @@
- 
 export const metadata = {
   title: "Terms and Conditions | Soonlist",
   openGraph: {

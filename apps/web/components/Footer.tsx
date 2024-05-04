@@ -1,10 +1,11 @@
 "use client";
 
- 
 import Link from "next/link";
-import { CircleDollarSign } from "lucide-react";
 import { SignedOut } from "@clerk/nextjs";
-import { Button, buttonVariants } from "./ui/button";
+import { CircleDollarSign } from "lucide-react";
+
+import { Button, buttonVariants } from "@soonlist/ui/button";
+
 import { WaitlistSignup } from "./WaitlistSignup";
 
 export function Footer() {

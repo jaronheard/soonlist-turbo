@@ -1,6 +1,6 @@
+import Link from "next/link";
 import { PlusCircleIcon } from "@heroicons/react/20/solid";
 import { clsx } from "clsx";
-import Link from "next/link";
 
 export function ListCardAdd() {
   return (
@@ -11,7 +11,7 @@ export function ListCardAdd() {
       <div
         className={clsx(
           "bg-primary group-hover:bg-primary/90",
-          "flex h-[5.375rem] w-[5.375rem] flex-shrink-0 items-center justify-center rounded-l-md text-sm font-medium text-white"
+          "flex h-[5.375rem] w-[5.375rem] flex-shrink-0 items-center justify-center rounded-l-md text-sm font-medium text-white",
         )}
       >
         <PlusCircleIcon className="size-12" />

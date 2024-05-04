@@ -1,10 +1,12 @@
 import React from "react";
-import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import Link from "next/link";
+import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
+
+import { Button } from "@soonlist/ui/button";
+
 import { CTAButton } from "~/components/CallToActions";
-import { RainbowText } from "~/components/RainbowText";
-import { Button } from "~/components/ui/button";
 import { ContactUs } from "~/components/ContactUs";
+import { RainbowText } from "~/components/RainbowText";
 
 export const metadata = {
   title: "About | Soonlist",

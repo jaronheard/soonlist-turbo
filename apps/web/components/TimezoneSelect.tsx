@@ -1,24 +1,21 @@
 "use client";
 
 import { useContext, useState } from "react";
-import { allTimezones, useTimezoneSelect } from "react-timezone-select";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { TimezoneContext } from "~/context/TimezoneContext";
+import { allTimezones, useTimezoneSelect } from "react-timezone-select";
 
-import { cn } from "~/lib/utils";
-import { Button } from "~/components/ui/button";
+import { Button } from "@soonlist/ui/button";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-} from "~/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "~/components/ui/popover";
+} from "@soonlist/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@soonlist/ui/popover";
+
+import { TimezoneContext } from "~/context/TimezoneContext";
+import { cn } from "~/lib/utils";
 
 const labelStyle = "abbrev";
 const timezones = {
@@ -70,7 +67,7 @@ export function TimezoneSelect({
                 value={tz.label}
                 onSelect={(currentValue) => {
                   const tzValue = options.find(
-                    (tz) => tz.label.toLocaleLowerCase() === currentValue
+                    (tz) => tz.label.toLocaleLowerCase() === currentValue,
                   )?.value;
                   if (!tzValue) return;
                   setTimezone(tzValue);
@@ -80,7 +77,7 @@ export function TimezoneSelect({
                 <Check
                   className={cn(
                     "mr-2 size-4",
-                    timezone === tz.value ? "opacity-100" : "opacity-0"
+                    timezone === tz.value ? "opacity-100" : "opacity-0",
                   )}
                 />
                 {tz.label}

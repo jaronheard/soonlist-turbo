@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { clsx } from "clsx";
 import { SquareStack } from "lucide-react";
-import Link from "next/link";
+
 import { cn } from "~/lib/utils";
 
 const colors = [
@@ -30,14 +31,14 @@ export function ListCard(props: {
     <div
       className={cn(
         "item-center flex overflow-hidden rounded-xl border-[5px] border-accent-yellow bg-interactive-2",
-        props.className
+        props.className,
       )}
     >
       <Link
         href={props.id ? `/list/${props.id}` : `/${props.username}/events`}
         className={clsx(
           getRainbowColorFromString(props.name),
-          "size-[5.375rem] flex-shrink-0 items-center justify-center rounded-l-md text-4xl font-bold font-heading leading-none text-white flex pt-1"
+          "flex size-[5.375rem] flex-shrink-0 items-center justify-center rounded-l-md pt-1 font-heading text-4xl font-bold leading-none text-white",
         )}
       >
         {getInitialsFromString(props.name)}

@@ -1,3 +1,4 @@
+import type { ShareIntentFile } from "expo-share-intent";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -12,7 +13,7 @@ import {
 import MLKit from "react-native-mlkit-ocr";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
-import { ShareIntentFile, useShareIntent } from "expo-share-intent";
+import { useShareIntent } from "expo-share-intent";
 import * as WebBrowser from "expo-web-browser";
 import * as Bytescale from "@bytescale/sdk";
 import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
@@ -47,7 +48,7 @@ const SignOut = () => {
       <Button
         title="Sign Out"
         onPress={() => {
-          signOut();
+          void signOut();
         }}
       />
     </View>
@@ -113,13 +114,14 @@ const _uploadImage = async (
     const results = await uploadManager.upload({
       data: fileData,
       path: {
-        folderPath: path?.folderPath,
+        folderPath: path.folderPath,
         fileName: `${path.fileName}.${mimeTypeExtension}`,
       },
     });
     console.log("File uploaded successfully!", results);
-  } catch (e: any) {
-    console.log(`Error:\n${e.message}`);
+  } catch (e: unknown) {
+    console.error("Failed to upload the file:", e);
+    return { error: e };
   }
 };
 
@@ -128,8 +130,9 @@ const _getTextFromImage = async (file: ShareIntentFile) => {
     const resultFromFile = await MLKit.detectFromUri(file.path);
     const textFromFile = resultFromFile.map((block) => block.text).join("");
     return textFromFile;
-  } catch (e: any) {
-    console.log(`Error:\n${e.message}`);
+  } catch (e: unknown) {
+    console.error("Failed to get text from image:", e);
+    return { error: e };
   }
 };
 
@@ -145,6 +148,7 @@ export default function App() {
     resetOnBackground: true,
   });
   const [state, setState] = useState({
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     textFromImage: undefined as string | undefined,
     uploading: false,
     path: getRandomPath(),
@@ -175,21 +179,30 @@ export default function App() {
 
   useWarmUpBrowser();
 
-  const file = shareIntent?.files?.[0];
+  const file = shareIntent.files?.[0];
 
   useEffect(() => {
     if (file?.mimeType.startsWith("image/") && !state.uploading) {
       const mimeTypeExtension = file.mimeType.split("/")[1];
       setState((prev) => ({ ...prev, fileExtension: `.${mimeTypeExtension}` }));
-      _getTextFromImage(file).then((text) =>
-        setState((prev) => ({ ...prev, textFromImage: text })),
-      );
+      _getTextFromImage(file)
+        .then((text) => {
+          if (typeof text === "string") {
+            console.log("Text from image:", text);
+            setState((prev) => ({ ...prev, textFromImage: text }));
+          }
+        })
+        .catch((e) => {
+          console.error("Failed to get text from image:", e);
+        });
       setState((prev) => ({ ...prev, uploading: true }));
-      _uploadImage(file.path, state.path, mimeTypeExtension || "jpg").then(() =>
-        setState((prev) => ({ ...prev, uploading: false })),
-      );
+      _uploadImage(file.path, state.path, mimeTypeExtension || "jpg")
+        .then(() => setState((prev) => ({ ...prev, uploading: false })))
+        .catch((e) => {
+          console.error("Failed to upload the file:", e);
+        });
     }
-  }, [file]);
+  }, [file, state.path, state.uploading]);
 
   const _handleOpenWithWebBrowser = async (
     rawText: string,
@@ -221,16 +234,20 @@ export default function App() {
   };
 
   if (shareIntent.text) {
-    _handleOpenWithWebBrowser(shareIntent.text);
+    void _handleOpenWithWebBrowser(shareIntent.text);
     return null; // Return null to prevent rendering the rest of the component
   }
 
   if (state.textFromImage) {
-    _handleOpenWithWebBrowser(state.textFromImage, filePathParam);
+    void _handleOpenWithWebBrowser(state.textFromImage, filePathParam);
     return null; // Return null to prevent rendering the rest of the component
   }
 
-  if (!Constants?.expoConfig?.extra?.clerkPublishableKey) {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  const clerkPublishableKey = Constants.expoConfig?.extra
+    ?.clerkPublishableKey as string | undefined;
+
+  if (!clerkPublishableKey) {
     console.log(Constants.expoConfig);
     return (
       <SafeAreaView style={styles.container}>
@@ -242,16 +259,14 @@ export default function App() {
   }
 
   return (
-    <ClerkProvider
-      publishableKey={Constants.expoConfig.extra.clerkPublishableKey}
-      tokenCache={tokenCache}
-    >
+    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
       <SafeAreaView style={styles.container}>
         <SignedOut>
           <SignInWithOAuth />
         </SignedOut>
         <SignedIn>
           <Image
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             source={require("../assets/icon.png")}
             style={[styles.logo, styles.gap]}
           />

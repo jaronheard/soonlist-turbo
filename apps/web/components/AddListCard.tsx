@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+
+import { Input } from "@soonlist/ui/input";
+import { Textarea } from "@soonlist/ui/textarea";
+
 import { ListSaveButton } from "./ListSaveButton";
 import { ListUpdateButton } from "./ListUpdateButton";
-import { Textarea } from "./ui/textarea";
-import { Input } from "./ui/input";
 
 interface AddListCardProps {
   name: string;
@@ -24,7 +26,7 @@ export function AddListCard({ ...initialProps }: AddListCardProps) {
       name,
       description,
     }),
-    [name, description]
+    [name, description],
   );
 
   return (

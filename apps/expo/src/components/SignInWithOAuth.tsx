@@ -16,18 +16,17 @@ const SignInWithOAuth = () => {
 
   const onPress = React.useCallback(async () => {
     try {
-      const { createdSessionId, signIn, signUp, setActive } =
-        await startOAuthFlow();
+      const { createdSessionId, setActive } = await startOAuthFlow();
 
       if (createdSessionId && setActive) {
-        setActive({ session: createdSessionId });
+        void setActive({ session: createdSessionId });
       } else {
         // Use signIn or signUp for next steps such as MFA
       }
     } catch (err) {
       console.error("OAuth error", err);
     }
-  }, []);
+  }, [startOAuthFlow]);
 
   return <Button title="Sign in with Google" onPress={onPress} />;
 };

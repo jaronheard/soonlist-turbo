@@ -1,6 +1,5 @@
-import { Button } from "~/components/ui/button";
+import { Button } from "@soonlist/ui/button";
 
- 
 export const metadata = {
   title: "Early Access | Soonlist",
   openGraph: {
@@ -10,7 +9,7 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <div className="prose sm:prose-lg lg:prose-xl xl:prose-2xl 2xl:prose-2xl mx-auto px-8 py-12">
+    <div className="prose mx-auto px-8 py-12 sm:prose-lg lg:prose-xl xl:prose-2xl 2xl:prose-2xl">
       <h1 className="font-heading">Seeking Portland Event List Makers</h1>
       <h2 className="font-heading">Events For Everybody</h2>
       <p>

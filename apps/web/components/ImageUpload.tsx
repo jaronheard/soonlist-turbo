@@ -1,20 +1,19 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import React, { useEffect, useRef, useState } from "react";
 import * as Bytescale from "@bytescale/sdk";
-import React, { useState, useRef, useEffect } from "react";
+
 import "react-image-crop/dist/ReactCrop.css";
-import { SwitchCamera, Trash, Upload, Scissors } from "lucide-react";
+
+import type { Crop } from "react-image-crop";
 import { UploadButton } from "@bytescale/upload-widget-react";
 import { Dialog } from "@headlessui/react";
-import {
-  ReactCrop,
-  
-  centerCrop,
-  makeAspectCrop
-} from "react-image-crop";
-import type {Crop} from "react-image-crop";
-import { Button } from "~/components/ui/button";
+import { Scissors, SwitchCamera, Trash, Upload } from "lucide-react";
+import { centerCrop, makeAspectCrop, ReactCrop } from "react-image-crop";
+
+import { Button } from "@soonlist/ui/button";
+
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { cn, extractFilePath } from "~/lib/utils";
 
@@ -67,7 +66,7 @@ const buildCroppedUrl = (
     naturalHeight: number;
     crop: Crop;
     targetAspect: number;
-  }
+  },
 ): string => {
   const { naturalWidth, naturalHeight, crop, targetAspect } = opts;
   const validOptions =
@@ -126,7 +125,7 @@ const buildCroppedUrl = (
 
 const buildAllCropUrls = (
   filePath: string,
-  opts: { naturalWidth: number; naturalHeight: number; crop: Crop }
+  opts: { naturalWidth: number; naturalHeight: number; crop: Crop },
 ) => {
   const { naturalWidth, naturalHeight, crop } = opts;
   const newCroppedImagesUrls = {} as Record<string, string>;
@@ -154,7 +153,7 @@ const buildAllCropUrls = (
 
     // Get the cropped image URL for the API
     for (const [key, aspect] of Object.entries(
-      aspectRatioWithOriginalAndCropped
+      aspectRatioWithOriginalAndCropped,
     )) {
       const croppedImageUrl = buildCroppedUrl(filePath, {
         naturalWidth: naturalWidth,
@@ -182,10 +181,10 @@ const defaultCrop = (opts: { naturalWidth: number; naturalHeight: number }) => {
       },
       naturalWidth / naturalHeight,
       naturalWidth,
-      naturalHeight
+      naturalHeight,
     ),
     naturalWidth,
-    naturalHeight
+    naturalHeight,
   );
 };
 
@@ -201,7 +200,7 @@ export function ImageUpload({
     ? extractFilePath(croppedImageUrlFromProps)
     : undefined;
   const [filePath, setFilePath] = useState(
-    filePathFromSearchParam || filePathFromImages || ""
+    filePathFromSearchParam || filePathFromImages || "",
   );
   const initialImageUrl =
     croppedImageUrlFromProps || (filePath && buildDefaultUrl(filePath)) || "";
@@ -259,13 +258,12 @@ export function ImageUpload({
       });
       setCroppedImagesUrls(cropUrls);
     }
-     
   }, [imageLoaded]);
 
   const onCropComplete = (crop: Crop, percentageCrop: Crop) => {
     if (!hasNaturalDimensions) {
       console.error(
-        "onCropComplete was called before natural dimensions were set."
+        "onCropComplete was called before natural dimensions were set.",
       );
       return;
     }
@@ -282,7 +280,7 @@ export function ImageUpload({
   };
 
   const croppedImagesMatchFilePath = Object.values(croppedImagesUrls).some(
-    (url) => url.includes(filePath)
+    (url) => url.includes(filePath),
   );
   const showCroppedImage =
     croppedImagesMatchFilePath && croppedImagesUrls.cropped;
@@ -300,7 +298,7 @@ export function ImageUpload({
                 "mx-auto block h-auto max-h-96 w-full object-contain",
                 {
                   hidden: showCroppedImage,
-                }
+                },
               )}
               ref={fullImageRef}
             />

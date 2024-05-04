@@ -2,9 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { Instagram, LinkIcon, Mail, MessageSquare } from "lucide-react";
-import { FollowUserButton } from "./FollowButtons";
-import { Button, buttonVariants } from "./ui/button";
+
+import { Button, buttonVariants } from "@soonlist/ui/button";
+
 import { api } from "~/trpc/server";
+import { FollowUserButton } from "./FollowButtons";
 
 const SAMPLE_BIO = `I haven't written a bio yet... you'll have to find me at one of my events!`;
 
@@ -29,9 +31,9 @@ export async function UserInfo(props: UserInfoProps) {
 
   let user;
   if (props.userId) {
-    user = await api.user.getById.query({ id: props.userId });
+    user = await api.user.getById({ id: props.userId });
   } else if (props.userName) {
-    user = await api.user.getByUsername.query({ userName: props.userName });
+    user = await api.user.getByUsername({ userName: props.userName });
   }
 
   if (!user) {
@@ -42,7 +44,7 @@ export async function UserInfo(props: UserInfoProps) {
 
   const following =
     activeUser?.id &&
-    (await api.user.getIfFollowing.query({
+    (await api.user.getIfFollowing({
       followerId: activeUser.id,
       followingId: user.id,
     }));

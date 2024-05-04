@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { buttonVariants } from "./ui/button";
-import { Skeleton } from "~/components/ui/skeleton";
+
+import { buttonVariants } from "@soonlist/ui/button";
+import { Skeleton } from "@soonlist/ui/skeleton";
 
 function LoadingEvent() {
   return (

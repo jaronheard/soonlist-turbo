@@ -1,5 +1,6 @@
-import type { EventMetadata } from "~/lib/prompts";
-import type { AddToCalendarButtonProps } from "~/types";
+import type { EventMetadata } from "@soonlist/cal";
+import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
+
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
 import { ImageUpload } from "~/components/ImageUpload";
 import { UserInfo } from "~/components/UserInfo";
@@ -11,7 +12,7 @@ export default async function Page({
 }: {
   params: { eventId: string };
 }) {
-  const event = await api.event.get.query({ eventId: params.eventId });
+  const event = await api.event.get({ eventId: params.eventId });
 
   if (!event) {
     return <p className="text-lg text-gray-500">No event found.</p>;

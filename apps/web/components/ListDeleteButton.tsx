@@ -1,10 +1,12 @@
 "use client";
 
-import { SignedIn, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { SignedIn, useUser } from "@clerk/nextjs";
 import { Loader2, Trash } from "lucide-react";
-import { Button } from "./ui/button";
+import { toast } from "sonner";
+
+import { Button } from "@soonlist/ui/button";
+
 import { api } from "~/trpc/react";
 
 interface ListDeleteButtonProps {
@@ -36,13 +38,13 @@ export function ListDeleteButton(props: ListDeleteButtonProps) {
 
   return (
     <SignedIn>
-      {deleteList.isLoading && (
+      {deleteList.isPending && (
         <Button variant={"destructive"} disabled>
           <Loader2 className="mr-2 size-4 animate-spin" />
           Please wait
         </Button>
       )}
-      {!deleteList.isLoading && (
+      {!deleteList.isPending && (
         <Button
           variant={"destructive"}
           onClick={() =>

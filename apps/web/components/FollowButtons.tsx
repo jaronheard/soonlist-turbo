@@ -1,12 +1,14 @@
 "use client";
 
-import { SignedIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { SignedIn } from "@clerk/nextjs";
 import { Check, Loader2, Plus } from "lucide-react";
-import { Button } from "./ui/button";
-import { DropdownMenuItem } from "./DropdownMenu";
+import { toast } from "sonner";
+
+import { Button } from "@soonlist/ui/button";
+
 import { api } from "~/trpc/react";
+import { DropdownMenuItem } from "./DropdownMenu";
 
 export function FollowEventDropdownButton({
   eventId,
@@ -34,7 +36,7 @@ export function FollowEventDropdownButton({
       router.refresh();
     },
   });
-  const isLoading = follow.isLoading || unfollow.isLoading;
+  const isLoading = follow.isPending || unfollow.isPending;
 
   return (
     <SignedIn>
@@ -95,7 +97,7 @@ export function FollowEventButton({
       router.refresh();
     },
   });
-  const isLoading = follow.isLoading || unfollow.isLoading;
+  const isLoading = follow.isPending || unfollow.isPending;
 
   return (
     <SignedIn>
@@ -157,7 +159,7 @@ export function FollowUserButton({
       router.refresh();
     },
   });
-  const isLoading = follow.isLoading || unfollow.isLoading;
+  const isLoading = follow.isPending || unfollow.isPending;
   return (
     <SignedIn>
       {isLoading && (
@@ -219,7 +221,7 @@ export function FollowListButton({
       router.refresh();
     },
   });
-  const isLoading = follow.isLoading || unfollow.isLoading;
+  const isLoading = follow.isPending || unfollow.isPending;
 
   return (
     <SignedIn>

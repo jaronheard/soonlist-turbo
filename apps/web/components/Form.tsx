@@ -1,9 +1,11 @@
 "use client";
+
 import Link from "next/link";
 import { Loader2, Sparkles } from "lucide-react";
-import { Textarea } from "./ui/textarea";
-import { Label } from "./ui/label";
-import { Button } from "./ui/button";
+
+import { Button } from "@soonlist/ui/button";
+import { Label } from "@soonlist/ui/label";
+import { Textarea } from "@soonlist/ui/textarea";
 
 export function Form({
   handleInputChange,

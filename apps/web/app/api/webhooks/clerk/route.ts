@@ -1,9 +1,10 @@
-import { Webhook } from "svix";
+import type { WebhookEvent } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
-import type {WebhookEvent} from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
-import { db } from "~/server/db";
-import { users } from "~/server/db/schema";
+import { Webhook } from "svix";
+
+import { db } from "@soonlist/db";
+import { users } from "@soonlist/db/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
 
   if (!WEBHOOK_SECRET) {
     throw new Error(
-      "Please add WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local"
+      "Please add WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local",
     );
   }
 

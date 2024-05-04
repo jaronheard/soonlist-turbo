@@ -3,7 +3,7 @@ import { api } from "~/trpc/server";
 import { ListCard } from "./ListCard";
 
 export async function SampleList({ listId }: { listId: string }) {
-  const list = await api.list.get.query({ listId });
+  const list = await api.list.get({ listId });
 
   if (!list) {
     return <> </>;

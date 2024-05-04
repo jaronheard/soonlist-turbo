@@ -2,9 +2,11 @@
 
 import { Share } from "lucide-react";
 import { toast } from "sonner";
+
+import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
+import { Button } from "@soonlist/ui/button";
+
 import { DropdownMenuItem } from "./DropdownMenu";
-import { Button } from "./ui/button";
-import type {AddToCalendarButtonProps} from "~/types";
 
 export interface ShareButtonProps {
   id: string;
@@ -34,7 +36,7 @@ export function ShareButton(props: ShareButtonProps) {
     } else {
       // Fallback for browsers that do not support the Share API
       void navigator.clipboard.writeText(
-        `${process.env.NEXT_PUBLIC_URL}/event/${props.id}`
+        `${process.env.NEXT_PUBLIC_URL}/event/${props.id}`,
       );
       toast("Event URL copied to clipboard!");
     }

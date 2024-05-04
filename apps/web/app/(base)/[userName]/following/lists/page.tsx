@@ -1,16 +1,19 @@
-import type {Metadata, ResolvingMetadata} from "next/types";
-import { UserInfo } from "~/components/UserInfo";
-import { ListCard } from "~/components/ListCard";
+import type { Metadata, ResolvingMetadata } from "next/types";
+
 import { FollowListButton } from "~/components/FollowButtons";
+import { ListCard } from "~/components/ListCard";
+import { UserInfo } from "~/components/UserInfo";
 import { api } from "~/trpc/server";
 
-interface Props { params: { userName: string } }
+interface Props {
+  params: { userName: string };
+}
 
 export async function generateMetadata(
   { params }: Props,
-  parent: ResolvingMetadata
+  parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const lists = await api.list.getFollowing.query({
+  const lists = await api.list.getFollowing({
     userName: params.userName,
   });
   const listCount = lists.length;
@@ -29,7 +32,7 @@ export async function generateMetadata(
 }
 
 export default async function Page({ params }: Props) {
-  const lists = await api.list.getFollowing.query({
+  const lists = await api.list.getFollowing({
     userName: params.userName,
   });
 

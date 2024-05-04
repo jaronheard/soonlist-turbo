@@ -6,11 +6,12 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 
-import type { EventMetadataLoose } from "~/lib/prompts";
+import type { EventMetadataLoose } from "@soonlist/cal";
+import { Button } from "@soonlist/ui/button";
+
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import { api } from "~/trpc/react";
-import { Button } from "./ui/button";
 
 interface UpdateButtonProps {
   event: AddToCalendarButtonType;
@@ -47,13 +48,13 @@ export function UpdateButton(props: UpdateButtonProps) {
   return (
     <>
       <SignedIn>
-        {updateEvent.isLoading && (
+        {updateEvent.isPending && (
           <Button disabled>
             <Loader2 className="mr-2 size-4 animate-spin" />
             Please wait
           </Button>
         )}
-        {!updateEvent.isLoading && (
+        {!updateEvent.isPending && (
           <Button
             onClick={() =>
               updateEvent.mutate({

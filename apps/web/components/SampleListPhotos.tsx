@@ -1,10 +1,12 @@
 import Image from "next/image";
 import { ArrowBigRight } from "lucide-react";
+
+import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
+
 import { api } from "~/trpc/server";
-import type {AddToCalendarButtonProps} from "~/types";
 
 export async function SampleListPhotos({ listId }: { listId: string }) {
-  const list = await api.list.get.query({ listId });
+  const list = await api.list.get({ listId });
 
   if (!list) {
     return <> </>;
@@ -14,12 +16,13 @@ export async function SampleListPhotos({ listId }: { listId: string }) {
   const events = list.eventToLists
     .map((item) => item.event)
     // filter out null events
-    .filter((event) => event.startDateTime)
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    .filter((event) => event?.startDateTime)
     // sort by startDateTime
     .sort(
       (a, b) =>
         new Date(a.startDateTime).getTime() -
-        new Date(b.startDateTime).getTime()
+        new Date(b.startDateTime).getTime(),
     )
     // limit to 3 events
     .slice(-3)

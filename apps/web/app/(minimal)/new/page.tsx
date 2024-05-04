@@ -2,9 +2,10 @@ import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { X } from "lucide-react";
 
+import { Button } from "@soonlist/ui/button";
+
 import { AddEvent } from "~/app/(base)/AddEvent";
 import { Logo } from "~/components/Logo";
-import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/server";
 import { EventsFromImage } from "./EventsFromImage";
 import { EventsFromRawText } from "./EventsFromRawText";
@@ -27,7 +28,7 @@ export default async function Page({ searchParams }: Props) {
   const username = user?.username;
   const lists =
     username &&
-    (await api.list.getAllForUser.query({
+    (await api.list.getAllForUser({
       userName: username,
     }));
   const timezone = searchParams.timezone || "America/Los_Angeles";
@@ -79,7 +80,7 @@ export default async function Page({ searchParams }: Props) {
         </Button>
         <div className="absolute top-0 z-20 flex flex-col items-center">
           <Logo className="origin-top scale-50" />
-          <h1 className="font-heading text-2.5xl -mt-2 hidden font-bold leading-9 tracking-wide text-gray-700 lg:block">
+          <h1 className="-mt-2 hidden font-heading text-2.5xl font-bold leading-9 tracking-wide text-gray-700 lg:block">
             Add Event
           </h1>
         </div>

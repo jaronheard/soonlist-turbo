@@ -1,9 +1,10 @@
 "use client";
 
-import { SignedIn, useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { SignedIn, useUser } from "@clerk/nextjs";
 import { Edit } from "lucide-react";
-import { buttonVariants } from "./ui/button";
+
+import { buttonVariants } from "@soonlist/ui/button";
 
 interface ListEditButtonProps {
   listUserId: string;

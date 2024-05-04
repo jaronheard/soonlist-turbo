@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import typography from "@tailwindcss/typography";
 import animate from "tailwindcss-animate";
 
 import base from "./base";
@@ -17,8 +18,8 @@ export default {
     extend: {
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) - 1.25rem)",
+        sm: "calc(var(--radius) - 1.5rem)",
       },
       keyframes: {
         "accordion-down": {
@@ -34,7 +35,34 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      // special additions
+      transitionProperty: {
+        width: "width",
+      },
+      fontFamily: {
+        sans: ["var(--font-plex-sans)"],
+        heading: ["var(--font-kalam)"],
+      },
+      letterSpacing: {
+        tight: "-0.09rem",
+        tighterish: "-0.18rem",
+      },
+      lineHeight: {
+        7.5: "1.875rem",
+      },
+      spacing: {
+        "2.5xl": "44.125rem",
+        "7xl": "87.5rem",
+      },
+      fontSize: {
+        "2.5xl": "1.75rem",
+      },
+      hyphens: {
+        "hyphens-none": "none",
+        "hyphens-manual": "manual",
+        "hyphens-auto": "auto",
+      },
     },
   },
-  plugins: [animate],
+  plugins: [animate, typography],
 } satisfies Config;

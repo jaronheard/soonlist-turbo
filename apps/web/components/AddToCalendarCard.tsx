@@ -5,35 +5,36 @@ import React, { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Shapes, Text } from "lucide-react";
 
-import type { EventMetadata } from "~/lib/prompts";
-import type { ATCBActionEventConfig } from "~/types";
-import { useCroppedImageContext } from "~/context/CroppedImageContext";
-import { useNewEventContext } from "~/context/NewEventContext";
-import { feedback } from "~/lib/intercom/intercom";
+import type { EventMetadata } from "@soonlist/cal";
+import type { ATCBActionEventConfig } from "@soonlist/cal/types";
 import {
   ACCESSIBILITY_TYPES_OPTIONS,
   EVENT_CATEGORIES,
   EVENT_TYPES,
   // PLATFORMS,
   PRICE_TYPE,
-} from "~/lib/prompts";
-import { CalendarButton } from "./CalendarButton";
-import { SaveButton } from "./SaveButton";
-import { TimezoneSelect } from "./TimezoneSelect";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Input, InputDescription } from "./ui/input";
-import { InputTags } from "./ui/input-tags";
-import { Label } from "./ui/label";
-import { MultiSelect } from "./ui/multiselect";
+} from "@soonlist/cal";
+import { Button } from "@soonlist/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
+import { Input, InputDescription } from "@soonlist/ui/input";
+import { InputTags } from "@soonlist/ui/input-tags";
+import { Label } from "@soonlist/ui/label";
+import { MultiSelect } from "@soonlist/ui/multiselect";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
-import { Textarea } from "./ui/textarea";
+} from "@soonlist/ui/select";
+import { Textarea } from "@soonlist/ui/textarea";
+
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
+import { useNewEventContext } from "~/context/NewEventContext";
+import { feedback } from "~/lib/intercom/intercom";
+import { CalendarButton } from "./CalendarButton";
+import { SaveButton } from "./SaveButton";
+import { TimezoneSelect } from "./TimezoneSelect";
 import { UpdateButton } from "./UpdateButton";
 
 export type AddToCalendarCardProps = AddToCalendarButtonType & {

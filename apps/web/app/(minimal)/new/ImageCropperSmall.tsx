@@ -1,26 +1,25 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import React, { useEffect, useRef, useState } from "react";
 import * as Bytescale from "@bytescale/sdk";
-import React, { useState, useRef, useEffect } from "react";
+
 import "react-image-crop/dist/ReactCrop.css";
-import { SwitchCamera, Upload, Scissors, PencilIcon } from "lucide-react";
+
+import type { Crop } from "react-image-crop";
 import { UploadButton } from "@bytescale/upload-widget-react";
 import { Dialog } from "@headlessui/react";
-import {
-  ReactCrop,
-  
-  centerCrop,
-  makeAspectCrop
-} from "react-image-crop";
-import type {Crop} from "react-image-crop";
-import { Button, buttonVariants } from "~/components/ui/button";
-import { useCroppedImageContext } from "~/context/CroppedImageContext";
-import { cn, extractFilePath } from "~/lib/utils";
+import { PencilIcon, Scissors, SwitchCamera, Upload } from "lucide-react";
+import { centerCrop, makeAspectCrop, ReactCrop } from "react-image-crop";
+
+import { Button, buttonVariants } from "@soonlist/ui/button";
+
 import {
   buildDefaultUrl,
   bytescaleWidgetOptions,
 } from "~/components/ImageUpload";
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
+import { cn, extractFilePath } from "~/lib/utils";
 
 const buildCroppedUrl = (
   filePath: string,
@@ -29,7 +28,7 @@ const buildCroppedUrl = (
     naturalHeight: number;
     crop: Crop;
     targetAspect: number;
-  }
+  },
 ): string => {
   const { naturalWidth, naturalHeight, crop, targetAspect } = opts;
   const validOptions =
@@ -88,7 +87,7 @@ const buildCroppedUrl = (
 
 const buildAllCropUrls = (
   filePath: string,
-  opts: { naturalWidth: number; naturalHeight: number; crop: Crop }
+  opts: { naturalWidth: number; naturalHeight: number; crop: Crop },
 ) => {
   const { naturalWidth, naturalHeight, crop } = opts;
   const newCroppedImagesUrls = {} as Record<string, string>;
@@ -116,7 +115,7 @@ const buildAllCropUrls = (
 
     // Get the cropped image URL for the API
     for (const [key, aspect] of Object.entries(
-      aspectRatioWithOriginalAndCropped
+      aspectRatioWithOriginalAndCropped,
     )) {
       const croppedImageUrl = buildCroppedUrl(filePath, {
         naturalWidth: naturalWidth,
@@ -144,10 +143,10 @@ const defaultCrop = (opts: { naturalWidth: number; naturalHeight: number }) => {
       },
       naturalWidth / naturalHeight,
       naturalWidth,
-      naturalHeight
+      naturalHeight,
     ),
     naturalWidth,
-    naturalHeight
+    naturalHeight,
   );
 };
 
@@ -167,7 +166,7 @@ export function ImageCropperSmall({
     ? extractFilePath(croppedImageUrlFromProps)
     : undefined;
   const [filePath, setFilePath] = useState(
-    filePathFromSearchParam || filePathFromImages || ""
+    filePathFromSearchParam || filePathFromImages || "",
   );
   const initialImageUrl =
     croppedImageUrlFromProps || (filePath && buildDefaultUrl(filePath)) || "";
@@ -243,13 +242,12 @@ export function ImageCropperSmall({
       });
       setCroppedImagesUrls(cropUrls);
     }
-     
   }, [isImageLoading, hasNaturalDimensions]);
 
   const onCropComplete = (crop: Crop, percentageCrop: Crop) => {
     if (!hasNaturalDimensions) {
       console.error(
-        "onCropComplete was called before natural dimensions were set."
+        "onCropComplete was called before natural dimensions were set.",
       );
       return;
     }
@@ -266,7 +264,7 @@ export function ImageCropperSmall({
   };
 
   const croppedImagesMatchFilePath = Object.values(croppedImagesUrls).some(
-    (url) => url.includes(filePath)
+    (url) => url.includes(filePath),
   );
   const showCroppedImage =
     croppedImagesMatchFilePath && croppedImagesUrls.cropped;
@@ -282,7 +280,7 @@ export function ImageCropperSmall({
                   "mx-auto block size-40 animate-pulse rounded-2xl border-2 bg-gray-50",
                   {
                     hidden: showCroppedImage || isModalOpen || !isImageLoading,
-                  }
+                  },
                 )}
               />
 
@@ -293,7 +291,7 @@ export function ImageCropperSmall({
                   "mx-auto block h-40 overflow-hidden object-cover",
                   {
                     hidden: showCroppedImage || isImageLoading,
-                  }
+                  },
                 )}
                 ref={fullImageRef}
               />
@@ -305,14 +303,14 @@ export function ImageCropperSmall({
                   "mx-auto block h-40 overflow-hidden object-cover",
                   {
                     hidden: !showCroppedImage || isModalOpen || isImageLoading,
-                  }
+                  },
                 )}
               />
               {!showActions && (
                 <div
                   className={cn(
                     buttonVariants({ size: "icon", variant: "secondary" }),
-                    "hover:bg-secondary absolute -bottom-2 left-1/2 -translate-x-1/2 scale-150"
+                    "absolute -bottom-2 left-1/2 -translate-x-1/2 scale-150 hover:bg-secondary",
                   )}
                 >
                   <PencilIcon className="size-6" />

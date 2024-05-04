@@ -1,15 +1,11 @@
 "use client";
 
-import React, {
-  createContext,
-  useState,
-  useContext
-  
-} from "react";
-import type {ReactNode} from "react";
+import type { ReactNode } from "react";
 import type * as z from "zod";
-import type {organizeFormSchema} from "~/components/YourDetails";
-import type {AddToCalendarCardProps} from "~/components/AddToCalendarCard";
+import React, { createContext, useContext, useState } from "react";
+
+import type { AddToCalendarCardProps } from "~/components/AddToCalendarCard";
+import type { organizeFormSchema } from "~/components/YourDetails";
 
 // Define the type of the context state
 interface NewEventContextState {

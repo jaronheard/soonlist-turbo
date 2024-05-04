@@ -5,9 +5,10 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { Button } from "@soonlist/ui/button";
+import { CardDescription } from "@soonlist/ui/card";
+
 import { api } from "~/trpc/react";
-import { Button } from "./ui/button";
-import { CardDescription } from "./ui/card";
 
 interface ListUpdateButtonProps {
   id: string;
@@ -40,9 +41,9 @@ export function ListUpdateButton(props: ListUpdateButtonProps) {
               description: props.description,
             })
           }
-          disabled={updateList.isLoading}
+          disabled={updateList.isPending}
         >
-          {updateList.isLoading ? (
+          {updateList.isPending ? (
             <>
               <Loader2 className="mr-2 size-4 animate-spin" />
               Please wait

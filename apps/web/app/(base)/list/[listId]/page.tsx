@@ -1,19 +1,22 @@
-import type {Metadata, ResolvingMetadata} from "next/types";
+import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
-import { UserInfo } from "~/components/UserInfo";
-import { ListEditButton } from "~/components/ListEditButton";
-import { ListDeleteButton } from "~/components/ListDeleteButton";
+
 import { EventList } from "~/components/EventList";
 import { FollowListButton } from "~/components/FollowButtons";
+import { ListDeleteButton } from "~/components/ListDeleteButton";
+import { ListEditButton } from "~/components/ListEditButton";
+import { UserInfo } from "~/components/UserInfo";
 import { api } from "~/trpc/server";
 
-interface Props { params: { listId: string } }
+interface Props {
+  params: { listId: string };
+}
 
 export async function generateMetadata(
   { params }: Props,
-  parent: ResolvingMetadata
+  parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const list = await api.list.get.query({ listId: params.listId });
+  const list = await api.list.get({ listId: params.listId });
 
   if (!list) {
     return {
@@ -29,11 +32,11 @@ export async function generateMetadata(
     .sort(
       (a, b) =>
         new Date(a.startDateTime).getTime() -
-        new Date(b.startDateTime).getTime()
+        new Date(b.startDateTime).getTime(),
     );
 
   const futureEvents = events.filter(
-    (event) => event.startDateTime >= new Date()
+    (event) => event.startDateTime && event.startDateTime >= new Date(),
   );
   const futureEventsCount = futureEvents.length;
   // optionally access and extend (rather than replace) parent metadata
@@ -53,7 +56,7 @@ export async function generateMetadata(
 
 export default async function Page({ params }: Props) {
   const user = await currentUser();
-  const list = await api.list.get.query({ listId: params.listId });
+  const list = await api.list.get({ listId: params.listId });
 
   if (!list) {
     return <> </>;
@@ -66,16 +69,16 @@ export default async function Page({ params }: Props) {
     .sort(
       (a, b) =>
         new Date(a.startDateTime).getTime() -
-        new Date(b.startDateTime).getTime()
+        new Date(b.startDateTime).getTime(),
     );
 
   const pastEvents = events.filter((item) => item.endDateTime < new Date());
 
   const currentEvents = events.filter(
-    (item) => item.startDateTime < new Date() && item.endDateTime > new Date()
+    (item) => item.startDateTime < new Date() && item.endDateTime > new Date(),
   );
   const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date()
+    (item) => item.startDateTime >= new Date(),
   );
 
   const self = user?.username === list.user.username;
@@ -85,7 +88,7 @@ export default async function Page({ params }: Props) {
   return (
     <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
       <div className="flex flex-col gap-4 lg:sticky lg:top-32 lg:self-start">
-        <p className="font-heading text-neutral-1 text-5xl font-bold leading-[3.5rem] tracking-tight">
+        <p className="font-heading text-5xl font-bold leading-[3.5rem] tracking-tight text-neutral-1">
           {list.name}
         </p>
         <div className="flex gap-6">
@@ -94,7 +97,7 @@ export default async function Page({ params }: Props) {
           </p>
           <UserInfo userId={list.user.id} />
         </div>
-        <div className="text-neutral-2 text-2xl">{list.description}</div>
+        <div className="text-2xl text-neutral-2">{list.description}</div>
         <div className="flex place-items-center gap-4">
           {!self && (
             <>

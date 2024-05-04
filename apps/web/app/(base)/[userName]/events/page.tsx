@@ -1,17 +1,20 @@
-import type {Metadata, ResolvingMetadata} from "next/types";
+import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
-import { UserInfo } from "~/components/UserInfo";
-import { ListCardsForUser } from "~/components/ListCardsForUser";
+
 import { EventList } from "~/components/EventList";
+import { ListCardsForUser } from "~/components/ListCardsForUser";
+import { UserInfo } from "~/components/UserInfo";
 import { api } from "~/trpc/server";
 
-interface Props { params: { userName: string } }
+interface Props {
+  params: { userName: string };
+}
 
 export async function generateMetadata(
   { params }: Props,
-  parent: ResolvingMetadata
+  parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const events = await api.event.getForUser.query({
+  const events = await api.event.getForUser({
     userName: params.userName,
   });
 
@@ -25,7 +28,7 @@ export async function generateMetadata(
   }
 
   const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date()
+    (item) => item.startDateTime >= new Date(),
   );
 
   const futureEventsCount = futureEvents.length;
@@ -48,17 +51,17 @@ export async function generateMetadata(
 export default async function Page({ params }: Props) {
   const activeUser = await currentUser();
   const self = activeUser?.username === params.userName;
-  const events = await api.event.getForUser.query({
+  const events = await api.event.getForUser({
     userName: params.userName,
   });
 
   const pastEvents = events.filter((item) => item.endDateTime < new Date());
 
   const currentEvents = events.filter(
-    (item) => item.startDateTime < new Date() && item.endDateTime > new Date()
+    (item) => item.startDateTime < new Date() && item.endDateTime > new Date(),
   );
   const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date()
+    (item) => item.startDateTime >= new Date(),
   );
 
   return (

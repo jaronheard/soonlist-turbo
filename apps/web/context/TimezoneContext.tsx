@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState, createContext  } from "react";
-import type {ReactNode} from "react";
+import type { ReactNode } from "react";
+import React, { createContext, useState } from "react";
 
 // Create a Context for the timezone
 export const TimezoneContext = createContext({
@@ -13,7 +13,7 @@ export const TimezoneContext = createContext({
 // Provider component
 export const TimezoneProvider = ({ children }: { children: ReactNode }) => {
   const [timezone, setTimezone] = useState(
-    Intl.DateTimeFormat().resolvedOptions().timeZone
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
 
   return (

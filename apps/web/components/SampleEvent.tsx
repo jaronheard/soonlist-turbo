@@ -1,13 +1,14 @@
 import Image from "next/image";
 
-import type { AddToCalendarButtonPropsRestricted } from "~/types";
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+
 import { api } from "~/trpc/server";
 import { EventListItem } from "./EventDisplays";
 import { ListCard } from "./ListCard";
 import { UserAllEventsCard } from "./UserAllEventsCard";
 
 export async function SampleEvent({ eventId }: { eventId: string }) {
-  const event = await api.event.get.query({
+  const event = await api.event.get({
     eventId,
   });
 
@@ -28,7 +29,7 @@ export async function SampleEvent({ eventId }: { eventId: string }) {
   return (
     <div className="flex flex-row gap-8 lg:flex-row">
       <div className="hidden flex-col items-center lg:flex">
-        <div className="border-accent-yellow relative size-24 overflow-hidden rounded-xl border-[6px] lg:size-44">
+        <div className="relative size-24 overflow-hidden rounded-xl border-[6px] border-accent-yellow lg:size-44">
           <Image
             src={fullImageUrl!}
             fill
@@ -58,7 +59,7 @@ export async function SampleEvent({ eventId }: { eventId: string }) {
         )}
         <div className="pt-6 lg:hidden"></div>
         <div className="flex items-center lg:hidden">
-          <div className="border-accent-yellow relative size-24 overflow-hidden rounded-xl border-[6px] lg:size-44">
+          <div className="relative size-24 overflow-hidden rounded-xl border-[6px] border-accent-yellow lg:size-44">
             <Image
               src={fullImageUrl!}
               fill

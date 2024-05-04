@@ -1,32 +1,14 @@
 "use client";
 
+import type { useForm } from "react-hook-form";
+import type { z } from "zod";
 import * as React from "react";
-import type {useForm} from "react-hook-form";
 import { SignedIn } from "@clerk/nextjs";
 import { ListIcon, Plus } from "lucide-react";
-import type {z} from "zod";
-import type {organizeFormSchema} from "~/components/YourDetails";
-import type {List} from "~/server/db/types";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import {
-  FormLabel,
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "~/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import { Textarea } from "~/components/ui/textarea";
-import { MultiSelect } from "~/components/ui/multiselect";
-import { Button } from "~/components/ui/button";
+
+import type { List } from "@soonlist/db/types";
+import { Button } from "@soonlist/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +16,27 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "~/components/ui/dialog";
+} from "@soonlist/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@soonlist/ui/form";
+import { MultiSelect } from "@soonlist/ui/multiselect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@soonlist/ui/select";
+import { Textarea } from "@soonlist/ui/textarea";
+
+import type { organizeFormSchema } from "~/components/YourDetails";
 import { AddListCard } from "~/components/AddListCard";
 
 export function Organize({

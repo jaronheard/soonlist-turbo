@@ -1,7 +1,8 @@
 "use client";
 
+import { Button } from "@soonlist/ui/button";
+
 import { SaveButton } from "~/components/SaveButton";
-import { Button } from "~/components/ui/button";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import {

@@ -1,11 +1,12 @@
 "use client";
 
+import { blankEvent } from "@soonlist/cal";
+
+import { AddToCalendarCard } from "~/components/AddToCalendarCard";
+import { api } from "~/trpc/react";
+import { EventPreviewLoadingSpinner } from "./EventPreviewLoadingSpinner";
 import { EventsError } from "./EventsError";
 import { NewEventPreview } from "./NewEventPreview";
-import { EventPreviewLoadingSpinner } from "./EventPreviewLoadingSpinner";
-import { api } from "~/trpc/react";
-import { AddToCalendarCard } from "~/components/AddToCalendarCard";
-import { blankEvent } from "~/lib/utils";
 
 const queryOptions = {
   // don't refetch on mount, window focus, or reconnect
@@ -28,12 +29,12 @@ export function EventsFromRawText({
       rawText,
       timezone,
     },
-    queryOptions
+    queryOptions,
   );
 
   const { events, response } = fromRawText.data ?? {};
 
-  if (fromRawText.isLoading) {
+  if (fromRawText.isPending) {
     return <EventPreviewLoadingSpinner className="h-64" />;
   }
 

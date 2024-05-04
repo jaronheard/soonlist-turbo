@@ -1,31 +1,29 @@
 "use client";
 
+import type { z } from "zod";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  CheckCircle2,
+  CircleDashed,
   Globe,
   Instagram,
   Mail,
-  Phone,
-  CheckCircle2,
-  CircleDashed,
   Pen,
+  Phone,
 } from "lucide-react";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import type {z} from "zod";
-import { TabsTrigger, TabsList, TabsContent, Tabs } from "~/components/ui/tabs";
+
+import { Button } from "@soonlist/ui/button";
 import {
-  CardTitle,
+  Card,
+  CardContent,
   CardDescription,
   CardHeader,
-  CardContent,
-  Card,
-} from "~/components/ui/card";
-import { Textarea } from "~/components/ui/textarea";
-import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
+  CardTitle,
+} from "@soonlist/ui/card";
 import {
   Form,
   FormControl,
@@ -34,10 +32,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "~/components/ui/form";
-import { api } from "~/trpc/react";
-import { userAdditionalInfoSchema } from "~/lib/schemas";
+} from "@soonlist/ui/form";
+import { Input } from "@soonlist/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
+import { Textarea } from "@soonlist/ui/textarea";
+import { userAdditionalInfoSchema } from "@soonlist/validators";
+
 import { cn } from "~/lib/utils";
+import { api } from "~/trpc/react";
 
 export function OnboardingTabs({
   additionalInfo,

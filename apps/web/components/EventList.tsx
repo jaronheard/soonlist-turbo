@@ -1,14 +1,16 @@
 import { clsx } from "clsx";
-import type {User, EventFollow, Event, Comment} from "~/server/db/types";
-import { EventListItem } from "~/components/EventDisplays";
+
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+import type { Comment, Event, EventFollow, User } from "@soonlist/db/types";
+import { collapseSimilarEvents } from "@soonlist/cal";
+
 import {
   Accordion,
+  AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  AccordionContent,
 } from "~/components/Accordian";
-import type {AddToCalendarButtonPropsRestricted} from "~/types";
-import { collapseSimilarEvents } from "~/lib/similarEvents";
+import { EventListItem } from "~/components/EventDisplays";
 
 function ListContainer({
   children,
@@ -62,16 +64,16 @@ export function EventList({
 }) {
   function getVisibleEvents(events: EventWithUser[]) {
     return events.filter(
-      (item) => showPrivateEvents || item.visibility === "public"
+      (item) => showPrivateEvents || item.visibility === "public",
     );
   }
 
   const currentEventsToUse = collapseSimilarEvents(
-    getVisibleEvents(currentEvents)
+    getVisibleEvents(currentEvents),
   );
   const pastEventsToUse = collapseSimilarEvents(getVisibleEvents(pastEvents));
   const futureEventsToUse = collapseSimilarEvents(
-    getVisibleEvents(futureEvents)
+    getVisibleEvents(futureEvents),
   );
   const showPastEvents =
     variant !== "future-minimal" && pastEventsToUse.length > 0;
