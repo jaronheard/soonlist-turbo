@@ -30,7 +30,7 @@ export function ListCard(props: {
   return (
     <div
       className={cn(
-        "item-center border-accent-yellow bg-interactive-2 flex overflow-hidden rounded-xl border-[5px]",
+        "item-center flex overflow-hidden rounded-xl border-[5px] border-accent-yellow bg-interactive-2",
         props.className,
       )}
     >
@@ -38,7 +38,7 @@ export function ListCard(props: {
         href={props.id ? `/list/${props.id}` : `/${props.username}/events`}
         className={clsx(
           getRainbowColorFromString(props.name),
-          "font-heading flex size-[5.375rem] flex-shrink-0 items-center justify-center rounded-l-md pt-1 text-4xl font-bold leading-none text-white",
+          "flex size-[5.375rem] flex-shrink-0 items-center justify-center rounded-l-md pt-1 font-heading text-4xl font-bold leading-none text-white",
         )}
       >
         {getInitialsFromString(props.name)}
@@ -48,15 +48,15 @@ export function ListCard(props: {
           href={props.id ? `/list/${props.id}` : `/${props.username}/events`}
           className="flex justify-between"
         >
-          <div className="text-interactive-1 truncate text-xl font-bold leading-6 tracking-wide">
+          <div className="truncate text-xl font-bold leading-6 tracking-wide text-interactive-1">
             {props.name}
           </div>
-          <SquareStack className="text-interactive-1 ml-4 size-6" />
+          <SquareStack className="ml-4 size-6 text-interactive-1" />
         </Link>
-        <div className="text-neutral-2 truncate text-lg font-medium leading-none">
+        <div className="truncate text-lg font-medium leading-none text-neutral-2">
           {props.id ? "curated by " : "by "}
           <Link
-            className="text-interactive-1 font-semibold"
+            className="font-semibold text-interactive-1"
             href={`/${props.username}/events`}
           >
             @{props.username}

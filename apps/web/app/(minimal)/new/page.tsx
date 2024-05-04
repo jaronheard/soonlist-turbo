@@ -80,7 +80,7 @@ export default async function Page({ searchParams }: Props) {
         </Button>
         <div className="absolute top-0 z-20 flex flex-col items-center">
           <Logo className="origin-top scale-50" />
-          <h1 className="font-heading text-2.5xl -mt-2 hidden font-bold leading-9 tracking-wide text-gray-700 lg:block">
+          <h1 className="-mt-2 hidden font-heading text-2.5xl font-bold leading-9 tracking-wide text-gray-700 lg:block">
             Add Event
           </h1>
         </div>

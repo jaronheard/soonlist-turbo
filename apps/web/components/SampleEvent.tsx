@@ -29,7 +29,7 @@ export async function SampleEvent({ eventId }: { eventId: string }) {
   return (
     <div className="flex flex-row gap-8 lg:flex-row">
       <div className="hidden flex-col items-center lg:flex">
-        <div className="border-accent-yellow relative size-24 overflow-hidden rounded-xl border-[6px] lg:size-44">
+        <div className="relative size-24 overflow-hidden rounded-xl border-[6px] border-accent-yellow lg:size-44">
           <Image
             src={fullImageUrl!}
             fill
@@ -59,7 +59,7 @@ export async function SampleEvent({ eventId }: { eventId: string }) {
         )}
         <div className="pt-6 lg:hidden"></div>
         <div className="flex items-center lg:hidden">
-          <div className="border-accent-yellow relative size-24 overflow-hidden rounded-xl border-[6px] lg:size-44">
+          <div className="relative size-24 overflow-hidden rounded-xl border-[6px] border-accent-yellow lg:size-44">
             <Image
               src={fullImageUrl!}
               fill

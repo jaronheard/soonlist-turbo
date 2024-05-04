@@ -8,7 +8,7 @@ export const metadata = {
 export default function Page() {
   return (
     <div className="bg-white px-6 py-32 lg:px-8">
-      <div className="prose sm:prose-lg lg:prose-xl xl:prose-2xl 2xl:prose-2xl mx-auto">
+      <div className="prose mx-auto sm:prose-lg lg:prose-xl xl:prose-2xl 2xl:prose-2xl">
         <h1>Website Terms and Conditions of Use</h1>
         <h2>1. Terms</h2>
         <p>

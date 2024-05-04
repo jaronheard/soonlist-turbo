@@ -64,8 +64,8 @@ export function EventLoadingText() {
 
   return (
     <div className="text-center">
-      <p className="text-neutral-1 font-semibold">🪄 {randomLoadingText} ✨</p>
-      <p className="text-neutral-2 text-sm">{loadingText}</p>
+      <p className="font-semibold text-neutral-1">🪄 {randomLoadingText} ✨</p>
+      <p className="text-sm text-neutral-2">{loadingText}</p>
     </div>
   );
 }

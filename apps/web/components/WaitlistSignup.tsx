@@ -56,7 +56,7 @@ export function WaitlistSignup() {
 
   return (
     <>
-      <div className="font-heading text-center text-4xl font-bold leading-[1.0833] tracking-tight text-gray-900 sm:text-5xl">
+      <div className="text-center font-heading text-4xl font-bold leading-[1.0833] tracking-tight text-gray-900 sm:text-5xl">
         Get early access
       </div>
       <p className="mx-auto mt-6 max-w-3xl text-center text-2xl leading-9 text-gray-400">

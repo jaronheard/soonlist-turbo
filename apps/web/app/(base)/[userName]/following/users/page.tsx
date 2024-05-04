@@ -13,10 +13,10 @@ export default async function Page({ params }: Props) {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="flex place-items-center gap-2">
-        <p className="font-heading text-neutral-1 text-5xl font-bold leading-[3.5rem] tracking-tight">
+        <p className="font-heading text-5xl font-bold leading-[3.5rem] tracking-tight text-neutral-1">
           Users followed by
         </p>
-        <p className="font-heading text-neutral-1 text-5xl font-bold leading-[3.5rem] tracking-tight">
+        <p className="font-heading text-5xl font-bold leading-[3.5rem] tracking-tight text-neutral-1">
           @{params.userName}
         </p>
       </div>

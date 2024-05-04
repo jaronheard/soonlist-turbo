@@ -128,10 +128,10 @@ function EventDateDisplaySimple({
 
   return (
     <div className="flex flex-col items-center justify-center gap-3">
-      <div className="text-neutral-2 text-lg font-semibold uppercase leading-none">
+      <div className="text-lg font-semibold uppercase leading-none text-neutral-2">
         {startDateInfo?.monthName.substring(0, 3)}
       </div>
-      <div className="font-heading text-neutral-1 text-4xl font-bold leading-none tracking-tighter">
+      <div className="font-heading text-4xl font-bold leading-none tracking-tighter text-neutral-1">
         {startDateInfo?.day}
       </div>
     </div>
@@ -200,7 +200,7 @@ function EventDetailsCard({
       <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
         {isClient && eventTimesAreDefined(startTime, endTime) && (
           <>
-            <div className="text-neutral-2 flex-wrap">
+            <div className="flex-wrap text-neutral-2">
               {startDateInfo.dayOfWeek.substring(0, 3)}
               {", "}
               {startDateInfo.month}/{startDateInfo.day}/
@@ -217,7 +217,7 @@ function EventDetailsCard({
         <Link
           href={`/event/${id}`}
           className={
-            "text-interactive-1 line-clamp-3 pr-12 text-2xl font-bold leading-9 tracking-wide"
+            "line-clamp-3 pr-12 text-2xl font-bold leading-9 tracking-wide text-interactive-1"
           }
         >
           {name}
@@ -226,7 +226,7 @@ function EventDetailsCard({
           {location && (
             <Link
               href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-              className={"text-neutral-2 line-clamp-1 shrink break-all"}
+              className={"line-clamp-1 shrink break-all text-neutral-2"}
             >
               {location}
             </Link>
@@ -245,7 +245,7 @@ function EventAccessibility({ metadata }: { metadata?: EventMetadataDisplay }) {
         Accessibility
       </Label>
       <div
-        className="text-neutral-1 flex flex-wrap gap-1 text-sm capitalize"
+        className="flex flex-wrap gap-1 text-sm capitalize text-neutral-1"
         id="accessibility"
       >
         {(metadata?.accessibility?.length === 0 ||
@@ -325,7 +325,7 @@ function EventMetadataDisplay({
     performersCharacterLength && performersCharacterLength > 15;
 
   return (
-    <div className="border-interactive-2 text-neutral-2 relative -m-2 my-3 grid grid-cols-2 gap-x-1 gap-y-3 rounded-2xl border p-4 py-6 md:grid-cols-4">
+    <div className="relative -m-2 my-3 grid grid-cols-2 gap-x-1 gap-y-3 rounded-2xl border border-interactive-2 p-4 py-6 text-neutral-2 md:grid-cols-4">
       <Badge
         className="absolute -top-3 left-1/2 -translate-x-1/2 hover:cursor-pointer"
         variant={"secondary"}
@@ -349,7 +349,7 @@ function EventMetadataDisplay({
           <CalendarIcon className="mr-1.5 size-4" />
           Category
         </Label>
-        <p className="text-neutral-1 text-sm capitalize" id="category">
+        <p className="text-sm capitalize text-neutral-1" id="category">
           {metadata?.category}
         </p>
       </div>
@@ -358,7 +358,7 @@ function EventMetadataDisplay({
           <GlobeIcon className="mr-1.5 size-4" />
           Type
         </Label>
-        <p className="text-neutral-1 text-sm capitalize" id="type">
+        <p className="text-sm capitalize text-neutral-1" id="type">
           {metadata?.type}
         </p>
       </div>
@@ -367,7 +367,7 @@ function EventMetadataDisplay({
           <TagIcon className="mr-1.5 size-4" />
           Price
         </Label>
-        <p className="text-neutral-1 text-sm capitalize" id="price">
+        <p className="text-sm capitalize text-neutral-1" id="price">
           {`${showPrice ? priceText : ""}${showSpace ? ", " : ""}`}
           {showPriceType && (
             <div className="inline capitalize">{priceTypeText}</div>
@@ -379,7 +379,7 @@ function EventMetadataDisplay({
           <PersonStanding className="mr-1.5 size-4" />
           Ages
         </Label>
-        <p className="text-neutral-1 text-sm capitalize" id="age-restriction">
+        <p className="text-sm capitalize text-neutral-1" id="age-restriction">
           {metadata?.ageRestriction}
         </p>
       </div>
@@ -393,7 +393,7 @@ function EventMetadataDisplay({
           <Mic className="mr-1.5 size-4" />
           Performers
         </Label>
-        <p className="text-neutral-1 text-sm" id="performers">
+        <p className="text-sm text-neutral-1" id="performers">
           {metadata?.performers?.join(", ")}
         </p>
       </div>
@@ -488,7 +488,7 @@ function EventDetails({
       <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
         {isClient && eventTimesAreDefined(startTime, endTime) && (
           <>
-            <div className="text-neutral-2 flex-wrap">
+            <div className="flex-wrap text-neutral-2">
               {startDateInfo.dayOfWeek.substring(0, 3)}
               {", "}
               {startDateInfo.month}/{startDateInfo.day}/
@@ -505,7 +505,7 @@ function EventDetails({
         <Link
           href={preview ? "" : `/event/${id}`}
           className={
-            "text-2.5xl text-neutral-1 line-clamp-3 pr-12 font-bold leading-9 tracking-[0.56px]"
+            "line-clamp-3 pr-12 text-2.5xl font-bold leading-9 tracking-[0.56px] text-neutral-1"
           }
         >
           {name}
@@ -514,7 +514,7 @@ function EventDetails({
           {location && (
             <Link
               href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-              className={"text-neutral-2 line-clamp-1 shrink break-all"}
+              className={"line-clamp-1 shrink break-all text-neutral-2"}
             >
               {location}
             </Link>
@@ -544,7 +544,7 @@ function EventDetails({
             )}
           >
             Learn more{" "}
-            <ArrowRight className="text-interactive-2 ml-1 size-4 " />
+            <ArrowRight className="ml-1 size-4 text-interactive-2 " />
           </Link>
         )}
         {preview && (
@@ -570,7 +570,7 @@ function EventDescription({
 }) {
   return (
     <div
-      className={cn("text-neutral-1 text-lg leading-7", {
+      className={cn("text-lg leading-7 text-neutral-1", {
         "line-clamp-3": truncate,
       })}
     >
@@ -607,20 +607,20 @@ function EventActionButtons({
       <div className="flex grow items-center justify-between">
         {visibility !== "private" && (
           <Link
-            className="text-neutral-2 text-lg font-medium leading-none"
+            className="text-lg font-medium leading-none text-neutral-2"
             href={`/${user.username}/events`}
           >
             added by @{user.username}
           </Link>
         )}
         {visibility === "private" && (
-          <div className="text-neutral-1 text-lg font-medium leading-none">
+          <div className="text-lg font-medium leading-none text-neutral-1">
             <EyeOff className="mr-2 inline" /> Unlisted event
           </div>
         )}
         <Link
           href={`/${user.username}/events`}
-          className="border-accent-yellow box-content block size-[2.625rem] shrink-0 rounded-full border-4"
+          className="box-content block size-[2.625rem] shrink-0 rounded-full border-4 border-accent-yellow"
         >
           <Image
             className="rounded-full"
@@ -681,7 +681,7 @@ export function EventListItem(props: EventListItemProps) {
         )}
         <li
           className={cn(
-            "after:border-neutral-3 relative grid overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:shadow-sm",
+            "relative grid overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
             { "lg:pl-16": !!image },
           )}
         >
@@ -693,7 +693,7 @@ export function EventListItem(props: EventListItemProps) {
             <div className="p-1"></div>
           </>
         )} */}
-          <div className="bg-interactive-3 absolute -right-24 -top-20 size-44 overflow-hidden rounded-full"></div>
+          <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
           <div className="absolute right-0 top-0 p-3">
             <EventDateDisplaySimple
               startDate={event.startDate}
@@ -735,7 +735,7 @@ export function EventListItem(props: EventListItemProps) {
   return (
     <li
       className={cn(
-        "after:border-neutral-3 relative h-full overflow-hidden rounded-xl bg-white shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:shadow-sm",
+        "relative h-full overflow-hidden rounded-xl bg-white shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
       )}
     >
       {image && (
@@ -750,10 +750,10 @@ export function EventListItem(props: EventListItemProps) {
         </div>
       )}
       {!image && (
-        <div className="bg-accent-yellow relative h-44 w-full grow"></div>
+        <div className="relative h-44 w-full grow bg-accent-yellow"></div>
       )}
       <div className="relative overflow-hidden">
-        <div className="bg-interactive-3 absolute -right-24 -top-20 size-44 overflow-hidden rounded-full"></div>
+        <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
         <div className="absolute right-0 top-0 p-3">
           <EventDateDisplaySimple
             startDate={event.startDate}
@@ -792,10 +792,10 @@ export function EventPreview(
   return (
     <div
       className={cn(
-        "after:border-neutral-3 relative grid max-w-xl overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:shadow-sm",
+        "relative grid max-w-xl overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
       )}
     >
-      <div className="bg-interactive-3 absolute -right-24 -top-20 size-44 overflow-hidden rounded-full"></div>
+      <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
       <div className="absolute right-0 top-0 p-3">
         <EventDateDisplaySimple
           startDate={event.startDate}
@@ -904,7 +904,7 @@ export function EventPage(props: EventPageProps) {
             <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
               {isClient && eventTimesAreDefined(startTime, endTime) && (
                 <>
-                  <div className="text-neutral-2 shrink-0">
+                  <div className="shrink-0 text-neutral-2">
                     {startDateInfo.dayOfWeek.substring(0, 3)}
                     {", "}
                     {startDateInfo.month}/{startDateInfo.day}/
@@ -924,7 +924,7 @@ export function EventPage(props: EventPageProps) {
               {location && (
                 <Link
                   href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-                  className={"text-neutral-2 line-clamp-1 shrink break-all"}
+                  className={"line-clamp-1 shrink break-all text-neutral-2"}
                 >
                   {location}
                 </Link>

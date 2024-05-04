@@ -83,7 +83,7 @@ const allUsers: { title: string; href: string; description: string }[] = [
 
 export function Header() {
   return (
-    <div className="bg-interactive-3 sticky top-0 z-50">
+    <div className="sticky top-0 z-50 bg-interactive-3">
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
         <div className="flex items-center sm:grow sm:gap-0">
           <NavigationMenu>
@@ -369,7 +369,7 @@ export function MobileNav() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" className="block lg:hidden">
-          <Menu className="text-interactive-1 size-6" />
+          <Menu className="size-6 text-interactive-1" />
           <span className="sr-only">Toggle Menu</span>
         </Button>
       </SheetTrigger>
@@ -399,7 +399,7 @@ export function MobileNav() {
               ) : (
                 <div className="size-8 rounded-full bg-gray-100"></div>
               )}
-              <div className="text-neutral-2 text-lg font-medium">
+              <div className="text-lg font-medium text-neutral-2">
                 @{user?.username}
               </div>
             </div>
@@ -432,7 +432,7 @@ export function MobileNav() {
           <div className="flex flex-col space-y-2">
             {sideNav(user?.username).map((item, index) => (
               <div key={index} className="flex flex-col space-y-3 pt-6">
-                <div className="text-neutral-2 text-lg font-medium">
+                <div className="text-lg font-medium text-neutral-2">
                   {item.title}
                 </div>
                 {item.items.length &&
@@ -572,7 +572,7 @@ function MobileButton({
         onOpenChange?.(false);
       }}
       variant={"ghost"}
-      className={cn(className, "text-neutral-1 text-lg font-medium")}
+      className={cn(className, "text-lg font-medium text-neutral-1")}
       {...props}
     >
       {children}

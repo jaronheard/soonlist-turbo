@@ -22,7 +22,7 @@ export function Footer() {
         </div>
         <div className="p-12"></div>
       </SignedOut>
-      <footer className="bg-neutral-1 w-full p-8 text-background sm:p-24">
+      <footer className="w-full bg-neutral-1 p-8 text-background sm:p-24">
         <nav className="mx-auto flex max-w-7xl flex-col justify-between gap-8 lg:flex-row">
           {/* Logo and Social Section */}
           <div className="pr-8">

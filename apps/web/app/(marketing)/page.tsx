@@ -117,14 +117,14 @@ function EventDetails({ className }: { className?: string }) {
         Let go! The entry fee ranges from $5 to $10. Arrive by 8:15 to be
         entered into a vinyl raffle where the top prize is $88 Mississippi...
       </p>
-      <div className="text-interactive-1 flex w-full justify-between">
+      <div className="flex w-full justify-between text-interactive-1">
         <div className="mt-4 inline-flex items-center text-sm font-medium">
           Learn more
-          <ArrowRight className="text-interactive-2 ml-1 size-4" />
+          <ArrowRight className="ml-1 size-4 text-interactive-2" />
         </div>
         <div className="mt-4 flex space-x-2">
-          <Calendar className="bg-interactive-3 text-interactive-1 size-8 rounded-full p-1.5" />
-          <Share className="bg-interactive-3 text-interactive-1 size-8 rounded-full p-1.5" />
+          <Calendar className="size-8 rounded-full bg-interactive-3 p-1.5 text-interactive-1" />
+          <Share className="size-8 rounded-full bg-interactive-3 p-1.5 text-interactive-1" />
         </div>
       </div>
     </div>
@@ -133,8 +133,8 @@ function EventDetails({ className }: { className?: string }) {
 
 function MakeAndShareListsOfEvents() {
   return (
-    <div className="md:border-neutral-3 px-4 py-16 text-center md:rounded-xl md:border md:px-16 lg:px-24">
-      <div className="max-w-2.5xl mx-auto">
+    <div className="px-4 py-16 text-center md:rounded-xl md:border md:border-neutral-3 md:px-16 lg:px-24">
+      <div className="mx-auto max-w-2.5xl">
         <h1 className="font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
           Make and share lists of events
         </h1>
@@ -173,9 +173,9 @@ function MakeAndShareListsOfEvents() {
             Let AI do the work of uncovering dates, times, locations, and more.
           </p>
           <div className="flex space-x-2 px-5 pt-12">
-            <div className="bg-interactive-3 text-interactive-1 flex size-80 items-start justify-center rounded-full text-base font-bold leading-5">
+            <div className="flex size-80 items-start justify-center rounded-full bg-interactive-3 text-base font-bold leading-5 text-interactive-1">
               <div className="">
-                <Sparkles className="bg-interactive-2 mx-auto mb-6 mt-4 size-12 rounded-full p-1.5" />
+                <Sparkles className="mx-auto mb-6 mt-4 size-12 rounded-full bg-interactive-2 p-1.5" />
                 <div className="flex flex-col gap-2">
                   <div className="">JAN 17 WEDS</div>
                   <div className="">4:00PM - 5:00PM</div>
@@ -201,13 +201,13 @@ function MakeAndShareListsOfEvents() {
           </p>
           <div className="pt-24"></div>
           <div className="relative h-64">
-            <div className="border-neutral-3 absolute z-30 mr-5 rounded-lg border-[0.85px] bg-white p-4 text-left shadow-sm">
+            <div className="absolute z-30 mr-5 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
               <EventDetails />
             </div>
-            <div className="border-neutral-3 absolute inset-x-2.5 top-2.5 z-20 rounded-lg border-[0.85px] bg-white p-4 text-left shadow-sm">
+            <div className="absolute inset-x-2.5 top-2.5 z-20 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
               <EventDetails className="opacity-0" />
             </div>
-            <div className="border-neutral-3 absolute left-5 top-5 z-10 rounded-lg border-[0.85px] bg-white p-4 text-left shadow-sm">
+            <div className="absolute left-5 top-5 z-10 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
               <EventDetails className="opacity-0" />
             </div>
           </div>
@@ -220,11 +220,11 @@ function MakeAndShareListsOfEvents() {
 export default function Page() {
   return (
     <div className="bg-white">
-      <div className="bg-interactive-3 relative isolate px-6 pt-14 lg:px-8">
+      <div className="relative isolate bg-interactive-3 px-6 pt-14 lg:px-8">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-16 py-16 pb-48 md:grid-cols-2 md:gap-x-16 md:pt-24">
           <div className="mx-auto">
             <div className="mx-auto">
-              <h1 className="font-heading tracking-tighterish text-6xl font-bold leading-[0.875] text-gray-700 md:text-8xl md:leading-[0.875]">
+              <h1 className="font-heading text-6xl font-bold leading-[0.875] tracking-tighterish text-gray-700 md:text-8xl md:leading-[0.875]">
                 Events for <span className="text-interactive-1">everybody</span>
               </h1>
               <p className="mt-6 max-w-[30rem] text-2xl leading-9 text-gray-400">
@@ -258,7 +258,7 @@ export default function Page() {
                 Curated event lists built by community members you know and
                 trust
               </h1>
-              <p className="leading-7.5 mt-6 text-xl text-gray-400 md:text-2xl md:leading-9">
+              <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
                 Join a network of passionate curators and participants building
                 community around events that matter.
               </p>
@@ -273,7 +273,7 @@ export default function Page() {
             <h1 className="font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
               Building togetherness
             </h1>
-            <p className="leading-7.5 mt-6 text-xl text-gray-400 md:text-2xl md:leading-9">
+            <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
               We&apos;re building an ecosystem that simplifies discovering,
               sharing, and engaging with events. It&apos;s a space where
               everyone has the power and tools to contribute to our shared
@@ -283,7 +283,7 @@ export default function Page() {
               {advancedFeatures.map((feature) => (
                 <div key={feature.name} className="relative flex gap-8">
                   <feature.icon
-                    className="bg-interactive-2 text-neutral-1 size-10 shrink-0 rounded-full p-2
+                    className="size-10 shrink-0 rounded-full bg-interactive-2 p-2 text-neutral-1
                       "
                     aria-hidden="true"
                   />
@@ -291,7 +291,7 @@ export default function Page() {
                     <dt className="block text-2xl font-semibold leading-normal text-gray-900">
                       {feature.name}
                     </dt>{" "}
-                    <dd className="text-neutral-2 block text-lg leading-6">
+                    <dd className="block text-lg leading-6 text-neutral-2">
                       {feature.description}
                     </dd>
                   </div>
@@ -324,23 +324,23 @@ export default function Page() {
                   key={testimonial.author.handle}
                   className="pt-8 md:inline-block md:w-full md:px-4"
                 >
-                  <figure className="border-neutral-3 bg-accent-yellow rounded-[10px] border-[0.85px] p-6 shadow-sm">
-                    <blockquote className="font-heading text-neutral-1 text-center text-2xl font-bold">
+                  <figure className="rounded-[10px] border-[0.85px] border-neutral-3 bg-accent-yellow p-6 shadow-sm">
+                    <blockquote className="text-center font-heading text-2xl font-bold text-neutral-1">
                       <p>{`“${testimonial.body}”`}</p>
                     </blockquote>
                     <figcaption className="w-min-content mt-6 flex items-center justify-center gap-x-4">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        className="border-accent-orange size-14 rounded-full border-[6px]"
+                        className="size-14 rounded-full border-[6px] border-accent-orange"
                         src={testimonial.author.imageUrl}
                         alt=""
                       />
                       <div>
-                        <div className="text-neutral-1 text-lg font-semibold leading-none">
+                        <div className="text-lg font-semibold leading-none text-neutral-1">
                           {testimonial.author.name}
                         </div>
                         <div className="py-0.5"></div>
-                        <div className="text-neutral-2 text-lg font-medium leading-none">{`@${testimonial.author.handle}`}</div>
+                        <div className="text-lg font-medium leading-none text-neutral-2">{`@${testimonial.author.handle}`}</div>
                       </div>
                     </figcaption>
                   </figure>
