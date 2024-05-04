@@ -65,6 +65,7 @@
     "@babel/core": "^7.24.4",
     "@babel/preset-env": "^7.24.4",
     "@babel/runtime": "^7.24.4",
+    "@soonlist/api": "workspace:*",
     "@soonlist/eslint-config": "workspace:*",
     "@soonlist/prettier-config": "workspace:*",
     "@soonlist/tailwind-config": "workspace:*",
