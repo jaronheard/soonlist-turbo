@@ -248,6 +248,12 @@ export default function App() {
         <Link style={[styles.gap, styles.bold, styles.interactive]} href="/new">
           /new
         </Link>
+        <Link
+          style={[styles.gap, styles.bold, styles.interactive]}
+          href="/events"
+        >
+          /events
+        </Link>
         <SignOut />
       </SignedIn>
     </SafeAreaView>
