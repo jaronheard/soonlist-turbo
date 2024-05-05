@@ -4,8 +4,8 @@ import { Link } from "expo-router";
 export default function Page() {
   return (
     <>
-      <Text>/new page</Text>
-      <Link href="/new/preview">Preview</Link>
+      <Text>/preview page</Text>
+      <Link href="/">Home</Link>
     </>
   );
 }
