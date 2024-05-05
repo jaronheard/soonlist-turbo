@@ -11,33 +11,14 @@ import {
   View,
 } from "react-native";
 import MLKit from "react-native-mlkit-ocr";
-import Constants from "expo-constants";
 import { Link } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { useShareIntent } from "expo-share-intent";
 import * as WebBrowser from "expo-web-browser";
 import * as Bytescale from "@bytescale/sdk";
-import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
+import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
 
 import SignInWithOAuth from "../components/SignInWithOAuth";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
-
-const tokenCache = {
-  async getToken(key: string) {
-    try {
-      return SecureStore.getItemAsync(key);
-    } catch (err) {
-      return null;
-    }
-  },
-  async saveToken(key: string, value: string) {
-    try {
-      return SecureStore.setItemAsync(key, value);
-    } catch (err) {
-      return;
-    }
-  },
-};
 
 const SignOut = () => {
   const { isLoaded, signOut } = useAuth();
@@ -244,52 +225,32 @@ export default function App() {
     return null; // Return null to prevent rendering the rest of the component
   }
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const clerkPublishableKey = Constants.expoConfig?.extra
-    ?.clerkPublishableKey as string | undefined;
-
-  if (!clerkPublishableKey) {
-    console.log(Constants.expoConfig);
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.error}>
-          No Clerk Publishable Key found. Please check your environment.
-        </Text>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
-      <SafeAreaView style={styles.container}>
-        <SignedOut>
-          <SignInWithOAuth />
-        </SignedOut>
-        <SignedIn>
-          <Image
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            source={require("../../assets/icon.png")}
-            style={[styles.logo, styles.gap]}
-          />
-          <Text style={[styles.gap, styles.large]}>
-            Share a screenshot or image to Soonlist...
-          </Text>
-          <Text
-            style={[styles.gap, styles.bold, styles.interactive]}
-            onPress={() => Linking.openURL("https://www.soonlist.com")}
-          >
-            View events
-          </Text>
-          <Link
-            style={[styles.gap, styles.bold, styles.interactive]}
-            href="/new"
-          >
-            /new
-          </Link>
-          <SignOut />
-        </SignedIn>
-      </SafeAreaView>
-    </ClerkProvider>
+    <SafeAreaView style={styles.container}>
+      <SignedOut>
+        <SignInWithOAuth />
+      </SignedOut>
+      <SignedIn>
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          source={require("../../assets/icon.png")}
+          style={[styles.logo, styles.gap]}
+        />
+        <Text style={[styles.gap, styles.large]}>
+          Share a screenshot or image to Soonlist...
+        </Text>
+        <Text
+          style={[styles.gap, styles.bold, styles.interactive]}
+          onPress={() => Linking.openURL("https://www.soonlist.com")}
+        >
+          View events
+        </Text>
+        <Link style={[styles.gap, styles.bold, styles.interactive]} href="/new">
+          /new
+        </Link>
+        <SignOut />
+      </SignedIn>
+    </SafeAreaView>
   );
 }
 
