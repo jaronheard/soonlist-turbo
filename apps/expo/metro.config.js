@@ -11,7 +11,7 @@ const path = require("path");
 module.exports = withTurborepoManagedCache(
   withMonorepoPaths(
     withNativeWind(getDefaultConfig(__dirname), {
-      input: "./styles/styles.css",
+      input: "./src/styles.css",
       configPath: "./tailwind.config.ts",
       serializer: {
         customSerializer: createSentryMetroSerializer(),

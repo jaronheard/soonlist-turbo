@@ -407,12 +407,7 @@ function App() {
           >
             soonlist.com
           </Text>
-          <Link
-            style={[styles.gap, styles.bold, styles.interactive]}
-            href="/new"
-          >
-            /new
-          </Link>
+          <Link href="/new">/new</Link>
           <SignOut />
         </SignedIn>
       </SafeAreaView>
