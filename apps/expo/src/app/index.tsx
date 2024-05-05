@@ -12,14 +12,15 @@ import {
 } from "react-native";
 import MLKit from "react-native-mlkit-ocr";
 import Constants from "expo-constants";
+import { Link } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useShareIntent } from "expo-share-intent";
 import * as WebBrowser from "expo-web-browser";
 import * as Bytescale from "@bytescale/sdk";
 import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
 
-import SignInWithOAuth from "./components/SignInWithOAuth";
-import { useWarmUpBrowser } from "./hooks/useWarmUpBrowser";
+import SignInWithOAuth from "../components/SignInWithOAuth";
+import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 
 const tokenCache = {
   async getToken(key: string) {
@@ -279,6 +280,12 @@ export default function App() {
           >
             View events
           </Text>
+          <Link
+            style={[styles.gap, styles.bold, styles.interactive]}
+            href="/new"
+          >
+            /new
+          </Link>
           <SignOut />
         </SignedIn>
       </SafeAreaView>
