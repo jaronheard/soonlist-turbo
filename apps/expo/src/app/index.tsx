@@ -389,7 +389,7 @@ function App() {
           View events
         </Text>
         <Link href="/new">/new</Link>
-
+        <Link href="/events">/events</Link>
         <SignOut />
       </SignedIn>
     </SafeAreaView>
