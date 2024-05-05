@@ -3,7 +3,7 @@ import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider } from "@clerk/clerk-expo";
 
-// import { TRPCProvider } from "~/utils/api";
+import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
 
@@ -45,20 +45,23 @@ export default function RootLayout() {
   }
 
   return (
-    // <TRPCProvider>
-    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: "#f472b6",
-          },
-          contentStyle: {
-            backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
-          },
-        }}
-      />
-      <StatusBar />
-    </ClerkProvider>
-    // </TRPCProvider>
+    <TRPCProvider>
+      <ClerkProvider
+        publishableKey={clerkPublishableKey}
+        tokenCache={tokenCache}
+      >
+        <Stack
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: "#f472b6",
+            },
+            contentStyle: {
+              backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
+            },
+          }}
+        />
+        <StatusBar />
+      </ClerkProvider>
+    </TRPCProvider>
   );
 }
