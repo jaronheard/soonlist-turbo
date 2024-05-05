@@ -28,6 +28,10 @@ const SignInWithOAuth = () => {
     }
   }, [startOAuthFlow]);
 
-  return <Button title="Sign in with Google" onPress={onPress} />;
+  return (
+    <>
+      <Button title="Sign in with Google" onPress={onPress} />
+    </>
+  );
 };
 export default SignInWithOAuth;
