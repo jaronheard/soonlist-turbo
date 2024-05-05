@@ -10,6 +10,14 @@
     "types": ["nativewind/types"],
     "checkJs": false
   },
-  "include": ["src", "*.ts", "*.js", "eslint.config.mjs"],
+  "include": [
+    "src",
+    "*.ts",
+    "*.js",
+    "eslint.config.mjs",
+    "src/app",
+    "src/components",
+    "src/hooks"
+  ],
   "exclude": ["node_modules"]
 }
