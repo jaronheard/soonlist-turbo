@@ -268,7 +268,7 @@ export default function App() {
         <SignedIn>
           <Image
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            source={require("../assets/icon.png")}
+            source={require("../../assets/icon.png")}
             style={[styles.logo, styles.gap]}
           />
           <Text style={[styles.gap, styles.large]}>
