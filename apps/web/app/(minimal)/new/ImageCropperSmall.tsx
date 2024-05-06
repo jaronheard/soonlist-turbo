@@ -183,20 +183,36 @@ export function ImageCropperSmall({
   const [isImageLoading, setIsImageLoading] = useState(true);
   const prevImageUrlRef = useRef<string | undefined>(undefined);
 
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetryLimit = 3;
+
   useEffect(() => {
     const imageElement = fullImageRef.current;
 
     if (imageElement && imageUrl) {
       const handleLoad = () => {
         setIsImageLoading(false);
+        setRetryCount(0); // Reset retry count on successful load
         if (imageCheckInterval) {
           clearInterval(imageCheckInterval);
           setImageCheckInterval(null);
         }
       };
 
+      const handleError = () => {
+        if (retryCount < maxRetryLimit) {
+          setTimeout(() => {
+            setImageUrl((prevUrl) => `${prevUrl}?retry=${retryCount + 1}`);
+            setRetryCount(retryCount + 1);
+          }, 1000); // Retry after 1 second
+        } else {
+          console.error("Failed to load image after multiple attempts.");
+        }
+      };
+
       setIsImageLoading(true);
       imageElement.addEventListener("load", handleLoad);
+      imageElement.addEventListener("error", handleError);
 
       // Start an interval to check for the image availability if not loaded yet
       if (!imageElement.complete || !imageElement.naturalWidth) {
@@ -214,12 +230,13 @@ export function ImageCropperSmall({
       // Clean up
       return () => {
         imageElement.removeEventListener("load", handleLoad);
+        imageElement.removeEventListener("error", handleError);
         if (imageCheckInterval) {
           clearInterval(imageCheckInterval);
         }
       };
     }
-  }, [imageCheckInterval, imageUrl]);
+  }, [imageCheckInterval, imageUrl, retryCount, maxRetryLimit]);
 
   useEffect(() => {
     prevImageUrlRef.current = imageUrl;

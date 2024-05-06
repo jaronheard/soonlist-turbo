@@ -1,12 +1,11 @@
 import type { ShareIntentFile } from "expo-share-intent";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Button,
   Image,
   Linking,
   Platform,
   SafeAreaView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -20,6 +19,8 @@ import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
 
 import SignInWithOAuth from "./components/SignInWithOAuth";
 import { useWarmUpBrowser } from "./hooks/useWarmUpBrowser";
+
+import "./styles.css";
 
 const tokenCache = {
   async getToken(key: string) {
@@ -147,13 +148,24 @@ export default function App() {
     debug: true,
     resetOnBackground: true,
   });
-  const [state, setState] = useState({
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    textFromImage: undefined as string | undefined,
+  const [state, setState] = useState<{
+    textFromImage?: string;
+    uploading: boolean;
+    path: { folderPath?: string; fileName: string };
+    fileExtension?: string;
+    isBrowserOpening: boolean;
+  }>({
+    textFromImage: undefined,
     uploading: false,
     path: getRandomPath(),
-    fileExtension: "",
+    fileExtension: undefined,
     isBrowserOpening: false,
+  });
+
+  // Using ref to keep track of the latest state
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
   });
 
   const reset = () => {
@@ -167,52 +179,99 @@ export default function App() {
     resetShareIntent();
   };
 
-  // format is /uploads/YYYY/MM/DD/fileName.extension with leading 0s
-  const year = new Date().getUTCFullYear();
-  const month = String(new Date().getUTCMonth() + 1).padStart(2, "0");
-  const day = String(new Date().getUTCDate()).padStart(2, "0");
-  const folderPath = `/uploads/${year}/${month}/${day}`;
-
+  // Building folderPath outside of useEffect
+  const getDatePath = () => {
+    const year = new Date().getUTCFullYear();
+    const month = String(new Date().getUTCMonth() + 1).padStart(2, "0");
+    const day = String(new Date().getUTCDate()).padStart(2, "0");
+    return `/uploads/${year}/${month}/${day}`;
+  };
+  const folderPath = getDatePath();
   const filePathParam = state.path.fileName
-    ? `filePath=${folderPath}/${state.path.fileName}${state.fileExtension}`
+    ? `filePath=${encodeURIComponent(
+        `${folderPath}/${state.path.fileName}${state.fileExtension}`,
+      )}`
     : "";
 
   useWarmUpBrowser();
 
   const file = shareIntent.files?.[0];
 
+  // Extract text from image
   useEffect(() => {
-    if (file?.mimeType.startsWith("image/") && !state.uploading) {
-      const mimeTypeExtension = file.mimeType.split("/")[1];
-      setState((prev) => ({ ...prev, fileExtension: `.${mimeTypeExtension}` }));
-      _getTextFromImage(file)
-        .then((text) => {
-          if (typeof text === "string") {
-            console.log("Text from image:", text);
-            setState((prev) => ({ ...prev, textFromImage: text }));
-          }
-        })
-        .catch((e) => {
-          console.error("Failed to get text from image:", e);
-        });
-      setState((prev) => ({ ...prev, uploading: true }));
-      _uploadImage(file.path, state.path, mimeTypeExtension || "jpg")
-        .then(() => setState((prev) => ({ ...prev, uploading: false })))
-        .catch((e) => {
-          console.error("Failed to upload the file:", e);
-        });
-    }
-  }, [file, state.path, state.uploading]);
+    if (!file || !file.mimeType.startsWith("image/") || state.uploading) return;
 
+    const mimeTypeExtension = file.mimeType.split("/")[1];
+    setState((prev) => ({
+      ...prev,
+      fileExtension: `.${mimeTypeExtension}`,
+    }));
+
+    const extractText = async () => {
+      try {
+        const text = await _getTextFromImage(file);
+        if (typeof text === "object") {
+          console.error("Failed to extract text from image:", text.error);
+          setState((prev) => ({ ...prev, uploading: false }));
+          return;
+        }
+        setState((prev) => ({
+          ...prev,
+          textFromImage: text,
+        }));
+      } catch (error) {
+        console.error("Failed to extract text from image:", error);
+        setState((prev) => ({ ...prev, uploading: false }));
+      }
+    };
+
+    void extractText();
+  }, [file, state.uploading]);
+
+  // Upload image
+  useEffect(() => {
+    if (!file || !state.fileExtension || state.uploading) return;
+
+    const pathForUpload = {
+      fileName: state.path.fileName,
+      folderPath: folderPath,
+    };
+    console.log(pathForUpload);
+
+    const uploadImage = async () => {
+      try {
+        await _uploadImage(
+          file.path,
+          pathForUpload,
+          state.fileExtension?.slice(1) || "jpg",
+        );
+        console.log("Upload successful!");
+        setState((prev) => ({ ...prev, uploading: false }));
+      } catch (error) {
+        console.error("Failed to upload image:", error);
+        setState((prev) => ({ ...prev, uploading: false }));
+      }
+    };
+
+    void uploadImage();
+  }, [
+    file,
+    state.fileExtension,
+    state.path,
+    state.textFromImage,
+    state.uploading,
+    folderPath,
+  ]);
+
+  // Handle opening web browser
   const _handleOpenWithWebBrowser = async (
     rawText: string,
     filePathParam?: string,
   ) => {
+    if (state.isBrowserOpening) return false;
+    setState((prev) => ({ ...prev, isBrowserOpening: true }));
     try {
-      if (state.isBrowserOpening) {
-        return false;
-      }
-      setState((prev) => ({ ...prev, isBrowserOpening: true }));
+      console.log("Opening browser with file path:", filePathParam);
       const result = await WebBrowser.openBrowserAsync(
         `https://www.soonlist.com/new?rawText=${encodeURIComponent(rawText)}&${filePathParam}`,
         {
@@ -250,8 +309,8 @@ export default function App() {
   if (!clerkPublishableKey) {
     console.log(Constants.expoConfig);
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.error}>
+      <SafeAreaView className="flex-1 items-center justify-center bg-white">
+        <Text className="mt-5 text-red-500">
           No Clerk Publishable Key found. Please check your environment.
         </Text>
       </SafeAreaView>
@@ -260,70 +319,35 @@ export default function App() {
 
   return (
     <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView className="flex flex-1 items-center justify-center bg-white">
         <SignedOut>
           <SignInWithOAuth />
         </SignedOut>
         <SignedIn>
-          <Image
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            source={require("../assets/icon.png")}
-            style={[styles.logo, styles.gap]}
-          />
-          <Text style={[styles.gap, styles.large]}>
-            Share a screenshot or image to Soonlist...
-          </Text>
-          <Text
-            style={[styles.gap, styles.bold, styles.interactive]}
-            onPress={() => Linking.openURL("https://www.soonlist.com")}
-          >
-            View events
-          </Text>
+          {state.uploading && (
+            <Text className="mb-5 text-lg">Uploading...</Text>
+          )}
+          {!state.uploading && (
+            <>
+              <Image
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                source={require("../assets/icon.png")}
+                className="mb-5 h-16 w-16 rounded-xl"
+              />
+              <Text className="mb-5 text-lg">
+                Share a screenshot or image to Soonlist...
+              </Text>
+              <Text
+                className="mb-5 text-xl font-bold text-interactive-1"
+                onPress={() => Linking.openURL("https://www.soonlist.com")}
+              >
+                View events
+              </Text>
+            </>
+          )}
           <SignOut />
         </SignedIn>
       </SafeAreaView>
     </ClerkProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f7f7f7",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logo: {
-    width: 75,
-    height: 75,
-    resizeMode: "contain",
-    borderRadius: 10,
-  },
-  image: {
-    width: 300,
-    height: 200,
-    resizeMode: "contain",
-    // backgroundColor: "lightgray",
-  },
-  gap: {
-    marginBottom: 20,
-  },
-  large: {
-    fontSize: 16,
-  },
-  bold: {
-    fontWeight: "bold",
-    fontSize: 20,
-  },
-  meta: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  error: {
-    color: "red",
-    marginTop: 20,
-  },
-  interactive: {
-    color: "#5A32FB",
-  },
-});
