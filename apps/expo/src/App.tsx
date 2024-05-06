@@ -1,12 +1,11 @@
 import type { ShareIntentFile } from "expo-share-intent";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Button,
   Image,
   Linking,
   Platform,
   SafeAreaView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -147,13 +146,24 @@ export default function App() {
     debug: true,
     resetOnBackground: true,
   });
-  const [state, setState] = useState({
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    textFromImage: undefined as string | undefined,
+  const [state, setState] = useState<{
+    textFromImage?: string;
+    uploading: boolean;
+    path: { folderPath?: string; fileName: string };
+    fileExtension?: string;
+    isBrowserOpening: boolean;
+  }>({
+    textFromImage: undefined,
     uploading: false,
     path: getRandomPath(),
-    fileExtension: "",
+    fileExtension: undefined,
     isBrowserOpening: false,
+  });
+
+  // Using ref to keep track of the latest state
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
   });
 
   const reset = () => {
@@ -167,14 +177,18 @@ export default function App() {
     resetShareIntent();
   };
 
-  // format is /uploads/YYYY/MM/DD/fileName.extension with leading 0s
-  const year = new Date().getUTCFullYear();
-  const month = String(new Date().getUTCMonth() + 1).padStart(2, "0");
-  const day = String(new Date().getUTCDate()).padStart(2, "0");
-  const folderPath = `/uploads/${year}/${month}/${day}`;
-
+  // Building folderPath outside of useEffect
+  const getDatePath = () => {
+    const year = new Date().getUTCFullYear();
+    const month = String(new Date().getUTCMonth() + 1).padStart(2, "0");
+    const day = String(new Date().getUTCDate()).padStart(2, "0");
+    return `/uploads/${year}/${month}/${day}`;
+  };
+  const folderPath = getDatePath();
   const filePathParam = state.path.fileName
-    ? `filePath=${folderPath}/${state.path.fileName}${state.fileExtension}`
+    ? `filePath=${encodeURIComponent(
+        `${folderPath}/${state.path.fileName}${state.fileExtension}`,
+      )}`
     : "";
 
   useWarmUpBrowser();
@@ -182,37 +196,54 @@ export default function App() {
   const file = shareIntent.files?.[0];
 
   useEffect(() => {
-    if (file?.mimeType.startsWith("image/") && !state.uploading) {
-      const mimeTypeExtension = file.mimeType.split("/")[1];
-      setState((prev) => ({ ...prev, fileExtension: `.${mimeTypeExtension}` }));
-      _getTextFromImage(file)
-        .then((text) => {
-          if (typeof text === "string") {
-            console.log("Text from image:", text);
-            setState((prev) => ({ ...prev, textFromImage: text }));
-          }
-        })
-        .catch((e) => {
-          console.error("Failed to get text from image:", e);
-        });
-      setState((prev) => ({ ...prev, uploading: true }));
-      _uploadImage(file.path, state.path, mimeTypeExtension || "jpg")
-        .then(() => setState((prev) => ({ ...prev, uploading: false })))
-        .catch((e) => {
-          console.error("Failed to upload the file:", e);
-        });
-    }
-  }, [file, state.path, state.uploading]);
+    if (!file?.mimeType.startsWith("image/") || stateRef.current.uploading)
+      return;
 
+    const mimeTypeExtension = file.mimeType.split("/")[1];
+    const newPathState = {
+      ...stateRef.current,
+      fileExtension: `.${mimeTypeExtension}`,
+      uploading: true,
+    };
+    setState(newPathState);
+
+    void (async () => {
+      try {
+        const text = await _getTextFromImage(file);
+        if (typeof text === "string") {
+          console.log("Text from image:", text);
+        }
+        if (!(typeof text === "string")) {
+          console.error("Failed to get text from image:", text);
+          setState((prev) => ({ ...prev, uploading: false }));
+          return;
+        }
+        await _uploadImage(
+          file.path,
+          stateRef.current.path,
+          mimeTypeExtension || "jpg",
+        );
+        console.log("Upload successful");
+        setState((prev) => ({
+          ...prev,
+          textFromImage: text,
+          uploading: false,
+        }));
+      } catch (e) {
+        console.error("Failed to handle image:", e);
+        setState((prev) => ({ ...prev, uploading: false }));
+      }
+    })();
+  }, [file]);
+
+  // Handle opening web browser
   const _handleOpenWithWebBrowser = async (
     rawText: string,
     filePathParam?: string,
   ) => {
+    if (state.isBrowserOpening) return false;
+    setState((prev) => ({ ...prev, isBrowserOpening: true }));
     try {
-      if (state.isBrowserOpening) {
-        return false;
-      }
-      setState((prev) => ({ ...prev, isBrowserOpening: true }));
       const result = await WebBrowser.openBrowserAsync(
         `https://www.soonlist.com/new?rawText=${encodeURIComponent(rawText)}&${filePathParam}`,
         {
