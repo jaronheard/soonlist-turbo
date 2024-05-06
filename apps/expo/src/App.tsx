@@ -20,6 +20,8 @@ import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
 import SignInWithOAuth from "./components/SignInWithOAuth";
 import { useWarmUpBrowser } from "./hooks/useWarmUpBrowser";
 
+import "./styles.css";
+
 const tokenCache = {
   async getToken(key: string) {
     try {
@@ -291,7 +293,7 @@ export default function App() {
 
   return (
     <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
+      <SafeAreaView className="flex flex-1 items-center justify-center bg-white">
         <SignedOut>
           <SignInWithOAuth />
         </SignedOut>
@@ -299,7 +301,7 @@ export default function App() {
           <Image
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             source={require("../assets/icon.png")}
-            className="w-18 h-18 contain mb-5 rounded-md"
+            className="mb-5 h-16 w-16 rounded-xl"
           />
           <Text className="mb-5 text-lg">
             Share a screenshot or image to Soonlist...
