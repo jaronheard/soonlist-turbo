@@ -47,6 +47,7 @@ export const _uploadImage = async (
       },
     });
     console.log("File uploaded successfully!", results);
+    return { success: true };
   } catch (e: unknown) {
     console.error("Failed to upload the file:", e);
     return { error: e };

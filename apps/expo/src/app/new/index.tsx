@@ -67,10 +67,9 @@ export default function Page() {
         >
           <Text className="text-foreground"> Refresh list</Text>
         </Pressable>
+        <EventFromRawText />
 
         {listsQuery.data && <UsersListsList lists={listsQuery.data} />}
-
-        <EventFromRawText />
       </View>
     </SafeAreaView>
   );
@@ -124,7 +123,11 @@ function EventFromRawText() {
         });
       setState((prev) => ({ ...prev, uploading: true }));
       _uploadImage(file.path, state.path, mimeTypeExtension || "jpg")
-        .then(() => setState((prev) => ({ ...prev, uploading: false })))
+        .then(
+          (result) =>
+            result.success &&
+            setState((prev) => ({ ...prev, uploading: false })),
+        )
         .catch((e) => {
           console.error("Failed to upload the file:", e);
         });
