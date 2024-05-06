@@ -1,5 +1,5 @@
-import type { ShareIntentFile } from "expo-share-intent";
-import { useEffect, useRef, useState } from "react";
+import type { ShareIntent, ShareIntentFile } from "expo-share-intent";
+import { useEffect, useState } from "react";
 import {
   Button,
   Image,
@@ -133,176 +133,128 @@ const _getTextFromImage = async (file: ShareIntentFile) => {
     return textFromFile;
   } catch (e: unknown) {
     console.error("Failed to get text from image:", e);
-    return { error: e };
+    return "";
   }
 };
 
-const getRandomPath = () => {
-  return {
-    fileName: guidGenerator(),
-  };
+const browserSettings = {
+  presentationStyle:
+    WebBrowser.WebBrowserPresentationStyle.OVER_CURRENT_CONTEXT,
+  showInRecents: true,
+  controlsColor: "#5A32FB",
+  toolbarColor: "#F7F7F7",
+  enableDefaultShareMenuItem: true,
+};
+
+const useHandleShareIntent = (shareIntent: ShareIntent) => {
+  const [status, setStatus] = useState({
+    textExtracted: false,
+    text: "",
+    uploading: false,
+    uploadComplete: false,
+    browserOpened: false,
+    taskCompleted: false,
+  });
+
+  useEffect(() => {
+    if (!shareIntent.files) return;
+
+    const { type, files, text /* webUrl, meta, */ } = shareIntent;
+
+    // only use first file
+    if (!files[0]) return;
+    const file = files[0];
+
+    async function handleShare() {
+      if (file.mimeType.startsWith("image/")) {
+        const text = await _getTextFromImage(file);
+        setStatus((prev) => ({ ...prev, textExtracted: true, text }));
+        const fileName = guidGenerator(); // Generate a unique filename for each image
+        const fileExtension = file.mimeType.split("/")[1] || "jpg";
+        const currentDate = new Date();
+        const year = currentDate.getUTCFullYear();
+        const month = String(currentDate.getUTCMonth() + 1).padStart(2, "0");
+        const day = String(currentDate.getUTCDate()).padStart(2, "0");
+        const folderPath = `/uploads/${year}/${month}/${day}`;
+        const filePathParam = `filePath=${encodeURIComponent(
+          `${folderPath}/${fileName}.${fileExtension}`,
+        )}`;
+        const browserUrl = `https://www.soonlist.com/new?rawText=${encodeURIComponent(
+          text,
+        )}&${filePathParam}`;
+
+        // Open the browser with the extracted text
+        void WebBrowser.openBrowserAsync(browserUrl, browserSettings).then(
+          (result) => {
+            setStatus((prev) => ({ ...prev, browserOpened: true }));
+            if (result.type === WebBrowser.WebBrowserResultType.DISMISS) {
+              setStatus((prev) => ({ ...prev, taskCompleted: true }));
+            }
+          },
+        );
+
+        // Start the upload in parallel
+        setStatus((prev) => ({ ...prev, uploading: true }));
+        void _uploadImage(
+          file.path,
+          { fileName, folderPath },
+          fileExtension,
+        ).then(() => {
+          setStatus((prev) => ({
+            ...prev,
+            uploading: false,
+            uploadComplete: true,
+          }));
+        });
+      } else if (type === "text" && text) {
+        setStatus((prev) => ({ ...prev, textExtracted: true, text: text }));
+        const browserUrl = `https://www.soonlist.com/new?rawText=${encodeURIComponent(
+          text,
+        )}`;
+
+        // Open the browser with the extracted text
+        void WebBrowser.openBrowserAsync(browserUrl, browserSettings).then(
+          (result) => {
+            setStatus((prev) => ({ ...prev, browserOpened: true }));
+            if (result.type === WebBrowser.WebBrowserResultType.DISMISS) {
+              setStatus((prev) => ({ ...prev, taskCompleted: true }));
+            }
+          },
+        );
+      }
+    }
+
+    void handleShare();
+
+    return () => {
+      // Cleanup potential pending operations if a new share intent is received
+      WebBrowser.dismissBrowser();
+    };
+  }, [shareIntent]);
+
+  return { status };
 };
 
 export default function App() {
+  // This hook manages incoming share intents
   const { shareIntent, resetShareIntent } = useShareIntent({
-    debug: true,
+    // debug: true,
     resetOnBackground: true,
   });
-  const [state, setState] = useState<{
-    textFromImage?: string;
-    uploading: boolean;
-    path: { folderPath?: string; fileName: string };
-    fileExtension?: string;
-    isBrowserOpening: boolean;
-  }>({
-    textFromImage: undefined,
-    uploading: false,
-    path: getRandomPath(),
-    fileExtension: undefined,
-    isBrowserOpening: false,
-  });
 
-  // Using ref to keep track of the latest state
-  const stateRef = useRef(state);
-  useEffect(() => {
-    stateRef.current = state;
-  });
+  // Our custom hook that handles the logic based on the type of the share intent
+  const { status } = useHandleShareIntent(shareIntent);
 
-  const resetState = () => {
-    setState({
-      textFromImage: undefined,
-      uploading: false,
-      path: getRandomPath(),
-      fileExtension: "",
-      isBrowserOpening: false,
-    });
-  };
-
-  const reset = () => {
-    resetState();
-    resetShareIntent();
-  };
-
-  // Building folderPath outside of useEffect
-  const getDatePath = () => {
-    const year = new Date().getUTCFullYear();
-    const month = String(new Date().getUTCMonth() + 1).padStart(2, "0");
-    const day = String(new Date().getUTCDate()).padStart(2, "0");
-    return `/uploads/${year}/${month}/${day}`;
-  };
-  const folderPath = getDatePath();
-  const filePathParam = state.path.fileName
-    ? `filePath=${encodeURIComponent(
-        `${folderPath}/${state.path.fileName}${state.fileExtension}`,
-      )}`
-    : "";
-
+  // Warm up the android browser to improve UX
+  // https://docs.expo.dev/guides/authentication/#improving-user-experience
   useWarmUpBrowser();
 
-  const file = shareIntent.files?.[0];
-
-  // Extract text from image
+  // Effect to reset the share intent when task is completed
   useEffect(() => {
-    if (!file || !file.mimeType.startsWith("image/") || state.uploading) return;
-
-    const mimeTypeExtension = file.mimeType.split("/")[1];
-    setState((prev) => ({
-      ...prev,
-      fileExtension: `.${mimeTypeExtension}`,
-    }));
-
-    const extractText = async () => {
-      try {
-        const text = await _getTextFromImage(file);
-        if (typeof text === "object") {
-          console.error("Failed to extract text from image:", text.error);
-          return;
-        }
-        setState((prev) => ({
-          ...prev,
-          textFromImage: text,
-        }));
-      } catch (error) {
-        console.error("Failed to extract text from image:", error);
-      }
-    };
-
-    void extractText();
-  }, [file, state.uploading]);
-
-  // Upload image
-  useEffect(() => {
-    if (!file || !state.fileExtension || state.uploading) return;
-
-    const pathForUpload = {
-      fileName: state.path.fileName,
-      folderPath: folderPath,
-    };
-    console.log(pathForUpload);
-
-    const uploadImage = async () => {
-      try {
-        await _uploadImage(
-          file.path,
-          pathForUpload,
-          state.fileExtension?.slice(1) || "jpg",
-        );
-        console.log("Upload successful!");
-        setState((prev) => ({ ...prev, uploading: false }));
-      } catch (error) {
-        console.error("Failed to upload image:", error);
-        setState((prev) => ({ ...prev, uploading: false }));
-      }
-    };
-
-    void uploadImage();
-  }, [
-    file,
-    state.fileExtension,
-    state.path,
-    state.textFromImage,
-    state.uploading,
-    folderPath,
-  ]);
-
-  // Handle opening web browser
-  const _handleOpenWithWebBrowser = async (
-    rawText: string,
-    filePathParam?: string,
-  ) => {
-    if (state.isBrowserOpening) return false;
-    setState((prev) => ({ ...prev, isBrowserOpening: true }));
-    try {
-      console.log("Opening browser with file path:", filePathParam);
-      const result = await WebBrowser.openBrowserAsync(
-        `https://www.soonlist.com/new?rawText=${encodeURIComponent(rawText)}&${filePathParam}`,
-        {
-          presentationStyle:
-            WebBrowser.WebBrowserPresentationStyle.OVER_CURRENT_CONTEXT,
-          showInRecents: true,
-          controlsColor: "#5A32FB",
-          toolbarColor: "#F7F7F7",
-          enableDefaultShareMenuItem: true,
-        },
-      );
-      console.log(result);
-      reset();
-      return true;
-    } catch (error) {
-      console.error("Failed to open browser:", error);
-      return false;
+    if (status.taskCompleted) {
+      resetShareIntent(); // Reset the share intent after the task is completed
     }
-  };
-
-  if (shareIntent.text) {
-    void _handleOpenWithWebBrowser(shareIntent.text);
-    return null; // Return null to prevent rendering the rest of the component
-  }
-
-  if (state.textFromImage) {
-    void _handleOpenWithWebBrowser(state.textFromImage, filePathParam);
-    return null; // Return null to prevent rendering the rest of the component
-  }
+  }, [status.taskCompleted, resetShareIntent]);
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const clerkPublishableKey = Constants.expoConfig?.extra
@@ -326,10 +278,10 @@ export default function App() {
           <SignInWithOAuth />
         </SignedOut>
         <SignedIn>
-          {state.uploading && (
+          {status.uploading && (
             <Text className="mb-5 text-lg">Uploading...</Text>
           )}
-          {!state.uploading && (
+          {!status.uploading && (
             <>
               <Image
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
