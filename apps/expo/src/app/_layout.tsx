@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider } from "@clerk/clerk-expo";
@@ -9,6 +9,7 @@ import "../styles.css";
 
 import { Text } from "react-native";
 import Constants from "expo-constants";
+import { ShareIntentProvider } from "expo-share-intent";
 import { useColorScheme } from "nativewind";
 
 const tokenCache = {
@@ -45,23 +46,35 @@ export default function RootLayout() {
   }
 
   return (
-    <TRPCProvider>
-      <ClerkProvider
-        publishableKey={clerkPublishableKey}
-        tokenCache={tokenCache}
-      >
-        <Stack
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: "#f472b6",
-            },
-            contentStyle: {
-              backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
-            },
-          }}
-        />
-        <StatusBar />
-      </ClerkProvider>
-    </TRPCProvider>
+    <ShareIntentProvider
+      options={{
+        debug: true,
+        resetOnBackground: true,
+        onResetShareIntent: () =>
+          // used when app going in background and when the reset button is pressed
+          router.replace({
+            pathname: "/",
+          }),
+      }}
+    >
+      <TRPCProvider>
+        <ClerkProvider
+          publishableKey={clerkPublishableKey}
+          tokenCache={tokenCache}
+        >
+          <Stack
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: "#f472b6",
+              },
+              contentStyle: {
+                backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
+              },
+            }}
+          />
+          <StatusBar />
+        </ClerkProvider>
+      </TRPCProvider>
+    </ShareIntentProvider>
   );
 }

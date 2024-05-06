@@ -1,5 +1,6 @@
-import { Pressable, SafeAreaView, Text, View } from "react-native";
+import { Image, Pressable, SafeAreaView, Text, View } from "react-native";
 import { Stack } from "expo-router";
+import { useShareIntentContext } from "expo-share-intent";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 
@@ -30,6 +31,7 @@ export function UsersListsList(props: {
 export default function Page() {
   // get user from clerk
   const { isLoaded, user } = useUser();
+  const { shareIntent, resetShareIntent } = useShareIntentContext();
 
   // In case the user signs out while on the page.
   if (!isLoaded || !user?.username) {
@@ -40,12 +42,20 @@ export default function Page() {
     userName: user.username,
   });
   const utils = api.useUtils();
+  const file = shareIntent.files?.[0];
 
   return (
     <SafeAreaView className=" bg-background">
       {/* Changes page title visible on the header */}
       <Stack.Screen options={{ title: "Choose List" }} />
       <View className="h-full w-full bg-background p-4">
+        {file && (
+          <Image
+            key={file.path}
+            source={{ uri: file.path }}
+            className="h-24 w-24"
+          />
+        )}
         <Pressable
           onPress={() => void utils.event.invalidate()}
           className="flex items-center rounded-lg bg-primary p-2"
