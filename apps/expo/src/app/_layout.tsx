@@ -11,6 +11,7 @@ import { Text } from "react-native";
 import Constants from "expo-constants";
 import { ShareIntentProvider } from "expo-share-intent";
 
+import { PortalHost } from "~/components/primitives/portal";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 const tokenCache = {
@@ -68,6 +69,7 @@ export default function RootLayout() {
           publishableKey={clerkPublishableKey}
           tokenCache={tokenCache}
         >
+          <PortalHost />
           <Stack
             screenOptions={{
               headerStyle: {
