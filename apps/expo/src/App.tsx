@@ -168,7 +168,7 @@ export default function App() {
     stateRef.current = state;
   });
 
-  const reset = () => {
+  const resetState = () => {
     setState({
       textFromImage: undefined,
       uploading: false,
@@ -176,6 +176,10 @@ export default function App() {
       fileExtension: "",
       isBrowserOpening: false,
     });
+  };
+
+  const reset = () => {
+    resetState();
     resetShareIntent();
   };
 
