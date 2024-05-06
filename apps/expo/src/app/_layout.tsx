@@ -10,7 +10,8 @@ import "../styles.css";
 import { Text } from "react-native";
 import Constants from "expo-constants";
 import { ShareIntentProvider } from "expo-share-intent";
-import { useColorScheme } from "nativewind";
+
+import { useColorScheme } from "~/lib/useColorScheme";
 
 const tokenCache = {
   async getToken(key: string) {
@@ -28,6 +29,11 @@ const tokenCache = {
     }
   },
 };
+
+export {
+  // Catch any errors thrown by the Layout component.
+  ErrorBoundary,
+} from "expo-router";
 
 // This is the main layout of the app
 // It wraps your pages with the providers they need
