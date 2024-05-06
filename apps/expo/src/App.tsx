@@ -250,8 +250,8 @@ export default function App() {
   if (!clerkPublishableKey) {
     console.log(Constants.expoConfig);
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.error}>
+      <SafeAreaView className="flex-1 items-center justify-center bg-white">
+        <Text className="mt-5 text-red-500">
           No Clerk Publishable Key found. Please check your environment.
         </Text>
       </SafeAreaView>
@@ -260,7 +260,7 @@ export default function App() {
 
   return (
     <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView className="flex-1 items-center justify-center bg-white">
         <SignedOut>
           <SignInWithOAuth />
         </SignedOut>
@@ -268,13 +268,13 @@ export default function App() {
           <Image
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             source={require("../assets/icon.png")}
-            style={[styles.logo, styles.gap]}
+            className="w-18 h-18 contain mb-5 rounded-md"
           />
-          <Text style={[styles.gap, styles.large]}>
+          <Text className="mb-5 text-lg">
             Share a screenshot or image to Soonlist...
           </Text>
           <Text
-            style={[styles.gap, styles.bold, styles.interactive]}
+            className="mb-5 text-xl font-bold text-interactive-1"
             onPress={() => Linking.openURL("https://www.soonlist.com")}
           >
             View events
@@ -285,45 +285,3 @@ export default function App() {
     </ClerkProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f7f7f7",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logo: {
-    width: 75,
-    height: 75,
-    resizeMode: "contain",
-    borderRadius: 10,
-  },
-  image: {
-    width: 300,
-    height: 200,
-    resizeMode: "contain",
-    // backgroundColor: "lightgray",
-  },
-  gap: {
-    marginBottom: 20,
-  },
-  large: {
-    fontSize: 16,
-  },
-  bold: {
-    fontWeight: "bold",
-    fontSize: 20,
-  },
-  meta: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  error: {
-    color: "red",
-    marginTop: 20,
-  },
-  interactive: {
-    color: "#5A32FB",
-  },
-});
