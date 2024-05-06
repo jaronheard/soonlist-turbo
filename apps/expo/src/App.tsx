@@ -197,46 +197,71 @@ export default function App() {
 
   const file = shareIntent.files?.[0];
 
+  // Extract text from image
   useEffect(() => {
-    if (!file?.mimeType.startsWith("image/") || stateRef.current.uploading)
-      return;
+    if (!file || !file.mimeType.startsWith("image/") || state.uploading) return;
 
     const mimeTypeExtension = file.mimeType.split("/")[1];
-    const newPathState = {
-      ...stateRef.current,
+    setState((prev) => ({
+      ...prev,
       fileExtension: `.${mimeTypeExtension}`,
-      uploading: true,
-    };
-    setState(newPathState);
+    }));
 
-    void (async () => {
+    const extractText = async () => {
       try {
         const text = await _getTextFromImage(file);
-        if (typeof text === "string") {
-          console.log("Text from image:", text);
-        }
-        if (!(typeof text === "string")) {
-          console.error("Failed to get text from image:", text);
+        if (typeof text === "object") {
+          console.error("Failed to extract text from image:", text.error);
           setState((prev) => ({ ...prev, uploading: false }));
           return;
         }
-        await _uploadImage(
-          file.path,
-          stateRef.current.path,
-          mimeTypeExtension || "jpg",
-        );
-        console.log("Upload successful");
         setState((prev) => ({
           ...prev,
           textFromImage: text,
-          uploading: false,
         }));
-      } catch (e) {
-        console.error("Failed to handle image:", e);
+      } catch (error) {
+        console.error("Failed to extract text from image:", error);
         setState((prev) => ({ ...prev, uploading: false }));
       }
-    })();
-  }, [file]);
+    };
+
+    void extractText();
+  }, [file, state.uploading]);
+
+  // Upload image
+  useEffect(() => {
+    if (!file || !state.fileExtension || state.uploading) return;
+
+    const pathForUpload = {
+      fileName: state.path.fileName,
+      folderPath: folderPath,
+    };
+    console.log(pathForUpload);
+
+    const uploadImage = async () => {
+      try {
+        await _uploadImage(
+          file.path,
+          pathForUpload,
+          state.fileExtension?.slice(1) || "jpg",
+        );
+        console.log("Upload successful!");
+        setState((prev) => ({ ...prev, uploading: false }));
+      } catch (error) {
+        console.error("Failed to upload image:", error);
+        setState((prev) => ({ ...prev, uploading: false }));
+      }
+    };
+
+    void uploadImage();
+  }, [
+    file,
+    state.fileExtension,
+    state.path,
+    state.textFromImage,
+    state.uploading,
+    folderPath,
+  ]);
 
   // Handle opening web browser
   const _handleOpenWithWebBrowser = async (
@@ -246,6 +271,7 @@ export default function App() {
     if (state.isBrowserOpening) return false;
     setState((prev) => ({ ...prev, isBrowserOpening: true }));
     try {
+      console.log("Opening browser with file path:", filePathParam);
       const result = await WebBrowser.openBrowserAsync(
         `https://www.soonlist.com/new?rawText=${encodeURIComponent(rawText)}&${filePathParam}`,
         {
@@ -298,20 +324,27 @@ export default function App() {
           <SignInWithOAuth />
         </SignedOut>
         <SignedIn>
-          <Image
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            source={require("../assets/icon.png")}
-            className="mb-5 h-16 w-16 rounded-xl"
-          />
-          <Text className="mb-5 text-lg">
-            Share a screenshot or image to Soonlist...
-          </Text>
-          <Text
-            className="mb-5 text-xl font-bold text-interactive-1"
-            onPress={() => Linking.openURL("https://www.soonlist.com")}
-          >
-            View events
-          </Text>
+          {state.uploading && (
+            <Text className="mb-5 text-lg">Uploading...</Text>
+          )}
+          {!state.uploading && (
+            <>
+              <Image
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                source={require("../assets/icon.png")}
+                className="mb-5 h-16 w-16 rounded-xl"
+              />
+              <Text className="mb-5 text-lg">
+                Share a screenshot or image to Soonlist...
+              </Text>
+              <Text
+                className="mb-5 text-xl font-bold text-interactive-1"
+                onPress={() => Linking.openURL("https://www.soonlist.com")}
+              >
+                View events
+              </Text>
+            </>
+          )}
           <SignOut />
         </SignedIn>
       </SafeAreaView>
