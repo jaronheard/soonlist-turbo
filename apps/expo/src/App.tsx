@@ -216,7 +216,6 @@ export default function App() {
         const text = await _getTextFromImage(file);
         if (typeof text === "object") {
           console.error("Failed to extract text from image:", text.error);
-          setState((prev) => ({ ...prev, uploading: false }));
           return;
         }
         setState((prev) => ({
@@ -225,7 +224,6 @@ export default function App() {
         }));
       } catch (error) {
         console.error("Failed to extract text from image:", error);
-        setState((prev) => ({ ...prev, uploading: false }));
       }
     };
 
