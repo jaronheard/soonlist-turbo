@@ -21,13 +21,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         iosActivationRules: {
           NSExtensionActivationSupportsText: true,
-          NSExtensionActivationSupportsWebURLWithMaxCount: 1,
-          NSExtensionActivationSupportsWebPageWithMaxCount: 1,
-          NSExtensionActivationSupportsImageWithMaxCount: 2,
-          NSExtensionActivationSupportsMovieWithMaxCount: 1,
-          NSExtensionActivationSupportsFileWithMaxCount: 1,
+          // TODO: SUPPORT TEXT
+          // NSExtensionActivationSupportsWebURLWithMaxCount: 1,
+          // NSExtensionActivationSupportsWebPageWithMaxCount: 1,
+          NSExtensionActivationSupportsImageWithMaxCount: 1,
+          // NSExtensionActivationSupportsMovieWithMaxCount: 1,
+          // NSExtensionActivationSupportsFileWithMaxCount: 1,
         },
-        androidIntentFilters: ["text/*", "image/*"],
+        androidIntentFilters: ["image/*"],
+        // TODO: SUPPORT TEXT
+        // androidIntentFilters: ["text/*", "image/*"],
         androidMultiIntentFilters: ["image/*"],
       },
     ],
