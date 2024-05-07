@@ -20,7 +20,8 @@
     "eas:build.dev.device.android": "eas build --profile development-device --platform android",
     "eas:build.dev.sim": "eas build --profile development --platform ios --platform android",
     "eas:build.dev.device": "eas build --profile development-device --platform ios --platform android",
-    "eas:build.prod": "eas build --profile production --platform ios --platform android",
+    "eas:build.prod.ios": "eas build --profile production --platform ios",
+    "eas:build.prod.android": "eas build --profile production --platform android",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "typecheck": "tsc --noEmit"

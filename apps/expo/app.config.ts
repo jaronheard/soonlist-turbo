@@ -39,7 +39,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "soonlist.soonlist",
-    buildNumber: "2",
+    buildNumber: "3",
   },
   android: {
     package: "soonlist.soonlist",
