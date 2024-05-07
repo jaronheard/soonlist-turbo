@@ -1,5 +1,5 @@
 import type { ShareIntent, ShareIntentFile } from "expo-share-intent";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Button,
   Image,
@@ -147,20 +147,24 @@ const browserSettings = {
   enableDefaultShareMenuItem: true,
 };
 
+const initialStatus = {
+  textExtracted: false,
+  text: "",
+  uploading: false,
+  uploadComplete: false,
+  openBrowserAsyncInProgress: false,
+  browserOpened: false,
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  lastBrowserStatus: undefined as WebBrowser.WebBrowserResultType | undefined,
+};
+
 const useHandleShareIntent = (shareIntent: ShareIntent) => {
-  const statusRef = useRef({
-    textExtracted: false,
-    text: "",
-    uploading: false,
-    uploadComplete: false,
-    openBrowserAsyncInProgress: false,
-    browserOpened: false,
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    lastBrowserStatus: undefined as WebBrowser.WebBrowserResultType | undefined,
-  });
+  const [shouldReset, setShouldReset] = useState(false);
+  const statusRef = useRef(initialStatus);
 
   useEffect(() => {
     console.log("useHandleShareIntent effect triggered");
+    setShouldReset(false);
     if (!shareIntent.files && !shareIntent.text) return;
 
     const { type, files, text /* webUrl, meta, */ } = shareIntent;
@@ -169,6 +173,7 @@ const useHandleShareIntent = (shareIntent: ShareIntent) => {
 
     async function handleShare() {
       console.log("handleShare started");
+
       try {
         if (file?.mimeType.startsWith("image/")) {
           console.log("handleShare image started");
@@ -220,6 +225,7 @@ const useHandleShareIntent = (shareIntent: ShareIntent) => {
             "browserOpened:",
             statusRef.current.browserOpened,
           );
+
           statusRef.current.openBrowserAsyncInProgress = true;
           try {
             const result = await WebBrowser.openBrowserAsync(
@@ -311,6 +317,17 @@ const useHandleShareIntent = (shareIntent: ShareIntent) => {
       } catch (error) {
         console.error("Error in handleShare:", error);
       }
+      console.log("handleShare finished");
+      if (
+        Platform.OS === "ios" &&
+        (!statusRef.current.openBrowserAsyncInProgress ||
+          statusRef.current.lastBrowserStatus ===
+            WebBrowser.WebBrowserResultType.DISMISS) &&
+        statusRef.current.uploading === false
+      ) {
+        console.log("SETTING RESET");
+        setShouldReset(true); // Set shouldReset when browser operation and uploading are done
+      }
     }
 
     void handleShare();
@@ -318,6 +335,8 @@ const useHandleShareIntent = (shareIntent: ShareIntent) => {
       console.log(" 🧼 useHandleShareIntent cleanup");
     };
   }, [shareIntent]);
+
+  return { shouldReset };
 };
 
 export default function App() {
@@ -325,24 +344,25 @@ export default function App() {
     "Attempted to call WebBrowser.openBrowserAsync multiple times while already active. Only one WebBrowser controller can be active at any given time.",
   ]);
   // This hook manages incoming share intents
-  const { shareIntent } = useShareIntent({
+  const { shareIntent, resetShareIntent } = useShareIntent({
     debug: true,
     resetOnBackground: false,
   });
 
   // Our custom hook that handles the logic based on the type of the share intent
-  useHandleShareIntent(shareIntent);
+  const { shouldReset } = useHandleShareIntent(shareIntent);
 
   // Warm up the android browser to improve UX
   // https://docs.expo.dev/guides/authentication/#improving-user-experience
   useWarmUpBrowser();
 
-  // // Effect to reset the share intent when task is completed
-  // useEffect(() => {
-  //   if (statusRef.current.taskCompleted) {
-  //     resetShareIntent(); // Reset the share intent after the task is completed
-  //   }
-  // }, [statusRef.current.taskCompleted, resetShareIntent]);
+  // Effect to reset the share intent when task is completed
+  useEffect(() => {
+    if (shouldReset) {
+      console.log("RESETTING");
+      resetShareIntent(); // Reset the share intent after the task is completed
+    }
+  }, [shouldReset, resetShareIntent]);
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const clerkPublishableKey = Constants.expoConfig?.extra
