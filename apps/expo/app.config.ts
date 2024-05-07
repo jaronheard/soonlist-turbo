@@ -23,7 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           NSExtensionActivationSupportsText: true,
           NSExtensionActivationSupportsWebURLWithMaxCount: 1,
           NSExtensionActivationSupportsWebPageWithMaxCount: 1,
-          NSExtensionActivationSupportsImageWithMaxCount: 2,
+          NSExtensionActivationSupportsImageWithMaxCount: 1,
           NSExtensionActivationSupportsMovieWithMaxCount: 1,
           NSExtensionActivationSupportsFileWithMaxCount: 1,
         },

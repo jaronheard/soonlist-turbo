@@ -1,9 +1,10 @@
 import type { ShareIntent, ShareIntentFile } from "expo-share-intent";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Button,
   Image,
   Linking,
+  LogBox,
   Platform,
   SafeAreaView,
   Text,
@@ -147,114 +148,225 @@ const browserSettings = {
 };
 
 const useHandleShareIntent = (shareIntent: ShareIntent) => {
-  const [status, setStatus] = useState({
+  const statusRef = useRef({
     textExtracted: false,
     text: "",
     uploading: false,
     uploadComplete: false,
+    openBrowserAsyncInProgress: false,
     browserOpened: false,
-    taskCompleted: false,
+    lastBrowserStatus: undefined as WebBrowser.WebBrowserResultType | undefined,
   });
 
   useEffect(() => {
-    if (!shareIntent.files) return;
+    console.log("useHandleShareIntent effect triggered");
+    const abortController = new AbortController();
+    if (!shareIntent.files && !shareIntent.text) return;
 
     const { type, files, text /* webUrl, meta, */ } = shareIntent;
 
-    // only use first file
-    if (!files[0]) return;
-    const file = files[0];
+    const file = files?.[0];
 
     async function handleShare() {
-      if (file.mimeType.startsWith("image/")) {
-        const text = await _getTextFromImage(file);
-        setStatus((prev) => ({ ...prev, textExtracted: true, text }));
-        const fileName = guidGenerator(); // Generate a unique filename for each image
-        const fileExtension = file.mimeType.split("/")[1] || "jpg";
-        const currentDate = new Date();
-        const year = currentDate.getUTCFullYear();
-        const month = String(currentDate.getUTCMonth() + 1).padStart(2, "0");
-        const day = String(currentDate.getUTCDate()).padStart(2, "0");
-        const folderPath = `/uploads/${year}/${month}/${day}`;
-        const filePathParam = `filePath=${encodeURIComponent(
-          `${folderPath}/${fileName}.${fileExtension}`,
-        )}`;
-        const browserUrl = `https://www.soonlist.com/new?rawText=${encodeURIComponent(
-          text,
-        )}&${filePathParam}`;
-
-        // Open the browser with the extracted text
-        void WebBrowser.openBrowserAsync(browserUrl, browserSettings).then(
-          (result) => {
-            setStatus((prev) => ({ ...prev, browserOpened: true }));
-            if (result.type === WebBrowser.WebBrowserResultType.DISMISS) {
-              setStatus((prev) => ({ ...prev, taskCompleted: true }));
+      console.log("handleShare started");
+      try {
+        if (file?.mimeType.startsWith("image/")) {
+          console.log("handleShare image started");
+          // Logic for handling image sharing
+          const text = await _getTextFromImage(file);
+          if (text !== statusRef.current.text) {
+            console.log("DIFFERENCE IN TEXT, DISMISSING BROWSER");
+            WebBrowser.dismissBrowser();
+            console.log("STATUS:", statusRef.current);
+            if (
+              statusRef.current.lastBrowserStatus ===
+              WebBrowser.WebBrowserResultType.LOCKED
+            ) {
+              console.log("BROWSER LOCKED, WAITING FOR 1 SECOND");
+              await new Promise((resolve) => setTimeout(resolve, 1000));
             }
-          },
-        );
+            console.log("BROWSER SHOULD BE DISMISSED NOW");
+          }
+          statusRef.current.text = text;
+          statusRef.current.textExtracted = true;
+          const fileName = guidGenerator();
+          const fileExtension = file.mimeType.split("/")[1] || "jpg";
+          const currentDate = new Date();
+          const year = currentDate.getUTCFullYear();
+          const month = String(currentDate.getUTCMonth() + 1).padStart(2, "0");
+          const day = String(currentDate.getUTCDate()).padStart(2, "0");
+          const folderPath = `/uploads/${year}/${month}/${day}`;
+          const filePathParam = `filePath=${encodeURIComponent(`${folderPath}/${fileName}.${fileExtension}`)}`;
+          const browserUrl = `https://www.soonlist.com/new?rawText=${encodeURIComponent(text)}&${filePathParam}`;
 
-        // Start the upload in parallel
-        setStatus((prev) => ({ ...prev, uploading: true }));
-        void _uploadImage(
-          file.path,
-          { fileName, folderPath },
-          fileExtension,
-        ).then(() => {
-          setStatus((prev) => ({
-            ...prev,
-            uploading: false,
-            uploadComplete: true,
-          }));
-        });
-      } else if (type === "text" && text) {
-        setStatus((prev) => ({ ...prev, textExtracted: true, text: text }));
-        const browserUrl = `https://www.soonlist.com/new?rawText=${encodeURIComponent(
-          text,
-        )}`;
+          statusRef.current.uploading = true;
+          void _uploadImage(
+            file.path,
+            { fileName, folderPath },
+            fileExtension,
+          ).then(() => {
+            statusRef.current.uploading = false;
+            statusRef.current.uploadComplete = true;
+          });
 
-        // Open the browser with the extracted text
-        void WebBrowser.openBrowserAsync(browserUrl, browserSettings).then(
-          (result) => {
-            setStatus((prev) => ({ ...prev, browserOpened: true }));
+          console.log("image > openBrowserAsync started");
+          console.log(
+            "lastBrowserStatus:",
+            statusRef.current.lastBrowserStatus,
+            "openBrowserAsyncInProgress:",
+            statusRef.current.openBrowserAsyncInProgress,
+            "browserOpened:",
+            statusRef.current.browserOpened,
+          );
+
+          // if (
+          //   statusRef.current.lastBrowserStatus !==
+          //     WebBrowser.WebBrowserResultType.LOCKED &&
+          //   statusRef.current.lastBrowserStatus !==
+          //     WebBrowser.WebBrowserResultType.OPENED &&
+          //   statusRef.current.lastBrowserStatus !==
+          //     WebBrowser.WebBrowserResultType.CANCEL &&
+          //   statusRef.current.lastBrowserStatus !==
+          //     WebBrowser.WebBrowserResultType.DISMISS
+          // ) {
+          //   console.log(
+          //     "🧹 dismissing browser since lastBrowserStatus: ",
+          //     statusRef.current.lastBrowserStatus,
+          //   );
+          //   WebBrowser.dismissBrowser();
+          // }
+          // if (statusRef.current.openBrowserAsyncInProgress) {
+          //   console.log(
+          //     "🧹 dismissing browser because op: ",
+          //     statusRef.current.lastBrowserStatus,
+          //   );
+          //   WebBrowser.dismissBrowser();
+          // }
+          statusRef.current.openBrowserAsyncInProgress = true;
+          try {
+            const result = await WebBrowser.openBrowserAsync(
+              browserUrl,
+              browserSettings,
+            );
+            console.log("image > openBrowserAsync finished", result.type);
             if (result.type === WebBrowser.WebBrowserResultType.DISMISS) {
-              setStatus((prev) => ({ ...prev, taskCompleted: true }));
+              console.log("Browser dismissed");
+              statusRef.current.lastBrowserStatus = result.type;
+              statusRef.current.openBrowserAsyncInProgress = false;
             }
-          },
-        );
+            if (result.type === WebBrowser.WebBrowserResultType.CANCEL) {
+              console.log("Browser cancelled");
+              statusRef.current.lastBrowserStatus = result.type;
+              statusRef.current.openBrowserAsyncInProgress = false;
+            }
+            if (result.type === WebBrowser.WebBrowserResultType.OPENED) {
+              console.log("Browser opened");
+              statusRef.current.lastBrowserStatus = result.type;
+              statusRef.current.openBrowserAsyncInProgress = false;
+            }
+            if (result.type === WebBrowser.WebBrowserResultType.LOCKED) {
+              console.log("Browser locked");
+              statusRef.current.lastBrowserStatus = result.type;
+              statusRef.current.openBrowserAsyncInProgress = false;
+            }
+            console.log("image > openBrowserAsync finished");
+          } catch (error) {
+            console.error("Error in image > openBrowserAsync:", error);
+            statusRef.current.openBrowserAsyncInProgress = false;
+          }
+        } else if (type === "text" && text) {
+          console.log("handleShare text started");
+          if (text !== statusRef.current.text) {
+            console.log("DIFFERENCE IN TEXT, DISMISSING BROWSER");
+            WebBrowser.dismissBrowser();
+            console.log("STATUS:", statusRef.current);
+            if (
+              statusRef.current.lastBrowserStatus ===
+              WebBrowser.WebBrowserResultType.LOCKED
+            ) {
+              console.log("BROWSER LOCKED, WAITING FOR 1 SECOND");
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+            console.log("BROWSER SHOULD BE DISMISSED NOW");
+          }
+          // Logic for handling text sharing
+          statusRef.current.text = text;
+          statusRef.current.textExtracted = true;
+          const browserUrl = `https://www.soonlist.com/new?rawText=${encodeURIComponent(text)}`;
+
+          console.log("text > openBrowserAsync started");
+          // if (!statusRef.current.openBrowserAsyncInProgress) {
+          //   console.log("text > openBrowserAsync started > dismissBrowser");
+          //   WebBrowser.dismissBrowser();
+          // }
+          statusRef.current.openBrowserAsyncInProgress = true;
+          try {
+            const result = await WebBrowser.openBrowserAsync(
+              browserUrl,
+              browserSettings,
+            );
+            console.log("text > openBrowserAsync finished", result.type);
+            if (result.type === WebBrowser.WebBrowserResultType.DISMISS) {
+              console.log("Browser dismissed");
+              statusRef.current.lastBrowserStatus = result.type;
+              statusRef.current.openBrowserAsyncInProgress = false;
+            }
+            if (result.type === WebBrowser.WebBrowserResultType.CANCEL) {
+              console.log("Browser cancelled");
+              statusRef.current.lastBrowserStatus = result.type;
+              statusRef.current.openBrowserAsyncInProgress = false;
+            }
+            if (result.type === WebBrowser.WebBrowserResultType.OPENED) {
+              console.log("Browser opened");
+              statusRef.current.lastBrowserStatus = result.type;
+              statusRef.current.openBrowserAsyncInProgress = false;
+            }
+            if (result.type === WebBrowser.WebBrowserResultType.LOCKED) {
+              console.log("Browser locked");
+              statusRef.current.lastBrowserStatus = result.type;
+              statusRef.current.openBrowserAsyncInProgress = false;
+            }
+            console.log("image > openBrowserAsync finished");
+          } catch (error) {
+            console.error("Error in text > openBrowserAsync:", error);
+            statusRef.current.openBrowserAsyncInProgress = false;
+          }
+        }
+      } catch (error) {
+        console.error("Error in handleShare:", error);
       }
     }
 
     void handleShare();
-
     return () => {
-      // Cleanup potential pending operations if a new share intent is received
-      WebBrowser.dismissBrowser();
+      console.log(" 🧼 useHandleShareIntent cleanup");
     };
   }, [shareIntent]);
-
-  return { status };
 };
 
 export default function App() {
+  LogBox.ignoreLogs([
+    "Attempted to call WebBrowser.openBrowserAsync multiple times while already active. Only one WebBrowser controller can be active at any given time.",
+  ]);
   // This hook manages incoming share intents
-  const { shareIntent, resetShareIntent } = useShareIntent({
+  const { shareIntent } = useShareIntent({
     // debug: true,
-    resetOnBackground: true,
+    resetOnBackground: false,
   });
 
   // Our custom hook that handles the logic based on the type of the share intent
-  const { status } = useHandleShareIntent(shareIntent);
+  useHandleShareIntent(shareIntent);
 
   // Warm up the android browser to improve UX
   // https://docs.expo.dev/guides/authentication/#improving-user-experience
   useWarmUpBrowser();
 
-  // Effect to reset the share intent when task is completed
-  useEffect(() => {
-    if (status.taskCompleted) {
-      resetShareIntent(); // Reset the share intent after the task is completed
-    }
-  }, [status.taskCompleted, resetShareIntent]);
+  // // Effect to reset the share intent when task is completed
+  // useEffect(() => {
+  //   if (statusRef.current.taskCompleted) {
+  //     resetShareIntent(); // Reset the share intent after the task is completed
+  //   }
+  // }, [statusRef.current.taskCompleted, resetShareIntent]);
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const clerkPublishableKey = Constants.expoConfig?.extra
@@ -278,27 +390,20 @@ export default function App() {
           <SignInWithOAuth />
         </SignedOut>
         <SignedIn>
-          {status.uploading && (
-            <Text className="mb-5 text-lg">Uploading...</Text>
-          )}
-          {!status.uploading && (
-            <>
-              <Image
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                source={require("../assets/icon.png")}
-                className="mb-5 h-16 w-16 rounded-xl"
-              />
-              <Text className="mb-5 text-lg">
-                Share a screenshot or image to Soonlist...
-              </Text>
-              <Text
-                className="mb-5 text-xl font-bold text-interactive-1"
-                onPress={() => Linking.openURL("https://www.soonlist.com")}
-              >
-                View events
-              </Text>
-            </>
-          )}
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            source={require("../assets/icon.png")}
+            className="mb-5 h-16 w-16 rounded-xl"
+          />
+          <Text className="mb-5 text-lg">
+            Share a screenshot or image to Soonlist...
+          </Text>
+          <Text
+            className="mb-5 text-xl font-bold text-interactive-1"
+            onPress={() => Linking.openURL("https://www.soonlist.com")}
+          >
+            View events
+          </Text>
           <SignOut />
         </SignedIn>
       </SafeAreaView>
