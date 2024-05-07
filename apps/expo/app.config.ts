@@ -2,7 +2,7 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "expo",
+  name: "Soonlist",
   slug: "timetimecc",
   scheme: "soonlist",
   version: "1.0.0",
@@ -39,7 +39,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "soonlist.soonlist",
-    buildNumber: "3",
+    buildNumber: "4",
   },
   android: {
     package: "soonlist.soonlist",
@@ -47,6 +47,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff",
     },
+    versionCode: 4,
   },
   // extra: {
   //   eas: {
