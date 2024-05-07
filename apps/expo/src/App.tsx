@@ -1,5 +1,5 @@
 import type { ShareIntent, ShareIntentFile } from "expo-share-intent";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   Button,
   Image,
@@ -155,12 +155,12 @@ const useHandleShareIntent = (shareIntent: ShareIntent) => {
     uploadComplete: false,
     openBrowserAsyncInProgress: false,
     browserOpened: false,
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     lastBrowserStatus: undefined as WebBrowser.WebBrowserResultType | undefined,
   });
 
   useEffect(() => {
     console.log("useHandleShareIntent effect triggered");
-    const abortController = new AbortController();
     if (!shareIntent.files && !shareIntent.text) return;
 
     const { type, files, text /* webUrl, meta, */ } = shareIntent;
@@ -175,17 +175,19 @@ const useHandleShareIntent = (shareIntent: ShareIntent) => {
           // Logic for handling image sharing
           const text = await _getTextFromImage(file);
           if (text !== statusRef.current.text) {
-            console.log("DIFFERENCE IN TEXT, DISMISSING BROWSER");
-            WebBrowser.dismissBrowser();
-            console.log("STATUS:", statusRef.current);
-            if (
-              statusRef.current.lastBrowserStatus ===
-              WebBrowser.WebBrowserResultType.LOCKED
-            ) {
-              console.log("BROWSER LOCKED, WAITING FOR 1 SECOND");
-              await new Promise((resolve) => setTimeout(resolve, 1000));
+            console.log("DIFFERENCE IN TEXT, DISMISSING BROWSER ON IOS");
+            if (Platform.OS === "ios") {
+              WebBrowser.dismissBrowser();
+              console.log("STATUS:", statusRef.current);
+              if (
+                statusRef.current.lastBrowserStatus ===
+                WebBrowser.WebBrowserResultType.LOCKED
+              ) {
+                console.log("BROWSER LOCKED, WAITING FOR 1 SECOND");
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+              }
+              console.log("BROWSER SHOULD BE DISMISSED NOW");
             }
-            console.log("BROWSER SHOULD BE DISMISSED NOW");
           }
           statusRef.current.text = text;
           statusRef.current.textExtracted = true;
@@ -218,30 +220,6 @@ const useHandleShareIntent = (shareIntent: ShareIntent) => {
             "browserOpened:",
             statusRef.current.browserOpened,
           );
-
-          // if (
-          //   statusRef.current.lastBrowserStatus !==
-          //     WebBrowser.WebBrowserResultType.LOCKED &&
-          //   statusRef.current.lastBrowserStatus !==
-          //     WebBrowser.WebBrowserResultType.OPENED &&
-          //   statusRef.current.lastBrowserStatus !==
-          //     WebBrowser.WebBrowserResultType.CANCEL &&
-          //   statusRef.current.lastBrowserStatus !==
-          //     WebBrowser.WebBrowserResultType.DISMISS
-          // ) {
-          //   console.log(
-          //     "🧹 dismissing browser since lastBrowserStatus: ",
-          //     statusRef.current.lastBrowserStatus,
-          //   );
-          //   WebBrowser.dismissBrowser();
-          // }
-          // if (statusRef.current.openBrowserAsyncInProgress) {
-          //   console.log(
-          //     "🧹 dismissing browser because op: ",
-          //     statusRef.current.lastBrowserStatus,
-          //   );
-          //   WebBrowser.dismissBrowser();
-          // }
           statusRef.current.openBrowserAsyncInProgress = true;
           try {
             const result = await WebBrowser.openBrowserAsync(
@@ -277,28 +255,26 @@ const useHandleShareIntent = (shareIntent: ShareIntent) => {
         } else if (type === "text" && text) {
           console.log("handleShare text started");
           if (text !== statusRef.current.text) {
-            console.log("DIFFERENCE IN TEXT, DISMISSING BROWSER");
-            WebBrowser.dismissBrowser();
-            console.log("STATUS:", statusRef.current);
-            if (
-              statusRef.current.lastBrowserStatus ===
-              WebBrowser.WebBrowserResultType.LOCKED
-            ) {
-              console.log("BROWSER LOCKED, WAITING FOR 1 SECOND");
-              await new Promise((resolve) => setTimeout(resolve, 1000));
+            console.log("DIFFERENCE IN TEXT, DISMISSING BROWSER ON IOS");
+            if (Platform.OS === "ios") {
+              WebBrowser.dismissBrowser();
+              console.log("STATUS:", statusRef.current);
+              if (
+                statusRef.current.lastBrowserStatus ===
+                WebBrowser.WebBrowserResultType.LOCKED
+              ) {
+                console.log("BROWSER LOCKED, WAITING FOR 1 SECOND");
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+              }
+              console.log("BROWSER SHOULD BE DISMISSED NOW");
             }
-            console.log("BROWSER SHOULD BE DISMISSED NOW");
           }
           // Logic for handling text sharing
           statusRef.current.text = text;
           statusRef.current.textExtracted = true;
           const browserUrl = `https://www.soonlist.com/new?rawText=${encodeURIComponent(text)}`;
-
           console.log("text > openBrowserAsync started");
-          // if (!statusRef.current.openBrowserAsyncInProgress) {
-          //   console.log("text > openBrowserAsync started > dismissBrowser");
-          //   WebBrowser.dismissBrowser();
-          // }
+
           statusRef.current.openBrowserAsyncInProgress = true;
           try {
             const result = await WebBrowser.openBrowserAsync(
@@ -350,7 +326,7 @@ export default function App() {
   ]);
   // This hook manages incoming share intents
   const { shareIntent } = useShareIntent({
-    // debug: true,
+    debug: true,
     resetOnBackground: false,
   });
 
