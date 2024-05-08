@@ -35,6 +35,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-updates",
+    [
+      "@sentry/react-native/expo",
+      {
+        organization: "soonlist",
+        project: "soonlist",
+      },
+    ],
   ],
   ios: {
     supportsTablet: true,
