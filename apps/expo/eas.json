@@ -16,15 +16,24 @@
       "distribution": "internal",
       "ios": {
         "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dGlnaHQtbW9uZ3JlbC01LmNsZXJrLmFjY291bnRzLmRldiQ"
       }
     },
     "development-device": {
       "extends": "base",
       "distribution": "internal",
-      "developmentClient": true
+      "developmentClient": true,
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dGlnaHQtbW9uZ3JlbC01LmNsZXJrLmFjY291bnRzLmRldiQ"
+      }
     },
     "production": {
-      "extends": "base"
+      "extends": "base",
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuc29vbmxpc3QuY29tJA"
+      }
     }
   },
   "submit": {
