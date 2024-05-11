@@ -7,7 +7,7 @@ export default function Page() {
     <>
       <ScrollToTop />
       <div className="flex w-full justify-center bg-white">
-        <SignUp afterSignUpUrl={`${process.env.NEXT_PUBLIC_URL}/get-started`} />
+        <SignUp />
       </div>
     </>
   );
