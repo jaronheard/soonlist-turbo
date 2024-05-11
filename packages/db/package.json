@@ -37,7 +37,8 @@
   "dependencies": {
     "@planetscale/database": "^1.18.0",
     "@t3-oss/env-core": "^0.10.0",
-    "drizzle-orm": "^0.30.9",
+    "drizzle-orm": "^0.30.10",
+    "drizzle-zod": "^0.5.1",
     "zod": "^3.23.0"
   },
   "devDependencies": {
