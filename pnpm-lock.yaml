@@ -339,6 +339,9 @@ importers:
       '@soonlist/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint
+      '@soonlist/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
       '@soonlist/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -673,7 +676,11 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
 
-  tooling/github: {}
+  tooling/github:
+    devDependencies:
+      '@soonlist/prettier-config':
+        specifier: workspace:*
+        version: link:../prettier
 
   tooling/prettier:
     dependencies:

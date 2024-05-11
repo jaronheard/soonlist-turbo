@@ -1,3 +1,7 @@
 {
-  "name": "@soonlist/github"
+  "name": "@soonlist/github",
+  "devDependencies": {
+    "@soonlist/prettier-config": "workspace:*"
+  },
+  "prettier": "@soonlist/prettier-config"
 }
