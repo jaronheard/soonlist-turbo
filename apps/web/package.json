@@ -6,9 +6,6 @@
   "scripts": {
     "build": "pnpm with-env next build",
     "clean": "git clean -xdf .next .turbo node_modules",
-    "db:dr": "pscale dr create timetime dev",
-    "db:push": "pnpm with-env drizzle-kit push:mysql --config=drizzle.config.ts",
-    "db:studio": "pnpm with-env drizzle-kit studio",
     "dev": "pnpm with-env next dev --turbo",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
