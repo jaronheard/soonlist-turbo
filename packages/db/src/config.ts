@@ -1,10 +1,10 @@
 import type { Config } from "drizzle-kit";
 
 export default {
-  schema: "./server/db/schema.ts",
+  schema: "src/schema/index.ts",
   out: "./drizzle",
-  driver: "mysql2",
+  dialect: "mysql",
   dbCredentials: {
-    uri: process.env.DATABASE_URL || "",
+    url: process.env.DATABASE_URL || "",
   },
 } satisfies Config;

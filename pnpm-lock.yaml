@@ -273,11 +273,8 @@ importers:
         specifier: ^11.0.6
         version: 11.0.6
       drizzle-orm:
-        specifier: ^0.30.9
-        version: 0.30.9(@planetscale/database@1.18.0)(@types/react@18.3.1)(mysql2@3.9.7)(react@18.3.1)
-      drizzle-zod:
-        specifier: ^0.5.1
-        version: 0.5.1(drizzle-orm@0.30.9(@planetscale/database@1.18.0)(@types/react@18.3.1)(mysql2@3.9.7)(react@18.3.1))(zod@3.23.4)
+        specifier: ^0.30.10
+        version: 0.30.10(@planetscale/database@1.18.0)(@types/react@18.3.1)(mysql2@3.9.7)(react@18.3.1)
       lucide-react:
         specifier: ^0.373.0
         version: 0.373.0(react@18.3.1)
@@ -363,9 +360,6 @@ importers:
       concurrently:
         specifier: ^8.2.2
         version: 8.2.2
-      drizzle-kit:
-        specifier: ^0.20.14
-        version: 0.20.17
       encoding:
         specifier: ^0.1.13
         version: 0.1.13
@@ -474,8 +468,11 @@ importers:
         specifier: ^0.10.0
         version: 0.10.1(typescript@5.4.5)(zod@3.23.4)
       drizzle-orm:
-        specifier: ^0.30.9
-        version: 0.30.9(@planetscale/database@1.18.0)(@types/react@18.3.1)(mysql2@3.9.7)(react@18.3.1)
+        specifier: ^0.30.10
+        version: 0.30.10(@planetscale/database@1.18.0)(@types/react@18.3.2)(mysql2@3.9.7)(react@18.3.1)
+      drizzle-zod:
+        specifier: ^0.5.1
+        version: 0.5.1(drizzle-orm@0.30.10(@planetscale/database@1.18.0)(@types/react@18.3.2)(mysql2@3.9.7)(react@18.3.1))(zod@3.23.4)
       zod:
         specifier: ^3.23.0
         version: 3.23.4
@@ -493,8 +490,8 @@ importers:
         specifier: ^7.4.1
         version: 7.4.1
       drizzle-kit:
-        specifier: ^0.20.14
-        version: 0.20.17
+        specifier: ^0.21.1
+        version: 0.21.1
       eslint:
         specifier: ^9.1.1
         version: 9.1.1
@@ -2034,6 +2031,9 @@ packages:
   '@floating-ui/dom@1.6.4':
     resolution: {integrity: sha512-0G8R+zOvQsAG1pg2Q99P21jiqxqGBW1iRe/iXHsBRBxnpXKFI8QwbB4x5KmYLggNO5m34IQgOIu9SCRfR/WWiQ==}
 
+  '@floating-ui/dom@1.6.5':
+    resolution: {integrity: sha512-Nsdud2X65Dz+1RHjAIP0t8z5e2ff/IRbei6BqFrl1urT8sDVzM1HMQ+R0XcU5ceRfyO3I6ayeqIfh+6Wb8LGTw==}
+
   '@floating-ui/react-dom@2.0.8':
     resolution: {integrity: sha512-HOdqOt3R3OGeTKidaLvJKcgg75S6tibQ3Tif4eyd91QnIJWr0NLvoXFpJA/j8HqkFSL68GDca9AuyWEHlhyClw==}
     peerDependencies:
@@ -2086,16 +2086,6 @@ packages:
     resolution: {integrity: sha512-fEcPfo4oN345SoqdlCDdSa4ivjaKbk0jTd+oubcgNxnNgAfzysfwWfQUr+51wigiWHQQRiZNd1Ao0M5Y3M2EGg==}
     peerDependencies:
       react: '>= 16'
-
-  '@hono/node-server@1.11.1':
-    resolution: {integrity: sha512-GW1Iomhmm1o4Z+X57xGby8A35Cu9UZLL7pSMdqDBkD99U5cywff8F+8hLk5aBTzNubnsFAvWQ/fZjNwPsEn9lA==}
-    engines: {node: '>=18.14.1'}
-
-  '@hono/zod-validator@0.2.1':
-    resolution: {integrity: sha512-HFoxln7Q6JsE64qz2WBS28SD33UB2alp3aRKmcWnNLDzEL1BLsWfbdX6e1HIiUprHYTIXf5y7ax8eYidKUwyaA==}
-    peerDependencies:
-      hono: '>=3.9.0'
-      zod: ^3.19.1
 
   '@hookform/resolvers@3.3.4':
     resolution: {integrity: sha512-o5cgpGOuJYrd+iMKvkttOclgwRW86EsWJZZRC23prf0uU2i48Htq4PuT73AVb9ionFyZrwYEITuOFGF+BydEtQ==}
@@ -3395,6 +3385,9 @@ packages:
   '@types/react@18.3.1':
     resolution: {integrity: sha512-V0kuGBX3+prX+DQ/7r2qsv1NsdfnCLnTgnRJ1pYnxykBhGMz+qj+box5lq7XsO5mtZsBqpjwwTu/7wszPfMBcw==}
 
+  '@types/react@18.3.2':
+    resolution: {integrity: sha512-Btgg89dAnqD4vV7R3hlwOxgqobUQKgx3MmrQRi0yYbs/P0ym8XozIAlkqVilPqHQwXs4e9Tf63rrCgl58BcO4w==}
+
   '@types/semver@7.5.8':
     resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
 
@@ -4014,10 +4007,6 @@ packages:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
 
-  camelcase@7.0.1:
-    resolution: {integrity: sha512-xlx1yCK2Oc1APsPXDL2LdlNP6+uu8OCDdhOBSVT279M/S+y75O30C2VuD8T2ogdePBBl7PfPF4504tnLgX3zfw==}
-    engines: {node: '>=14.16'}
-
   caniuse-lite@1.0.30001613:
     resolution: {integrity: sha512-BNjJULJfOONQERivfxte7alLfeLW4QnwHvNW4wEcLEbXfV6VSCYvr+REbf2Sojv8tC1THpjPXBxWgDbq4NtLWg==}
 
@@ -4032,10 +4021,6 @@ packages:
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
-
-  chalk@5.3.0:
-    resolution: {integrity: sha512-dLitG79d+GV1Nb/VYcCDFivJeK1hiukt9QjRNVOsUtTy1rR1YJsmpGGTZ3qJos+uw7WmWF4wUwBd9jxjocFC2w==}
-    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   change-case@3.1.0:
     resolution: {integrity: sha512-2AZp7uJZbYEzRPsFoa+ijKdvp9zsrnnt6+yFokfwEpeJm0xuJDVoxiRCAaTzyJND8GJkofo2IcKWaUZ/OECVzw==}
@@ -4518,12 +4503,12 @@ packages:
     resolution: {integrity: sha512-vyJTp8+mC+G+5dfgsY+r3ckxlz+QMX40VjPQsZc5gxVAxLmi64TBoVkP54A/pRAXMXsbu2GMMBrZPxNv23waMg==}
     engines: {node: '>=0.4.0'}
 
-  drizzle-kit@0.20.17:
-    resolution: {integrity: sha512-mLVDS4nXmO09wFVlzGrdshWnAL+U9eQGC5zRs6hTN6Q9arwQGWU2XnZ17I8BM8Quau8CQRx3Ms6VPgRWJFVp7Q==}
+  drizzle-kit@0.21.1:
+    resolution: {integrity: sha512-Sp7OnCdROiE2ebMuHsAfrnRoHVGYCvErQxUh7/0l6R1caHssZu9oZu/hW9rLU19xnTK4/y3iSe3sL0Cc530wCg==}
     hasBin: true
 
-  drizzle-orm@0.30.9:
-    resolution: {integrity: sha512-VOiCFsexErmgqvNCOmbzmqDCZzZsHoz6SkWAjTFxsTr1AllKDbDJ2+GgedLXsXMDgpg/ljDG1zItIFeZtiO2LA==}
+  drizzle-orm@0.30.10:
+    resolution: {integrity: sha512-IRy/QmMWw9lAQHpwbUh1b8fcn27S/a9zMIzqea1WNOxK9/4EB8gIo+FZWLiPXzl2n9ixGSv8BhsLZiOppWEwBw==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=3'
@@ -5453,10 +5438,6 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.2.8:
-    resolution: {integrity: sha512-re/zNrOWb7Sp9KhojlMEgcgvqsE8Rgk9IcmumqsbKa9ruPT5XuOcx1U+xuNaI4SUnwrPsiTQ72MiodtpJEVfjg==}
-    engines: {node: '>=16.0.0'}
-
   hosted-git-info@3.0.8:
     resolution: {integrity: sha512-aXpmwoOhRBrw6X3j0h5RloK4x1OzsxMPyxqIHyNfSe2pypkVTZFpEiRoSipPEPlMrh0HW/XsjkJ5WgnCirpNUw==}
     engines: {node: '>=10'}
@@ -6348,10 +6329,6 @@ packages:
 
   minimatch@5.1.6:
     resolution: {integrity: sha512-lKwV/1brpG6mBUFHtb7NUmtABCb2WZZmm2wNiOA5hAb8VdCS4B3dtMWyvcoViccwAW/COERjXLt0zP1zXUN26g==}
-    engines: {node: '>=10'}
-
-  minimatch@7.4.6:
-    resolution: {integrity: sha512-sBz8G/YjVniEz6lKPNpKxXwazJe4c19fEfV2GDMX6AjFz+MX9uDWIZW8XreVhkFW3fkIdTv/gxWr/Kks5FFAVw==}
     engines: {node: '>=10'}
 
   minimatch@9.0.4:
@@ -10209,6 +10186,11 @@ snapshots:
       '@floating-ui/core': 1.6.1
       '@floating-ui/utils': 0.2.2
 
+  '@floating-ui/dom@1.6.5':
+    dependencies:
+      '@floating-ui/core': 1.6.1
+      '@floating-ui/utils': 0.2.2
+
   '@floating-ui/react-dom@2.0.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@floating-ui/dom': 1.6.4
@@ -10255,13 +10237,6 @@ snapshots:
   '@heroicons/react@2.1.3(react@18.3.1)':
     dependencies:
       react: 18.3.1
-
-  '@hono/node-server@1.11.1': {}
-
-  '@hono/zod-validator@0.2.1(hono@4.2.8)(zod@3.23.4)':
-    dependencies:
-      hono: 4.2.8
-      zod: 3.23.4
 
   '@hookform/resolvers@3.3.4(react-hook-form@7.51.3(react@18.3.1))':
     dependencies:
@@ -11970,9 +11945,14 @@ snapshots:
 
   '@types/react-transition-group@4.4.10':
     dependencies:
-      '@types/react': 18.3.1
+      '@types/react': 18.3.2
 
   '@types/react@18.3.1':
+    dependencies:
+      '@types/prop-types': 15.7.12
+      csstype: 3.1.3
+
+  '@types/react@18.3.2':
     dependencies:
       '@types/prop-types': 15.7.12
       csstype: 3.1.3
@@ -12721,8 +12701,6 @@ snapshots:
 
   camelcase@6.3.0: {}
 
-  camelcase@7.0.1: {}
-
   caniuse-lite@1.0.30001613: {}
 
   chalk@2.4.2:
@@ -12740,8 +12718,6 @@ snapshots:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
-
-  chalk@5.3.0: {}
 
   change-case@3.1.0:
     dependencies:
@@ -13245,38 +13221,37 @@ snapshots:
     dependencies:
       wordwrap: 1.0.0
 
-  drizzle-kit@0.20.17:
+  drizzle-kit@0.21.1:
     dependencies:
       '@esbuild-kit/esm-loader': 2.6.5
-      '@hono/node-server': 1.11.1
-      '@hono/zod-validator': 0.2.1(hono@4.2.8)(zod@3.23.4)
-      camelcase: 7.0.1
-      chalk: 5.3.0
       commander: 9.5.0
       env-paths: 3.0.0
       esbuild: 0.19.12
       esbuild-register: 3.5.0(esbuild@0.19.12)
       glob: 8.1.0
       hanji: 0.0.5
-      hono: 4.2.8
       json-diff: 0.9.0
-      minimatch: 7.4.6
-      semver: 7.6.0
-      superjson: 2.2.1
       zod: 3.23.4
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.30.9(@planetscale/database@1.18.0)(@types/react@18.3.1)(mysql2@3.9.7)(react@18.3.1):
+  drizzle-orm@0.30.10(@planetscale/database@1.18.0)(@types/react@18.3.1)(mysql2@3.9.7)(react@18.3.1):
     optionalDependencies:
       '@planetscale/database': 1.18.0
       '@types/react': 18.3.1
       mysql2: 3.9.7
       react: 18.3.1
 
-  drizzle-zod@0.5.1(drizzle-orm@0.30.9(@planetscale/database@1.18.0)(@types/react@18.3.1)(mysql2@3.9.7)(react@18.3.1))(zod@3.23.4):
+  drizzle-orm@0.30.10(@planetscale/database@1.18.0)(@types/react@18.3.2)(mysql2@3.9.7)(react@18.3.1):
+    optionalDependencies:
+      '@planetscale/database': 1.18.0
+      '@types/react': 18.3.2
+      mysql2: 3.9.7
+      react: 18.3.1
+
+  drizzle-zod@0.5.1(drizzle-orm@0.30.10(@planetscale/database@1.18.0)(@types/react@18.3.2)(mysql2@3.9.7)(react@18.3.1))(zod@3.23.4):
     dependencies:
-      drizzle-orm: 0.30.9(@planetscale/database@1.18.0)(@types/react@18.3.1)(mysql2@3.9.7)(react@18.3.1)
+      drizzle-orm: 0.30.10(@planetscale/database@1.18.0)(@types/react@18.3.2)(mysql2@3.9.7)(react@18.3.1)
       zod: 3.23.4
 
   eastasianwidth@0.2.0: {}
@@ -14516,8 +14491,6 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.2.8: {}
-
   hosted-git-info@3.0.8:
     dependencies:
       lru-cache: 6.0.0
@@ -15499,10 +15472,6 @@ snapshots:
     dependencies:
       brace-expansion: 2.0.1
 
-  minimatch@7.4.6:
-    dependencies:
-      brace-expansion: 2.0.1
-
   minimatch@9.0.4:
     dependencies:
       brace-expansion: 2.0.1
@@ -16423,7 +16392,7 @@ snapshots:
       '@babel/runtime': 7.24.5
       '@emotion/cache': 11.11.0
       '@emotion/react': 11.11.4(@types/react@18.3.1)(react@18.3.1)
-      '@floating-ui/dom': 1.6.4
+      '@floating-ui/dom': 1.6.5
       '@types/react-transition-group': 4.4.10
       memoize-one: 6.0.0
       prop-types: 15.8.1

@@ -15,6 +15,10 @@
     "./types": {
       "types": "./dist/schema/types.d.ts",
       "default": "./src/schema/types.ts"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "default": "./src/config.ts"
     }
   },
   "license": "MIT",
@@ -26,13 +30,15 @@
     "lint": "eslint",
     "push": "pnpm with-env drizzle-kit push:mysql --config src/config.ts",
     "studio": "pnpm with-env drizzle-kit studio --config src/config.ts",
+    "dr": "pscale dr create timetime dev",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "@planetscale/database": "^1.18.0",
     "@t3-oss/env-core": "^0.10.0",
-    "drizzle-orm": "^0.30.9",
+    "drizzle-orm": "^0.30.10",
+    "drizzle-zod": "^0.5.1",
     "zod": "^3.23.0"
   },
   "devDependencies": {
@@ -40,7 +46,7 @@
     "@soonlist/prettier-config": "workspace:*",
     "@soonlist/tsconfig": "workspace:*",
     "dotenv-cli": "^7.4.1",
-    "drizzle-kit": "^0.20.14",
+    "drizzle-kit": "^0.21.1",
     "eslint": "^9.1.1",
     "mysql2": "^3.9.7",
     "prettier": "^3.2.5",
