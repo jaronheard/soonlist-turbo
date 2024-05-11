@@ -27,8 +27,8 @@ const isPublicRoute = createRouteMatcher([
   "/ingest",
   "/ingest/(.*)",
   "/monitoring(.*)",
-  "/sign-in",
-  "/sign-up",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
 ]);
 
 const isIgnoredRoute = createRouteMatcher([
