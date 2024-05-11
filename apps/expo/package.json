@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@bytescale/sdk": "^3.34.0",
-    "@clerk/clerk-expo": "^1.0.2",
+    "@clerk/clerk-expo": "^1.1.0",
     "@expo/metro-config": "^0.17.6",
     "@sentry/react-native": "~5.20.0",
     "@shopify/flash-list": "1.6.3",
