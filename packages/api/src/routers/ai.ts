@@ -28,7 +28,7 @@ export const aiRouter = createTRPCRouter({
       const prompt = getPrompt(input.timezone);
       // Ask OpenAI for a streaming completion given the prompt
       const res = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo-0125",
+        model: "gpt-4o-2024-05-13",
         response_format: { type: "json_object" },
         seed: 4206969,
 
@@ -69,7 +69,7 @@ export const aiRouter = createTRPCRouter({
       const prompt = getPrompt(input.timezone);
 
       const res = await openai.chat.completions.create({
-        model: "gpt-4-turbo",
+        model: "gpt-4o-2024-05-13",
         response_format: { type: "json_object" },
         max_tokens: 1000,
         seed: 4206969,
