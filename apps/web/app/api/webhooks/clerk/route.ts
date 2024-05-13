@@ -4,7 +4,16 @@ import { eq } from "drizzle-orm";
 import { Webhook } from "svix";
 
 import { db } from "@soonlist/db";
-import { users } from "@soonlist/db/schema";
+import {
+  comments,
+  eventFollows,
+  events,
+  eventToLists,
+  listFollows,
+  lists,
+  userFollows,
+  users,
+} from "@soonlist/db/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -86,7 +95,25 @@ export async function POST(req: Request) {
 
       // 👉 If the type is "user.deleted", delete the user record and associated blocks
       if (evt.type === "user.deleted") {
-        await db.delete(users).where(eq(users.id, evt.data.id || ""));
+        await Promise.all([
+          db.delete(users).where(eq(users.id, evt.data.id || "")),
+          db.delete(comments).where(eq(comments.userId, evt.data.id || "")),
+          db.delete(events).where(eq(events.userId, evt.data.id || "")),
+          db
+            .delete(eventFollows)
+            .where(eq(eventFollows.userId, evt.data.id || "")),
+          db.delete(lists).where(eq(lists.userId, evt.data.id || "")),
+          db
+            .delete(listFollows)
+            .where(eq(listFollows.userId, evt.data.id || "")),
+          db
+            .delete(userFollows)
+            .where(eq(userFollows.followerId, evt.data.id || "")),
+          db
+            .delete(userFollows)
+            .where(eq(userFollows.followingId, evt.data.id || "")),
+          // TODO: doesn't delete eventToLists, but should
+        ]);
       }
 
       return new Response("", { status: 201 });
