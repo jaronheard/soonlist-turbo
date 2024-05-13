@@ -18,7 +18,7 @@ import { SampleList } from "~/components/SampleList";
 
 const sampleEventId =
   process.env.NODE_ENV === "production"
-    ? "cngwe2lme7d4"
+    ? "j79eu2sup3gm"
     : "clpiq9ohe0005vt8uksvndxq3";
 const sampleEventListId =
   process.env.NODE_ENV === "production"
