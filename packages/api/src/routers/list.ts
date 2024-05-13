@@ -50,6 +50,7 @@ export const listRouter = createTRPCRouter({
               id: true,
               name: true,
               description: true,
+              visibility: true,
               createdAt: true,
               updatedAt: true,
             },
@@ -70,6 +71,7 @@ export const listRouter = createTRPCRouter({
             id: true,
             name: true,
             description: true,
+            visibility: true,
             createdAt: true,
             updatedAt: true,
           },
@@ -126,6 +128,7 @@ export const listRouter = createTRPCRouter({
       z.object({
         name: z.string(),
         description: z.string(),
+        visibility: z.enum(["public", "private"]),
       }),
     )
     .mutation(({ ctx, input }) => {
@@ -144,6 +147,7 @@ export const listRouter = createTRPCRouter({
           userId: userId,
           name: input.name,
           description: input.description,
+          visibility: input.visibility,
         })
         .then(() => ({
           id,
@@ -155,6 +159,7 @@ export const listRouter = createTRPCRouter({
         listId: z.string(),
         name: z.string(),
         description: z.string(),
+        visibility: z.enum(["public", "private"]),
       }),
     )
     .mutation(({ ctx, input }) => {
@@ -170,6 +175,7 @@ export const listRouter = createTRPCRouter({
         .set({
           name: input.name,
           description: input.description,
+          visibility: input.visibility,
         })
         .where(eq(lists.id, input.listId))
         .then(() => ({ id: input.listId }));

@@ -13,6 +13,7 @@ import { api } from "~/trpc/react";
 interface ListSaveButtonProps {
   name: string;
   description: string;
+  visibility: "public" | "private";
   afterSuccess?: string;
   afterSuccessFunction?: () => void;
 }
@@ -47,6 +48,7 @@ export function ListSaveButton(props: ListSaveButtonProps) {
               createList.mutate({
                 name: props.name,
                 description: props.description,
+                visibility: props.visibility,
               })
             }
           >

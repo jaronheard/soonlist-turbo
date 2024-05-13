@@ -14,6 +14,7 @@ interface ListUpdateButtonProps {
   id: string;
   name: string;
   description: string;
+  visibility: "public" | "private";
   afterSuccess?: string;
 }
 
@@ -39,6 +40,7 @@ export function ListUpdateButton(props: ListUpdateButtonProps) {
               listId: props.id,
               name: props.name,
               description: props.description,
+              visibility: props.visibility,
             })
           }
           disabled={updateList.isPending}

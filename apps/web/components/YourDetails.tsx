@@ -130,6 +130,7 @@ export function YourDetails({
                                 <AddListCard
                                   name=""
                                   description=""
+                                  visibility="public"
                                   afterSuccessFunction={() => null}
                                 />
                               </DialogDescription>

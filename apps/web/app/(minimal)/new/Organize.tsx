@@ -108,6 +108,7 @@ export function Organize({
                                 <AddListCard
                                   name=""
                                   description=""
+                                  visibility="public"
                                   afterSuccessFunction={() => null}
                                 />
                               </DialogDescription>

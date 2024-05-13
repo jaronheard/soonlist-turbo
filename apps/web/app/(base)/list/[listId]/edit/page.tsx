@@ -14,6 +14,7 @@ export default async function Page({ params }: { params: { listId: string } }) {
       description={list.description}
       update
       updateId={list.id}
+      visibility={list.visibility}
     />
   );
 }
