@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { listFollows, lists, users } from "@soonlist/db/schema";
+import { eventToLists, listFollows, lists, users } from "@soonlist/db/schema";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { generatePublicId } from "../utils";
@@ -184,6 +184,11 @@ export const listRouter = createTRPCRouter({
           message: "No user id found in session",
         });
       }
-      return ctx.db.delete(lists).where(eq(lists.id, input.listId));
+      return ctx.db.transaction(async (db) => {
+        await db.delete(lists).where(eq(lists.id, input.listId));
+        await db
+          .delete(eventToLists)
+          .where(eq(eventToLists.listId, input.listId));
+      });
     }),
 });
