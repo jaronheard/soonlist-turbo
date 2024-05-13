@@ -90,10 +90,8 @@ export function AddListCard({ ...initialProps }: AddListCardProps) {
         </label>
         <Select
           onValueChange={(value) =>
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             setVisibility(value as "public" | "private")
           }
-          value={visibility}
           defaultValue={visibility}
         >
           <SelectTrigger>
