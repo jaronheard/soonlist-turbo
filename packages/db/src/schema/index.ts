@@ -179,6 +179,9 @@ export const lists = mysqlTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updatedAt").onUpdateNow(),
+    visibility: mysqlEnum("visibility", ["public", "private"])
+      .default("public")
+      .notNull(),
   },
   (table) => {
     return {
