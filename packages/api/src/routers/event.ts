@@ -303,7 +303,14 @@ export const eventRouter = createTRPCRouter({
             message: "Unauthorized",
           });
         }
-        return ctx.db.delete(events).where(eq(events.id, input.id));
+        return ctx.db
+          .transaction(async (tx) => {
+            await tx.delete(events).where(eq(events.id, input.id));
+            await tx
+              .delete(eventToLists)
+              .where(eq(eventToLists.eventId, input.id));
+          })
+          .then(() => ({ id: input.id }));
       })
       .then(() => ({ id: input.id }));
   }),
