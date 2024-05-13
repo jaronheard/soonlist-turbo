@@ -651,7 +651,7 @@ function EventActionButtons({
 
 export function EventListItem(props: EventListItemProps) {
   const { user: clerkUser } = useUser();
-  const { user, eventFollows, id, event, filePath } = props;
+  const { user, eventFollows, id, event, filePath, visibility } = props;
   const roles = clerkUser?.unsafeMetadata.roles as string[] | undefined;
   const isSelf =
     clerkUser?.id === user?.id || clerkUser?.externalId === user?.id;
@@ -685,14 +685,14 @@ export function EventListItem(props: EventListItemProps) {
             { "lg:pl-16": !!image },
           )}
         >
-          {/* {visibility === "private" && (
-          <>
-            <Badge className="max-w-fit" variant="destructive">
-              Unlisted Event
-            </Badge>
-            <div className="p-1"></div>
-          </>
-        )} */}
+          {visibility === "private" && (
+            <>
+              <Badge className="max-w-fit" variant="destructive">
+                Unlisted Event
+              </Badge>
+              <div className="p-2"></div>
+            </>
+          )}
           <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
           <div className="absolute right-0 top-0 p-3">
             <EventDateDisplaySimple
@@ -842,6 +842,7 @@ export function EventPage(props: EventPageProps) {
     children,
     lists,
     eventMetadata,
+    visibility,
   } = props;
   const roles = clerkUser?.unsafeMetadata.roles as string[] | undefined;
   const isSelf =
@@ -890,13 +891,14 @@ export function EventPage(props: EventPageProps) {
 
   return (
     <div className="">
-      {/* {visibility === "private" && (
+      {visibility === "private" && (
         <>
           <Badge className="max-w-fit" variant="destructive">
             Unlisted Event
           </Badge>
+          <div className="p-1"></div>
         </>
-      )} */}
+      )}
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
         <div>
           <div className="flex flex-col gap-5">
