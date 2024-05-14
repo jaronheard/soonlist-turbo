@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { clsx } from "clsx";
-import { SquareStack } from "lucide-react";
+import { EyeOff, SquareStack } from "lucide-react";
 
 import { cn } from "~/lib/utils";
 
@@ -26,6 +26,7 @@ export function ListCard(props: {
   id?: string;
   username: string;
   className?: string;
+  visibility?: "public" | "private";
 }) {
   return (
     <div
@@ -49,6 +50,11 @@ export function ListCard(props: {
           className="flex justify-between"
         >
           <div className="truncate text-xl font-bold leading-6 tracking-wide text-interactive-1">
+            {props.visibility === "private" ? (
+              <EyeOff className="mr-2 inline" />
+            ) : (
+              ""
+            )}
             {props.name}
           </div>
           <SquareStack className="ml-4 size-6 text-interactive-1" />

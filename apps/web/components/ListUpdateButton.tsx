@@ -26,8 +26,8 @@ export function ListUpdateButton(props: ListUpdateButtonProps) {
     },
     onSuccess: ({ id }) => {
       toast.success("List saved.");
-      router.refresh();
       router.push(`/list/${id}`);
+      router.refresh();
     },
   });
 

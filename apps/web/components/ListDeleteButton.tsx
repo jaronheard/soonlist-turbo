@@ -23,8 +23,8 @@ export function ListDeleteButton(props: ListDeleteButtonProps) {
     },
     onSuccess: () => {
       toast.success("List deleted.");
-      router.refresh();
       router.push(`/${user?.username}/events`);
+      router.refresh();
     },
   });
 
