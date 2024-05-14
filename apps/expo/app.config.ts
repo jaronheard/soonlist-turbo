@@ -49,7 +49,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "soonlist.soonlist",
-    buildNumber: "4",
   },
   android: {
     package: "soonlist.soonlist",
@@ -57,7 +56,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff",
     },
-    versionCode: 4,
   },
   // extra: {
   //   eas: {
