@@ -4,6 +4,7 @@ import "~/styles/globals.css";
 
 import dynamic from "next/dynamic";
 import { IBM_Plex_Sans, Kalam } from "next/font/google";
+import Head from "next/head";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { PHProvider, Providers } from "./providers";
@@ -72,6 +73,14 @@ export default function RootLayout({
       lang="en"
       className={`!overflow-x-hidden ${kalam.variable} ${plex_sans.variable}`}
     >
+      <Head>
+        {/* globalThis polyfill https://github.com/vercel/next.js/discussions/58818#discussioncomment-8431496 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `!function(t){function e(){var e=this||self;e.globalThis=e,delete t.prototype._T_}"object"!=typeof globalThis&&(this?e():(t.defineProperty(t.prototype,"_T_",{configurable:!0,get:e}),_T_))}(Object);`,
+          }}
+        />
+      </Head>
       <PHProvider>
         <body>
           <PostHogPageView />
