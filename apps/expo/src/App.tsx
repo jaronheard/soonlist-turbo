@@ -17,17 +17,11 @@ import { useShareIntent } from "expo-share-intent";
 import * as WebBrowser from "expo-web-browser";
 import * as Bytescale from "@bytescale/sdk";
 import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
-import * as Sentry from "@sentry/react-native";
 
 import SignInWithOAuth from "./components/SignInWithOAuth";
 import { useWarmUpBrowser } from "./hooks/useWarmUpBrowser";
 
 import "./styles.css";
-
-Sentry.init({
-  dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.sentry.io/4506458761396224",
-  debug: true, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
-});
 
 const tokenCache = {
   async getToken(key: string) {
