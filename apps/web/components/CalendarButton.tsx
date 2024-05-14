@@ -19,8 +19,8 @@ export function CalendarButton(props: CalendarButtonProps) {
   const eventForCalendar = { ...props.event };
   const additionalText =
     props.username && props.id
-      ? `Collected by [url]${process.env.NEXT_PUBLIC_URL}/${props.username}/events|@${props.username}[/url] on [url]${process.env.NEXT_PUBLIC_URL}/event/${props.id}|Soonlist[/url]`
-      : `Collected on [url]${process.env.NEXT_PUBLIC_URL}|Soonlist[/url]`;
+      ? `Collected by [url]${process.env.NEXT_PUBLIC_VERCEL_URL}/${props.username}/events|@${props.username}[/url] on [url]${process.env.NEXT_PUBLIC_VERCEL_URL}/event/${props.id}|Soonlist[/url]`
+      : `Collected on [url]${process.env.NEXT_PUBLIC_VERCEL_URL}|Soonlist[/url]`;
   eventForCalendar.description = `${props.event.description}[br][br]${additionalText}`;
 
   if (props.type === "dropdown") {
