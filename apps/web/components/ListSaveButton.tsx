@@ -13,6 +13,7 @@ import { api } from "~/trpc/react";
 interface ListSaveButtonProps {
   name: string;
   description: string;
+  visibility: "public" | "private";
   afterSuccess?: string;
   afterSuccessFunction?: () => void;
 }
@@ -25,10 +26,10 @@ export function ListSaveButton(props: ListSaveButtonProps) {
     },
     onSuccess: ({ id }) => {
       toast.success("List saved.");
-      router.refresh();
       props.afterSuccessFunction
         ? props.afterSuccessFunction()
         : router.push(`/list/${id}`);
+      router.refresh();
     },
   });
 
@@ -47,6 +48,7 @@ export function ListSaveButton(props: ListSaveButtonProps) {
               createList.mutate({
                 name: props.name,
                 description: props.description,
+                visibility: props.visibility,
               })
             }
           >

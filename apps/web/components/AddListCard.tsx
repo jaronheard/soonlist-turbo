@@ -3,6 +3,13 @@
 import React, { useMemo, useState } from "react";
 
 import { Input } from "@soonlist/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@soonlist/ui/select";
 import { Textarea } from "@soonlist/ui/textarea";
 
 import { ListSaveButton } from "./ListSaveButton";
@@ -11,6 +18,7 @@ import { ListUpdateButton } from "./ListUpdateButton";
 interface AddListCardProps {
   name: string;
   description: string;
+  visibility: "public" | "private";
   update?: boolean;
   updateId?: string;
   afterSuccess?: string;
@@ -20,13 +28,17 @@ interface AddListCardProps {
 export function AddListCard({ ...initialProps }: AddListCardProps) {
   const [name, setName] = useState(initialProps.name);
   const [description, setDescription] = useState(initialProps.description);
+  const [visibility, setVisibility] = useState<"public" | "private">(
+    initialProps.visibility,
+  );
 
   const updatedProps = useMemo(
     () => ({
       name,
       description,
+      visibility,
     }),
-    [name, description],
+    [name, description, visibility],
   );
 
   return (
@@ -69,6 +81,29 @@ export function AddListCard({ ...initialProps }: AddListCardProps) {
           />
         </div>
       </div>
+      <div className="col-span-full">
+        <label
+          htmlFor="visibility"
+          className="block text-sm font-medium leading-6 text-gray-900"
+        >
+          Visibility
+        </label>
+        <Select
+          onValueChange={(value) =>
+            setVisibility(value as "public" | "private")
+          }
+          defaultValue={visibility}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Public" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="public">Public</SelectItem>
+            <SelectItem value="private">Unlisted</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="col-span-full">
         {!initialProps.update && (
           <ListSaveButton

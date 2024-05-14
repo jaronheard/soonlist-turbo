@@ -1,6 +1,8 @@
 import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
 
+import { Badge } from "@soonlist/ui/badge";
+
 import { EventList } from "~/components/EventList";
 import { FollowListButton } from "~/components/FollowButtons";
 import { ListDeleteButton } from "~/components/ListDeleteButton";
@@ -86,37 +88,50 @@ export default async function Page({ params }: Props) {
     user && list.listFollows.find((item) => item.userId === user.id);
 
   return (
-    <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
-      <div className="flex flex-col gap-4 lg:sticky lg:top-32 lg:self-start">
-        <p className="font-heading text-5xl font-bold leading-[3.5rem] tracking-tight text-neutral-1">
-          {list.name}
-        </p>
-        <div className="flex gap-6">
-          <p className="text-2xl font-bold leading-normal tracking-wide">
-            Curated by
+    <div className="">
+      {list.visibility === "private" && (
+        <>
+          <Badge className="max-w-fit" variant="destructive">
+            Unlisted List
+          </Badge>
+          <div className="p-1"></div>
+        </>
+      )}
+      <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
+        <div className="flex flex-col gap-4 lg:sticky lg:top-32 lg:self-start">
+          <p className="font-heading text-5xl font-bold leading-[3.5rem] tracking-tight text-neutral-1">
+            {list.name}
           </p>
-          <UserInfo userId={list.user.id} />
+          <div className="flex gap-6">
+            <p className="text-2xl font-bold leading-normal tracking-wide">
+              Curated by
+            </p>
+            <UserInfo userId={list.user.id} />
+          </div>
+          <div className="text-2xl text-neutral-2">{list.description}</div>
+          <div className="flex place-items-center gap-4">
+            {!self && (
+              <>
+                <FollowListButton
+                  listId={params.listId}
+                  following={!!following}
+                />
+              </>
+            )}
+            <ListEditButton listId={params.listId} listUserId={list.user.id} />
+            <ListDeleteButton
+              listId={params.listId}
+              listUserId={list.user.id}
+            />
+          </div>
         </div>
-        <div className="text-2xl text-neutral-2">{list.description}</div>
-        <div className="flex place-items-center gap-4">
-          {!self && (
-            <>
-              <FollowListButton
-                listId={params.listId}
-                following={!!following}
-              />
-            </>
-          )}
-          <ListEditButton listId={params.listId} listUserId={list.user.id} />
-          <ListDeleteButton listId={params.listId} listUserId={list.user.id} />
-        </div>
+        <EventList
+          currentEvents={currentEvents}
+          futureEvents={futureEvents}
+          pastEvents={pastEvents}
+          showPrivateEvents={!!self}
+        />
       </div>
-      <EventList
-        currentEvents={currentEvents}
-        futureEvents={futureEvents}
-        pastEvents={pastEvents}
-        showPrivateEvents={!!self}
-      />
     </div>
   );
 }

@@ -20,7 +20,10 @@ ListCardsForUserProps) {
   const user = await currentUser();
   const self = user?.username === userName;
   const hideAll = !self && lists.length === 0;
-  const listsToShow = lists.filter((list) => list.eventToLists.length > 0);
+  const listsToShow = lists.filter(
+    (list) =>
+      list.eventToLists.length > 0 && (self || list.visibility === "public"),
+  );
   const listsToUse = self ? lists : listsToShow;
 
   if (!lists || hideAll) {
@@ -37,6 +40,7 @@ ListCardsForUserProps) {
             name={list.name}
             // count={list.eventToLists.length}
             id={list.id}
+            visibility={list.visibility}
             username={list.user.username}
           />
         ))}

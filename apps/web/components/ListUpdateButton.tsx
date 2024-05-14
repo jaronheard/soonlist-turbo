@@ -14,6 +14,7 @@ interface ListUpdateButtonProps {
   id: string;
   name: string;
   description: string;
+  visibility: "public" | "private";
   afterSuccess?: string;
 }
 
@@ -25,8 +26,8 @@ export function ListUpdateButton(props: ListUpdateButtonProps) {
     },
     onSuccess: ({ id }) => {
       toast.success("List saved.");
-      router.refresh();
       router.push(`/list/${id}`);
+      router.refresh();
     },
   });
 
@@ -39,6 +40,7 @@ export function ListUpdateButton(props: ListUpdateButtonProps) {
               listId: props.id,
               name: props.name,
               description: props.description,
+              visibility: props.visibility,
             })
           }
           disabled={updateList.isPending}

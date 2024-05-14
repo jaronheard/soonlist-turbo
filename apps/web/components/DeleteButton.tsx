@@ -25,8 +25,8 @@ export function DeleteButton(props: DeleteButtonProps) {
     },
     onSuccess: () => {
       toast.success("Event deleted.");
-      router.refresh();
       router.push(`/${user?.username}/events`);
+      router.refresh();
     },
   });
 

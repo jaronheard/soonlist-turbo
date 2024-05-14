@@ -8,7 +8,6 @@ import {
   comments,
   eventFollows,
   events,
-  eventToLists,
   listFollows,
   lists,
   userFollows,
