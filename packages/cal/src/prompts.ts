@@ -168,7 +168,7 @@ export const addCommonAddToCalendarProps = (events: Event[]) => {
       startTime: event.startTime || undefined,
       endTime: event.endTime || undefined,
       timeZone: event.timeZone,
-      eventMetadata: event.eventMetadata,
+      eventMetadata: event.eventMetadata || undefined,
     };
   });
 };
@@ -190,16 +190,18 @@ The current date is ${date}, and the default timezone is ${timezone} unless spec
 Above, I pasted a text or image from which to extract calendar event details for upcoming events.
 
 You will
-1. Identify the event details that need to be captured.
+1. Identify details of the primary event mentioned in the text or image.
 2. Identify the platform from which the input text was extracted, and extract all usernames @-mentioned.
-3. Extract and format these details into a valid JSON response, strictly following the schema below. 
-4. Infer any missing information based on event context, type, or general conventions.
-5. NO COMMENTS ALLOWED in the JSON response, only the required fields and values.
-6. Write your JSON response by summarizing the event details from the provided data or your own inferred knowledge. Your response must be detailed, specific, and directly relevant to the JSON schema requirements.
+3. Remove the perspective or opinion from the input, focusing only on factual details.
+4. Extract and format these details into a valid JSON response, strictly following the schema below. 
+5. Infer any missing information based on event context, type, or general conventions.
+6. NO COMMENTS ALLOWED in the JSON response, only the required fields and values.
+7. Write your JSON response by summarizing the event details from the provided data or your own inferred knowledge. Your response must be detailed, specific, and directly relevant to the JSON schema requirements.
 
-Your answer should be fact-filled and SPECIFIC, providing information like ticket prices, main attractions, performers/speakers, registration link, contact information, official hashtags age restrictions, dress code, amenities available, sponsors.
-Stylistically write as though a Professor or The Economist would, in short, approachable, and professional language.
-No new adjectives, stick to the facts, and be concise. Use proper capitalization for all fields.
+Stylistically write in short, approachable, and professional language, like an editor of the Village Voice event section.
+Stick to known facts, and be concise. Use proper capitalization for all fields.
+No new adjectives/adverbs not in source text. No editorializing. No fluff. Nothing should be described as "engaging", "compelling", etc...
+The title, location and first 2 sentences of description should tell what attendees should expect. The remaining 2 sentences can be used for further description of the content of the event.
 
 ## JSON Schema
 
@@ -287,8 +289,8 @@ interface EventMetadata {
 }
 
 interface Event {
-  name: string; // The event's name. Be specific and include any subtitle or edition. Do not include the location. Use proper capitalization, ignoring all caps in the source text.
-  description: string; // Short description of the event, its significance, and what attendees can expect. If included in the source text, include the cost, allowed ages, rsvp details, performers, speakers, and any known times.
+  name: string; // 8 WORDS OR LESS. A short, informative, name for the event. Use title capitalization, disregarding any use of all caps in the source text. Quote any titles or subtitles. Do not include the location. 
+  description: string; // 4 sentence description of the event. Be specific and precise. Prioritize what attendees can expect in 2-3 sentences… if the original text captures what to expect in <5 sentences, then just use it, otherwise summarize
   startDate: string; // Start date in YYYY-MM-DD format.
   startTime?: string; // Start time, only the time portion (HH:MM:SS) of ISO 8601 format. CANNOT BE UNKNOWN. Do not include the date or time zone. Infer based on event type if not specified. Only omit if known to be an all-day event. 
   endDate: string; // End date in YYYY-MM-DD format.
