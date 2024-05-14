@@ -45,7 +45,7 @@ export async function generateMetadata(
     openGraph: {
       title: `${eventData.name}`,
       description: `(${eventData.startDate} ${eventData.startTime}-${eventData.endTime}) ${eventData.description}`,
-      url: `${process.env.NEXT_PUBLIC_URL}/event/${event.id}`,
+      url: `${process.env.NEXT_PUBLIC_VERCEL_URL}/event/${event.id}`,
       type: "article",
       images: previewImage || (await parent).openGraph?.images || [],
     },

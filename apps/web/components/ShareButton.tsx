@@ -27,7 +27,7 @@ export function ShareButton(props: ShareButtonProps) {
         await navigator.share({
           title: `${props.event.name} | Soonlist`,
           text: shareText,
-          url: `${process.env.NEXT_PUBLIC_URL}/event/${props.id}`,
+          url: `${process.env.NEXT_PUBLIC_VERCEL_URL}/event/${props.id}`,
         });
         console.log("Event shared successfully");
       } catch (error) {
@@ -36,7 +36,7 @@ export function ShareButton(props: ShareButtonProps) {
     } else {
       // Fallback for browsers that do not support the Share API
       void navigator.clipboard.writeText(
-        `${process.env.NEXT_PUBLIC_URL}/event/${props.id}`,
+        `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/event/${props.id}`,
       );
       toast("Event URL copied to clipboard!");
     }
