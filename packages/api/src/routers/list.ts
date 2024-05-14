@@ -2,7 +2,6 @@ import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import type { List } from "@soonlist/db/types";
 import { eventToLists, listFollows, lists, users } from "@soonlist/db/schema";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
@@ -49,7 +48,6 @@ export const listRouter = createTRPCRouter({
             },
             columns: {
               id: true,
-              userId: true,
               name: true,
               description: true,
               visibility: true,
@@ -60,7 +58,7 @@ export const listRouter = createTRPCRouter({
         },
       });
       return followLists.then((followList) =>
-        followList.map((item) => item.list as List),
+        followList.map((item) => item.list),
       );
     }),
   get: publicProcedure
