@@ -1,15 +1,21 @@
 // Learn more: https://docs.expo.dev/guides/monorepos/
-const { getSentryExpoConfig } = require("@sentry/react-native/metro");
+const { getDefaultConfig } = require("expo/metro-config");
 const { FileStore } = require("metro-cache");
 const { withNativeWind } = require("nativewind/metro");
+const {
+  createSentryMetroSerializer,
+} = require("@sentry/react-native/dist/js/tools/sentryMetroSerializer");
 
 const path = require("path");
 
 module.exports = withTurborepoManagedCache(
   withMonorepoPaths(
-    withNativeWind(getSentryExpoConfig(__dirname), {
+    withNativeWind(getDefaultConfig(__dirname), {
       input: "./src/styles.css",
       configPath: "./tailwind.config.ts",
+      serializer: {
+        customSerializer: createSentryMetroSerializer(),
+      },
     }),
   ),
 );
