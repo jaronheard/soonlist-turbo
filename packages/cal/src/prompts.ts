@@ -110,17 +110,43 @@ export const EventMetadataSchemaLoose = EventMetadataSchema.extend({
 });
 export type EventMetadataLoose = z.infer<typeof EventMetadataSchemaLoose>;
 
-export interface Event {
-  name: string; // The event's name. Be specific and include any subtitle or edition. Do not include the location.
-  description: string; // Short description of the event, its significance, and what attendees can expect. If included in the source text, include the cost, allowed ages, rsvp details, performers, speakers, and any known times.
-  startDate: string; // Start date in YYYY-MM-DD format.
-  startTime?: string; // Start time. ALWAYS include if known. Omit ONLY if known to be an all-day event.
-  endDate: string; // End date in YYYY-MM-DD format.
-  endTime?: string; // End time. ALWAYS include, inferring if necessary. Omit ONLY known to be an all-day event.
-  timeZone: string; // Timezone in IANA format.
-  location: string; // Location of the event.
-  eventMetadata: EventMetadata;
-}
+export const EventSchema = z.object({
+  name: z
+    .string()
+    .describe(
+      "The event's name. Be specific and include any subtitle or edition. Do not include the location.",
+    ),
+  description: z
+    .string()
+    .describe(
+      "Short description of the event, its significance, and what attendees can expect. If included in the source text, include the cost, allowed ages, rsvp details, performers, speakers, and any known times.",
+    ),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .describe("Start date in YYYY-MM-DD format."),
+  startTime: z
+    .string()
+    .optional()
+    .describe(
+      "Start time. ALWAYS include if known. Omit ONLY if known to be an all-day event.",
+    ),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .describe("End date in YYYY-MM-DD format."),
+  endTime: z
+    .string()
+    .optional()
+    .describe(
+      "End time. ALWAYS include, inferring if necessary. Omit ONLY known to be an all-day event.",
+    ),
+  timeZone: z.string().describe("Timezone in IANA format."),
+  location: z.string().describe("Location of the event."),
+  eventMetadata: EventMetadataSchema,
+});
+
+export type Event = z.infer<typeof EventSchema>;
 
 export const extractJsonFromResponse = (response: string) => {
   try {
