@@ -367,12 +367,12 @@ function EventMetadataDisplay({
           <TagIcon className="mr-1.5 size-4" />
           Price
         </Label>
-        <p className="text-sm capitalize text-neutral-1" id="price">
+        <div className="text-sm capitalize text-neutral-1" id="price">
           {`${showPrice ? priceText : ""}${showSpace ? ", " : ""}`}
           {showPriceType && (
             <div className="inline capitalize">{priceTypeText}</div>
           )}
-        </p>
+        </div>
       </div>
       <div className="flex flex-col gap-0.5">
         <Label className="flex items-center" htmlFor="age-restriction">
