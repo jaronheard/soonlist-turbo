@@ -404,7 +404,7 @@ function App() {
             className="mb-5 text-xl font-bold text-interactive-1"
             onPress={() => Linking.openURL("https://www.soonlist.com")}
           >
-            View events
+            soonlist.com
           </Text>
           <SignOut />
         </SignedIn>
