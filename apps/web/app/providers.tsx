@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ClerkProvider, useUser } from "@clerk/nextjs";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { posthog } from "posthog-js";
 import { PostHogProvider, usePostHog } from "posthog-js/react";
 
@@ -67,7 +66,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <IntercomProvider>
         <ContextProvider>
           {children}
-          {process.env.NODE_ENV === "production" ? <SpeedInsights /> : <></>}
           {process.env.NODE_ENV === "production" ? <UserAnalytics /> : <></>}
         </ContextProvider>
       </IntercomProvider>
