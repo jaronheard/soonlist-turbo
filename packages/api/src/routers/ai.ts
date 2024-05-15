@@ -27,8 +27,8 @@ export const aiRouter = createTRPCRouter({
         model: openai("gpt-4o-2024-05-13"),
         messages: [
           { role: "system", content: system.text },
+          { role: "user", content: prompt.text },
           { role: "user", content: input.rawText },
-          { role: "system", content: prompt.text },
         ],
         schema: z.object({ events: EventsSchema }),
       });
@@ -63,7 +63,7 @@ export const aiRouter = createTRPCRouter({
               },
             ],
           },
-          { role: "system", content: prompt.text },
+          { role: "user", content: prompt.text },
         ],
         schema: z.object({ events: EventsSchema }),
       });
