@@ -200,9 +200,6 @@ importers:
       '@sentry/nextjs':
         specifier: ^7.114.0
         version: 7.114.0(encoding@0.1.13)(next@14.2.3(@opentelemetry/api@1.8.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.91.0)
-      '@sentry/node':
-        specifier: ^7.114.0
-        version: 7.114.0
       '@soonlist/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -8746,7 +8743,7 @@ snapshots:
 
   '@babel/helper-module-imports@7.24.3':
     dependencies:
-      '@babel/types': 7.24.0
+      '@babel/types': 7.24.5
 
   '@babel/helper-module-transforms@7.23.3(@babel/core@7.24.4)':
     dependencies:
@@ -8813,7 +8810,7 @@ snapshots:
 
   '@babel/highlight@7.24.2':
     dependencies:
-      '@babel/helper-validator-identifier': 7.22.20
+      '@babel/helper-validator-identifier': 7.24.5
       chalk: 2.4.2
       js-tokens: 4.0.0
       picocolors: 1.0.0
@@ -9684,7 +9681,7 @@ snapshots:
   '@emotion/babel-plugin@11.11.0':
     dependencies:
       '@babel/helper-module-imports': 7.24.3
-      '@babel/runtime': 7.24.4
+      '@babel/runtime': 7.24.5
       '@emotion/hash': 0.9.1
       '@emotion/memoize': 0.8.1
       '@emotion/serialize': 1.1.4
@@ -12620,7 +12617,7 @@ snapshots:
 
   babel-plugin-macros@3.1.0:
     dependencies:
-      '@babel/runtime': 7.24.4
+      '@babel/runtime': 7.24.5
       cosmiconfig: 7.1.0
       resolve: 1.22.8
 

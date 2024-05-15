@@ -11,7 +11,6 @@ import { PHProvider, Providers } from "./providers";
 
 // edge causes sigkill on vercel about 50% of the time
 // workaround is to use VERCEL_FORCE_NO_BUILD_CACHE=1
-export const runtime = "edge";
 export const preferredRegion = "pdx1";
 
 const kalam = Kalam({

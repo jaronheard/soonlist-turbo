@@ -1,11 +1,10 @@
 import type { NextRequest } from "next/server";
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/nextjs";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { appRouter } from "@soonlist/api/root";
 import { createTRPCContext } from "@soonlist/api/trpc";
 
-export const runtime = "edge";
 export const preferredRegion = "pdx1";
 
 /**

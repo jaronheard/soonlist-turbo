@@ -23,7 +23,6 @@
     "@headlessui/react": "^1.7.18",
     "@headlessui/tailwindcss": "^0.2.0",
     "@sentry/nextjs": "^7.114.0",
-    "@sentry/node": "^7.114.0",
     "@soonlist/api": "workspace:*",
     "@soonlist/cal": "workspace:*",
     "@soonlist/db": "workspace:*",
