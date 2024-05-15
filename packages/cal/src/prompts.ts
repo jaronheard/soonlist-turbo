@@ -55,6 +55,7 @@ export const EVENT_TYPES = [
   "festival",
   "game",
   "meeting",
+  "movie",
   "opening",
   "party",
   "performance",
@@ -213,7 +214,7 @@ export const addCommonAddToCalendarPropsFromResponse = (response: string) => {
 };
 
 export const systemMessage = () =>
-  `You are an AI assistant that extracts calendar event details from text or images. Provide structured outputs in JSON format, strictly following the schema provided, ensuring only valid enum value, omitting fields that are undefined. Make reasonable assumptions when needed, but prioritize facts and direct information backed by the given data or logical inference. Acknowledge uncertainties and avoid unsupported statements. Keep responses concise, clear, and relevant.`;
+  `You are an AI assistant that extracts calendar event details from text or images. Provide structured outputs in JSON format, strictly following the schema provided. Ensure that all enum fields contain only valid values as specified in the schema. If a valid enum value cannot be determined, omit the field entirely. For non-enum fields, omit them if they are undefined or cannot be reasonably inferred from the given data. Make reasonable assumptions when needed, but prioritize facts and direct information backed by the given data or logical inference. Acknowledge uncertainties and avoid unsupported statements. Keep responses concise, clear, and relevant.`;
 
 export const getText = (date: string, timezone: string) => `# CONTEXT
 The current date is ${date}, and the default timezone is ${timezone} unless specified otherwise.

@@ -20,7 +20,6 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^0.0.13",
     "@ai-sdk/openai": "^0.0.12",
     "@clerk/nextjs": "^5.0.8",
     "@soonlist/cal": "workspace:*",
