@@ -12,7 +12,6 @@ import type {
 } from "@clerk/backend/internal";
 import type { User } from "@clerk/nextjs/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import * as Sentry from "@sentry/nextjs";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
@@ -104,8 +103,25 @@ export const createCallerFactory = t.createCallerFactory;
  */
 export const createTRPCRouter = t.router;
 
-/** Reusable middleware that enforces users are logged in before running the procedure. */
-const enforceUserIsAuthed = t.middleware(async ({ next }) => {
+/**
+ * Public (unauthed) procedure
+ *
+ * This is the base piece you use to build new queries and mutations on your
+ * tRPC API. It does not guarantee that a user querying is authorized, but you
+ * can still access user session data if they are logged in
+ */
+export const publicProcedure = t.procedure;
+
+/**
+ * Protected (authenticated) procedure
+ *
+ * If you want a query or mutation to ONLY be accessible to logged in users, use this. It verifies
+ * the session is valid and guarantees `ctx.session.user` is not null.
+ *
+ * @see https://trpc.io/docs/procedures
+ */
+export const protectedProcedure = t.procedure.use(async ({ next }) => {
+  console.log("TRPC Protected: ");
   const session = auth();
   const user = await currentUser();
   if (!user) {
@@ -119,39 +135,9 @@ const enforceUserIsAuthed = t.middleware(async ({ next }) => {
     userToUse.id = externalId;
   }
 
-  Sentry.setUser({ id: user.id, username: user.username || undefined });
-
   return next({
     ctx: {
       user: user,
     },
   });
 });
-
-const sentryMiddleware = t.middleware(
-  //@ts-expect-error this does not break even though types are mismatched
-  Sentry.Handlers.trpcMiddleware({
-    attachRpcInput: true,
-  }),
-);
-
-const finalMiddleware = sentryMiddleware.unstable_pipe(enforceUserIsAuthed);
-
-/**
- * Public (unauthed) procedure
- *
- * This is the base piece you use to build new queries and mutations on your
- * tRPC API. It does not guarantee that a user querying is authorized, but you
- * can still access user session data if they are logged in
- */
-export const publicProcedure = t.procedure.use(finalMiddleware);
-
-/**
- * Protected (authenticated) procedure
- *
- * If you want a query or mutation to ONLY be accessible to logged in users, use this. It verifies
- * the session is valid and guarantees `ctx.session.user` is not null.
- *
- * @see https://trpc.io/docs/procedures
- */
-export const protectedProcedure = t.procedure.use(finalMiddleware);
