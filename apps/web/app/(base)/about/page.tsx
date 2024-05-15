@@ -72,7 +72,7 @@ export default function Page() {
                 </span>
               </li>
               <li className="flex gap-x-3">
-                <CurrencyDollarIcon
+                <Currency
                   className="mt-1 size-5 flex-none text-gray-600"
                   aria-hidden="true"
                 />
@@ -86,7 +86,7 @@ export default function Page() {
                 </span>
               </li>
               <li className="flex gap-x-3">
-                <CurrencyDollarIcon
+                <Currency
                   className="mt-1 size-5 flex-none text-gray-600"
                   aria-hidden="true"
                 />

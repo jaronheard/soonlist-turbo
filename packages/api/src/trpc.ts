@@ -105,7 +105,7 @@ export const createCallerFactory = t.createCallerFactory;
 export const createTRPCRouter = t.router;
 
 /** Reusable middleware that enforces users are logged in before running the procedure. */
-const enforceUserIsAuthed = t.middleware(({ next }) => {
+const enforceUserIsAuthed = t.middleware(async ({ next }) => {
   const session = auth();
   const user = await currentUser();
   if (!user) {
@@ -155,5 +155,3 @@ export const publicProcedure = t.procedure.use(finalMiddleware);
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure.use(finalMiddleware);
-
-
