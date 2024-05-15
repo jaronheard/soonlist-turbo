@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { SignedIn, useUser } from "@clerk/nextjs";
-import { TrashIcon } from "@heroicons/react/24/solid";
+import { Trash } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@soonlist/ui/button";
@@ -50,7 +50,7 @@ export function DeleteButton(props: DeleteButtonProps) {
             deleteEvent.mutate({ id: props.id });
           }}
         >
-          <TrashIcon className="size-6" />
+          <Trash className="size-6" />
         </Button>
       </SignedIn>
     );
@@ -65,7 +65,7 @@ export function DeleteButton(props: DeleteButtonProps) {
         disabled={deleteEvent.isPending}
         className="text-red-600"
       >
-        <TrashIcon className="mr-2 size-4" />
+        <Trash className="mr-2 size-4" />
         Delete
       </DropdownMenuItem>
     </SignedIn>

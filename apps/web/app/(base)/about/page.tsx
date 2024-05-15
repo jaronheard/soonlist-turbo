@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
+import { Currency } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
 
@@ -58,7 +58,7 @@ export default function Page() {
             </p>
             <ul role="list" className="mt-8 max-w-xl space-y-8 text-gray-600">
               <li className="flex gap-x-3">
-                <CurrencyDollarIcon
+                <Currency
                   className="mt-1 size-5 flex-none text-gray-600"
                   aria-hidden="true"
                 />

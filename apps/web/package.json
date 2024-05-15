@@ -22,7 +22,6 @@
     "@clerk/nextjs": "^5.0.8",
     "@headlessui/react": "^1.7.18",
     "@headlessui/tailwindcss": "^0.2.0",
-    "@heroicons/react": "^2.1.1",
     "@js-temporal/polyfill": "^0.4.4",
     "@planetscale/database": "^1.18.0",
     "@sentry/nextjs": "^7.110.0",

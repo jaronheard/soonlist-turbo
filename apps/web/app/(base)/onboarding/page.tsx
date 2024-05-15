@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { CheckCircleIcon, CurrencyDollarIcon } from "@heroicons/react/20/solid";
+import { CheckCircle, Currency } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
 
@@ -45,7 +45,7 @@ export default function Page() {
           <ul role="list" className="">
             <li className="">
               <div className="flex gap-x-3">
-                <CheckCircleIcon
+                <CheckCircle
                   className="mt-1.5 size-6 flex-none text-neutral-1"
                   aria-hidden="true"
                 />
@@ -100,7 +100,7 @@ export default function Page() {
             </li>
 
             <li className="flex gap-x-3">
-              <CheckCircleIcon
+              <CheckCircle
                 className="mt-1.5 size-6 flex-none text-neutral-1"
                 aria-hidden="true"
               />
@@ -117,7 +117,7 @@ export default function Page() {
           <h2 className="font-heading">Customize, Calendar, and Share</h2>
           <ul role="list" className="">
             <li className="flex gap-x-3">
-              <CheckCircleIcon
+              <CheckCircle
                 className="mt-1.5 size-6 flex-none text-neutral-1"
                 aria-hidden="true"
               />
@@ -131,7 +131,7 @@ export default function Page() {
               </span>
             </li>
             <li className="flex gap-x-3">
-              <CheckCircleIcon
+              <CheckCircle
                 className="mt-1.5 size-6 flex-none text-neutral-1"
                 aria-hidden="true"
               />
@@ -143,7 +143,7 @@ export default function Page() {
               </span>
             </li>
             <li className="flex gap-x-3">
-              <CheckCircleIcon
+              <CheckCircle
                 className="mt-1.5 size-6 flex-none text-neutral-1"
                 aria-hidden="true"
               />
@@ -173,7 +173,7 @@ export default function Page() {
             </p>
             <ul role="list" className="">
               <li className="flex gap-x-3">
-                <CurrencyDollarIcon
+                <Currency
                   className="mt-1.5 size-6 flex-none text-neutral-1"
                   aria-hidden="true"
                 />
@@ -187,7 +187,7 @@ export default function Page() {
                 </span>
               </li>
               <li className="flex gap-x-3">
-                <CurrencyDollarIcon
+                <Currency
                   className="mt-1.5 size-6 flex-none text-neutral-1"
                   aria-hidden="true"
                 />
@@ -201,7 +201,7 @@ export default function Page() {
                 </span>
               </li>
               <li className="flex gap-x-3">
-                <CurrencyDollarIcon
+                <Currency
                   className="mt-1.5 size-6 flex-none text-neutral-1"
                   aria-hidden="true"
                 />
