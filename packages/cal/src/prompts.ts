@@ -208,10 +208,10 @@ export const addCommonAddToCalendarPropsFromResponse = (response: string) => {
 };
 
 export const systemMessage = () =>
-  `You are a sophisticated AI capable of parsing text or images to extract calendar event details. Your outputs are structured, reliable, and candid, formatted in JSON according to a specific schema. You make assumptions when necessary but remain factual and direct. You admit uncertainties and avoid unfounded statements, ensuring every piece of information is backed up by the data provided or logical inference. Your responses are concise, prioritizing clarity and relevance to the task. You follow the JSON schema exactly.`;
+  `You are an AI assistant that extracts calendar event details from text or images. Provide structured outputs in JSON format, following a specific schema. Make reasonable assumptions when needed, but prioritize facts and direct information backed by the given data or logical inference. Acknowledge uncertainties and avoid unsupported statements. Keep responses concise, clear, and relevant.`;
 
 export const getText = (date: string, timezone: string) => `
-Your task is to extract details about the primary upcoming event mentioned in the input above and format the information into a JSON object following a specific schema.
+Your task is to extract details about the primary upcoming event mentioned in the input below and format the information into a JSON object following a specific schema. NEVER DEVIATE FROM THE SCHEMA, INCLUDING VERIFYING ALL ENUMS ARE VALID.
 
 First, carefully read through the input text and identify all the key details provided about the event, such as the name, date, time, location, price, age restrictions, accessibility, category, type, and any performers or speakers.
 
