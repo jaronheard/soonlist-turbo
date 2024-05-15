@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import * as Sentry from "@sentry/node";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { appRouter } from "@soonlist/api/root";
@@ -24,9 +25,15 @@ const handler = (req: NextRequest) =>
     router: appRouter,
     createContext: () => createContext(req),
     onError: ({ path, error }) => {
-      throw new Error(
-        `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`,
-      );
+      try {
+        throw new Error(
+          `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`,
+        );
+      } catch (err) {
+        Sentry.captureException(err);
+        // Optional: You can log the error or perform any other necessary actions
+        console.error(err);
+      }
     },
   });
 

@@ -1,4 +1,5 @@
 import { openai } from "@ai-sdk/openai";
+import { TRPCError } from "@trpc/server";
 import { generateObject } from "ai";
 import { z } from "zod";
 
@@ -14,7 +15,10 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 export const aiRouter = createTRPCRouter({
   testError: publicProcedure.query(() => {
-    throw new Error("This is a test error");
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "This is a test error.",
+    });
   }),
   eventFromRawText: protectedProcedure
     .input(
