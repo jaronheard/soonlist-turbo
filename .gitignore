@@ -41,8 +41,9 @@ next-env.d.ts
 # idea
 .idea
 
-# Sentry Config File
+# Sentry Config Files
 .sentryclirc
+.env.sentry-build-plugin
 
 # expo
 .expo/
