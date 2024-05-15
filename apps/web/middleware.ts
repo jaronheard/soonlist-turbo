@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
   "/early-access",
   "/error",
   "/error-rsc",
+  "/error-sentry",
   "/explore",
   "/onboarding",
   "/events",
