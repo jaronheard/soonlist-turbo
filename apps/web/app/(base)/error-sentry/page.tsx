@@ -49,7 +49,7 @@ export default function Page() {
             margin: "18px",
           }}
           onClick={() => {
-            Sentry.startSpan(
+            void Sentry.startSpan(
               {
                 name: "Example Frontend Span",
                 op: "test",
