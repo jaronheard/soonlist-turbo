@@ -529,6 +529,7 @@ function EventDetails({
               alt=""
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+              priority
             />
           </div>
         )}
@@ -746,6 +747,7 @@ export function EventListItem(props: EventListItemProps) {
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+            priority
           />
         </div>
       )}
