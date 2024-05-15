@@ -31,10 +31,10 @@ export const aiRouter = createTRPCRouter({
           { role: "user", content: input.rawText },
           { role: "system", content: prompt.text },
         ],
-        schema: EventsSchema,
+        schema: z.object({ events: EventsSchema }),
       });
 
-      const events = addCommonAddToCalendarProps(object);
+      const events = addCommonAddToCalendarProps(object.events);
       return { events };
     }),
   eventFromImage: protectedProcedure
@@ -67,10 +67,10 @@ export const aiRouter = createTRPCRouter({
           },
           { role: "system", content: prompt.text },
         ],
-        schema: EventsSchema,
+        schema: z.object({ events: EventsSchema }),
       });
 
-      const events = addCommonAddToCalendarProps(object);
+      const events = addCommonAddToCalendarProps(object.events);
       return { events };
     }),
 });
