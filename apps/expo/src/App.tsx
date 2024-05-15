@@ -406,12 +406,6 @@ function App() {
           >
             View events
           </Text>
-          <Button
-            title="Test Sentry"
-            onPress={() => {
-              Sentry.captureException(new Error("First error"));
-            }}
-          />
           <SignOut />
         </SignedIn>
       </SafeAreaView>
