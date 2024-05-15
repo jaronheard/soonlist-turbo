@@ -1,0 +1,125 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The event's name. Be specific and include any subtitle or edition. Do not include the location."
+      },
+      "description": {
+        "type": "string",
+        "description": "Short description of the event, its significance, and what attendees can expect. If included in the source text, include the cost, allowed ages, rsvp details, performers, speakers, and any known times."
+      },
+      "startDate": {
+        "type": "string",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+        "description": "Start date in YYYY-MM-DD format."
+      },
+      "startTime": {
+        "type": "string",
+        "description": "Start time. ALWAYS include if known. Omit ONLY if known to be an all-day event."
+      },
+      "endDate": {
+        "type": "string",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+        "description": "End date in YYYY-MM-DD format."
+      },
+      "endTime": {
+        "type": "string",
+        "description": "End time. ALWAYS include, inferring if necessary. Omit ONLY known to be an all-day event."
+      },
+      "timeZone": {
+        "type": "string",
+        "description": "Timezone in IANA format."
+      },
+      "location": { "type": "string", "description": "Location of the event." },
+      "eventMetadata": {
+        "type": "object",
+        "properties": {
+          "accessibility": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "closedCaptioning",
+                "masksRequired",
+                "masksSuggested",
+                "signLanguageInterpretation",
+                "wheelchairAccessible"
+              ]
+            }
+          },
+          "accessibilityNotes": { "type": "string" },
+          "ageRestriction": {
+            "type": "string",
+            "enum": ["all-ages", "18+", "21+", "unknown"]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "arts",
+              "business",
+              "community",
+              "culture",
+              "education",
+              "entertainment",
+              "food",
+              "health",
+              "lifestyle",
+              "literature",
+              "music",
+              "religion",
+              "science",
+              "sports",
+              "tech",
+              "unknown"
+            ]
+          },
+          "mentions": { "type": "array", "items": { "type": "string" } },
+          "performers": { "type": "array", "items": { "type": "string" } },
+          "priceMax": { "type": "number" },
+          "priceMin": { "type": "number" },
+          "priceType": {
+            "type": "string",
+            "enum": ["donation", "free", "notaflof", "paid", "unknown"]
+          },
+          "source": { "type": "string", "enum": ["instagram", "unknown"] },
+          "type": {
+            "type": "string",
+            "enum": [
+              "competition",
+              "concert",
+              "conference",
+              "exhibition",
+              "festival",
+              "game",
+              "meeting",
+              "opening",
+              "party",
+              "performance",
+              "seminar",
+              "show",
+              "unknown",
+              "webinar",
+              "workshop"
+            ]
+          }
+        },
+        "required": ["ageRestriction", "category", "priceType", "type"],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "name",
+      "description",
+      "startDate",
+      "endDate",
+      "timeZone",
+      "location",
+      "eventMetadata"
+    ],
+    "additionalProperties": false
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -1,19 +1,16 @@
-import { OpenAI } from "openai";
+import { openai } from "@ai-sdk/openai";
+import { generateObject } from "ai";
 import { z } from "zod";
 
 import {
-  addCommonAddToCalendarPropsFromResponse,
+  addCommonAddToCalendarProps,
+  EventMetadataSchema,
+  EventSchema,
   getPrompt,
   getSystemMessage,
 } from "@soonlist/cal";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-
-// Create an OpenAI API client (that's edge friendly!)
-const config = {
-  apiKey: process.env.OPENAI_API_KEY,
-};
-const openai = new OpenAI(config);
 
 export const aiRouter = createTRPCRouter({
   eventFromRawText: protectedProcedure
@@ -26,35 +23,46 @@ export const aiRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const system = getSystemMessage();
       const prompt = getPrompt(input.timezone);
-      // Ask OpenAI for a streaming completion given the prompt
-      const res = await openai.chat.completions.create({
-        model: "gpt-4o-2024-05-13",
-        response_format: { type: "json_object" },
-        seed: 4206969,
 
-        messages: [
-          {
-            role: "system",
-            content: system.text,
-          },
-          {
-            role: "user",
-            content: input.rawText,
-          },
-          { role: "system", content: prompt.text },
-        ],
-      });
+      const [event, metadata] = await Promise.all([
+        generateObject({
+          model: openai("gpt-4o"),
+          mode: "json",
+          temperature: 0.2,
+          maxRetries: 0,
+          messages: [
+            { role: "system", content: system.text },
+            {
+              role: "user",
+              content: `${prompt.text} Input: """
+              ${input.rawText}
+              """`,
+            },
+          ],
+          schema: EventSchema,
+        }),
+        generateObject({
+          model: openai("gpt-4o"),
+          mode: "json",
+          temperature: 0.2,
+          maxRetries: 0,
+          messages: [
+            { role: "system", content: system.text },
+            {
+              role: "user",
+              content: `${prompt.text} Input: """
+              ${input.rawText}
+              """`,
+            },
+          ],
+          schema: EventMetadataSchema,
+        }),
+      ]);
 
-      const choice = res.choices[0];
-      if (!choice) {
-        throw new Error("No response from OpenAI (choices[0])");
-      }
-      const response = choice.message.content;
-      if (!response) {
-        throw new Error("No response from OpenAI (choice.message.content)");
-      }
+      const eventObject = { ...event.object, eventMetadata: metadata.object };
 
-      const events = addCommonAddToCalendarPropsFromResponse(response);
+      const events = addCommonAddToCalendarProps([eventObject]);
+      const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
       return { events, response };
     }),
   eventFromImage: protectedProcedure
@@ -68,41 +76,59 @@ export const aiRouter = createTRPCRouter({
       const system = getSystemMessage();
       const prompt = getPrompt(input.timezone);
 
-      const res = await openai.chat.completions.create({
-        model: "gpt-4o-2024-05-13",
-        response_format: { type: "json_object" },
-        max_tokens: 1000,
-        seed: 4206969,
-        messages: [
-          {
-            role: "system",
-            content: system.text,
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "image_url",
-                image_url: {
-                  url: input.imageUrl,
+      const [event, metadata] = await Promise.all([
+        generateObject({
+          model: openai("gpt-4o"),
+          mode: "json",
+          temperature: 0.2,
+          maxRetries: 0,
+          messages: [
+            { role: "system", content: system.text },
+            {
+              role: "user",
+              content: prompt.text,
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "image",
+                  image: new URL(input.imageUrl),
                 },
-              },
-            ],
-          },
-          { role: "system", content: prompt.text },
-        ],
-      });
+              ],
+            },
+          ],
+          schema: EventSchema,
+        }),
+        generateObject({
+          model: openai("gpt-4o"),
+          mode: "json",
+          temperature: 0.2,
+          maxRetries: 0,
+          messages: [
+            { role: "system", content: system.text },
+            {
+              role: "user",
+              content: prompt.text,
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "image",
+                  image: new URL(input.imageUrl),
+                },
+              ],
+            },
+          ],
+          schema: EventMetadataSchema,
+        }),
+      ]);
 
-      const choice = res.choices[0];
-      if (!choice) {
-        throw new Error("No response from OpenAI (choices[0])");
-      }
-      const response = choice.message.content;
-      if (!response) {
-        throw new Error("No response from OpenAI (choice.message.content)");
-      }
+      const eventObject = { ...event.object, eventMetadata: metadata.object };
 
-      const events = addCommonAddToCalendarPropsFromResponse(response);
+      const events = addCommonAddToCalendarProps([eventObject]);
+      const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
       return { events, response };
     }),
 });
