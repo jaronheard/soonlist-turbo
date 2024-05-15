@@ -10,9 +10,12 @@ import {
   getSystemMessage,
 } from "@soonlist/cal";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 export const aiRouter = createTRPCRouter({
+  testError: publicProcedure.query(() => {
+    throw new Error("This is a test error");
+  }),
   eventFromRawText: protectedProcedure
     .input(
       z.object({
