@@ -62,7 +62,8 @@ export const aiRouter = createTRPCRouter({
       const eventObject = { ...event.object, eventMetadata: metadata.object };
 
       const events = addCommonAddToCalendarProps([eventObject]);
-      return { events };
+      const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
+      return { events, response };
     }),
   eventFromImage: protectedProcedure
     .input(
@@ -127,6 +128,7 @@ export const aiRouter = createTRPCRouter({
       const eventObject = { ...event.object, eventMetadata: metadata.object };
 
       const events = addCommonAddToCalendarProps([eventObject]);
-      return { events };
+      const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
+      return { events, response };
     }),
 });
