@@ -34,7 +34,8 @@
       "extends": "base",
       "env": {
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuc29vbmxpc3QuY29tJA"
-      }
+      },
+      "autoIncrement": true
     }
   },
   "submit": {
