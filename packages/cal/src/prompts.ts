@@ -145,6 +145,7 @@ export const EventSchema = z.object({
   location: z.string().describe("Location of the event."),
   eventMetadata: EventMetadataSchema,
 });
+export const EventsSchema = z.array(EventSchema);
 
 export type Event = z.infer<typeof EventSchema>;
 
