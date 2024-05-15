@@ -44,6 +44,7 @@ export const EVENT_CATEGORIES = [
   "unknown",
 ] as const;
 export const EventCategorySchema = z.enum(EVENT_CATEGORIES);
+
 export type EventCategory = z.infer<typeof EventCategorySchema>;
 
 export const EVENT_TYPES = [
@@ -87,26 +88,26 @@ export const ACCESSIBILITY_TYPES_OPTIONS = [
 ];
 
 export const EventMetadataSchema = z.object({
-  mentions: z.array(z.string()).optional(),
-  source: PlatformSchema.optional(),
-  priceMin: z.number().optional(),
-  priceMax: z.number().optional(),
-  priceType: PriceTypeSchema,
-  ageRestriction: AgeRestrictionSchema,
-  category: EventCategorySchema,
-  type: EventTypeSchema,
-  performers: z.array(z.string()).optional(),
   accessibility: z.array(AccessibilityTypeSchema).optional(),
   accessibilityNotes: z.string().optional(),
+  ageRestriction: AgeRestrictionSchema,
+  category: EventCategorySchema,
+  mentions: z.array(z.string()).optional(),
+  performers: z.array(z.string()).optional(),
+  priceMax: z.number().optional(),
+  priceMin: z.number().optional(),
+  priceType: PriceTypeSchema,
+  source: PlatformSchema.optional(),
+  type: EventTypeSchema,
 });
 export type EventMetadata = z.infer<typeof EventMetadataSchema>;
 export const EventMetadataSchemaLoose = EventMetadataSchema.extend({
-  source: z.string().optional(),
-  priceType: z.string().optional(),
+  accessibility: z.array(z.string()).optional(),
   ageRestriction: z.string().optional(),
   category: z.string().optional(),
+  priceType: z.string().optional(),
+  source: z.string().optional(),
   type: z.string().optional(),
-  accessibility: z.array(z.string()).optional(),
 });
 export type EventMetadataLoose = z.infer<typeof EventMetadataSchemaLoose>;
 
@@ -143,8 +144,12 @@ export const EventSchema = z.object({
     ),
   timeZone: z.string().describe("Timezone in IANA format."),
   location: z.string().describe("Location of the event."),
-  eventMetadata: EventMetadataSchema,
+  // eventMetadata: EventMetadataSchema,
 });
+export const EventWithMetadataSchema = EventSchema.extend({
+  eventMetadata: EventMetadataSchema.optional(),
+});
+export type EventWithMetadata = z.infer<typeof EventWithMetadataSchema>;
 export const EventsSchema = z.array(EventSchema);
 
 export type Event = z.infer<typeof EventSchema>;
@@ -164,7 +169,7 @@ export const extractJsonFromResponse = (response: string) => {
   }
 };
 
-export const addCommonAddToCalendarProps = (events: Event[]) => {
+export const addCommonAddToCalendarProps = (events: EventWithMetadata[]) => {
   return events.map((event) => {
     return {
       options: [
@@ -208,22 +213,27 @@ export const addCommonAddToCalendarPropsFromResponse = (response: string) => {
 };
 
 export const systemMessage = () =>
-  `You are an AI assistant that extracts calendar event details from text or images. Provide structured outputs in JSON format, following a specific schema. Make reasonable assumptions when needed, but prioritize facts and direct information backed by the given data or logical inference. Acknowledge uncertainties and avoid unsupported statements. Keep responses concise, clear, and relevant.`;
+  `You are an AI assistant that extracts calendar event details from text or images. Provide structured outputs in JSON format, strictly following the schema provided, ensuring only valid enum value, omitting fields that are undefined. Make reasonable assumptions when needed, but prioritize facts and direct information backed by the given data or logical inference. Acknowledge uncertainties and avoid unsupported statements. Keep responses concise, clear, and relevant.`;
 
-export const getText = (date: string, timezone: string) => `
-Your task is to extract details about the primary upcoming event mentioned in the input below and format the information into a JSON object following a specific schema. NEVER DEVIATE FROM THE SCHEMA, INCLUDING VERIFYING ALL ENUMS ARE VALID.
-
-First, carefully read through the input text and identify all the key details provided about the event, such as the name, date, time, location, price, age restrictions, accessibility, category, type, and any performers or speakers.
-
-Next, try to determine the platform the input text was likely copied from, such as Instagram, Facebook, Twitter, etc. If you can't determine the source platform, set it to "unknown". Also extract any @username mentions included in the text, leaving out the @ symbol.
-
-As you extract the event details, try to remove any subjective opinions or commentary, and focus solely on the factual information. If any required fields are missing from the input text, do your best to infer reasonable values based on context clues, the type of event, and general conventions. For example, if no start time is specified, infer a likely time based on the event type.
-
+export const getText = (date: string, timezone: string) => `# CONTEXT
 The current date is ${date}, and the default timezone is ${timezone} unless specified otherwise.
 
-Write the event name and description in a concise, engaging style, as if you were an editor for the events section of the Village Voice. The name should be 8 words or less. The description should be exactly 4 sentences focused on describing the event itself, what attendees can expect to experience there, and any other key factual details. Quote any book/movie/album titles or event names.
+## YOUR JOB
+Above, I pasted a text or image from which to extract calendar event details.
 
-Avoid any language that sounds like an invitation, call-to-action, or advertisement, such as "Join us for...", "Don't miss...", "Get your tickets...", etc. Stick closely to the facts provided in the input text. Do not editorialize or add fluffy adjectives and adverbs not found in the original text. Be specific about the event.`;
+You will
+1. Identify details of the primary event mentioned in the text or image.
+2. Identify the platform from which the input text was extracted, and extract all usernames @-mentioned.
+3. Remove the perspective or opinion from the input, focusing only on factual details.
+4. Extract and format these details into a valid JSON response, strictly following the schema below. 
+5. Infer any missing information based on event context, type, or general conventions.
+6. Write your JSON response by summarizing the event details from the provided data or your own inferred knowledge. Your response must be detailed, specific, and directly relevant to the JSON schema requirements.
+
+Stylistically write in short, approachable, and professional language, like an editor of the Village Voice event section.
+Stick to known facts, and be concise. Use proper capitalization for all fields.
+No new adjectives/adverbs not in source text. No editorializing. No fluff. Nothing should be described as "engaging", "compelling", etc...
+Avoid using phrases like 'join us,' 'come celebrate,' or any other invitations. Instead, maintain a neutral and descriptive tone. For example, instead of saying 'Join a family-friendly bike ride,' describe it as 'A family-friendly bike ride featuring murals, light installations, and a light-up dance party.'"
+`;
 
 const formatOffsetAsIANASoft = (offset: string) => {
   const timezone = soft(offset)[0];
