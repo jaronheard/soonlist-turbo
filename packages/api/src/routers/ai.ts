@@ -25,7 +25,6 @@ export const aiRouter = createTRPCRouter({
 
       const { object } = await generateObject({
         model: openai("gpt-4o-2024-05-13"),
-        seed: 4206969,
         messages: [
           { role: "system", content: system.text },
           { role: "user", content: input.rawText },
@@ -50,7 +49,6 @@ export const aiRouter = createTRPCRouter({
 
       const { object } = await generateObject({
         model: openai("gpt-4o-2024-05-13"),
-        seed: 4206969,
         messages: [
           {
             role: "system",
