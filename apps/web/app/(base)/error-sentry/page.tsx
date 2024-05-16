@@ -48,11 +48,8 @@ export default function Page() {
             fontSize: "14px",
             margin: "18px",
           }}
-          onClick={async () => {
-            const res = await fetch("/api/sentry-example-api");
-            if (!res.ok) {
-              throw new Error("Sentry Example Frontend Error");
-            }
+          onClick={() => {
+            throw new Error("Sentry Example Frontend Error");
           }}
         >
           Throw error!
