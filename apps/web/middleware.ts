@@ -29,6 +29,8 @@ const isPublicRoute = createRouteMatcher([
   "/list/(.*)",
   "/ingest",
   "/ingest/(.*)",
+  "/monitoring",
+  "/monitoring(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
 ]);
@@ -38,7 +40,6 @@ const isIgnoredRoute = createRouteMatcher([
   "/.well-known/acme-challenge/(.*)",
   "/.well-known/vercel-user-meta",
   "/__nextjs_original-stack-frame",
-  "/monitoring(.*)",
 ]);
 
 export default clerkMiddleware((auth, req) => {
