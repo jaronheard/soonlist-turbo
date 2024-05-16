@@ -90,6 +90,7 @@ const nextConfigWithSentry =
           project: "soonlist",
         },
         {
+          tunnelRoute: "/monitoring",
           // For all available options, see:
           // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
