@@ -1,12 +1,10 @@
 "use client";
 
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
-import { useContext, useEffect, useState } from "react";
-import { useChat } from "ai/react";
+import { useContext, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Download, Share, Sparkles } from "lucide-react";
-import { toast } from "sonner";
 
-import { addCommonAddToCalendarPropsFromResponse } from "@soonlist/cal";
 import { Button } from "@soonlist/ui/button";
 import {
   Card,
@@ -18,10 +16,10 @@ import {
 } from "@soonlist/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 
-import { Form } from "~/components/Form";
 import { Output } from "~/components/Output";
+import { TextEventForm } from "~/components/TextEventForm";
 import { TimezoneContext } from "~/context/TimezoneContext";
-import { cn, getLastMessages } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { UploadImageForProcessingButton } from "./UploadImageForProcessingButton";
 
 function Code({
@@ -44,50 +42,23 @@ function Code({
 }
 
 export function AddEvent() {
+  const router = useRouter();
+
   // State variables
-  const [finished, setFinished] = useState(false);
-  const [events, setEvents] = useState<AddToCalendarButtonType[] | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used in useEffect
-  const [trackedAddToCalendarGoal, setTrackedAddToCalendarGoal] =
-    useState(false);
+  const [events, setEvents] = useState<AddToCalendarButtonType[] | null>([]);
+  const [input, setInput] = useState("");
 
   // Context variables
   const { timezone } = useContext(TimezoneContext);
 
-  // Custom hooks and utility functions
-  const { input, handleInputChange, handleSubmit, isLoading, messages } =
-    useChat({
-      body: {
-        source: "text",
-        timezone,
-      },
-      onFinish() {
-        setFinished(true);
-      },
-    });
-
-  const { lastAssistantMessage } = getLastMessages(messages);
-
-  // Event handlers
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    setFinished(false);
-    setTrackedAddToCalendarGoal(false);
-    handleSubmit(e);
+  // Helpers
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
   };
-
-  // Effects
-  useEffect(() => {
-    if (finished) {
-      const updatedEvents =
-        addCommonAddToCalendarPropsFromResponse(lastAssistantMessage);
-      updatedEvents && setEvents(updatedEvents);
-      if (!(events && events.length > 0)) {
-        toast.error(
-          "Something went wrong. Add you event manually or try again.",
-        );
-      }
-    }
-  }, [finished]);
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Prevent the default form submission behavior
+    router.push(`/new?rawText=${input}&timezone=${timezone}`);
+  };
 
   return (
     <div className="min-h-[60vh] ">
@@ -115,10 +86,9 @@ export function AddEvent() {
             <CardContent>
               <UploadImageForProcessingButton />
               <div className="p-4"></div>
-              <Form
+              <TextEventForm
                 handleInputChange={handleInputChange}
                 input={input}
-                isLoading={isLoading}
                 onSubmit={onSubmit}
               />
             </CardContent>
@@ -187,7 +157,7 @@ export function AddEvent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Output events={[]} finished={true} setEvents={setEvents} />
+              <Output events={events} finished={true} setEvents={setEvents} />
             </CardContent>
           </Card>
         </TabsContent>

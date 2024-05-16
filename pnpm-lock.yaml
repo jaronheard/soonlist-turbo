@@ -233,9 +233,6 @@ importers:
       add-to-calendar-button-react:
         specifier: ^2.6.13
         version: 2.6.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      ai:
-        specifier: ^3.1.8
-        version: 3.1.8(openai@4.38.5(encoding@0.1.13))(react@18.3.1)(solid-js@1.8.17)(svelte@4.2.15)(vue@3.4.25(typescript@5.4.5))(zod@3.23.4)
       clsx:
         specifier: ^2.1.0
         version: 2.1.1
@@ -263,9 +260,6 @@ importers:
       next:
         specifier: ^14.2.3
         version: 14.2.3(@opentelemetry/api@1.8.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      openai-edge:
-        specifier: ^1.2.2
-        version: 1.2.2
       posthog-js:
         specifier: ^1.100.0
         version: 1.130.0
@@ -6642,10 +6636,6 @@ packages:
   open@8.4.2:
     resolution: {integrity: sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==}
     engines: {node: '>=12'}
-
-  openai-edge@1.2.2:
-    resolution: {integrity: sha512-C3/Ao9Hkx5uBPv9YFBpX/x59XMPgPUU4dyGg/0J2sOJ7O9D98kD+lfdOc7v/60oYo5xzMGct80uFkYLH+X2qgw==}
-    engines: {node: '>=18'}
 
   openai@4.38.5:
     resolution: {integrity: sha512-Ym5GJL98ZhLJJ7enBx53jjG3vwN/fsB+Ozh46nnRZZS9W1NiYqbwkJ+sXd3dkCIiWIgcyyOPL2Zr8SQAzbpj3g==}
@@ -15868,8 +15858,6 @@ snapshots:
       define-lazy-prop: 2.0.0
       is-docker: 2.2.1
       is-wsl: 2.2.0
-
-  openai-edge@1.2.2: {}
 
   openai@4.38.5(encoding@0.1.13):
     dependencies:
