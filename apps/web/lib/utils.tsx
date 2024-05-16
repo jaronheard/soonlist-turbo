@@ -1,4 +1,3 @@
-import type { Message } from "ai";
 import type { ClassValue } from "clsx";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -65,21 +64,6 @@ export const translateToHtml = (input: string): string => {
 };
 
 export type Status = "idle" | "submitting" | "success" | "error";
-
-export const getLastMessages = (messages: Message[]) => {
-  const userMessages = messages.filter((message) => message.role === "user");
-  const assistantMessages = messages.filter(
-    (message) => message.role === "assistant",
-  );
-
-  const lastUserMessage = userMessages[userMessages.length - 1]?.content || "";
-  // const lastAssistantMessage =
-  //   assistantMessages?.[userMessages.length - 1]?.content || null;
-  const lastAssistantMessage =
-    assistantMessages[userMessages.length - 1]?.content || "";
-
-  return { lastUserMessage, lastAssistantMessage };
-};
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
