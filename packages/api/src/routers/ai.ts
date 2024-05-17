@@ -119,57 +119,95 @@ export const aiRouter = createTRPCRouter({
         timezone: z.string(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const system = getSystemMessage();
       const prompt = getPrompt(input.timezone);
 
+      const generateObjectWithLogging = async <T>(
+        generateObjectOptions: Parameters<typeof generateObject<T>>[0],
+        loggingOptions: { name: string },
+      ): Promise<ReturnType<typeof generateObject<T>>> => {
+        const trace = langfuse.trace({
+          name: loggingOptions.name,
+          sessionId: ctx.auth.sessionId,
+          userId: ctx.auth.userId,
+          input: input.imageUrl,
+        });
+        const generation = trace.generation({
+          name: "generation",
+          input: input.imageUrl,
+          model: MODEL,
+          version: prompt.version,
+        });
+        generation.update({
+          completionStartTime: new Date(),
+        });
+        const result = await generateObject(generateObjectOptions);
+        generation.end({
+          output: result.rawResponse?.toString(),
+        });
+        generation.score({
+          name: "quality",
+          value: 1,
+          comment: "Untested",
+        });
+        await langfuse.flushAsync(); // TODO: don't block for this
+        return result;
+      };
+
       const [event, metadata] = await Promise.all([
-        generateObject({
-          model: openai(MODEL),
-          mode: "json",
-          temperature: 0.2,
-          maxRetries: 0,
-          messages: [
-            { role: "system", content: system.text },
-            {
-              role: "user",
-              content: prompt.text,
-            },
-            {
-              role: "user",
-              content: [
-                {
-                  type: "image",
-                  image: new URL(input.imageUrl),
-                },
-              ],
-            },
-          ],
-          schema: EventSchema,
-        }),
-        generateObject({
-          model: openai("gpt-4o"),
-          mode: "json",
-          temperature: 0.2,
-          maxRetries: 0,
-          messages: [
-            { role: "system", content: system.text },
-            {
-              role: "user",
-              content: prompt.text,
-            },
-            {
-              role: "user",
-              content: [
-                {
-                  type: "image",
-                  image: new URL(input.imageUrl),
-                },
-              ],
-            },
-          ],
-          schema: EventMetadataSchema,
-        }),
+        generateObjectWithLogging(
+          {
+            model: openai(MODEL),
+            mode: "json",
+            temperature: 0.2,
+            maxRetries: 0,
+            messages: [
+              { role: "system", content: system.text },
+              {
+                role: "user",
+                content: prompt.text,
+              },
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "image",
+                    image: new URL(input.imageUrl),
+                  },
+                ],
+              },
+            ],
+            schema: EventSchema,
+          },
+          { name: "eventFromImage.event" },
+        ),
+        generateObjectWithLogging(
+          {
+            model: openai("gpt-4o"),
+            mode: "json",
+            temperature: 0.2,
+            maxRetries: 0,
+            messages: [
+              { role: "system", content: system.text },
+              {
+                role: "user",
+                content: prompt.text,
+              },
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "image",
+                    image: new URL(input.imageUrl),
+                  },
+                ],
+              },
+            ],
+            schema: EventMetadataSchema,
+          },
+          { name: "eventFromImage.metadata" },
+        ),
       ]);
 
       const eventObject = { ...event.object, eventMetadata: metadata.object };
