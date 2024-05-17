@@ -1,4 +1,5 @@
 import { openai } from "@ai-sdk/openai";
+import { waitUntil } from "@vercel/functions";
 import { generateObject } from "ai";
 import { Langfuse } from "langfuse";
 import { z } from "zod";
@@ -62,7 +63,7 @@ export const aiRouter = createTRPCRouter({
           value: 1,
           comment: "Untested",
         });
-        await langfuse.flushAsync(); // TODO: don't block for this
+        waitUntil(langfuse.flushAsync());
         return result;
       };
       // END - duplicated except for input with eventFromImage
@@ -154,7 +155,7 @@ export const aiRouter = createTRPCRouter({
           value: 1,
           comment: "Untested",
         });
-        await langfuse.flushAsync(); // TODO: don't block for this
+        waitUntil(langfuse.flushAsync());
         return result;
       };
       // END - duplicated except for input with eventFromRawText

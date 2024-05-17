@@ -381,6 +381,9 @@ importers:
       '@trpc/server':
         specifier: 11.0.0-rc.334
         version: 11.0.0-rc.334
+      '@vercel/functions':
+        specifier: ^1.0.2
+        version: 1.0.2
       ai:
         specifier: ^3.1.8
         version: 3.1.8(openai@4.38.5(encoding@0.1.13))(react@18.3.1)(solid-js@1.8.17)(svelte@4.2.15)(vue@3.4.25(typescript@5.4.5))(zod@3.23.4)
@@ -3490,6 +3493,10 @@ packages:
     resolution: {integrity: sha512-hHqer2mcdVC0eYnVNbWyi28AlGOPb2vjH3lP3/Bc8Lc8BjhMsDwFMm7WhoP5C1+cfbr/QJ6Er3H/L08wznXxfg==}
     peerDependencies:
       graphql: ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0
+
+  '@vercel/functions@1.0.2':
+    resolution: {integrity: sha512-j3udyHOv/05Y8o3WQ/ANMWa1aYagsY5B3ouImiwgYsz5z4CBUHTY5dk74oQAXYr+bgoVDpdDlmxkpnxGzKEdLQ==}
+    engines: {node: '>= 16'}
 
   '@vue/compiler-core@3.4.25':
     resolution: {integrity: sha512-Y2pLLopaElgWnMNolgG8w3C5nNUVev80L7hdQ5iIKPtMJvhVpG0zhnBG/g3UajJmZdvW0fktyZTotEHD1Srhbg==}
@@ -12180,6 +12187,8 @@ snapshots:
       '@urql/core': 2.3.6(graphql@15.8.0)
       graphql: 15.8.0
       wonka: 4.0.15
+
+  '@vercel/functions@1.0.2': {}
 
   '@vue/compiler-core@3.4.25':
     dependencies:
