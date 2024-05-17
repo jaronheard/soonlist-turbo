@@ -33,6 +33,7 @@ export const aiRouter = createTRPCRouter({
       const system = getSystemMessage();
       const prompt = getPrompt(input.timezone);
 
+      // START - duplicated except for input with eventFromImage
       const generateObjectWithLogging = async <T>(
         generateObjectOptions: Parameters<typeof generateObject<T>>[0],
         loggingOptions: { name: string },
@@ -64,6 +65,7 @@ export const aiRouter = createTRPCRouter({
         await langfuse.flushAsync(); // TODO: don't block for this
         return result;
       };
+      // END - duplicated except for input with eventFromImage
 
       const [event, metadata] = await Promise.all([
         generateObjectWithLogging(
@@ -123,6 +125,7 @@ export const aiRouter = createTRPCRouter({
       const system = getSystemMessage();
       const prompt = getPrompt(input.timezone);
 
+      // START - duplicated except for input with eventFromRawText
       const generateObjectWithLogging = async <T>(
         generateObjectOptions: Parameters<typeof generateObject<T>>[0],
         loggingOptions: { name: string },
@@ -154,6 +157,7 @@ export const aiRouter = createTRPCRouter({
         await langfuse.flushAsync(); // TODO: don't block for this
         return result;
       };
+      // END - duplicated except for input with eventFromRawText
 
       const [event, metadata] = await Promise.all([
         generateObjectWithLogging(
