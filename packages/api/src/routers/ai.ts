@@ -44,6 +44,7 @@ export const aiRouter = createTRPCRouter({
           sessionId: ctx.auth.sessionId,
           userId: ctx.auth.userId,
           input: input.rawText,
+          version: prompt.version,
         });
         const generation = trace.generation({
           name: "generation",
@@ -56,12 +57,15 @@ export const aiRouter = createTRPCRouter({
         });
         const result = await generateObject(generateObjectOptions);
         generation.end({
-          output: result.rawResponse?.toString(),
+          output: result.object,
         });
         generation.score({
-          name: "quality",
-          value: 1,
+          name: "valid",
+          value: result.object === null ? 0 : 1,
           comment: "Untested",
+        });
+        trace.update({
+          output: result.object,
         });
         waitUntil(langfuse.flushAsync());
         return result;
@@ -136,6 +140,7 @@ export const aiRouter = createTRPCRouter({
           sessionId: ctx.auth.sessionId,
           userId: ctx.auth.userId,
           input: input.imageUrl,
+          version: prompt.version,
         });
         const generation = trace.generation({
           name: "generation",
@@ -148,12 +153,15 @@ export const aiRouter = createTRPCRouter({
         });
         const result = await generateObject(generateObjectOptions);
         generation.end({
-          output: result.rawResponse?.toString(),
+          output: result.object,
         });
         generation.score({
-          name: "quality",
-          value: 1,
+          name: "valid",
+          value: result.object === null ? 0 : 1,
           comment: "Untested",
+        });
+        trace.update({
+          output: result.object,
         });
         waitUntil(langfuse.flushAsync());
         return result;
