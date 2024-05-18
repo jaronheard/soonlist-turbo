@@ -18,7 +18,7 @@ import { SampleList } from "~/components/SampleList";
 
 const sampleEventId =
   process.env.NODE_ENV === "production"
-    ? "j79eu2sup3gm"
+    ? "t8f7locjjfbf"
     : "clpiq9ohe0005vt8uksvndxq3";
 const sampleEventListId =
   process.env.NODE_ENV === "production"
@@ -228,8 +228,8 @@ export default function Page() {
                 Events for <span className="text-interactive-1">everybody</span>
               </h1>
               <p className="mt-6 max-w-[30rem] text-2xl leading-9 text-gray-400">
-                Gather, organize, and share events that matter to you and your
-                communities
+                Save events from anywhere. Make lists for your communities,
+                friends, or yourself. Experience, connect, and grow.
               </p>
             </div>
             <div className="mt-10 flex items-center gap-x-6">
