@@ -33,9 +33,9 @@ const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
 });
 
 const title = "Soonlist";
-const tagline = "Events for everybody";
+const tagline = "Organize possibilities";
 const description =
-  "Gather, organize, and share events that matter to you and your communities.";
+  "Save events from anywhere. Make lists for your communities, friends, or yourself. Experience, connect, and grow.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.soonlist.com/"),

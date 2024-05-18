@@ -225,7 +225,8 @@ export default function Page() {
           <div className="mx-auto">
             <div className="mx-auto">
               <h1 className="font-heading text-6xl font-bold leading-[0.875] tracking-tighterish text-gray-700 md:text-8xl md:leading-[0.875]">
-                Events for <span className="text-interactive-1">everybody</span>
+                Organize{" "}
+                <span className="text-interactive-1">possibilities</span>
               </h1>
               <p className="mt-6 max-w-[30rem] text-2xl leading-9 text-gray-400">
                 Save events from anywhere. Make lists for your communities,
