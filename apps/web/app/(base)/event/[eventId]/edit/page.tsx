@@ -1,3 +1,5 @@
+import { auth } from "@clerk/nextjs/server";
+
 import type { EventMetadata } from "@soonlist/cal";
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 
@@ -12,10 +14,15 @@ export default async function Page({
 }: {
   params: { eventId: string };
 }) {
+  const { userId } = auth().protect();
   const event = await api.event.get({ eventId: params.eventId });
 
   if (!event) {
     return <p className="text-lg text-gray-500">No event found.</p>;
+  }
+
+  if (event.userId !== userId) {
+    return <p className="text-lg text-gray-500">You do not have access.</p>;
   }
 
   const eventData = event.event as AddToCalendarButtonProps;

@@ -29,6 +29,27 @@ export const listRouter = createTRPCRouter({
       });
       return usersWithLists.then((users) => users[0]?.lists || []);
     }),
+  getAllForUserId: publicProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(({ ctx, input }) => {
+      const usersWithLists = ctx.db.query.users.findMany({
+        where: eq(users.id, input.userId),
+        with: {
+          lists: {
+            orderBy: (list, { asc }) => [asc(list.updatedAt)],
+            with: {
+              // userId replaced here
+              user: {
+                columns: { id: true, username: true },
+              },
+              // event to list replaced count
+              eventToLists: true,
+            },
+          },
+        },
+      });
+      return usersWithLists.then((users) => users[0]?.lists || []);
+    }),
   getFollowing: publicProcedure
     .input(z.object({ userName: z.string() }))
     .query(({ ctx, input }) => {
