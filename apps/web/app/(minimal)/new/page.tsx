@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { X } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
@@ -25,8 +25,14 @@ interface Props {
 
 export default async function Page({ searchParams }: Props) {
   const { userId } = auth().protect();
+  // get externalId, but only in dev
+  let externalId;
+  if (process.env.NODE_ENV === "development") {
+    const user = await currentUser();
+    externalId = user?.externalId;
+  }
   const lists = await api.list.getAllForUserId({
-    userId: userId,
+    userId: externalId || userId,
   });
   const timezone = searchParams.timezone || "America/Los_Angeles";
   // image only
