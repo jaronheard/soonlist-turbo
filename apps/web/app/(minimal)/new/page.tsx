@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { X } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
@@ -24,20 +24,17 @@ interface Props {
 }
 
 export default async function Page({ searchParams }: Props) {
-  const user = await currentUser();
-  const username = user?.username;
-  const lists =
-    username &&
-    (await api.list.getAllForUser({
-      userName: username,
-    }));
+  const { userId } = auth().protect();
+  const lists = await api.list.getAllForUserId({
+    userId: userId,
+  });
   const timezone = searchParams.timezone || "America/Los_Angeles";
   // image only
   if (searchParams.filePath && !searchParams.rawText) {
     return (
       <ProgressStages
         filePath={searchParams.filePath}
-        lists={lists || undefined}
+        lists={lists}
         Preview={
           <EventsFromImage
             timezone={timezone}
@@ -53,7 +50,7 @@ export default async function Page({ searchParams }: Props) {
     return (
       <ProgressStages
         filePath={searchParams.filePath}
-        lists={lists || undefined}
+        lists={lists}
         Preview={
           <EventsFromRawText
             timezone={timezone}
