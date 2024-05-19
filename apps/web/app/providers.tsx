@@ -10,9 +10,19 @@ import ContextProvider from "~/context/ContextProvider";
 import { IntercomProvider } from "~/lib/intercom/IntercomProvider";
 
 if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "", {
-    api_host: `${process.env.NEXT_PUBLIC_VERCEL_URL}/ingest`,
+  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "fake key", {
+    api_host:
+      process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
     capture_pageview: false, // Disable automatic pageview capture, as we capture manually
+    loaded: function (ph) {
+      // only capture events if vercel is production
+      if (process.env.VERCEL_ENV === "production") {
+        ph.opt_in_capturing();
+      }
+      if (process.env.VERCEL_ENV !== "production") {
+        ph.opt_out_capturing();
+      }
+    },
   });
 }
 
