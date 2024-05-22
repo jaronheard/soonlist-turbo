@@ -221,31 +221,45 @@ export default function Page() {
   return (
     <div className="bg-white">
       <div className="relative isolate bg-interactive-3 px-6 pt-14 lg:px-8">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-16 py-16 pb-48 md:grid-cols-2 md:gap-x-16 md:pt-24">
+        <Image
+          src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
+          fill
+          alt=""
+          className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg object-contain object-top opacity-10"
+        />
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-16 py-16 pb-48 md:grid-cols-1 md:gap-x-16 md:pt-24">
           <div className="mx-auto">
-            <div className="mx-auto">
+            <div className="mx-auto text-center">
               <h1 className="font-heading text-6xl font-bold leading-[0.875] tracking-tighterish text-gray-700 md:text-8xl md:leading-[0.875]">
                 Organize{" "}
-                <span className="text-interactive-1">possibilities</span>
+                <span className="relative inline-block text-interactive-1">
+                  <svg
+                    width="492"
+                    height="96"
+                    viewBox="0 0 492 96"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="tranform absolute inset-0 z-[-1] h-full w-full scale-110 opacity-100"
+                  >
+                    <path
+                      d="M0.977745 90.0631L13.3028 15.2256C13.6677 13.01 15.557 11.3673 17.8018 11.314L487.107 0.163765C490.41 0.0852941 492.749 3.36593 491.598 6.46257L474.712 51.884C474.083 53.5754 472.537 54.7535 470.739 54.9104L5.99405 95.4768C2.9558 95.742 0.482147 93.0724 0.977745 90.0631Z"
+                      fill="#FEEA9F"
+                    />
+                  </svg>
+                  possibilities
+                </span>
               </h1>
-              <p className="mt-6 max-w-[30rem] text-2xl leading-9 text-gray-400">
-                Save events from anywhere. Make lists for your communities,
-                friends, or yourself. Experience, connect, and grow.
+              <p className="mx-auto mt-6 max-w-[36rem] text-2xl leading-9 text-gray-400">
+                The easiest way to gather & share events, ever.
               </p>
             </div>
-            <div className="mt-10 flex items-center gap-x-6">
+            <div className="mt-10 flex w-full items-center justify-center gap-x-6">
               <CTAButton />
-              <Link
-                href="/explore"
-                className={buttonVariants({ variant: "secondary" })}
-              >
-                Discover Events <ArrowRight className="ml-1 size-4" />
-              </Link>
             </div>
           </div>
-          <div className="mx-auto">
+          {/* <div className="mx-auto">
             <SampleEvent eventId={sampleEventId} />
-          </div>
+          </div> */}
         </div>
       </div>
       <div className="isolate mx-auto -mt-24 max-w-7xl bg-white md:rounded-lg">
