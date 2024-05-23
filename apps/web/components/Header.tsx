@@ -206,16 +206,6 @@ export function Nav() {
               </NavigationMenuLink>
             </Link>
           </SignedIn>
-          <SignedOut>
-            <Link href="/early-access" legacyBehavior passHref>
-              <NavigationMenuLink
-                className={buttonVariants({ variant: "default" })}
-              >
-                <Star className="mr-2 hidden size-4 sm:block"></Star>
-                Early Access
-              </NavigationMenuLink>
-            </Link>
-          </SignedOut>
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>

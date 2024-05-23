@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { CalendarPlus, Star } from "lucide-react";
+import { CalendarPlus } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
 
@@ -11,10 +11,10 @@ export function CTAButton() {
   return (
     <>
       <SignedOut>
-        <Button asChild>
+        <Button asChild size="lg">
           <Link href={"/early-access"}>
-            <Star className="mr-2 size-4"></Star>
-            Early Access
+            <CalendarPlus className="mr-2 size-4"></CalendarPlus>
+            Add Your First Event
           </Link>
         </Button>
       </SignedOut>

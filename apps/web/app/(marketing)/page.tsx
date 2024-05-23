@@ -131,28 +131,26 @@ function EventDetails({ className }: { className?: string }) {
   );
 }
 
-function MakeAndShareListsOfEvents() {
+function ConnectWithWhatMatters() {
   return (
     <div className="px-4 py-16 text-center md:rounded-xl md:border md:border-neutral-3 md:px-16 lg:px-24">
       <div className="mx-auto max-w-2.5xl">
         <h1 className="font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
-          Make and share lists of events
+          Connect with what matters
         </h1>
         <p className="mx-auto mt-6 max-w-3xl text-2xl leading-9 text-gray-400">
-          Easily discover, curate, and share events that bring us together. Join
-          a network of passionate curators and participants building community
-          around events that matter.
+          Save, organize, and spread events that inspire you.
         </p>
       </div>
       <div className="mt-12 grid gap-8 md:grid-cols-3">
         <div>
           <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-            Discover Events
+            Save (it all)
           </h2>
           <div className="py-2"></div>
           <p className="mt-2 text-lg leading-7 text-gray-500">
-            Discover events from other curators or add your own in just a few
-            clicks.
+            Collect events from screenshots, websites, flyers, and beyond.
+            Automagically capture event details.
           </p>
           <div className="flex space-x-2 px-5 pt-14">
             <Image
@@ -164,13 +162,36 @@ function MakeAndShareListsOfEvents() {
             />
           </div>
         </div>
-        <div className="flex flex-col items-center">
+        <div>
           <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-            Curate & Build
+            Organize (your way)
           </h2>
           <div className="py-2"></div>
           <p className="mt-2 text-lg leading-7 text-gray-500">
-            Let AI do the work of uncovering dates, times, locations, and more.
+            Make lists, add to your calendar, and stay organized. See all your
+            possibilities.
+          </p>
+          <div className="pt-24"></div>
+          <div className="relative h-64">
+            <div className="absolute z-30 mr-5 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
+              <EventDetails />
+            </div>
+            <div className="absolute inset-x-2.5 top-2.5 z-20 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
+              <EventDetails className="opacity-0" />
+            </div>
+            <div className="absolute left-5 top-5 z-10 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
+              <EventDetails className="opacity-0" />
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col items-center">
+          <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
+            Share (with anyone)
+          </h2>
+          <div className="py-2"></div>
+          <p className="mt-2 text-lg leading-7 text-gray-500">
+            Send to friends, family, or your community – even if they don't use
+            Soonlist.
           </p>
           <div className="flex space-x-2 px-5 pt-12">
             <div className="flex size-80 items-start justify-center rounded-full bg-interactive-3 text-base font-bold leading-5 text-interactive-1">
@@ -188,27 +209,6 @@ function MakeAndShareListsOfEvents() {
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-            Organize & Share
-          </h2>
-          <div className="py-2"></div>
-          <p className="mt-2 text-lg leading-7 text-gray-500">
-            Organize events into useful, shareable lists. Easily share events.
-          </p>
-          <div className="pt-24"></div>
-          <div className="relative h-64">
-            <div className="absolute z-30 mr-5 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
-              <EventDetails />
-            </div>
-            <div className="absolute inset-x-2.5 top-2.5 z-20 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
-              <EventDetails className="opacity-0" />
-            </div>
-            <div className="absolute left-5 top-5 z-10 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
-              <EventDetails className="opacity-0" />
             </div>
           </div>
         </div>
@@ -250,7 +250,7 @@ export default function Page() {
                 </span>
               </h1>
               <p className="mx-auto mt-6 max-w-[36rem] text-2xl leading-9 text-gray-400">
-                The easiest way to gather & share events, ever.
+                The easiest way to gather and share events, ever.
               </p>
             </div>
             <div className="mt-10 flex w-full items-center justify-center gap-x-6">
@@ -263,9 +263,9 @@ export default function Page() {
         </div>
       </div>
       <div className="isolate mx-auto -mt-24 max-w-7xl bg-white md:rounded-lg">
-        <MakeAndShareListsOfEvents />
+        <ConnectWithWhatMatters />
       </div>
-      <div className="relative isolate bg-white px-6 lg:px-8">
+      {/* <div className="relative isolate bg-white px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl grid-cols-1 grid-rows-1 gap-y-16 py-16 md:grid-cols-2 md:gap-x-16 md:pt-24">
           <div className="mx-auto max-w-7xl">
             <div className="mx-auto">
@@ -281,7 +281,7 @@ export default function Page() {
           </div>
           <SampleList listId={sampleEventListId} />
         </div>
-      </div>
+      </div> */}
       <div className="relative isolate bg-white px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl grid-cols-1 grid-rows-1 gap-y-16 py-16 md:grid-cols-2 md:gap-x-16 md:pt-24">
           <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg">
