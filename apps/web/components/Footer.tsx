@@ -13,7 +13,7 @@ export function Footer() {
           <div className="pr-8">
             <h1 className="font-heading text-4xl font-bold">Soonlist</h1>
             <div className="mt-6 flex flex-col gap-4 sm:flex-row">
-              <Button size={"sm"} asChild>
+              <Button asChild>
                 <Link href="/get-started">Get Started</Link>
               </Button>
               {/* Social Media Links */}

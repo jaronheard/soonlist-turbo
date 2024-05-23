@@ -7,6 +7,7 @@ import {
   SignedIn,
   SignedOut,
   SignInButton,
+  SignUpButton,
   useClerk,
   useUser,
 } from "@clerk/nextjs";
@@ -190,8 +191,17 @@ export function Nav() {
         </NavigationMenuItem>
         <SignedOut>
           <NavigationMenuItem className="hidden lg:block">
+            <Link href="/sign-in" legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                Log In
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+        </SignedOut>
+        <SignedOut>
+          <NavigationMenuItem className="hidden lg:block">
             <SignInButton>
-              <Button variant="secondary">Log In</Button>
+              <Button>Sign Up</Button>
             </SignInButton>
           </NavigationMenuItem>
         </SignedOut>
@@ -300,6 +310,7 @@ const mainNav = [
   {
     title: "About",
     href: "/onboarding",
+    signedOutOnly: false,
   },
 ];
 
@@ -413,6 +424,7 @@ export function MobileNav() {
                     key={item.href}
                     href={item.href}
                     onOpenChange={setOpen}
+                    signedOutOnly={item.signedOutOnly}
                   >
                     {item.title}
                   </MobileLink>
@@ -442,15 +454,25 @@ export function MobileNav() {
           </div>
           <Separator className="my-3" />
           <SignedOut>
-            <SignInButton>
+            <SignUpButton>
               <Button
-                variant="secondary"
                 className="w-full"
                 onClick={() => {
                   setOpen(false);
                 }}
               >
-                Log In
+                Sign Up
+              </Button>
+            </SignUpButton>
+            <SignInButton>
+              <Button
+                variant={"secondary"}
+                className="w-full"
+                onClick={() => {
+                  setOpen(false);
+                }}
+              >
+                Sign Up
               </Button>
             </SignInButton>
           </SignedOut>
