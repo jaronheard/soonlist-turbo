@@ -75,10 +75,11 @@ const tiers = [
     features: ["3 public event lists", "Add up to 100 public events"],
     mostPopular: false,
     free: true,
+    soon: false,
   },
   {
-    name: "Supporter",
-    id: "tier-supporter",
+    name: "Standard",
+    id: "tier-standard",
     href: "#",
     priceMonthly: "$7",
     description: "Unlimited public and private events and lists.",
@@ -90,6 +91,7 @@ const tiers = [
     ],
     mostPopular: true,
     free: false,
+    soon: false,
   },
   {
     name: "Plus (coming soon)",
@@ -106,6 +108,7 @@ const tiers = [
     ],
     mostPopular: false,
     free: false,
+    soon: true,
   },
 ];
 
@@ -130,6 +133,7 @@ function Pricing() {
                 tier.mostPopular ? "lg:z-10 lg:rounded-b-none" : "lg:mt-8",
                 tierIdx === 0 ? "lg:rounded-r-none" : "",
                 tierIdx === tiers.length - 1 ? "lg:rounded-l-none" : "",
+                tier.soon ? "opacity-75" : "",
                 "flex flex-col justify-between rounded-xl border border-neutral-3 bg-white p-8 shadow-sm xl:p-10",
               )}
             >
@@ -177,8 +181,12 @@ function Pricing() {
                 </ul>
               </div>
               <div className="mt-8">
-                <Button aria-describedby={tier.id} className="w-full">
-                  Get started
+                <Button
+                  aria-describedby={tier.id}
+                  className="w-full"
+                  disabled={tier.soon}
+                >
+                  {tier.soon ? "Coming soon" : "Get started"}
                 </Button>
               </div>
             </div>
