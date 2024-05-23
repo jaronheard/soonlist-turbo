@@ -4,21 +4,12 @@ import {
   Calendar,
   Megaphone,
   Share,
-  Sparkles,
   Users,
   Zap,
 } from "lucide-react";
 
 import { CTAButton } from "~/components/CallToActions";
-
-// const sampleEventId =
-//   process.env.NODE_ENV === "production"
-//     ? "t8f7locjjfbf"
-//     : "clpiq9ohe0005vt8uksvndxq3";
-// const sampleEventListId =
-//   process.env.NODE_ENV === "production"
-//     ? "cloetmfc60001jr0ays7hsxum"
-//     : "tlmtav2fb70t";
+import { AutoPlayVideo } from "./AutoPlayVideo";
 
 const advancedFeatures = [
   {
@@ -71,7 +62,7 @@ const testimonials = [
     },
   },
   {
-    body: "I’m stoked that Soonlist helps me discover and share music events, especially those in non-conventional venues.",
+    body: "I’m stoked that Soonlist helps me save and share music events, especially those in non-conventional venues.",
     author: {
       name: "Josh Carr",
       handle: "joshcarr",
@@ -88,15 +79,15 @@ const testimonials = [
         "https://upcdn.io/12a1yek/raw/uploads/Soonlist/gina_google_profile.webp",
     },
   },
-  // {
-  //   body: "Even in these early stages, the vision for how this can benefit communities is clear and it's exciting to be part of.",
-  //   author: {
-  //     name: "Sarah Ashton",
-  //     handle: "sarah-a",
-  //     imageUrl:
-  //       "https://www.soonlist.com/_next/image?url=https%3A%2F%2Fimg.clerk.com%2FeyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yWUpwZnIyc25rM0JBOERmbUFPNXFMWlo0MXIifQ&w=750&q=75",
-  //   },
-  // },
+  {
+    body: "I'm a freak for my calendar, and Soonlist is the perfect way to keep it fresh and full of events that inspire me.",
+    author: {
+      name: "Eric Benedon",
+      handle: "eggsbenedon",
+      imageUrl:
+        "https://upcdn.io/12a1yek/raw/uploads/Soonlist/eric_profile.webp",
+    },
+  },
 ];
 
 function EventDetails({ className }: { className?: string }) {
@@ -134,7 +125,7 @@ function ConnectWithWhatMatters() {
           Connect with what matters
         </h1>
         <p className="mx-auto mt-6 max-w-3xl text-2xl leading-9 text-gray-400">
-          Save, organize, and spread events that inspire you.
+          Save, organize, and share events that inspire you.
         </p>
       </div>
       <div className="mt-12 grid gap-8 md:grid-cols-3">
@@ -144,8 +135,8 @@ function ConnectWithWhatMatters() {
           </h2>
           <div className="py-2"></div>
           <p className="mt-2 text-lg leading-7 text-gray-500">
-            Collect events from screenshots, websites, flyers, and beyond.
-            Automagically capture event details.
+            Capture events details from screenshots, websites, flyers, and
+            beyond.
           </p>
           <div className="flex space-x-2 px-5 pt-14">
             <Image
@@ -166,17 +157,14 @@ function ConnectWithWhatMatters() {
             Make lists, add to your calendar, and stay organized. See all your
             possibilities.
           </p>
-          <div className="pt-24"></div>
-          <div className="relative h-64">
-            <div className="absolute z-30 mr-5 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
-              <EventDetails />
-            </div>
-            <div className="absolute inset-x-2.5 top-2.5 z-20 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
-              <EventDetails className="opacity-0" />
-            </div>
-            <div className="absolute left-5 top-5 z-10 rounded-lg border-[0.85px] border-neutral-3 bg-white p-4 text-left shadow-sm">
-              <EventDetails className="opacity-0" />
-            </div>
+          <div className="flex space-x-2 px-5 pt-14">
+            <Image
+              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/lists.png"
+              height={316}
+              width={285}
+              alt=""
+              className="size-full"
+            />
           </div>
         </div>
         <div className="flex flex-col items-center">
@@ -185,26 +173,17 @@ function ConnectWithWhatMatters() {
           </h2>
           <div className="py-2"></div>
           <p className="mt-2 text-lg leading-7 text-gray-500">
-            Send to friends, family, or your community – even if they don't use
-            Soonlist.
+            Send links to friends, family, or your community—no account or app
+            needed.
           </p>
-          <div className="flex space-x-2 px-5 pt-12">
-            <div className="flex size-80 items-start justify-center rounded-full bg-interactive-3 text-base font-bold leading-5 text-interactive-1">
-              <div className="">
-                <Sparkles className="mx-auto mb-6 mt-4 size-12 rounded-full bg-interactive-2 p-1.5" />
-                <div className="flex flex-col gap-2">
-                  <div className="">JAN 17 WEDS</div>
-                  <div className="">4:00PM - 5:00PM</div>
-                  <div className="text-balance">
-                    Dance Party: Sweat Out 2023 w/ PLNT DDJ
-                  </div>
-                  <p className="text-balance px-3.5 font-medium">
-                    Let go! The entry fee ranges from $5 to $10. Arrive by 8:15
-                    to be entered...
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div className="flex space-x-2 px-5 pt-14">
+            <Image
+              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/sharing.png"
+              height={316}
+              width={285}
+              alt=""
+              className="size-full"
+            />
           </div>
         </div>
       </div>
@@ -220,7 +199,7 @@ export default function Page() {
           src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
           fill
           alt=""
-          className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg object-contain object-top opacity-10"
+          className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg object-contain object-top opacity-[0.05]"
         />
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-16 py-16 pb-48 md:grid-cols-1 md:gap-x-16 md:pt-24">
           <div className="mx-auto">
@@ -250,6 +229,14 @@ export default function Page() {
             </div>
             <div className="mt-10 flex w-full items-center justify-center gap-x-6">
               <CTAButton />
+            </div>
+          </div>
+          <div className="">
+            <p className="text-center font-heading text-2xl font-bold text-gray-700">
+              See it in action 👀
+            </p>
+            <div className="relative mx-auto h-[30.5rem] w-[18rem] overflow-hidden rounded-xl border-4 border-accent-yellow bg-white md:px-6 lg:px-0">
+              <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-update-cropped.mp4" />
             </div>
           </div>
           {/* <div className="mx-auto">
