@@ -1,40 +1,11 @@
 import Image from "next/image";
-import {
-  ArrowRight,
-  Calendar,
-  CheckIcon,
-  Megaphone,
-  Share,
-  Users,
-  Zap,
-} from "lucide-react";
+import { CheckIcon } from "lucide-react";
 
 import { cn } from "@soonlist/ui";
 import { Button } from "@soonlist/ui/button";
 
 import { CTAButton } from "~/components/CallToActions";
 import { AutoPlayVideo } from "./AutoPlayVideo";
-
-const advancedFeatures = [
-  {
-    name: "Community First",
-    description:
-      "Be part of a community where value is shared, from our business model to financially supporting curators.",
-    icon: Users,
-  },
-  {
-    name: "Curator Empowerment",
-    description:
-      "Elevate, recognize, and value curators with tools that amplify their contributions to communities.",
-    icon: Megaphone,
-  },
-  {
-    name: "Instant Connection",
-    description:
-      "Leverage AI to swiftly create and share events, and get back to getting together faster.",
-    icon: Zap,
-  },
-];
 
 const testimonials = [
   {
@@ -348,67 +319,7 @@ export default function Page() {
       <div className="isolate mx-auto -mt-24 max-w-7xl bg-white md:rounded-lg">
         <ConnectWithWhatMatters />
       </div>
-      {/* <div className="relative isolate bg-white px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 grid-rows-1 gap-y-16 py-16 md:grid-cols-2 md:gap-x-16 md:pt-24">
-          <div className="mx-auto max-w-7xl">
-            <div className="mx-auto">
-              <h1 className="font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
-                Curated event lists built by community members you know and
-                trust
-              </h1>
-              <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
-                Join a network of passionate curators and participants building
-                community around events that matter.
-              </p>
-            </div>
-          </div>
-          <SampleList listId={sampleEventListId} />
-        </div>
-      </div> */}
       <Pricing />
-      {/* <div className="relative isolate bg-white px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 grid-rows-1 gap-y-16 py-16 md:grid-cols-2 md:gap-x-16 md:pt-24">
-          <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg">
-            <h1 className="font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
-              Building togetherness
-            </h1>
-            <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
-              We&apos;re building an ecosystem that simplifies discovering,
-              sharing, and engaging with events. It&apos;s a space where
-              everyone has the power and tools to contribute to our shared
-              calendars and build community.
-            </p>
-            <dl className="mt-10 max-w-xl space-y-8 text-base leading-7 text-gray-600 lg:max-w-none">
-              {advancedFeatures.map((feature) => (
-                <div key={feature.name} className="relative flex gap-8">
-                  <feature.icon
-                    className="size-10 shrink-0 rounded-full bg-interactive-2 p-2 text-neutral-1
-                      "
-                    aria-hidden="true"
-                  />
-                  <div className="flex flex-col gap-2">
-                    <dt className="block text-2xl font-semibold leading-normal text-gray-900">
-                      {feature.name}
-                    </dt>{" "}
-                    <dd className="block text-lg leading-6 text-neutral-2">
-                      {feature.description}
-                    </dd>
-                  </div>
-                </div>
-              ))}
-            </dl>
-          </div>
-          <div className="relative h-full min-h-96 overflow-hidden rounded-xl md:px-6 lg:px-0">
-            <Image
-              src="https://upcdn.io/12a1yek/raw/uploads/2024/01/17/IMG_3960.png"
-              alt=""
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 1008px"
-              className="object-cover"
-            />
-          </div>
-        </div>
-      </div> */}
       <div className="relative isolate bg-white pb-32 pt-24 md:pt-32">
         <div className="mx-auto max-w-7xl px-6 md:px-8">
           <div className="mx-auto max-w-xl text-center">
