@@ -176,8 +176,7 @@ function Pricing() {
                     <Suspense
                       fallback={
                         <Badge variant={"secondary"}>
-                          🌈 NOTAFLOF for community projects. Contact us for
-                          more
+                          🌈 NOTAFLOF for community projects. Contact us
                         </Badge>
                       }
                     >
