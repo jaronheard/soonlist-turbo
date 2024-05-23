@@ -124,12 +124,12 @@ function Pricing() {
             Pricing
           </h1>
           <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
-            We want Soonlist to be broadly accessible, sustainable, and in the
+            Soonlist aims to be broadly accessible, sustainable, and in the
             future,{" "}
             <Link href="/about" className="text-interactive-1 underline">
               community-owned
             </Link>
-            . We don't sell your data or run ads. We're funded by our community.
+            . We don't sell your attention or data.
           </p>
         </div>
         <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
