@@ -36,7 +36,7 @@ export function Footer() {
           </div>
           <div className="flex w-full flex-wrap justify-between gap-8">
             {/* Events Section */}
-            <div>
+            {/* <div>
               <h2 className="text-lg font-medium opacity-[66.666%]">Events</h2>
               <ul className="text-semibold mt-2 space-y-1 text-lg">
                 {navigation.events.map((item) => (
@@ -45,7 +45,7 @@ export function Footer() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </div> */}
             {/* Support Section */}
             <div>
               <h2 className="text-lg font-medium opacity-[66.666%]">Support</h2>
