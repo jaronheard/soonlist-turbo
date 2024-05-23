@@ -10,7 +10,7 @@ import {
   useClerk,
   useUser,
 } from "@clerk/nextjs";
-import { CalendarPlus, Menu, Star } from "lucide-react";
+import { CalendarPlus, Menu } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";

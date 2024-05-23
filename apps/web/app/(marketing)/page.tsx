@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import {
   ArrowRight,
   Calendar,
@@ -10,20 +9,16 @@ import {
   Zap,
 } from "lucide-react";
 
-import { buttonVariants } from "@soonlist/ui/button";
-
 import { CTAButton } from "~/components/CallToActions";
-import { SampleEvent } from "~/components/SampleEvent";
-import { SampleList } from "~/components/SampleList";
 
-const sampleEventId =
-  process.env.NODE_ENV === "production"
-    ? "t8f7locjjfbf"
-    : "clpiq9ohe0005vt8uksvndxq3";
-const sampleEventListId =
-  process.env.NODE_ENV === "production"
-    ? "cloetmfc60001jr0ays7hsxum"
-    : "tlmtav2fb70t";
+// const sampleEventId =
+//   process.env.NODE_ENV === "production"
+//     ? "t8f7locjjfbf"
+//     : "clpiq9ohe0005vt8uksvndxq3";
+// const sampleEventListId =
+//   process.env.NODE_ENV === "production"
+//     ? "cloetmfc60001jr0ays7hsxum"
+//     : "tlmtav2fb70t";
 
 const advancedFeatures = [
   {
