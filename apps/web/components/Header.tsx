@@ -198,13 +198,6 @@ export function Nav() {
             </Link>
           </NavigationMenuItem>
         </SignedOut>
-        <SignedOut>
-          <NavigationMenuItem className="hidden lg:block">
-            <SignInButton>
-              <Button>Sign Up</Button>
-            </SignInButton>
-          </NavigationMenuItem>
-        </SignedOut>
         <NavigationMenuItem>
           <SignedIn>
             <Link href="/new" legacyBehavior passHref>
