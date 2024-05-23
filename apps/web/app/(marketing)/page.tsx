@@ -212,7 +212,7 @@ function ConnectWithWhatMatters() {
           </p>
           <div className="flex space-x-2 px-5 pt-14">
             <Image
-              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
+              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/saving.png"
               height={316}
               width={285}
               alt=""
