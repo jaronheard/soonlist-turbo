@@ -1,11 +1,14 @@
+import { Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { CheckIcon } from "lucide-react";
 
 import { cn } from "@soonlist/ui";
+import { Badge } from "@soonlist/ui/badge";
 import { Button } from "@soonlist/ui/button";
 
 import { CTAButton } from "~/components/CallToActions";
-import { AutoPlayVideo } from "./AutoPlayVideo";
+import { AutoPlayVideo, NotaflofBadge } from "./components";
 
 const testimonials = [
   {
@@ -78,8 +81,8 @@ const tiers = [
     soon: false,
   },
   {
-    name: "Standard",
-    id: "tier-standard",
+    name: "Personal",
+    id: "tier-personal",
     href: "#",
     priceMonthly: "$7",
     description: "Unlimited public and private events and lists.",
@@ -94,8 +97,8 @@ const tiers = [
     soon: false,
   },
   {
-    name: "Plus (coming soon)",
-    id: "tier-plus",
+    name: "Pro (coming soon)",
+    id: "tier-pro",
     href: "#",
     priceMonthly: "$35",
     description: "Customize, integrate, and brand your events and lists.",
@@ -122,7 +125,8 @@ function Pricing() {
           </h1>
           <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
             We want Soonlist to be broadly accessible, sustainable, and in the
-            future, community-owned. We also don't sell your data or run ads.
+            future, <Link href="/about">community-owned</Link>. We don't sell
+            your data or run ads. We're funded by our community.
           </p>
         </div>
         <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
@@ -149,9 +153,7 @@ function Pricing() {
                     {tier.name}
                   </h3>
                   {tier.mostPopular ? (
-                    <p className="rounded-full bg-interactive-2 px-2.5 py-1 text-xs font-semibold leading-5 text-neutral-1">
-                      Most popular
-                    </p>
+                    <Badge variant={"secondary"}>Most popular</Badge>
                   ) : null}
                 </div>
                 <p className="mt-4 text-lg leading-6 text-neutral-2">
@@ -165,6 +167,21 @@ function Pricing() {
                     /month
                   </span>
                 </p>
+                {tier.mostPopular && (
+                  <>
+                    <div className="p-2"></div>
+                    <Suspense
+                      fallback={
+                        <Badge variant={"secondary"}>
+                          🌈 NOTAFLOF for community projects. Contact us for
+                          more
+                        </Badge>
+                      }
+                    >
+                      <NotaflofBadge />
+                    </Suspense>
+                  </>
+                )}
                 <ul
                   role="list"
                   className="mt-8 space-y-3 text-lg leading-6 text-neutral-2"

@@ -2,6 +2,10 @@
 
 import { useEffect, useRef } from "react";
 
+import { badgeVariants } from "@soonlist/ui/badge";
+
+import { newMessage } from "~/lib/intercom/intercom";
+
 // const sampleEventId =
 //   process.env.NODE_ENV === "production"
 //     ? "t8f7locjjfbf"
@@ -24,5 +28,20 @@ export const AutoPlayVideo = ({ src, ...rest }: { src: string }) => {
       <source src={src} type="video/mp4" />
       Your browser does not support the video tag.
     </video>
+  );
+};
+
+export const NotaflofBadge = () => {
+  return (
+    <button
+      className={badgeVariants({ variant: "secondary" })}
+      onClick={() =>
+        newMessage(
+          "NOTAFLOF request. I'd like to pay ... and my project is ...",
+        )
+      }
+    >
+      🌈 NOTAFLOF for community projects. Contact us for more
+    </button>
   );
 };
