@@ -2,11 +2,15 @@ import Image from "next/image";
 import {
   ArrowRight,
   Calendar,
+  CheckIcon,
   Megaphone,
   Share,
   Users,
   Zap,
 } from "lucide-react";
+
+import { cn } from "@soonlist/ui";
+import { Button } from "@soonlist/ui/button";
 
 import { CTAButton } from "~/components/CallToActions";
 import { AutoPlayVideo } from "./AutoPlayVideo";
@@ -90,27 +94,124 @@ const testimonials = [
   },
 ];
 
-function EventDetails({ className }: { className?: string }) {
+const tiers = [
+  {
+    name: "Free",
+    id: "tier-free",
+    href: "#",
+    priceMonthly: "$0",
+    description: "A few lists for your public events.",
+    features: ["3 public event lists", "Add up to 100 public events"],
+    mostPopular: false,
+    free: true,
+  },
+  {
+    name: "Supporter",
+    id: "tier-supporter",
+    href: "#",
+    priceMonthly: "$7",
+    description: "Unlimited public and private events and lists.",
+    features: [
+      "Unlimited event lists",
+      "Unlimited public events",
+      "Unlimited private events",
+      "Supporter badge",
+    ],
+    mostPopular: true,
+    free: false,
+  },
+  {
+    name: "Plus (coming soon)",
+    id: "tier-plus",
+    href: "#",
+    priceMonthly: "$35",
+    description: "Customize, integrate, and brand your events and lists.",
+    features: [
+      "Unlimited events & lists",
+      "Customize prompts & fields",
+      "Embeddable lists",
+      "Custom colors & branding",
+      "Priority support",
+    ],
+    mostPopular: false,
+    free: false,
+  },
+];
+
+function Pricing() {
   return (
-    <div className={className}>
-      <div className="text-xs text-gray-500">
-        7:30PM - 11:00PM // Turn Turn Turn
-      </div>
-      <div className="mt-1 text-lg font-semibold">
-        Dance Party: Sweat Out 2023
-      </div>
-      <p className="mt-1 text-sm text-gray-500">
-        Let go! The entry fee ranges from $5 to $10. Arrive by 8:15 to be
-        entered into a vinyl raffle where the top prize is $88 Mississippi...
-      </p>
-      <div className="flex w-full justify-between text-interactive-1">
-        <div className="mt-4 inline-flex items-center text-sm font-medium">
-          Learn more
-          <ArrowRight className="ml-1 size-4 text-interactive-2" />
+    <div className="relative isolate bg-white px-6 py-24 sm:py-32 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-4xl text-center">
+          <h1 className="font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
+            Pricing
+          </h1>
+          <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
+            We want Soonlist to be broadly accessible, sustainable, and in the
+            future, community-owned. We also don't sell your data or run ads.
+          </p>
         </div>
-        <div className="mt-4 flex space-x-2">
-          <Calendar className="size-8 rounded-full bg-interactive-3 p-1.5 text-interactive-1" />
-          <Share className="size-8 rounded-full bg-interactive-3 p-1.5 text-interactive-1" />
+        <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+          {tiers.map((tier, tierIdx) => (
+            <div
+              key={tier.id}
+              className={cn(
+                tier.mostPopular ? "lg:z-10 lg:rounded-b-none" : "lg:mt-8",
+                tierIdx === 0 ? "lg:rounded-r-none" : "",
+                tierIdx === tiers.length - 1 ? "lg:rounded-l-none" : "",
+                "flex flex-col justify-between rounded-xl border border-neutral-3 bg-white p-8 shadow-sm xl:p-10",
+              )}
+            >
+              <div>
+                <div className="flex items-center justify-between gap-x-4">
+                  <h3
+                    id={tier.id}
+                    className={cn(
+                      tier.mostPopular ? "text-interactive-1" : "text-gray-900",
+                      "font-heading text-2xl font-semibold leading-8",
+                    )}
+                  >
+                    {tier.name}
+                  </h3>
+                  {tier.mostPopular ? (
+                    <p className="rounded-full bg-interactive-2 px-2.5 py-1 text-xs font-semibold leading-5 text-neutral-1">
+                      Most popular
+                    </p>
+                  ) : null}
+                </div>
+                <p className="mt-4 text-lg leading-6 text-neutral-2">
+                  {tier.description}
+                </p>
+                <p className="mt-6 flex items-baseline gap-x-1">
+                  <span className="font-heading text-4xl font-bold tracking-tight text-gray-900">
+                    {tier.priceMonthly}
+                  </span>
+                  <span className="text-lg font-semibold leading-6 text-neutral-2">
+                    /month
+                  </span>
+                </p>
+                <ul
+                  role="list"
+                  className="mt-8 space-y-3 text-lg leading-6 text-neutral-2"
+                >
+                  {tier.features.map((feature) => (
+                    <li key={feature} className="flex gap-x-3">
+                      <CheckIcon
+                        className="h-6 w-5 flex-none text-interactive-1"
+                        aria-hidden="true"
+                      />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-8">
+                <Button aria-describedby={tier.id} className="w-full">
+                  Get started
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -264,7 +365,8 @@ export default function Page() {
           <SampleList listId={sampleEventListId} />
         </div>
       </div> */}
-      <div className="relative isolate bg-white px-6 lg:px-8">
+      <Pricing />
+      {/* <div className="relative isolate bg-white px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl grid-cols-1 grid-rows-1 gap-y-16 py-16 md:grid-cols-2 md:gap-x-16 md:pt-24">
           <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg">
             <h1 className="font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
@@ -306,7 +408,7 @@ export default function Page() {
             />
           </div>
         </div>
-      </div>
+      </div> */}
       <div className="relative isolate bg-white pb-32 pt-24 md:pt-32">
         <div className="mx-auto max-w-7xl px-6 md:px-8">
           <div className="mx-auto max-w-xl text-center">
