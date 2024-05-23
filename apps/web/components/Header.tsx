@@ -216,6 +216,15 @@ export function Nav() {
               </NavigationMenuLink>
             </Link>
           </SignedIn>
+          <SignedOut>
+            <Link href="/sign-up" legacyBehavior passHref>
+              <NavigationMenuLink
+                className={buttonVariants({ variant: "default" })}
+              >
+                Sign<span className="inline">&nbsp;Up</span>
+              </NavigationMenuLink>
+            </Link>
+          </SignedOut>
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
@@ -464,6 +473,7 @@ export function MobileNav() {
                 Sign Up
               </Button>
             </SignUpButton>
+            <div className="my-3"></div>
             <SignInButton>
               <Button
                 variant={"secondary"}
@@ -472,7 +482,7 @@ export function MobileNav() {
                   setOpen(false);
                 }}
               >
-                Sign Up
+                Log In
               </Button>
             </SignInButton>
           </SignedOut>
