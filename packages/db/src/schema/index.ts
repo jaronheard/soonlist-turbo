@@ -157,12 +157,12 @@ export const userFollows = mysqlTable(
 
 export const userFollowsRelations = relations(userFollows, ({ one }) => ({
   follower: one(users, {
-    fields: [userFollows.followerId],
+    fields: [userFollows.followingId],
     references: [users.id],
     relationName: "follower",
   }),
   following: one(users, {
-    fields: [userFollows.followingId],
+    fields: [userFollows.followerId],
     references: [users.id],
     relationName: "following",
   }),
