@@ -75,7 +75,7 @@ const tiers = [
     href: "#",
     priceMonthly: "$0",
     description: "A few lists for your public events.",
-    features: ["3 public event lists", "Add up to 100 public events"],
+    features: ["Add up to 100 public events", "3 public event lists"],
     mostPopular: false,
     free: true,
     soon: false,
@@ -87,9 +87,9 @@ const tiers = [
     priceMonthly: "$7",
     description: "Unlimited public and private events and lists.",
     features: [
-      "Unlimited event lists",
       "Unlimited public events",
       "Unlimited private events",
+      "Unlimited event lists",
       "Supporter badge",
     ],
     mostPopular: true,
@@ -224,13 +224,13 @@ function ConnectWithWhatMatters() {
           Connect with what matters
         </h1>
         <p className="mx-auto mt-6 max-w-3xl text-2xl leading-9 text-gray-400">
-          Save, organize, and share events that inspire you.
+          Add, organize, and share events that inspire you.
         </p>
       </div>
       <div className="mt-12 grid gap-8 md:grid-cols-3">
         <div>
           <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-            Save (it all)
+            Add (it all)
           </h2>
           <div className="py-2"></div>
           <p className="mt-2 text-lg leading-7 text-gray-500">
@@ -239,7 +239,7 @@ function ConnectWithWhatMatters() {
           </p>
           <div className="flex space-x-2 px-5 pt-14">
             <Image
-              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/saving.png"
+              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
               height={316}
               width={285}
               alt=""
@@ -253,8 +253,7 @@ function ConnectWithWhatMatters() {
           </h2>
           <div className="py-2"></div>
           <p className="mt-2 text-lg leading-7 text-gray-500">
-            Make lists, add to your calendar, and stay organized. See all your
-            possibilities.
+            Make lists, add to your personal calendar, and stay up to date.
           </p>
           <div className="flex space-x-2 px-5 pt-14">
             <Image
@@ -272,7 +271,7 @@ function ConnectWithWhatMatters() {
           </h2>
           <div className="py-2"></div>
           <p className="mt-2 text-lg leading-7 text-gray-500">
-            Send links to friends, family, or your community—no account or app
+            Send links to friends, family, or your community—no social media
             needed.
           </p>
           <div className="flex space-x-2 px-5 pt-14">
