@@ -41,7 +41,7 @@ export const NotaflofBadge = () => {
         )
       }
     >
-      🌈 NOTAFLOF for community projects. Contact us
+      🌈 NOTAFLOF for community projects.
     </button>
   );
 };
