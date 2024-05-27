@@ -12,7 +12,7 @@ export function CTAButton() {
     <>
       <SignedOut>
         <Button asChild size="lg">
-          <Link href={"/early-access"}>
+          <Link href={"/new"}>
             <CalendarPlus className="mr-2 size-4"></CalendarPlus>
             Add your first event
           </Link>
