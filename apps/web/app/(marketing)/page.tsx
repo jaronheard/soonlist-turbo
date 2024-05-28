@@ -78,7 +78,7 @@ const tiers = [
     features: ["Add up to 100 public events", "3 public event lists"],
     mostPopular: false,
     free: true,
-    soon: false,
+    soon: true,
   },
   {
     name: "Personal",
@@ -94,7 +94,7 @@ const tiers = [
     ],
     mostPopular: true,
     free: false,
-    soon: false,
+    soon: true,
   },
   {
     name: "Pro (coming soon)",
