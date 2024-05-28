@@ -157,12 +157,12 @@ export const userFollows = mysqlTable(
 
 export const userFollowsRelations = relations(userFollows, ({ one }) => ({
   follower: one(users, {
-    fields: [userFollows.followingId],
+    fields: [userFollows.followerId],
     references: [users.id],
     relationName: "follower",
   }),
   following: one(users, {
-    fields: [userFollows.followerId],
+    fields: [userFollows.followingId],
     references: [users.id],
     relationName: "following",
   }),
@@ -248,8 +248,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   events: many(events),
   eventFollows: many(eventFollows),
   listFollows: many(listFollows),
-  followers: many(userFollows, { relationName: "follower" }),
-  following: many(userFollows, { relationName: "following" }),
+  // this confuses me a bit, but it results in the correct relations
+  followers: many(userFollows, { relationName: "following" }),
+  following: many(userFollows, { relationName: "follower" }),
   lists: many(lists),
 }));
 
