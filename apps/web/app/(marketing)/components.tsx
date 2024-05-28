@@ -11,6 +11,7 @@ export const AutoPlayVideo = ({ src, ...rest }: { src: string }) => {
 
   useEffect(() => {
     if (videoRef.current) {
+      // @ts-expect-error videoRef.current.play() is not unsafe
       videoRef.current.play();
     }
   }, []); // Empty dependency array ensures this runs once after the component mounts
