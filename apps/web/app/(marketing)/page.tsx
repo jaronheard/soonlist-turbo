@@ -293,6 +293,7 @@ export default function Page() {
           src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
           fill
           alt=""
+          priority
           className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg object-contain object-top opacity-[0.05]"
         />
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-16 py-16 pb-48 md:grid-cols-1 md:gap-x-16 md:pt-24">
