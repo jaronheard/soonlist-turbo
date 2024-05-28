@@ -124,12 +124,8 @@ function Pricing() {
             Pricing
           </h1>
           <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
-            Soonlist aims to be broadly accessible, sustainable, and in the
-            future,{" "}
-            <Link href="/about" className="text-interactive-1 underline">
-              community-owned
-            </Link>
-            . We don't sell your attention or data.
+            Soonlist is an independent, community-supported platform. We don't
+            sell your attention or data.
           </p>
         </div>
         <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
@@ -221,11 +217,11 @@ function ConnectWithWhatMatters() {
     <div className="px-4 py-16 text-center md:rounded-xl md:border md:border-neutral-3 md:px-16 lg:px-24">
       <div className="mx-auto max-w-2.5xl">
         <h1 className="font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
-          Connect with what matters
-        </h1>
-        <p className="mx-auto mt-6 max-w-3xl text-2xl leading-9 text-gray-400">
           Add, organize, and share events that inspire you.
-        </p>
+        </h1>
+        {/* <p className="mx-auto mt-6 max-w-3xl text-2xl leading-9 text-gray-400">
+          Add, organize, and share events that inspire you.
+        </p> */}
       </div>
       <div className="mt-12 grid gap-8 md:grid-cols-3">
         <div>
@@ -322,7 +318,7 @@ export default function Page() {
                 </span>
               </h1>
               <p className="mx-auto mt-6 max-w-[36rem] text-2xl leading-9 text-gray-400">
-                The easiest way to gather and share events, ever.
+                The best way to add, organize, and share events.
               </p>
             </div>
             <div className="mt-10 flex w-full items-center justify-center gap-x-6">
@@ -333,8 +329,8 @@ export default function Page() {
             <p className="text-center font-heading text-2xl font-bold text-gray-700">
               See it in action 👀
             </p>
-            <div className="relative mx-auto h-[30.5rem] w-[18rem] overflow-hidden rounded-xl border-4 border-accent-yellow bg-white md:px-6 lg:px-0">
-              <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-update-cropped-update-v2.mp4" />
+            <div className="relative mx-auto h-[31.25rem] w-[18rem] overflow-hidden rounded-xl border-4 border-accent-yellow bg-white md:px-6 lg:px-0">
+              <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-update-cropped-update-v4.mp4" />
             </div>
           </div>
           {/* <div className="mx-auto">
