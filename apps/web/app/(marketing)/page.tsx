@@ -257,7 +257,7 @@ function ConnectWithWhatMatters() {
           </p>
           <div className="flex space-x-2 px-5 pt-14">
             <Image
-              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/lists.png"
+              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/lists-v1.png"
               height={316}
               width={285}
               alt=""
@@ -276,7 +276,7 @@ function ConnectWithWhatMatters() {
           </p>
           <div className="flex space-x-2 px-5 pt-14">
             <Image
-              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/sharing.png"
+              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/sharing-v1.png"
               height={316}
               width={285}
               alt=""
