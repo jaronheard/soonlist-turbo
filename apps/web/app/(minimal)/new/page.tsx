@@ -24,7 +24,10 @@ interface Props {
 }
 
 export default async function Page({ searchParams }: Props) {
-  const { userId } = auth().protect();
+  const { userId } = auth().protect({
+    unauthenticatedUrl: "/sign-up",
+    unauthorizedUrl: "/",
+  });
   // get externalId, but only in dev
   let externalId;
   if (process.env.NODE_ENV === "development") {

@@ -1,42 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { SignedOut } from "@clerk/nextjs";
-import { CircleDollarSign } from "lucide-react";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
-
-import { WaitlistSignup } from "./WaitlistSignup";
 
 export function Footer() {
   return (
     <div className="">
-      <SignedOut>
-        <div className="mx-auto max-w-7xl px-6 sm:px-8">
-          <div
-            id="waitlist"
-            className=" mx-auto rounded-xl border-2 border-gray-100 bg-white px-8 py-16 shadow-md sm:px-24"
-          >
-            <WaitlistSignup />
-          </div>
-        </div>
-        <div className="p-12"></div>
-      </SignedOut>
       <footer className="w-full bg-neutral-1 p-8 text-background sm:p-24">
         <nav className="mx-auto flex max-w-7xl flex-col justify-between gap-8 lg:flex-row">
           {/* Logo and Social Section */}
           <div className="pr-8">
             <h1 className="font-heading text-4xl font-bold">Soonlist</h1>
             <div className="mt-6 flex flex-col gap-4 sm:flex-row">
-              <Button size={"sm"} asChild>
-                <a
-                  href="https://buy.stripe.com/4gwaFB6sJ8Ah8ykcMM"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <CircleDollarSign className="mr-2 size-4"></CircleDollarSign>
-                  Support Soonlist
-                </a>
+              <Button asChild>
+                <Link href="/get-started">Get Started</Link>
               </Button>
               {/* Social Media Links */}
               {navigation.social.map((item) => (
@@ -58,7 +36,7 @@ export function Footer() {
           </div>
           <div className="flex w-full flex-wrap justify-between gap-8">
             {/* Events Section */}
-            <div>
+            {/* <div>
               <h2 className="text-lg font-medium opacity-[66.666%]">Events</h2>
               <ul className="text-semibold mt-2 space-y-1 text-lg">
                 {navigation.events.map((item) => (
@@ -67,7 +45,7 @@ export function Footer() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </div> */}
             {/* Support Section */}
             <div>
               <h2 className="text-lg font-medium opacity-[66.666%]">Support</h2>

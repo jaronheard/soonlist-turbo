@@ -7,10 +7,11 @@ import {
   SignedIn,
   SignedOut,
   SignInButton,
+  SignUpButton,
   useClerk,
   useUser,
 } from "@clerk/nextjs";
-import { CalendarPlus, Menu, Star } from "lucide-react";
+import { CalendarPlus, Menu } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
@@ -190,9 +191,11 @@ export function Nav() {
         </NavigationMenuItem>
         <SignedOut>
           <NavigationMenuItem className="hidden lg:block">
-            <SignInButton>
-              <Button variant="secondary">Log In</Button>
-            </SignInButton>
+            <Link href="/sign-in" legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                Log In
+              </NavigationMenuLink>
+            </Link>
           </NavigationMenuItem>
         </SignedOut>
         <NavigationMenuItem>
@@ -207,12 +210,11 @@ export function Nav() {
             </Link>
           </SignedIn>
           <SignedOut>
-            <Link href="/early-access" legacyBehavior passHref>
+            <Link href="/sign-up" legacyBehavior passHref>
               <NavigationMenuLink
                 className={buttonVariants({ variant: "default" })}
               >
-                <Star className="mr-2 hidden size-4 sm:block"></Star>
-                Early Access
+                Sign<span className="inline">&nbsp;Up</span>
               </NavigationMenuLink>
             </Link>
           </SignedOut>
@@ -310,6 +312,7 @@ const mainNav = [
   {
     title: "About",
     href: "/onboarding",
+    signedOutOnly: false,
   },
 ];
 
@@ -423,6 +426,7 @@ export function MobileNav() {
                     key={item.href}
                     href={item.href}
                     onOpenChange={setOpen}
+                    signedOutOnly={item.signedOutOnly}
                   >
                     {item.title}
                   </MobileLink>
@@ -452,9 +456,20 @@ export function MobileNav() {
           </div>
           <Separator className="my-3" />
           <SignedOut>
+            <SignUpButton>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  setOpen(false);
+                }}
+              >
+                Sign Up
+              </Button>
+            </SignUpButton>
+            <div className="my-3"></div>
             <SignInButton>
               <Button
-                variant="secondary"
+                variant={"secondary"}
                 className="w-full"
                 onClick={() => {
                   setOpen(false);
