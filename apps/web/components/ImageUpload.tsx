@@ -51,11 +51,26 @@ export const bytescaleWidgetOptions = {
   ],
   styles: {
     colors: {
+      active: "#E0D9FF",
+      error: "#ba2727",
       primary: "#5A32FB",
+      shade100: "#162135",
+      shade200: "#28344d",
+      shade300: "#28344d",
+      shade400: "#28344d",
+      shade500: "#627496",
+      shade600: "#627496",
+      shade700: "#DCE0E8",
+      shade800: "#DCE0E8",
+      shade900: "#F7F7F7",
     },
     fontFamilies: {
       base: "var(--font-plex-sans)",
     },
+  },
+  locale: {
+    uploadFileBtn: "Upload an image",
+    orDragDropFile: "...or drag and drop an image here",
   },
 };
 
