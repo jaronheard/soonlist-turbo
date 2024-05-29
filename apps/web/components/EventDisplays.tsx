@@ -54,6 +54,7 @@ import { ShareButton } from "./ShareButton";
 import { UserAllEventsCard } from "./UserAllEventsCard";
 
 interface EventListItemProps {
+  list?: List;
   variant?: "card";
   user?: User;
   eventFollows: EventFollow[];
@@ -426,6 +427,7 @@ function EventDetails({
   preview,
   EventActionButtons,
   metadata,
+  variant,
 }: {
   id: string;
   name: string;
@@ -440,6 +442,7 @@ function EventDetails({
   EventActionButtons?: React.ReactNode;
   preview?: boolean;
   metadata?: EventMetadataDisplay;
+  variant?: "minimal";
 }) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
@@ -528,7 +531,7 @@ function EventDetails({
         <div className="pt-2">
           <EventDescription description={description} truncate />
         </div>
-        {!preview && (
+        {/* {!preview && (
           <Link
             href={`/event/${id}`}
             className={cn(
@@ -539,7 +542,7 @@ function EventDetails({
             Learn more{" "}
             <ArrowRight className="ml-1 size-4 text-interactive-2 " />
           </Link>
-        )}
+        )} */}
         {preview && (
           <div className="w-full">
             <EventMetadataDisplay metadata={metadata} />
@@ -577,6 +580,7 @@ function EventDescription({
 }
 
 function EventActionButtons({
+  list,
   user,
   event,
   id,
@@ -584,6 +588,7 @@ function EventActionButtons({
   // isFollowing,
   visibility,
 }: {
+  list?: List;
   user?: User;
   event: AddToCalendarButtonPropsRestricted;
   id: string;
@@ -599,12 +604,12 @@ function EventActionButtons({
     <div className="flex w-full flex-wrap items-center gap-3">
       <div className="flex grow items-center justify-between">
         {visibility !== "private" && (
-          <Link
-            className="text-lg font-medium leading-none text-neutral-2"
-            href={`/${user.username}/events`}
-          >
-            added by @{user.username}
-          </Link>
+          <ListCard
+            name={list?.name || "All Events"}
+            id={list?.id}
+            username={user.username}
+            variant="minimal"
+          />
         )}
         {visibility === "private" && (
           <div className="text-lg font-medium leading-none text-neutral-1">
@@ -707,9 +712,10 @@ export function EventListItem(props: EventListItemProps) {
               endTime={event.endTime!}
               timezone={event.timeZone || "America/Los_Angeles"}
               location={event.location}
-              description={event.description}
+              // description={event.description}
               EventActionButtons={
                 <EventActionButtons
+                  list={props.list}
                   user={user}
                   event={event as AddToCalendarButtonPropsRestricted}
                   id={id}
