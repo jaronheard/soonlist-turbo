@@ -326,14 +326,6 @@ function EventMetadataDisplay({
 
   return (
     <div className="relative -m-2 my-3 grid grid-cols-2 gap-x-1 gap-y-3 rounded-2xl border border-interactive-2 p-4 py-6 text-neutral-2 md:grid-cols-4">
-      <Badge
-        className="absolute -top-3 left-1/2 -translate-x-1/2 hover:cursor-pointer"
-        variant={"secondary"}
-        onClick={() => feedback("Event Metadata")}
-      >
-        <Sparkles size={16} className="mr-1" />
-        Experimental
-      </Badge>
       <SignedIn>
         <Badge
           className="absolute -bottom-3 left-1/2 -translate-x-1/2 hover:cursor-pointer"
