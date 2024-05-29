@@ -4,6 +4,7 @@ import type { z } from "zod";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  CalendarPlus,
   CheckCircle2,
   CircleDashed,
   Globe,
@@ -79,10 +80,10 @@ export function UserProfileForm({
 
   const updateAdditionalInfo = api.user.updateAdditionalInfo.useMutation({
     onError: () => {
-      toast.error("Bio and public contact info not saved. Please try again.");
+      toast.error("Public profile not saved. Please try again.");
     },
     onSuccess: () => {
-      toast.success("Bio and public contact info saved.");
+      toast.success("Public profile saved.");
       router.refresh();
       onSubmitSuccess();
     },
@@ -194,7 +195,10 @@ export function UserProfileForm({
             </div>
           </CardContent>
         </Card>
-        <Button type="submit">Add Your First Event</Button>
+        <Button type="submit" size="lg">
+          <CalendarPlus className="mr-2 size-4"></CalendarPlus>
+          Add your first event
+        </Button>
       </form>
     </Form>
   );

@@ -58,10 +58,6 @@ export function TextEventForm({
           or{" "}
           <Link href="/jaronheard/events" className="font-bold text-slate-900">
             list
-          </Link>{" "}
-          or{" "}
-          <Link href="/onboarding" className="font-bold text-slate-900">
-            learn more
           </Link>
           .
         </span>
