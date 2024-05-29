@@ -25,7 +25,7 @@ export async function generateMetadata(
     openGraph: {
       title: `All users`,
       description: `See all users on  Soonlist`,
-      url: `${process.env.NEXT_PUBLIC_VERCEL_URL}/users`,
+      url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/users`,
       type: "article",
       images: [...previousImages],
     },
