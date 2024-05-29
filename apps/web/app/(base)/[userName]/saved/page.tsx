@@ -39,7 +39,7 @@ export async function generateMetadata(
     openGraph: {
       title: `@${params.userName}'s saved (${futureEventsCount} upcoming events)`,
       description: `See the events that @${params.userName} has saved on  Soonlist`,
-      url: `${process.env.NEXT_PUBLIC_VERCEL_URL}/${params.userName}/saved`,
+      url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/saved`,
       type: "article",
       images: [...previousImages],
     },

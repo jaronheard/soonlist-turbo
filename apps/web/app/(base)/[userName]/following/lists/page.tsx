@@ -24,7 +24,7 @@ export async function generateMetadata(
     openGraph: {
       title: `@${params.userName} is following (${listCount} lists)`,
       description: `See the lists @${params.userName} is following on  Soonlist`,
-      url: `${process.env.NEXT_PUBLIC_VERCEL_URL}/${params.userName}/following/users`,
+      url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/following/users`,
       type: "article",
       images: [...previousImages],
     },
