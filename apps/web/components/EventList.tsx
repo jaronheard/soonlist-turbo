@@ -80,7 +80,7 @@ export function EventList({
   const showCurrentEvents = true;
   const variantToUse = variant === "card" ? "card" : undefined;
   const variantForListItems =
-    variant === "future-minimal" ? "minimal" : undefined;
+    variant === "future-minimal" ? "minimal" : variantToUse;
 
   return (
     <Accordion
