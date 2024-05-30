@@ -11,7 +11,7 @@ import {
   useClerk,
   useUser,
 } from "@clerk/nextjs";
-import { CalendarPlus, Menu } from "lucide-react";
+import { CalendarHeart, CalendarPlus, Globe2Icon, Menu } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
@@ -40,13 +40,6 @@ import {
 import { Logo } from "./Logo";
 import { TimezoneSelect } from "./TimezoneSelect";
 
-const newEvent: { title: string; href: string; description: string }[] = [
-  {
-    title: "New Event",
-    href: "/new",
-    description: "Add a new event",
-  },
-];
 const userEvents: { title: string; href: string; description: string }[] = [
   {
     title: "My Events",
@@ -116,79 +109,24 @@ export function Nav() {
       <NavigationMenuList className="flex gap-3">
         <SignedIn>
           <NavigationMenuItem className="hidden lg:block">
-            <NavigationMenuTrigger>Events</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <ul className="grid w-[300px] gap-3 p-4 sm:w-[400px]">
-                {newEvent.map((component) => (
-                  <ListItem
-                    key={component.title}
-                    title={component.title}
-                    href={component.href}
-                  >
-                    {component.description}
-                  </ListItem>
-                ))}
-                <Separator />
-                <SignedIn>
-                  {userEvents.map((component) => (
-                    <ListItem
-                      key={component.title}
-                      title={component.title}
-                      href={`/${user?.username}${component.href}`}
-                    >
-                      {component.description}
-                    </ListItem>
-                  ))}
-                </SignedIn>
-                {allEvents.map((component) => (
-                  <ListItem
-                    key={component.title}
-                    title={component.title}
-                    href={component.href}
-                  >
-                    {component.description}
-                  </ListItem>
-                ))}
-              </ul>
-            </NavigationMenuContent>
+            <Link href={`/${user?.username}/upcoming`} legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                <CalendarHeart className="mr-2 size-4" />
+                Upcoming
+              </NavigationMenuLink>
+            </Link>
           </NavigationMenuItem>
         </SignedIn>
         <SignedIn>
           <NavigationMenuItem className="hidden lg:block">
-            <NavigationMenuTrigger>Users</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <ul className="grid w-[300px] gap-3 p-4 sm:w-[400px]">
-                <SignedIn>
-                  {userFollowing.map((component) => (
-                    <ListItem
-                      key={component.title}
-                      title={component.title}
-                      href={`/${user?.username}${component.href}`}
-                    >
-                      {component.description}
-                    </ListItem>
-                  ))}
-                </SignedIn>
-                {allUsers.map((component) => (
-                  <ListItem
-                    key={component.title}
-                    title={component.title}
-                    href={component.href}
-                  >
-                    {component.description}
-                  </ListItem>
-                ))}
-              </ul>
-            </NavigationMenuContent>
+            <Link href={`/explore`} legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                <Globe2Icon className="mr-2 size-4" />
+                Explore
+              </NavigationMenuLink>
+            </Link>
           </NavigationMenuItem>
         </SignedIn>
-        <NavigationMenuItem className="hidden lg:block">
-          <Link href="/onboarding" legacyBehavior passHref>
-            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              About
-            </NavigationMenuLink>
-          </Link>
-        </NavigationMenuItem>
         <SignedOut>
           <NavigationMenuItem className="hidden lg:block">
             <Link href="/sign-in" legacyBehavior passHref>
