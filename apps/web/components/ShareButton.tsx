@@ -27,7 +27,7 @@ export function ShareButton(props: ShareButtonProps) {
         await navigator.share({
           title: `${props.event.name} | Soonlist`,
           text: shareText,
-          url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}`,
+          url: `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}`,
         });
         console.log("Event shared successfully");
       } catch (error) {
