@@ -2,7 +2,6 @@ import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
 
 import { EventList } from "~/components/EventList";
-import { ListCardsForUser } from "~/components/ListCardsForUser";
 import { UserInfo } from "~/components/UserInfo";
 import { api } from "~/trpc/server";
 
@@ -51,11 +50,11 @@ export async function generateMetadata(
 export default async function Page({ params }: Props) {
   const activeUser = await currentUser();
   const self = activeUser?.username === params.userName;
-  const events = await api.event.getForUser({
+  const events = await api.event.getUpcomingForUser({
     userName: params.userName,
   });
 
-  const pastEvents = events.filter((item) => item.endDateTime < new Date());
+  // const pastEvents = events.filter((item) => item.endDateTime < new Date());
 
   const currentEvents = events.filter(
     (item) => item.startDateTime < new Date() && item.endDateTime > new Date(),
@@ -65,9 +64,10 @@ export default async function Page({ params }: Props) {
   );
 
   return (
-    <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
+    <div className="mx-auto max-w-lg">
+      <UserInfo userName={params.userName} />
       <EventList
-        currentEvents={[]}
+        currentEvents={currentEvents}
         pastEvents={[]}
         futureEvents={futureEvents}
         hideCurator

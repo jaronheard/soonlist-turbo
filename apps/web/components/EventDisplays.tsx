@@ -6,7 +6,6 @@ import Link from "next/link";
 import { SignedIn, useUser } from "@clerk/nextjs";
 import {
   Accessibility,
-  ArrowRight,
   CalendarIcon,
   Ear,
   EyeOff,
@@ -15,7 +14,6 @@ import {
   Mic,
   PersonStanding,
   ShieldPlus,
-  Sparkles,
   TagIcon,
 } from "lucide-react";
 
@@ -35,7 +33,6 @@ import {
   timeFormatDateInfo,
 } from "@soonlist/cal";
 import { Badge } from "@soonlist/ui/badge";
-import { buttonVariants } from "@soonlist/ui/button";
 import { Label } from "@soonlist/ui/label";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
@@ -55,7 +52,7 @@ import { UserAllEventsCard } from "./UserAllEventsCard";
 
 interface EventListItemProps {
   list?: List;
-  variant?: "card";
+  variant?: "card" | "minimal";
   user?: User;
   eventFollows: EventFollow[];
   comments: Comment[];
@@ -70,6 +67,7 @@ interface EventListItemProps {
     similarityDetails: SimilarityDetails;
   }[];
   filePath?: string;
+  happeningNow?: boolean;
 }
 
 interface EventPageProps {
@@ -427,7 +425,6 @@ function EventDetails({
   preview,
   EventActionButtons,
   metadata,
-  variant,
 }: {
   id: string;
   name: string;
@@ -580,36 +577,40 @@ function EventDescription({
 }
 
 function EventActionButtons({
-  list,
   user,
   event,
   id,
   isOwner,
   // isFollowing,
   visibility,
+  variant,
 }: {
-  list?: List;
   user?: User;
   event: AddToCalendarButtonPropsRestricted;
   id: string;
   isOwner: boolean;
   isFollowing?: boolean;
   visibility: "public" | "private";
+  variant?: "minimal";
 }) {
   if (!user) {
     return null;
+  }
+
+  if (variant === "minimal") {
+    return <></>;
   }
 
   return (
     <div className="flex w-full flex-wrap items-center gap-3">
       <div className="flex grow items-center justify-between">
         {visibility !== "private" && (
-          <ListCard
-            name={list?.name || "All Events"}
-            id={list?.id}
-            username={user.username}
-            variant="minimal"
-          />
+          <Link
+            className="text-lg font-medium leading-none text-neutral-2"
+            href={`/${user.username}/events`}
+          >
+            added by @{user.username}
+          </Link>
         )}
         {visibility === "private" && (
           <div className="text-lg font-medium leading-none text-neutral-1">
@@ -680,9 +681,17 @@ export function EventListItem(props: EventListItemProps) {
         <li
           className={cn(
             "relative grid overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
-            { "lg:pl-16": !!image },
+            { "lg:pl-16": !!image, "bg-interactive-3": props.happeningNow },
           )}
         >
+          {props.happeningNow && (
+            <Badge
+              className="absolute bottom-2 right-2 max-w-fit"
+              variant="secondary"
+            >
+              Happening Now
+            </Badge>
+          )}
           {visibility === "private" && (
             <>
               <Badge className="max-w-fit" variant="destructive">
@@ -715,13 +724,13 @@ export function EventListItem(props: EventListItemProps) {
               // description={event.description}
               EventActionButtons={
                 <EventActionButtons
-                  list={props.list}
                   user={user}
                   event={event as AddToCalendarButtonPropsRestricted}
                   id={id}
                   isOwner={!!isOwner}
                   isFollowing={isFollowing}
                   visibility={props.visibility}
+                  variant={props.variant === "minimal" ? "minimal" : undefined}
                 />
               }
             />

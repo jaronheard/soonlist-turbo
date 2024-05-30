@@ -50,15 +50,6 @@ export function ListCard(props: {
             )}
             {props.name}
           </div>
-          <div className="ml-2 truncate text-xs text-neutral-2">
-            {props.id ? "curated by " : "by "}
-            <Link
-              className="font-semibold text-interactive-1"
-              href={`/${props.username}/events`}
-            >
-              @{props.username}
-            </Link>
-          </div>
         </div>
       </div>
     );

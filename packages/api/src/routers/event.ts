@@ -67,6 +67,30 @@ export const eventRouter = createTRPCRouter({
         .then((users) => users[0]?.events || []);
       return user;
     }),
+  getUpcomingForUser: publicProcedure
+    .input(z.object({ userName: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db.query.users
+        .findMany({
+          where: eq(users.username, input.userName),
+          with: {
+            events: {
+              where: gte(
+                events.startDateTime,
+                new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
+              ),
+              orderBy: [asc(events.startDateTime)],
+              with: {
+                eventFollows: true,
+                comments: true,
+                user: true,
+              },
+            },
+          },
+        })
+        .then((users) => users[0]?.events || []);
+      return user;
+    }),
   getCreatedForUser: publicProcedure
     .input(z.object({ userName: z.string() }))
     .query(({ ctx, input }) => {

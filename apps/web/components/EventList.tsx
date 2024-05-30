@@ -79,6 +79,8 @@ export function EventList({
     variant !== "future-minimal" && pastEventsToUse.length > 0;
   const showCurrentEvents = true;
   const variantToUse = variant === "card" ? "card" : undefined;
+  const variantForListItems =
+    variant === "future-minimal" ? "minimal" : undefined;
 
   return (
     <Accordion
@@ -103,7 +105,7 @@ export function EventList({
               <ListContainer variant={variantToUse}>
                 {pastEventsToUse.map(({ event: item, similarEvents }) => (
                   <EventListItem
-                    variant={variantToUse}
+                    variant={variantForListItems}
                     key={item.id}
                     user={item.user}
                     eventFollows={item.eventFollows}
@@ -124,14 +126,16 @@ export function EventList({
       )}
       {showCurrentEvents && currentEventsToUse.length > 0 && (
         <AccordionItem value="current-events" className="px-6">
-          <AccordionTrigger className="-mx-6 px-6">
-            <div className="flex w-full items-center justify-between">
-              Happening now
-              <span className="inline-flex items-center justify-center rounded-full bg-interactive-1 px-2 py-1 text-lg font-semibold leading-none text-white">
-                {currentEventsToUse.length}
-              </span>
-            </div>
-          </AccordionTrigger>
+          {variant !== "future-minimal" && (
+            <AccordionTrigger className="-mx-6 px-6">
+              <div className="flex w-full items-center justify-between">
+                Happening now
+                <span className="inline-flex items-center justify-center rounded-full bg-interactive-1 px-2 py-1 text-lg font-semibold leading-none text-white">
+                  {currentEventsToUse.length}
+                </span>
+              </div>
+            </AccordionTrigger>
+          )}
           <AccordionContent className="-mx-6 rounded-xl">
             {currentEventsToUse.length === 0 ? (
               <p className="mx-6 text-lg text-gray-500">No future events.</p>
@@ -139,7 +143,7 @@ export function EventList({
               <ListContainer variant={variantToUse}>
                 {currentEventsToUse.map(({ event: item, similarEvents }) => (
                   <EventListItem
-                    variant={variantToUse}
+                    variant={variantForListItems}
                     key={item.id}
                     user={item.user}
                     eventFollows={item.eventFollows}
@@ -151,6 +155,7 @@ export function EventList({
                     hideCurator={hideCurator}
                     showOtherCurators={showOtherCurators}
                     similarEvents={similarEvents}
+                    happeningNow={true}
                   />
                 ))}
               </ListContainer>
@@ -180,7 +185,7 @@ export function EventList({
             <ListContainer variant={variantToUse}>
               {futureEventsToUse.map(({ event: item, similarEvents }) => (
                 <EventListItem
-                  variant={variantToUse}
+                  variant={variantForListItems}
                   key={item.id}
                   user={item.user}
                   eventFollows={item.eventFollows}
