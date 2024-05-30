@@ -329,7 +329,7 @@ export default function Page() {
             <p className="text-center font-heading text-2xl font-bold text-gray-700">
               See it in action 👀
             </p>
-            <div className="relative mx-auto h-[31rem] w-[18rem] overflow-hidden rounded-xl border-4 border-accent-yellow bg-white md:px-6 lg:px-0">
+            <div className="relative mx-auto h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
               <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-update-cropped-update-v4.mp4" />
             </div>
           </div>
