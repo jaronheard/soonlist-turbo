@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   description: tagline,
   openGraph: {
     siteName: "Soonlist",
-    title: "Event lists for everybody",
+    title: "Organize possibilities",
     description,
     locale: "en_US",
     type: "website",
