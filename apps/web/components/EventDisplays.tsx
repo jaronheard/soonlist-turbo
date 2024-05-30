@@ -127,10 +127,16 @@ function EventDateDisplaySimple({
 
   return (
     <div className="flex flex-col items-center justify-center gap-3">
-      <div className="text-lg font-semibold uppercase leading-none text-neutral-2">
+      <div
+        className="text-lg font-semibold uppercase leading-none text-neutral-2"
+        suppressHydrationWarning
+      >
         {startDateInfo?.monthName.substring(0, 3)}
       </div>
-      <div className="font-heading text-4xl font-bold leading-none tracking-tighter text-neutral-1">
+      <div
+        className="font-heading text-4xl font-bold leading-none tracking-tighter text-neutral-1"
+        suppressHydrationWarning
+      >
         {startDateInfo?.day}
       </div>
     </div>
@@ -198,17 +204,15 @@ function EventDetailsCard({
       {/* duplicated with Event */}
       <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
         {isClient && eventTimesAreDefined(startTime, endTime) && (
-          <>
-            <div className="flex-wrap text-neutral-2">
-              {startDateInfo.dayOfWeek.substring(0, 3)}
-              {", "}
-              {startDateInfo.month}/{startDateInfo.day}/
-              {startDateInfo.year.toString().substring(2, 4)}{" "}
-              <span className="text-neutral-3">{"//"}</span>{" "}
-              {timeFormatDateInfo(startDateInfo)}-
-              {timeFormatDateInfo(endDateInfo)}
-            </div>
-          </>
+          <div className="flex-wrap text-neutral-2" suppressHydrationWarning>
+            {startDateInfo.dayOfWeek.substring(0, 3)}
+            {", "}
+            {startDateInfo.month}/{startDateInfo.day}/
+            {startDateInfo.year.toString().substring(2, 4)}{" "}
+            <span className="text-neutral-3">{"//"}</span>{" "}
+            {timeFormatDateInfo(startDateInfo)}-
+            {timeFormatDateInfo(endDateInfo)}
+          </div>
         )}
       </div>
       {/* end duplicated with Event */}
@@ -479,17 +483,15 @@ function EventDetails({
       {/* duplicated with Event */}
       <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
         {isClient && eventTimesAreDefined(startTime, endTime) && (
-          <>
-            <div className="flex-wrap text-neutral-2">
-              {startDateInfo.dayOfWeek.substring(0, 3)}
-              {", "}
-              {startDateInfo.month}/{startDateInfo.day}/
-              {startDateInfo.year.toString().substring(2, 4)}{" "}
-              <span className="text-neutral-3">{"//"}</span>{" "}
-              {timeFormatDateInfo(startDateInfo)}-
-              {timeFormatDateInfo(endDateInfo)}
-            </div>
-          </>
+          <div className="flex-wrap text-neutral-2" suppressHydrationWarning>
+            {startDateInfo.dayOfWeek.substring(0, 3)}
+            {", "}
+            {startDateInfo.month}/{startDateInfo.day}/
+            {startDateInfo.year.toString().substring(2, 4)}{" "}
+            <span className="text-neutral-3">{"//"}</span>{" "}
+            {timeFormatDateInfo(startDateInfo)}-
+            {timeFormatDateInfo(endDateInfo)}
+          </div>
         )}
       </div>
       {/* end duplicated with Event */}
@@ -914,17 +916,18 @@ export function EventPage(props: EventPageProps) {
             {/* duplicated with EventListItem */}
             <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
               {isClient && eventTimesAreDefined(startTime, endTime) && (
-                <>
-                  <div className="shrink-0 text-neutral-2">
-                    {startDateInfo.dayOfWeek.substring(0, 3)}
-                    {", "}
-                    {startDateInfo.month}/{startDateInfo.day}/
-                    {startDateInfo.year.toString().substring(2, 4)}{" "}
-                    <span className="text-neutral-3">{"//"}</span>{" "}
-                    {timeFormatDateInfo(startDateInfo)}-
-                    {timeFormatDateInfo(endDateInfo)}
-                  </div>
-                </>
+                <div
+                  className="shrink-0 text-neutral-2"
+                  suppressHydrationWarning
+                >
+                  {startDateInfo.dayOfWeek.substring(0, 3)}
+                  {", "}
+                  {startDateInfo.month}/{startDateInfo.day}/
+                  {startDateInfo.year.toString().substring(2, 4)}{" "}
+                  <span className="text-neutral-3">{"//"}</span>{" "}
+                  {timeFormatDateInfo(startDateInfo)}-
+                  {timeFormatDateInfo(endDateInfo)}
+                </div>
               )}
             </div>
             {/* end duplicated with EventListItem */}
