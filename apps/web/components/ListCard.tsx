@@ -27,7 +27,34 @@ export function ListCard(props: {
   username: string;
   className?: string;
   visibility?: "public" | "private";
+  variant?: "minimal";
 }) {
+  if (props.variant === "minimal") {
+    return (
+      <div className="inline-flex items-center overflow-hidden rounded-lg border-2 border-accent-yellow bg-interactive-2">
+        <Link
+          href={props.id ? `/list/${props.id}` : `/${props.username}/events`}
+          className={clsx(
+            getRainbowColorFromString(props.name),
+            "flex h-10 w-10 items-center justify-center rounded-l-md text-lg font-bold text-white",
+          )}
+        >
+          {getInitialsFromString(props.name)}
+        </Link>
+        <div className="flex min-w-0 flex-1 items-center px-3">
+          <div className="truncate text-sm font-medium text-interactive-1">
+            {props.visibility === "private" ? (
+              <EyeOff className="mr-1 inline h-3 w-3" />
+            ) : (
+              ""
+            )}
+            {props.name}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
