@@ -1,13 +1,25 @@
 import { differenceInMinutes } from "date-fns";
 
-import type { Comment, Event, EventFollow, User } from "@soonlist/db/types";
+import type {
+  Comment,
+  Event,
+  EventFollow,
+  EventToLists,
+  List,
+  User,
+} from "@soonlist/db/types";
 
 import type { AddToCalendarButtonProps } from "./types";
+
+type EventToListsWithList = EventToLists & {
+  list: List;
+};
 
 export type EventWithUser = Event & {
   user: User;
   eventFollows: EventFollow[];
   comments: Comment[];
+  eventToLists?: EventToListsWithList[];
 };
 
 // Cosine Similarity Functions
