@@ -17,11 +17,9 @@ import { toast } from "sonner";
 import { Button, buttonVariants } from "@soonlist/ui/button";
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@soonlist/ui/navigation-menu";
 import { ScrollArea } from "@soonlist/ui/scroll-area";
@@ -33,47 +31,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./DropdownMenu";
 import { Logo } from "./Logo";
 import { TimezoneSelect } from "./TimezoneSelect";
-
-const userEvents: { title: string; href: string; description: string }[] = [
-  {
-    title: "My Events",
-    href: "/events",
-    description: "All events you have added or saved",
-  },
-  {
-    title: "Following",
-    href: "/following",
-    description: "All events from lists you are following",
-  },
-];
-
-const allEvents: { title: string; href: string; description: string }[] = [
-  {
-    title: "Discover",
-    href: "/explore",
-    description: "Discover events from all users",
-  },
-];
-const userFollowing: { title: string; href: string; description: string }[] = [
-  {
-    title: "Following",
-    href: "/following/users",
-    description: "Users you are following",
-  },
-];
-const allUsers: { title: string; href: string; description: string }[] = [
-  {
-    title: "Explore",
-    href: "/users",
-    description: "Explore all users",
-  },
-];
 
 export function Header() {
   return (
@@ -232,13 +194,44 @@ const UserMenu = () => {
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="flex flex-col gap-1">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <TimezoneSelect />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="flex items-center gap-2">
+          {user.imageUrl ? (
+            <Image
+              alt={"User"}
+              src={user.imageUrl}
+              width={32}
+              height={32}
+              className="size-8 rounded-full"
+            />
+          ) : (
+            <div className="size-8 rounded-full bg-gray-100"></div>
+          )}
+          <div className="text-lg font-medium text-neutral-2">
+            @{user.username}
+          </div>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => openUserProfile()}>
           Profile
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>Timezone</DropdownMenuLabel>
-        <TimezoneSelect />
+        <div className="p-1"></div>
+        {sideNav(user.username || "").map((item, index) => (
+          <div key={index} className="ml-2 flex flex-col space-y-3">
+            {item.items.length &&
+              item.items.map((item) => (
+                <React.Fragment key={item.href}>
+                  {item.href ? (
+                    <MobileLink href={item.href}>{item.title}</MobileLink>
+                  ) : (
+                    item.title
+                  )}
+                </React.Fragment>
+              ))}
+          </div>
+        ))}
+        <div className="p-1"></div>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>Sign Out</DropdownMenuItem>
       </DropdownMenuContent>
@@ -246,56 +239,18 @@ const UserMenu = () => {
   );
 };
 
-const mainNav = [
+const sideNav = (username: string) => [
   {
-    title: "About",
-    href: "/onboarding",
-    signedOutOnly: false,
-  },
-];
-
-const sideNav = (username?: string | null) => [
-  {
-    title: "Events",
     items: [
       {
-        title: "My Events",
-        href: `/${username!}/events`,
+        title: "My Events & Lists",
+        href: `/${username}/events`,
         signedInOnly: true,
       },
       {
         title: "Following",
-        href: `/${username!}/following`,
+        href: `/${username}/following`,
         signedInOnly: true,
-      },
-      {
-        title: "Discover",
-        href: "/explore",
-      },
-      // { title: "All", href: "/events", signedInOnly: true },
-      {
-        title: "Add",
-        href: "/new",
-      },
-    ],
-  },
-  {
-    title: "Users",
-    items: [
-      {
-        title: "Following",
-        href: `${username!}/following/users`,
-        signedInOnly: true,
-      },
-      // {
-      //   title: "All",
-      //   href: "/users",
-      //   signedInOnly: true,
-      // },
-      {
-        title: "Explore",
-        href: "/users",
-        signedOutOnly: true,
       },
     ],
   },
@@ -357,41 +312,47 @@ export function MobileNav() {
           </SignedIn>
           <Separator className="my-3" />
           <div className="flex flex-col space-y-3">
-            {mainNav.map(
-              (item) =>
-                item.href && (
-                  <MobileLink
-                    key={item.href}
-                    href={item.href}
-                    onOpenChange={setOpen}
-                    signedOutOnly={item.signedOutOnly}
-                  >
-                    {item.title}
-                  </MobileLink>
-                ),
-            )}
+            <MobileLink
+              key={"explore"}
+              href={`/${user?.username}/upcoming`}
+              onOpenChange={setOpen}
+              signedInOnly
+              className="flex items-center gap-2 text-interactive-1"
+            >
+              <CalendarHeart className="size-4" />
+              Upcoming
+            </MobileLink>
+            <MobileLink
+              key={"explore"}
+              href={"/explore"}
+              onOpenChange={setOpen}
+              signedInOnly
+              className="flex items-center gap-2 text-interactive-1"
+            >
+              <Globe2Icon className="size-4" />
+              Explore
+            </MobileLink>
           </div>
-          <div className="flex flex-col space-y-2">
-            {sideNav(user?.username).map((item, index) => (
-              <div key={index} className="flex flex-col space-y-3 pt-6">
-                <div className="text-lg font-medium text-neutral-2">
-                  {item.title}
+          <SignedIn>
+            <div className="flex flex-col space-y-2">
+              {sideNav(user?.username || "").map((item, index) => (
+                <div key={index} className="flex flex-col space-y-3">
+                  {item.items.length &&
+                    item.items.map((item) => (
+                      <React.Fragment key={item.href}>
+                        {item.href ? (
+                          <MobileLink href={item.href} onOpenChange={setOpen}>
+                            {item.title}
+                          </MobileLink>
+                        ) : (
+                          item.title
+                        )}
+                      </React.Fragment>
+                    ))}
                 </div>
-                {item.items.length &&
-                  item.items.map((item) => (
-                    <React.Fragment key={item.href}>
-                      {item.href ? (
-                        <MobileLink href={item.href} onOpenChange={setOpen}>
-                          {item.title}
-                        </MobileLink>
-                      ) : (
-                        item.title
-                      )}
-                    </React.Fragment>
-                  ))}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </SignedIn>
           <Separator className="my-3" />
           <SignedOut>
             <SignUpButton>
