@@ -51,7 +51,7 @@ import { ShareButton } from "./ShareButton";
 import { UserAllEventsCard } from "./UserAllEventsCard";
 
 interface EventListItemProps {
-  list?: List;
+  list?: List; // this is the list that this is a part of
   variant?: "card" | "minimal";
   user?: User;
   eventFollows: EventFollow[];
@@ -68,6 +68,7 @@ interface EventListItemProps {
   }[];
   filePath?: string;
   happeningNow?: boolean;
+  lists?: List[]; // this is all lists that this event is a part of
 }
 
 interface EventPageProps {
@@ -586,6 +587,7 @@ function EventActionButtons({
   // isFollowing,
   visibility,
   variant,
+  size,
 }: {
   user?: User;
   event: AddToCalendarButtonPropsRestricted;
@@ -593,14 +595,37 @@ function EventActionButtons({
   isOwner: boolean;
   isFollowing?: boolean;
   visibility: "public" | "private";
-  variant?: "minimal";
+  variant?: "none" | "minimal";
+  size?: "sm";
 }) {
   if (!user) {
     return null;
   }
+  if (variant === "none") {
+    return <></>;
+  }
 
   if (variant === "minimal") {
-    return <></>;
+    const scale =
+      size === "sm" ? "transform scale-[0.55] origin-bottom-right" : "";
+    return (
+      <div className={cn("flex w-full flex-wrap items-center gap-3", scale)}>
+        <CalendarButton
+          type="icon"
+          event={event as ATCBActionEventConfig}
+          id={id}
+          username={user.username}
+        />
+        <ShareButton type="icon" event={event} id={id} />
+        {/* <FollowEventDropdownButton eventId={id} following={isFollowing} /> */}
+        {isOwner && (
+          <>
+            <EditButton type="icon" userId={user.id} id={id} />
+            <DeleteButton type="icon" userId={user.id} id={id} />
+          </>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -652,7 +677,7 @@ function EventActionButtons({
 
 export function EventListItem(props: EventListItemProps) {
   const { user: clerkUser } = useUser();
-  const { user, eventFollows, id, event, filePath, visibility } = props;
+  const { user, eventFollows, id, event, filePath, visibility, lists } = props;
   const roles = clerkUser?.unsafeMetadata.roles as string[] | undefined;
   const isSelf =
     clerkUser?.id === user?.id || clerkUser?.externalId === user?.id;
@@ -666,7 +691,7 @@ export function EventListItem(props: EventListItemProps) {
   // const showOtherCurators = !isSelf && props.showOtherCurators;
   // const showCurator = showOtherCurators || !props.hideCurator;
 
-  if (props.variant !== "card") {
+  if (!props.variant || props.variant === "minimal") {
     return (
       <div className="relative">
         {image && (
@@ -686,21 +711,40 @@ export function EventListItem(props: EventListItemProps) {
             { "lg:pl-16": !!image, "bg-interactive-3": props.happeningNow },
           )}
         >
-          {props.happeningNow && (
-            <Badge
-              className="absolute bottom-2 right-2 max-w-fit"
-              variant="secondary"
-            >
-              Happening Now
-            </Badge>
-          )}
-          {visibility === "private" && (
-            <>
-              <Badge className="max-w-fit" variant="destructive">
-                Unlisted Event
-              </Badge>
-              <div className="p-2"></div>
-            </>
+          <div className="absolute bottom-2 left-2 z-10 flex gap-1 p-1">
+            {user &&
+              lists &&
+              lists.length > 0 &&
+              lists.map((list) => (
+                <ListCard
+                  key={list.id}
+                  name={list.name}
+                  id={list.id}
+                  username={user.username}
+                  visibility={list.visibility}
+                  variant="badge"
+                ></ListCard>
+              ))}
+            {visibility === "private" && (
+              <Badge variant="destructive">Unlisted Event</Badge>
+            )}
+            {props.happeningNow && (
+              <Badge variant="secondary">Happening Now</Badge>
+            )}
+          </div>
+          {props.variant === "minimal" && (
+            <div className="absolute bottom-2 right-2 z-10 p-1">
+              <EventActionButtons
+                user={user}
+                event={event as AddToCalendarButtonPropsRestricted}
+                id={id}
+                isOwner={!!isOwner}
+                isFollowing={isFollowing}
+                visibility={props.visibility}
+                variant="minimal"
+                size="sm"
+              />
+            </div>
           )}
           <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
           <div className="absolute right-0 top-0 p-3">
@@ -732,7 +776,7 @@ export function EventListItem(props: EventListItemProps) {
                   isOwner={!!isOwner}
                   isFollowing={isFollowing}
                   visibility={props.visibility}
-                  variant={props.variant === "minimal" ? "minimal" : undefined}
+                  variant={props.variant === "minimal" ? "none" : undefined}
                 />
               }
             />
