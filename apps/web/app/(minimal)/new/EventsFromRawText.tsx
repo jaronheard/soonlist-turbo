@@ -9,6 +9,9 @@ import { EventsError } from "./EventsError";
 import { NewEventPreview } from "./NewEventPreview";
 
 const queryOptions = {
+  // only retry once
+  retry: 1,
+  retryDelay: 250,
   // don't refetch on mount, window focus, or reconnect
   refetchOnMount: false,
   refetchOnWindowFocus: false,
