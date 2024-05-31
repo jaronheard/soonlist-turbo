@@ -14,13 +14,9 @@ export default async function Page() {
   );
   return (
     <>
-      <div className="p-4"></div>
       <h1 className="font-heading text-6xl font-bold leading-[0.875] tracking-tighterish text-gray-700 md:text-8xl md:leading-[0.875]">
         Discover
       </h1>
-      <p className="mt-6 max-w-[30rem] text-2xl leading-9 text-gray-400">
-        Discover events from early access users
-      </p>
       <EventList
         currentEvents={currentEvents}
         futureEvents={futureEvents}

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { EyeOff, SquareStack } from "lucide-react";
 
+import { Badge } from "@soonlist/ui/badge";
+
 import { cn } from "~/lib/utils";
 
 const colors = [
@@ -27,8 +29,22 @@ export function ListCard(props: {
   username: string;
   className?: string;
   visibility?: "public" | "private";
-  variant?: "minimal";
+  variant?: "minimal" | "badge";
 }) {
+  if (props.variant === "badge") {
+    return (
+      <Link href={props.id ? `/list/${props.id}` : `/${props.username}/events`}>
+        <Badge className="max-w-fit" variant={"secondary"}>
+          <SquareStack className="mr-1 size-2 text-interactive-1" />
+          {props.visibility === "private" && (
+            <EyeOff className="mr-1 inline size-2" />
+          )}
+          {props.name}
+        </Badge>
+      </Link>
+    );
+  }
+
   if (props.variant === "minimal") {
     return (
       <div className="inline-flex items-center overflow-hidden rounded-lg border-2 border-accent-yellow bg-interactive-2">
@@ -43,10 +59,8 @@ export function ListCard(props: {
         </Link>
         <div className="flex min-w-0 flex-1 items-center px-3">
           <div className="truncate text-sm font-medium text-interactive-1">
-            {props.visibility === "private" ? (
+            {props.visibility === "private" && (
               <EyeOff className="mr-1 inline h-3 w-3" />
-            ) : (
-              ""
             )}
             {props.name}
           </div>

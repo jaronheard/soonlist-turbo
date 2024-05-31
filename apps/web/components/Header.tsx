@@ -74,7 +74,7 @@ export function Nav() {
             <Link href={`/${user?.username}/upcoming`} legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 <CalendarHeart className="mr-2 size-4" />
-                Upcoming
+                My Feed
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
@@ -84,7 +84,7 @@ export function Nav() {
             <Link href={`/explore`} legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 <Globe2Icon className="mr-2 size-4" />
-                Explore
+                Discover
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
@@ -320,7 +320,7 @@ export function MobileNav() {
               className="flex items-center gap-2 text-interactive-1"
             >
               <CalendarHeart className="size-4" />
-              Upcoming
+              My Feed
             </MobileLink>
             <MobileLink
               key={"explore"}
@@ -330,10 +330,11 @@ export function MobileNav() {
               className="flex items-center gap-2 text-interactive-1"
             >
               <Globe2Icon className="size-4" />
-              Explore
+              Discover
             </MobileLink>
           </div>
           <SignedIn>
+            <div className="p-1.5"></div>
             <div className="flex flex-col space-y-2">
               {sideNav(user?.username || "").map((item, index) => (
                 <div key={index} className="flex flex-col space-y-3">

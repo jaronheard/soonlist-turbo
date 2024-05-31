@@ -1,7 +1,14 @@
 import { clsx } from "clsx";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
-import type { Comment, Event, EventFollow, User } from "@soonlist/db/types";
+import type {
+  Comment,
+  Event,
+  EventFollow,
+  EventToLists,
+  List,
+  User,
+} from "@soonlist/db/types";
 import { collapseSimilarEvents } from "@soonlist/cal";
 
 import {
@@ -37,10 +44,15 @@ function ListContainer({
   );
 }
 
+type EventToListsWithList = EventToLists & {
+  list: List;
+};
+
 export type EventWithUser = Event & {
   user: User;
   eventFollows: EventFollow[];
   comments: Comment[];
+  eventToLists?: EventToListsWithList[];
 };
 
 export function EventList({
@@ -113,6 +125,7 @@ export function EventList({
                     id={item.id}
                     event={item.event as AddToCalendarButtonPropsRestricted}
                     visibility={item.visibility}
+                    lists={item.eventToLists?.map((list) => list.list)}
                     createdAt={item.createdAt}
                     hideCurator={hideCurator}
                     showOtherCurators={showOtherCurators}
@@ -151,6 +164,7 @@ export function EventList({
                     id={item.id}
                     event={item.event as AddToCalendarButtonPropsRestricted}
                     visibility={item.visibility}
+                    lists={item.eventToLists?.map((list) => list.list)}
                     createdAt={item.createdAt}
                     hideCurator={hideCurator}
                     showOtherCurators={showOtherCurators}
@@ -193,6 +207,7 @@ export function EventList({
                   id={item.id}
                   event={item.event as AddToCalendarButtonPropsRestricted}
                   visibility={item.visibility}
+                  lists={item.eventToLists?.map((list) => list.list)}
                   createdAt={item.createdAt}
                   hideCurator={hideCurator}
                   showOtherCurators={showOtherCurators}
