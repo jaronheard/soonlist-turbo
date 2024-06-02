@@ -46,7 +46,7 @@ export function EventsFromRawText({
       <>
         <EventsError rawText={rawText} response={response || undefined} />
         <div className="p-4"></div>
-        <AddToCalendarCard {...blankEvent} />
+        <AddToCalendarCard {...blankEvent} hideFloatingActionButtons />
       </>
     );
   }

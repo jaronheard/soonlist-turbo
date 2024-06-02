@@ -46,6 +46,7 @@ export type AddToCalendarCardProps = AddToCalendarButtonType & {
   setAddToCalendarButtonProps?: (props: AddToCalendarButtonType) => void;
   eventMetadata?: EventMetadata;
   onUpdate?: (props: AddToCalendarButtonType) => void;
+  hideFloatingActionButtons?: boolean;
 };
 
 export function AddToCalendarCard({
@@ -474,8 +475,8 @@ export function AddToCalendarCard({
             onChange={(e) => setLink(e.target.value)}
           />
         </div>
-        {!initialProps.onUpdate && (
-          <div className="flex gap-3">
+        {!initialProps.onUpdate && !initialProps.hideFloatingActionButtons && (
+          <div className="fixed bottom-4 left-1/2 flex -translate-x-1/2 transform gap-3">
             {!initialProps.update && (
               <SaveButton
                 notes={notes}
