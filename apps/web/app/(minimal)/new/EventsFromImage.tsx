@@ -50,7 +50,7 @@ export function EventsFromImage({
           response={response || undefined}
         />
         <div className="p-4"></div>
-        <AddToCalendarCard {...blankEvent} />
+        <AddToCalendarCard {...blankEvent} hideFloatingActionButtons />
       </>
     );
   }

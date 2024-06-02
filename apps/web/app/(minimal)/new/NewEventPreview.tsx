@@ -23,7 +23,11 @@ export function NewEventPreview(initialProps: AddToCalendarCardProps) {
   if (mode === Mode.Edit) {
     return (
       <div className="pb-4">
-        <AddToCalendarCard {...event} onUpdate={setEvent} />
+        <AddToCalendarCard
+          {...event}
+          onUpdate={setEvent}
+          hideFloatingActionButtons
+        />
       </div>
     );
   }
