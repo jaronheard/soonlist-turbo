@@ -79,7 +79,7 @@ export const aiRouter = createTRPCRouter({
           {
             model: openai(MODEL),
             mode: "json",
-            temperature: 0,
+            temperature: 0.2,
             maxRetries: 0,
             messages: [
               { role: "system", content: system.text },
@@ -98,13 +98,13 @@ export const aiRouter = createTRPCRouter({
           {
             model: openai(MODEL),
             mode: "json",
-            temperature: 0,
+            temperature: 0.2,
             maxRetries: 0,
             messages: [
               { role: "system", content: systemMetadata.text },
               {
                 role: "user",
-                content: `${prompt.text} Input: """
+                content: `${prompt.textMetadata} Input: """
               ${input.rawText}
               """`,
               },
@@ -132,6 +132,8 @@ export const aiRouter = createTRPCRouter({
       const system = getSystemMessage();
       const systemMetadata = getSystemMessageMetadata();
       const prompt = getPrompt(input.timezone);
+
+      console.log("systemMetadata", systemMetadata);
 
       // START - duplicated except for input with eventFromRawText
       const generateObjectWithLogging = async <T>(
@@ -176,7 +178,7 @@ export const aiRouter = createTRPCRouter({
           {
             model: openai(MODEL),
             mode: "json",
-            temperature: 0,
+            temperature: 0.2,
             maxRetries: 0,
             messages: [
               { role: "system", content: system.text },
@@ -202,13 +204,13 @@ export const aiRouter = createTRPCRouter({
           {
             model: openai(MODEL),
             mode: "json",
-            temperature: 0,
+            temperature: 0.2,
             maxRetries: 0,
             messages: [
               { role: "system", content: systemMetadata.text },
               {
                 role: "user",
-                content: prompt.text,
+                content: prompt.textMetadata,
               },
               {
                 role: "user",
