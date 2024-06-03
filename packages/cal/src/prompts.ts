@@ -259,6 +259,7 @@ Stylistically write in short, approachable, and professional language, like an e
 Stick to known facts, and be concise. Use proper capitalization for all fields.
 No new adjectives/adverbs not in source text. No editorializing. No fluff. Nothing should be described as "engaging", "compelling", etc...
 Avoid using phrases like 'join us,' 'come celebrate,' or any other invitations. Instead, maintain a neutral and descriptive tone. For example, instead of saying 'Join a family-friendly bike ride,' describe it as 'A family-friendly bike ride featuring murals, light installations, and a light-up dance party.'"
+Use they/them pronouns when referring to people whose gender is not explicitly stated.
 `;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -288,7 +289,7 @@ export const getPrompt = (timezone = "America/Los_Angeles") => {
   return {
     text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2024.06.02.4",
+    version: "v2024.06.02.5",
   };
 };
 
