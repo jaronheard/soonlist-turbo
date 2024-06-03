@@ -85,7 +85,7 @@ export function ListCard(props: {
       >
         {getInitialsFromString(props.name)}
       </Link>
-      <div className="flex min-w-0 grow flex-col gap-1 p-5">
+      <div className="flex min-w-0 grow flex-col gap-1 overflow-hidden p-5">
         <Link
           href={props.id ? `/list/${props.id}` : `/${props.username}/events`}
           className="flex justify-between"
@@ -103,7 +103,7 @@ export function ListCard(props: {
         <div className="truncate text-lg font-medium leading-none text-neutral-2">
           {props.id ? "curated by " : "by "}
           <Link
-            className="font-semibold text-interactive-1"
+            className="inline font-semibold text-interactive-1"
             href={`/${props.username}/events`}
           >
             @{props.username}
