@@ -10,6 +10,7 @@ import {
   EventSchema,
   getPrompt,
   getSystemMessage,
+  getSystemMessageMetadata,
 } from "@soonlist/cal";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -32,6 +33,7 @@ export const aiRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const system = getSystemMessage();
+      const systemMetadata = getSystemMessageMetadata();
       const prompt = getPrompt(input.timezone);
 
       // START - duplicated except for input with eventFromImage
@@ -77,7 +79,7 @@ export const aiRouter = createTRPCRouter({
           {
             model: openai(MODEL),
             mode: "json",
-            temperature: 0.2,
+            temperature: 0,
             maxRetries: 0,
             messages: [
               { role: "system", content: system.text },
@@ -96,10 +98,10 @@ export const aiRouter = createTRPCRouter({
           {
             model: openai(MODEL),
             mode: "json",
-            temperature: 0.2,
+            temperature: 0,
             maxRetries: 0,
             messages: [
-              { role: "system", content: system.text },
+              { role: "system", content: systemMetadata.text },
               {
                 role: "user",
                 content: `${prompt.text} Input: """
@@ -128,6 +130,7 @@ export const aiRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const system = getSystemMessage();
+      const systemMetadata = getSystemMessageMetadata();
       const prompt = getPrompt(input.timezone);
 
       // START - duplicated except for input with eventFromRawText
@@ -173,7 +176,7 @@ export const aiRouter = createTRPCRouter({
           {
             model: openai(MODEL),
             mode: "json",
-            temperature: 0.2,
+            temperature: 0,
             maxRetries: 0,
             messages: [
               { role: "system", content: system.text },
@@ -197,12 +200,12 @@ export const aiRouter = createTRPCRouter({
         ),
         generateObjectWithLogging(
           {
-            model: openai("gpt-4o"),
+            model: openai(MODEL),
             mode: "json",
-            temperature: 0.2,
+            temperature: 0,
             maxRetries: 0,
             messages: [
-              { role: "system", content: system.text },
+              { role: "system", content: systemMetadata.text },
               {
                 role: "user",
                 content: prompt.text,

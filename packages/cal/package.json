@@ -22,11 +22,12 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@soonlist/db": "workspace:*",
     "@js-temporal/polyfill": "^0.4.4",
+    "@soonlist/db": "workspace:*",
     "date-fns": "^3.6.0",
     "timezone-soft": "^1.5.2",
-    "zod": "^3.23.0"
+    "zod": "^3.23.0",
+    "zod-to-json-schema": "^3.23.0"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",
