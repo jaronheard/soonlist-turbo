@@ -1,6 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import soft from "timezone-soft";
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 // parse the response text into array of events. response format is:
 interface Response {
@@ -213,8 +214,20 @@ export const addCommonAddToCalendarPropsFromResponse = (response: string) => {
   return addCommonAddToCalendarProps(events);
 };
 
-export const systemMessage = () =>
-  `You are an AI assistant that extracts calendar event details from text or images. Provide structured outputs in JSON format, strictly following the schema provided. Ensure that all enum fields contain only valid values as specified in the schema. If a valid enum value cannot be determined, omit the field entirely. For non-enum fields, omit them if they are undefined or cannot be reasonably inferred from the given data. Make reasonable assumptions when needed, but prioritize facts and direct information backed by the given data or logical inference. Acknowledge uncertainties and avoid unsupported statements. Keep responses concise, clear, and relevant.`;
+export const eventMetadataSchemaAsText = JSON.stringify(
+  zodToJsonSchema(EventMetadataSchema),
+);
+
+export const systemMessage = (shema?: string) =>
+  `You are an AI assistant that extracts calendar event details from text or images. Provide structured outputs in JSON format, strictly following the schema provided. For enum fields, only use values explicitly defined in the schema. If a valid enum value cannot be confidently determined, set the field to undefined. For non-enum fields, set them to undefined if the information is not directly stated, cannot be logically inferred with high confidence, or the inferred value does not match the expected data type. Never populate fields with assumed or uncertain values. Make reasonable assumptions only when absolutely necessary, prioritizing facts and direct information supported by the given data. Clearly acknowledge any uncertainties or missing information. Keep responses concise, focusing solely on extracting and structuring the available event details. Avoid including unsupported statements or extra commentary.
+  ${
+    shema
+      ? `
+    The schema is as follows:
+    ${shema}
+      `
+      : ``
+  }`;
 
 export const getText = (date: string, timezone: string) => `# CONTEXT
 The current date is ${date}, and the default timezone is ${timezone} unless specified otherwise.
@@ -248,13 +261,20 @@ export const getPrompt = (timezone = "America/Los_Angeles") => {
 
   return {
     text: getText(date, timezoneIANA),
-    version: "v2024.5.14.1",
+    version: "v2024.06.02.1",
   };
 };
 
 export const getSystemMessage = () => {
   return {
     text: systemMessage(),
-    version: "v2024.03.16.1",
+    version: "v2024.06.02.1",
+  };
+};
+
+export const getSystemMessageMetadata = () => {
+  return {
+    text: systemMessage(eventMetadataSchemaAsText),
+    version: "v2024.06.02.1",
   };
 };

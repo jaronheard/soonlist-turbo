@@ -430,6 +430,9 @@ importers:
       zod:
         specifier: ^3.23.0
         version: 3.23.4
+      zod-to-json-schema:
+        specifier: ^3.23.0
+        version: 3.23.0(zod@3.23.4)
     devDependencies:
       '@soonlist/eslint-config':
         specifier: workspace:*
@@ -8620,6 +8623,11 @@ packages:
     resolution: {integrity: sha512-+akaPo6a0zpVCCseDed504KBJUQpEW5QZw7RMneNmKw+fGaML1Z9tUNLnHHAC8x6dzVRO1eB2oEMyZRnuBZg7Q==}
     peerDependencies:
       zod: ^3.22.4
+
+  zod-to-json-schema@3.23.0:
+    resolution: {integrity: sha512-az0uJ243PxsRIa2x1WmNE/pnuA05gUq/JB8Lwe1EDCCL/Fz9MgjYQ0fPlyc2Tcv6aF2ZA7WM5TWaRZVEFaAIag==}
+    peerDependencies:
+      zod: ^3.23.3
 
   zod@3.23.4:
     resolution: {integrity: sha512-/AtWOKbBgjzEYYQRNfoGKHObgfAZag6qUJX1VbHo2PRBgS+wfWagEY2mizjfyAPcGesrJOcx/wcl0L9WnVrHFw==}
@@ -17952,6 +17960,10 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   zod-to-json-schema@3.22.5(zod@3.23.4):
+    dependencies:
+      zod: 3.23.4
+
+  zod-to-json-schema@3.23.0(zod@3.23.4):
     dependencies:
       zod: 3.23.4
 
