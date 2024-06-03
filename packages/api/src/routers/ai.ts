@@ -57,20 +57,45 @@ export const aiRouter = createTRPCRouter({
         generation.update({
           completionStartTime: new Date(),
         });
-        const result = await generateObject(generateObjectOptions);
-        generation.end({
-          output: result.object,
-        });
-        generation.score({
-          name: "valid",
-          value: result.object === null ? 0 : 1,
-          comment: "Untested",
-        });
-        trace.update({
-          output: result.object,
-        });
-        waitUntil(langfuse.flushAsync());
-        return result;
+        try {
+          const result = await generateObject(generateObjectOptions);
+          generation.end({
+            output: result.object,
+          });
+          generation.score({
+            name: "eventToJson",
+            value: result.object === null ? 0 : 1,
+          });
+          trace.update({
+            output: result.object,
+            metadata: {
+              finishReason: result.finishReason,
+              logprobs: result.logprobs,
+              rawResponse: result.rawResponse,
+              warnings: result.warnings,
+            },
+          });
+          waitUntil(langfuse.flushAsync());
+          return result;
+        } catch (error) {
+          console.error(
+            "An error occurred while generating the response:",
+            error,
+          );
+          generation.score({
+            name: "eventToJson",
+            value: 0,
+          });
+          trace.update({
+            output: null,
+            metadata: {
+              finishReason: "error",
+              error: error,
+            },
+          });
+          waitUntil(langfuse.flushAsync());
+          throw error;
+        }
       };
       // END - duplicated except for input with eventFromImage
 
@@ -156,20 +181,46 @@ export const aiRouter = createTRPCRouter({
         generation.update({
           completionStartTime: new Date(),
         });
-        const result = await generateObject(generateObjectOptions);
-        generation.end({
-          output: result.object,
-        });
-        generation.score({
-          name: "valid",
-          value: result.object === null ? 0 : 1,
-          comment: "Untested",
-        });
-        trace.update({
-          output: result.object,
-        });
-        waitUntil(langfuse.flushAsync());
-        return result;
+        try {
+          const result = await generateObject(generateObjectOptions);
+          generation.end({
+            output: result.object,
+          });
+          generation.score({
+            name: "eventToJson",
+            value: result.object === null ? 0 : 1,
+            comment: "Untested",
+          });
+          trace.update({
+            output: result.object,
+            metadata: {
+              finishReason: result.finishReason,
+              logprobs: result.logprobs,
+              rawResponse: result.rawResponse,
+              warnings: result.warnings,
+            },
+          });
+          waitUntil(langfuse.flushAsync());
+          return result;
+        } catch (error) {
+          console.error(
+            "An error occurred while generating the response:",
+            error,
+          );
+          generation.score({
+            name: "eventToJson",
+            value: 0,
+          });
+          trace.update({
+            output: null,
+            metadata: {
+              finishReason: "error",
+              error: error,
+            },
+          });
+          waitUntil(langfuse.flushAsync());
+          throw error;
+        }
       };
       // END - duplicated except for input with eventFromRawText
 
