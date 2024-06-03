@@ -218,13 +218,25 @@ export const eventMetadataSchemaAsText = JSON.stringify(
   zodToJsonSchema(EventMetadataSchema),
 );
 
-export const systemMessage = (shema?: string) =>
-  `You are an AI assistant that extracts calendar event details from text or images. Provide structured outputs in JSON format, strictly following the schema provided. For enum fields, only use values explicitly defined in the schema. If a valid enum value cannot be confidently determined, set the field to undefined. For non-enum fields, set them to undefined if the information is not directly stated, cannot be logically inferred with high confidence, or the inferred value does not match the expected data type. Never populate fields with assumed or uncertain values. Make reasonable assumptions only when absolutely necessary, prioritizing facts and direct information supported by the given data. Clearly acknowledge any uncertainties or missing information. Keep responses concise, focusing solely on extracting and structuring the available event details. Avoid including unsupported statements or extra commentary.
+export const systemMessage = (schema?: string) =>
+  `You are an AI assistant that extracts calendar event details from text or images. Provide structured outputs in JSON format, strictly adhering to the provided schema. Non-conforming outputs will cause fatal errors.
+
+  **Schema Adherence:**
+  * **Only Valid Options**: Enum fields must only use values explicitly defined in the schema.
+  * **Omit Unknowns:** Omit fields if their values are undefined or cannot be reasonably inferred from the input.
+
+  **Reasoning and Assumptions:**
+
+  * Make reasonable assumptions when necessary, but prioritize facts and direct information from the input.
+  * Acknowledge any uncertainties and avoid making unsupported statements.
+
+  **Output Style:** Keep responses concise, clear, and relevant.
+
   ${
-    shema
+    schema
       ? `
-    The schema is as follows:
-    ${shema}
+    **Schema:** The schema is as follows:
+    ${schema}
       `
       : ``
   }`;
@@ -233,7 +245,7 @@ export const getText = (date: string, timezone: string) => `# CONTEXT
 The current date is ${date}, and the default timezone is ${timezone} unless specified otherwise.
 
 ## YOUR JOB
-Above, I pasted a text or image from which to extract calendar event details.
+Below, I pasted a text or image from which to extract calendar event details.
 
 You will
 1. Identify details of the primary event mentioned in the text or image.
@@ -249,6 +261,20 @@ No new adjectives/adverbs not in source text. No editorializing. No fluff. Nothi
 Avoid using phrases like 'join us,' 'come celebrate,' or any other invitations. Instead, maintain a neutral and descriptive tone. For example, instead of saying 'Join a family-friendly bike ride,' describe it as 'A family-friendly bike ride featuring murals, light installations, and a light-up dance party.'"
 `;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const getTextMetadata = (date: string, timezone: string) => `
+# YOUR JOB
+Below, I pasted a text or image from which to extract event metadata. 
+
+You will:
+1. Extract relevant metadata information from the event details.
+2. Generate values for the event metadata fields strictly adhering to the provided enums and schema.
+3. If a metadata field value is not explicitly mentioned or cannot be reasonably inferred from the event details, omit that field from the output.
+4. Format the event metadata as a valid JSON object, following the schema provided.
+
+Ensure that the generated metadata values are concise, relevant, and adhere to the schema requirements. Do not include any additional fields or values not specified in the schema.
+`;
+
 const formatOffsetAsIANASoft = (offset: string) => {
   const timezone = soft(offset)[0];
   return timezone?.iana || "America/Los_Angeles";
@@ -261,20 +287,21 @@ export const getPrompt = (timezone = "America/Los_Angeles") => {
 
   return {
     text: getText(date, timezoneIANA),
-    version: "v2024.06.02.1",
+    textMetadata: getTextMetadata(date, timezoneIANA),
+    version: "v2024.06.02.4",
   };
 };
 
 export const getSystemMessage = () => {
   return {
     text: systemMessage(),
-    version: "v2024.06.02.1",
+    version: "v2024.06.02.4",
   };
 };
 
 export const getSystemMessageMetadata = () => {
   return {
     text: systemMessage(eventMetadataSchemaAsText),
-    version: "v2024.06.02.1",
+    version: "v2024.06.02.4",
   };
 };

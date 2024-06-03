@@ -57,20 +57,45 @@ export const aiRouter = createTRPCRouter({
         generation.update({
           completionStartTime: new Date(),
         });
-        const result = await generateObject(generateObjectOptions);
-        generation.end({
-          output: result.object,
-        });
-        generation.score({
-          name: "valid",
-          value: result.object === null ? 0 : 1,
-          comment: "Untested",
-        });
-        trace.update({
-          output: result.object,
-        });
-        waitUntil(langfuse.flushAsync());
-        return result;
+        try {
+          const result = await generateObject(generateObjectOptions);
+          generation.end({
+            output: result.object,
+          });
+          generation.score({
+            name: "eventToJson",
+            value: result.object === null ? 0 : 1,
+          });
+          trace.update({
+            output: result.object,
+            metadata: {
+              finishReason: result.finishReason,
+              logprobs: result.logprobs,
+              rawResponse: result.rawResponse,
+              warnings: result.warnings,
+            },
+          });
+          waitUntil(langfuse.flushAsync());
+          return result;
+        } catch (error) {
+          console.error(
+            "An error occurred while generating the response:",
+            error,
+          );
+          generation.score({
+            name: "eventToJson",
+            value: 0,
+          });
+          trace.update({
+            output: null,
+            metadata: {
+              finishReason: "error",
+              error: error,
+            },
+          });
+          waitUntil(langfuse.flushAsync());
+          throw error;
+        }
       };
       // END - duplicated except for input with eventFromImage
 
@@ -79,7 +104,7 @@ export const aiRouter = createTRPCRouter({
           {
             model: openai(MODEL),
             mode: "json",
-            temperature: 0,
+            temperature: 0.2,
             maxRetries: 0,
             messages: [
               { role: "system", content: system.text },
@@ -98,13 +123,13 @@ export const aiRouter = createTRPCRouter({
           {
             model: openai(MODEL),
             mode: "json",
-            temperature: 0,
+            temperature: 0.2,
             maxRetries: 0,
             messages: [
               { role: "system", content: systemMetadata.text },
               {
                 role: "user",
-                content: `${prompt.text} Input: """
+                content: `${prompt.textMetadata} Input: """
               ${input.rawText}
               """`,
               },
@@ -133,6 +158,8 @@ export const aiRouter = createTRPCRouter({
       const systemMetadata = getSystemMessageMetadata();
       const prompt = getPrompt(input.timezone);
 
+      console.log("systemMetadata", systemMetadata);
+
       // START - duplicated except for input with eventFromRawText
       const generateObjectWithLogging = async <T>(
         generateObjectOptions: Parameters<typeof generateObject<T>>[0],
@@ -154,20 +181,46 @@ export const aiRouter = createTRPCRouter({
         generation.update({
           completionStartTime: new Date(),
         });
-        const result = await generateObject(generateObjectOptions);
-        generation.end({
-          output: result.object,
-        });
-        generation.score({
-          name: "valid",
-          value: result.object === null ? 0 : 1,
-          comment: "Untested",
-        });
-        trace.update({
-          output: result.object,
-        });
-        waitUntil(langfuse.flushAsync());
-        return result;
+        try {
+          const result = await generateObject(generateObjectOptions);
+          generation.end({
+            output: result.object,
+          });
+          generation.score({
+            name: "eventToJson",
+            value: result.object === null ? 0 : 1,
+            comment: "Untested",
+          });
+          trace.update({
+            output: result.object,
+            metadata: {
+              finishReason: result.finishReason,
+              logprobs: result.logprobs,
+              rawResponse: result.rawResponse,
+              warnings: result.warnings,
+            },
+          });
+          waitUntil(langfuse.flushAsync());
+          return result;
+        } catch (error) {
+          console.error(
+            "An error occurred while generating the response:",
+            error,
+          );
+          generation.score({
+            name: "eventToJson",
+            value: 0,
+          });
+          trace.update({
+            output: null,
+            metadata: {
+              finishReason: "error",
+              error: error,
+            },
+          });
+          waitUntil(langfuse.flushAsync());
+          throw error;
+        }
       };
       // END - duplicated except for input with eventFromRawText
 
@@ -176,7 +229,7 @@ export const aiRouter = createTRPCRouter({
           {
             model: openai(MODEL),
             mode: "json",
-            temperature: 0,
+            temperature: 0.2,
             maxRetries: 0,
             messages: [
               { role: "system", content: system.text },
@@ -202,13 +255,13 @@ export const aiRouter = createTRPCRouter({
           {
             model: openai(MODEL),
             mode: "json",
-            temperature: 0,
+            temperature: 0.2,
             maxRetries: 0,
             messages: [
               { role: "system", content: systemMetadata.text },
               {
                 role: "user",
-                content: prompt.text,
+                content: prompt.textMetadata,
               },
               {
                 role: "user",
