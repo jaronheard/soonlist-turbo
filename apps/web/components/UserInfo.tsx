@@ -67,7 +67,7 @@ export async function UserInfo(props: UserInfoProps) {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex gap-6">
-          <Link href={`/${user.username}/events`}>
+          <Link href={`/${user.username}/events`} className="flex-shrink-0">
             <Image
               className="content-box size-20 rounded-full border-8 border-accent-yellow"
               src={user.userImage}
@@ -76,12 +76,12 @@ export async function UserInfo(props: UserInfoProps) {
               height={375}
             />
           </Link>
-          <div className="flex flex-col">
+          <div className="flex flex-col overflow-hidden">
             <Link href={`/${user.username}/events`}>
-              <p className="font-heading text-5xl font-bold leading-[3.5rem] tracking-tight text-neutral-1">
+              <p className="font-heading text-4xl font-bold leading-[2.5rem] tracking-tight text-neutral-1 sm:text-5xl sm:leading-[3.5rem]">
                 {user.displayName}
               </p>
-              <p className="text-2xl font-bold leading-normal tracking-wide">
+              <p className="truncate break-all text-xl font-bold leading-normal tracking-wide sm:text-2xl">
                 @{user.username}
               </p>
             </Link>

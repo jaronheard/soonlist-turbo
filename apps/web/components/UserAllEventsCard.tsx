@@ -19,11 +19,11 @@ export function UserAllEventsCard(props: {
         alt=""
         className="size-[5.375rem]"
       />
-      <div className="flex flex-col gap-1 p-5">
+      <div className="flex flex-col gap-1 overflow-hidden p-5">
         <div className="text-xl font-bold leading-6 tracking-wide text-interactive-1">
           All Events
         </div>
-        <div className="text-lg font-medium leading-none text-neutral-2">
+        <div className="truncate text-lg font-medium leading-none text-neutral-2">
           by{" "}
           <span className="font-semibold text-interactive-1">@{username}</span>
         </div>
