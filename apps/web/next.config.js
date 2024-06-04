@@ -10,7 +10,7 @@ const nextConfig = {
     "@soonlist/cal",
     "@soonlist/db",
     "@soonlist/ui",
-    "@acme/validators",
+    "@soonlist/validators",
   ],
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
