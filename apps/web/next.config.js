@@ -43,18 +43,16 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    return process.env.NODE_ENV === "production"
-      ? [
-          {
-            source: "/ingest/static/:path*",
-            destination: "https://us-assets.i.posthog.com/static/:path*",
-          },
-          {
-            source: "/ingest/:path*",
-            destination: "https://us.i.posthog.com/:path*",
-          },
-        ]
-      : [];
+    return [
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://us-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://us.i.posthog.com/:path*",
+      },
+    ];
   },
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
