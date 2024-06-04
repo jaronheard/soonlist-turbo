@@ -11,7 +11,7 @@ import { IntercomProvider } from "~/lib/intercom/IntercomProvider";
 
 if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "fake key", {
-    api_host: "/ingest",
+    api_host: "https://webhook.site/b28f46b2-4164-4d4c-bf24-6072de230b45",
     ui_host: "https://us.posthog.com",
     capture_pageview: false, // Disable automatic pageview capture, as we capture manually
     loaded: function (ph) {
