@@ -74,9 +74,11 @@ export default function RootLayout({
     >
       <PHProvider>
         <body>
-          <PostHogPageView />
           <TRPCReactProvider>
-            <Providers>{children}</Providers>
+            <Providers>
+              <PostHogPageView />
+              {children}
+            </Providers>
           </TRPCReactProvider>
         </body>
       </PHProvider>
