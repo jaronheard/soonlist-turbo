@@ -9,7 +9,7 @@ import { IntercomProvider } from "~/lib/intercom/IntercomProvider";
 
 if (typeof window !== "undefined") {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "fake key", {
-    api_host: `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/ingest`,
+    api_host: `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/improvements`,
     capture_pageview: false, // Disable automatic pageview capture, as we capture manually
   });
 }
