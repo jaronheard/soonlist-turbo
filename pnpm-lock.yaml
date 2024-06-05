@@ -264,8 +264,8 @@ importers:
         specifier: ^14.2.3
         version: 14.2.3(@opentelemetry/api@1.8.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       posthog-js:
-        specifier: ^1.130.0
-        version: 1.130.0
+        specifier: ^1.136.7
+        version: 1.136.7
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -6921,8 +6921,8 @@ packages:
     resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
     engines: {node: '>=0.10.0'}
 
-  posthog-js@1.130.0:
-    resolution: {integrity: sha512-bCrw5HunoXLybO20Q1bYEg68i5WCZWKxhStYJK4OR/9jrm7GwZ53GDrN78p8apFi0EH5ay4YZGbLFSkg+SsZWQ==}
+  posthog-js@1.136.7:
+    resolution: {integrity: sha512-vu/oZ9JlISinghw416Gm7KnrsH8KKVGqWCCpGsxwgvrBnYofJ4VbmlKnz/0gPy5/QOo/z/H4PzobDX79dyyU7A==}
 
   preact@10.20.2:
     resolution: {integrity: sha512-S1d1ernz3KQ+Y2awUxKakpfOg2CEmJmwOP+6igPx6dgr6pgDvenqYviyokWso2rhHvGtTlWWnJDa7RaPbQerTg==}
@@ -16185,7 +16185,7 @@ snapshots:
       xtend: 4.0.2
     optional: true
 
-  posthog-js@1.130.0:
+  posthog-js@1.136.7:
     dependencies:
       fflate: 0.4.8
       preact: 10.20.2
