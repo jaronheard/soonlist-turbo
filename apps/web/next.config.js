@@ -45,11 +45,11 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: "/improvements/static/:path*",
+        source: "/app/static/:path*",
         destination: "https://us-assets.i.posthog.com/static/:path*",
       },
       {
-        source: "/improvements/:path*",
+        source: "/app/:path*",
         destination: "https://us.i.posthog.com/:path*",
       },
     ];
