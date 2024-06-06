@@ -1,11 +1,12 @@
 "use client";
 
 import { Suspense } from "react";
+import Link from "next/link";
 import { CheckIcon } from "lucide-react";
 
 import { cn } from "@soonlist/ui";
 import { Badge, badgeVariants } from "@soonlist/ui/badge";
-import { Button } from "@soonlist/ui/button";
+import { Button, buttonVariants } from "@soonlist/ui/button";
 
 import { newMessage } from "~/lib/intercom/intercom";
 
@@ -35,18 +36,18 @@ export const NotaflofBadge = () => {
 export const tiers = [
   {
     name: "Free",
-    id: "tier-free",
+    id: "free",
     href: "#",
     priceMonthly: "$0",
     description: "A few lists for your public events.",
     features: ["Add up to 100 public events", "3 public event lists"],
     mostPopular: false,
     free: true,
-    soon: true,
+    soon: false,
   },
   {
     name: "Personal",
-    id: "tier-personal",
+    id: "personal",
     href: "#",
     priceMonthly: "$7",
     description: "Unlimited public and private events and lists.",
@@ -58,11 +59,11 @@ export const tiers = [
     ],
     mostPopular: true,
     free: false,
-    soon: true,
+    soon: false,
   },
   {
     name: "Pro (coming soon)",
-    id: "tier-pro",
+    id: "pro",
     href: "#",
     priceMonthly: "$35",
     description: "Customize, integrate, and brand your events and lists.",
@@ -79,7 +80,11 @@ export const tiers = [
   },
 ];
 
-export function Pricing() {
+export function Pricing({
+  checkoutUrls,
+}: {
+  checkoutUrls?: Record<string, string>;
+}) {
   return (
     <div className="relative isolate bg-white px-6 py-24 sm:py-32 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -160,13 +165,24 @@ export function Pricing() {
                 </ul>
               </div>
               <div className="mt-8">
-                <Button
-                  aria-describedby={tier.id}
-                  className="w-full"
-                  disabled={tier.soon}
-                >
-                  {tier.soon ? "Coming soon" : "Get started"}
-                </Button>
+                {tier.soon && (
+                  <Button
+                    aria-describedby={tier.id}
+                    className="w-full"
+                    disabled
+                  >
+                    Coming soon
+                  </Button>
+                )}
+                {!tier.soon && (
+                  <Link
+                    aria-describedby={tier.id}
+                    className={cn("w-full", buttonVariants())}
+                    href={checkoutUrls?.[tier.id] || "/account/plans"}
+                  >
+                    Get started
+                  </Link>
+                )}
               </div>
             </div>
           ))}

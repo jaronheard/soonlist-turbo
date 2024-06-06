@@ -7,11 +7,11 @@ export const stripeRouter = createTRPCRouter({
   getSubscriptionCheckoutUrls: protectedProcedure.query(async ({ ctx }) => {
     const plans = {
       personal: {
-        name: "Personal",
+        name: "personal",
         priceId: process.env.STRIPE_PRICE_ID_PERSONAL_MONTHLY || "",
       },
       pro: {
-        name: "Pro",
+        name: "pro",
         priceId: process.env.STRIPE_PRICE_ID_PRO_MONTHLY || "",
       },
     };
@@ -33,8 +33,8 @@ export const stripeRouter = createTRPCRouter({
               quantity: 1,
             },
           ],
-          success_url: `${url}/get-started`,
-          cancel_url: `${url}/account/plans`,
+          success_url: `https://${url}/get-started`,
+          cancel_url: `https://${url}/account/plans`,
           subscription_data: {
             metadata: {
               userId: ctx.auth.userId,
