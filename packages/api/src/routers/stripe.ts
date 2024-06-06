@@ -48,6 +48,7 @@ export const stripeRouter = createTRPCRouter({
             },
             trial_period_days: 14,
           },
+          allow_promotion_codes: true,
         });
 
         if (!checkoutSession.url) {
