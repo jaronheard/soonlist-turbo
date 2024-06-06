@@ -77,6 +77,7 @@ export async function POST(req: Request) {
             displayName: `${evt.data.first_name} ${evt.data.last_name}`,
             userImage: evt.data.image_url,
             email: evt.data.email_addresses[0]?.email_address || "",
+            publicMetadata: evt.data.public_metadata,
           })
           .where(eq(users.id, evt.data.id));
       }
@@ -89,6 +90,7 @@ export async function POST(req: Request) {
           displayName: `${evt.data.first_name} ${evt.data.last_name}`,
           userImage: evt.data.image_url,
           email: evt.data.email_addresses[0]?.email_address || "",
+          publicMetadata: evt.data.public_metadata,
         });
       }
 
