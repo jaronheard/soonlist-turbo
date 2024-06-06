@@ -218,6 +218,9 @@ importers:
       '@soonlist/validators':
         specifier: workspace:*
         version: link:../../packages/validators
+      '@t3-oss/env-nextjs':
+        specifier: ^0.10.1
+        version: 0.10.1(typescript@5.4.5)(zod@3.23.4)
       '@tanstack/react-query':
         specifier: ^5.32.1
         version: 5.32.1(react@18.3.1)
@@ -3237,6 +3240,15 @@ packages:
 
   '@t3-oss/env-core@0.10.1':
     resolution: {integrity: sha512-GcKZiCfWks5CTxhezn9k5zWX3sMDIYf6Kaxy2Gx9YEQftFcz8hDRN56hcbylyAO3t4jQnQ5ifLawINsNgCDpOg==}
+    peerDependencies:
+      typescript: '>=5.0.0'
+      zod: ^3.0.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  '@t3-oss/env-nextjs@0.10.1':
+    resolution: {integrity: sha512-iy2qqJLnFh1RjEWno2ZeyTu0ufomkXruUsOZludzDIroUabVvHsrSjtkHqwHp1/pgPUzN3yBRHMILW162X7x2Q==}
     peerDependencies:
       typescript: '>=5.0.0'
       zod: ^3.0.0
@@ -11873,6 +11885,13 @@ snapshots:
 
   '@t3-oss/env-core@0.10.1(typescript@5.4.5)(zod@3.23.4)':
     dependencies:
+      zod: 3.23.4
+    optionalDependencies:
+      typescript: 5.4.5
+
+  '@t3-oss/env-nextjs@0.10.1(typescript@5.4.5)(zod@3.23.4)':
+    dependencies:
+      '@t3-oss/env-core': 0.10.1(typescript@5.4.5)(zod@3.23.4)
       zod: 3.23.4
     optionalDependencies:
       typescript: 5.4.5
