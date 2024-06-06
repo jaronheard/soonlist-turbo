@@ -182,6 +182,9 @@ const UserMenu = () => {
     );
   }
 
+  const plan = user.publicMetadata.plan as { name?: string } | undefined;
+  const planName = plan?.name;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="hidden py-2 lg:block">
@@ -196,7 +199,10 @@ const UserMenu = () => {
       <DropdownMenuContent className="flex flex-col gap-1">
         <TimezoneSelect />
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="flex items-center gap-2">
+        <DropdownMenuItem
+          className="flex items-center gap-2"
+          onClick={() => openUserProfile()}
+        >
           {user.imageUrl ? (
             <Image
               alt={"User"}
@@ -212,9 +218,14 @@ const UserMenu = () => {
             @{user.username}
           </div>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => openUserProfile()}>
-          Profile
-        </DropdownMenuItem>
+        <div className="ml-2 flex flex-col space-y-3 text-neutral-2">
+          {planName && (
+            <MobileLink href={"/account/plans"}>Manage Plan</MobileLink>
+          )}
+          {!planName && (
+            <MobileLink href={"/account/plans"}>Upgrade</MobileLink>
+          )}
+        </div>
         <DropdownMenuSeparator />
         <div className="p-1"></div>
         {sideNav(user.username || "").map((item, index) => (
@@ -261,6 +272,9 @@ export function MobileNav() {
   const { user } = useUser();
   const { signOut, openUserProfile } = useClerk();
 
+  const plan = user?.publicMetadata.plan as { name?: string } | undefined;
+  const planName = plan?.name;
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -283,7 +297,10 @@ export function MobileNav() {
           </div>
           <SignedIn>
             <Separator className="my-3" />
-            <div className="flex items-center gap-2">
+            <button
+              className="flex items-center gap-2"
+              onClick={() => openUserProfile()}
+            >
               {user?.imageUrl ? (
                 <Image
                   alt={"User"}
@@ -298,16 +315,16 @@ export function MobileNav() {
               <div className="text-lg font-medium text-neutral-2">
                 @{user?.username}
               </div>
-            </div>
+            </button>
             <div className="pt-3">
-              <MobileButton
-                href="/profile"
+              <MobileLink
+                key={"plans"}
+                href="/account/plans"
                 onOpenChange={setOpen}
-                onClick={() => openUserProfile()}
-                className="w-full justify-start py-0 pl-0"
+                className="w-full justify-start py-0 pl-0 text-neutral-2"
               >
-                Profile
-              </MobileButton>
+                {planName ? "Manage Plan" : "Upgrade"}
+              </MobileLink>
             </div>
           </SignedIn>
           <Separator className="my-3" />

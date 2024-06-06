@@ -55,7 +55,7 @@ export const tiers = [
       "Unlimited public events",
       "Unlimited private events",
       "Unlimited event lists",
-      "Supporter badge",
+      "Support further development",
     ],
     mostPopular: true,
     free: false,

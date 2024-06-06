@@ -3,6 +3,8 @@ import Stripe from "stripe";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
+const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+
 export const stripeRouter = createTRPCRouter({
   getSubscriptionCheckoutUrls: protectedProcedure.query(async ({ ctx }) => {
     const plans = {
@@ -34,8 +36,8 @@ export const stripeRouter = createTRPCRouter({
               quantity: 1,
             },
           ],
-          success_url: `http://${url}/new`,
-          cancel_url: `http://${url}/account/plans`,
+          success_url: `${protocol}://${url}/new`,
+          cancel_url: `${protocol}://${url}/account/plans`,
           metadata: {
             userId: ctx.user.id,
           },
@@ -67,7 +69,7 @@ export const stripeRouter = createTRPCRouter({
     });
 
     const url = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL;
-    const returnUrl = `http://${url}/account/plans`;
+    const returnUrl = `${protocol}://${url}/account/plans`;
     const userStripe = ctx.user.publicMetadata.stripe as
       | {
           customerId?: string;
