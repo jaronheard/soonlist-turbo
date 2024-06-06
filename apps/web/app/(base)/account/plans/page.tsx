@@ -15,10 +15,7 @@ export default async function Page() {
   const { sessionClaims } = auth().protect({
     unauthenticatedUrl: "/sign-up",
     unauthorizedUrl: "/",
-    redirectTo: "/account/plans",
   });
-
-  console.log(sessionClaims);
 
   const checkoutUrlsForPlans = await api.stripe.getSubscriptionCheckoutUrls();
   const checkoutUrls = checkoutUrlsForPlans.reduce(
@@ -26,7 +23,10 @@ export default async function Page() {
     {},
   );
 
-  console.log(checkoutUrls);
-
-  return <Pricing checkoutUrls={checkoutUrls} />;
+  return (
+    <>
+      {JSON.stringify(sessionClaims)}
+      <Pricing checkoutUrls={checkoutUrls} />
+    </>
+  );
 }

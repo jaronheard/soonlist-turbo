@@ -37,7 +37,8 @@ export const stripeRouter = createTRPCRouter({
           cancel_url: `https://${url}/account/plans`,
           subscription_data: {
             metadata: {
-              userId: ctx.auth.userId,
+              userId: ctx.user.id,
+              plan: planKey,
             },
             trial_period_days: 14,
           },

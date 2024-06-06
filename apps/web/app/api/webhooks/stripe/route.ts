@@ -24,12 +24,13 @@ export async function POST(req: NextRequest) {
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(
+    event = await stripe.webhooks.constructEventAsync(
       await req.text(),
       stripeSignature,
       webhookSecret,
     );
   } catch (error) {
+    console.error("Error constructing event:", error);
     if (error instanceof Error)
       return NextResponse.json(
         {
@@ -43,64 +44,71 @@ export async function POST(req: NextRequest) {
 
   if (event === undefined) throw new Error(`event is undefined`);
   switch (event.type) {
-    case "checkout.session.completed": {
-      const session = event.data.object;
-      console.log(`Payment successful for session ID: ${session.id}`);
-      await clerkClient.users.updateUserMetadata(
-        event.data.object.metadata?.userId || "",
-        {
-          publicMetadata: {
-            stripe: {
-              customerId: session.customer,
-              status: session.status,
-              payment: session.payment_status,
-            },
-          },
-        },
-      );
+    // case "checkout.session.completed": {
+    //   const session = event.data.object;
+    //   console.log(`Payment successful for session ID: ${session.id}`);
+    //   console.log(event.data.object.metadata);
+    //   await clerkClient.users.updateUserMetadata(
+    //     event.data.object.metadata?.userId || "",
+    //     {
+    //       publicMetadata: {
+    //         stripe: {
+    //           customerId: session.customer,
+    //           status: session.status,
+    //           payment: session.payment_status,
+    //         },
+    //       },
+    //     },
+    //   );
 
-      break;
-    }
+    //   break;
+    // }
     case "customer.subscription.created": {
       const subscription = event.data.object;
+      console.log(subscription);
 
-      await clerkClient.users.updateUserMetadata(
+      const updatedUser = await clerkClient.users.updateUserMetadata(
         event.data.object.metadata.userId || "",
         {
           publicMetadata: {
             plan: {
-              name: subscription.items.data[0]?.plan.product,
+              name: event.data.object.metadata.plan,
+              productId: subscription.items.data[0]?.plan.product,
               status: subscription.status,
               id: subscription.items.data[0]?.plan.id,
             },
           },
         },
       );
+
+      console.log(updatedUser);
       break;
     }
 
     case "customer.subscription.updated": {
       const subscription = event.data.object;
 
-      await clerkClient.users.updateUserMetadata(
+      const updatedUser = await clerkClient.users.updateUserMetadata(
         event.data.object.metadata.userId || "",
         {
           publicMetadata: {
             plan: {
-              name: subscription.items.data[0]?.plan.product,
+              name: event.data.object.metadata.plan,
+              productId: subscription.items.data[0]?.plan.product,
               status: subscription.status,
               id: subscription.items.data[0]?.plan.id,
             },
           },
         },
       );
+      console.log(updatedUser);
       break;
     }
 
     case "customer.subscription.deleted": {
       const subscription = event.data.object;
 
-      await clerkClient.users.updateUserMetadata(
+      const updatedUser = await clerkClient.users.updateUserMetadata(
         event.data.object.metadata.userId || "",
         {
           publicMetadata: {
@@ -108,19 +116,22 @@ export async function POST(req: NextRequest) {
               customerId: subscription.customer,
             },
             plan: {
-              name: subscription.items.data[0]?.plan.product,
+              name: event.data.object.metadata.plan,
+              productId: subscription.items.data[0]?.plan.product,
               status: subscription.status,
               id: subscription.items.data[0]?.plan.id,
             },
           },
         },
       );
+      console.log(updatedUser);
       break;
     }
 
     default:
       console.warn(`Unhandled event type: ${event.type}`);
+      return NextResponse.json({ status: 200, message: "unhandled event" });
   }
 
-  NextResponse.json({ status: 200, message: "success" });
+  return NextResponse.json({ status: 200, message: "success" });
 }
