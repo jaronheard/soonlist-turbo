@@ -5,6 +5,7 @@ import { EventList } from "~/components/EventList";
 import { ListCardsForUser } from "~/components/ListCardsForUser";
 import { UserInfo } from "~/components/UserInfo";
 import { api } from "~/trpc/server";
+import { env } from "process";
 
 interface Props {
   params: { userName: string };
@@ -41,7 +42,7 @@ export async function generateMetadata(
     openGraph: {
       title: `@${params.userName} (${futureEventsCount} upcoming events)`,
       description: `See the events that @${params.userName} has saved on Soonlist`,
-      url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/events`,
+      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/events`,
       type: "article",
       images: [...previousImages],
     },

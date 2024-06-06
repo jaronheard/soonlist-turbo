@@ -10,6 +10,7 @@ import { api } from "~/trpc/server";
 import { EventsFromImage } from "./EventsFromImage";
 import { EventsFromRawText } from "./EventsFromRawText";
 import { ProgressStages } from "./ProgressStages";
+import { env } from "~/env";
 
 export const maxDuration = 60;
 
@@ -30,7 +31,7 @@ export default async function Page({ searchParams }: Props) {
   });
   // get externalId, but only in dev
   let externalId;
-  if (process.env.NODE_ENV === "development") {
+  if (env.NODE_ENV === "development") {
     const user = await currentUser();
     externalId = user?.externalId;
   }

@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
+import { env } from "~/env";
 import { api } from "~/trpc/server";
 
 interface Props {
@@ -40,7 +41,7 @@ export async function generateMetadata(
     openGraph: {
       title: `@${params.userName} (${futureEventsCount} upcoming events)`,
       description: `See the events that @${params.userName} has saved on Soonlist`,
-      url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/events`,
+      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/events`,
       type: "article",
       images: [...previousImages],
     },

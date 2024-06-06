@@ -348,6 +348,9 @@ importers:
       eslint-plugin-tailwindcss:
         specifier: ^3.14.0
         version: 3.15.1(tailwindcss@3.4.3(ts-node@10.9.2(@types/node@20.12.7)(typescript@5.4.5)))
+      jiti:
+        specifier: ^1.21.3
+        version: 1.21.3
       postcss:
         specifier: ^8.4.38
         version: 8.4.38
@@ -5846,8 +5849,8 @@ packages:
   jimp-compact@0.16.1:
     resolution: {integrity: sha512-dZ6Ra7u1G8c4Letq/B5EzAxj4tLFHL+cGtdpR+PVm4yzPDj+lCk+AbivWt1eOM+ikzkowtyV7qSqX6qr3t71Ww==}
 
-  jiti@1.21.0:
-    resolution: {integrity: sha512-gFqAIbuKyyso/3G2qhiO2OM6shY6EPP/R0+mkDbyspxKazh8BXDC5FiFsUjlczgdNz/vfra0da2y+aHrusLG/Q==}
+  jiti@1.21.3:
+    resolution: {integrity: sha512-uy2bNX5zQ+tESe+TiC7ilGRz8AtRGmnJH55NC5S0nSUjvvvM2hJHmefHErugGXN4pNv4Qx7vLsnNw9qJ9mtIsw==}
     hasBin: true
 
   joi@17.13.0:
@@ -15028,7 +15031,7 @@ snapshots:
 
   jimp-compact@0.16.1: {}
 
-  jiti@1.21.0: {}
+  jiti@1.21.3: {}
 
   joi@17.13.0:
     dependencies:
@@ -17332,7 +17335,7 @@ snapshots:
       fast-glob: 3.3.2
       glob-parent: 6.0.2
       is-glob: 4.0.3
-      jiti: 1.21.0
+      jiti: 1.21.3
       lilconfig: 2.1.0
       micromatch: 4.0.5
       normalize-path: 3.0.0

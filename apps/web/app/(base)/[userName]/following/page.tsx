@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
+import { env } from "~/env";
 import { api } from "~/trpc/server";
 
 interface Props {
@@ -39,7 +40,7 @@ export async function generateMetadata(
     openGraph: {
       title: `@${params.userName} is following (${futureEventsCount} upcoming events)`,
       description: `See the events @${params.userName} is following on  Soonlist`,
-      url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/following`,
+      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/following`,
       type: "article",
       images: [...previousImages],
     },

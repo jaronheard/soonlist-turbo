@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 import { Button } from "@soonlist/ui/button";
 
+import { env } from "~/env";
 import { DropdownMenuItem } from "./DropdownMenu";
 
 export interface ShareButtonProps {
@@ -27,7 +28,7 @@ export function ShareButton(props: ShareButtonProps) {
         await navigator.share({
           title: `${props.event.name} | Soonlist`,
           text: shareText,
-          url: `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}`,
+          url: `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}`,
         });
         console.log("Event shared successfully");
       } catch (error) {
@@ -36,7 +37,7 @@ export function ShareButton(props: ShareButtonProps) {
     } else {
       // Fallback for browsers that do not support the Share API
       void navigator.clipboard.writeText(
-        `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}`,
+        `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}`,
       );
       toast("Event URL copied to clipboard!");
     }

@@ -9,6 +9,7 @@ import { ListDeleteButton } from "~/components/ListDeleteButton";
 import { ListEditButton } from "~/components/ListEditButton";
 import { UserInfo } from "~/components/UserInfo";
 import { api } from "~/trpc/server";
+import { env } from "~/env";
 
 interface Props {
   params: { listId: string };
@@ -49,7 +50,7 @@ export async function generateMetadata(
     openGraph: {
       title: `${list.name} by @${list.user.username} (${futureEventsCount} upcoming)`,
       description: `${list.description}`,
-      url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/list/${params.listId}`,
+      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/list/${params.listId}`,
       type: "article",
       images: [...previousImages],
     },
