@@ -490,24 +490,24 @@ function MobileLink({
   );
 }
 
-function MobileButton({
-  onOpenChange,
-  className,
-  children,
-  onClick,
-  ...props
-}: MobileLinkProps & { onClick: () => void }) {
-  return (
-    <Button
-      onClick={() => {
-        onClick();
-        onOpenChange?.(false);
-      }}
-      variant={"ghost"}
-      className={cn(className, "text-lg font-medium text-neutral-1")}
-      {...props}
-    >
-      {children}
-    </Button>
-  );
-}
+// function MobileButton({
+//   onOpenChange,
+//   className,
+//   children,
+//   onClick,
+//   ...props
+// }: MobileLinkProps & { onClick: () => void }) {
+//   return (
+//     <Button
+//       onClick={() => {
+//         onClick();
+//         onOpenChange?.(false);
+//       }}
+//       variant={"ghost"}
+//       className={cn(className, "text-lg font-medium text-neutral-1")}
+//       {...props}
+//     >
+//       {children}
+//     </Button>
+//   );
+// }
