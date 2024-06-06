@@ -44,7 +44,7 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_KEY: z.string(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string(),
     NEXT_PUBLIC_VERCEL_ENV: z.enum(["development", "preview", "production"]),
-    NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL: z.string().url(),
+    NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL: z.string(),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
