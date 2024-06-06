@@ -4,12 +4,12 @@ import type { z } from "zod";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  CalendarPlus,
   CheckCircle2,
   CircleDashed,
   Globe,
   Instagram,
   Mail,
+  PartyPopper,
   Pen,
   Phone,
 } from "lucide-react";
@@ -58,7 +58,7 @@ export function OnboardingTabs({
       <CardContent className="space-y-6">
         <UserProfileForm
           defaultValues={additionalInfo}
-          onSubmitSuccess={() => router.push("/new")}
+          onSubmitSuccess={() => router.push("/account/plans")}
         />
       </CardContent>
     </Card>
@@ -196,8 +196,8 @@ export function UserProfileForm({
           </CardContent>
         </Card>
         <Button type="submit" size="lg">
-          <CalendarPlus className="mr-2 size-4"></CalendarPlus>
-          Add your first event
+          <PartyPopper className="mr-2 size-4"></PartyPopper>
+          Choose your plan
         </Button>
       </form>
     </Form>

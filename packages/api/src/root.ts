@@ -1,6 +1,7 @@
 import { aiRouter } from "./routers/ai";
 import { eventRouter } from "./routers/event";
 import { listRouter } from "./routers/list";
+import { stripeRouter } from "./routers/stripe";
 import { userRouter } from "./routers/user";
 import { waitlistRouter } from "./routers/waitlist";
 import { createTRPCRouter } from "./trpc";
@@ -13,8 +14,9 @@ import { createTRPCRouter } from "./trpc";
 export const appRouter = createTRPCRouter({
   ai: aiRouter,
   event: eventRouter,
-  user: userRouter,
   list: listRouter,
+  stripe: stripeRouter,
+  user: userRouter,
   waitlist: waitlistRouter,
 });
 

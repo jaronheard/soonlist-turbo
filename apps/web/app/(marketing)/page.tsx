@@ -1,13 +1,7 @@
-import { Suspense } from "react";
 import Image from "next/image";
-import { CheckIcon } from "lucide-react";
-
-import { cn } from "@soonlist/ui";
-import { Badge } from "@soonlist/ui/badge";
-import { Button } from "@soonlist/ui/button";
 
 import { CTAButton } from "~/components/CallToActions";
-import { AutoPlayVideo, NotaflofBadge } from "./components";
+import { AutoPlayVideo, Pricing } from "./components";
 
 const testimonials = [
   {
@@ -66,150 +60,6 @@ const testimonials = [
     },
   },
 ];
-
-const tiers = [
-  {
-    name: "Free",
-    id: "tier-free",
-    href: "#",
-    priceMonthly: "$0",
-    description: "A few lists for your public events.",
-    features: ["Add up to 100 public events", "3 public event lists"],
-    mostPopular: false,
-    free: true,
-    soon: true,
-  },
-  {
-    name: "Personal",
-    id: "tier-personal",
-    href: "#",
-    priceMonthly: "$7",
-    description: "Unlimited public and private events and lists.",
-    features: [
-      "Unlimited public events",
-      "Unlimited private events",
-      "Unlimited event lists",
-      "Supporter badge",
-    ],
-    mostPopular: true,
-    free: false,
-    soon: true,
-  },
-  {
-    name: "Pro (coming soon)",
-    id: "tier-pro",
-    href: "#",
-    priceMonthly: "$35",
-    description: "Customize, integrate, and brand your events and lists.",
-    features: [
-      "Unlimited events & lists",
-      "Customize prompts & fields",
-      "Embeddable lists",
-      "Custom colors & branding",
-      "Priority support",
-    ],
-    mostPopular: false,
-    free: false,
-    soon: true,
-  },
-];
-
-function Pricing() {
-  return (
-    <div className="relative isolate bg-white px-6 py-24 sm:py-32 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-4xl text-center">
-          <h1 className="font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
-            Pricing
-          </h1>
-          <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
-            Soonlist is an independent, community-supported platform. We don't
-            sell your attention or data.
-          </p>
-        </div>
-        <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-          {tiers.map((tier, tierIdx) => (
-            <div
-              key={tier.id}
-              className={cn(
-                tier.mostPopular ? "lg:z-10 lg:rounded-b-none" : "lg:mt-8",
-                tierIdx === 0 ? "lg:rounded-r-none" : "",
-                tierIdx === tiers.length - 1 ? "lg:rounded-l-none" : "",
-                tier.soon ? "opacity-75" : "",
-                "flex flex-col justify-between rounded-xl border border-neutral-3 bg-white p-8 shadow-sm xl:p-10",
-              )}
-            >
-              <div>
-                <div className="flex items-center justify-between gap-x-4">
-                  <h3
-                    id={tier.id}
-                    className={cn(
-                      tier.mostPopular ? "text-interactive-1" : "text-gray-900",
-                      "font-heading text-2xl font-semibold leading-8",
-                    )}
-                  >
-                    {tier.name}
-                  </h3>
-                  {tier.mostPopular ? (
-                    <Badge variant={"secondary"}>Most popular</Badge>
-                  ) : null}
-                </div>
-                <p className="mt-4 text-lg leading-6 text-neutral-2">
-                  {tier.description}
-                </p>
-                <p className="mt-6 flex items-baseline gap-x-1">
-                  <span className="font-heading text-4xl font-bold tracking-tight text-gray-900">
-                    {tier.priceMonthly}
-                  </span>
-                  <span className="text-lg font-semibold leading-6 text-neutral-2">
-                    /month
-                  </span>
-                </p>
-                {tier.mostPopular && (
-                  <>
-                    <div className="p-2"></div>
-                    <Suspense
-                      fallback={
-                        <Badge variant={"secondary"}>
-                          🌈 NOTAFLOF for community projects.
-                        </Badge>
-                      }
-                    >
-                      <NotaflofBadge />
-                    </Suspense>
-                  </>
-                )}
-                <ul
-                  role="list"
-                  className="mt-8 space-y-3 text-lg leading-6 text-neutral-2"
-                >
-                  {tier.features.map((feature) => (
-                    <li key={feature} className="flex gap-x-3">
-                      <CheckIcon
-                        className="h-6 w-5 flex-none text-interactive-1"
-                        aria-hidden="true"
-                      />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-8">
-                <Button
-                  aria-describedby={tier.id}
-                  className="w-full"
-                  disabled={tier.soon}
-                >
-                  {tier.soon ? "Coming soon" : "Get started"}
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ConnectWithWhatMatters() {
   return (
@@ -341,7 +191,9 @@ export default function Page() {
       <div className="isolate mx-auto -mt-24 max-w-7xl bg-white md:rounded-lg">
         <ConnectWithWhatMatters />
       </div>
-      <Pricing />
+      <div className="relative isolate bg-white px-6 py-24 sm:py-32 lg:px-8">
+        <Pricing />
+      </div>
       <div className="relative isolate bg-white pb-32 pt-24 md:pt-32">
         <div className="mx-auto max-w-7xl px-6 md:px-8">
           <div className="mx-auto max-w-xl text-center">

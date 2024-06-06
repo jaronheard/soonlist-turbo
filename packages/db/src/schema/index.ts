@@ -235,6 +235,7 @@ export const users = mysqlTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updatedAt").onUpdateNow(),
+    publicMetadata: json("publicMetadata"),
   },
   (table) => {
     return {
