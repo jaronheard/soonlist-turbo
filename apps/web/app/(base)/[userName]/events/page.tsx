@@ -1,3 +1,4 @@
+import { env } from "process";
 import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
 
@@ -5,7 +6,6 @@ import { EventList } from "~/components/EventList";
 import { ListCardsForUser } from "~/components/ListCardsForUser";
 import { UserInfo } from "~/components/UserInfo";
 import { api } from "~/trpc/server";
-import { env } from "process";
 
 interface Props {
   params: { userName: string };

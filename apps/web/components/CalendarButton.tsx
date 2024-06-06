@@ -6,8 +6,8 @@ import { CalendarPlus } from "lucide-react";
 import type { ATCBActionEventConfig } from "@soonlist/cal/types";
 import { Button } from "@soonlist/ui/button";
 
-import { DropdownMenuItem } from "./DropdownMenu";
 import { env } from "~/env";
+import { DropdownMenuItem } from "./DropdownMenu";
 
 interface CalendarButtonProps {
   event: ATCBActionEventConfig;

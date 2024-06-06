@@ -8,8 +8,8 @@ import { FollowListButton } from "~/components/FollowButtons";
 import { ListDeleteButton } from "~/components/ListDeleteButton";
 import { ListEditButton } from "~/components/ListEditButton";
 import { UserInfo } from "~/components/UserInfo";
-import { api } from "~/trpc/server";
 import { env } from "~/env";
+import { api } from "~/trpc/server";
 
 interface Props {
   params: { listId: string };
