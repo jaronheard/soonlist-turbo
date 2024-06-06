@@ -15,6 +15,7 @@ export const config = {
 };
 
 export async function POST(req: NextRequest) {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (req === null)
     throw new Error(`Missing userId or request`, { cause: { req } });
 
@@ -44,29 +45,23 @@ export async function POST(req: NextRequest) {
 
   if (event === undefined) throw new Error(`event is undefined`);
   switch (event.type) {
-    // case "checkout.session.completed": {
-    //   const session = event.data.object;
-    //   console.log(`Payment successful for session ID: ${session.id}`);
-    //   console.log(event.data.object.metadata);
-    //   await clerkClient.users.updateUserMetadata(
-    //     event.data.object.metadata?.userId || "",
-    //     {
-    //       publicMetadata: {
-    //         stripe: {
-    //           customerId: session.customer,
-    //           status: session.status,
-    //           payment: session.payment_status,
-    //         },
-    //       },
-    //     },
-    //   );
-
-    //   break;
-    // }
+    case "checkout.session.completed": {
+      const session = event.data.object;
+      const updatedUser = await clerkClient.users.updateUserMetadata(
+        event.data.object.metadata?.userId || "",
+        {
+          publicMetadata: {
+            stripe: {
+              customerId: session.customer,
+            },
+          },
+        },
+      );
+      console.log("checkout.session.completed", updatedUser.publicMetadata);
+      break;
+    }
     case "customer.subscription.created": {
       const subscription = event.data.object;
-      console.log(subscription);
-
       const updatedUser = await clerkClient.users.updateUserMetadata(
         event.data.object.metadata.userId || "",
         {
@@ -81,7 +76,7 @@ export async function POST(req: NextRequest) {
         },
       );
 
-      console.log(updatedUser);
+      console.log("customer.subscription.created", updatedUser.publicMetadata);
       break;
     }
 
@@ -101,7 +96,7 @@ export async function POST(req: NextRequest) {
           },
         },
       );
-      console.log(updatedUser);
+      console.log("customer.subscription.updated", updatedUser.publicMetadata);
       break;
     }
 
@@ -124,7 +119,7 @@ export async function POST(req: NextRequest) {
           },
         },
       );
-      console.log(updatedUser);
+      console.log("customer.subscription.deleted", updatedUser.publicMetadata);
       break;
     }
 

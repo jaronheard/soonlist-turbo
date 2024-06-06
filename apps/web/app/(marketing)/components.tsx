@@ -82,9 +82,21 @@ export const tiers = [
 
 export function Pricing({
   checkoutUrls,
+  currentPlan,
+  planActive,
+  customerPortalUrl,
 }: {
   checkoutUrls?: Record<string, string>;
+  currentPlan?: string;
+  planActive?: boolean;
+  customerPortalUrl?: string;
 }) {
+  const tiersWithStatus = tiers.map((tier) => ({
+    ...tier,
+    current: tier.id === currentPlan,
+    active: tier.id === currentPlan && planActive,
+  }));
+
   return (
     <div className="relative isolate bg-white px-6 py-24 sm:py-32 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -98,7 +110,7 @@ export function Pricing({
           </p>
         </div>
         <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-          {tiers.map((tier, tierIdx) => (
+          {tiersWithStatus.map((tier, tierIdx) => (
             <div
               key={tier.id}
               className={cn(
@@ -107,6 +119,7 @@ export function Pricing({
                 tierIdx === tiers.length - 1 ? "lg:rounded-l-none" : "",
                 tier.soon ? "opacity-75" : "",
                 "flex flex-col justify-between rounded-xl border border-neutral-3 bg-white p-8 shadow-sm xl:p-10",
+                tier.current ? "border-accent-foreground" : "",
               )}
             >
               <div>
@@ -120,7 +133,9 @@ export function Pricing({
                   >
                     {tier.name}
                   </h3>
-                  {tier.mostPopular ? (
+                  {tier.current ? (
+                    <Badge variant={"default"}>Current plan</Badge>
+                  ) : tier.mostPopular ? (
                     <Badge variant={"secondary"}>Most popular</Badge>
                   ) : null}
                 </div>
@@ -174,13 +189,27 @@ export function Pricing({
                     Coming soon
                   </Button>
                 )}
-                {!tier.soon && (
+                {!tier.soon &&
+                  !tier.active &&
+                  (!customerPortalUrl || tier.id !== "free") && (
+                    <Link
+                      aria-describedby={tier.id}
+                      className={cn("w-full", buttonVariants())}
+                      href={checkoutUrls?.[tier.id] || "/account/plans"}
+                    >
+                      Get started
+                    </Link>
+                  )}
+                {!tier.soon && tier.active && (
                   <Link
                     aria-describedby={tier.id}
-                    className={cn("w-full", buttonVariants())}
-                    href={checkoutUrls?.[tier.id] || "/account/plans"}
+                    className={cn(
+                      "w-full",
+                      buttonVariants({ variant: "link" }),
+                    )}
+                    href={customerPortalUrl || "/account/plans"}
                   >
-                    Get started
+                    Manage Plan
                   </Link>
                 )}
               </div>
