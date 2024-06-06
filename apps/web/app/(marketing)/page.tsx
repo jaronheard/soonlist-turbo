@@ -191,7 +191,9 @@ export default function Page() {
       <div className="isolate mx-auto -mt-24 max-w-7xl bg-white md:rounded-lg">
         <ConnectWithWhatMatters />
       </div>
-      <Pricing />
+      <div className="relative isolate bg-white px-6 py-24 sm:py-32 lg:px-8">
+        <Pricing />
+      </div>
       <div className="relative isolate bg-white pb-32 pt-24 md:pt-32">
         <div className="mx-auto max-w-7xl px-6 md:px-8">
           <div className="mx-auto max-w-xl text-center">

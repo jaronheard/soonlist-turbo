@@ -26,17 +26,15 @@ export default async function Page() {
 
   const currentPlan = sessionClaims.publicMetadata?.plan?.name || "free";
   const currentPlanStatus =
-    sessionClaims.publicMetadata?.plan?.status || "active";
+    sessionClaims.publicMetadata?.plan?.status || "no plan";
   const planActive =
     currentPlanStatus === "active" || currentPlanStatus === "trialing";
-  const customerId = sessionClaims.publicMetadata?.stripe?.customerId;
 
   return (
     <Pricing
       checkoutUrls={checkoutUrls}
       currentPlan={currentPlan}
       planActive={planActive}
-      customerId={customerId}
       customerPortalUrl={customerPortalUrl}
     />
   );

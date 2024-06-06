@@ -58,7 +58,7 @@ export function OnboardingTabs({
       <CardContent className="space-y-6">
         <UserProfileForm
           defaultValues={additionalInfo}
-          onSubmitSuccess={() => router.push("/new")}
+          onSubmitSuccess={() => router.push("/account/plans")}
         />
       </CardContent>
     </Card>
@@ -197,7 +197,7 @@ export function UserProfileForm({
         </Card>
         <Button type="submit" size="lg">
           <CalendarPlus className="mr-2 size-4"></CalendarPlus>
-          Add your first event
+          Choose your plan
         </Button>
       </form>
     </Form>

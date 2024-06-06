@@ -34,7 +34,7 @@ export const stripeRouter = createTRPCRouter({
               quantity: 1,
             },
           ],
-          success_url: `http://${url}/get-started`,
+          success_url: `http://${url}/new`,
           cancel_url: `http://${url}/account/plans`,
           metadata: {
             userId: ctx.user.id,
@@ -68,14 +68,15 @@ export const stripeRouter = createTRPCRouter({
 
     const url = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL;
     const returnUrl = `http://${url}/account/plans`;
-    const userStripe = ctx.user.publicMetadata.stripe as { customerId: string };
-    const customerId = userStripe.customerId;
+    const userStripe = ctx.user.publicMetadata.stripe as
+      | {
+          customerId?: string;
+        }
+      | undefined;
+    const customerId = userStripe?.customerId;
 
     if (!customerId) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "No customerId found in user metadata",
-      });
+      return undefined;
     }
 
     const portalSession = await stripe.billingPortal.sessions.create({
