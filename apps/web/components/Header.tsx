@@ -186,7 +186,7 @@ const UserMenu = () => {
   const planName = plan?.name;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger className="hidden py-2 lg:block">
         <Image
           alt={"User"}
