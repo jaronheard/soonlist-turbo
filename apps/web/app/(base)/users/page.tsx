@@ -2,6 +2,7 @@
 import type { Metadata, ResolvingMetadata } from "next/types";
 
 import { UserInfo } from "~/components/UserInfo";
+import { env } from "~/env";
 // import Leaderboard from "~/components/Leaderboard";
 // import LeaderboardSkeleton from "~/components/LeaderboardSkeleton";
 // import {
@@ -25,7 +26,7 @@ export async function generateMetadata(
     openGraph: {
       title: `All users`,
       description: `See all users on  Soonlist`,
-      url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/users`,
+      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/users`,
       type: "article",
       images: [...previousImages],
     },

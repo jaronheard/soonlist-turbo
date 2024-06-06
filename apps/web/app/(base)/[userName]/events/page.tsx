@@ -1,3 +1,4 @@
+import { env } from "process";
 import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
 
@@ -41,7 +42,7 @@ export async function generateMetadata(
     openGraph: {
       title: `@${params.userName} (${futureEventsCount} upcoming events)`,
       description: `See the events that @${params.userName} has saved on Soonlist`,
-      url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/events`,
+      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/events`,
       type: "article",
       images: [...previousImages],
     },

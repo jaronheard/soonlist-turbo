@@ -8,6 +8,8 @@ import SuperJSON from "superjson";
 
 import type { AppRouter } from "@soonlist/api";
 
+import { env } from "~/env";
+
 const createQueryClient = () =>
   new QueryClient({
     defaultOptions: {
@@ -40,7 +42,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
       links: [
         loggerLink({
           enabled: (op) =>
-            process.env.NODE_ENV === "development" ||
+            env.NODE_ENV === "development" ||
             (op.direction === "down" && op.result instanceof Error),
         }),
         unstable_httpBatchStreamLink({
@@ -67,8 +69,5 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 
 export const getBaseUrl = () => {
   if (typeof window !== "undefined") return window.location.origin;
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL)
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
-
-  return `http://localhost:${process.env.PORT ?? 3000}`;
+  return `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`;
 };

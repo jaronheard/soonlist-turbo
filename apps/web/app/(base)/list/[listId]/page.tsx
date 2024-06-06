@@ -8,6 +8,7 @@ import { FollowListButton } from "~/components/FollowButtons";
 import { ListDeleteButton } from "~/components/ListDeleteButton";
 import { ListEditButton } from "~/components/ListEditButton";
 import { UserInfo } from "~/components/UserInfo";
+import { env } from "~/env";
 import { api } from "~/trpc/server";
 
 interface Props {
@@ -49,7 +50,7 @@ export async function generateMetadata(
     openGraph: {
       title: `${list.name} by @${list.user.username} (${futureEventsCount} upcoming)`,
       description: `${list.description}`,
-      url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/list/${params.listId}`,
+      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/list/${params.listId}`,
       type: "article",
       images: [...previousImages],
     },

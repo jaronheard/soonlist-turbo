@@ -7,6 +7,7 @@
     "build": "pnpm with-env next build",
     "clean": "git clean -xdf .next .turbo node_modules",
     "dev": "pnpm with-env next dev --turbo",
+    "dev:production": "pnpm with-env:production next dev --turbo",
     "dev:tunnel": "concurrently \"pnpm run tunnel\" \"pnpm with-env next dev --turbo\"",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
@@ -14,7 +15,8 @@
     "sync-users": "node scripts/sync-users.mjs",
     "tunnel": "lt --port 3000 --subdomain soonlist",
     "typecheck": "tsc --noEmit",
-    "with-env": "dotenv -e ../../.env --"
+    "with-env": "dotenv -e ../../.env.local --",
+    "with-env:production": "dotenv -e ../../.env.production --"
   },
   "dependencies": {
     "@bytescale/sdk": "^3.34.0",
@@ -29,6 +31,7 @@
     "@soonlist/tailwind-config": "workspace:*",
     "@soonlist/ui": "workspace:*",
     "@soonlist/validators": "workspace:*",
+    "@t3-oss/env-nextjs": "^0.10.1",
     "@tanstack/react-query": "^5.32.1",
     "@trpc/client": "11.0.0-rc.364",
     "@trpc/react-query": "11.0.0-rc.364",
@@ -73,6 +76,7 @@
     "eslint": "^9.1.1",
     "eslint-plugin-path": "^1.2.4",
     "eslint-plugin-tailwindcss": "^3.14.0",
+    "jiti": "^1.21.3",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5"

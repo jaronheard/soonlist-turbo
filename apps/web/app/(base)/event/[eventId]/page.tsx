@@ -11,6 +11,7 @@ import type { EventWithUser } from "~/components/EventList";
 import { EventPage } from "~/components/EventDisplays";
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
+import { env } from "~/env";
 import { api } from "~/trpc/server";
 import { ResetNewEventContext } from "./ResetNewEventContext";
 
@@ -45,7 +46,7 @@ export async function generateMetadata(
     openGraph: {
       title: `${eventData.name}`,
       description: `(${eventData.startDate} ${eventData.startTime}-${eventData.endTime}) ${eventData.description}`,
-      url: `${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${event.id}`,
+      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${event.id}`,
       type: "article",
       images: previewImage || (await parent).openGraph?.images || [],
     },

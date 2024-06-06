@@ -6,6 +6,7 @@ import { CalendarPlus } from "lucide-react";
 import type { ATCBActionEventConfig } from "@soonlist/cal/types";
 import { Button } from "@soonlist/ui/button";
 
+import { env } from "~/env";
 import { DropdownMenuItem } from "./DropdownMenu";
 
 interface CalendarButtonProps {
@@ -19,8 +20,8 @@ export function CalendarButton(props: CalendarButtonProps) {
   const eventForCalendar = { ...props.event };
   const additionalText =
     props.username && props.id
-      ? `Collected by [url]${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${props.username}/events|@${props.username}[/url] on [url]${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
-      : `Collected on [url]${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}|Soonlist[/url]`;
+      ? `Collected by [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${props.username}/events|@${props.username}[/url] on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
+      : `Collected on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}|Soonlist[/url]`;
   eventForCalendar.description = `${props.event.description}[br][br]${additionalText}`;
 
   if (props.type === "dropdown") {

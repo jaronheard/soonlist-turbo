@@ -5,6 +5,8 @@
 import * as Sentry from "@sentry/nextjs";
 import { posthog } from "posthog-js";
 
+import { env } from "./env";
+
 Sentry.init({
   dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.sentry.io/4506458761396224",
   // Set the sample rate to 0 to disable tracing
@@ -23,5 +25,5 @@ Sentry.init({
       blockAllMedia: true,
     }),
   ],
-  enabled: process.env.NODE_ENV === "production",
+  enabled: env.NODE_ENV === "production",
 });

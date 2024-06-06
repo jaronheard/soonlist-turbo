@@ -5,12 +5,14 @@ import crypto from "crypto";
 import fs from "fs";
 import { createClerkClient } from "@clerk/clerk-sdk-node";
 
+import { env } from "~/env";
+
 // Set up Clerk client with your Clerk Backend API key
 const clerkProd = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY_PROD,
+  secretKey: env.CLERK_SECRET_KEY_PROD,
 });
 const clerkDev = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY_DEV,
+  secretKey: env.CLERK_SECRET_KEY_DEV,
 });
 
 async function getClerkUsersProd() {

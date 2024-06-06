@@ -3,12 +3,14 @@ import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import Stripe from "stripe";
 
+import { env } from "~/env";
+
 export const dynamic = "force-dynamic";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2024-04-10",
 });
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
+const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
