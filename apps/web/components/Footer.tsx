@@ -99,7 +99,7 @@ const navigation = {
       href: "https://jaronheard.notion.site/Soonlist-Changelog-3f6510dac9e642429d793fae5d96af8f",
     },
   ],
-  project: [{ name: "About", href: "/onboarding" }],
+  project: [{ name: "About", href: "/about" }],
   legal: [
     { name: "Privacy", href: "/privacy" },
     { name: "Terms", href: "/terms" },
