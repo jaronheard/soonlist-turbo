@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import "~/styles/globals.css";
 
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { IBM_Plex_Sans, Kalam } from "next/font/google";
 
@@ -73,7 +74,9 @@ export default function RootLayout({
         <body>
           <TRPCReactProvider>
             <Providers>
-              <PostHogPageView />
+              <Suspense>
+                <PostHogPageView />
+              </Suspense>
               {children}
             </Providers>
           </TRPCReactProvider>

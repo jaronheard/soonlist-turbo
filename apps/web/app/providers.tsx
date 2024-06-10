@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { posthog } from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
@@ -26,9 +27,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         variables: { colorPrimary: "rgb(90, 50, 251)", borderRadius: "16px" },
       }}
     >
-      <IntercomProvider>
-        <ContextProvider>{children}</ContextProvider>
-      </IntercomProvider>
+      <Suspense>
+        <IntercomProvider> </IntercomProvider>
+      </Suspense>
+      <ContextProvider>{children}</ContextProvider>
     </ClerkProvider>
   );
 }
