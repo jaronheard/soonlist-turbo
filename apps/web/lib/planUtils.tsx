@@ -15,3 +15,4 @@ export const getPlanStatusFromUser = (user: User) => {
     activePaid,
   };
 };
+
