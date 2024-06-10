@@ -29,7 +29,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     >
       <Suspense>
         <IntercomProvider> </IntercomProvider>
-      </Suspense>g
+      </Suspense>
       <ContextProvider>{children}</ContextProvider>
     </ClerkProvider>
   );
