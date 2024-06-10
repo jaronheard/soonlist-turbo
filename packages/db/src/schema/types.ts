@@ -51,3 +51,15 @@ export type UpdateUser = Partial<InferInsertModel<typeof users>>;
 export type EventToLists = InferSelectModel<typeof eventToLists>;
 export type NewEventToLists = InferInsertModel<typeof eventToLists>;
 export type UpdateEventToLists = Partial<InferInsertModel<typeof eventToLists>>;
+
+export interface UserPublicMetadata {
+  stripe?: {
+    customerId?: string;
+  };
+  plan?: {
+    name?: "free" | "personal" | "pro";
+    productId?: string;
+    status?: string;
+    id?: string;
+  };
+}
