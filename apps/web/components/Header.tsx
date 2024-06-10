@@ -11,7 +11,13 @@ import {
   useClerk,
   useUser,
 } from "@clerk/nextjs";
-import { CalendarHeart, CalendarPlus, Globe2Icon, Menu } from "lucide-react";
+import {
+  CalendarHeart,
+  CalendarPlus,
+  Globe2Icon,
+  Menu,
+  Star,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
@@ -182,12 +188,24 @@ const UserMenu = () => {
     );
   }
 
-  const plan = user.publicMetadata.plan as { name?: string } | undefined;
+  const plan = user.publicMetadata.plan as
+    | { name?: string; status?: string }
+    | undefined;
   const planName = plan?.name;
+  const planStatus = plan?.status;
+  const active = planStatus === "active" || planStatus === "trialing";
+  const paid = planName !== "free";
+  const activePaid = active && paid;
 
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger className="hidden py-2 lg:block">
+      <DropdownMenuTrigger className="relative hidden py-2 lg:block">
+        {activePaid && (
+          <Star
+            className="absolute bottom-0.5 right-0 z-10 size-[1rem] rounded-full bg-interactive-2 p-0.5 text-interactive-1"
+            fill="currentColor"
+          />
+        )}
         <Image
           alt={"User"}
           src={user.imageUrl}
@@ -204,13 +222,21 @@ const UserMenu = () => {
           onClick={() => openUserProfile()}
         >
           {user.imageUrl ? (
-            <Image
-              alt={"User"}
-              src={user.imageUrl}
-              width={32}
-              height={32}
-              className="size-8 rounded-full"
-            />
+            <div className="relative py-2">
+              {activePaid && (
+                <Star
+                  className="absolute bottom-0.5 right-0 z-10 size-[1rem] rounded-full bg-interactive-2 p-0.5 text-interactive-1"
+                  fill="currentColor"
+                />
+              )}
+              <Image
+                alt={"User"}
+                src={user.imageUrl}
+                width={32}
+                height={32}
+                className="size-8 rounded-full"
+              />
+            </div>
           ) : (
             <div className="size-8 rounded-full bg-gray-100"></div>
           )}
