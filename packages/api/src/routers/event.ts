@@ -362,7 +362,7 @@ export const eventRouter = createTRPCRouter({
 
       const { event, eventMetadata } = input;
       const hasComment = input.comment && input.comment.length > 0;
-      const hasLists = input.lists && input.lists.length > 0;
+      const hasLists = input.lists.length > 0;
       const hasVisibility = input.visibility && input.visibility.length > 0;
 
       let startTime = event.startTime;
@@ -486,7 +486,7 @@ export const eventRouter = createTRPCRouter({
 
       const { event, eventMetadata } = input;
       const hasComment = input.comment && input.comment.length > 0;
-      const hasLists = input.lists && input.lists.length > 0;
+      const hasLists = input.lists.length > 0;
       const hasVisibility = input.visibility && input.visibility.length > 0;
 
       let startTime = event.startTime;
