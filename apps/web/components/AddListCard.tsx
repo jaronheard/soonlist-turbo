@@ -59,6 +59,7 @@ export function AddListCard({ ...initialProps }: AddListCardProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Portland Art Openings, Poetry Readings, etc."
+              autoFocus
             />
           </div>
         </div>
