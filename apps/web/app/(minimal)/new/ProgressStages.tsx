@@ -45,7 +45,7 @@ function ProgressStagesWrapper({
           variant={"ghost"}
           size={"icon"}
         >
-          <Link href="/">
+          <Link href={status === Status.Organize ? "/" : "/new"}>
             <X />
           </Link>
         </Button>
