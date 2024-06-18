@@ -2,8 +2,9 @@
 
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import { useContext, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { Image, Text } from "lucide-react";
 
 import {
   Card,
@@ -14,10 +15,33 @@ import {
 } from "@soonlist/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 
-import { Output } from "~/components/Output";
 import { TextEventForm } from "~/components/TextEventForm";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { UploadImageForProcessingButton } from "./UploadImageForProcessingButton";
+
+function SampleEventLink() {
+  return (
+    <div className="mt-4 text-center">
+      <span className="text-muted-foreground">
+        Or look at a sample{" "}
+        <a
+          href="/event/cloqaw5z80001l8086s39cxk3"
+          className="font-bold text-interactive-1"
+        >
+          event
+        </a>{" "}
+        or{" "}
+        <Link
+          href="/jaronheard/events"
+          className="font-bold text-interactive-1"
+        >
+          list
+        </Link>
+        .
+      </span>
+    </div>
+  );
+}
 
 export function AddEvent() {
   const router = useRouter();
@@ -40,44 +64,46 @@ export function AddEvent() {
 
   return (
     <div className="min-h-[60vh] ">
-      <Tabs defaultValue="text" className="max-w-screen sm:max-w-xl">
+      <Tabs defaultValue="image" className="w-80 sm:w-96">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="text">
-            <Sparkles className="mr-2 size-4" />
-            Image/Text
+          <TabsTrigger value="image">
+            <Image className="mr-2 size-4" />
+            Image
           </TabsTrigger>
-          <TabsTrigger value="manual">Manual</TabsTrigger>
+          <TabsTrigger value="text">
+            <Text className="mr-2 size-4" />
+            Text
+          </TabsTrigger>
         </TabsList>
-        <TabsContent value="text">
+        <TabsContent value="image">
           <Card>
             <CardHeader>
-              <CardTitle>Image/Text</CardTitle>
+              <CardTitle>Image</CardTitle>
               <CardDescription>
-                Add an event from image or an text. We&apos;ll use a little AI
-                to figure out the details.
+                Add an event from a screenshot or poster.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <UploadImageForProcessingButton />
-              <div className="p-4"></div>
+              <SampleEventLink />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="text">
+          <Card>
+            <CardHeader>
+              <CardTitle>Text</CardTitle>
+              <CardDescription>
+                Add an event from text. Copy/paste, or use your own words.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <TextEventForm
                 handleInputChange={handleInputChange}
                 input={input}
                 onSubmit={onSubmit}
               />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="manual">
-          <Card>
-            <CardHeader>
-              <CardTitle>Text</CardTitle>
-              <CardDescription>
-                Add an event manually by filling out a form.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Output events={events} finished={true} setEvents={setEvents} />
+              <SampleEventLink />
             </CardContent>
           </Card>
         </TabsContent>

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
@@ -46,22 +45,6 @@ export function TextEventForm({
         <Sparkles className="mr-2 size-4" />
         Generate from text
       </Button>
-      <div className="mt-4 text-center">
-        <span className="text-slate-500">
-          Or look at a sample{" "}
-          <a
-            href="/event/cloqaw5z80001l8086s39cxk3"
-            className="font-bold text-slate-900"
-          >
-            event
-          </a>{" "}
-          or{" "}
-          <Link href="/jaronheard/events" className="font-bold text-slate-900">
-            list
-          </Link>
-          .
-        </span>
-      </div>
     </form>
   );
 }
