@@ -47,7 +47,6 @@ export function AddEvent() {
   const router = useRouter();
 
   // State variables
-  const [events, setEvents] = useState<AddToCalendarButtonType[] | null>([]);
   const [input, setInput] = useState("");
 
   // Context variables
