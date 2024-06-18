@@ -146,6 +146,135 @@ export const aiRouter = createTRPCRouter({
       const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
       return { events, response };
     }),
+  eventsFromUrl: protectedProcedure
+    .input(
+      z.object({
+        url: z.string(),
+        timezone: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const system = getSystemMessage();
+      const systemMetadata = getSystemMessageMetadata();
+      const prompt = getPrompt(input.timezone);
+
+      // START - duplicated except for input with eventFromImage
+      const generateObjectWithLogging = async <T>(
+        generateObjectOptions: Parameters<typeof generateObject<T>>[0],
+        loggingOptions: { name: string },
+      ): Promise<ReturnType<typeof generateObject<T>>> => {
+        const trace = langfuse.trace({
+          name: loggingOptions.name,
+          sessionId: ctx.auth.sessionId,
+          userId: ctx.auth.userId,
+          input: input.url,
+          version: prompt.version,
+        });
+        const generation = trace.generation({
+          name: "generation",
+          input: input.url,
+          model: MODEL,
+          version: prompt.version,
+        });
+        generation.update({
+          completionStartTime: new Date(),
+        });
+        try {
+          const result = await generateObject(generateObjectOptions);
+          generation.end({
+            output: result.object,
+          });
+          generation.score({
+            name: "eventToJson",
+            value: result.object === null ? 0 : 1,
+          });
+          trace.update({
+            output: result.object,
+            metadata: {
+              finishReason: result.finishReason,
+              logprobs: result.logprobs,
+              rawResponse: result.rawResponse,
+              warnings: result.warnings,
+            },
+          });
+          waitUntil(langfuse.flushAsync());
+          return result;
+        } catch (error) {
+          console.error(
+            "An error occurred while generating the response:",
+            error,
+          );
+          generation.score({
+            name: "eventToJson",
+            value: 0,
+          });
+          trace.update({
+            output: null,
+            metadata: {
+              finishReason: "error",
+              error: error,
+            },
+          });
+          waitUntil(langfuse.flushAsync());
+          throw error;
+        }
+      };
+      // END - duplicated except for input with eventFromImage
+      const jinaReader = await fetch(`https://r.jina.ai/${input.url}`, {
+        method: "GET",
+      });
+      const rawText = await jinaReader.text();
+      if (!rawText) {
+        throw new Error("Failed to fetch the text from the URL.");
+      }
+
+      const [event, metadata] = await Promise.all([
+        generateObjectWithLogging(
+          {
+            model: openai(MODEL),
+            mode: "json",
+            temperature: 0.2,
+            maxRetries: 0,
+            messages: [
+              { role: "system", content: system.text },
+              {
+                role: "user",
+                content: `${prompt.text} Input: """
+              ${rawText}
+              """`,
+              },
+            ],
+            schema: EventSchema,
+          },
+          { name: "eventFromUrl.event" },
+        ),
+        generateObjectWithLogging(
+          {
+            model: openai(MODEL),
+            mode: "json",
+            temperature: 0.2,
+            maxRetries: 0,
+            messages: [
+              { role: "system", content: systemMetadata.text },
+              {
+                role: "user",
+                content: `${prompt.textMetadata} Input: """
+              ${rawText}
+              """`,
+              },
+            ],
+            schema: EventMetadataSchema,
+          },
+          { name: "eventFromUrl.metadata" },
+        ),
+      ]);
+
+      const eventObject = { ...event.object, eventMetadata: metadata.object };
+
+      const events = addCommonAddToCalendarProps([eventObject]);
+      const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
+      return { events, response };
+    }),
   eventFromImage: protectedProcedure
     .input(
       z.object({

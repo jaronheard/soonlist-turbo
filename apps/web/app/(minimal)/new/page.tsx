@@ -10,6 +10,7 @@ import { env } from "~/env";
 import { api } from "~/trpc/server";
 import { EventsFromImage } from "./EventsFromImage";
 import { EventsFromRawText } from "./EventsFromRawText";
+import { EventsFromUrl } from "./EventsFromUrl";
 import { ProgressStages } from "./ProgressStages";
 
 export const maxDuration = 60;
@@ -17,6 +18,7 @@ export const maxDuration = 60;
 interface Props {
   searchParams: {
     rawText?: string;
+    url?: string;
     saveIntent?: boolean;
     filePath?: string;
     timezone?: string;
@@ -67,6 +69,16 @@ export default async function Page({ searchParams }: Props) {
             rawText={searchParams.rawText}
           />
         }
+      ></ProgressStages>
+    );
+  }
+  // url
+  if (searchParams.url) {
+    return (
+      <ProgressStages
+        filePath={searchParams.filePath}
+        lists={lists}
+        Preview={<EventsFromUrl timezone={timezone} url={searchParams.url} />}
       ></ProgressStages>
     );
   }

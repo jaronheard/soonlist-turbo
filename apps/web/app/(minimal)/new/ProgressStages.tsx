@@ -4,6 +4,7 @@ import type { SubmitHandler } from "react-hook-form";
 import type { z } from "zod";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, X } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -32,6 +33,7 @@ function ProgressStagesWrapper({
   children: JSX.Element;
   onClickNextOrganize?: () => void;
 }) {
+  const router = useRouter();
   const { status, goToPreviousStatus } = useNewEventProgressContext();
   const [showCropActions, setShowCropActions] = useState(false);
   return (
@@ -45,13 +47,23 @@ function ProgressStagesWrapper({
           variant={"ghost"}
           size={"icon"}
         >
-          <Link href="/">
+          <Link href={status === Status.Organize ? "/" : "/new"}>
             <X />
           </Link>
         </Button>
         {status !== Status.Organize && (
           <Button
             onClick={goToPreviousStatus}
+            className="absolute -top-2 left-0"
+            variant={"ghost"}
+            size={"icon"}
+          >
+            <ChevronLeft />
+          </Button>
+        )}
+        {status === Status.Organize && (
+          <Button
+            onClick={() => router.back()}
             className="absolute -top-2 left-0"
             variant={"ghost"}
             size={"icon"}
