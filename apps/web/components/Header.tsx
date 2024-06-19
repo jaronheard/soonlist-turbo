@@ -7,7 +7,6 @@ import {
   SignedIn,
   SignedOut,
   SignInButton,
-  SignUpButton,
   useClerk,
   useUser,
 } from "@clerk/nextjs";
@@ -42,6 +41,7 @@ import {
 } from "./DropdownMenu";
 import { Logo } from "./Logo";
 import { TimezoneSelect } from "./TimezoneSelect";
+import { WaitlistButtonWithDrawer } from "./WaitlistSignup";
 
 export function Header() {
   return (
@@ -116,13 +116,7 @@ export function Nav() {
             </Link>
           </SignedIn>
           <SignedOut>
-            <Link href="/sign-up" legacyBehavior passHref>
-              <NavigationMenuLink
-                className={buttonVariants({ variant: "default" })}
-              >
-                Sign<span className="inline">&nbsp;Up</span>
-              </NavigationMenuLink>
-            </Link>
+            <WaitlistButtonWithDrawer />
           </SignedOut>
         </NavigationMenuItem>
       </NavigationMenuList>
@@ -397,9 +391,9 @@ export function MobileNav() {
               ))}
             </div>
           </SignedIn>
-          <Separator className="my-3" />
           <SignedOut>
-            <SignUpButton>
+            {/* <Separator className="my-3" /> */}
+            {/* <SignUpButton>
               <Button
                 className="w-full"
                 onClick={() => {
@@ -409,7 +403,7 @@ export function MobileNav() {
                 Sign Up
               </Button>
             </SignUpButton>
-            <div className="my-3"></div>
+            <div className="my-3"></div> */}
             <SignInButton>
               <Button
                 variant={"secondary"}
@@ -423,6 +417,7 @@ export function MobileNav() {
             </SignInButton>
           </SignedOut>
           <SignedIn>
+            <Separator className="my-3" />
             <Button
               variant="secondary"
               className="w-full"

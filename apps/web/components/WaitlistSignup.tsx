@@ -1,12 +1,30 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, TicketPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 
 import { Button } from "@soonlist/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@soonlist/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@soonlist/ui/drawer";
 import {
   Form,
   FormControl,
@@ -20,6 +38,24 @@ import { Input } from "@soonlist/ui/input";
 
 import { api } from "~/trpc/react";
 
+export function useMediaQuery(query: string) {
+  const [value, setValue] = useState(false);
+
+  useEffect(() => {
+    function onChange(event: MediaQueryListEvent) {
+      setValue(event.matches);
+    }
+
+    const result = matchMedia(query);
+    result.addEventListener("change", onChange);
+    setValue(result.matches);
+
+    return () => result.removeEventListener("change", onChange);
+  }, [query]);
+
+  return value;
+}
+
 const formSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email.",
@@ -29,7 +65,7 @@ const formSchema = z.object({
   }),
 });
 
-export function WaitlistSignup() {
+export function WaitlistSignup({ afterSubmit }: { afterSubmit: () => void }) {
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,7 +78,7 @@ export function WaitlistSignup() {
 
   const waitlistSignup = api.waitlist.create.useMutation({
     onError: () => {
-      toast.error("Your weren't added to the waitlist. Please try again.");
+      toast.error("❣️ You're already on the list!");
     },
     onSuccess: () => {
       form.reset();
@@ -51,60 +87,99 @@ export function WaitlistSignup() {
   });
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
+    afterSubmit();
     waitlistSignup.mutate(values);
   }
 
   return (
-    <>
-      <div className="text-center font-heading text-4xl font-bold leading-[1.0833] tracking-tight text-gray-900 sm:text-5xl">
-        Get early access
-      </div>
-      <p className="mx-auto mt-6 max-w-3xl text-center text-2xl leading-9 text-gray-400">
-        Soonlist is currently in preview. Be one of the first to know when we
-        launch in your area, and get free early supporter perks! 🎉
-      </p>
-      <div className="py-4"></div>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col justify-center gap-4 md:flex-row md:gap-4"
-        >
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem className="max-w-48 sm:max-w-xl">
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="" {...field} />
-                  </FormControl>
-                  <FormDescription>Your email</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="zipcode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Postal Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="" {...field} />
-                  </FormControl>
-                  <FormDescription>Your area</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <Button className="max-w-min md:mt-8" type="submit">
-            <ClipboardList className="mr-2 size-4"></ClipboardList>
-            Get on the list
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="" {...field} />
+              </FormControl>
+              <FormDescription>Your email</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="zipcode"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Postal Code</FormLabel>
+              <FormControl>
+                <Input placeholder="" {...field} />
+              </FormControl>
+              <FormDescription>Your area</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button className="w-full" type="submit">
+          <ClipboardList className="mr-2 size-4"></ClipboardList>
+          Get on the list
+        </Button>
+      </form>
+    </Form>
+  );
+}
+
+export function WaitlistButtonWithDrawer({
+  size = "default",
+}: {
+  size?: "sm" | "lg" | "default";
+}) {
+  const [open, setOpen] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button size={size}>
+            <TicketPlus className="mr-2 size-4"></TicketPlus>
+            Join waitlist
           </Button>
-        </form>
-      </Form>
-    </>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Join the waitlist</DialogTitle>
+            <DialogDescription>
+              Be one of the first to get early access.
+            </DialogDescription>
+          </DialogHeader>
+          <WaitlistSignup afterSubmit={() => setOpen(false)} />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        <Button size={size}>
+          <TicketPlus className="mr-1.5 size-4 rotate-[-20deg]"></TicketPlus>
+          Join waitlist
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>Join the waitlist</DrawerTitle>
+          <DrawerDescription>
+            Be one of the first to get early access.
+          </DrawerDescription>
+        </DrawerHeader>
+        <DrawerFooter>
+          <WaitlistSignup afterSubmit={() => setOpen(false)} />
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

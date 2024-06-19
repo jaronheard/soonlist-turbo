@@ -7,19 +7,16 @@ import { CalendarPlus } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
 
+import { WaitlistButtonWithDrawer } from "./WaitlistSignup";
+
 export function CTAButton() {
   return (
     <>
       <SignedOut>
-        <Button asChild size="lg">
-          <Link href={"/new"}>
-            <CalendarPlus className="mr-2 size-4"></CalendarPlus>
-            Add your first event
-          </Link>
-        </Button>
+        <WaitlistButtonWithDrawer size="lg" />
       </SignedOut>
       <SignedIn>
-        <Button asChild>
+        <Button asChild size="lg">
           <Link href={"/new"}>
             <CalendarPlus className="mr-2 size-4"></CalendarPlus>
             Add<span className="inline">&nbsp;Event</span>
