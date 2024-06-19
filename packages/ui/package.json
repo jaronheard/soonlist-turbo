@@ -39,7 +39,8 @@
     "sonner": "^1.4.41",
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "vaul": "^0.9.1"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",
