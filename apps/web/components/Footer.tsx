@@ -1,14 +1,34 @@
 "use client";
 
 import Link from "next/link";
+import { SignedOut } from "@clerk/nextjs";
 
 import { buttonVariants } from "@soonlist/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 
 import { WaitlistButtonWithDrawer } from "./WaitlistSignup";
 
 export function Footer() {
   return (
     <div className="">
+      <SignedOut>
+        <div className="mx-auto max-w-xl px-6 md:px-8">
+          <Card className="bg-primary text-primary-foreground">
+            <CardHeader>
+              <CardTitle className="-mb-4 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-primary-foreground md:text-5xl">
+                Get early access
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-lg">
+                Save, organize, and share the events that inspire <em>you</em>.
+              </p>
+              <WaitlistButtonWithDrawer size="lg" variant="secondary" />
+            </CardContent>
+          </Card>
+        </div>
+        <div className="p-2.5"></div>
+      </SignedOut>
       <footer className="w-full bg-neutral-1 p-8 text-background sm:p-24">
         <nav className="mx-auto flex max-w-7xl flex-col justify-between gap-8 lg:flex-row">
           {/* Logo and Social Section */}
