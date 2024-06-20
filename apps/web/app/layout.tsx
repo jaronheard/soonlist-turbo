@@ -80,7 +80,7 @@ export default function RootLayout({
       className={`!overflow-x-hidden ${kalam.variable} ${plex_sans.variable}`}
     >
       <PHProvider>
-        <body>
+        <body className="overflow-x-hidden">
           <TRPCReactProvider>
             <Providers>
               <Suspense>
