@@ -66,6 +66,11 @@ const nextConfig = {
         destination: "/",
         permanent: true,
       },
+      {
+        source: "/early-access",
+        destination: "/",
+        permanent: true,
+      },
     ];
   },
   // This is required to support PostHog trailing slash API requests

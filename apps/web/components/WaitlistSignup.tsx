@@ -133,8 +133,10 @@ export function WaitlistSignup({ afterSubmit }: { afterSubmit: () => void }) {
 
 export function WaitlistButtonWithDrawer({
   size = "default",
+  variant = "default",
 }: {
   size?: "sm" | "lg" | "default";
+  variant?: "default" | "secondary" | "outline";
 }) {
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -143,8 +145,8 @@ export function WaitlistButtonWithDrawer({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button size={size}>
-            <TicketPlus className="mr-2 size-4"></TicketPlus>
+          <Button size={size} variant={variant}>
+            <TicketPlus className="mr-2 size-4 rotate-[-20deg]"></TicketPlus>
             Join waitlist
           </Button>
         </DialogTrigger>
@@ -164,7 +166,7 @@ export function WaitlistButtonWithDrawer({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button size={size}>
+        <Button size={size} variant={variant}>
           <TicketPlus className="mr-1.5 size-4 rotate-[-20deg]"></TicketPlus>
           Join waitlist
         </Button>
