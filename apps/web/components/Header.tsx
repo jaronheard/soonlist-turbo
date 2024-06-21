@@ -312,7 +312,7 @@ export function MobileNav() {
           <Logo className="scale-75" variant="hidePreview" />
         </MobileLink>
         <ScrollArea className="h-full pl-6">
-          <div className="pt-2">
+          <div className="px-1 pt-2">
             <TimezoneSelect />
           </div>
           <SignedIn>
