@@ -17,6 +17,9 @@ export default function PostHogPageView(): null {
 
   // Track pageviews
   useEffect(() => {
+    if (process.env.NODE_ENV == "development") {
+      return;
+    }
     if (pathname && posthog) {
       let url = window.origin + pathname;
       if (searchParams.toString()) {
@@ -29,6 +32,9 @@ export default function PostHogPageView(): null {
   }, [pathname, searchParams, posthog]);
 
   useEffect(() => {
+    if (process.env.NODE_ENV == "development") {
+      return;
+    }
     // 👉 Check the sign in status and user info,
     //    and identify the user if they aren't already
     if (isSignedIn && userId && user && !posthog._isIdentified()) {
