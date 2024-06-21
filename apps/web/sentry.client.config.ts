@@ -22,7 +22,7 @@ Sentry.init({
     Sentry.replayIntegration({
       // Additional SDK configuration goes in here, for example:
       // maskAllText: true,
-      blockAllMedia: true,
+      // blockAllMedia: true,
     }),
   ],
   enabled: env.NODE_ENV === "production",
