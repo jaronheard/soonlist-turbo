@@ -7,6 +7,12 @@
       "request": "attach",
       "name": "Attach to Node.js",
       "port": 9230
+    },
+    {
+      "type": "react-native-ide",
+      "request": "launch",
+      "name": "React Native IDE panel",
+      "appRoot": "apps/mobile"
     }
   ]
 }
