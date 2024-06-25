@@ -11,6 +11,7 @@ import type {
   SignedOutAuthObject,
 } from "@clerk/backend/internal";
 import type { User } from "@clerk/nextjs/server";
+import type { OpenApiMeta } from "trpc-openapi";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
@@ -73,16 +74,20 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
  * This is where the trpc api is initialized, connecting the context and
  * transformer
  */
-const t = initTRPC.context<typeof createTRPCContext>().create({
-  transformer: superjson,
-  errorFormatter: ({ shape, error }) => ({
-    ...shape,
-    data: {
-      ...shape.data,
-      zodError: error.cause instanceof ZodError ? error.cause.flatten() : null,
-    },
-  }),
-});
+const t = initTRPC
+  .meta<OpenApiMeta>()
+  .context<typeof createTRPCContext>()
+  .create({
+    transformer: superjson,
+    errorFormatter: ({ shape, error }) => ({
+      ...shape,
+      data: {
+        ...shape.data,
+        zodError:
+          error.cause instanceof ZodError ? error.cause.flatten() : null,
+      },
+    }),
+  });
 
 /**
  * Create a server-side caller
