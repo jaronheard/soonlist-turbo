@@ -6,7 +6,7 @@ import SignInWithOAuth from "~/components/SignInWithOAuth";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
 
-export default function Index() {
+export default function Events() {
   // get user from clerk
   const { isLoaded, user } = useUser();
 
@@ -15,7 +15,7 @@ export default function Index() {
     return <SignInWithOAuth />;
   }
 
-  const eventsQuery = api.event.getForUser.useQuery({
+  const eventsQuery = api.event.getUpcomingForUser.useQuery({
     userName: user.username,
   });
   const utils = api.useUtils();
@@ -25,9 +25,9 @@ export default function Index() {
   // });
 
   return (
-    <SafeAreaView className=" bg-background">
+    <SafeAreaView className="h-full w-full bg-background">
       {/* Changes page title visible on the header */}
-      <Stack.Screen options={{ title: "All Events" }} />
+      <Stack.Screen options={{ title: "My Feed" }} />
       <View className="h-full w-full bg-background p-4">
         <Pressable
           onPress={() => void utils.event.invalidate()}
