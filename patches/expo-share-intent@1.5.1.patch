@@ -1,0 +1,16 @@
+diff --git a/plugin/build/ios/ShareExtensionViewController.swift b/plugin/build/ios/ShareExtensionViewController.swift
+index 67036867bd4a082140d2f8ae5000caea9cdb50fb..74b9b1269b7772b13f435b29bdab0e254f10557e 100644
+--- a/plugin/build/ios/ShareExtensionViewController.swift
++++ b/plugin/build/ios/ShareExtensionViewController.swift
+@@ -20,6 +20,11 @@ class ShareViewController: SLComposeServiceViewController {
+   let textContentType = kUTTypeText as String
+   let urlContentType = kUTTypeURL as String
+   let fileURLType = kUTTypeFileURL as String;
++
++  override func loadView() {
++    // Override loadView to prevent the UI from being loaded
++    self.view = UIView(frame: CGRect.zero)
++  }
+   
+   override func isContentValid() -> Bool {
+     return true
