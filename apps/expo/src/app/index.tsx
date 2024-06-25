@@ -20,7 +20,7 @@ import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
 import SignInWithOAuth from "../components/SignInWithOAuth";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 
-import "./styles.css";
+import "../styles.css";
 
 import Constants from "expo-constants";
 import * as Sentry from "@sentry/react-native";
