@@ -11,40 +11,23 @@ import {
   View,
 } from "react-native";
 import MLKit from "react-native-mlkit-ocr";
-import Constants from "expo-constants";
-import * as SecureStore from "expo-secure-store";
+import { Link } from "expo-router";
 import { useShareIntent } from "expo-share-intent";
 import * as WebBrowser from "expo-web-browser";
 import * as Bytescale from "@bytescale/sdk";
-import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
+import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
 
-import SignInWithOAuth from "./components/SignInWithOAuth";
-import { useWarmUpBrowser } from "./hooks/useWarmUpBrowser";
+import SignInWithOAuth from "../components/SignInWithOAuth";
+import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 
-import "./styles.css";
+import "../styles.css";
 
+import Constants from "expo-constants";
 import * as Sentry from "@sentry/react-native";
 
 Sentry.init({
   dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.us.sentry.io/4506458761396224",
 });
-
-const tokenCache = {
-  async getToken(key: string) {
-    try {
-      return SecureStore.getItemAsync(key);
-    } catch (err) {
-      return null;
-    }
-  },
-  async saveToken(key: string, value: string) {
-    try {
-      return SecureStore.setItemAsync(key, value);
-    } catch (err) {
-      return;
-    }
-  },
-};
 
 const SignOut = () => {
   const { isLoaded, signOut } = useAuth();
@@ -386,30 +369,30 @@ function App() {
   }
 
   return (
-    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
-      <SafeAreaView className="flex flex-1 items-center justify-center bg-white">
-        <SignedOut>
-          <SignInWithOAuth />
-        </SignedOut>
-        <SignedIn>
-          <Image
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            source={require("../assets/icon.png")}
-            className="mb-5 h-16 w-16 rounded-xl"
-          />
-          <Text className="mb-5 text-lg">
-            Share a screenshot or image to Soonlist...
-          </Text>
-          <Text
-            className="mb-5 text-xl font-bold text-interactive-1"
-            onPress={() => Linking.openURL("https://www.soonlist.com")}
-          >
-            soonlist.com
-          </Text>
-          <SignOut />
-        </SignedIn>
-      </SafeAreaView>
-    </ClerkProvider>
+    <SafeAreaView className="flex flex-1 items-center justify-center bg-white">
+      <SignedOut>
+        <SignInWithOAuth />
+      </SignedOut>
+      <SignedIn>
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          source={require("../../assets/icon.png")}
+          className="mb-5 h-16 w-16 rounded-xl"
+        />
+        <Text className="mb-5 text-lg">
+          Share a screenshot or image to Soonlist...
+        </Text>
+        <Text
+          className="mb-5 text-xl font-bold text-interactive-1"
+          onPress={() => Linking.openURL("https://www.soonlist.com")}
+        >
+          View events
+        </Text>
+        <Link href="/new">/new</Link>
+        <Link href="/events">/events</Link>
+        <SignOut />
+      </SignedIn>
+    </SafeAreaView>
   );
 }
 
