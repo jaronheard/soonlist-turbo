@@ -49,6 +49,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "soonlist.soonlist",
+    config: {
+      usesNonExemptEncryption: false,
+    },
   },
   android: {
     package: "soonlist.soonlist",
