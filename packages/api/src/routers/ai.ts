@@ -25,6 +25,16 @@ const MODEL = "gpt-4o";
 
 export const aiRouter = createTRPCRouter({
   eventFromRawText: protectedProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: "/ai/eventFromRawText",
+        tags: ["ai", "event"],
+        summary: "Generate an event from raw text",
+        description: "Generate an event from raw text",
+        protect: true,
+      },
+    })
     .input(
       z.object({
         rawText: z.string(),
@@ -147,6 +157,16 @@ export const aiRouter = createTRPCRouter({
       return { events, response };
     }),
   eventsFromUrl: protectedProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: "/ai/eventsFromUrl",
+        tags: ["ai", "event"],
+        summary: "Generate events from a URL",
+        description: "Generate events from a URL",
+        protect: true,
+      },
+    })
     .input(
       z.object({
         url: z.string(),
@@ -276,6 +296,16 @@ export const aiRouter = createTRPCRouter({
       return { events, response };
     }),
   eventFromImage: protectedProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: "/ai/eventFromImage",
+        tags: ["ai", "event"],
+        summary: "Generate an event from an image",
+        description: "Generate an event from an image",
+        protect: true,
+      },
+    })
     .input(
       z.object({
         imageUrl: z.string(),
