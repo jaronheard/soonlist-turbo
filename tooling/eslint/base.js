@@ -82,6 +82,10 @@ export default tseslint.config(
           assertionStyle: "never",
         },
       ],
+      "no-warning-comments": [
+        "error",
+        { terms: ["XXX"], location: "anywhere" },
+      ],
     },
   },
   {
