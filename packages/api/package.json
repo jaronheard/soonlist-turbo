@@ -32,7 +32,7 @@
     "nanoid": "^5.0.7",
     "stripe": "^15.9.0",
     "superjson": "2.2.1",
-    "trpc-openapi": "^1.2.0",
+    "trpc-swagger": "^1.2.6",
     "zod": "^3.23.0"
   },
   "devDependencies": {
