@@ -7,7 +7,7 @@ import { AddListCard } from "~/components/AddListCard";
 
 export default function Page() {
   const searchParams = useSearchParams();
-  const afterSuccess = searchParams.get("afterSuccess") || "";
+  const afterSuccess = searchParams?.get("afterSuccess") || "";
   return (
     <SignedIn>
       <AddListCard
