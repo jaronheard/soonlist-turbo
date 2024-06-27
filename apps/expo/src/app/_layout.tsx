@@ -42,8 +42,8 @@ export async function sendPushNotification(expoPushToken: string) {
   const message = {
     to: expoPushToken,
     sound: "default",
-    title: "Original Title",
-    body: "And here is the body!",
+    title: "Want in early?",
+    body: "You can be one of the first. We want to learn together.",
     data: { someData: "goes here" },
   };
 
@@ -91,6 +91,7 @@ async function registerForPushNotificationsAsync() {
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const projectId: string | undefined =
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       Constants.expoConfig?.extra?.eas?.projectId ??
       Constants.easConfig?.projectId;
     if (!projectId) {
