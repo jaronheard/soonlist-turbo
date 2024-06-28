@@ -149,9 +149,6 @@ export default function RootLayout() {
     };
   }, []);
 
-  console.log(expoPushToken); // XXX
-  console.log(notification); // XXX
-
   const { colorScheme } = useColorScheme();
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const clerkPublishableKey = Constants.expoConfig?.extra
