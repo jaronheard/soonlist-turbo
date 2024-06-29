@@ -24,7 +24,7 @@ import { filterDuplicates, generatePublicId } from "../utils";
 
 const stringArraySchema = z.array(z.string());
 
-export const eventCreateSchema = z.object({
+const eventCreateSchema = z.object({
   event: AddToCalendarButtonPropsSchema,
   eventMetadata: EventMetadataSchemaLoose.optional(),
   comment: z.string().optional(),

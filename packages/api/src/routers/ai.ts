@@ -26,7 +26,6 @@ import {
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { generatePublicId } from "../utils";
-import { eventCreateSchema } from "./event";
 
 const langfuse = new Langfuse({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
@@ -36,13 +35,16 @@ const langfuse = new Langfuse({
 
 const MODEL = "gpt-4o";
 
-const prototypeEventCreateSchema = z
-  .object({
-    rawText: z.string(),
-    timezone: z.string(),
-    expoPushToken: z.string(),
-  })
-  .merge(eventCreateSchema);
+const prototypeEventCreateSchema = z.object({
+  rawText: z.string(),
+  timezone: z.string(),
+  expoPushToken: z.string(),
+  comment: z.string().optional(),
+  lists: z.array(z.record(z.string().trim())),
+  visibility: z.enum(["public", "private"]).optional(),
+  userId: z.string(),
+  username: z.string(),
+});
 // Create a single Expo SDK client to be reused
 const expo = new Expo();
 
@@ -555,8 +557,8 @@ export const aiRouter = createTRPCRouter({
       // return { events, response };
 
       // adapted logic from event.create
-      const userId = ctx.auth.userId;
-      const username = ctx.currentUser?.username;
+      const userId = input.userId;
+      const username = input.username;
       if (!userId) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -615,7 +617,7 @@ export const aiRouter = createTRPCRouter({
         id: eventid,
         userId: userId,
         userName: username || "unknown",
-        event: event,
+        event: firstEvent,
         eventMetadata: firstEvent.eventMetadata,
         startDateTime: startUtcDate,
         endDateTime: endUtcDate,

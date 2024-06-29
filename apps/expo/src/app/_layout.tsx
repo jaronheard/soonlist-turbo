@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Platform, Text, View } from "react-native";
+import { Platform, Text } from "react-native";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import { ClerkProvider } from "@clerk/clerk-expo";
+import { ClerkProvider, SignedIn } from "@clerk/clerk-expo";
 import { useColorScheme } from "nativewind";
 
-import { api, TRPCProvider } from "~/utils/api";
+import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
+
+import AddButtonView from "~/components/AddButtonView";
 
 const tokenCache = {
   async getToken(key: string) {
@@ -114,28 +116,28 @@ async function registerForPushNotificationsAsync() {
   }
 }
 
-function PushNotificationSenderButton({
-  expoPushToken,
-}: {
-  expoPushToken: string;
-}) {
-  const notificationMutation =
-    api.notification.sendSingleNotification.useMutation({});
+// function PushNotificationSenderButton({
+//   expoPushToken,
+// }: {
+//   expoPushToken: string;
+// }) {
+//   const notificationMutation =
+//     api.notification.sendSingleNotification.useMutation({});
 
-  return (
-    <Button
-      title="Press to Send Notification"
-      onPress={() => {
-        notificationMutation.mutate({
-          expoPushToken: expoPushToken,
-          title: "Test from TRPC",
-          body: "Test",
-          data: { test: "test" },
-        });
-      }}
-    />
-  );
-}
+//   return (
+//     <Button
+//       title="Press to Send Notification"
+//       onPress={() => {
+//         notificationMutation.mutate({
+//           expoPushToken: expoPushToken,
+//           title: "Test from TRPC",
+//           body: "Test",
+//           data: { test: "test" },
+//         });
+//       }}
+//     />
+//   );
+// }
 
 // This is the main layout of the app
 // It wraps your pages with the providers they need
@@ -201,7 +203,10 @@ export default function RootLayout() {
             },
           }}
         />
-        <View
+        <SignedIn>
+          <AddButtonView expoPushToken={expoPushToken} />
+        </SignedIn>
+        {/* <View
           style={{
             flex: 1,
             alignItems: "center",
@@ -219,7 +224,7 @@ export default function RootLayout() {
             </Text>
           </View>
           <PushNotificationSenderButton expoPushToken={expoPushToken} />
-        </View>
+        </View> */}
         <StatusBar />
       </ClerkProvider>
     </TRPCProvider>
