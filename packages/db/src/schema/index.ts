@@ -236,6 +236,7 @@ export const users = mysqlTable(
       .notNull(),
     updatedAt: timestamp("updatedAt").onUpdateNow(),
     publicMetadata: json("publicMetadata"),
+    expoPushToken: varchar("expoPushToken", { length: 254 }),
   },
   (table) => {
     return {
