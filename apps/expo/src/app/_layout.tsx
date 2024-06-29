@@ -9,7 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { useColorScheme } from "nativewind";
 
-import { TRPCProvider } from "~/utils/api";
+import { api, TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
 
@@ -114,6 +114,29 @@ async function registerForPushNotificationsAsync() {
   }
 }
 
+function PushNotificationSenderButton({
+  expoPushToken,
+}: {
+  expoPushToken: string;
+}) {
+  const notificationMutation =
+    api.notification.sendSingleNotification.useMutation({});
+
+  return (
+    <Button
+      title="Press to Send Notification"
+      onPress={() => {
+        notificationMutation.mutate({
+          expoPushToken: expoPushToken,
+          title: "Test from TRPC",
+          body: "Test",
+          data: { test: "test" },
+        });
+      }}
+    />
+  );
+}
+
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 export default function RootLayout() {
@@ -195,12 +218,7 @@ export default function RootLayout() {
                 JSON.stringify(notification.request.content.data)}
             </Text>
           </View>
-          <Button
-            title="Press to Send Notification"
-            onPress={async () => {
-              await sendPushNotification(expoPushToken);
-            }}
-          />
+          <PushNotificationSenderButton expoPushToken={expoPushToken} />
         </View>
         <StatusBar />
       </ClerkProvider>
