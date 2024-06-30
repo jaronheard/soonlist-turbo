@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useUser } from "@clerk/clerk-expo";
 
 import { api } from "~/utils/api";
@@ -14,18 +14,18 @@ export default function TokenSaver({
     onSettled: () => void utils.pushToken.invalidate(),
   });
 
-  useEffect(() => {
+  const saveExpoToken = useCallback(() => {
     if (user) {
-      const saveExpoToken = async () => {
-        createTokenMutation.mutate({
-          userId: user.id,
-          expoPushToken: expoPushToken,
-        });
-      };
-
-      void saveExpoToken();
+      createTokenMutation.mutate({
+        userId: user.id,
+        expoPushToken: expoPushToken,
+      });
     }
-  }, [expoPushToken, user, createTokenMutation]);
+  }, [user, expoPushToken, createTokenMutation]);
+
+  useEffect(() => {
+    saveExpoToken();
+  }, [saveExpoToken]);
 
   return null; // This component doesn't render anything
 }

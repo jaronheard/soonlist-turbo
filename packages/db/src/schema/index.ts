@@ -251,7 +251,7 @@ export const pushTokens = mysqlTable(
   {
     id: serial("id").primaryKey(),
     userId: varchar("userId", { length: 191 }).notNull(),
-    expoPushToken: varchar("expoPushToken", { length: 254 }).notNull(),
+    expoPushToken: varchar("expoPushToken", { length: 191 }).notNull(),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),

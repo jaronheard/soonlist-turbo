@@ -507,196 +507,235 @@ export const aiRouter = createTRPCRouter({
           throw error;
         }
       };
-      // END - duplicated except for input with eventFromImage
-
-      const [event, metadata] = await Promise.all([
-        generateObjectWithLogging(
-          {
-            model: openai(MODEL),
-            mode: "json",
-            temperature: 0.2,
-            maxRetries: 0,
-            messages: [
-              { role: "system", content: system.text },
-              {
-                role: "user",
-                content: `${prompt.text} Input: """
-              ${input.rawText}
-              """`,
-              },
-            ],
-            schema: EventSchema,
-          },
-          { name: "eventFromRawText.event" },
-        ),
-        generateObjectWithLogging(
-          {
-            model: openai(MODEL),
-            mode: "json",
-            temperature: 0.2,
-            maxRetries: 0,
-            messages: [
-              { role: "system", content: systemMetadata.text },
-              {
-                role: "user",
-                content: `${prompt.textMetadata} Input: """
-              ${input.rawText}
-              """`,
-              },
-            ],
-            schema: EventMetadataSchema,
-          },
-          { name: "eventFromRawText.metadata" },
-        ),
-      ]);
-
-      const eventObject = { ...event.object, eventMetadata: metadata.object };
-
-      const events = addCommonAddToCalendarProps([eventObject]);
-      // const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
-      // return { events, response };
-
-      // adapted logic from event.create
-      const userId = input.userId;
-      const username = input.username;
-      if (!userId) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "No user id found in session",
-        });
-      }
-
-      if (!username) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "No username found in session",
-        });
-      }
-
-      const firstEvent = events[0];
-      if (!firstEvent) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "No events found in response",
-        });
-      }
-
-      const hasComment = input.comment && input.comment.length > 0;
-      const hasLists = input.lists.length > 0;
-      const hasVisibility = input.visibility && input.visibility.length > 0;
-
-      let startTime = firstEvent.startTime;
-      let endTime = firstEvent.endTime;
-      let timeZone = firstEvent.timeZone;
-
-      // time zone is America/Los_Angeles if not specified
-      if (!timeZone) {
-        timeZone = "America/Los_Angeles";
-      }
-
-      // start time is 00:00 if not specified
-      if (!startTime) {
-        startTime = "00:00";
-      }
-      // end time is 23:59 if not specified
-      if (!endTime) {
-        endTime = "23:59";
-      }
-
-      const start = Temporal.ZonedDateTime.from(
-        `${firstEvent.startDate}T${startTime}[${timeZone}]`,
-      );
-      const end = Temporal.ZonedDateTime.from(
-        `${firstEvent.endDate}T${endTime}[${timeZone}]`,
-      );
-      const startUtcDate = new Date(start.epochMilliseconds);
-      const endUtcDate = new Date(end.epochMilliseconds);
-      const eventid = generatePublicId();
-
-      const values = {
-        id: eventid,
-        userId: userId,
-        userName: username || "unknown",
-        event: firstEvent,
-        eventMetadata: firstEvent.eventMetadata,
-        startDateTime: startUtcDate,
-        endDateTime: endUtcDate,
-        ...(hasVisibility && {
-          visibility: input.visibility,
-        }),
-      };
-      const createEvent = await ctx.db
-        .transaction(async (tx) => {
-          const insertEvent = async (event: NewEvent) => {
-            return tx.insert(eventsSchema).values(event);
-          };
-          const insertComment = async (comment: NewComment) => {
-            return tx.insert(comments).values(comment);
-          };
-          const insertEventToLists = async (eventToList: NewEventToLists[]) => {
-            return tx.insert(eventToLists).values(eventToList);
-          };
-
-          await insertEvent(values);
-          if (hasComment) {
-            await insertComment({
-              eventId: eventid,
-              content: input.comment || "",
-              userId: userId,
-            });
-          } else {
-            // no need to insert comment if there is no comment
-          }
-          if (hasLists) {
-            await tx
-              .delete(eventToLists)
-              .where(eq(eventToLists.eventId, eventid));
-            await insertEventToLists(
-              input.lists.map((list) => ({
-                eventId: eventid,
-                listId: list.value!,
-              })),
-            );
-          } else {
-            // no need to insert event to list if there is no list
-          }
-        })
-        .then(() => ({ id: eventid }));
-      console.log("createEvent", createEvent);
-      const { expoPushToken } = input;
-
-      const title = "Soonlist";
-      const body = "Your event is ready to go!";
-      const data = { url: "/new/preview" };
-
-      if (!Expo.isExpoPushToken(expoPushToken)) {
-        throw new Error(
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          `Push token ${expoPushToken} is not a valid Expo push token`,
-        );
-      }
-
-      const message: ExpoPushMessage = {
-        to: expoPushToken,
-        sound: "default",
-        title,
-        body,
-        data,
-      };
-
       try {
-        const [ticket] = await expo.sendPushNotificationsAsync([message]);
-        return {
-          success: true,
-          ticket,
+        // END - duplicated except for input with eventFromImage
+        const [event, metadata] = await Promise.all([
+          generateObjectWithLogging(
+            {
+              model: openai(MODEL),
+              mode: "json",
+              temperature: 0.2,
+              maxRetries: 0,
+              messages: [
+                { role: "system", content: system.text },
+                {
+                  role: "user",
+                  content: `${prompt.text} Input: """
+              ${input.rawText}
+              """`,
+                },
+              ],
+              schema: EventSchema,
+            },
+            { name: "eventFromRawText.event" },
+          ),
+          generateObjectWithLogging(
+            {
+              model: openai(MODEL),
+              mode: "json",
+              temperature: 0.2,
+              maxRetries: 0,
+              messages: [
+                { role: "system", content: systemMetadata.text },
+                {
+                  role: "user",
+                  content: `${prompt.textMetadata} Input: """
+              ${input.rawText}
+              """`,
+                },
+              ],
+              schema: EventMetadataSchema,
+            },
+            { name: "eventFromRawText.metadata" },
+          ),
+        ]);
+
+        const eventObject = { ...event.object, eventMetadata: metadata.object };
+
+        const events = addCommonAddToCalendarProps([eventObject]);
+        // const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
+        // return { events, response };
+
+        // adapted logic from event.create
+        const userId = input.userId;
+        const username = input.username;
+        if (!userId) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "No user id found in session",
+          });
+        }
+
+        if (!username) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "No username found in session",
+          });
+        }
+
+        const firstEvent = events[0];
+        if (!firstEvent) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "No events found in response",
+          });
+        }
+
+        const hasComment = input.comment && input.comment.length > 0;
+        const hasLists = input.lists.length > 0;
+        const hasVisibility = input.visibility && input.visibility.length > 0;
+
+        let startTime = firstEvent.startTime;
+        let endTime = firstEvent.endTime;
+        let timeZone = firstEvent.timeZone;
+
+        // time zone is America/Los_Angeles if not specified
+        if (!timeZone) {
+          timeZone = "America/Los_Angeles";
+        }
+
+        // start time is 00:00 if not specified
+        if (!startTime) {
+          startTime = "00:00";
+        }
+        // end time is 23:59 if not specified
+        if (!endTime) {
+          endTime = "23:59";
+        }
+
+        const start = Temporal.ZonedDateTime.from(
+          `${firstEvent.startDate}T${startTime}[${timeZone}]`,
+        );
+        const end = Temporal.ZonedDateTime.from(
+          `${firstEvent.endDate}T${endTime}[${timeZone}]`,
+        );
+        const startUtcDate = new Date(start.epochMilliseconds);
+        const endUtcDate = new Date(end.epochMilliseconds);
+        const eventid = generatePublicId();
+
+        const values = {
+          id: eventid,
+          userId: userId,
+          userName: username || "unknown",
+          event: firstEvent,
+          eventMetadata: firstEvent.eventMetadata,
+          startDateTime: startUtcDate,
+          endDateTime: endUtcDate,
+          ...(hasVisibility && {
+            visibility: input.visibility,
+          }),
         };
+        const createEvent = await ctx.db
+          .transaction(async (tx) => {
+            const insertEvent = async (event: NewEvent) => {
+              return tx.insert(eventsSchema).values(event);
+            };
+            const insertComment = async (comment: NewComment) => {
+              return tx.insert(comments).values(comment);
+            };
+            const insertEventToLists = async (
+              eventToList: NewEventToLists[],
+            ) => {
+              return tx.insert(eventToLists).values(eventToList);
+            };
+
+            await insertEvent(values);
+            if (hasComment) {
+              await insertComment({
+                eventId: eventid,
+                content: input.comment || "",
+                userId: userId,
+              });
+            } else {
+              // no need to insert comment if there is no comment
+            }
+            if (hasLists) {
+              await tx
+                .delete(eventToLists)
+                .where(eq(eventToLists.eventId, eventid));
+              await insertEventToLists(
+                input.lists.map((list) => ({
+                  eventId: eventid,
+                  listId: list.value!,
+                })),
+              );
+            } else {
+              // no need to insert event to list if there is no list
+            }
+          })
+          .then(() => ({ id: eventid }));
+        console.log("createEvent", createEvent);
+        const { expoPushToken } = input;
+
+        const title = "Soonlist";
+        const body = "Your event is ready to go!";
+        const data = { url: "/new/preview" };
+
+        if (!Expo.isExpoPushToken(expoPushToken)) {
+          throw new Error(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            `Push token ${expoPushToken} is not a valid Expo push token`,
+          );
+        }
+
+        const message: ExpoPushMessage = {
+          to: expoPushToken,
+          sound: "default",
+          title,
+          body,
+          data,
+        };
+
+        try {
+          const [ticket] = await expo.sendPushNotificationsAsync([message]);
+          return {
+            success: true,
+            ticket,
+          };
+        } catch (error) {
+          console.error("Error sending notification:", error);
+          return {
+            success: false,
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+            error: (error as Error).message,
+          };
+        }
       } catch (error) {
-        console.error("Error sending notification:", error);
-        return {
-          success: false,
-          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-          error: (error as Error).message,
+        const { expoPushToken } = input;
+
+        const title = "Soonlist";
+        const body = "There was an error creating your event.";
+        const data = { url: "/new/preview" };
+
+        if (!Expo.isExpoPushToken(expoPushToken)) {
+          throw new Error(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            `Push token ${expoPushToken} is not a valid Expo push token`,
+          );
+        }
+
+        const message: ExpoPushMessage = {
+          to: expoPushToken,
+          sound: "default",
+          title,
+          body,
+          data,
         };
+
+        try {
+          const [ticket] = await expo.sendPushNotificationsAsync([message]);
+          return {
+            success: true,
+            ticket,
+          };
+        } catch (error) {
+          console.error("Error sending notification:", error);
+          return {
+            success: false,
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+            error: (error as Error).message,
+          };
+        }
       }
     }),
 });

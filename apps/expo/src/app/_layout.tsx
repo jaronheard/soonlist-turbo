@@ -144,6 +144,7 @@ async function registerForPushNotificationsAsync() {
 // It wraps your pages with the providers they need
 export default function RootLayout() {
   const [expoPushToken, setExpoPushToken] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [notification, setNotification] = useState<
     Notifications.Notification | undefined
   >(undefined);
@@ -205,7 +206,7 @@ export default function RootLayout() {
           }}
         />
         <SignedIn>
-          <TokenSaver expoPushToken={expoPushToken} />
+          {/* <TokenSaver expoPushToken={expoPushToken} /> */}
           <AddButtonView expoPushToken={expoPushToken} />
         </SignedIn>
         {/* <View
