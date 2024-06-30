@@ -14,6 +14,7 @@ import { TRPCProvider } from "~/utils/api";
 import "../styles.css";
 
 import AddButtonView from "~/components/AddButtonView";
+import TokenSaver from "~/components/TokenSaver";
 
 const tokenCache = {
   async getToken(key: string) {
@@ -204,6 +205,7 @@ export default function RootLayout() {
           }}
         />
         <SignedIn>
+          <TokenSaver expoPushToken={expoPushToken} />
           <AddButtonView expoPushToken={expoPushToken} />
         </SignedIn>
         {/* <View

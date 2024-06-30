@@ -2,6 +2,7 @@ import { aiRouter } from "./routers/ai";
 import { eventRouter } from "./routers/event";
 import { listRouter } from "./routers/list";
 import { notificationRouter } from "./routers/notification";
+import { pushTokenRouter } from "./routers/pushToken";
 import { stripeRouter } from "./routers/stripe";
 import { userRouter } from "./routers/user";
 import { waitlistRouter } from "./routers/waitlist";
@@ -17,6 +18,7 @@ export const appRouter = createTRPCRouter({
   event: eventRouter,
   list: listRouter,
   notification: notificationRouter,
+  pushToken: pushTokenRouter,
   stripe: stripeRouter,
   user: userRouter,
   waitlist: waitlistRouter,
