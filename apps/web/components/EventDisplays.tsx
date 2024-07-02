@@ -209,6 +209,7 @@ function EventDetailsCard({
         isClient={isClient}
         startDateInfo={startDateInfo}
         startTime={startTime}
+        variant="compact"
       />
       <div className="flex w-full flex-col items-start gap-2">
         <Link
@@ -870,18 +871,23 @@ function DateAndTimeDisplay({
   isClient,
   startDateInfo,
   startTime,
+  variant = "default",
 }: {
   endDateInfo: DateInfo;
   endTime?: string;
   isClient: boolean;
   startDateInfo: DateInfo;
   startTime?: string;
+  variant?: "default" | "compact";
 }) {
   return (
     <div className="flex flex-col gap-2 pr-12 text-lg font-medium leading-none">
       {isClient && eventTimesAreDefined(startTime, endTime) && (
         <div
-          className="flex flex-col text-neutral-2 sm:flex-row"
+          className={cn(
+            "flex flex-col text-neutral-2 sm:flex-row",
+            variant === "compact" && "sm:flex-col",
+          )}
           suppressHydrationWarning
         >
           <div>
@@ -889,6 +895,14 @@ function DateAndTimeDisplay({
             {", "}
             {startDateInfo.month}/{startDateInfo.day}/
             {startDateInfo.year.toString().substring(2, 4)}
+          </div>
+          <div
+            className={cn(
+              "mx-1 hidden text-neutral-3 sm:block",
+              variant === "compact" && "sm:hidden",
+            )}
+          >
+            {"//"}
           </div>
           <div>
             {timeFormatDateInfo(startDateInfo)}-
