@@ -542,6 +542,88 @@ function EventDetails({
   );
 }
 
+function HappeningSoonBadge({
+  startDate,
+  startTime,
+  timezone,
+}: {
+  startDate: string;
+  startTime?: string;
+  timezone: string;
+}) {
+  const { timezone: userTimezone } = useContext(TimezoneContext);
+
+  const startDateInfo = startTime
+    ? getDateTimeInfo(startDate, startTime, timezone, userTimezone.toString())
+    : getDateInfoUTC(startDate);
+
+  const relativeTimeFormat = (dateInfo: DateInfo) => {
+    const now = new Date();
+    const startDate = new Date(
+      dateInfo.year,
+      dateInfo.month - 1,
+      dateInfo.day,
+      dateInfo.hour,
+      dateInfo.minute,
+    );
+    const difference = startDate.getTime() - now.getTime();
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(difference / (1000 * 60 * 60));
+    const minutes = Math.floor(difference / (1000 * 60));
+
+    if (difference < 0) {
+      return "in the past";
+    }
+
+    if (days === 0 && hours === 0) {
+      return `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    }
+    if (days === 0 && hours < 1) {
+      return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    }
+    if (days === 0) {
+      return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
+    }
+    if (days === 1) {
+      return `${days} day`;
+    }
+    if (days < 7) {
+      return `${days} day${days === 1 ? "" : "s"}`;
+    }
+    return `${days} day${days === 1 ? "" : "s"}`;
+  };
+
+  if (!startDateInfo) {
+    return null;
+  }
+
+  const relativeTimeString = relativeTimeFormat(startDateInfo);
+  const now = new Date();
+  const startDateObj = new Date(
+    startDateInfo.year,
+    startDateInfo.month - 1,
+    startDateInfo.day,
+    startDateInfo.hour,
+    startDateInfo.minute,
+  );
+  const difference = startDateObj.getTime() - now.getTime();
+  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+
+  if (difference < 0) {
+    return null;
+  }
+  if (days < 3) {
+    return (
+      <Badge
+        className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1 opacity-80"
+        disabled
+        variant="yellow"
+      >{`${relativeTimeString}`}</Badge>
+    );
+  }
+  return null;
+}
+
 function EventDescription({
   description,
   truncate,
@@ -691,10 +773,26 @@ export function EventListItem(props: EventListItemProps) {
             />
           </Link>
         )}
+        {props.happeningNow && (
+          <Badge
+            className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1"
+            disabled
+            variant="yellow"
+          >
+            Happening Now
+          </Badge>
+        )}
+        {event.startTime && event.startDate && (
+          <HappeningSoonBadge
+            startTime={event.startTime}
+            startDate={event.startDate}
+            timezone={event.timeZone || "America/Los_Angeles"}
+          />
+        )}
         <li
           className={cn(
             "relative grid overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
-            { "lg:pl-16": !!image, "bg-interactive-3": props.happeningNow },
+            { "lg:pl-16": !!image, "bg-accent-yellow/50": props.happeningNow },
           )}
         >
           <div className="absolute bottom-2 left-2 z-10 flex gap-1 p-1">
@@ -713,9 +811,6 @@ export function EventListItem(props: EventListItemProps) {
               ))}
             {visibility === "private" && (
               <Badge variant="destructive">Unlisted Event</Badge>
-            )}
-            {props.happeningNow && (
-              <Badge variant="secondary">Happening Now</Badge>
             )}
           </div>
           {props.variant === "minimal" && (
