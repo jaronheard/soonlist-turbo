@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import type {
+  DateInfo,
   EventMetadata as EventMetadataDisplay,
   SimilarityDetails,
 } from "@soonlist/cal";
@@ -202,21 +203,13 @@ function EventDetailsCard({
 
   return (
     <div className="flex w-full flex-col items-start justify-center gap-2">
-      {/* duplicated with Event */}
-      <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
-        {isClient && eventTimesAreDefined(startTime, endTime) && (
-          <div className="flex-wrap text-neutral-2" suppressHydrationWarning>
-            {startDateInfo.dayOfWeek.substring(0, 3)}
-            {", "}
-            {startDateInfo.month}/{startDateInfo.day}/
-            {startDateInfo.year.toString().substring(2, 4)}{" "}
-            <span className="text-neutral-3">{"//"}</span>{" "}
-            {timeFormatDateInfo(startDateInfo)}-
-            {timeFormatDateInfo(endDateInfo)}
-          </div>
-        )}
-      </div>
-      {/* end duplicated with Event */}
+      <DateAndTimeDisplay
+        endDateInfo={endDateInfo}
+        endTime={endTime}
+        isClient={isClient}
+        startDateInfo={startDateInfo}
+        startTime={startTime}
+      />
       <div className="flex w-full flex-col items-start gap-2">
         <Link
           href={`/event/${id}`}
@@ -481,21 +474,13 @@ function EventDetails({
 
   return (
     <div className="flex w-full flex-col items-start justify-center gap-2">
-      {/* duplicated with Event */}
-      <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
-        {isClient && eventTimesAreDefined(startTime, endTime) && (
-          <div className="flex-wrap text-neutral-2" suppressHydrationWarning>
-            {startDateInfo.dayOfWeek.substring(0, 3)}
-            {", "}
-            {startDateInfo.month}/{startDateInfo.day}/
-            {startDateInfo.year.toString().substring(2, 4)}{" "}
-            <span className="text-neutral-3">{"//"}</span>{" "}
-            {timeFormatDateInfo(startDateInfo)}-
-            {timeFormatDateInfo(endDateInfo)}
-          </div>
-        )}
-      </div>
-      {/* end duplicated with Event */}
+      <DateAndTimeDisplay
+        endDateInfo={endDateInfo}
+        endTime={endTime}
+        isClient={isClient}
+        startDateInfo={startDateInfo}
+        startTime={startTime}
+      />
       <div className="flex w-full flex-col items-start gap-2">
         <Link
           href={preview ? "" : `/event/${id}`}
@@ -879,6 +864,42 @@ export function EventPreview(
   );
 }
 
+function DateAndTimeDisplay({
+  endDateInfo,
+  endTime,
+  isClient,
+  startDateInfo,
+  startTime,
+}: {
+  endDateInfo: DateInfo;
+  endTime?: string;
+  isClient: boolean;
+  startDateInfo: DateInfo;
+  startTime?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2 pr-12 text-lg font-medium leading-none">
+      {isClient && eventTimesAreDefined(startTime, endTime) && (
+        <div
+          className="flex flex-col text-neutral-2 sm:flex-row"
+          suppressHydrationWarning
+        >
+          <div>
+            {startDateInfo.dayOfWeek.substring(0, 3)}
+            {", "}
+            {startDateInfo.month}/{startDateInfo.day}/
+            {startDateInfo.year.toString().substring(2, 4)}
+          </div>
+          <div>
+            {timeFormatDateInfo(startDateInfo)}-
+            {timeFormatDateInfo(endDateInfo)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function EventPage(props: EventPageProps) {
   const { user: clerkUser } = useUser();
   const [isClient, setIsClient] = useState(false);
@@ -957,24 +978,13 @@ export function EventPage(props: EventPageProps) {
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
         <div>
           <div className="flex flex-col gap-5">
-            {/* duplicated with EventListItem */}
-            <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
-              {isClient && eventTimesAreDefined(startTime, endTime) && (
-                <div
-                  className="shrink-0 text-neutral-2"
-                  suppressHydrationWarning
-                >
-                  {startDateInfo.dayOfWeek.substring(0, 3)}
-                  {", "}
-                  {startDateInfo.month}/{startDateInfo.day}/
-                  {startDateInfo.year.toString().substring(2, 4)}{" "}
-                  <span className="text-neutral-3">{"//"}</span>{" "}
-                  {timeFormatDateInfo(startDateInfo)}-
-                  {timeFormatDateInfo(endDateInfo)}
-                </div>
-              )}
-            </div>
-            {/* end duplicated with EventListItem */}
+            <DateAndTimeDisplay
+              endDateInfo={endDateInfo}
+              endTime={endTime}
+              isClient={isClient}
+              startDateInfo={startDateInfo}
+              startTime={startTime}
+            />
             <h1 className="font-heading text-5xl font-bold leading-[3.5rem]">
               {event.name}
             </h1>
