@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import type {
+  DateInfo,
   EventMetadata as EventMetadataDisplay,
   SimilarityDetails,
 } from "@soonlist/cal";
@@ -202,21 +203,14 @@ function EventDetailsCard({
 
   return (
     <div className="flex w-full flex-col items-start justify-center gap-2">
-      {/* duplicated with Event */}
-      <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
-        {isClient && eventTimesAreDefined(startTime, endTime) && (
-          <div className="flex-wrap text-neutral-2" suppressHydrationWarning>
-            {startDateInfo.dayOfWeek.substring(0, 3)}
-            {", "}
-            {startDateInfo.month}/{startDateInfo.day}/
-            {startDateInfo.year.toString().substring(2, 4)}{" "}
-            <span className="text-neutral-3">{"//"}</span>{" "}
-            {timeFormatDateInfo(startDateInfo)}-
-            {timeFormatDateInfo(endDateInfo)}
-          </div>
-        )}
-      </div>
-      {/* end duplicated with Event */}
+      <DateAndTimeDisplay
+        endDateInfo={endDateInfo}
+        endTime={endTime}
+        isClient={isClient}
+        startDateInfo={startDateInfo}
+        startTime={startTime}
+        variant="compact"
+      />
       <div className="flex w-full flex-col items-start gap-2">
         <Link
           href={`/event/${id}`}
@@ -481,21 +475,13 @@ function EventDetails({
 
   return (
     <div className="flex w-full flex-col items-start justify-center gap-2">
-      {/* duplicated with Event */}
-      <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
-        {isClient && eventTimesAreDefined(startTime, endTime) && (
-          <div className="flex-wrap text-neutral-2" suppressHydrationWarning>
-            {startDateInfo.dayOfWeek.substring(0, 3)}
-            {", "}
-            {startDateInfo.month}/{startDateInfo.day}/
-            {startDateInfo.year.toString().substring(2, 4)}{" "}
-            <span className="text-neutral-3">{"//"}</span>{" "}
-            {timeFormatDateInfo(startDateInfo)}-
-            {timeFormatDateInfo(endDateInfo)}
-          </div>
-        )}
-      </div>
-      {/* end duplicated with Event */}
+      <DateAndTimeDisplay
+        endDateInfo={endDateInfo}
+        endTime={endTime}
+        isClient={isClient}
+        startDateInfo={startDateInfo}
+        startTime={startTime}
+      />
       <div className="flex w-full flex-col items-start gap-2">
         <Link
           href={preview ? "" : `/event/${id}`}
@@ -554,6 +540,88 @@ function EventDetails({
       </div>
     </div>
   );
+}
+
+function HappeningSoonBadge({
+  startDate,
+  startTime,
+  timezone,
+}: {
+  startDate: string;
+  startTime?: string;
+  timezone: string;
+}) {
+  const { timezone: userTimezone } = useContext(TimezoneContext);
+
+  const startDateInfo = startTime
+    ? getDateTimeInfo(startDate, startTime, timezone, userTimezone.toString())
+    : getDateInfoUTC(startDate);
+
+  const relativeTimeFormat = (dateInfo: DateInfo) => {
+    const now = new Date();
+    const startDate = new Date(
+      dateInfo.year,
+      dateInfo.month - 1,
+      dateInfo.day,
+      dateInfo.hour,
+      dateInfo.minute,
+    );
+    const difference = startDate.getTime() - now.getTime();
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(difference / (1000 * 60 * 60));
+    const minutes = Math.floor(difference / (1000 * 60));
+
+    if (difference < 0) {
+      return "in the past";
+    }
+
+    if (days === 0 && hours === 0) {
+      return `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    }
+    if (days === 0 && hours < 1) {
+      return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    }
+    if (days === 0) {
+      return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
+    }
+    if (days === 1) {
+      return `${days} day`;
+    }
+    if (days < 7) {
+      return `${days} day${days === 1 ? "" : "s"}`;
+    }
+    return `${days} day${days === 1 ? "" : "s"}`;
+  };
+
+  if (!startDateInfo) {
+    return null;
+  }
+
+  const relativeTimeString = relativeTimeFormat(startDateInfo);
+  const now = new Date();
+  const startDateObj = new Date(
+    startDateInfo.year,
+    startDateInfo.month - 1,
+    startDateInfo.day,
+    startDateInfo.hour,
+    startDateInfo.minute,
+  );
+  const difference = startDateObj.getTime() - now.getTime();
+  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+
+  if (difference < 0) {
+    return null;
+  }
+  if (days < 3) {
+    return (
+      <Badge
+        className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1 opacity-80"
+        disabled
+        variant="yellow"
+      >{`${relativeTimeString}`}</Badge>
+    );
+  }
+  return null;
 }
 
 function EventDescription({
@@ -705,10 +773,26 @@ export function EventListItem(props: EventListItemProps) {
             />
           </Link>
         )}
+        {props.happeningNow && (
+          <Badge
+            className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1"
+            disabled
+            variant="yellow"
+          >
+            Happening Now
+          </Badge>
+        )}
+        {event.startTime && event.startDate && (
+          <HappeningSoonBadge
+            startTime={event.startTime}
+            startDate={event.startDate}
+            timezone={event.timeZone || "America/Los_Angeles"}
+          />
+        )}
         <li
           className={cn(
             "relative grid overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
-            { "lg:pl-16": !!image, "bg-interactive-3": props.happeningNow },
+            { "lg:pl-16": !!image, "bg-accent-yellow/50": props.happeningNow },
           )}
         >
           <div className="absolute bottom-2 left-2 z-10 flex gap-1 p-1">
@@ -727,9 +811,6 @@ export function EventListItem(props: EventListItemProps) {
               ))}
             {visibility === "private" && (
               <Badge variant="destructive">Unlisted Event</Badge>
-            )}
-            {props.happeningNow && (
-              <Badge variant="secondary">Happening Now</Badge>
             )}
           </div>
           {props.variant === "minimal" && (
@@ -879,6 +960,55 @@ export function EventPreview(
   );
 }
 
+function DateAndTimeDisplay({
+  endDateInfo,
+  endTime,
+  isClient,
+  startDateInfo,
+  startTime,
+  variant = "default",
+}: {
+  endDateInfo: DateInfo;
+  endTime?: string;
+  isClient: boolean;
+  startDateInfo: DateInfo;
+  startTime?: string;
+  variant?: "default" | "compact";
+}) {
+  return (
+    <div className="flex flex-col gap-2 pr-12 text-lg font-medium leading-none">
+      {isClient && eventTimesAreDefined(startTime, endTime) && (
+        <div
+          className={cn(
+            "flex flex-col text-neutral-2 sm:flex-row",
+            variant === "compact" && "sm:flex-col",
+          )}
+          suppressHydrationWarning
+        >
+          <div>
+            {startDateInfo.dayOfWeek.substring(0, 3)}
+            {", "}
+            {startDateInfo.month}/{startDateInfo.day}/
+            {startDateInfo.year.toString().substring(2, 4)}
+          </div>
+          <div
+            className={cn(
+              "mx-1 hidden text-neutral-3 sm:block",
+              variant === "compact" && "sm:hidden",
+            )}
+          >
+            {"//"}
+          </div>
+          <div>
+            {timeFormatDateInfo(startDateInfo)}-
+            {timeFormatDateInfo(endDateInfo)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function EventPage(props: EventPageProps) {
   const { user: clerkUser } = useUser();
   const [isClient, setIsClient] = useState(false);
@@ -957,24 +1087,13 @@ export function EventPage(props: EventPageProps) {
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
         <div>
           <div className="flex flex-col gap-5">
-            {/* duplicated with EventListItem */}
-            <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
-              {isClient && eventTimesAreDefined(startTime, endTime) && (
-                <div
-                  className="shrink-0 text-neutral-2"
-                  suppressHydrationWarning
-                >
-                  {startDateInfo.dayOfWeek.substring(0, 3)}
-                  {", "}
-                  {startDateInfo.month}/{startDateInfo.day}/
-                  {startDateInfo.year.toString().substring(2, 4)}{" "}
-                  <span className="text-neutral-3">{"//"}</span>{" "}
-                  {timeFormatDateInfo(startDateInfo)}-
-                  {timeFormatDateInfo(endDateInfo)}
-                </div>
-              )}
-            </div>
-            {/* end duplicated with EventListItem */}
+            <DateAndTimeDisplay
+              endDateInfo={endDateInfo}
+              endTime={endTime}
+              isClient={isClient}
+              startDateInfo={startDateInfo}
+              startTime={startTime}
+            />
             <h1 className="font-heading text-5xl font-bold leading-[3.5rem]">
               {event.name}
             </h1>
