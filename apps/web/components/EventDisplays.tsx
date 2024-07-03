@@ -678,13 +678,13 @@ function EventActionButtons({
       size === "sm" ? "transform scale-[0.55] origin-bottom-right" : "";
     return (
       <div className={cn("flex w-full flex-wrap items-center gap-3", scale)}>
+        <ShareButton type="icon" event={event} id={id} />
         <CalendarButton
           type="icon"
           event={event as ATCBActionEventConfig}
           id={id}
           username={user.username}
         />
-        <ShareButton type="icon" event={event} id={id} />
         {/* <FollowEventDropdownButton eventId={id} following={isFollowing} /> */}
         {isOwner && (
           <>

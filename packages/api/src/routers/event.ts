@@ -70,15 +70,13 @@ export const eventRouter = createTRPCRouter({
   getUpcomingForUser: publicProcedure
     .input(z.object({ userName: z.string() }))
     .query(async ({ ctx, input }) => {
-      const user = await ctx.db.query.users
+      const now = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
+      const createdEvents = await ctx.db.query.users
         .findMany({
           where: eq(users.username, input.userName),
           with: {
             events: {
-              where: gte(
-                events.startDateTime,
-                new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
-              ),
+              where: gte(events.startDateTime, now),
               orderBy: [asc(events.startDateTime)],
               with: {
                 eventFollows: true,
@@ -95,7 +93,34 @@ export const eventRouter = createTRPCRouter({
           },
         })
         .then((users) => users[0]?.events || []);
-      return user;
+      const savedEvents = await ctx.db.query.users
+        .findMany({
+          where: eq(users.username, input.userName),
+          with: {
+            eventFollows: {
+              with: {
+                event: {
+                  with: {
+                    user: true,
+                    eventFollows: true,
+                    comments: true,
+                  },
+                },
+              },
+            },
+          },
+        })
+        .then(
+          (users) =>
+            users[0]?.eventFollows
+              .map((eventFollow) => eventFollow.event)
+              .filter((event) => event.startDateTime > now) || [],
+        );
+      return [...savedEvents, ...createdEvents].sort(
+        (a, b) =>
+          new Date(a.startDateTime).getTime() -
+          new Date(b.startDateTime).getTime(),
+      );
     }),
   getCreatedForUser: publicProcedure
     .input(z.object({ userName: z.string() }))
