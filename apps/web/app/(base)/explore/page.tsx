@@ -1,4 +1,4 @@
-import { Globe, Globe2 } from "lucide-react";
+import { Globe2 } from "lucide-react";
 
 import { EventList } from "~/components/EventList";
 import { api } from "~/trpc/server";
