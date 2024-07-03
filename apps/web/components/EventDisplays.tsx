@@ -585,12 +585,12 @@ function HappeningSoonBadge({
       return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
     }
     if (days === 1) {
-      return `${days} day`;
+      return `Starts in ~${days} day`;
     }
     if (days < 7) {
-      return `${days} day${days === 1 ? "" : "s"}`;
+      return `Starts in ~${days} day${days === 1 ? "" : "s"}`;
     }
-    return `${days} day${days === 1 ? "" : "s"}`;
+    return `in the future`;
   };
 
   if (!startDateInfo) {
