@@ -743,6 +743,36 @@ function EventActionButtons({
   );
 }
 
+interface UserInfoMiniProps {
+  username: string;
+  displayName: string;
+  userImage: string;
+}
+
+export function UserInfoMini({
+  username,
+  userImage,
+}: Omit<UserInfoMiniProps, "displayName">) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Link href={`/${username}/events`} className="relative flex items-center">
+        <Image
+          className="inline-block size-4 rounded-full"
+          src={userImage}
+          alt={`${username}'s profile picture`}
+          width={16}
+          height={16}
+        />
+      </Link>
+      <Link href={`/${username}/events`} className="group flex items-center">
+        <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
+          @{username}
+        </p>
+      </Link>
+    </div>
+  );
+}
+
 export function EventListItem(props: EventListItemProps) {
   const { user: clerkUser } = useUser();
   const { user, eventFollows, id, event, filePath, visibility, lists } = props;
@@ -795,7 +825,7 @@ export function EventListItem(props: EventListItemProps) {
             { "lg:pl-16": !!image, "bg-accent-yellow/50": props.happeningNow },
           )}
         >
-          <div className="absolute bottom-2 left-2 z-10 flex gap-1 p-1">
+          <div className="absolute bottom-2 left-2 z-10 flex gap-2 p-1">
             {user &&
               lists &&
               lists.length > 0 &&
@@ -809,6 +839,12 @@ export function EventListItem(props: EventListItemProps) {
                   variant="badge"
                 ></ListCard>
               ))}
+            {user && !isSelf && (
+              <UserInfoMini
+                username={user.username}
+                userImage={user.userImage}
+              />
+            )}
             {visibility === "private" && (
               <Badge variant="destructive">Unlisted Event</Badge>
             )}
