@@ -78,26 +78,22 @@ export function AddEvent() {
       <Tabs
         value={uploadOption}
         onValueChange={(value: string) => {
-          const parsedValue = UploadOptionsSchema.safeParse(value);
-          if (parsedValue.success) {
-            setUploadOption(parsedValue.data);
-          } else {
-            console.error("Invalid upload option:", value);
-          }
+          const parsedValue = UploadOptionsSchema.parse(value);
+          setUploadOption(parsedValue);
         }}
         className="w-80 sm:w-96"
       >
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="image">
-            <Camera className="mr-2 size-4" />
+            <Camera className="mr-3 size-6" />
             Image
           </TabsTrigger>
           <TabsTrigger value="text">
-            <Text className="mr-2 size-4" />
+            <Text className="mr-3 size-6" />
             Text
           </TabsTrigger>
           <TabsTrigger value="link">
-            <LinkIcon className="mr-2 size-4" />
+            <LinkIcon className="mr-3 size-6" />
             Link
           </TabsTrigger>
         </TabsList>

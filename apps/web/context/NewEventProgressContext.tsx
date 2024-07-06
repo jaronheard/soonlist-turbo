@@ -24,7 +24,7 @@ export enum UploadOptions {
   Link = "link",
 }
 
-export const UploadOptionsSchema = z.enum(["image", "text", "link"]);
+export const UploadOptionsSchema = z.nativeEnum(UploadOptions);
 
 // Create a context with empty objects and dummy functions
 export const NewEventProgressContext = createContext({
