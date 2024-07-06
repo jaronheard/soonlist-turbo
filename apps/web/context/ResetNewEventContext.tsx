@@ -26,7 +26,7 @@ export function ResetNewEventContext() {
     });
     setEventData(undefined);
     setMode(Mode.View);
-    setStatus(Status.Organize);
+    setStatus(Status.Upload);
   }, [
     pathName,
     setCroppedImagesUrls,

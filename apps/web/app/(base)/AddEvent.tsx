@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 
 import { TextEventForm } from "~/components/TextEventForm";
 import { UrlEventForm } from "~/components/UrlEventForm";
+import { useNewEventProgressContext } from "~/context/NewEventProgressContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { UploadImageForProcessingButton } from "./UploadImageForProcessingButton";
 
@@ -48,6 +49,7 @@ export function AddEvent() {
 
   // State variables
   const [input, setInput] = useState("");
+  const { goToNextStatus } = useNewEventProgressContext();
 
   // Context variables
   const { timezone } = useContext(TimezoneContext);
@@ -58,10 +60,12 @@ export function AddEvent() {
   };
   const onSubmitText = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Prevent the default form submission behavior
+    goToNextStatus();
     router.push(`/new?rawText=${input}&timezone=${timezone}`);
   };
   const onSubmitUrl = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Prevent the default form submission behavior
+    goToNextStatus();
     router.push(`/new?url=${input}&timezone=${timezone}`);
   };
 

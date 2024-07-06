@@ -11,6 +11,7 @@ export enum Mode {
 }
 
 export enum Status {
+  Upload = "upload",
   Organize = "organize",
   Preview = "preview",
   Publish = "publish",
@@ -36,7 +37,7 @@ export const NewEventProgressProvider = ({
   children: ReactNode;
 }) => {
   const [mode, setMode] = useState(Mode.View);
-  const [status, setStatus] = useState(Status.Organize);
+  const [status, setStatus] = useState(Status.Upload);
 
   function goToNextStatus() {
     const allStatuses = Object.values(Status);

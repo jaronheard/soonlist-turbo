@@ -13,6 +13,7 @@ import type { List } from "@soonlist/db/types";
 import { Button } from "@soonlist/ui/button";
 import { Stepper, StepStatus } from "@soonlist/ui/stepper";
 
+import { AddEvent } from "~/app/(base)/AddEvent";
 import { Logo } from "~/components/Logo";
 import { organizeFormSchema } from "~/components/YourDetails";
 import { useNewEventContext } from "~/context/NewEventContext";
@@ -26,6 +27,11 @@ import { NewEventFooterButtons } from "./NewEventFooterButtons";
 import { Organize } from "./Organize";
 
 function ProgressStagesStepper({ status }: { status: Status }) {
+  const stepsUpload = [
+    { name: "Upload", href: "#", status: StepStatus.Current },
+    { name: "Organize", href: "#", status: StepStatus.Upcoming },
+    { name: "Review", href: "#", status: StepStatus.Upcoming },
+  ];
   const stepsOrganize = [
     { name: "Upload", href: "#", status: StepStatus.Complete },
     { name: "Organize", href: "#", status: StepStatus.Current },
@@ -42,6 +48,9 @@ function ProgressStagesStepper({ status }: { status: Status }) {
     { name: "Review", href: "#", status: StepStatus.Complete },
   ];
   function getSteps() {
+    if (status === Status.Upload) {
+      return stepsUpload;
+    }
     if (status === Status.Organize) {
       return stepsOrganize;
     }
@@ -66,6 +75,8 @@ function ProgressStagesWrapper({
   const router = useRouter();
   const { status, goToPreviousStatus } = useNewEventProgressContext();
   const [showCropActions, setShowCropActions] = useState(false);
+
+  console.log("status", status);
 
   return (
     <>
@@ -140,7 +151,7 @@ export function ProgressStages({
 }: {
   filePath?: string;
   lists?: List[];
-  Preview: JSX.Element;
+  Preview?: JSX.Element;
 }) {
   const { status, goToNextStatus } = useNewEventProgressContext();
   const { organizeData, setOrganizeData } = useNewEventContext();
@@ -162,6 +173,14 @@ export function ProgressStages({
     goToNextStatus();
   };
 
+  if (status === Status.Upload) {
+    return (
+      <ProgressStagesWrapper>
+        <AddEvent />
+      </ProgressStagesWrapper>
+    );
+  }
+
   if (status === Status.Organize) {
     return (
       <ProgressStagesWrapper
@@ -180,11 +199,13 @@ export function ProgressStages({
   if (status === Status.Preview) {
     return (
       <ProgressStagesWrapper filePath={filePath}>
-        {Preview}
+        {Preview || <></>}
       </ProgressStagesWrapper>
     );
   }
   return (
-    <ProgressStagesWrapper filePath={filePath}>{Preview}</ProgressStagesWrapper>
+    <ProgressStagesWrapper filePath={filePath}>
+      {Preview || <></>}
+    </ProgressStagesWrapper>
   );
 }

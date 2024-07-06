@@ -13,7 +13,6 @@ import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
 import { env } from "~/env";
 import { api } from "~/trpc/server";
-import { ResetNewEventContext } from "./ResetNewEventContext";
 
 interface Props {
   params: {
@@ -84,7 +83,6 @@ export default async function Page({ params }: Props) {
 
   return (
     <>
-      <ResetNewEventContext />
       <EventPage
         user={event.user}
         eventFollows={event.eventFollows}

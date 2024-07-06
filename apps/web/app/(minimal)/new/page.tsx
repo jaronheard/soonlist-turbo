@@ -1,11 +1,5 @@
-import Link from "next/link";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { X } from "lucide-react";
 
-import { Button } from "@soonlist/ui/button";
-
-import { AddEvent } from "~/app/(base)/AddEvent";
-import { Logo } from "~/components/Logo";
 import { env } from "~/env";
 import { api } from "~/trpc/server";
 import { EventsFromImage } from "./EventsFromImage";
@@ -83,15 +77,5 @@ export default async function Page({ searchParams }: Props) {
     );
   }
 
-  // default
-  return (
-    <>
-      <header className="fixed inset-x-0 top-0 z-10 flex flex-col items-center justify-center bg-interactive-3">
-        <Logo className="scale-50" />
-      </header>
-      <div className="flex w-full flex-col items-center gap-8 pt-4">
-        <AddEvent />
-      </div>
-    </>
-  );
+  return <ProgressStages />;
 }
