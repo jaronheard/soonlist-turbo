@@ -177,7 +177,17 @@ export function ProgressStages({
   if (status === Status.Upload) {
     return (
       <ProgressStagesWrapper>
-        <AddEvent />
+        <>
+          <div className="flex flex-col items-center gap-3 text-center">
+            <h2 className="text-2xl font-bold text-neutral-1">
+              Upload your event
+            </h2>
+            <p className="text-base font-medium leading-5 text-neutral-2">
+              Add your event info. Upload an image, enter text, or add a link.
+            </p>
+          </div>
+          <AddEvent />
+        </>
       </ProgressStagesWrapper>
     );
   }
@@ -189,6 +199,14 @@ export function ProgressStages({
         onClickNextOrganize={form.handleSubmit(onSubmit)}
       >
         <>
+          <div className="flex flex-col items-center gap-3 text-center">
+            <h2 className="text-2xl font-bold text-neutral-1">
+              Organize your event
+            </h2>
+            <p className="text-base font-medium leading-5 text-neutral-2">
+              Choose lists, set visibility, and add your notes.
+            </p>
+          </div>
           <Organize lists={lists || []} form={form} />
           {/* This ensures that the event starts being processed by the LLM immediately */}
           <div className="hidden">{Preview}</div>
@@ -200,7 +218,17 @@ export function ProgressStages({
   if (status === Status.Preview) {
     return (
       <ProgressStagesWrapper filePath={filePath}>
-        {Preview || <></>}
+        <>
+          <div className="flex flex-col items-center gap-3 text-center">
+            <h2 className="text-2xl font-bold text-neutral-1">
+              Review your event
+            </h2>
+            <p className="text-base font-medium leading-5 text-neutral-2">
+              Check your event information. Once confirmed, save your event.
+            </p>
+          </div>
+          {Preview || <></>}
+        </>
       </ProgressStagesWrapper>
     );
   }
