@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 
 import type { List } from "@soonlist/db/types";
 import { Button } from "@soonlist/ui/button";
+import { Stepper } from "@soonlist/ui/stepper";
 
 import { Logo } from "~/components/Logo";
 import { organizeFormSchema } from "~/components/YourDetails";
@@ -37,63 +38,68 @@ function ProgressStagesWrapper({
   const { status, goToPreviousStatus } = useNewEventProgressContext();
   const [showCropActions, setShowCropActions] = useState(false);
   return (
-    <div className="flex w-full flex-col items-center">
-      {/* <YourDetails lists={lists || undefined} /> */}
-      {/* <ImageUpload filePath={searchParams.filePath} /> */}
-      <header className="fixed inset-x-0 top-2 z-10 flex flex-col items-center justify-center">
-        <Button
-          asChild
-          className="absolute -top-2 right-0"
-          variant={"ghost"}
-          size={"icon"}
-        >
-          <Link href={status === Status.Organize ? "/" : "/new"}>
-            <X />
-          </Link>
-        </Button>
-        {status !== Status.Organize && (
-          <Button
-            onClick={goToPreviousStatus}
-            className="absolute -top-2 left-0"
-            variant={"ghost"}
-            size={"icon"}
-          >
-            <ChevronLeft />
-          </Button>
-        )}
-        {status === Status.Organize && (
-          <Button
-            onClick={() => router.back()}
-            className="absolute -top-2 left-0"
-            variant={"ghost"}
-            size={"icon"}
-          >
-            <ChevronLeft />
-          </Button>
-        )}
-        <button
-          className={cn("relative z-30 origin-top", {
-            "scale-50 hover:opacity-60": !showCropActions,
-            "-mt-2 rounded-b-2xl bg-secondary px-4 pb-4 pt-2": showCropActions,
-          })}
-          onClick={() => {
-            !showCropActions && setShowCropActions(true);
-          }}
-        >
-          <ImageCropperSmall
-            filePath={filePath}
-            showActions={showCropActions}
-            setShowActions={setShowCropActions}
-          />
-        </button>
-        <div className="absolute top-24 z-20 flex gap-4">
-          <Logo className="origin-top scale-50" />
-        </div>
+    <>
+      <header className="fixed inset-x-0 top-0 z-10 flex flex-col items-center justify-center bg-interactive-3">
+        <Logo className="scale-50" />
       </header>
-      <div className="p-14"></div>
-      {children}
-      <NewEventFooterButtons onClickNextOrganize={onClickNextOrganize} />
-    </div>
+      <div className="flex w-full flex-col items-center">
+        <div className="p-14"></div>
+        <Stepper />
+        {/* <YourDetails lists={lists || undefined} /> */}
+        {/* <ImageUpload filePath={searchParams.filePath} /> */}
+        <header className="fixed inset-x-0 top-2 z-10 flex flex-col items-center justify-center">
+          <Button
+            asChild
+            className="absolute -top-2 right-0"
+            variant={"ghost"}
+            size={"icon"}
+          >
+            <Link href={status === Status.Organize ? "/" : "/new"}>
+              <X />
+            </Link>
+          </Button>
+          {status !== Status.Organize && (
+            <Button
+              onClick={goToPreviousStatus}
+              className="absolute -top-2 left-0"
+              variant={"ghost"}
+              size={"icon"}
+            >
+              <ChevronLeft />
+            </Button>
+          )}
+          {status === Status.Organize && (
+            <Button
+              onClick={() => router.back()}
+              className="absolute -top-2 left-0"
+              variant={"ghost"}
+              size={"icon"}
+            >
+              <ChevronLeft />
+            </Button>
+          )}
+          <button
+            className={cn("relative z-30 origin-top", {
+              "scale-50 hover:opacity-60": !showCropActions,
+              "-mt-2 rounded-b-2xl bg-secondary px-4 pb-4 pt-2":
+                showCropActions,
+            })}
+            onClick={() => {
+              !showCropActions && setShowCropActions(true);
+            }}
+          >
+            <ImageCropperSmall
+              filePath={filePath}
+              showActions={showCropActions}
+              setShowActions={setShowCropActions}
+            />
+          </button>
+        </header>
+        <div className="p-14"></div>
+        {children}
+        <NewEventFooterButtons onClickNextOrganize={onClickNextOrganize} />
+      </div>
+    </>
   );
 }
 
