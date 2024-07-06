@@ -2,29 +2,70 @@
 
 import type { SubmitHandler } from "react-hook-form";
 import type { z } from "zod";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { SignedIn } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, X } from "lucide-react";
+import { Camera, ChevronLeft, LinkIcon, ListIcon, Plus, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import type { List } from "@soonlist/db/types";
 import { Button } from "@soonlist/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@soonlist/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@soonlist/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@soonlist/ui/form";
+import { MultiSelect } from "@soonlist/ui/multiselect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@soonlist/ui/select";
 import { Stepper, StepStatus } from "@soonlist/ui/stepper";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
+import { Textarea } from "@soonlist/ui/textarea";
 
-import { AddEvent } from "~/app/(base)/AddEvent";
+import { AddListCard } from "~/components/AddListCard";
 import { Logo } from "~/components/Logo";
+import { SaveButton } from "~/components/SaveButton";
+import { TextEventForm } from "~/components/TextEventForm";
+import { UrlEventForm } from "~/components/UrlEventForm";
 import { organizeFormSchema } from "~/components/YourDetails";
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import {
+  Mode,
   Status,
+  UploadOptionsSchema,
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
+import { TimezoneContext } from "~/context/TimezoneContext";
 import { cn } from "~/lib/utils";
 import { ImageCropperSmall } from "./ImageCropperSmall";
-import { NewEventFooterButtons } from "./NewEventFooterButtons";
-import { Organize } from "./Organize";
+import { UploadImageForProcessingButton, UploadImageForProcessingDropzone } from "./uploadImages";
 
 function ProgressStagesStepper({ status }: { status: Status }) {
   const { goToStatus } = useNewEventProgressContext();
@@ -298,5 +339,306 @@ export function ProgressStages({
     <ProgressStagesWrapper filePath={filePath}>
       {Preview || <></>}
     </ProgressStagesWrapper>
+  );
+}
+
+function NewEventFooterButtons({
+  onClickNextOrganize,
+}: {
+  onClickNextOrganize?: () => void;
+  onClickNextPublish?: () => void;
+}) {
+  const { mode, setMode, status, goToNextStatus } =
+    useNewEventProgressContext();
+  const { organizeData, eventData } = useNewEventContext();
+  const { croppedImagesUrls } = useCroppedImageContext();
+  const otherMode = mode === Mode.Edit ? Mode.View : Mode.Edit;
+
+  const hasFilePath = croppedImagesUrls.filePath;
+  const hasAllAspectRatios =
+    croppedImagesUrls.cropped &&
+    croppedImagesUrls.square &&
+    croppedImagesUrls.fourThree &&
+    croppedImagesUrls.sixteenNine;
+  const validImagesFromContext = hasFilePath && hasAllAspectRatios;
+
+  const imagesFromContext = validImagesFromContext
+    ? [
+        croppedImagesUrls.square!,
+        croppedImagesUrls.fourThree!,
+        croppedImagesUrls.sixteenNine!,
+        croppedImagesUrls.cropped!,
+      ]
+    : undefined;
+
+  const removeImage = croppedImagesUrls.deleted;
+  // use images from context or initial props
+  const images = removeImage
+    ? []
+    : imagesFromContext || eventData?.images || [];
+
+  return (
+    <footer className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-4 border-t border-neutral-3 bg-white p-5">
+      {status === Status.Upload && <UploadImageForProcessingButton />}
+      {status === Status.Preview && (
+        <>
+          <Button
+            size="lg"
+            variant="secondary"
+            onClick={() => setMode(otherMode)}
+            className="capitalize"
+          >
+            {otherMode}
+          </Button>
+          {eventData && (
+            <SaveButton
+              event={{ ...eventData, images }}
+              eventMetadata={eventData.eventMetadata}
+              notes={organizeData.notes}
+              visibility={organizeData.visibility}
+              lists={organizeData.lists}
+              onClick={goToNextStatus}
+            />
+          )}
+        </>
+      )}
+      {status === Status.Organize && (
+        <Button size="lg" onClick={onClickNextOrganize} className="w-full">
+          Next
+        </Button>
+      )}
+    </footer>
+  );
+}
+
+export function Organize({
+  form,
+  lists,
+}: {
+  form: ReturnType<typeof useForm<z.infer<typeof organizeFormSchema>>>;
+  lists?: List[];
+}) {
+  const listOptions = lists
+    ?.map((list) => ({
+      label: list.name,
+      value: list.id,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  return (
+    <SignedIn>
+      <Card className="max-w-screen w-full sm:max-w-xl">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <ListIcon className="mr-2 size-6" />
+            Save to List
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form className="flex flex-col gap-6">
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your Note (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Example: My friend Sarah hosts this dance party every year and its so fun!"
+                        defaultValue={field.value}
+                        onChange={field.onChange}
+                        rows={5}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Write something personal about this event
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lists"
+                render={({ field: { ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Choose a list</FormLabel>
+                    <MultiSelect
+                      AdditionalPopoverAction={() => (
+                        <Dialog>
+                          <DialogTrigger className="w-full p-1">
+                            <Button size="sm" className="w-full rounded-sm">
+                              <Plus className="-ml-2 mr-2 size-4" />
+                              New List
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Add a new list</DialogTitle>
+                              <DialogDescription>
+                                <AddListCard
+                                  name=""
+                                  description=""
+                                  visibility="public"
+                                  afterSuccessFunction={() => null}
+                                />
+                              </DialogDescription>
+                            </DialogHeader>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                      selected={field.value}
+                      options={listOptions || []}
+                      placeholder="All Events"
+                      {...field}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="visibility"
+                render={({ field }) => (
+                  <FormItem className="">
+                    <FormLabel>Visibility</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Public" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="public">Public</SelectItem>
+                        <SelectItem value="private">Unlisted</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </SignedIn>
+  );
+}
+
+function SampleEventLink() {
+  return (
+    <div className="mt-4 text-center">
+      <span className="text-muted-foreground">
+        Or look at a sample{" "}
+        <a
+          href="/event/cloqaw5z80001l8086s39cxk3"
+          className="font-bold text-interactive-1"
+        >
+          event
+        </a>{" "}
+        or{" "}
+        <Link
+          href="/jaronheard/events"
+          className="font-bold text-interactive-1"
+        >
+          list
+        </Link>
+        .
+      </span>
+    </div>
+  );
+}
+
+export function AddEvent() {
+  const router = useRouter();
+
+  // State variables
+  const [input, setInput] = useState("");
+  const { goToNextStatus, uploadOption, setUploadOption } =
+    useNewEventProgressContext();
+
+  // Context variables
+  const { timezone } = useContext(TimezoneContext);
+
+  // Helpers
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+  const onSubmitText = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Prevent the default form submission behavior
+    goToNextStatus();
+    router.push(`/new?rawText=${input}&timezone=${timezone}`);
+  };
+  const onSubmitUrl = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Prevent the default form submission behavior
+    goToNextStatus();
+    router.push(`/new?url=${input}&timezone=${timezone}`);
+  };
+
+  return (
+    <div className="min-h-[60vh] ">
+      <Tabs
+        value={uploadOption}
+        onValueChange={(value: string) => {
+          const parsedValue = UploadOptionsSchema.parse(value);
+          setUploadOption(parsedValue);
+        }}
+        className="w-80 sm:w-96"
+      >
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="image">
+            <Camera className="mr-3 size-6" />
+            Image
+          </TabsTrigger>
+          <TabsTrigger value="text">Text</TabsTrigger>
+          <TabsTrigger value="link">
+            <LinkIcon className="mr-3 size-6" />
+            Link
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="image" className="mt-11">
+          <UploadImageForProcessingDropzone />
+        </TabsContent>
+        <TabsContent value="text">
+          <Card>
+            <CardHeader>
+              <CardTitle>Text</CardTitle>
+              <CardDescription>
+                Add an event from text. Copy/paste, or use your own words.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TextEventForm
+                handleInputChange={handleInputChange}
+                input={input}
+                onSubmit={onSubmitText}
+              />
+              <SampleEventLink />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="link">
+          <Card>
+            <CardHeader>
+              <CardTitle>Link</CardTitle>
+              <CardDescription>Add an event from a link.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UrlEventForm
+                handleInputChange={handleInputChange}
+                input={input}
+                onSubmit={onSubmitUrl}
+              />
+              <SampleEventLink />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
