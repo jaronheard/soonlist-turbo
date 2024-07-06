@@ -76,16 +76,18 @@ function ProgressStagesWrapper({
   const { status, goToPreviousStatus } = useNewEventProgressContext();
   const [showCropActions, setShowCropActions] = useState(false);
 
-  console.log("status", status);
-
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-10 flex flex-col items-center justify-center bg-interactive-3">
         <Logo className="scale-50" />
       </header>
-      <div className="flex w-full flex-col items-center">
-        <div className="p-14"></div>
-        <ProgressStagesStepper status={status} />
+      <div className="flex w-full flex-col items-center gap-11 p-6 pt-10">
+        <div className="flex flex-col items-center gap-4">
+          <h1 className="text-xl font-semibold text-neutral-2">
+            Create an event
+          </h1>
+          <ProgressStagesStepper status={status} />
+        </div>
         {/* <YourDetails lists={lists || undefined} /> */}
         {/* <ImageUpload filePath={searchParams.filePath} /> */}
         <header className="fixed inset-x-0 top-2 z-10 flex flex-col items-center justify-center">
@@ -136,7 +138,6 @@ function ProgressStagesWrapper({
             />
           </button>
         </header>
-        <div className="p-14"></div>
         {children}
         <NewEventFooterButtons onClickNextOrganize={onClickNextOrganize} />
       </div>
