@@ -32,6 +32,7 @@ import {
   getDateInfoUTC,
   getDateTimeInfo,
   timeFormatDateInfo,
+  timeIsTomorrow,
 } from "@soonlist/cal";
 import { Badge } from "@soonlist/ui/badge";
 import { Label } from "@soonlist/ui/label";
@@ -571,6 +572,12 @@ function HappeningSoonBadge({
     const hours = Math.floor(difference / (1000 * 60 * 60));
     const minutes = Math.floor(difference / (1000 * 60));
 
+    const isSameDay = dateInfo.day === now.getDate();
+    const isSameMonth = dateInfo.month - 1 === now.getMonth();
+    const isSameYear = dateInfo.year === now.getFullYear();
+    const isToday = isSameDay && isSameMonth && isSameYear;
+    const isTomorrow = timeIsTomorrow(now, startDate);
+
     if (difference < 0) {
       return "in the past";
     }
@@ -581,16 +588,13 @@ function HappeningSoonBadge({
     if (days === 0 && hours < 1) {
       return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
     }
-    if (days === 0) {
+    if (isToday) {
       return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
     }
-    if (days === 1) {
-      return `Starts in ~${days} day`;
+    if (isTomorrow) {
+      return `Tomorrow`;
     }
-    if (days < 7) {
-      return `Starts in ~${days} day${days === 1 ? "" : "s"}`;
-    }
-    return `in the future`;
+    return ``;
   };
 
   if (!startDateInfo) {
@@ -598,6 +602,10 @@ function HappeningSoonBadge({
   }
 
   const relativeTimeString = relativeTimeFormat(startDateInfo);
+  if (!relativeTimeString) {
+    return null;
+  }
+
   const now = new Date();
   const startDateObj = new Date(
     startDateInfo.year,
@@ -607,21 +615,18 @@ function HappeningSoonBadge({
     startDateInfo.minute,
   );
   const difference = startDateObj.getTime() - now.getTime();
-  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
 
   if (difference < 0) {
     return null;
   }
-  if (days < 3) {
-    return (
-      <Badge
-        className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1 opacity-80"
-        disabled
-        variant="yellow"
-      >{`${relativeTimeString}`}</Badge>
-    );
-  }
-  return null;
+
+  return (
+    <Badge
+      className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1 opacity-80"
+      disabled
+      variant="yellow"
+    >{`${relativeTimeString}`}</Badge>
+  );
 }
 
 function EventDescription({
