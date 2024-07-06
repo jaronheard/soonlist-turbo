@@ -17,6 +17,7 @@ interface SaveButtonProps {
   notes?: string;
   visibility: "public" | "private";
   lists: Record<string, string>[];
+  onClick?: () => void;
 }
 
 export function SaveButton(props: SaveButtonProps) {
@@ -45,6 +46,7 @@ export function SaveButton(props: SaveButtonProps) {
         {!updateEvent.isPending && (
           <Button
             onClick={() => {
+              props.onClick?.();
               updateEvent.mutate({
                 event: props.event,
                 eventMetadata: props.eventMetadata,

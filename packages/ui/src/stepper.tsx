@@ -2,13 +2,22 @@ import { CheckIcon } from "lucide-react";
 
 import { cn } from ".";
 
-const steps = [
-  { name: "Upload", href: "#", status: "complete" },
-  { name: "Organize", href: "#", status: "current" },
-  { name: "Review", href: "#", status: "upcoming" },
-];
+enum StepStatus {
+  Complete = "complete",
+  Current = "current",
+  Upcoming = "upcoming",
+}
+interface Step {
+  name: string;
+  href: string;
+  status: StepStatus;
+}
 
-function Stepper() {
+interface StepperProps {
+  steps: Step[];
+}
+
+function Stepper({ steps }: StepperProps) {
   return (
     <nav aria-label="Progress">
       <ol role="list" className="flex items-center pb-8">
@@ -28,7 +37,7 @@ function Stepper() {
                 >
                   <div className="h-[0.1875rem] w-full bg-interactive-1" />
                 </div>
-                <a className="relative block bg-white p-0.5" href="#">
+                <a className="relative block bg-white p-0.5" href={step.href}>
                   <div className="flex h-4 w-4 items-center justify-center rounded-full bg-success hover:bg-indigo-900">
                     <CheckIcon
                       aria-hidden="true"
@@ -49,7 +58,7 @@ function Stepper() {
                   <div className="h-[0.0625rem] w-full bg-neutral-3" />
                 </div>
                 <a
-                  href="#"
+                  href={step.href}
                   aria-current="step"
                   className="relative block bg-white p-0.5"
                 >
@@ -69,7 +78,7 @@ function Stepper() {
                   <div className="h-[0.0625rem] w-full bg-neutral-3" />
                 </div>
                 <a
-                  href="#"
+                  href={step.href}
                   aria-hidden="true"
                   className="relative flex h-2 w-2 items-center justify-center rounded-full bg-neutral-3"
                 >
@@ -86,4 +95,4 @@ function Stepper() {
   );
 }
 
-export { Stepper };
+export { Stepper, StepStatus };

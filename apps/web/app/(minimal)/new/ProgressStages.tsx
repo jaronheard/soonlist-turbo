@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form";
 
 import type { List } from "@soonlist/db/types";
 import { Button } from "@soonlist/ui/button";
-import { Stepper } from "@soonlist/ui/stepper";
+import { Stepper, StepStatus } from "@soonlist/ui/stepper";
 
 import { Logo } from "~/components/Logo";
 import { organizeFormSchema } from "~/components/YourDetails";
@@ -25,6 +25,35 @@ import { ImageCropperSmall } from "./ImageCropperSmall";
 import { NewEventFooterButtons } from "./NewEventFooterButtons";
 import { Organize } from "./Organize";
 
+function ProgressStagesStepper({ status }: { status: Status }) {
+  const stepsOrganize = [
+    { name: "Upload", href: "#", status: StepStatus.Complete },
+    { name: "Organize", href: "#", status: StepStatus.Current },
+    { name: "Review", href: "#", status: StepStatus.Upcoming },
+  ];
+  const stepsPreview = [
+    { name: "Upload", href: "#", status: StepStatus.Complete },
+    { name: "Organize", href: "#", status: StepStatus.Complete },
+    { name: "Review", href: "#", status: StepStatus.Current },
+  ];
+  const stepsPublish = [
+    { name: "Upload", href: "#", status: StepStatus.Complete },
+    { name: "Organize", href: "#", status: StepStatus.Complete },
+    { name: "Review", href: "#", status: StepStatus.Complete },
+  ];
+  function getSteps() {
+    if (status === Status.Organize) {
+      return stepsOrganize;
+    }
+    if (status === Status.Preview) {
+      return stepsPreview;
+    }
+    return stepsPublish;
+  }
+  const steps = getSteps();
+  return <Stepper steps={steps} />;
+}
+
 function ProgressStagesWrapper({
   filePath,
   children,
@@ -37,6 +66,7 @@ function ProgressStagesWrapper({
   const router = useRouter();
   const { status, goToPreviousStatus } = useNewEventProgressContext();
   const [showCropActions, setShowCropActions] = useState(false);
+
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-10 flex flex-col items-center justify-center bg-interactive-3">
@@ -44,7 +74,7 @@ function ProgressStagesWrapper({
       </header>
       <div className="flex w-full flex-col items-center">
         <div className="p-14"></div>
-        <Stepper />
+        <ProgressStagesStepper status={status} />
         {/* <YourDetails lists={lists || undefined} /> */}
         {/* <ImageUpload filePath={searchParams.filePath} /> */}
         <header className="fixed inset-x-0 top-2 z-10 flex flex-col items-center justify-center">
@@ -113,7 +143,7 @@ export function ProgressStages({
   Preview: JSX.Element;
 }) {
   const { status, goToNextStatus } = useNewEventProgressContext();
-  const { organizeData, setOrganizeData, eventData } = useNewEventContext();
+  const { organizeData, setOrganizeData } = useNewEventContext();
   const { notes, visibility, lists: eventLists } = organizeData;
 
   const form = useForm<z.infer<typeof organizeFormSchema>>({
@@ -154,15 +184,7 @@ export function ProgressStages({
       </ProgressStagesWrapper>
     );
   }
-
-  if (status === Status.Publish) {
-    return (
-      <ProgressStagesWrapper filePath={filePath}>
-        <>
-          <>{JSON.stringify(eventData, null, 2)}</>
-          <>{JSON.stringify(organizeData, null, 2)}</>
-        </>
-      </ProgressStagesWrapper>
-    );
-  }
+  return (
+    <ProgressStagesWrapper filePath={filePath}>{Preview}</ProgressStagesWrapper>
+  );
 }

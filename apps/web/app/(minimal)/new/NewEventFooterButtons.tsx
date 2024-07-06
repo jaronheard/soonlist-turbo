@@ -17,7 +17,8 @@ export function NewEventFooterButtons({
   onClickNextOrganize?: () => void;
   onClickNextPublish?: () => void;
 }) {
-  const { mode, setMode, status } = useNewEventProgressContext();
+  const { mode, setMode, status, goToNextStatus } =
+    useNewEventProgressContext();
   const { organizeData, eventData } = useNewEventContext();
   const { croppedImagesUrls } = useCroppedImageContext();
   const otherMode = mode === Mode.Edit ? Mode.View : Mode.Edit;
@@ -64,6 +65,7 @@ export function NewEventFooterButtons({
               notes={organizeData.notes}
               visibility={organizeData.visibility}
               lists={organizeData.lists}
+              onClick={goToNextStatus}
             />
           )}
         </>
