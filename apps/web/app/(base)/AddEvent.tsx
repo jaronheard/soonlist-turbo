@@ -86,19 +86,8 @@ export function AddEvent() {
             Link
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="image">
-          <Card>
-            <CardHeader>
-              <CardTitle>Image</CardTitle>
-              <CardDescription>
-                Add an event from a screenshot or poster.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UploadImageForProcessingButton />
-              <SampleEventLink />
-            </CardContent>
-          </Card>
+        <TabsContent value="image" className="mt-11">
+          <UploadImageForProcessingButton />
         </TabsContent>
         <TabsContent value="text">
           <Card>
