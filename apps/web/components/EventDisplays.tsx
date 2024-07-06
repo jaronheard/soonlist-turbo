@@ -800,7 +800,7 @@ export function EventListItem(props: EventListItemProps) {
         {image && (
           <Link href={`/event/${id}`}>
             <Image
-              className="absolute left-0 top-7 z-10 hidden size-20 -translate-x-1/2 rounded-xl lg:block"
+              className="absolute left-0 top-7 z-10 hidden size-20 -translate-x-1/2 rounded-xl object-cover lg:block"
               src={image}
               alt=""
               width={375}
