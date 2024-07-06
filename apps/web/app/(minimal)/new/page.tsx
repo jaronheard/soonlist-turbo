@@ -86,23 +86,8 @@ export default async function Page({ searchParams }: Props) {
   // default
   return (
     <>
-      <header className="fixed inset-x-0 top-2 z-10 flex flex-col items-center justify-center">
-        <Button
-          asChild
-          className="absolute -top-2 right-0"
-          variant={"ghost"}
-          size={"icon"}
-        >
-          <Link href="/">
-            <X />
-          </Link>
-        </Button>
-        <div className="absolute top-0 z-20 flex flex-col items-center">
-          <Logo className="origin-top scale-50" />
-          <h1 className="-mt-2 hidden font-heading text-2.5xl font-bold leading-9 tracking-wide text-gray-700 lg:block">
-            Add Event
-          </h1>
-        </div>
+      <header className="fixed inset-x-0 top-0 z-10 flex flex-col items-center justify-center bg-interactive-3">
+        <Logo className="scale-50" />
       </header>
       <div className="flex w-full flex-col items-center gap-8 pt-4">
         <AddEvent />
