@@ -11,6 +11,7 @@ interface Step {
   name: string;
   href: string;
   status: StepStatus;
+  onClick?: () => void;
 }
 
 interface StepperProps {
@@ -29,7 +30,7 @@ function Stepper({ steps }: StepperProps) {
               "relative",
             )}
           >
-            {step.status === "complete" ? (
+            {step.status === StepStatus.Complete ? (
               <>
                 <div
                   aria-hidden="true"
@@ -37,19 +38,36 @@ function Stepper({ steps }: StepperProps) {
                 >
                   <div className="h-[0.1875rem] w-full bg-interactive-1" />
                 </div>
-                <a className="relative block bg-white p-0.5" href={step.href}>
-                  <div className="flex h-4 w-4 items-center justify-center rounded-full bg-success hover:bg-indigo-900">
-                    <CheckIcon
-                      aria-hidden="true"
-                      className="mt-[0.05rem] h-3 w-3 text-white"
-                    />
-                    <span className="absolute -bottom-8 font-medium text-neutral-2">
-                      {step.name}
-                    </span>
-                  </div>
-                </a>
+                {step.onClick ? (
+                  <button
+                    onClick={step.onClick}
+                    className="relative block bg-white p-0.5"
+                  >
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-success hover:bg-indigo-900">
+                      <CheckIcon
+                        aria-hidden="true"
+                        className="mt-[0.05rem] h-3 w-3 text-white"
+                      />
+                      <span className="absolute -bottom-8 font-medium text-neutral-2">
+                        {step.name}
+                      </span>
+                    </div>
+                  </button>
+                ) : (
+                  <a className="relative block bg-white p-0.5" href={step.href}>
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-success hover:bg-indigo-900">
+                      <CheckIcon
+                        aria-hidden="true"
+                        className="mt-[0.05rem] h-3 w-3 text-white"
+                      />
+                      <span className="absolute -bottom-8 font-medium text-neutral-2">
+                        {step.name}
+                      </span>
+                    </div>
+                  </a>
+                )}
               </>
-            ) : step.status === "current" ? (
+            ) : step.status === StepStatus.Current ? (
               <>
                 <div
                   aria-hidden="true"
@@ -57,17 +75,31 @@ function Stepper({ steps }: StepperProps) {
                 >
                   <div className="h-[0.0625rem] w-full bg-neutral-3" />
                 </div>
-                <a
-                  href={step.href}
-                  aria-current="step"
-                  className="relative block bg-white p-0.5"
-                >
-                  <div className="flex h-4 w-4 items-center justify-center rounded-full border-4 border-interactive-1 bg-neutral-3">
-                    <span className="absolute -bottom-8 font-bold text-interactive-1">
-                      {step.name}
-                    </span>
-                  </div>
-                </a>
+                {step.onClick ? (
+                  <button
+                    onClick={step.onClick}
+                    aria-current="step"
+                    className="relative block bg-white p-0.5"
+                  >
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full border-4 border-interactive-1 bg-neutral-3">
+                      <span className="absolute -bottom-8 font-bold text-interactive-1">
+                        {step.name}
+                      </span>
+                    </div>
+                  </button>
+                ) : (
+                  <a
+                    href={step.href}
+                    aria-current="step"
+                    className="relative block bg-white p-0.5"
+                  >
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full border-4 border-interactive-1 bg-neutral-3">
+                      <span className="absolute -bottom-8 font-bold text-interactive-1">
+                        {step.name}
+                      </span>
+                    </div>
+                  </a>
+                )}
               </>
             ) : (
               <>
@@ -77,15 +109,27 @@ function Stepper({ steps }: StepperProps) {
                 >
                   <div className="h-[0.0625rem] w-full bg-neutral-3" />
                 </div>
-                <a
-                  href={step.href}
-                  aria-hidden="true"
-                  className="relative flex h-2 w-2 items-center justify-center rounded-full bg-neutral-3"
-                >
-                  <span className="absolute -bottom-[2.375rem] font-medium text-neutral-2">
-                    {step.name}
-                  </span>
-                </a>
+                {step.onClick ? (
+                  <button
+                    onClick={step.onClick}
+                    aria-hidden="true"
+                    className="relative flex h-2 w-2 items-center justify-center rounded-full bg-neutral-3"
+                  >
+                    <span className="absolute -bottom-[2.375rem] font-medium text-neutral-2">
+                      {step.name}
+                    </span>
+                  </button>
+                ) : (
+                  <a
+                    href={step.href}
+                    aria-hidden="true"
+                    className="relative flex h-2 w-2 items-center justify-center rounded-full bg-neutral-3"
+                  >
+                    <span className="absolute -bottom-[2.375rem] font-medium text-neutral-2">
+                      {step.name}
+                    </span>
+                  </a>
+                )}
               </>
             )}
           </li>

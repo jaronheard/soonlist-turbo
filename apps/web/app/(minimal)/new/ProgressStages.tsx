@@ -27,25 +27,87 @@ import { NewEventFooterButtons } from "./NewEventFooterButtons";
 import { Organize } from "./Organize";
 
 function ProgressStagesStepper({ status }: { status: Status }) {
+  const { goToStatus } = useNewEventProgressContext();
+
   const stepsUpload = [
-    { name: "Upload", href: "#", status: StepStatus.Current },
-    { name: "Organize", href: "#", status: StepStatus.Upcoming },
-    { name: "Review", href: "#", status: StepStatus.Upcoming },
+    {
+      name: "Upload",
+      href: "#",
+      onClick: () => goToStatus(Status.Upload),
+      status: StepStatus.Current,
+    },
+    {
+      name: "Organize",
+      href: "#",
+      onClick: () => goToStatus(Status.Organize),
+      status: StepStatus.Upcoming,
+    },
+    {
+      name: "Review",
+      href: "#",
+      onClick: () => goToStatus(Status.Preview),
+      status: StepStatus.Upcoming,
+    },
   ];
   const stepsOrganize = [
-    { name: "Upload", href: "#", status: StepStatus.Complete },
-    { name: "Organize", href: "#", status: StepStatus.Current },
-    { name: "Review", href: "#", status: StepStatus.Upcoming },
+    {
+      name: "Upload",
+      href: "#",
+      onClick: () => goToStatus(Status.Upload),
+      status: StepStatus.Complete,
+    },
+    {
+      name: "Organize",
+      href: "#",
+      onClick: () => goToStatus(Status.Organize),
+      status: StepStatus.Current,
+    },
+    {
+      name: "Review",
+      href: "#",
+      onClick: () => goToStatus(Status.Preview),
+      status: StepStatus.Upcoming,
+    },
   ];
   const stepsPreview = [
-    { name: "Upload", href: "#", status: StepStatus.Complete },
-    { name: "Organize", href: "#", status: StepStatus.Complete },
-    { name: "Review", href: "#", status: StepStatus.Current },
+    {
+      name: "Upload",
+      href: "#",
+      onClick: () => goToStatus(Status.Upload),
+      status: StepStatus.Complete,
+    },
+    {
+      name: "Organize",
+      href: "#",
+      onClick: () => goToStatus(Status.Organize),
+      status: StepStatus.Complete,
+    },
+    {
+      name: "Review",
+      href: "#",
+      onClick: () => goToStatus(Status.Preview),
+      status: StepStatus.Current,
+    },
   ];
   const stepsPublish = [
-    { name: "Upload", href: "#", status: StepStatus.Complete },
-    { name: "Organize", href: "#", status: StepStatus.Complete },
-    { name: "Review", href: "#", status: StepStatus.Complete },
+    {
+      name: "Upload",
+      href: "#",
+      onClick: () => goToStatus(Status.Upload),
+      status: StepStatus.Complete,
+    },
+    {
+      name: "Organize",
+      href: "#",
+      onClick: () => goToStatus(Status.Organize),
+      status: StepStatus.Complete,
+    },
+    {
+      name: "Review",
+      href: "#",
+      onClick: () => goToStatus(Status.Preview),
+      status: StepStatus.Complete,
+    },
   ];
   function getSteps() {
     if (status === Status.Upload) {

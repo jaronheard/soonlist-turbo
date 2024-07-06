@@ -3,6 +3,7 @@
 
 import type { ReactNode } from "react";
 import React, { createContext, useContext, useState } from "react";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 
 // Define the type of the context state
@@ -37,6 +38,7 @@ export const NewEventProgressContext = createContext({
   setStatus: (status: Status) => console.warn("no status provider"),
   goToNextStatus: () => console.warn("no status provider"),
   goToPreviousStatus: () => console.warn("no status provider"),
+  goToStatus: (status: Status) => console.warn("no status provider"),
 });
 
 export const useNewEventProgressContext = () =>
@@ -48,6 +50,7 @@ export const NewEventProgressProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  const router = useRouter();
   const [mode, setMode] = useState(Mode.View);
   const [status, setStatus] = useState(Status.Upload);
   const [uploadOption, setUploadOption] = useState(UploadOptions.Image);
@@ -70,6 +73,14 @@ export const NewEventProgressProvider = ({
     }
   }
 
+  function goToStatus(newStatus: Status) {
+    // clear query params if status is upload
+    if (newStatus === Status.Upload) {
+      router.push("/new");
+    }
+    setStatus(newStatus);
+  }
+
   return (
     <NewEventProgressContext.Provider
       value={{
@@ -79,6 +90,7 @@ export const NewEventProgressProvider = ({
         setStatus,
         goToNextStatus,
         goToPreviousStatus,
+        goToStatus,
         uploadOption,
         setUploadOption,
       }}
