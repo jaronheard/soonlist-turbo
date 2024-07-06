@@ -229,6 +229,32 @@ export function endsNextDayBeforeMorning(
   return isNextDay && isBeforeMorning;
 }
 
+export function timeIsTomorrow(now: Date, startTime: Date): boolean {
+  // Normalize the current date to midnight
+  const normalizedNow = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+
+  // Normalize the startTime to midnight
+  const normalizedStartTime = new Date(
+    startTime.getFullYear(),
+    startTime.getMonth(),
+    startTime.getDate(),
+  );
+
+  // Calculate the difference in time
+  const timeDifference =
+    normalizedStartTime.getTime() - normalizedNow.getTime();
+
+  // Convert the time difference to days
+  const dayDifference = timeDifference / (1000 * 60 * 60 * 24);
+
+  // Check if the difference is exactly 1 day
+  return dayDifference === 1;
+}
+
 export function eventTimesAreDefined(
   startTime: string | undefined,
   endTime: string | undefined,
