@@ -16,7 +16,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 
 import { TextEventForm } from "~/components/TextEventForm";
 import { UrlEventForm } from "~/components/UrlEventForm";
-import { useNewEventProgressContext } from "~/context/NewEventProgressContext";
+import {
+  UploadOptionsSchema,
+  useNewEventProgressContext,
+} from "~/context/NewEventProgressContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { UploadImageForProcessingDropzone } from "./UploadImageForProcessingButton";
 
@@ -49,7 +52,8 @@ export function AddEvent() {
 
   // State variables
   const [input, setInput] = useState("");
-  const { goToNextStatus } = useNewEventProgressContext();
+  const { goToNextStatus, uploadOption, setUploadOption } =
+    useNewEventProgressContext();
 
   // Context variables
   const { timezone } = useContext(TimezoneContext);
@@ -71,7 +75,18 @@ export function AddEvent() {
 
   return (
     <div className="min-h-[60vh] ">
-      <Tabs defaultValue="image" className="w-80 sm:w-96">
+      <Tabs
+        value={uploadOption}
+        onValueChange={(value: string) => {
+          const parsedValue = UploadOptionsSchema.safeParse(value);
+          if (parsedValue.success) {
+            setUploadOption(parsedValue.data);
+          } else {
+            console.error("Invalid upload option:", value);
+          }
+        }}
+        className="w-80 sm:w-96"
+      >
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="image">
             <Camera className="mr-2 size-4" />

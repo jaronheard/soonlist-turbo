@@ -3,6 +3,7 @@
 
 import type { ReactNode } from "react";
 import React, { createContext, useContext, useState } from "react";
+import { z } from "zod";
 
 // Define the type of the context state
 export enum Mode {
@@ -17,9 +18,20 @@ export enum Status {
   Publish = "publish",
 }
 
+export enum UploadOptions {
+  Image = "image",
+  Text = "text",
+  Link = "link",
+}
+
+export const UploadOptionsSchema = z.enum(["image", "text", "link"]);
+
 // Create a context with empty objects and dummy functions
 export const NewEventProgressContext = createContext({
   mode: Mode.View,
+  uploadOption: UploadOptions.Image,
+  setUploadOption: (uploadOption: UploadOptions) =>
+    console.warn("no uploadOption provider"),
   setMode: (mode: Mode) => console.warn("no mode provider"),
   status: Status.Preview,
   setStatus: (status: Status) => console.warn("no status provider"),
@@ -38,6 +50,7 @@ export const NewEventProgressProvider = ({
 }) => {
   const [mode, setMode] = useState(Mode.View);
   const [status, setStatus] = useState(Status.Upload);
+  const [uploadOption, setUploadOption] = useState(UploadOptions.Image);
 
   function goToNextStatus() {
     const allStatuses = Object.values(Status);
@@ -66,6 +79,8 @@ export const NewEventProgressProvider = ({
         setStatus,
         goToNextStatus,
         goToPreviousStatus,
+        uploadOption,
+        setUploadOption,
       }}
     >
       {children}

@@ -73,7 +73,7 @@ export function NewEventFooterButtons({
         </>
       )}
       {status === Status.Organize && (
-        <Button size="lg" onClick={onClickNextOrganize}>
+        <Button size="lg" onClick={onClickNextOrganize} className="w-full">
           Next
         </Button>
       )}
