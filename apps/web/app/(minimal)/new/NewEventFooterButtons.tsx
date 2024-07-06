@@ -2,6 +2,7 @@
 
 import { Button } from "@soonlist/ui/button";
 
+import { UploadImageForProcessingButton } from "~/app/(base)/UploadImageForProcessingButton";
 import { SaveButton } from "~/components/SaveButton";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
@@ -47,7 +48,8 @@ export function NewEventFooterButtons({
     : imagesFromContext || eventData?.images || [];
 
   return (
-    <footer className="fixed inset-x-0 bottom-0 flex items-center justify-center gap-4 p-4">
+    <footer className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-4 border-t border-neutral-3 bg-white p-5">
+      {status === Status.Upload && <UploadImageForProcessingButton />}
       {status === Status.Preview && (
         <>
           <Button

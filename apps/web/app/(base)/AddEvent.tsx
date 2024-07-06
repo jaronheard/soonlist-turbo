@@ -3,7 +3,7 @@
 import { useContext, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Image, LinkIcon, Text } from "lucide-react";
+import { Camera, LinkIcon, Text } from "lucide-react";
 
 import {
   Card,
@@ -18,7 +18,7 @@ import { TextEventForm } from "~/components/TextEventForm";
 import { UrlEventForm } from "~/components/UrlEventForm";
 import { useNewEventProgressContext } from "~/context/NewEventProgressContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
-import { UploadImageForProcessingButton } from "./UploadImageForProcessingButton";
+import { UploadImageForProcessingDropzone } from "./UploadImageForProcessingButton";
 
 function SampleEventLink() {
   return (
@@ -74,7 +74,7 @@ export function AddEvent() {
       <Tabs defaultValue="image" className="w-80 sm:w-96">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="image">
-            <Image className="mr-2 size-4" />
+            <Camera className="mr-2 size-4" />
             Image
           </TabsTrigger>
           <TabsTrigger value="text">
@@ -87,7 +87,7 @@ export function AddEvent() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="image" className="mt-11">
-          <UploadImageForProcessingButton />
+          <UploadImageForProcessingDropzone />
         </TabsContent>
         <TabsContent value="text">
           <Card>
