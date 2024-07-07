@@ -3,12 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Button } from "@soonlist/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogTitle,
-} from "@soonlist/ui/dialog";
+import { Dialog, DialogContent, DialogFooter } from "@soonlist/ui/dialog";
 
 import type { AddToCalendarCardProps } from "~/components/AddToCalendarCard";
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
@@ -44,7 +39,7 @@ export function NewEventPreview(initialProps: AddToCalendarCardProps) {
       {mode === Mode.Edit && (
         <Dialog open={true} onOpenChange={() => setMode(Mode.View)}>
           <DialogContent className="overflow-hidden">
-            <div className="-m-6 mb-0 max-h-[80vh] overflow-y-auto">
+            <div className="-m-6 mb-0 max-h-[80dvh] overflow-y-auto">
               <AddToCalendarCard
                 {...event}
                 onUpdate={setEvent}
