@@ -30,6 +30,7 @@ export const UploadOptionsSchema = z.nativeEnum(UploadOptions);
 // Create a context with empty objects and dummy functions
 export const NewEventProgressContext = createContext({
   mode: Mode.View,
+  inactiveMode: Mode.Edit,
   uploadOption: UploadOptions.Image,
   setUploadOption: (uploadOption: UploadOptions) =>
     console.warn("no uploadOption provider"),
@@ -54,6 +55,7 @@ export const NewEventProgressProvider = ({
   const [mode, setMode] = useState(Mode.View);
   const [status, setStatus] = useState(Status.Upload);
   const [uploadOption, setUploadOption] = useState(UploadOptions.Image);
+  const inactiveMode = mode === Mode.Edit ? Mode.View : Mode.Edit;
 
   function goToNextStatus() {
     const allStatuses = Object.values(Status);
@@ -85,6 +87,7 @@ export const NewEventProgressProvider = ({
     <NewEventProgressContext.Provider
       value={{
         mode,
+        inactiveMode,
         setMode,
         status,
         setStatus,

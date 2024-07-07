@@ -7,7 +7,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SignedIn } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera, ChevronLeft, LinkIcon, ListIcon, Plus, X } from "lucide-react";
+import {
+  Camera,
+  ChevronLeft,
+  LinkIcon,
+  ListIcon,
+  Plus,
+  Sparkles,
+  Text,
+  X,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import type { List } from "@soonlist/db/types";
@@ -36,6 +45,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@soonlist/ui/form";
+import { Input } from "@soonlist/ui/input";
+import { Label } from "@soonlist/ui/label";
 import { MultiSelect } from "@soonlist/ui/multiselect";
 import {
   Select,
@@ -51,8 +62,6 @@ import { Textarea } from "@soonlist/ui/textarea";
 import { AddListCard } from "~/components/AddListCard";
 import { Logo } from "~/components/Logo";
 import { SaveButton } from "~/components/SaveButton";
-import { TextEventForm } from "~/components/TextEventForm";
-import { UrlEventForm } from "~/components/UrlEventForm";
 import { organizeFormSchema } from "~/components/YourDetails";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
@@ -65,7 +74,10 @@ import {
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { cn } from "~/lib/utils";
 import { ImageCropperSmall } from "./ImageCropperSmall";
-import { UploadImageForProcessingButton, UploadImageForProcessingDropzone } from "./uploadImages";
+import {
+  UploadImageForProcessingButton,
+  UploadImageForProcessingDropzone,
+} from "./uploadImages";
 
 function ProgressStagesStepper({ status }: { status: Status }) {
   const { goToStatus } = useNewEventProgressContext();
@@ -242,7 +254,7 @@ function ProgressStagesWrapper({
           </button>
         </header>
         {children}
-        <NewEventFooterButtons onClickNextOrganize={onClickNextOrganize} />
+        {/* Footer should be included in children */}
       </div>
     </>
   );
@@ -257,9 +269,34 @@ export function ProgressStages({
   lists?: List[];
   Preview?: JSX.Element;
 }) {
-  const { status, goToNextStatus } = useNewEventProgressContext();
-  const { organizeData, setOrganizeData } = useNewEventContext();
+  const { status, goToNextStatus, setMode, inactiveMode } =
+    useNewEventProgressContext();
+  const { organizeData, setOrganizeData, eventData } = useNewEventContext();
   const { notes, visibility, lists: eventLists } = organizeData;
+  const { croppedImagesUrls } = useCroppedImageContext();
+
+  const hasFilePath = croppedImagesUrls.filePath;
+  const hasAllAspectRatios =
+    croppedImagesUrls.cropped &&
+    croppedImagesUrls.square &&
+    croppedImagesUrls.fourThree &&
+    croppedImagesUrls.sixteenNine;
+  const validImagesFromContext = hasFilePath && hasAllAspectRatios;
+
+  const imagesFromContext = validImagesFromContext
+    ? [
+        croppedImagesUrls.square!,
+        croppedImagesUrls.fourThree!,
+        croppedImagesUrls.sixteenNine!,
+        croppedImagesUrls.cropped!,
+      ]
+    : undefined;
+
+  const removeImage = croppedImagesUrls.deleted;
+  // use images from context or initial props
+  const images = removeImage
+    ? []
+    : imagesFromContext || eventData?.images || [];
 
   const form = useForm<z.infer<typeof organizeFormSchema>>({
     resolver: zodResolver(organizeFormSchema),
@@ -331,6 +368,26 @@ export function ProgressStages({
             </p>
           </div>
           {Preview || <></>}
+          <ProgressStagesFooter>
+            <Button
+              size="lg"
+              variant="secondary"
+              onClick={() => setMode(inactiveMode)}
+              className="capitalize"
+            >
+              {inactiveMode}
+            </Button>
+            {eventData && (
+              <SaveButton
+                event={{ ...eventData, images }}
+                eventMetadata={eventData.eventMetadata}
+                notes={organizeData.notes}
+                visibility={organizeData.visibility}
+                lists={organizeData.lists}
+                onClick={goToNextStatus}
+              />
+            )}
+          </ProgressStagesFooter>
         </>
       </ProgressStagesWrapper>
     );
@@ -351,31 +408,6 @@ function NewEventFooterButtons({
   const { mode, setMode, status, goToNextStatus } =
     useNewEventProgressContext();
   const { organizeData, eventData } = useNewEventContext();
-  const { croppedImagesUrls } = useCroppedImageContext();
-  const otherMode = mode === Mode.Edit ? Mode.View : Mode.Edit;
-
-  const hasFilePath = croppedImagesUrls.filePath;
-  const hasAllAspectRatios =
-    croppedImagesUrls.cropped &&
-    croppedImagesUrls.square &&
-    croppedImagesUrls.fourThree &&
-    croppedImagesUrls.sixteenNine;
-  const validImagesFromContext = hasFilePath && hasAllAspectRatios;
-
-  const imagesFromContext = validImagesFromContext
-    ? [
-        croppedImagesUrls.square!,
-        croppedImagesUrls.fourThree!,
-        croppedImagesUrls.sixteenNine!,
-        croppedImagesUrls.cropped!,
-      ]
-    : undefined;
-
-  const removeImage = croppedImagesUrls.deleted;
-  // use images from context or initial props
-  const images = removeImage
-    ? []
-    : imagesFromContext || eventData?.images || [];
 
   return (
     <footer className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-4 border-t border-neutral-3 bg-white p-5">
@@ -402,22 +434,27 @@ function NewEventFooterButtons({
           )}
         </>
       )}
-      {status === Status.Organize && (
-        <Button size="lg" onClick={onClickNextOrganize} className="w-full">
-          Next
-        </Button>
-      )}
     </footer>
   );
 }
 
-export function Organize({
+function ProgressStagesFooter({ children }: { children: React.ReactNode }) {
+  return (
+    <footer className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-4 border-t border-neutral-3 bg-white p-5">
+      {children}
+    </footer>
+  );
+}
+
+function Organize({
   form,
   lists,
 }: {
   form: ReturnType<typeof useForm<z.infer<typeof organizeFormSchema>>>;
   lists?: List[];
 }) {
+  const { goToNextStatus } = useNewEventProgressContext();
+
   const listOptions = lists
     ?.map((list) => ({
       label: list.name,
@@ -426,135 +463,101 @@ export function Organize({
     .sort((a, b) => a.label.localeCompare(b.label));
 
   return (
-    <SignedIn>
-      <Card className="max-w-screen w-full sm:max-w-xl">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <ListIcon className="mr-2 size-6" />
-            Save to List
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form className="flex flex-col gap-6">
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Note (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Example: My friend Sarah hosts this dance party every year and its so fun!"
-                        defaultValue={field.value}
-                        onChange={field.onChange}
-                        rows={5}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Write something personal about this event
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
+    <Form {...form}>
+      <form className="flex w-full flex-col gap-6">
+        <FormField
+          control={form.control}
+          name="lists"
+          render={({ field: { ...field } }) => (
+            <FormItem>
+              <FormLabel>Add to list(s)</FormLabel>
+              <MultiSelect
+                AdditionalPopoverAction={() => (
+                  <Dialog>
+                    <DialogTrigger className="w-full p-1">
+                      <Button size="sm" className="w-full rounded-sm">
+                        <Plus className="-ml-2 mr-2 size-4" />
+                        New List
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add a new list</DialogTitle>
+                        <DialogDescription>
+                          <AddListCard
+                            name=""
+                            description=""
+                            visibility="public"
+                            afterSuccessFunction={() => null}
+                          />
+                        </DialogDescription>
+                      </DialogHeader>
+                    </DialogContent>
+                  </Dialog>
                 )}
+                selected={field.value}
+                options={listOptions || []}
+                placeholder="All Events"
+                {...field}
               />
-              <FormField
-                control={form.control}
-                name="lists"
-                render={({ field: { ...field } }) => (
-                  <FormItem>
-                    <FormLabel>Choose a list</FormLabel>
-                    <MultiSelect
-                      AdditionalPopoverAction={() => (
-                        <Dialog>
-                          <DialogTrigger className="w-full p-1">
-                            <Button size="sm" className="w-full rounded-sm">
-                              <Plus className="-ml-2 mr-2 size-4" />
-                              New List
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Add a new list</DialogTitle>
-                              <DialogDescription>
-                                <AddListCard
-                                  name=""
-                                  description=""
-                                  visibility="public"
-                                  afterSuccessFunction={() => null}
-                                />
-                              </DialogDescription>
-                            </DialogHeader>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                      selected={field.value}
-                      options={listOptions || []}
-                      placeholder="All Events"
-                      {...field}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="visibility"
-                render={({ field }) => (
-                  <FormItem className="">
-                    <FormLabel>Visibility</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Public" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="public">Public</SelectItem>
-                        <SelectItem value="private">Unlisted</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </SignedIn>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="visibility"
+          render={({ field }) => (
+            <FormItem className="">
+              <FormLabel>Visibility</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Public" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="private">Unlisted</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Optional: Anything you want to add..."
+                  defaultValue={field.value}
+                  onChange={field.onChange}
+                  rows={5}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <ProgressStagesFooter>
+          <Button size="lg" onClick={() => goToNextStatus()} className="w-full">
+            Next
+          </Button>
+        </ProgressStagesFooter>
+      </form>
+    </Form>
   );
 }
 
-function SampleEventLink() {
-  return (
-    <div className="mt-4 text-center">
-      <span className="text-muted-foreground">
-        Or look at a sample{" "}
-        <a
-          href="/event/cloqaw5z80001l8086s39cxk3"
-          className="font-bold text-interactive-1"
-        >
-          event
-        </a>{" "}
-        or{" "}
-        <Link
-          href="/jaronheard/events"
-          className="font-bold text-interactive-1"
-        >
-          list
-        </Link>
-        .
-      </span>
-    </div>
-  );
-}
-
-export function AddEvent() {
+function AddEvent() {
   const router = useRouter();
 
   // State variables
@@ -595,7 +598,10 @@ export function AddEvent() {
             <Camera className="mr-3 size-6" />
             Image
           </TabsTrigger>
-          <TabsTrigger value="text">Text</TabsTrigger>
+          <TabsTrigger value="text">
+            <Text className="mr-3 size-6" />
+            Text
+          </TabsTrigger>
           <TabsTrigger value="link">
             <LinkIcon className="mr-3 size-6" />
             Link
@@ -603,42 +609,106 @@ export function AddEvent() {
         </TabsList>
         <TabsContent value="image" className="mt-11">
           <UploadImageForProcessingDropzone />
+          <ProgressStagesFooter>
+            <UploadImageForProcessingButton />
+          </ProgressStagesFooter>
         </TabsContent>
-        <TabsContent value="text">
-          <Card>
-            <CardHeader>
-              <CardTitle>Text</CardTitle>
-              <CardDescription>
-                Add an event from text. Copy/paste, or use your own words.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TextEventForm
-                handleInputChange={handleInputChange}
-                input={input}
-                onSubmit={onSubmitText}
-              />
-              <SampleEventLink />
-            </CardContent>
-          </Card>
+        <TabsContent value="text" className="mt-11">
+          <TextEventForm
+            handleInputChange={handleInputChange}
+            input={input}
+            onSubmit={onSubmitText}
+          />
         </TabsContent>
-        <TabsContent value="link">
-          <Card>
-            <CardHeader>
-              <CardTitle>Link</CardTitle>
-              <CardDescription>Add an event from a link.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UrlEventForm
-                handleInputChange={handleInputChange}
-                input={input}
-                onSubmit={onSubmitUrl}
-              />
-              <SampleEventLink />
-            </CardContent>
-          </Card>
+        <TabsContent value="link" className="mt-11">
+          <UrlEventForm
+            handleInputChange={handleInputChange}
+            input={input}
+            onSubmit={onSubmitUrl}
+          />
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function TextEventForm({
+  handleInputChange,
+  input,
+  onSubmit,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleInputChange: (e: any) => void;
+  input: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onSubmit: (e: any) => void;
+}) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleKeyDown = (event: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      onSubmit(event);
+    }
+  };
+
+  return (
+    <form className="grid w-full max-w-xl gap-1.5" onSubmit={onSubmit}>
+      <Textarea
+        id="input"
+        onKeyDown={handleKeyDown}
+        value={input}
+        onChange={handleInputChange}
+        rows={8}
+        placeholder={"Paste or type event info..."}
+      />
+      <ProgressStagesFooter>
+        <Button type="submit" disabled={!input}>
+          <Sparkles className="mr-2 size-4" />
+          Generate from text
+        </Button>
+      </ProgressStagesFooter>
+    </form>
+  );
+}
+
+export function UrlEventForm({
+  handleInputChange,
+  input,
+  onSubmit,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleInputChange: (e: any) => void;
+  input: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onSubmit: (e: any) => void;
+}) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleKeyDown = (event: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      onSubmit(event);
+    }
+  };
+
+  return (
+    <form className="grid w-full max-w-xl gap-1.5" onSubmit={onSubmit}>
+      <Label className="hidden" htmlFor="input">
+        Enter url with event info
+      </Label>
+      <Input
+        type="url"
+        id="input"
+        onKeyDown={handleKeyDown}
+        value={input}
+        onChange={handleInputChange}
+        placeholder={"Enter event URL..."}
+      />
+      <ProgressStagesFooter>
+        <Button type="submit" disabled={!input}>
+          <Sparkles className="mr-2 size-4" />
+          Generate from link
+        </Button>
+      </ProgressStagesFooter>
+    </form>
   );
 }
