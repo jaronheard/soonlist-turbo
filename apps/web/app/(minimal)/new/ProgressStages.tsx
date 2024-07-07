@@ -317,8 +317,6 @@ export function ProgressStages({
         : eventData?.images) ||
       [];
 
-  console.log("images", images);
-
   const form = useForm<z.infer<typeof organizeFormSchema>>({
     resolver: zodResolver(organizeFormSchema),
     defaultValues: {
