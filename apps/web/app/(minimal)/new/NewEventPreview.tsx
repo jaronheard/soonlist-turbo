@@ -22,7 +22,7 @@ export function NewEventPreview(initialProps: AddToCalendarCardProps) {
 
   if (mode === Mode.Edit) {
     return (
-      <div className="pb-4">
+      <div className="mx-auto pb-4 sm:w-[30rem] md:w-[36rem]">
         <AddToCalendarCard
           {...event}
           onUpdate={setEvent}
@@ -32,14 +32,16 @@ export function NewEventPreview(initialProps: AddToCalendarCardProps) {
     );
   }
   return (
-    <EventPreview
-      user={undefined}
-      eventFollows={[]}
-      comments={[]}
-      id={""}
-      createdAt={undefined}
-      event={event}
-      visibility="public"
-    />
+    <div className="mx-auto sm:w-[30rem] md:w-[36rem]">
+      <EventPreview
+        user={undefined}
+        eventFollows={[]}
+        comments={[]}
+        id={""}
+        createdAt={undefined}
+        event={event}
+        visibility="public"
+      />
+    </div>
   );
 }
