@@ -60,6 +60,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 import { Textarea } from "@soonlist/ui/textarea";
 
 import { AddListCard } from "~/components/AddListCard";
+import { ImageUpload } from "~/components/ImageUpload";
 import { Logo } from "~/components/Logo";
 import { SaveButton } from "~/components/SaveButton";
 import { organizeFormSchema } from "~/components/YourDetails";
@@ -235,7 +236,7 @@ function ProgressStagesWrapper({
             </Button>
           )}
           <button
-            className={cn("relative z-30 origin-top", {
+            className={cn("relative z-50 origin-top", {
               "scale-50 hover:opacity-60": !showCropActions,
               "-mt-2 rounded-b-2xl bg-secondary px-4 pb-4 pt-2":
                 showCropActions,
@@ -283,13 +284,9 @@ export function ProgressStages({
   const { croppedImagesUrls } = useCroppedImageContext();
 
   useEffect(() => {
-    console.log(showUpload, isShortcut);
     if (!showUpload && !isShortcut) {
-      console.log("setting shortcut and satatus to Organize");
       setIsShortcut(true);
       setStatus(Status.Organize);
-    } else {
-      console.log("skipped effect");
     }
   }, [showUpload, setIsShortcut, setMode]);
 
@@ -314,7 +311,13 @@ export function ProgressStages({
   // use images from context or initial props
   const images = removeImage
     ? []
-    : imagesFromContext || eventData?.images || [];
+    : imagesFromContext ||
+      (typeof eventData?.images === "string"
+        ? [eventData.images]
+        : eventData?.images) ||
+      [];
+
+  console.log("images", images);
 
   const form = useForm<z.infer<typeof organizeFormSchema>>({
     resolver: zodResolver(organizeFormSchema),
@@ -352,10 +355,7 @@ export function ProgressStages({
 
   if (status === Status.Organize) {
     return (
-      <ProgressStagesWrapper
-        filePath={filePath}
-        onClickNextOrganize={form.handleSubmit(onSubmit)}
-      >
+      <ProgressStagesWrapper filePath={filePath}>
         <>
           <div className="flex flex-col items-center gap-3 text-center">
             <h2 className="text-2xl font-bold text-neutral-1">
@@ -366,6 +366,7 @@ export function ProgressStages({
             </p>
           </div>
           <Organize lists={lists || []} form={form} />
+          <ImageUpload images={images} />
           {/* This ensures that the event starts being processed by the LLM immediately */}
           <div className="hidden">{Preview}</div>
         </>

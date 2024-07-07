@@ -991,6 +991,7 @@ export function EventPreview(
           endDate={event.endDate!}
           startTime={event.startTime!}
           endTime={event.endTime!}
+          image={event.images?.[3]}
           timezone={event.timeZone || "America/Los_Angeles"}
           location={event.location}
           description={event.description}
