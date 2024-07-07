@@ -18,6 +18,7 @@ interface SaveButtonProps {
   visibility: "public" | "private";
   lists: Record<string, string>[];
   onClick?: () => void;
+  loading: boolean;
 }
 
 export function SaveButton(props: SaveButtonProps) {
@@ -37,13 +38,13 @@ export function SaveButton(props: SaveButtonProps) {
   return (
     <>
       <SignedIn>
-        {updateEvent.isPending && (
+        {(updateEvent.isPending || props.loading) && (
           <Button disabled>
             <Loader2 className="mr-2 size-4 animate-spin" />
-            Please wait
+            Saving
           </Button>
         )}
-        {!updateEvent.isPending && (
+        {!(updateEvent.isPending || props.loading) && (
           <Button
             onClick={() => {
               props.onClick?.();

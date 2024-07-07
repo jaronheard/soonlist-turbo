@@ -411,7 +411,31 @@ export function ProgressStages({
   }
   return (
     <ProgressStagesWrapper filePath={filePath}>
-      {Preview || <></>}
+      <>
+        {Preview || <></>}
+        <ProgressStagesFooter>
+          <Button
+            size="lg"
+            variant="secondary"
+            onClick={() => setMode(inactiveMode)}
+            className="capitalize"
+            disabled={true}
+          >
+            {inactiveMode}
+          </Button>
+          {eventData && (
+            <SaveButton
+              event={{ ...eventData, images }}
+              eventMetadata={eventData.eventMetadata}
+              notes={organizeData.notes}
+              visibility={organizeData.visibility}
+              lists={organizeData.lists}
+              onClick={goToNextStatus}
+              loading={true}
+            />
+          )}
+        </ProgressStagesFooter>
+      </>
     </ProgressStagesWrapper>
   );
 }
