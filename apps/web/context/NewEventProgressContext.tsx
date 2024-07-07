@@ -29,6 +29,9 @@ export const UploadOptionsSchema = z.nativeEnum(UploadOptions);
 
 // Create a context with empty objects and dummy functions
 export const NewEventProgressContext = createContext({
+  isShortcut: false,
+  setIsShortcut: (isShortcut: boolean) =>
+    console.warn("no isShortcut provider"),
   mode: Mode.View,
   inactiveMode: Mode.Edit,
   uploadOption: UploadOptions.Image,
@@ -55,6 +58,7 @@ export const NewEventProgressProvider = ({
   const [mode, setMode] = useState(Mode.View);
   const [status, setStatus] = useState(Status.Upload);
   const [uploadOption, setUploadOption] = useState(UploadOptions.Image);
+  const [isShortcut, setIsShortcut] = useState(false);
   const inactiveMode = mode === Mode.Edit ? Mode.View : Mode.Edit;
 
   function goToNextStatus() {
@@ -86,6 +90,8 @@ export const NewEventProgressProvider = ({
   return (
     <NewEventProgressContext.Provider
       value={{
+        isShortcut,
+        setIsShortcut,
         mode,
         inactiveMode,
         setMode,

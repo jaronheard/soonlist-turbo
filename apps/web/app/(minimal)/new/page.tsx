@@ -77,5 +77,5 @@ export default async function Page({ searchParams }: Props) {
     );
   }
 
-  return <ProgressStages />;
+  return <ProgressStages showUpload={true} />;
 }

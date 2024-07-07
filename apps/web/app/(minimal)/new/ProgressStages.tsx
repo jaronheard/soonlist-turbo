@@ -2,7 +2,7 @@
 
 import type { SubmitHandler } from "react-hook-form";
 import type { z } from "zod";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SignedIn } from "@clerk/nextjs";
@@ -259,19 +259,39 @@ function ProgressStagesWrapper({
 }
 
 export function ProgressStages({
+  showUpload,
   filePath,
   lists,
   Preview,
 }: {
+  showUpload?: boolean;
   filePath?: string;
   lists?: List[];
   Preview?: JSX.Element;
 }) {
-  const { status, goToNextStatus, setMode, inactiveMode } =
-    useNewEventProgressContext();
+  const {
+    status,
+    goToNextStatus,
+    setMode,
+    inactiveMode,
+    isShortcut,
+    setIsShortcut,
+    setStatus,
+  } = useNewEventProgressContext();
   const { organizeData, setOrganizeData, eventData } = useNewEventContext();
   const { notes, visibility, lists: eventLists } = organizeData;
   const { croppedImagesUrls } = useCroppedImageContext();
+
+  useEffect(() => {
+    console.log(showUpload, isShortcut);
+    if (!showUpload && !isShortcut) {
+      console.log("setting shortcut and satatus to Organize");
+      setIsShortcut(true);
+      setStatus(Status.Organize);
+    } else {
+      console.log("skipped effect");
+    }
+  }, [showUpload, setIsShortcut, setMode]);
 
   const hasFilePath = croppedImagesUrls.filePath;
   const hasAllAspectRatios =

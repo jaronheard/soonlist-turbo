@@ -16,6 +16,7 @@ export function ResetNewEventContext() {
   const { setCroppedImagesUrls } = useCroppedImageContext();
   const { setOrganizeData, setEventData } = useNewEventContext();
   const { setStatus, setMode } = useNewEventProgressContext();
+  const { setIsShortcut } = useNewEventProgressContext();
 
   useEffect(() => {
     setCroppedImagesUrls({});
@@ -27,6 +28,7 @@ export function ResetNewEventContext() {
     setEventData(undefined);
     setMode(Mode.View);
     setStatus(Status.Upload);
+    setIsShortcut(false);
   }, [
     pathName,
     setCroppedImagesUrls,
