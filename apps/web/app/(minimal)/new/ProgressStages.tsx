@@ -366,7 +366,7 @@ export function ProgressStages({
             </p>
           </div>
           <Organize lists={lists || []} form={form} />
-          <ImageUpload images={images} />
+          <ImageUpload filePath={filePath} />
           {/* This ensures that the event starts being processed by the LLM immediately */}
           <div className="hidden">{Preview}</div>
         </>
