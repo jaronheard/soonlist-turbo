@@ -181,11 +181,9 @@ function ProgressStagesStepper({ status }: { status: Status }) {
 function ProgressStagesWrapper({
   filePath,
   children,
-  onClickNextOrganize,
 }: {
   filePath?: string;
   children: JSX.Element;
-  onClickNextOrganize?: () => void;
 }) {
   const router = useRouter();
   const { status, goToPreviousStatus } = useNewEventProgressContext();
@@ -196,7 +194,7 @@ function ProgressStagesWrapper({
       <header className="fixed inset-x-0 top-0 z-10 flex flex-col items-center justify-center bg-interactive-3">
         <Logo className="scale-50" />
       </header>
-      <div className="flex w-full flex-col items-center gap-11 p-6 pt-10">
+      <div className="mx-auto flex w-full max-w-80 flex-col items-center gap-11 pt-10 sm:max-w-96 sm:pt-0">
         <div className="flex flex-col items-center gap-4">
           <h1 className="text-xl font-semibold text-neutral-2">
             Create an event
@@ -440,8 +438,10 @@ function NewEventFooterButtons({
 
 function ProgressStagesFooter({ children }: { children: React.ReactNode }) {
   return (
-    <footer className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-4 border-t border-neutral-3 bg-white p-5">
-      {children}
+    <footer className="fixed inset-x-0 bottom-0 z-50 border-t border-neutral-3 bg-white p-5">
+      <div className="mx-auto flex max-w-80 items-center justify-center gap-4 sm:max-w-96">
+        {children}
+      </div>
     </footer>
   );
 }
