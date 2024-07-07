@@ -3,7 +3,7 @@
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import React, { useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Shapes, Text } from "lucide-react";
+import { Pencil, Shapes, Text } from "lucide-react";
 
 import type { EventMetadata } from "@soonlist/cal";
 import type { ATCBActionEventConfig } from "@soonlist/cal/types";
@@ -14,6 +14,7 @@ import {
   // PLATFORMS,
   PRICE_TYPE,
 } from "@soonlist/cal";
+import { cn } from "@soonlist/ui";
 import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 import { Input, InputDescription } from "@soonlist/ui/input";
@@ -47,10 +48,12 @@ export type AddToCalendarCardProps = AddToCalendarButtonType & {
   eventMetadata?: EventMetadata;
   onUpdate?: (props: AddToCalendarButtonType) => void;
   hideFloatingActionButtons?: boolean;
+  hideBorder?: boolean;
 };
 
 export function AddToCalendarCard({
   firstInputRef,
+  hideBorder,
   ...initialProps
 }: AddToCalendarCardProps) {
   const { user } = useUser();
@@ -176,12 +179,14 @@ export function AddToCalendarCard({
   }
 
   return (
-    <Card className="max-w-screen sm:max-w-xl">
+    <Card
+      className={cn("max-w-screen sm:max-w-xl", { "border-0": hideBorder })}
+    >
       <CardContent className="grid grid-cols-1 gap-6 rounded-md py-6 shadow-md sm:grid-cols-6">
         <CardTitle className="col-span-full flex items-center justify-between">
           <div className="flex items-center">
-            <Text className="mr-2 size-6" />
-            Event Details
+            <Pencil className="mr-2 size-6" />
+            Edit Event Details
           </div>
         </CardTitle>
         <div className="col-span-full">
