@@ -82,7 +82,7 @@ export const NewEventProgressProvider = ({
   function goToStatus(newStatus: Status) {
     // clear query params if status is upload
     if (newStatus === Status.Upload) {
-      router.push("/new");
+      router.push("/new", { scroll: false });
     }
     setStatus(newStatus);
   }

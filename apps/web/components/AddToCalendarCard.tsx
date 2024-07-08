@@ -1,7 +1,7 @@
 "use client";
 
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Pencil, Shapes, Text } from "lucide-react";
 
@@ -170,13 +170,67 @@ export function AddToCalendarCard({
     },
   };
 
-  if (initialProps.onUpdate) {
-    // TODO: determine if this is a hack or not
-    // do not update unless props are different
-    if (JSON.stringify(initialProps) !== JSON.stringify(updatedProps)) {
-      initialProps.onUpdate(updatedProps);
+  useEffect(() => {
+    if (initialProps.onUpdate) {
+      const updatedProps = {
+        ...filteredProps,
+        acceptableListStyle,
+        name,
+        location,
+        description: link
+          ? description + "[br][br]" + `[url]${link}|More Info[/url]`
+          : description,
+        startDate,
+        startTime,
+        endDate,
+        endTime,
+        timeZone,
+        images,
+        eventMetadata: {
+          mentions,
+          source,
+          priceMin,
+          priceMax,
+          priceType,
+          ageRestriction,
+          category,
+          type,
+          performers,
+          accessibility: accessibility.map((a) => a.value),
+          accessibilityNotes,
+        },
+      };
+
+      if (JSON.stringify(initialProps) !== JSON.stringify(updatedProps)) {
+        initialProps.onUpdate(updatedProps);
+      }
     }
-  }
+  }, [
+    name,
+    location,
+    description,
+    link,
+    startDate,
+    startTime,
+    endDate,
+    endTime,
+    timeZone,
+    images,
+    mentions,
+    source,
+    priceMin,
+    priceMax,
+    priceType,
+    ageRestriction,
+    category,
+    type,
+    performers,
+    accessibility,
+    accessibilityNotes,
+    initialProps,
+    filteredProps,
+    acceptableListStyle,
+  ]);
 
   return (
     <Card

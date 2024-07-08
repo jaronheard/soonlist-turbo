@@ -106,7 +106,7 @@ export function Nav() {
         </SignedOut>
         <NavigationMenuItem>
           <SignedIn>
-            <Link href="/new" legacyBehavior passHref>
+            <Link href="/new" legacyBehavior passHref scroll={false}>
               <NavigationMenuLink
                 className={buttonVariants({ variant: "default" })}
               >

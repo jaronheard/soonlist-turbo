@@ -211,7 +211,10 @@ function ProgressStagesWrapper({
             variant={"ghost"}
             size={"icon"}
           >
-            <Link href={status === Status.Organize ? "/" : "/new"}>
+            <Link
+              href={status === Status.Organize ? "/" : "/new"}
+              scroll={false}
+            >
               <X />
             </Link>
           </Button>
@@ -333,6 +336,34 @@ export function ProgressStages({
     goToNextStatus();
   };
 
+  const renderPreview = () => (
+    <>
+      {Preview || <></>}
+      <ProgressStagesFooter>
+        <Button
+          size="lg"
+          variant="secondary"
+          onClick={() => setMode(inactiveMode)}
+          className="capitalize"
+          disabled={status === Status.Publish}
+        >
+          {inactiveMode}
+        </Button>
+        {eventData && (
+          <SaveButton
+            event={{ ...eventData, images }}
+            eventMetadata={eventData.eventMetadata}
+            notes={organizeData.notes}
+            visibility={organizeData.visibility}
+            lists={organizeData.lists}
+            onClick={goToNextStatus}
+            loading={status === Status.Publish}
+          />
+        )}
+      </ProgressStagesFooter>
+    </>
+  );
+
   if (status === Status.Upload) {
     return (
       <ProgressStagesWrapper>
@@ -372,72 +403,29 @@ export function ProgressStages({
     );
   }
 
-  if (status === Status.Preview) {
+  if (status === Status.Preview || status === Status.Publish) {
     return (
       <ProgressStagesWrapper filePath={filePath}>
         <>
           <div className="flex flex-col items-center gap-3 text-center">
             <h2 className="text-2xl font-bold text-neutral-1">
-              Review your event
+              {status === Status.Preview
+                ? "Review your event"
+                : "Publishing event"}
             </h2>
             <p className="text-base font-medium leading-5 text-neutral-2">
-              Check your event information. Once confirmed, save your event.
+              {status === Status.Preview
+                ? "Check your event information. Once confirmed, save your event."
+                : "Your event is being saved..."}
             </p>
           </div>
-          {Preview || <></>}
-          <ProgressStagesFooter>
-            <Button
-              size="lg"
-              variant="secondary"
-              onClick={() => setMode(inactiveMode)}
-              className="capitalize"
-            >
-              {inactiveMode}
-            </Button>
-            {eventData && (
-              <SaveButton
-                event={{ ...eventData, images }}
-                eventMetadata={eventData.eventMetadata}
-                notes={organizeData.notes}
-                visibility={organizeData.visibility}
-                lists={organizeData.lists}
-                onClick={goToNextStatus}
-              />
-            )}
-          </ProgressStagesFooter>
+          {renderPreview()}
         </>
       </ProgressStagesWrapper>
     );
   }
-  return (
-    <ProgressStagesWrapper filePath={filePath}>
-      <>
-        {Preview || <></>}
-        <ProgressStagesFooter>
-          <Button
-            size="lg"
-            variant="secondary"
-            onClick={() => setMode(inactiveMode)}
-            className="capitalize"
-            disabled={true}
-          >
-            {inactiveMode}
-          </Button>
-          {eventData && (
-            <SaveButton
-              event={{ ...eventData, images }}
-              eventMetadata={eventData.eventMetadata}
-              notes={organizeData.notes}
-              visibility={organizeData.visibility}
-              lists={organizeData.lists}
-              onClick={goToNextStatus}
-              loading={true}
-            />
-          )}
-        </ProgressStagesFooter>
-      </>
-    </ProgressStagesWrapper>
-  );
+
+  return null;
 }
 
 function NewEventFooterButtons({

@@ -17,7 +17,7 @@ export function CTAButton() {
       </SignedOut>
       <SignedIn>
         <Button asChild size="lg">
-          <Link href={"/new"}>
+          <Link href={"/new"} scroll={false}>
             <CalendarPlus className="mr-2 size-4"></CalendarPlus>
             Add<span className="inline">&nbsp;Event</span>
           </Link>

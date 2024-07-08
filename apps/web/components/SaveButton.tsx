@@ -18,7 +18,7 @@ interface SaveButtonProps {
   visibility: "public" | "private";
   lists: Record<string, string>[];
   onClick?: () => void;
-  loading: boolean;
+  loading?: boolean;
 }
 
 export function SaveButton(props: SaveButtonProps) {
