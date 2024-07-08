@@ -5,7 +5,7 @@ import { api } from "~/trpc/server";
 import { EventsFromImage } from "./EventsFromImage";
 import { EventsFromRawText } from "./EventsFromRawText";
 import { EventsFromUrl } from "./EventsFromUrl";
-import { ProgressStages } from "./progressStages";
+import { ProgressStages } from "./newEventProgressStages";
 
 export const maxDuration = 60;
 
