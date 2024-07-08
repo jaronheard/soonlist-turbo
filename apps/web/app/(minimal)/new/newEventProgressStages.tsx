@@ -2,18 +2,9 @@
 
 import type { z } from "zod";
 import { useContext, useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Camera,
-  ChevronLeft,
-  LinkIcon,
-  Plus,
-  Sparkles,
-  Text,
-  X,
-} from "lucide-react";
+import { Camera, LinkIcon, Plus, Sparkles, Text } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import type { List } from "@soonlist/db/types";
@@ -61,8 +52,6 @@ import {
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
-import { cn } from "~/lib/utils";
-import { ImageCropperSmall } from "./ImageCropperSmall";
 import {
   UploadImageForProcessingButton,
   UploadImageForProcessingDropzone,
