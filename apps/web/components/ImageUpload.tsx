@@ -324,17 +324,15 @@ export function ImageUpload({
               )}
               ref={fullImageRef}
             />
-            {showCroppedImage && (
-              <div className="text-center text-sm text-gray-500">
-                <span className="font-medium">Cropped Preview</span>
-              </div>
-            )}
             <img
               src={croppedImagesUrls.cropped}
               alt="Cropped Preview"
-              className={cn("mx-auto block h-36 overflow-hidden object-cover", {
-                hidden: !showCroppedImage || isModalOpen,
-              })}
+              className={cn(
+                "mx-auto block w-80 overflow-hidden object-cover sm:w-96",
+                {
+                  hidden: !showCroppedImage || isModalOpen,
+                },
+              )}
             />
             <div className="p-1"></div>
 
@@ -365,24 +363,24 @@ export function ImageUpload({
                       setIsModalOpen(false);
                     }}
                     className="absolute right-2 top-2"
-                    variant="destructive"
+                    size="sm"
                   >
-                    Close
+                    Done
                   </Button>
                 </div>
               </div>
             </Dialog>
-            <div className="p-2"></div>
           </>
         )}
       </>
-      <div className="p-2"></div>
+      <div className="p-3"></div>
       <div className="mx-auto flex flex-wrap justify-center gap-4">
         {imageUrl && (
           <Button
             onClick={() => setIsModalOpen(true)}
             size="sm"
             variant="outline"
+            type="button"
           >
             <Scissors className="mr-2 size-4" />
             Crop

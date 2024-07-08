@@ -308,8 +308,7 @@ export function ProgressStages({
               Choose lists, set visibility, and add your notes.
             </p>
           </div>
-          <Organize lists={lists || []} form={form} />
-          <ImageUpload filePath={filePath} />
+          <Organize lists={lists || []} form={form} filePath={filePath} />
           {/* This ensures that the event starts being processed by the LLM immediately */}
           <div className="hidden">{Preview}</div>
         </>
@@ -355,9 +354,11 @@ function ProgressStagesFooter({ children }: { children: React.ReactNode }) {
 function Organize({
   form,
   lists,
+  filePath,
 }: {
   form: ReturnType<typeof useForm<z.infer<typeof organizeFormSchema>>>;
   lists?: List[];
+  filePath?: string;
 }) {
   const { goToNextStatus } = useNewEventProgressContext();
 
@@ -460,6 +461,7 @@ function Organize({
             </FormItem>
           )}
         />
+        <ImageUpload filePath={filePath} />
         <ProgressStagesFooter>
           <Button size="lg" className="w-full" type="submit">
             Next
