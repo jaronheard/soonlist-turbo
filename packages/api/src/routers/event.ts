@@ -605,16 +605,25 @@ export const eventRouter = createTRPCRouter({
       eventId: input.id,
     });
   }),
-  unfollow: protectedProcedure.input(eventIdSchema).mutation(({ ctx }) => {
-    const { userId } = ctx.auth;
-    if (!userId) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "No user id found in session",
-      });
-    }
-    return ctx.db.delete(eventFollows).where(eq(eventFollows.userId, userId));
-  }),
+  unfollow: protectedProcedure
+    .input(eventIdSchema)
+    .mutation(({ ctx, input }) => {
+      const { userId } = ctx.auth;
+      if (!userId) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "No user id found in session",
+        });
+      }
+      return ctx.db
+        .delete(eventFollows)
+        .where(
+          and(
+            eq(eventFollows.userId, userId),
+            eq(eventFollows.eventId, input.id),
+          ),
+        );
+    }),
   addToList: protectedProcedure
     .input(z.object({ eventId: z.string(), listId: z.string() }))
     .mutation(({ ctx, input }) => {

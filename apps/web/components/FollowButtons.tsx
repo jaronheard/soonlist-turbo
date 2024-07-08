@@ -74,9 +74,11 @@ export function FollowEventDropdownButton({
 export function FollowEventButton({
   eventId,
   following,
+  type,
 }: {
   eventId: string;
   following?: boolean;
+  type?: "button" | "icon";
 }) {
   const router = useRouter();
   const follow = api.event.follow.useMutation({
@@ -98,6 +100,27 @@ export function FollowEventButton({
     },
   });
   const isLoading = follow.isPending || unfollow.isPending;
+
+  if (type === "icon") {
+    return (
+      <SignedIn>
+        <Button
+          onClick={() =>
+            following
+              ? unfollow.mutate({ id: eventId })
+              : follow.mutate({ id: eventId })
+          }
+          disabled={isLoading}
+          variant="ghost"
+          size="icon"
+        >
+          {isLoading && <Loader2 className="size-4 animate-spin" />}
+          {!isLoading && following && <Check className="size-4" />}
+          {!isLoading && !following && <Plus className="size-4" />}
+        </Button>
+      </SignedIn>
+    );
+  }
 
   return (
     <SignedIn>
