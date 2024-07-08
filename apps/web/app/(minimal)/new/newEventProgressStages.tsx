@@ -168,81 +168,25 @@ function ProgressStagesStepper({ status }: { status: Status }) {
 }
 
 function ProgressStagesWrapper({
-  filePath,
   children,
 }: {
   filePath?: string;
   children: JSX.Element;
 }) {
-  const router = useRouter();
-  const { status, goToPreviousStatus } = useNewEventProgressContext();
-  const [showCropActions, setShowCropActions] = useState(false);
+  const { status } = useNewEventProgressContext();
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-10 flex flex-col items-center justify-center bg-interactive-3">
-        <Logo className="scale-50" />
+      <header className="fixed inset-x-0 top-0 z-10 flex h-12 flex-col items-center justify-center bg-interactive-3">
+        <Logo className="scale-[0.6]" />
       </header>
-      <div className="mx-auto flex w-full max-w-80 flex-col items-center gap-11 pt-10 sm:max-w-96 sm:pt-0">
+      <div className="mx-auto flex w-full max-w-80 flex-col items-center gap-11 sm:max-w-96">
         <div className="flex flex-col items-center gap-4">
           <h1 className="text-xl font-semibold text-neutral-2">
             Create an event
           </h1>
           <ProgressStagesStepper status={status} />
         </div>
-        {/* <YourDetails lists={lists || undefined} /> */}
-        {/* <ImageUpload filePath={searchParams.filePath} /> */}
-        <header className="fixed inset-x-0 top-2 z-10 flex flex-col items-center justify-center">
-          <Button
-            asChild
-            className="absolute -top-2 right-0"
-            variant={"ghost"}
-            size={"icon"}
-          >
-            <Link
-              href={status === Status.Organize ? "/" : "/new"}
-              scroll={false}
-            >
-              <X />
-            </Link>
-          </Button>
-          {status !== Status.Organize && (
-            <Button
-              onClick={goToPreviousStatus}
-              className="absolute -top-2 left-0"
-              variant={"ghost"}
-              size={"icon"}
-            >
-              <ChevronLeft />
-            </Button>
-          )}
-          {status === Status.Organize && (
-            <Button
-              onClick={() => router.back()}
-              className="absolute -top-2 left-0"
-              variant={"ghost"}
-              size={"icon"}
-            >
-              <ChevronLeft />
-            </Button>
-          )}
-          <button
-            className={cn("relative z-50 origin-top", {
-              "scale-50 hover:opacity-60": !showCropActions,
-              "-mt-2 rounded-b-2xl bg-secondary px-4 pb-4 pt-2":
-                showCropActions,
-            })}
-            onClick={() => {
-              !showCropActions && setShowCropActions(true);
-            }}
-          >
-            <ImageCropperSmall
-              filePath={filePath}
-              showActions={showCropActions}
-              setShowActions={setShowCropActions}
-            />
-          </button>
-        </header>
         {children}
         {/* Footer should be included in children */}
       </div>
