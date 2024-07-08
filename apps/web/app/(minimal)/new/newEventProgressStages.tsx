@@ -2,7 +2,9 @@
 
 import type { z } from "zod";
 import { useContext, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera, LinkIcon, Plus, Sparkles, Text } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -170,7 +172,9 @@ function ProgressStagesWrapper({
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-10 flex h-12 flex-col items-center justify-center bg-interactive-3">
-        <Logo className="scale-[0.6]" />
+        <Link href="/">
+          <Logo className="scale-[0.6]" />
+        </Link>
       </header>
       <div className="mx-auto flex w-full max-w-80 flex-col items-center gap-11 sm:max-w-96">
         <div className="flex flex-col items-center gap-4">
