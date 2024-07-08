@@ -1,17 +1,14 @@
 "use client";
 
-import type { SubmitHandler } from "react-hook-form";
 import type { z } from "zod";
 import { useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { SignedIn } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Camera,
   ChevronLeft,
   LinkIcon,
-  ListIcon,
   Plus,
   Sparkles,
   Text,
@@ -21,13 +18,6 @@ import { useForm } from "react-hook-form";
 
 import type { List } from "@soonlist/db/types";
 import { Button } from "@soonlist/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@soonlist/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -39,7 +29,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -67,7 +56,6 @@ import { organizeFormSchema } from "~/components/YourDetails";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import {
-  Mode,
   Status,
   UploadOptionsSchema,
   useNewEventProgressContext,
@@ -282,7 +270,7 @@ export function ProgressStages({
     setIsShortcut,
     setStatus,
   } = useNewEventProgressContext();
-  const { organizeData, setOrganizeData, eventData } = useNewEventContext();
+  const { organizeData, eventData } = useNewEventContext();
   const { notes, visibility, lists: eventLists } = organizeData;
   const { croppedImagesUrls } = useCroppedImageContext();
 
@@ -328,13 +316,6 @@ export function ProgressStages({
       lists: eventLists,
     },
   });
-
-  const onSubmit: SubmitHandler<z.infer<typeof organizeFormSchema>> = (
-    data,
-  ) => {
-    setOrganizeData(data);
-    goToNextStatus();
-  };
 
   const renderPreview = () => (
     <>
@@ -426,45 +407,6 @@ export function ProgressStages({
   }
 
   return null;
-}
-
-function NewEventFooterButtons({
-  onClickNextOrganize,
-}: {
-  onClickNextOrganize?: () => void;
-  onClickNextPublish?: () => void;
-}) {
-  const { mode, setMode, status, goToNextStatus } =
-    useNewEventProgressContext();
-  const { organizeData, eventData } = useNewEventContext();
-
-  return (
-    <footer className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-4 border-t border-neutral-3 bg-white p-5">
-      {status === Status.Upload && <UploadImageForProcessingButton />}
-      {status === Status.Preview && (
-        <>
-          <Button
-            size="lg"
-            variant="secondary"
-            onClick={() => setMode(otherMode)}
-            className="capitalize"
-          >
-            {otherMode}
-          </Button>
-          {eventData && (
-            <SaveButton
-              event={{ ...eventData, images }}
-              eventMetadata={eventData.eventMetadata}
-              notes={organizeData.notes}
-              visibility={organizeData.visibility}
-              lists={organizeData.lists}
-              onClick={goToNextStatus}
-            />
-          )}
-        </>
-      )}
-    </footer>
-  );
 }
 
 function ProgressStagesFooter({ children }: { children: React.ReactNode }) {
