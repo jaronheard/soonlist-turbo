@@ -8,11 +8,12 @@ import "react-image-crop/dist/ReactCrop.css";
 
 import type { Crop } from "react-image-crop";
 import { UploadButton } from "@bytescale/upload-widget-react";
-import { Dialog } from "@headlessui/react";
 import { Scissors, SwitchCamera, Trash, Upload } from "lucide-react";
 import { centerCrop, makeAspectCrop, ReactCrop } from "react-image-crop";
 
 import { Button } from "@soonlist/ui/button";
+import { CardTitle } from "@soonlist/ui/card";
+import { Dialog, DialogContent, DialogFooter } from "@soonlist/ui/dialog";
 
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { cn, extractFilePath } from "~/lib/utils";
@@ -324,65 +325,50 @@ export function ImageUpload({
               )}
               ref={fullImageRef}
             />
-            {showCroppedImage && (
-              <div className="text-center text-sm text-gray-500">
-                <span className="font-medium">Cropped Preview</span>
-              </div>
-            )}
             <img
               src={croppedImagesUrls.cropped}
               alt="Cropped Preview"
-              className={cn("mx-auto block h-36 overflow-hidden object-cover", {
-                hidden: !showCroppedImage || isModalOpen,
-              })}
+              className={cn(
+                "mx-auto block w-80 overflow-hidden object-cover sm:w-96",
+                {
+                  hidden: !showCroppedImage || isModalOpen,
+                },
+              )}
             />
             <div className="p-1"></div>
 
-            <Dialog
-              open={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              className="fixed inset-0 z-10 mx-auto max-h-[90vh] max-w-[90vw] overflow-y-auto"
-            >
-              <div className="flex min-h-screen items-center justify-center">
-                <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-
-                <div className="relative mx-auto max-h-[90vh] max-w-[90vw] rounded bg-white p-4 sm:max-w-sm">
-                  <Dialog.Title className="text-lg font-medium leading-6 text-gray-900">
-                    Crop Image
-                  </Dialog.Title>
-                  <div className="p-2"></div>
-                  <ReactCrop
-                    crop={crop}
-                    onComplete={onCropComplete}
-                    onChange={onCropChange}
-                    className="max-h-[75vh] max-w-[90vw]"
-                  >
-                    <img src={imageUrl} alt="Cropper img" />
-                  </ReactCrop>
-                  <div className="p-2"></div>
-                  <Button
-                    onClick={() => {
-                      setIsModalOpen(false);
-                    }}
-                    className="absolute right-2 top-2"
-                    variant="destructive"
-                  >
-                    Close
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogContent className="max-h-[80dvh] overflow-y-auto">
+                <CardTitle className="flex items-center gap-2">
+                  <Scissors className="size-6" />
+                  Crop
+                </CardTitle>
+                <ReactCrop
+                  crop={crop}
+                  onComplete={onCropComplete}
+                  onChange={onCropChange}
+                  className="max-h-[80dvh] max-w-[80dvw]"
+                >
+                  <img src={imageUrl} alt="Cropper img" />
+                </ReactCrop>
+                <DialogFooter className="border-t border-neutral-3">
+                  <Button onClick={() => setIsModalOpen(false)} size="sm">
+                    Done
                   </Button>
-                </div>
-              </div>
+                </DialogFooter>
+              </DialogContent>
             </Dialog>
-            <div className="p-2"></div>
           </>
         )}
       </>
-      <div className="p-2"></div>
+      <div className="p-3"></div>
       <div className="mx-auto flex flex-wrap justify-center gap-4">
         {imageUrl && (
           <Button
             onClick={() => setIsModalOpen(true)}
             size="sm"
             variant="outline"
+            type="button"
           >
             <Scissors className="mr-2 size-4" />
             Crop
