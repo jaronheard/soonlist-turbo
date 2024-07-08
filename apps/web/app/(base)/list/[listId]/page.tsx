@@ -105,7 +105,7 @@ export default async function Page({ params }: Props) {
           </p>
           <div className="flex gap-6">
             <p className="text-2xl font-bold leading-normal tracking-wide">
-              Curated by
+              Saved by
             </p>
             <UserInfo userId={list.user.id} />
           </div>
