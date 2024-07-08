@@ -17,7 +17,7 @@ interface NewEventContextState {
 
 // Create a context with empty objects and dummy functions
 const NewEventContext = createContext<NewEventContextState>({
-  organizeData: { notes: "", visibility: "public", lists: [] } as z.infer<
+  organizeData: { notes: "", visibility: "private", lists: [] } as z.infer<
     typeof organizeFormSchema
   >,
   setOrganizeData: () => null,

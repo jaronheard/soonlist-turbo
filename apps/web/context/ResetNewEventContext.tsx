@@ -22,7 +22,7 @@ export function ResetNewEventContext() {
     setCroppedImagesUrls({});
     setOrganizeData({
       notes: "",
-      visibility: "public",
+      visibility: "private",
       lists: [],
     });
     setEventData(undefined);
