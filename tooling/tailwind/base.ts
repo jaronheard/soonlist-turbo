@@ -66,6 +66,9 @@ export default {
           2: "rgb(var(--interactive-2) / <alpha-value>)",
           3: "rgb(var(--interactive-3) / <alpha-value>)",
         },
+        success: {
+          DEFAULT: "rgb(var(--success) / <alpha-value>)",
+        },
       },
     },
   },

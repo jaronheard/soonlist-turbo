@@ -39,6 +39,7 @@ import { Label } from "@soonlist/ui/label";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { feedback } from "~/lib/intercom/intercom";
 import { cn, translateToHtml } from "~/lib/utils";
@@ -504,7 +505,11 @@ function EventDetails({
         </div>
         {/* full width image with a max height, fill container to width */}
         {image && (
-          <div className="relative h-32 w-full grow sm:h-56 lg:hidden">
+          <div
+            className={cn("relative h-32 w-full grow sm:h-56", {
+              "lg:hidden": !preview,
+            })}
+          >
             <Image
               className="rounded-xl object-cover"
               src={image}
@@ -965,6 +970,9 @@ export function EventPreview(
   props: EventListItemProps & { event: AddToCalendarCardProps },
 ) {
   const { id, event } = props;
+  const { croppedImagesUrls } = useCroppedImageContext();
+  const { images } = event;
+  const image = croppedImagesUrls.cropped || images?.[3];
 
   return (
     <div
@@ -991,6 +999,7 @@ export function EventPreview(
           endDate={event.endDate!}
           startTime={event.startTime!}
           endTime={event.endTime!}
+          image={image}
           timezone={event.timeZone || "America/Los_Angeles"}
           location={event.location}
           description={event.description}

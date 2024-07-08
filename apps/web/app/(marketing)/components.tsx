@@ -191,6 +191,7 @@ export function Pricing({
                     aria-describedby={tier.id}
                     className={cn("w-full", buttonVariants())}
                     href={checkoutUrls?.[tier.id] || "/new"}
+                    scroll={false}
                   >
                     Get started
                   </Link>
