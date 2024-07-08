@@ -72,12 +72,14 @@ function ProgressStagesStepper({ status }: { status: Status }) {
       href: "#",
       onClick: () => goToStatus(Status.Organize),
       status: StepStatus.Upcoming,
+      disabled: true,
     },
     {
       name: "Review",
       href: "#",
       onClick: () => goToStatus(Status.Preview),
       status: StepStatus.Upcoming,
+      disabled: true,
     },
   ];
   const stepsOrganize = [
@@ -92,6 +94,7 @@ function ProgressStagesStepper({ status }: { status: Status }) {
       href: "#",
       onClick: () => goToStatus(Status.Organize),
       status: StepStatus.Current,
+      disabled: true,
     },
     {
       name: "Review",

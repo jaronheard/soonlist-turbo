@@ -12,6 +12,7 @@ interface Step {
   href: string;
   status: StepStatus;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
 interface StepperProps {
@@ -42,6 +43,7 @@ function Stepper({ steps }: StepperProps) {
                   <button
                     onClick={step.onClick}
                     className="relative block bg-white p-0.5"
+                    disabled={step.disabled}
                   >
                     <div className="flex h-4 w-4 items-center justify-center rounded-full bg-success hover:bg-indigo-900">
                       <CheckIcon
@@ -80,6 +82,7 @@ function Stepper({ steps }: StepperProps) {
                     onClick={step.onClick}
                     aria-current="step"
                     className="relative block bg-white p-0.5"
+                    disabled={step.disabled}
                   >
                     <div className="flex h-4 w-4 items-center justify-center rounded-full border-4 border-interactive-1 bg-neutral-3">
                       <span className="absolute -bottom-8 font-bold text-interactive-1">
@@ -114,6 +117,7 @@ function Stepper({ steps }: StepperProps) {
                     onClick={step.onClick}
                     aria-hidden="true"
                     className="relative flex h-2 w-2 items-center justify-center rounded-full bg-neutral-3"
+                    disabled={step.disabled}
                   >
                     <span className="absolute -bottom-[2.375rem] font-medium text-neutral-2">
                       {step.name}
