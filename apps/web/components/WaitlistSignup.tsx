@@ -20,7 +20,6 @@ import {
   Drawer,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -171,16 +170,15 @@ export function WaitlistButtonWithDrawer({
           Join waitlist
         </Button>
       </DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent className="">
         <DrawerHeader>
           <DrawerTitle>Join the waitlist</DrawerTitle>
           <DrawerDescription>
             Be one of the first to get early access.
           </DrawerDescription>
         </DrawerHeader>
-        <DrawerFooter>
-          <WaitlistSignup afterSubmit={() => setOpen(false)} />
-        </DrawerFooter>
+        <WaitlistSignup afterSubmit={() => setOpen(false)} />
+        <div className="p-3"></div>
       </DrawerContent>
     </Drawer>
   );
