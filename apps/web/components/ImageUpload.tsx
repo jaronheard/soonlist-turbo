@@ -234,7 +234,7 @@ export function ImageUpload({
     if (!filePath && filePathFromSearchParam) {
       setFilePath(filePathFromSearchParam);
     }
-  }, [filePathFromSearchParam]);
+  }, [filePathFromSearchParam, filePath, setFilePath]);
 
   useEffect(() => {
     // Reset the imageLoaded state whenever imageUrl changes
