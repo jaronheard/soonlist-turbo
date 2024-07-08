@@ -445,8 +445,6 @@ function EventDetails({
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
 
-  console.log("EventDetails image", image);
-
   useEffect(() => {
     setIsClient(true);
   }, []);

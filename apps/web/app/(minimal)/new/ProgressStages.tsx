@@ -505,9 +505,16 @@ function Organize({
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
+  const onSubmit = () => {
+    goToNextStatus();
+  };
+
   return (
     <Form {...form}>
-      <form className="flex w-full flex-col gap-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex w-full flex-col gap-6"
+      >
         <FormField
           control={form.control}
           name="lists"
@@ -591,7 +598,7 @@ function Organize({
           )}
         />
         <ProgressStagesFooter>
-          <Button size="lg" onClick={() => goToNextStatus()} className="w-full">
+          <Button size="lg" className="w-full" type="submit">
             Next
           </Button>
         </ProgressStagesFooter>
@@ -618,12 +625,16 @@ function AddEvent() {
   const onSubmitText = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Prevent the default form submission behavior
     goToNextStatus();
-    router.push(`/new?rawText=${input}&timezone=${timezone}`);
+    router.push(`/new?rawText=${input}&timezone=${timezone}`, {
+      scroll: false,
+    });
   };
   const onSubmitUrl = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Prevent the default form submission behavior
     goToNextStatus();
-    router.push(`/new?url=${input}&timezone=${timezone}`);
+    router.push(`/new?url=${input}&timezone=${timezone}`, {
+      scroll: false,
+    });
   };
 
   return (

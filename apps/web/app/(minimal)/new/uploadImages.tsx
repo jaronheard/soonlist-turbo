@@ -40,7 +40,9 @@ export const UploadImageForProcessingDropzone = () => {
             const filePath = uploadedFiles[0]?.filePath;
             if (filePath) {
               goToNextStatus();
-              router.push(`/new?filePath=${filePath}&timezone=${timezone}`);
+              router.push(`/new?filePath=${filePath}&timezone=${timezone}`, {
+                scroll: false,
+              });
             }
           }
         }}
@@ -62,7 +64,9 @@ export const UploadImageForProcessingButton = () => {
           const filePath = files[0]!.filePath;
           if (filePath) {
             goToNextStatus();
-            router.push(`/new?filePath=${filePath}&timezone=${timezone}`);
+            router.push(`/new?filePath=${filePath}&timezone=${timezone}`, {
+              scroll: false,
+            });
           }
         }
       }}
