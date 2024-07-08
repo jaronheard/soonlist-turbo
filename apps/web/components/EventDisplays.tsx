@@ -662,7 +662,7 @@ function EventActionButtons({
   event,
   id,
   isOwner,
-  // isFollowing,
+  isFollowing,
   visibility,
   variant,
   size,
@@ -695,6 +695,9 @@ function EventActionButtons({
           id={id}
           username={user.username}
         />
+        {!isOwner && (
+          <FollowEventButton eventId={id} following={isFollowing} type="icon" />
+        )}
         {/* <FollowEventDropdownButton eventId={id} following={isFollowing} /> */}
         {isOwner && (
           <>
@@ -742,7 +745,9 @@ function EventActionButtons({
         id={id}
         username={user.username}
       />
-      {/* <FollowEventDropdownButton eventId={id} following={isFollowing} /> */}
+      {!isOwner && (
+        <FollowEventButton eventId={id} following={isFollowing} type="icon" />
+      )}
       {isOwner && (
         <>
           <EditButton type="icon" userId={user.id} id={id} />
@@ -790,7 +795,9 @@ export function EventListItem(props: EventListItemProps) {
   const isSelf =
     clerkUser?.id === user?.id || clerkUser?.externalId === user?.id;
   const isOwner = isSelf || roles?.includes("admin");
-  const isFollowing = !!eventFollows.find((item) => item.userId === user?.id);
+  const isFollowing = !!eventFollows.find(
+    (item) => item.userId === user?.id || item.userId === clerkUser?.externalId,
+  );
   const image =
     event.images?.[3] ||
     (filePath ? buildDefaultUrl(props.filePath || "") : undefined);
