@@ -13,12 +13,7 @@ import { centerCrop, makeAspectCrop, ReactCrop } from "react-image-crop";
 
 import { Button } from "@soonlist/ui/button";
 import { CardTitle } from "@soonlist/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogTitle,
-} from "@soonlist/ui/dialog";
+import { Dialog, DialogContent, DialogFooter } from "@soonlist/ui/dialog";
 
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { cn, extractFilePath } from "~/lib/utils";
