@@ -238,8 +238,8 @@ export function AddToCalendarCard({
     >
       <CardContent className="grid grid-cols-1 gap-6 rounded-md py-6 shadow-md sm:grid-cols-6">
         <CardTitle className="col-span-full flex items-center justify-between">
-          <div className="flex items-center">
-            <Pencil className="mr-2 size-6" />
+          <div className="flex items-center gap-2">
+            <Pencil className="size-6" />
             Edit Event Details
           </div>
         </CardTitle>
