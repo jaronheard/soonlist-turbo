@@ -44,8 +44,8 @@ export const EVENT_CATEGORIES = [
   "tech",
   "unknown",
 ] as const;
-export const EventCategorySchema = z.enum(EVENT_CATEGORIES);
-
+// export const EventCategorySchema = z.enum(EVENT_CATEGORIES);
+export const EventCategorySchema = z.string();
 export type EventCategory = z.infer<typeof EventCategorySchema>;
 
 export const EVENT_TYPES = [
@@ -66,7 +66,8 @@ export const EVENT_TYPES = [
   "webinar",
   "workshop",
 ] as const;
-export const EventTypeSchema = z.enum(EVENT_TYPES);
+// export const EventTypeSchema = z.enum(EVENT_TYPES);
+export const EventTypeSchema = z.string();
 export type EventType = z.infer<typeof EventTypeSchema>;
 
 export const ACCESSIBILITY_TYPES = [
@@ -93,14 +94,18 @@ export const EventMetadataSchema = z.object({
   accessibility: z.array(AccessibilityTypeSchema).optional(),
   accessibilityNotes: z.string().optional(),
   ageRestriction: AgeRestrictionSchema,
-  category: EventCategorySchema,
+  category: EventCategorySchema.describe(
+    "Category of the event: one of " + EVENT_CATEGORIES.join(", "),
+  ),
   mentions: z.array(z.string()).optional(),
   performers: z.array(z.string()).optional(),
   priceMax: z.number().optional(),
   priceMin: z.number().optional(),
   priceType: PriceTypeSchema,
   source: PlatformSchema.optional(),
-  type: EventTypeSchema,
+  type: EventTypeSchema.describe(
+    "Type of the event: one of " + EVENT_TYPES.join(", "),
+  ),
 });
 export type EventMetadata = z.infer<typeof EventMetadataSchema>;
 export const EventMetadataSchemaLoose = EventMetadataSchema.extend({
