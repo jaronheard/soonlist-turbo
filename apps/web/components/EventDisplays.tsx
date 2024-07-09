@@ -168,7 +168,6 @@ function EventDetailsCard({
   timezone: string;
   description?: string;
   location?: string;
-  EventActionButtons?: React.ReactNode;
 }) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
@@ -920,6 +919,7 @@ export function EventListItem(props: EventListItemProps) {
     );
   }
 
+  // if (props.variant === "card")
   return (
     <li
       className={cn(
@@ -968,6 +968,37 @@ export function EventListItem(props: EventListItemProps) {
             />
           )}
         </div>
+      </div>
+      <div className="p-3"></div>
+      <div className="absolute bottom-2 left-2 z-10 flex gap-2 p-1">
+        {user &&
+          lists &&
+          lists.length > 0 &&
+          lists.map((list) => (
+            <ListCard
+              key={list.id}
+              name={list.name}
+              id={list.id}
+              username={user.username}
+              visibility={list.visibility}
+              variant="badge"
+            ></ListCard>
+          ))}
+        {user && (
+          <UserInfoMini username={user.username} userImage={user.userImage} />
+        )}
+      </div>
+      <div className="absolute bottom-2 right-2 z-10 p-1">
+        <EventActionButtons
+          user={user}
+          event={event as AddToCalendarButtonPropsRestricted}
+          id={id}
+          isOwner={!!isOwner}
+          isFollowing={isFollowing}
+          visibility={visibility}
+          variant="minimal"
+          size="sm"
+        />
       </div>
     </li>
   );
