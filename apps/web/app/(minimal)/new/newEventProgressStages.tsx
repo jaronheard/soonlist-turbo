@@ -375,6 +375,7 @@ function Organize({
   lists?: List[];
   filePath?: string;
 }) {
+  const { setOrganizeData } = useNewEventContext();
   const { goToNextStatus } = useNewEventProgressContext();
 
   const listOptions = lists
@@ -384,7 +385,8 @@ function Organize({
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
-  const onSubmit = () => {
+  const onSubmit = (values: z.infer<typeof organizeFormSchema>) => {
+    setOrganizeData(values);
     goToNextStatus();
   };
 
