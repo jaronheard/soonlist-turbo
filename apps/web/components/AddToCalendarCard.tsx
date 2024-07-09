@@ -116,7 +116,7 @@ export function AddToCalendarCard({
     (initialProps.eventMetadata?.ageRestriction || "none") as string,
   );
   const [category, setCategory] = useState(
-    (initialProps.eventMetadata?.category || "unknown") as string,
+    initialProps.eventMetadata?.category || "unknown",
   );
   const [type, setType] = useState(initialProps.eventMetadata?.type || "event");
   const [performers, setPerformers] = useState(
