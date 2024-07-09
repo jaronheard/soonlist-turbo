@@ -157,11 +157,6 @@ function EventDetailsCard({
   timezone,
   location,
   description,
-  user,
-  lists,
-  isOwner,
-  isFollowing,
-  visibility,
 }: {
   id: string;
   name: string;
@@ -173,12 +168,6 @@ function EventDetailsCard({
   timezone: string;
   description?: string;
   location?: string;
-  EventActionButtons?: React.ReactNode;
-  user?: User;
-  lists?: List[];
-  isOwner?: boolean;
-  isFollowing?: boolean;
-  visibility: "public" | "private";
 }) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
@@ -242,37 +231,6 @@ function EventDetailsCard({
             </Link>
           )}
         </div>
-      </div>
-      <div className="p-2"></div>
-      <div className="absolute bottom-2 left-2 z-10 flex gap-2 p-1">
-        {user &&
-          lists &&
-          lists.length > 0 &&
-          lists.map((list) => (
-            <ListCard
-              key={list.id}
-              name={list.name}
-              id={list.id}
-              username={user.username}
-              visibility={list.visibility}
-              variant="badge"
-            ></ListCard>
-          ))}
-        {user && (
-          <UserInfoMini username={user.username} userImage={user.userImage} />
-        )}
-      </div>
-      <div className="absolute bottom-2 right-2 z-10 p-1">
-        <EventActionButtons
-          user={user}
-          event={event as AddToCalendarButtonPropsRestricted}
-          id={id}
-          isOwner={!!isOwner}
-          isFollowing={isFollowing}
-          visibility={visibility}
-          variant="minimal"
-          size="sm"
-        />
       </div>
     </div>
   );
@@ -1007,14 +965,40 @@ export function EventListItem(props: EventListItemProps) {
               timezone={event.timeZone || "America/Los_Angeles"}
               location={event.location}
               description={event.description}
-              visibility={visibility}
-              user={user}
-              lists={lists}
-              isOwner={!!isOwner}
-              isFollowing={isFollowing}
             />
           )}
         </div>
+      </div>
+      <div className="p-3"></div>
+      <div className="absolute bottom-2 left-2 z-10 flex gap-2 p-1">
+        {user &&
+          lists &&
+          lists.length > 0 &&
+          lists.map((list) => (
+            <ListCard
+              key={list.id}
+              name={list.name}
+              id={list.id}
+              username={user.username}
+              visibility={list.visibility}
+              variant="badge"
+            ></ListCard>
+          ))}
+        {user && (
+          <UserInfoMini username={user.username} userImage={user.userImage} />
+        )}
+      </div>
+      <div className="absolute bottom-2 right-2 z-10 p-1">
+        <EventActionButtons
+          user={user}
+          event={event as AddToCalendarButtonPropsRestricted}
+          id={id}
+          isOwner={!!isOwner}
+          isFollowing={isFollowing}
+          visibility={visibility}
+          variant="minimal"
+          size="sm"
+        />
       </div>
     </li>
   );
