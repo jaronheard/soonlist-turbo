@@ -1,3 +1,4 @@
+import { currentUser } from "@clerk/nextjs/server";
 import { clsx } from "clsx";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -55,7 +56,7 @@ export type EventWithUser = Event & {
   eventToLists?: EventToListsWithList[];
 };
 
-export function EventList({
+export async function EventList({
   currentEvents,
   futureEvents,
   pastEvents,
@@ -74,6 +75,7 @@ export function EventList({
   showPrivateEvents?: boolean;
   children?: React.ReactNode;
 }) {
+  const user = await currentUser();
   function getVisibleEvents(events: EventWithUser[]) {
     return events.filter(
       (item) => showPrivateEvents || item.visibility === "public",
@@ -82,10 +84,15 @@ export function EventList({
 
   const currentEventsToUse = collapseSimilarEvents(
     getVisibleEvents(currentEvents),
+    user?.externalId || user?.id,
   );
-  const pastEventsToUse = collapseSimilarEvents(getVisibleEvents(pastEvents));
+  const pastEventsToUse = collapseSimilarEvents(
+    getVisibleEvents(pastEvents),
+    user?.externalId || user?.id,
+  );
   const futureEventsToUse = collapseSimilarEvents(
     getVisibleEvents(futureEvents),
+    user?.externalId || user?.id,
   );
   const showPastEvents =
     variant !== "future-minimal" && pastEventsToUse.length > 0;
