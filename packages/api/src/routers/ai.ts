@@ -6,6 +6,7 @@ import { TRPCError } from "@trpc/server";
 import { waitUntil } from "@vercel/functions";
 import { generateObject } from "ai";
 import { Langfuse } from "langfuse";
+import SuperJSON from "superjson";
 import { z } from "zod";
 
 import type { NewComment, NewEvent, NewEventToLists } from "@soonlist/db/types";
@@ -445,6 +446,8 @@ export const aiRouter = createTRPCRouter({
       const system = getSystemMessage();
       const systemMetadata = getSystemMessageMetadata();
       const prompt = getPrompt(input.timezone);
+
+      console.log("input", SuperJSON.stringify(input));
 
       // START - duplicated except for input with eventFromImage
       const generateObjectWithLogging = async <T>(
