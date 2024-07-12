@@ -672,7 +672,7 @@ export const aiRouter = createTRPCRouter({
 
         const title = "Soonlist";
         const body = "Your event is ready to go!";
-        const data = { url: "/new/preview" };
+        const data = { url: `/event/${createEvent.id}` };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new Error(
