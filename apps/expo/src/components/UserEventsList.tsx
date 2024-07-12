@@ -41,7 +41,7 @@ export default function UserEventsList(props: {
   return (
     <FlashList
       data={events}
-      estimatedItemSize={20}
+      estimatedItemSize={100}
       ItemSeparatorComponent={() => <View className="h-2" />}
       renderItem={(post) => <Event event={post.item} />}
     />

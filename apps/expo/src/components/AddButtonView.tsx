@@ -47,8 +47,6 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>{/* Your main content goes here */}</View>
-
       <Modal
         animationType="fade"
         transparent={true}
@@ -93,11 +91,10 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  content: {
-    flex: 1,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   modalContainer: {
     flex: 1,
@@ -157,12 +154,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#6200EE",
     padding: 20,
     borderRadius: 50,
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    left: 20,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 20,
+    marginHorizontal: 20,
   },
   fabText: {
     color: "white",
