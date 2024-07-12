@@ -114,6 +114,8 @@ export const eventRouter = createTRPCRouter({
           (users) =>
             users[0]?.eventFollows
               .map((eventFollow) => eventFollow.event)
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+              .filter((event) => event?.startDateTime)
               .filter((event) => event.startDateTime > now) || [],
         );
       return [...savedEvents, ...createdEvents].sort(
