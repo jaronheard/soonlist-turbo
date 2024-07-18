@@ -249,7 +249,7 @@ export const users = mysqlTable(
 export const pushTokens = mysqlTable(
   "PushTokens",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").primaryKey().autoincrement(),
     userId: varchar("userId", { length: 191 }).notNull(),
     expoPushToken: varchar("expoPushToken", { length: 191 }).notNull(),
     createdAt: timestamp("created_at")
