@@ -5,14 +5,19 @@ import { FlashList } from "@shopify/flash-list";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import { api } from "~/utils/api";
 
 export function Event(props: {
   event: RouterOutputs["event"]["getUpcomingForUser"][number];
 }) {
+  const utils = api.useUtils();
+  const deleteEventMutation = api.event.delete.useMutation({
+    onSettled: () => void utils.event.invalidate(),
+  });
   const id = props.event.id;
   const e = props.event.event as AddToCalendarButtonPropsRestricted;
   return (
-    <View className="flex flex-row rounded-lg bg-muted p-4">
+    <View className="flex flex-col rounded-lg bg-muted p-4">
       <View className="flex-grow">
         <Link
           asChild
@@ -29,6 +34,12 @@ export function Event(props: {
           </Pressable>
         </Link>
       </View>
+      <Pressable
+        onPress={() => deleteEventMutation.mutate({ id })}
+        className="mt-4 self-end"
+      >
+        <Text className="text-red-500">Delete</Text>
+      </Pressable>
     </View>
   );
 }

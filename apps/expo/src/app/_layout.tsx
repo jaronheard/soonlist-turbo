@@ -222,11 +222,8 @@ export default function RootLayout() {
   }
 
   return (
-    <TRPCProvider>
-      <ClerkProvider
-        publishableKey={clerkPublishableKey}
-        tokenCache={tokenCache}
-      >
+    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
+      <TRPCProvider>
         <Stack
           screenOptions={{
             headerStyle: {
@@ -238,7 +235,7 @@ export default function RootLayout() {
           }}
         />
         <SignedIn>
-          {/* <TokenSaver expoPushToken={expoPushToken} /> */}
+          <TokenSaver expoPushToken={expoPushToken} />
           <AddButtonView expoPushToken={expoPushToken} />
         </SignedIn>
         {/* <View
@@ -261,7 +258,7 @@ export default function RootLayout() {
           <PushNotificationSenderButton expoPushToken={expoPushToken} />
         </View> */}
         <StatusBar />
-      </ClerkProvider>
-    </TRPCProvider>
+      </TRPCProvider>
+    </ClerkProvider>
   );
 }

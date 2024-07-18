@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
@@ -19,10 +19,6 @@ export default function Events() {
     userName: user.username,
   });
   const utils = api.useUtils();
-
-  // const deletePostMutation = api.event.delete.useMutation({
-  //   onSettled: () => utils.event.invalidate().then(),
-  // });
 
   return (
     <View className="flex-1">
