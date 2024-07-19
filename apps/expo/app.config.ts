@@ -20,6 +20,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   assetBundlePatterns: ["**/*"],
   plugins: [
     [
+      "expo-build-properties",
+      {
+        ios: {
+          deploymentTarget: "15.0",
+        },
+      },
+    ],
+    [
       "expo-share-intent",
       {
         iosActivationRules: {

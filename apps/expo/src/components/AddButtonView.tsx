@@ -79,6 +79,10 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
         </View>
       </Modal>
 
+      {/* <TouchableOpacity style={styles.fab} onPress={() => signOut()}>
+        <Text style={styles.fabText}>Logout</Text>
+      </TouchableOpacity> */}
+
       <TouchableOpacity
         style={styles.fab}
         onPress={() => setModalVisible(true)}

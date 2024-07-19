@@ -14,17 +14,17 @@ import { TRPCProvider } from "~/utils/api";
 import "../styles.css";
 
 import AddButtonView from "~/components/AddButtonView";
-import TokenSaver from "~/components/TokenSaver";
+import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 
 const tokenCache = {
-  async getToken(key: string) {
+  getToken(key: string) {
     try {
       return SecureStore.getItemAsync(key);
     } catch (err) {
       return null;
     }
   },
-  async saveToken(key: string, value: string) {
+  saveToken(key: string, value: string) {
     try {
       return SecureStore.setItemAsync(key, value);
     } catch (err) {
@@ -235,7 +235,7 @@ export default function RootLayout() {
           }}
         />
         <SignedIn>
-          <TokenSaver expoPushToken={expoPushToken} />
+          <AuthAndTokenSync expoPushToken={expoPushToken} />
           <AddButtonView expoPushToken={expoPushToken} />
         </SignedIn>
         {/* <View
