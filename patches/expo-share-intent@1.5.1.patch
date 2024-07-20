@@ -1,3 +1,16 @@
+diff --git a/ios/ExpoShareIntentModule.podspec b/ios/ExpoShareIntentModule.podspec
+index 6db146996720008f9ce6f1809b6ec7f6951a78e9..8b63c33060bccc1b01e65b0e3aa51d931c422dab 100644
+--- a/ios/ExpoShareIntentModule.podspec
++++ b/ios/ExpoShareIntentModule.podspec
+@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
+   s.license        = package['license']
+   s.author         = package['author']
+   s.homepage       = package['homepage']
+-  s.platform       = :ios, '13.0'
++  s.platform       = :ios, '15.0'
+   s.swift_version  = '5.4'
+   s.source         = { git: 'https://github.com/achorein/expo-share-intent' }
+   s.static_framework = true
 diff --git a/plugin/build/ios/ShareExtensionViewController.swift b/plugin/build/ios/ShareExtensionViewController.swift
 index 67036867bd4a082140d2f8ae5000caea9cdb50fb..95daf888a4b805ea52027a31d4115784d0707b3c 100644
 --- a/plugin/build/ios/ShareExtensionViewController.swift
