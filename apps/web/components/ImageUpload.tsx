@@ -12,8 +12,13 @@ import { Scissors, SwitchCamera, Trash, Upload } from "lucide-react";
 import { centerCrop, makeAspectCrop, ReactCrop } from "react-image-crop";
 
 import { Button } from "@soonlist/ui/button";
-import { CardTitle } from "@soonlist/ui/card";
-import { Dialog, DialogContent, DialogFooter } from "@soonlist/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@soonlist/ui/dialog";
 
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { cn, extractFilePath } from "~/lib/utils";
@@ -346,15 +351,17 @@ export function ImageUpload({
 
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogContent className="max-h-[80dvh] overflow-y-auto">
-                <CardTitle className="flex items-center gap-2">
-                  <Scissors className="size-6" />
-                  Crop
-                </CardTitle>
+                <DialogHeader className="">
+                  <DialogTitle className="flex items-center gap-2">
+                    <Scissors className="size-6" />
+                    Crop
+                  </DialogTitle>
+                </DialogHeader>
                 <ReactCrop
                   crop={crop}
                   onComplete={onCropComplete}
                   onChange={onCropChange}
-                  className="max-h-[80dvh] max-w-[80dvw]"
+                  className="max-w-[80dvw]"
                 >
                   <img src={imageUrl} alt="Cropper img" />
                 </ReactCrop>
