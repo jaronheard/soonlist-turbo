@@ -17,19 +17,12 @@ import AddButtonView from "~/components/AddButtonView";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 
 const tokenCache = {
-  getToken(key: string) {
-    try {
-      return SecureStore.getItemAsync(key);
-    } catch (err) {
-      return null;
-    }
+  getToken: async (key: string) => {
+    const token = await SecureStore.getItemAsync(key);
+    return token;
   },
-  saveToken(key: string, value: string) {
-    try {
-      return SecureStore.setItemAsync(key, value);
-    } catch (err) {
-      return;
-    }
+  saveToken: (key: string, value: string) => {
+    return SecureStore.setItemAsync(key, value);
   },
 };
 
