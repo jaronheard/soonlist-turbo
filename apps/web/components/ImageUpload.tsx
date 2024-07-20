@@ -230,6 +230,13 @@ export function ImageUpload({
     naturalHeight && naturalWidth && naturalHeight > 0 && naturalWidth > 0;
   const [imageLoaded, setImageLoaded] = useState(false);
 
+  // if initialImageUrl changes from "" to something else, set imageUrl to initialImageUrl
+  useEffect(() => {
+    if (initialImageUrl && initialImageUrl !== "") {
+      setImageUrl(initialImageUrl);
+    }
+  }, [initialImageUrl, setImageUrl]);
+
   // if filePath isn't set, updated it when filePathFromSearchParam changes
   useEffect(() => {
     if (!filePath && filePathFromSearchParam) {
