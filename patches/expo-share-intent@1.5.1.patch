@@ -805,3 +805,15 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..95daf888a4b805ea52027a31d4115784
 -  }
 +  return nil
  }
+diff --git a/plugin/build/ios/withIosShareExtensionXcodeTarget.js b/plugin/build/ios/withIosShareExtensionXcodeTarget.js
+index 9d192ccaebf4bae7195d1e735f5aef67a8283461..0593f3f5253da74272c711a7796ad7bb895e2658 100644
+--- a/plugin/build/ios/withIosShareExtensionXcodeTarget.js
++++ b/plugin/build/ios/withIosShareExtensionXcodeTarget.js
+@@ -61,6 +61,7 @@ const withShareExtensionXcodeTarget = (config, parameters) => {
+                     buildSettingsObj["SWIFT_EMIT_LOC_STRINGS"] = "YES";
+                     buildSettingsObj["SWIFT_VERSION"] = "5.0";
+                     buildSettingsObj["TARGETED_DEVICE_FAMILY"] = `"1,2"`;
++                    buildSettingsObj["IPHONEOS_DEPLOYMENT_TARGET"] = "15.0";
+                 }
+             }
+         }
