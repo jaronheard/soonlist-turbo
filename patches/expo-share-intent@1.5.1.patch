@@ -231,7 +231,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..95daf888a4b805ea52027a31d4115784
 +  guard
 +    let url = URL(
 +      string:
-+        "https://c5c6-24-22-1-138.ngrok-free.app/api/trpc/ai.eventFromRawTextThenCreateThenNotification"
++        "https://www.soonlist.com/api/trpc/ai.eventFromRawTextThenCreateThenNotification"
 +    )
 +  else {
 +    NSLog("Invalid URL")
@@ -394,7 +394,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..95daf888a4b805ea52027a31d4115784
 +  guard
 +    let url = URL(
 +      string:
-+        "https://c5c6-24-22-1-138.ngrok-free.app/api/trpc/ai.eventFromImageThenCreateThenNotification"
++        "https://www.soonlist.com/api/trpc/ai.eventFromImageThenCreateThenNotification"
 +    )
 +  else {
 +    NSLog("Invalid URL")
