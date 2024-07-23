@@ -1,32 +1,28 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Platform, Text, View } from "react-native";
+import { Platform, Text } from "react-native";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import { ClerkProvider } from "@clerk/clerk-expo";
+import { ClerkProvider, SignedIn } from "@clerk/clerk-expo";
 import { useColorScheme } from "nativewind";
 
 import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
 
+import AddButtonView from "~/components/AddButtonView";
+import AuthAndTokenSync from "~/components/AuthAndTokenSync";
+
 const tokenCache = {
-  async getToken(key: string) {
-    try {
-      return SecureStore.getItemAsync(key);
-    } catch (err) {
-      return null;
-    }
+  getToken: async (key: string) => {
+    const token = await SecureStore.getItemAsync(key);
+    return token;
   },
-  async saveToken(key: string, value: string) {
-    try {
-      return SecureStore.setItemAsync(key, value);
-    } catch (err) {
-      return;
-    }
+  saveToken: (key: string, value: string) => {
+    return SecureStore.setItemAsync(key, value);
   },
 };
 
@@ -114,15 +110,71 @@ async function registerForPushNotificationsAsync() {
   }
 }
 
+// function PushNotificationSenderButton({
+//   expoPushToken,
+// }: {
+//   expoPushToken: string;
+// }) {
+//   const notificationMutation =
+//     api.notification.sendSingleNotification.useMutation({});
+
+//   return (
+//     <Button
+//       title="Press to Send Notification"
+//       onPress={() => {
+//         notificationMutation.mutate({
+//           expoPushToken: expoPushToken,
+//           title: "Test from TRPC",
+//           body: "Test",
+//           data: { test: "test" },
+//         });
+//       }}
+//     />
+//   );
+// }
+
+function useNotificationObserver() {
+  useEffect(() => {
+    let isMounted = true;
+
+    function redirect(notification: Notifications.Notification) {
+      const url = notification.request.content.data.url as string | undefined;
+      if (url) {
+        router.push(url);
+      }
+    }
+
+    void Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (!isMounted || !response?.notification) {
+        return;
+      }
+      redirect(response.notification);
+    });
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        redirect(response.notification);
+      },
+    );
+
+    return () => {
+      isMounted = false;
+      subscription.remove();
+    };
+  }, []);
+}
+
 // This is the main layout of the app
 // It wraps your pages with the providers they need
 export default function RootLayout() {
   const [expoPushToken, setExpoPushToken] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [notification, setNotification] = useState<
     Notifications.Notification | undefined
   >(undefined);
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
+  useNotificationObserver();
 
   useEffect(() => {
     registerForPushNotificationsAsync()
@@ -163,11 +215,8 @@ export default function RootLayout() {
   }
 
   return (
-    <TRPCProvider>
-      <ClerkProvider
-        publishableKey={clerkPublishableKey}
-        tokenCache={tokenCache}
-      >
+    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
+      <TRPCProvider>
         <Stack
           screenOptions={{
             headerStyle: {
@@ -178,7 +227,11 @@ export default function RootLayout() {
             },
           }}
         />
-        <View
+        <SignedIn>
+          <AuthAndTokenSync expoPushToken={expoPushToken} />
+          <AddButtonView expoPushToken={expoPushToken} />
+        </SignedIn>
+        {/* <View
           style={{
             flex: 1,
             alignItems: "center",
@@ -195,15 +248,10 @@ export default function RootLayout() {
                 JSON.stringify(notification.request.content.data)}
             </Text>
           </View>
-          <Button
-            title="Press to Send Notification"
-            onPress={async () => {
-              await sendPushNotification(expoPushToken);
-            }}
-          />
-        </View>
+          <PushNotificationSenderButton expoPushToken={expoPushToken} />
+        </View> */}
         <StatusBar />
-      </ClerkProvider>
-    </TRPCProvider>
+      </TRPCProvider>
+    </ClerkProvider>
   );
 }

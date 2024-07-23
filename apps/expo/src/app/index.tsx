@@ -8,7 +8,7 @@ import "../styles.css";
 import Constants from "expo-constants";
 import * as Sentry from "@sentry/react-native";
 
-import Events from "./events";
+import Events from "../components/Events";
 
 Sentry.init({
   dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.us.sentry.io/4506458761396224",
@@ -31,14 +31,14 @@ function App() {
   }
 
   return (
-    <SafeAreaView className="flex flex-1 items-center justify-center bg-white">
+    <>
       <SignedOut>
         <SignInWithOAuth />
       </SignedOut>
       <SignedIn>
         <Events />
       </SignedIn>
-    </SafeAreaView>
+    </>
   );
 }
 
