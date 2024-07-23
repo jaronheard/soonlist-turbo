@@ -3,6 +3,8 @@
 
 import type { ReactNode } from "react";
 import React, { createContext, useContext, useState } from "react";
+import { useRouter } from "next/navigation";
+import { z } from "zod";
 
 // Define the type of the context state
 export enum Mode {
@@ -11,19 +13,36 @@ export enum Mode {
 }
 
 export enum Status {
+  Upload = "upload",
   Organize = "organize",
   Preview = "preview",
   Publish = "publish",
 }
 
+export enum UploadOptions {
+  Image = "image",
+  Text = "text",
+  Link = "link",
+}
+
+export const UploadOptionsSchema = z.nativeEnum(UploadOptions);
+
 // Create a context with empty objects and dummy functions
 export const NewEventProgressContext = createContext({
+  isShortcut: false,
+  setIsShortcut: (isShortcut: boolean) =>
+    console.warn("no isShortcut provider"),
   mode: Mode.View,
+  inactiveMode: Mode.Edit,
+  uploadOption: UploadOptions.Image,
+  setUploadOption: (uploadOption: UploadOptions) =>
+    console.warn("no uploadOption provider"),
   setMode: (mode: Mode) => console.warn("no mode provider"),
   status: Status.Preview,
   setStatus: (status: Status) => console.warn("no status provider"),
   goToNextStatus: () => console.warn("no status provider"),
   goToPreviousStatus: () => console.warn("no status provider"),
+  goToStatus: (status: Status) => console.warn("no status provider"),
 });
 
 export const useNewEventProgressContext = () =>
@@ -35,8 +54,12 @@ export const NewEventProgressProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  const router = useRouter();
   const [mode, setMode] = useState(Mode.View);
-  const [status, setStatus] = useState(Status.Organize);
+  const [status, setStatus] = useState(Status.Upload);
+  const [uploadOption, setUploadOption] = useState(UploadOptions.Image);
+  const [isShortcut, setIsShortcut] = useState(false);
+  const inactiveMode = mode === Mode.Edit ? Mode.View : Mode.Edit;
 
   function goToNextStatus() {
     const allStatuses = Object.values(Status);
@@ -56,15 +79,29 @@ export const NewEventProgressProvider = ({
     }
   }
 
+  function goToStatus(newStatus: Status) {
+    // clear query params if status is upload
+    if (newStatus === Status.Upload) {
+      router.push("/new", { scroll: false });
+    }
+    setStatus(newStatus);
+  }
+
   return (
     <NewEventProgressContext.Provider
       value={{
+        isShortcut,
+        setIsShortcut,
         mode,
+        inactiveMode,
         setMode,
         status,
         setStatus,
         goToNextStatus,
         goToPreviousStatus,
+        goToStatus,
+        uploadOption,
+        setUploadOption,
       }}
     >
       {children}

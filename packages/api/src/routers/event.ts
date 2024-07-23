@@ -70,15 +70,13 @@ export const eventRouter = createTRPCRouter({
   getUpcomingForUser: publicProcedure
     .input(z.object({ userName: z.string() }))
     .query(async ({ ctx, input }) => {
-      const user = await ctx.db.query.users
+      const now = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
+      const createdEvents = await ctx.db.query.users
         .findMany({
           where: eq(users.username, input.userName),
           with: {
             events: {
-              where: gte(
-                events.startDateTime,
-                new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
-              ),
+              where: gte(events.startDateTime, now),
               orderBy: [asc(events.startDateTime)],
               with: {
                 eventFollows: true,
@@ -95,7 +93,36 @@ export const eventRouter = createTRPCRouter({
           },
         })
         .then((users) => users[0]?.events || []);
-      return user;
+      const savedEvents = await ctx.db.query.users
+        .findMany({
+          where: eq(users.username, input.userName),
+          with: {
+            eventFollows: {
+              with: {
+                event: {
+                  with: {
+                    user: true,
+                    eventFollows: true,
+                    comments: true,
+                  },
+                },
+              },
+            },
+          },
+        })
+        .then(
+          (users) =>
+            users[0]?.eventFollows
+              .map((eventFollow) => eventFollow.event)
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+              .filter((event) => event?.startDateTime)
+              .filter((event) => event.startDateTime > now) || [],
+        );
+      return [...savedEvents, ...createdEvents].sort(
+        (a, b) =>
+          new Date(a.startDateTime).getTime() -
+          new Date(b.startDateTime).getTime(),
+      );
     }),
   getCreatedForUser: publicProcedure
     .input(z.object({ userName: z.string() }))
@@ -580,16 +607,25 @@ export const eventRouter = createTRPCRouter({
       eventId: input.id,
     });
   }),
-  unfollow: protectedProcedure.input(eventIdSchema).mutation(({ ctx }) => {
-    const { userId } = ctx.auth;
-    if (!userId) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "No user id found in session",
-      });
-    }
-    return ctx.db.delete(eventFollows).where(eq(eventFollows.userId, userId));
-  }),
+  unfollow: protectedProcedure
+    .input(eventIdSchema)
+    .mutation(({ ctx, input }) => {
+      const { userId } = ctx.auth;
+      if (!userId) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "No user id found in session",
+        });
+      }
+      return ctx.db
+        .delete(eventFollows)
+        .where(
+          and(
+            eq(eventFollows.userId, userId),
+            eq(eventFollows.eventId, input.id),
+          ),
+        );
+    }),
   addToList: protectedProcedure
     .input(z.object({ eventId: z.string(), listId: z.string() }))
     .mutation(({ ctx, input }) => {

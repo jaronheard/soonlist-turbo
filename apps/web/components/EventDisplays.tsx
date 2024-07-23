@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import type {
+  DateInfo,
   EventMetadata as EventMetadataDisplay,
   SimilarityDetails,
 } from "@soonlist/cal";
@@ -31,12 +32,14 @@ import {
   getDateInfoUTC,
   getDateTimeInfo,
   timeFormatDateInfo,
+  timeIsTomorrow,
 } from "@soonlist/cal";
 import { Badge } from "@soonlist/ui/badge";
 import { Label } from "@soonlist/ui/label";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
+import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { feedback } from "~/lib/intercom/intercom";
 import { cn, translateToHtml } from "~/lib/utils";
@@ -165,7 +168,6 @@ function EventDetailsCard({
   timezone: string;
   description?: string;
   location?: string;
-  EventActionButtons?: React.ReactNode;
 }) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
@@ -202,21 +204,14 @@ function EventDetailsCard({
 
   return (
     <div className="flex w-full flex-col items-start justify-center gap-2">
-      {/* duplicated with Event */}
-      <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
-        {isClient && eventTimesAreDefined(startTime, endTime) && (
-          <div className="flex-wrap text-neutral-2" suppressHydrationWarning>
-            {startDateInfo.dayOfWeek.substring(0, 3)}
-            {", "}
-            {startDateInfo.month}/{startDateInfo.day}/
-            {startDateInfo.year.toString().substring(2, 4)}{" "}
-            <span className="text-neutral-3">{"//"}</span>{" "}
-            {timeFormatDateInfo(startDateInfo)}-
-            {timeFormatDateInfo(endDateInfo)}
-          </div>
-        )}
-      </div>
-      {/* end duplicated with Event */}
+      <DateAndTimeDisplay
+        endDateInfo={endDateInfo}
+        endTime={endTime}
+        isClient={isClient}
+        startDateInfo={startDateInfo}
+        startTime={startTime}
+        variant="compact"
+      />
       <div className="flex w-full flex-col items-start gap-2">
         <Link
           href={`/event/${id}`}
@@ -481,21 +476,13 @@ function EventDetails({
 
   return (
     <div className="flex w-full flex-col items-start justify-center gap-2">
-      {/* duplicated with Event */}
-      <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
-        {isClient && eventTimesAreDefined(startTime, endTime) && (
-          <div className="flex-wrap text-neutral-2" suppressHydrationWarning>
-            {startDateInfo.dayOfWeek.substring(0, 3)}
-            {", "}
-            {startDateInfo.month}/{startDateInfo.day}/
-            {startDateInfo.year.toString().substring(2, 4)}{" "}
-            <span className="text-neutral-3">{"//"}</span>{" "}
-            {timeFormatDateInfo(startDateInfo)}-
-            {timeFormatDateInfo(endDateInfo)}
-          </div>
-        )}
-      </div>
-      {/* end duplicated with Event */}
+      <DateAndTimeDisplay
+        endDateInfo={endDateInfo}
+        endTime={endTime}
+        isClient={isClient}
+        startDateInfo={startDateInfo}
+        startTime={startTime}
+      />
       <div className="flex w-full flex-col items-start gap-2">
         <Link
           href={preview ? "" : `/event/${id}`}
@@ -517,7 +504,11 @@ function EventDetails({
         </div>
         {/* full width image with a max height, fill container to width */}
         {image && (
-          <div className="relative h-32 w-full grow sm:h-56 lg:hidden">
+          <div
+            className={cn("relative h-32 w-full grow sm:h-56", {
+              "lg:hidden": !preview,
+            })}
+          >
             <Image
               className="rounded-xl object-cover"
               src={image}
@@ -556,6 +547,92 @@ function EventDetails({
   );
 }
 
+function HappeningSoonBadge({
+  startDate,
+  startTime,
+  timezone,
+}: {
+  startDate: string;
+  startTime?: string;
+  timezone: string;
+}) {
+  const { timezone: userTimezone } = useContext(TimezoneContext);
+
+  const startDateInfo = startTime
+    ? getDateTimeInfo(startDate, startTime, timezone, userTimezone.toString())
+    : getDateInfoUTC(startDate);
+
+  const relativeTimeFormat = (dateInfo: DateInfo) => {
+    const now = new Date();
+    const startDate = new Date(
+      dateInfo.year,
+      dateInfo.month - 1,
+      dateInfo.day,
+      dateInfo.hour,
+      dateInfo.minute,
+    );
+    const difference = startDate.getTime() - now.getTime();
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(difference / (1000 * 60 * 60));
+    const minutes = Math.floor(difference / (1000 * 60));
+
+    const isSameDay = dateInfo.day === now.getDate();
+    const isSameMonth = dateInfo.month - 1 === now.getMonth();
+    const isSameYear = dateInfo.year === now.getFullYear();
+    const isToday = isSameDay && isSameMonth && isSameYear;
+    const isTomorrow = timeIsTomorrow(now, startDate);
+
+    if (difference < 0) {
+      return "in the past";
+    }
+
+    if (days === 0 && hours === 0) {
+      return `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    }
+    if (days === 0 && hours < 1) {
+      return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    }
+    if (isToday) {
+      return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
+    }
+    if (isTomorrow) {
+      return `Tomorrow`;
+    }
+    return ``;
+  };
+
+  if (!startDateInfo) {
+    return null;
+  }
+
+  const relativeTimeString = relativeTimeFormat(startDateInfo);
+  if (!relativeTimeString) {
+    return null;
+  }
+
+  const now = new Date();
+  const startDateObj = new Date(
+    startDateInfo.year,
+    startDateInfo.month - 1,
+    startDateInfo.day,
+    startDateInfo.hour,
+    startDateInfo.minute,
+  );
+  const difference = startDateObj.getTime() - now.getTime();
+
+  if (difference < 0) {
+    return null;
+  }
+
+  return (
+    <Badge
+      className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1 opacity-80"
+      disabled
+      variant="yellow"
+    >{`${relativeTimeString}`}</Badge>
+  );
+}
+
 function EventDescription({
   description,
   truncate,
@@ -584,7 +661,7 @@ function EventActionButtons({
   event,
   id,
   isOwner,
-  // isFollowing,
+  isFollowing,
   visibility,
   variant,
   size,
@@ -610,13 +687,16 @@ function EventActionButtons({
       size === "sm" ? "transform scale-[0.55] origin-bottom-right" : "";
     return (
       <div className={cn("flex w-full flex-wrap items-center gap-3", scale)}>
+        <ShareButton type="icon" event={event} id={id} />
         <CalendarButton
           type="icon"
           event={event as ATCBActionEventConfig}
           id={id}
           username={user.username}
         />
-        <ShareButton type="icon" event={event} id={id} />
+        {!isOwner && (
+          <FollowEventButton eventId={id} following={isFollowing} type="icon" />
+        )}
         {/* <FollowEventDropdownButton eventId={id} following={isFollowing} /> */}
         {isOwner && (
           <>
@@ -664,13 +744,45 @@ function EventActionButtons({
         id={id}
         username={user.username}
       />
-      {/* <FollowEventDropdownButton eventId={id} following={isFollowing} /> */}
+      {!isOwner && (
+        <FollowEventButton eventId={id} following={isFollowing} type="icon" />
+      )}
       {isOwner && (
         <>
           <EditButton type="icon" userId={user.id} id={id} />
           <DeleteButton type="icon" userId={user.id} id={id} />
         </>
       )}
+    </div>
+  );
+}
+
+interface UserInfoMiniProps {
+  username: string;
+  displayName: string;
+  userImage: string;
+}
+
+export function UserInfoMini({
+  username,
+  userImage,
+}: Omit<UserInfoMiniProps, "displayName">) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Link href={`/${username}/events`} className="relative flex items-center">
+        <Image
+          className="inline-block size-4 rounded-full"
+          src={userImage}
+          alt={`${username}'s profile picture`}
+          width={16}
+          height={16}
+        />
+      </Link>
+      <Link href={`/${username}/events`} className="group flex items-center">
+        <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
+          @{username}
+        </p>
+      </Link>
     </div>
   );
 }
@@ -682,7 +794,9 @@ export function EventListItem(props: EventListItemProps) {
   const isSelf =
     clerkUser?.id === user?.id || clerkUser?.externalId === user?.id;
   const isOwner = isSelf || roles?.includes("admin");
-  const isFollowing = !!eventFollows.find((item) => item.userId === user?.id);
+  const isFollowing = !!eventFollows.find(
+    (item) => item.userId === user?.id || item.userId === clerkUser?.externalId,
+  );
   const image =
     event.images?.[3] ||
     (filePath ? buildDefaultUrl(props.filePath || "") : undefined);
@@ -697,7 +811,7 @@ export function EventListItem(props: EventListItemProps) {
         {image && (
           <Link href={`/event/${id}`}>
             <Image
-              className="absolute left-0 top-7 z-10 hidden size-20 -translate-x-1/2 rounded-xl lg:block"
+              className="absolute left-0 top-7 z-10 hidden size-20 -translate-x-1/2 rounded-xl object-cover lg:block"
               src={image}
               alt=""
               width={375}
@@ -705,13 +819,29 @@ export function EventListItem(props: EventListItemProps) {
             />
           </Link>
         )}
+        {props.happeningNow && (
+          <Badge
+            className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1"
+            disabled
+            variant="yellow"
+          >
+            Happening Now
+          </Badge>
+        )}
+        {event.startTime && event.startDate && (
+          <HappeningSoonBadge
+            startTime={event.startTime}
+            startDate={event.startDate}
+            timezone={event.timeZone || "America/Los_Angeles"}
+          />
+        )}
         <li
           className={cn(
             "relative grid overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
-            { "lg:pl-16": !!image, "bg-interactive-3": props.happeningNow },
+            { "lg:pl-16": !!image, "bg-accent-yellow/50": props.happeningNow },
           )}
         >
-          <div className="absolute bottom-2 left-2 z-10 flex gap-1 p-1">
+          <div className="absolute bottom-2 left-2 z-10 flex gap-2 p-1">
             {user &&
               lists &&
               lists.length > 0 &&
@@ -725,11 +855,14 @@ export function EventListItem(props: EventListItemProps) {
                   variant="badge"
                 ></ListCard>
               ))}
+            {user && !isSelf && (
+              <UserInfoMini
+                username={user.username}
+                userImage={user.userImage}
+              />
+            )}
             {visibility === "private" && (
               <Badge variant="destructive">Unlisted Event</Badge>
-            )}
-            {props.happeningNow && (
-              <Badge variant="secondary">Happening Now</Badge>
             )}
           </div>
           {props.variant === "minimal" && (
@@ -786,6 +919,7 @@ export function EventListItem(props: EventListItemProps) {
     );
   }
 
+  // if (props.variant === "card")
   return (
     <li
       className={cn(
@@ -835,6 +969,37 @@ export function EventListItem(props: EventListItemProps) {
           )}
         </div>
       </div>
+      <div className="p-3"></div>
+      <div className="absolute bottom-2 left-2 z-10 flex gap-2 p-1">
+        {user &&
+          lists &&
+          lists.length > 0 &&
+          lists.map((list) => (
+            <ListCard
+              key={list.id}
+              name={list.name}
+              id={list.id}
+              username={user.username}
+              visibility={list.visibility}
+              variant="badge"
+            ></ListCard>
+          ))}
+        {user && (
+          <UserInfoMini username={user.username} userImage={user.userImage} />
+        )}
+      </div>
+      <div className="absolute bottom-2 right-2 z-10 p-1">
+        <EventActionButtons
+          user={user}
+          event={event as AddToCalendarButtonPropsRestricted}
+          id={id}
+          isOwner={!!isOwner}
+          isFollowing={isFollowing}
+          visibility={visibility}
+          variant="minimal"
+          size="sm"
+        />
+      </div>
     </li>
   );
 }
@@ -843,6 +1008,9 @@ export function EventPreview(
   props: EventListItemProps & { event: AddToCalendarCardProps },
 ) {
   const { id, event } = props;
+  const { croppedImagesUrls } = useCroppedImageContext();
+  const { images } = event;
+  const image = croppedImagesUrls.cropped || images?.[3];
 
   return (
     <div
@@ -869,12 +1037,62 @@ export function EventPreview(
           endDate={event.endDate!}
           startTime={event.startTime!}
           endTime={event.endTime!}
+          image={image}
           timezone={event.timeZone || "America/Los_Angeles"}
           location={event.location}
           description={event.description}
           metadata={event.eventMetadata}
         />
       </div>
+    </div>
+  );
+}
+
+function DateAndTimeDisplay({
+  endDateInfo,
+  endTime,
+  isClient,
+  startDateInfo,
+  startTime,
+  variant = "default",
+}: {
+  endDateInfo: DateInfo;
+  endTime?: string;
+  isClient: boolean;
+  startDateInfo: DateInfo;
+  startTime?: string;
+  variant?: "default" | "compact";
+}) {
+  return (
+    <div className="flex flex-col gap-2 pr-12 text-lg font-medium leading-none">
+      {isClient && eventTimesAreDefined(startTime, endTime) && (
+        <div
+          className={cn(
+            "flex flex-col text-neutral-2 sm:flex-row",
+            variant === "compact" && "sm:flex-col",
+          )}
+          suppressHydrationWarning
+        >
+          <div>
+            {startDateInfo.dayOfWeek.substring(0, 3)}
+            {", "}
+            {startDateInfo.month}/{startDateInfo.day}/
+            {startDateInfo.year.toString().substring(2, 4)}
+          </div>
+          <div
+            className={cn(
+              "mx-1 hidden text-neutral-3 sm:block",
+              variant === "compact" && "sm:hidden",
+            )}
+          >
+            {"//"}
+          </div>
+          <div>
+            {timeFormatDateInfo(startDateInfo)}-
+            {timeFormatDateInfo(endDateInfo)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -957,24 +1175,13 @@ export function EventPage(props: EventPageProps) {
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
         <div>
           <div className="flex flex-col gap-5">
-            {/* duplicated with EventListItem */}
-            <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
-              {isClient && eventTimesAreDefined(startTime, endTime) && (
-                <div
-                  className="shrink-0 text-neutral-2"
-                  suppressHydrationWarning
-                >
-                  {startDateInfo.dayOfWeek.substring(0, 3)}
-                  {", "}
-                  {startDateInfo.month}/{startDateInfo.day}/
-                  {startDateInfo.year.toString().substring(2, 4)}{" "}
-                  <span className="text-neutral-3">{"//"}</span>{" "}
-                  {timeFormatDateInfo(startDateInfo)}-
-                  {timeFormatDateInfo(endDateInfo)}
-                </div>
-              )}
-            </div>
-            {/* end duplicated with EventListItem */}
+            <DateAndTimeDisplay
+              endDateInfo={endDateInfo}
+              endTime={endTime}
+              isClient={isClient}
+              startDateInfo={startDateInfo}
+              startTime={startTime}
+            />
             <h1 className="font-heading text-5xl font-bold leading-[3.5rem]">
               {event.name}
             </h1>

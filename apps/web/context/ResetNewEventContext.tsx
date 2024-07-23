@@ -16,17 +16,19 @@ export function ResetNewEventContext() {
   const { setCroppedImagesUrls } = useCroppedImageContext();
   const { setOrganizeData, setEventData } = useNewEventContext();
   const { setStatus, setMode } = useNewEventProgressContext();
+  const { setIsShortcut } = useNewEventProgressContext();
 
   useEffect(() => {
     setCroppedImagesUrls({});
     setOrganizeData({
       notes: "",
-      visibility: "public",
+      visibility: "private",
       lists: [],
     });
     setEventData(undefined);
     setMode(Mode.View);
-    setStatus(Status.Organize);
+    setStatus(Status.Upload);
+    setIsShortcut(false);
   }, [
     pathName,
     setCroppedImagesUrls,

@@ -101,7 +101,7 @@ export function ListCard(props: {
           <SquareStack className="ml-4 size-6 text-interactive-1" />
         </Link>
         <div className="truncate text-lg font-medium leading-none text-neutral-2">
-          {props.id ? "curated by " : "by "}
+          {props.id ? "saved by " : "saved by "}
           <Link
             className="inline font-semibold text-interactive-1"
             href={`/${props.username}/events`}

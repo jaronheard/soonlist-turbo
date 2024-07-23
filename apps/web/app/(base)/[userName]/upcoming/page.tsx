@@ -1,5 +1,6 @@
 import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
+import { CalendarHeart } from "lucide-react";
 
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
@@ -66,7 +67,16 @@ export default async function Page({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-lg">
-      <UserInfo userName={params.userName} />
+      {self ? (
+        <h1 className="-mt-8 mb-4 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
+          <div className="flex gap-4">
+            <CalendarHeart className="size-10" />
+            My Feed
+          </div>
+        </h1>
+      ) : (
+        <UserInfo userName={params.userName} />
+      )}
       <EventList
         currentEvents={currentEvents}
         pastEvents={[]}

@@ -44,15 +44,28 @@ import { TimezoneSelect } from "./TimezoneSelect";
 import { WaitlistButtonWithDrawer } from "./WaitlistSignup";
 
 export function Header() {
+  const { user } = useUser();
+
   return (
     <div className="sticky top-0 z-50 bg-interactive-3">
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
         <div className="flex items-center sm:grow sm:gap-0">
           <NavigationMenu>
-            <Link href="/" className="relative flex items-center">
-              <Logo variant="hidePreview" className="block sm:hidden" />
-              <Logo className="hidden sm:block" />
-            </Link>
+            <SignedIn>
+              <Link
+                href={`/${user?.username}/upcoming`}
+                className="relative flex items-center"
+              >
+                <Logo variant="hidePreview" className="block sm:hidden" />
+                <Logo className="hidden sm:block" />
+              </Link>
+            </SignedIn>
+            <SignedOut>
+              <Link href="/" className="relative flex items-center">
+                <Logo variant="hidePreview" className="block sm:hidden" />
+                <Logo className="hidden sm:block" />
+              </Link>
+            </SignedOut>
           </NavigationMenu>
         </div>
         <div className="flex shrink-0 sm:gap-5">
@@ -106,7 +119,7 @@ export function Nav() {
         </SignedOut>
         <NavigationMenuItem>
           <SignedIn>
-            <Link href="/new" legacyBehavior passHref>
+            <Link href="/new" legacyBehavior passHref scroll={false}>
               <NavigationMenuLink
                 className={buttonVariants({ variant: "default" })}
               >

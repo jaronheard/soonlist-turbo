@@ -1,4 +1,5 @@
 import type { Metadata, ResolvingMetadata } from "next/types";
+import { currentUser } from "@clerk/nextjs/server";
 
 import type { EventMetadata } from "@soonlist/cal";
 import type {
@@ -13,7 +14,6 @@ import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
 import { env } from "~/env";
 import { api } from "~/trpc/server";
-import { ResetNewEventContext } from "./ResetNewEventContext";
 
 interface Props {
   params: {
@@ -55,6 +55,7 @@ export async function generateMetadata(
 
 export default async function Page({ params }: Props) {
   const event = await api.event.get({ eventId: params.eventId });
+  const user = await currentUser();
   if (!event) {
     return <p className="text-lg text-gray-500">No event found.</p>;
   }
@@ -76,15 +77,15 @@ export default async function Page({ params }: Props) {
   })) as EventWithUser[];
 
   // find the event that matches the current event
-  const similarEvents = collapseSimilarEvents(possibleDuplicateEvents).find(
-    (similarEvent) => similarEvent.event.id === event.id,
-  )?.similarEvents;
+  const similarEvents = collapseSimilarEvents(
+    possibleDuplicateEvents,
+    user?.id,
+  ).find((similarEvent) => similarEvent.event.id === event.id)?.similarEvents;
 
   const lists = event.eventToLists.map((list) => list.list);
 
   return (
     <>
-      <ResetNewEventContext />
       <EventPage
         user={event.user}
         eventFollows={event.eventFollows}

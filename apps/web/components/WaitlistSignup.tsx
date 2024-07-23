@@ -16,15 +16,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@soonlist/ui/dialog";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@soonlist/ui/drawer";
+// import {
+//   Drawer,
+//   DrawerContent,
+//   DrawerDescription,
+//   DrawerHeader,
+//   DrawerTitle,
+//   DrawerTrigger,
+// } from "@soonlist/ui/drawer";
 import {
   Form,
   FormControl,
@@ -139,49 +138,48 @@ export function WaitlistButtonWithDrawer({
   variant?: "default" | "secondary" | "outline";
 }) {
   const [open, setOpen] = useState(false);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  // const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  if (isDesktop) {
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button size={size} variant={variant}>
-            <TicketPlus className="mr-2 size-4 rotate-[-20deg]"></TicketPlus>
-            Join waitlist
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Join the waitlist</DialogTitle>
-            <DialogDescription>
-              Be one of the first to get early access.
-            </DialogDescription>
-          </DialogHeader>
-          <WaitlistSignup afterSubmit={() => setOpen(false)} />
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
+  // if (isDesktop) {
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button size={size} variant={variant}>
-          <TicketPlus className="mr-1.5 size-4 rotate-[-20deg]"></TicketPlus>
+          <TicketPlus className="mr-2 size-4 rotate-[-20deg]"></TicketPlus>
           Join waitlist
         </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>Join the waitlist</DrawerTitle>
-          <DrawerDescription>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Join the waitlist</DialogTitle>
+          <DialogDescription>
             Be one of the first to get early access.
-          </DrawerDescription>
-        </DrawerHeader>
-        <DrawerFooter>
-          <WaitlistSignup afterSubmit={() => setOpen(false)} />
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+          </DialogDescription>
+        </DialogHeader>
+        <WaitlistSignup afterSubmit={() => setOpen(false)} />
+      </DialogContent>
+    </Dialog>
   );
+  // }
+
+  // return (
+  //   <Drawer open={open} onOpenChange={setOpen}>
+  //     <DrawerTrigger asChild>
+  //       <Button size={size} variant={variant}>
+  //         <TicketPlus className="mr-1.5 size-4 rotate-[-20deg]"></TicketPlus>
+  //         Join waitlist
+  //       </Button>
+  //     </DrawerTrigger>
+  //     <DrawerContent className="">
+  //       <DrawerHeader>
+  //         <DrawerTitle>Join the waitlist</DrawerTitle>
+  //         <DrawerDescription>
+  //           Be one of the first to get early access.
+  //         </DrawerDescription>
+  //       </DrawerHeader>
+  //       <WaitlistSignup afterSubmit={() => setOpen(false)} />
+  //       <div className="p-3"></div>
+  //     </DrawerContent>
+  //   </Drawer>
+  // );
 }

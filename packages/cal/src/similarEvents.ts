@@ -130,13 +130,16 @@ export interface EventWithSimilarity {
   similarEvents: SimilarEvents;
 }
 
-function collapseSimilarEvents(events: EventWithUser[]) {
+function collapseSimilarEvents(
+  events: EventWithUser[],
+  currentUserId?: string,
+) {
   // Define thresholds
   const startTimeThreshold = 60; // 60 minutes for start time
   const endTimeThreshold = 60; // 60 minutes for end time
-  const nameThreshold = 0.1; // 70% similarity for name
-  const descriptionThreshold = 0.1; // 70% similarity for description
-  const locationThreshold = 0.1; // 70% similarity for location
+  const nameThreshold = 0.1; // 10% similarity for name
+  const descriptionThreshold = 0.1; // 10% similarity for description
+  const locationThreshold = 0.1; // 10% similarity for location
 
   const eventsWithSimilarity: EventWithSimilarity[] = [];
 
@@ -181,15 +184,32 @@ function collapseSimilarEvents(events: EventWithUser[]) {
       return;
     }
 
-    let earliestEvent = currentEvent;
-    let earliestCreationDate = new Date(currentEvent.createdAt);
+    const firstEventWithCurrentUserId = similarEvents.find(
+      ({ event }) => event.userId === currentUserId,
+    );
+    const similarEventsHasCurrentUserId =
+      firstEventWithCurrentUserId !== undefined;
+
+    let earliestEvent = firstEventWithCurrentUserId?.event || currentEvent;
+    let earliestCreationDate = new Date(
+      firstEventWithCurrentUserId?.event.createdAt || currentEvent.createdAt,
+    );
 
     similarEvents.forEach(({ event: similarEvent }) => {
       const similarEventCreationDate = new Date(similarEvent.createdAt);
-
-      if (similarEventCreationDate < earliestCreationDate) {
-        earliestEvent = similarEvent;
-        earliestCreationDate = similarEventCreationDate;
+      if (similarEventsHasCurrentUserId) {
+        // only set as earlies if it matches the current user
+        if (similarEvent.userId === currentUserId) {
+          if (similarEventCreationDate < earliestCreationDate) {
+            earliestEvent = similarEvent;
+            earliestCreationDate = similarEventCreationDate;
+          }
+        }
+      } else {
+        if (similarEventCreationDate < earliestCreationDate) {
+          earliestEvent = similarEvent;
+          earliestCreationDate = similarEventCreationDate;
+        }
       }
 
       // Mark this similar event as seen

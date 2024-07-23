@@ -10,7 +10,7 @@
   "license": "MIT",
   "scripts": {
     "add": "pnpm dlx shadcn-ui add",
-    "clean": "rm -rf .turbo node_modules",
+    "clean": "rm -rf .turbo node_modules dist",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
@@ -34,6 +34,7 @@
     "@radix-ui/react-toast": "^1.1.5",
     "@radix-ui/react-toggle": "^1.0.3",
     "class-variance-authority": "^0.7.0",
+    "lucide-react": "^0.373.0",
     "next-themes": "^0.3.0",
     "react-hook-form": "^7.51.1",
     "sonner": "^1.4.41",

@@ -1,9 +1,9 @@
 "use client";
 
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Shapes, Text } from "lucide-react";
+import { Pencil, Shapes } from "lucide-react";
 
 import type { EventMetadata } from "@soonlist/cal";
 import type { ATCBActionEventConfig } from "@soonlist/cal/types";
@@ -14,6 +14,7 @@ import {
   // PLATFORMS,
   PRICE_TYPE,
 } from "@soonlist/cal";
+import { cn } from "@soonlist/ui";
 import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 import { Input, InputDescription } from "@soonlist/ui/input";
@@ -47,10 +48,12 @@ export type AddToCalendarCardProps = AddToCalendarButtonType & {
   eventMetadata?: EventMetadata;
   onUpdate?: (props: AddToCalendarButtonType) => void;
   hideFloatingActionButtons?: boolean;
+  hideBorder?: boolean;
 };
 
 export function AddToCalendarCard({
   firstInputRef,
+  hideBorder,
   ...initialProps
 }: AddToCalendarCardProps) {
   const { user } = useUser();
@@ -113,7 +116,7 @@ export function AddToCalendarCard({
     (initialProps.eventMetadata?.ageRestriction || "none") as string,
   );
   const [category, setCategory] = useState(
-    (initialProps.eventMetadata?.category || "unknown") as string,
+    initialProps.eventMetadata?.category || "unknown",
   );
   const [type, setType] = useState(initialProps.eventMetadata?.type || "event");
   const [performers, setPerformers] = useState(
@@ -167,21 +170,77 @@ export function AddToCalendarCard({
     },
   };
 
-  if (initialProps.onUpdate) {
-    // TODO: determine if this is a hack or not
-    // do not update unless props are different
-    if (JSON.stringify(initialProps) !== JSON.stringify(updatedProps)) {
-      initialProps.onUpdate(updatedProps);
+  useEffect(() => {
+    if (initialProps.onUpdate) {
+      const updatedProps = {
+        ...filteredProps,
+        acceptableListStyle,
+        name,
+        location,
+        description: link
+          ? description + "[br][br]" + `[url]${link}|More Info[/url]`
+          : description,
+        startDate,
+        startTime,
+        endDate,
+        endTime,
+        timeZone,
+        images,
+        eventMetadata: {
+          mentions,
+          source,
+          priceMin,
+          priceMax,
+          priceType,
+          ageRestriction,
+          category,
+          type,
+          performers,
+          accessibility: accessibility.map((a) => a.value),
+          accessibilityNotes,
+        },
+      };
+
+      if (JSON.stringify(initialProps) !== JSON.stringify(updatedProps)) {
+        initialProps.onUpdate(updatedProps);
+      }
     }
-  }
+  }, [
+    name,
+    location,
+    description,
+    link,
+    startDate,
+    startTime,
+    endDate,
+    endTime,
+    timeZone,
+    images,
+    mentions,
+    source,
+    priceMin,
+    priceMax,
+    priceType,
+    ageRestriction,
+    category,
+    type,
+    performers,
+    accessibility,
+    accessibilityNotes,
+    initialProps,
+    filteredProps,
+    acceptableListStyle,
+  ]);
 
   return (
-    <Card className="max-w-screen sm:max-w-xl">
+    <Card
+      className={cn("max-w-screen sm:max-w-xl", { "border-0": hideBorder })}
+    >
       <CardContent className="grid grid-cols-1 gap-6 rounded-md py-6 shadow-md sm:grid-cols-6">
         <CardTitle className="col-span-full flex items-center justify-between">
-          <div className="flex items-center">
-            <Text className="mr-2 size-6" />
-            Event Details
+          <div className="flex items-center gap-2">
+            <Pencil className="size-6" />
+            Edit Event Details
           </div>
         </CardTitle>
         <div className="col-span-full">
