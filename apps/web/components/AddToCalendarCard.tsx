@@ -312,6 +312,16 @@ export function AddToCalendarCard({
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
+          <InputDescription>
+            Links to a Google Maps search (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${location}`}
+              className="underline"
+            >
+              preview
+            </a>
+            )
+          </InputDescription>
         </div>
         <div className="col-span-full">
           <Label
