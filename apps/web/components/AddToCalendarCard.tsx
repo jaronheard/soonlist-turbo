@@ -3,7 +3,7 @@
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Pencil, Shapes } from "lucide-react";
+import { Link, Pencil, Shapes } from "lucide-react";
 
 import type { EventMetadata } from "@soonlist/cal";
 import type { ATCBActionEventConfig } from "@soonlist/cal/types";
@@ -312,6 +312,16 @@ export function AddToCalendarCard({
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
+          <InputDescription>
+            Links to a Google Maps search (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${location}`}
+              className="underline"
+            >
+              preview
+            </a>
+            )
+          </InputDescription>
         </div>
         <div className="col-span-full">
           <Label
