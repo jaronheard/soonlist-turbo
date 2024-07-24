@@ -10,6 +10,7 @@ import type {
   UpdateEvent,
 } from "@soonlist/db/types";
 import { EventMetadataSchemaLoose } from "@soonlist/cal";
+import { gt, inArray } from "@soonlist/db";
 import {
   comments,
   eventFollows,
@@ -227,6 +228,72 @@ export const eventRouter = createTRPCRouter({
           new Date(b.startDateTime).getTime(),
       );
       return sortedFollowedEvents;
+    }),
+  getFollowingUpcomingForUser: publicProcedure
+    .input(z.object({ userName: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const now = new Date();
+
+      // Step 1: Fetch user and relationships
+      const following = await ctx.db.query.users.findMany({
+        where: eq(users.username, input.userName),
+        columns: {
+          username: true,
+        },
+        with: {
+          listFollows: {
+            with: {
+              list: {
+                with: {
+                  eventToLists: true,
+                },
+              },
+            },
+          },
+          eventFollows: true,
+          following: {
+            with: {
+              following: {
+                with: { events: true },
+              },
+            },
+          },
+        },
+      });
+
+      // Collect all event IDs
+      const eventIds = new Set<string>();
+      following.forEach((user) => {
+        user.eventFollows.forEach((ef) => eventIds.add(ef.eventId));
+        user.listFollows.forEach((lf) =>
+          lf.list.eventToLists.forEach((etl) => eventIds.add(etl.eventId)),
+        );
+        user.following.forEach((f) =>
+          f.following.events.forEach((e) => eventIds.add(e.id)),
+        );
+      });
+
+      // Step 2: Fetch upcoming events
+      const upcomingEvents = await ctx.db.query.events.findMany({
+        where: and(
+          inArray(events.id, Array.from(eventIds)),
+          gt(events.startDateTime, now),
+        ),
+        with: {
+          user: true,
+          eventFollows: true,
+          comments: true,
+        },
+      });
+
+      // Step 3: Sort events
+      const sortedEvents = upcomingEvents.sort(
+        (a, b) =>
+          new Date(a.startDateTime).getTime() -
+          new Date(b.startDateTime).getTime(),
+      );
+
+      return sortedEvents;
     }),
   getSavedForUser: publicProcedure
     .input(z.object({ userName: z.string() }))
