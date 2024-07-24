@@ -75,6 +75,7 @@ export default async function Page({ params }: Props) {
         pastEvents={pastEvents}
         futureEvents={futureEvents}
         currentEvents={currentEvents}
+        variant="future-minimal"
       />
       <div className="p-5"></div>
     </>
