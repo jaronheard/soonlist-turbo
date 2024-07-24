@@ -262,10 +262,13 @@ const UserMenu = () => {
         <DropdownMenuSeparator />
         <div className="p-1"></div>
         {sideNav(user.username || "").map((item, index) => (
-          <div key={index} className="ml-2 flex flex-col space-y-3">
+          <div
+            key={`user-nav-${index}`}
+            className="ml-2 flex flex-col space-y-3"
+          >
             {item.items.length &&
               item.items.map((item) => (
-                <React.Fragment key={item.href}>
+                <React.Fragment key={`user-nav-${index}-${item.href}`}>
                   {item.href ? (
                     <MobileLink href={item.href}>{item.title}</MobileLink>
                   ) : (
@@ -295,6 +298,11 @@ const sideNav = (username: string) => [
         title: "Following",
         href: `/${username}/following`,
         signedInOnly: true,
+      },
+      {
+        title: "About",
+        href: `/about`,
+        signedInOnly: false,
       },
     ],
   },
@@ -351,7 +359,7 @@ export function MobileNav() {
             </button>
             <div className="pt-3">
               <MobileLink
-                key={"plans"}
+                key={"user-nav-plans"}
                 href="/account/plans"
                 onOpenChange={setOpen}
                 className="w-full justify-start py-0 pl-0 text-neutral-2"
@@ -363,7 +371,7 @@ export function MobileNav() {
           <Separator className="my-3" />
           <div className="flex flex-col space-y-3">
             <MobileLink
-              key={"explore"}
+              key="user-nav-my-feed"
               href={`/${user?.username}/upcoming`}
               onOpenChange={setOpen}
               signedInOnly
@@ -373,7 +381,7 @@ export function MobileNav() {
               My Feed
             </MobileLink>
             <MobileLink
-              key={"explore"}
+              key={"user-nav-explore"}
               href={"/explore"}
               onOpenChange={setOpen}
               signedInOnly
