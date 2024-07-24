@@ -3,7 +3,7 @@
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Link, Pencil, Shapes } from "lucide-react";
+import { Pencil, Shapes } from "lucide-react";
 
 import type { EventMetadata } from "@soonlist/cal";
 import type { ATCBActionEventConfig } from "@soonlist/cal/types";
