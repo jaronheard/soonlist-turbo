@@ -101,8 +101,12 @@ export function getDateTimeInfo(
   // check is timestring is valid (HH:MM:SS)
   const timePattern = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
   if (!timePattern.test(timeString)) {
+    console.error("Possibly invalid time format. Adding seconds...");
+    timeString += ":00";
+  }
+  if (!timePattern.test(timeString)) {
     console.error("Invalid time format. Use HH:MM:SS.");
-    timeString = "23:59:59``";
+    timeString = "23:59:59";
   }
 
   const hasTime = timeString !== "";
