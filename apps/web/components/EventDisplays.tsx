@@ -907,7 +907,6 @@ export function EventListItem(props: EventListItemProps) {
                 user={user}
                 event={event as AddToCalendarButtonPropsRestricted}
                 id={id}
-                hideCurator={props.hideCurator}
                 isOwner={!!isOwner}
                 isFollowing={isFollowing}
                 visibility={props.visibility}
@@ -943,7 +942,6 @@ export function EventListItem(props: EventListItemProps) {
                   user={user}
                   event={event as AddToCalendarButtonPropsRestricted}
                   id={id}
-                  hideCurator={props.hideCurator}
                   isOwner={!!isOwner}
                   isFollowing={isFollowing}
                   visibility={props.visibility}
@@ -1031,7 +1029,6 @@ export function EventListItem(props: EventListItemProps) {
           user={user}
           event={event as AddToCalendarButtonPropsRestricted}
           id={id}
-          hideCurator={props.hideCurator}
           isOwner={!!isOwner}
           isFollowing={isFollowing}
           visibility={visibility}
