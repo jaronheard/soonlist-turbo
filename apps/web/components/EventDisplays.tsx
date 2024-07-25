@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import { use, useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SignedIn, useUser } from "@clerk/nextjs";
@@ -44,10 +44,11 @@ import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { feedback } from "~/lib/intercom/intercom";
 import { cn, translateToHtml } from "~/lib/utils";
+import { api } from "~/trpc/react";
 import { CalendarButton } from "./CalendarButton";
 import { DeleteButton } from "./DeleteButton";
 import { EditButton } from "./EditButton";
-import { FollowEventButton } from "./FollowButtons";
+import { FollowEventButton, FollowUserButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
 import { ListCard } from "./ListCard";
 import { PersonalNote } from "./PersonalNote";
@@ -663,6 +664,7 @@ function EventActionButtons({
   user,
   event,
   id,
+  hideCurator,
   isOwner,
   isFollowing,
   visibility,
@@ -672,6 +674,7 @@ function EventActionButtons({
   user?: User;
   event: AddToCalendarButtonPropsRestricted;
   id: string;
+  hideCurator?: boolean;
   isOwner: boolean;
   isFollowing?: boolean;
   visibility: "public" | "private";
@@ -770,6 +773,29 @@ export function UserInfoMini({
   username,
   userImage,
 }: Omit<UserInfoMiniProps, "displayName">) {
+  const { user: activeUser } = useUser();
+
+  const userQuery = api.user.getByUsername.useQuery({
+    userName: username,
+  });
+
+  const followingQuery = api.user.getIfFollowing.useQuery(
+    {
+      followerId: activeUser?.externalId || activeUser?.id || "",
+      followingId: userQuery.data?.id || "",
+    },
+    {
+      enabled:
+        !!(activeUser?.externalId || activeUser?.id) && !!userQuery.data?.id,
+    },
+  );
+
+  const user = userQuery.data;
+
+  const self = activeUser?.username === user?.username;
+
+  const following = followingQuery.data;
+
   return (
     <div className="flex items-center gap-1.5">
       <Link href={`/${username}/events`} className="relative flex items-center">
@@ -786,6 +812,13 @@ export function UserInfoMini({
           @{username}
         </p>
       </Link>
+      <div className="flex h-5 items-center">
+        {!self && user?.id && (
+          <div className="origin-left scale-50 transform">
+            <FollowUserButton userId={user.id} following={!!following} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -858,12 +891,14 @@ export function EventListItem(props: EventListItemProps) {
                   variant="badge"
                 ></ListCard>
               ))}
-            {user && !isSelf && (
-              <UserInfoMini
-                username={user.username}
-                userImage={user.userImage}
-              />
-            )}
+            {user &&
+              !isSelf &&
+              (props.showOtherCurators || !props.hideCurator) && (
+                <UserInfoMini
+                  username={user.username}
+                  userImage={user.userImage}
+                />
+              )}
             {visibility === "private" && (
               <Badge variant="destructive">Unlisted Event</Badge>
             )}
@@ -874,6 +909,7 @@ export function EventListItem(props: EventListItemProps) {
                 user={user}
                 event={event as AddToCalendarButtonPropsRestricted}
                 id={id}
+                hideCurator={props.hideCurator}
                 isOwner={!!isOwner}
                 isFollowing={isFollowing}
                 visibility={props.visibility}
@@ -909,6 +945,7 @@ export function EventListItem(props: EventListItemProps) {
                   user={user}
                   event={event as AddToCalendarButtonPropsRestricted}
                   id={id}
+                  hideCurator={props.hideCurator}
                   isOwner={!!isOwner}
                   isFollowing={isFollowing}
                   visibility={props.visibility}
@@ -996,6 +1033,7 @@ export function EventListItem(props: EventListItemProps) {
           user={user}
           event={event as AddToCalendarButtonPropsRestricted}
           id={id}
+          hideCurator={props.hideCurator}
           isOwner={!!isOwner}
           isFollowing={isFollowing}
           visibility={visibility}

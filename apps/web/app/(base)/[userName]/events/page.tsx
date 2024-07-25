@@ -78,6 +78,7 @@ export default async function Page({ params }: Props) {
         hideCurator
         showOtherCurators={true}
         showPrivateEvents={self}
+        variant="card"
       />
     </div>
   );
