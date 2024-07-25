@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SignedIn, useUser } from "@clerk/nextjs";
@@ -664,7 +664,6 @@ function EventActionButtons({
   user,
   event,
   id,
-  hideCurator,
   isOwner,
   isFollowing,
   visibility,
@@ -674,7 +673,6 @@ function EventActionButtons({
   user?: User;
   event: AddToCalendarButtonPropsRestricted;
   id: string;
-  hideCurator?: boolean;
   isOwner: boolean;
   isFollowing?: boolean;
   visibility: "public" | "private";
