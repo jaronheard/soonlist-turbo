@@ -46,7 +46,7 @@ export async function UserInfo(props: UserInfoProps) {
   const following =
     activeUser?.id &&
     (await api.user.getIfFollowing({
-      followerId: activeUser.id,
+      followerId: activeUser.externalId || activeUser.id,
       followingId: user.id,
     }));
 
@@ -85,7 +85,7 @@ export async function UserInfo(props: UserInfoProps) {
             </Link>
           </div>
         </div>
-        <div className="flex gap-4">
+        <div className="flex items-center gap-4">
           {user.publicInsta && (
             <a
               href={`https://instagram.com/${user.publicInsta}`}
@@ -117,6 +117,11 @@ export async function UserInfo(props: UserInfoProps) {
             >
               <LinkIcon className="size-6" />
             </a>
+          )}
+          {!self && (
+            <div>
+              <FollowUserButton userId={user.id} following={!!following} />
+            </div>
           )}
         </div>
         <div className="text-2xl text-neutral-2">{user.bio || SAMPLE_BIO}</div>

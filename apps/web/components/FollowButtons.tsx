@@ -159,9 +159,11 @@ export function FollowEventButton({
 export function FollowUserButton({
   userId,
   following,
+  className,
 }: {
   userId: string;
   following: boolean;
+  className?: string;
 }) {
   const router = useRouter();
   const follow = api.user.follow.useMutation({
@@ -186,7 +188,7 @@ export function FollowUserButton({
   return (
     <SignedIn>
       {isLoading && (
-        <Button disabled size="sm">
+        <Button disabled size="sm" className={className}>
           <Loader2 className="mr-2 size-4 animate-spin" />
           Please wait
         </Button>
@@ -199,6 +201,7 @@ export function FollowUserButton({
               : follow.mutate({ followingId: userId })
           }
           size="sm"
+          className={className}
         >
           {following && (
             <>

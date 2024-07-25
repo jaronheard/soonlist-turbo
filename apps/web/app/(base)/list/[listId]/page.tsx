@@ -131,6 +131,7 @@ export default async function Page({ params }: Props) {
           futureEvents={futureEvents}
           pastEvents={pastEvents}
           showPrivateEvents={!!self}
+          variant="card"
         />
       </div>
     </div>
