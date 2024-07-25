@@ -87,6 +87,7 @@ export function FollowEventButton({
     },
     onSuccess: () => {
       toast.success("Event saved.");
+
       router.refresh();
     },
   });
@@ -166,12 +167,17 @@ export function FollowUserButton({
   className?: string;
 }) {
   const router = useRouter();
+  const utils = api.useUtils();
   const follow = api.user.follow.useMutation({
     onError: () => {
       toast.error("User not followed. Please try again.");
     },
     onSuccess: () => {
       toast.success("Followed user.");
+      void utils.user.getFollowing.invalidate();
+      void utils.user.getIfFollowing.invalidate();
+      void utils.event.getFollowingForUser.invalidate();
+      void utils.event.getFollowingUpcomingForUser.invalidate();
       router.refresh();
     },
   });
@@ -181,6 +187,10 @@ export function FollowUserButton({
     },
     onSuccess: () => {
       toast.success("User unfollowed.");
+      void utils.user.getFollowing.invalidate();
+      void utils.user.getIfFollowing.invalidate();
+      void utils.event.getFollowingForUser.invalidate();
+      void utils.event.getFollowingUpcomingForUser.invalidate();
       router.refresh();
     },
   });
