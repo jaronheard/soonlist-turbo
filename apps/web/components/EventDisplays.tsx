@@ -1225,9 +1225,10 @@ export function EventPage(props: EventPageProps) {
               {location && (
                 <Link
                   href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-                  className={"line-clamp-1 shrink break-all text-neutral-2"}
+                  className="line-clamp-1 flex shrink items-center gap-0.5 break-all text-neutral-2"
                 >
-                  {location}
+                  <MapPin className="size-4 flex-shrink-0" />
+                  <span className="line-clamp-1">{location}</span>
                 </Link>
               )}
             </div>
