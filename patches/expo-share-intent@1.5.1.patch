@@ -795,7 +795,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..95daf888a4b805ea52027a31d4115784
 +      return (userId, username, authToken, expoPushToken)
      }
 +  } catch {
-+    print("Error parsing authData: \(error)")
++    NSLog("Error parsing authData: \(error)")
    }
 -}
  
