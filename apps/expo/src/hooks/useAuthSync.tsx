@@ -1,6 +1,24 @@
 import { useEffect, useState } from "react";
+import * as FileSystem from "expo-file-system";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const saveAuthData = async (authData: {
+  username: string | null;
+  authToken: string | null;
+  expoPushToken: string | null;
+}) => {
+  const directory = FileSystem.documentDirectory + "SharedContainer/";
+  await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
+  await FileSystem.writeAsStringAsync(
+    directory + "authData.json",
+    JSON.stringify(authData),
+  );
+};
+
+const deleteAuthData = async () => {
+  const directory = FileSystem.documentDirectory + "SharedContainer/";
+  await FileSystem.deleteAsync(directory + "authData.json");
+};
 
 const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
   const { getToken } = useAuth();
@@ -20,13 +38,13 @@ const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
 
         const newAuthData = { userId, username, authToken, expoPushToken };
         // Store in SecureStore (all one entry)
-        await AsyncStorage.setItem("authData", JSON.stringify(newAuthData));
+        await saveAuthData(newAuthData);
 
         // Update state
         setAuthData(newAuthData);
       } else {
         // Clear data when signed out
-        await AsyncStorage.removeItem("authData");
+        await deleteAuthData();
         setAuthData(null);
       }
     };
