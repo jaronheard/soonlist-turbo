@@ -7,12 +7,16 @@ const saveAuthData = async (authData: {
   authToken: string | null;
   expoPushToken: string | null;
 }) => {
-  const directory = FileSystem.documentDirectory + "SharedContainer/";
-  await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
-  await FileSystem.writeAsStringAsync(
-    directory + "authData.json",
-    JSON.stringify(authData),
-  );
+  try {
+    const groupIdentifier = "group.soonlist.soonlist";
+    const directory = `${FileSystem.documentDirectory}../Groups/${groupIdentifier}/`;
+    await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
+    const filePath = `${directory}authData.json`;
+    await FileSystem.writeAsStringAsync(filePath, JSON.stringify(authData));
+    console.log("Auth data saved successfully");
+  } catch (error) {
+    console.error("Error saving auth data:", error);
+  }
 };
 
 const deleteAuthData = async () => {
