@@ -60,6 +60,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     config: {
       usesNonExemptEncryption: false,
     },
+    entitlements: {
+      keychainAccessGroups: ["group.soonlist.soonlist"],
+    },
   },
   android: {
     package: "soonlist.soonlist",

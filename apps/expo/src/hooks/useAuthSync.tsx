@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import * as FileSystem from "expo-file-system";
+import * as SecureStore from "expo-secure-store";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 
 const saveAuthData = async (authData: {
@@ -8,20 +8,31 @@ const saveAuthData = async (authData: {
   expoPushToken: string | null;
 }) => {
   try {
-    const groupIdentifier = "group.soonlist.soonlist";
-    const directory = `${FileSystem.documentDirectory}../Groups/${groupIdentifier}/`;
-    await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
-    const filePath = `${directory}authData.json`;
-    await FileSystem.writeAsStringAsync(filePath, JSON.stringify(authData));
+    await SecureStore.setItemAsync("authData", JSON.stringify(authData), {
+      keychainAccessible: SecureStore.WHEN_UNLOCKED,
+      keychainService: "group.soonlist.soonlist",
+    });
     console.log("Auth data saved successfully");
   } catch (error) {
-    console.error("Error saving auth data:", error);
+    console.error(
+      "Error saving auth data:",
+      error instanceof Error ? error.message : String(error),
+    );
   }
 };
 
 const deleteAuthData = async () => {
-  const directory = FileSystem.documentDirectory + "SharedContainer/";
-  await FileSystem.deleteAsync(directory + "authData.json");
+  try {
+    await SecureStore.deleteItemAsync("authData", {
+      keychainService: "group.soonlist.soonlist",
+    });
+    console.log("Auth data deleted successfully");
+  } catch (error: unknown) {
+    console.error(
+      "Error deleting auth data:",
+      error instanceof Error ? error.message : String(error),
+    );
+  }
 };
 
 const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
