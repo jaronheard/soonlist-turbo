@@ -53,6 +53,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         project: "soonlist",
       },
     ],
+    "expo-secure-store",
   ],
   ios: {
     supportsTablet: true,
