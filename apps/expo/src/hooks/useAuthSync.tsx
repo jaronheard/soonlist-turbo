@@ -10,7 +10,7 @@ const saveAuthData = async (authData: {
   try {
     await SecureStore.setItemAsync("authData", JSON.stringify(authData), {
       keychainAccessible: SecureStore.WHEN_UNLOCKED,
-      keychainService: "group.soonlist.soonlist",
+      // keychainService: "group.soonlist.soonlist",
     });
     console.log("Auth data saved successfully");
   } catch (error) {
@@ -24,7 +24,7 @@ const saveAuthData = async (authData: {
 const deleteAuthData = async () => {
   try {
     await SecureStore.deleteItemAsync("authData", {
-      keychainService: "group.soonlist.soonlist",
+      // keychainService: "group.soonlist.soonlist",
     });
     console.log("Auth data deleted successfully");
   } catch (error: unknown) {
