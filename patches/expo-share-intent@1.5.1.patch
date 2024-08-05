@@ -12,10 +12,10 @@ index 6db146996720008f9ce6f1809b6ec7f6951a78e9..8b63c33060bccc1b01e65b0e3aa51d93
    s.source         = { git: 'https://github.com/achorein/expo-share-intent' }
    s.static_framework = true
 diff --git a/plugin/build/ios/ShareExtensionViewController.swift b/plugin/build/ios/ShareExtensionViewController.swift
-index 67036867bd4a082140d2f8ae5000caea9cdb50fb..d2e1ff7152a3c7eb3740093654e644790614deec 100644
+index 67036867bd4a082140d2f8ae5000caea9cdb50fb..a3c186b41088926675162a08f4f4bffedac45304 100644
 --- a/plugin/build/ios/ShareExtensionViewController.swift
 +++ b/plugin/build/ios/ShareExtensionViewController.swift
-@@ -1,496 +1,410 @@
+@@ -1,496 +1,423 @@
 -/*!
 - * Native module created for Expo Share Intent (https://github.com/achorein/expo-share-intent)
 - * author: achorein (https://github.com/achorein)
@@ -417,7 +417,13 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..d2e1ff7152a3c7eb3740093654e64479
 +  else {
 +    NSLog("soonlist.share-extension.shareviewcontroller: Invalid URL")
 +    return
-+  }
+   }
+-  
+-  func getExtension(from url: URL, type: SharedMediaType) -> String {
+-    let parts = url.lastPathComponent.components(separatedBy: ".")
+-    var ex: String? = nil
+-    if (parts.count > 1) {
+-      ex = parts.last
 +
 +  let jsonData: Data
 +  do {
@@ -428,13 +434,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..d2e1ff7152a3c7eb3740093654e64479
 +  } catch {
 +    NSLog("soonlist.share-extension.shareviewcontroller: Error encoding JSON: \(error)")
 +    return
-   }
--  
--  func getExtension(from url: URL, type: SharedMediaType) -> String {
--    let parts = url.lastPathComponent.components(separatedBy: ".")
--    var ex: String? = nil
--    if (parts.count > 1) {
--      ex = parts.last
++  }
 +
 +  var request = URLRequest(url: url)
 +  request.httpMethod = "POST"
@@ -585,18 +585,18 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..d2e1ff7152a3c7eb3740093654e64479
 +      NSLog("soonlist.share-extension.shareviewcontroller: Error uploading image: \(error)")
 +      completion("")
 +      return
++    }
++
++    guard let data = data else {
++      NSLog("soonlist.share-extension.shareviewcontroller: No data received from image upload")
++      completion("")
++      return
      }
 -    
 -    var saved = false
 -    let assetImgGenerate = AVAssetImageGenerator(asset: asset)
 -    assetImgGenerate.appliesPreferredTrackTransform = true
 -    assetImgGenerate.maximumSize =  CGSize(width: 360, height: 360)
-+
-+    guard let data = data else {
-+      NSLog("soonlist.share-extension.shareviewcontroller: No data received from image upload")
-+      completion("")
-+      return
-+    }
 +
      do {
 -      let img = try assetImgGenerate.copyCGImage(at: CMTimeMakeWithSeconds(600, preferredTimescale: Int32(1.0)), actualTime: nil)
@@ -639,6 +639,19 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..d2e1ff7152a3c7eb3740093654e64479
 +    let lists: [String]
 +    let userId: String
 +    let username: String
++  }
++}
++
++struct PrototypeEventCreateImageSchema: Codable {
++  let json: EventData
++
++  struct EventData: Codable {
++    let imageUrl: String
++    let timezone: String
++    let expoPushToken: String
++    let lists: [String]
++    let userId: String
++    let username: String
    }
 -  
 -  class SharedMediaFile: Codable {
@@ -662,19 +675,6 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..d2e1ff7152a3c7eb3740093654e64479
 -      self.duration = duration
 -      self.mimeType = mimeType
 -      self.type = type
-+}
-+
-+struct PrototypeEventCreateImageSchema: Codable {
-+  let json: EventData
-+
-+  struct EventData: Codable {
-+    let imageUrl: String
-+    let timezone: String
-+    let expoPushToken: String
-+    let lists: [String]
-+    let userId: String
-+    let username: String
-+  }
 +}
 +
 +class KeychainHelper {
@@ -709,10 +709,16 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..d2e1ff7152a3c7eb3740093654e64479
 +{
 +  NSLog("soonlist.share-extension.shareviewcontroller: Attempting to load auth data from Keychain")
 +
-+  guard let authDataString = KeychainHelper.getValue(forKey: "authData") else {
-+    NSLog(
-+      "soonlist.share-extension.shareviewcontroller: Failed to retrieve authData string from Keychain"
-+    )
++  let keychainAccessible =
++    SecItemCopyMatching(
++      [
++        kSecClass as String: kSecClassGenericPassword,
++        kSecAttrService as String: "group.soonlist.soonlist",
++        kSecReturnData as String: false,
++      ] as CFDictionary, nil) == errSecSuccess
++
++  guard keychainAccessible else {
++    NSLog("soonlist.share-extension.shareviewcontroller: Keychain is not accessible")
 +    return nil
    }
 -  
@@ -720,11 +726,10 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..d2e1ff7152a3c7eb3740093654e64479
 -    let encodedData = try? JSONEncoder().encode(data)
 -    return encodedData!
 +
-+  NSLog(
-+    "soonlist.share-extension.shareviewcontroller: Retrieved authData string: \(authDataString)")
-+
-+  guard let authDataData = authDataString.data(using: .utf8) else {
-+    NSLog("soonlist.share-extension.shareviewcontroller: Failed to convert authData string to Data")
++  guard let authDataString = KeychainHelper.getValue(forKey: "authData") else {
++    NSLog(
++      "soonlist.share-extension.shareviewcontroller: Failed to retrieve authData string from Keychain"
++    )
 +    return nil
    }
 -}
@@ -834,6 +839,14 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..d2e1ff7152a3c7eb3740093654e64479
 -        return mimeType
 -      } else {
 -        return "application/octet-stream"
++  NSLog(
++    "soonlist.share-extension.shareviewcontroller: Retrieved authData string: \(authDataString)")
++
++  guard let authDataData = authDataString.data(using: .utf8) else {
++    NSLog("soonlist.share-extension.shareviewcontroller: Failed to convert authData string to Data")
++    return nil
++  }
++
 +  do {
 +    if let authData = try JSONSerialization.jsonObject(with: authDataData, options: [])
 +      as? [String: String]
