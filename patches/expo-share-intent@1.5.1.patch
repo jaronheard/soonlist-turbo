@@ -12,7 +12,7 @@ index 6db146996720008f9ce6f1809b6ec7f6951a78e9..8b63c33060bccc1b01e65b0e3aa51d93
    s.source         = { git: 'https://github.com/achorein/expo-share-intent' }
    s.static_framework = true
 diff --git a/plugin/build/ios/ShareExtensionViewController.swift b/plugin/build/ios/ShareExtensionViewController.swift
-index 67036867bd4a082140d2f8ae5000caea9cdb50fb..a5833b1d5e0c1fcfd5b27925e9a3a8e4bfb72327 100644
+index 67036867bd4a082140d2f8ae5000caea9cdb50fb..d6f229b6c7a2681e2fa36cad32bac8e5b84c73d2 100644
 --- a/plugin/build/ios/ShareExtensionViewController.swift
 +++ b/plugin/build/ios/ShareExtensionViewController.swift
 @@ -1,496 +1,442 @@
@@ -745,7 +745,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..a5833b1d5e0c1fcfd5b27925e9a3a8e4
 -    let encodedData = try? JSONEncoder().encode(data)
 -    return encodedData!
 +
-+  guard let authDataString = KeychainHelper.getValue(forKey: "authData") else {
++  guard let authDataString = KeychainHelper.getValue(forKey: "@soonlist/Soonlist-authData") else {
 +    NSLog(
 +      "soonlist.share-extension.shareviewcontroller: Failed to retrieve authData string from Keychain"
 +    )
