@@ -1201,19 +1201,6 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..a2c9e287f01ef7e5bc5992c686aed068
 +  NSLog("soonlist.share-extension.shareviewcontroller: Failed to load auth data")
 +  return nil
  }
-diff --git a/plugin/build/ios/withIosAppEntitlements.js b/plugin/build/ios/withIosAppEntitlements.js
-index 145fde5bbff7056bbabf0b78c1cc93d3fd760175..a5d2bdd03eff369ce4e5a9e8ead8e3167d2be36b 100644
---- a/plugin/build/ios/withIosAppEntitlements.js
-+++ b/plugin/build/ios/withIosAppEntitlements.js
-@@ -8,6 +8,8 @@ const withAppEntitlements = (config) => {
-         const appIdentifier = config.ios?.bundleIdentifier;
-         config.modResults["com.apple.security.application-groups"] =
-             (0, constants_1.getAppGroups)(appIdentifier);
-+        config.modResults["keychain-access-groups"] =
-+            (0, constants_1.getAppGroups)(appIdentifier);
-         return config;
-     });
- };
 diff --git a/plugin/build/ios/withIosShareExtensionXcodeTarget.js b/plugin/build/ios/withIosShareExtensionXcodeTarget.js
 index 9d192ccaebf4bae7195d1e735f5aef67a8283461..0593f3f5253da74272c711a7796ad7bb895e2658 100644
 --- a/plugin/build/ios/withIosShareExtensionXcodeTarget.js
