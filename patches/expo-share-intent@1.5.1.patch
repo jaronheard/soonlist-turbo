@@ -12,10 +12,10 @@ index 6db146996720008f9ce6f1809b6ec7f6951a78e9..8b63c33060bccc1b01e65b0e3aa51d93
    s.source         = { git: 'https://github.com/achorein/expo-share-intent' }
    s.static_framework = true
 diff --git a/plugin/build/ios/ShareExtensionViewController.swift b/plugin/build/ios/ShareExtensionViewController.swift
-index 67036867bd4a082140d2f8ae5000caea9cdb50fb..5ef747fd669ff00fcf427db6b1908ee40fa4d5b5 100644
+index 67036867bd4a082140d2f8ae5000caea9cdb50fb..71e28b750050270bcfa1cf411d8abfff1da3f351 100644
 --- a/plugin/build/ios/ShareExtensionViewController.swift
 +++ b/plugin/build/ios/ShareExtensionViewController.swift
-@@ -1,496 +1,488 @@
+@@ -1,496 +1,490 @@
 -/*!
 - * Native module created for Expo Share Intent (https://github.com/achorein/expo-share-intent)
 - * author: achorein (https://github.com/achorein)
@@ -697,12 +697,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..5ef747fd669ff00fcf427db6b1908ee4
      }
 +
 +    return value
-   }
--  
--  enum SharedMediaType: Int, Codable {
--    case image
--    case video
--    case file
++  }
 +}
 +
 +func loadAuthData() -> (userId: String, username: String, authToken: String, expoPushToken: String)?
@@ -737,7 +732,12 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..5ef747fd669ff00fcf427db6b1908ee4
 +  default:
 +    NSLog(
 +      "soonlist.share-extension.shareviewcontroller: Keychain is not accessible. Error: \(status)")
-+  }
+   }
+-  
+-  enum SharedMediaType: Int, Codable {
+-    case image
+-    case video
+-    case file
 +
 +  guard status == errSecSuccess else {
 +    return nil
@@ -935,17 +935,19 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..5ef747fd669ff00fcf427db6b1908ee4
 +  }
 +
 +  for (index, existingItem) in existingItems.enumerated() {
-+    if let account = existingItem[kSecAttrAccount as String] as? String,
-+      let passwordData = existingItem[kSecValueData as String] as? Data,
-+      let password = String(data: passwordData, encoding: .utf8)
-+    {
-+      NSLog(
-+        "soonlist.share-extension.shareviewcontroller: Item \(index + 1): Account: \(account), Password: \(password)"
-+      )
-+    } else {
-+      NSLog(
-+        "soonlist.share-extension.shareviewcontroller: Item \(index + 1): Unable to read account or password"
-+      )
++    let account = existingItem[kSecAttrAccount as String] as? String ?? "Unknown Account"
++    let passwordData = existingItem[kSecValueData as String] as? Data
++    let password =
++      passwordData != nil
++      ? String(data: passwordData!, encoding: .utf8) ?? "Unable to decode" : "No password data"
++
++    NSLog(
++      "soonlist.share-extension.shareviewcontroller: Item \(index + 1): Account: \(account), Password: \(password)"
++    )
++
++    // Log all attributes for debugging
++    for (key, value) in existingItem {
++      NSLog("soonlist.share-extension.shareviewcontroller: Item \(index + 1) - \(key): \(value)")
 +    }
    }
  }
