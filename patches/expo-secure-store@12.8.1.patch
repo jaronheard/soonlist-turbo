@@ -1,5 +1,23 @@
+diff --git a/build/SecureStore.d.ts b/build/SecureStore.d.ts
+index 13871e43eb9bd9611ac6a8a5c666b80566d1035a..02d3e02b6dc0d8ed7b40097a62cec00531e723bd 100644
+--- a/build/SecureStore.d.ts
++++ b/build/SecureStore.d.ts
+@@ -65,6 +65,13 @@ export type SecureStoreOptions = {
+      * @platform ios
+      */
+     keychainAccessible?: KeychainAccessibilityConstant;
++    /**
++     * Specifies the keychain access group to use for the keychain item. Equivalent to [`kSecAttrAccessGroup`](https://developer.apple.com/documentation/security/ksecattraccessgroup).
++     * @see Apple's documentation on [keychain access groups](https://developer.apple.com/documentation/security/keychain_services/keychain_items/sharing_access_to_keychain_items_among_a_collection_of_apps).
++     * @default The default keychain access group for the current app.
++     * @platform ios
++     */
++    keychainAccessGroup?: string;   
+ };
+ /**
+  * Returns whether the SecureStore API is enabled on the current device. This does not check the app
 diff --git a/ios/SecureStoreModule.swift b/ios/SecureStoreModule.swift
-index 593fb9f30b91172e6f795b147ba9e1f934099b80..9a1c87ec781272695ea7342a0f1d1184f9ac5eaf 100644
+index 593fb9f30b91172e6f795b147ba9e1f934099b80..452290d78e635a48b4ae5243a7cf8af120a4185b 100644
 --- a/ios/SecureStoreModule.swift
 +++ b/ios/SecureStoreModule.swift
 @@ -8,12 +8,14 @@ public final class SecureStoreModule: Module {
@@ -127,12 +145,12 @@ index 593fb9f30b91172e6f795b147ba9e1f934099b80..9a1c87ec781272695ea7342a0f1d1184
        kSecAttrGeneric as String: encodedKey,
 -      kSecAttrAccount as String: encodedKey
 +      kSecAttrAccount as String: encodedKey,
-+      kSecAttrAccessGroup as String: options.sharedAccessGroupIdentifier,
++      kSecAttrAccessGroup as String: options.keychainAccessGroup,
      ]
    }
  
 diff --git a/ios/SecureStoreOptions.swift b/ios/SecureStoreOptions.swift
-index 8cc104f35b43669d67cb5020fca9295bbe2b5a43..45da2f090e1169dd728e9213da273580f61cbd5a 100644
+index 8cc104f35b43669d67cb5020fca9295bbe2b5a43..24a324df87ab7af4c042fb58d0b13ca81f2d0044 100644
 --- a/ios/SecureStoreOptions.swift
 +++ b/ios/SecureStoreOptions.swift
 @@ -12,4 +12,7 @@ internal struct SecureStoreOptions: Record {
@@ -141,5 +159,23 @@ index 8cc104f35b43669d67cb5020fca9295bbe2b5a43..45da2f090e1169dd728e9213da273580
    var requireAuthentication: Bool
 +
 +  @Field
-+  var sharedAccessGroupIdentifier: String?
++  var keychainAccessGroup: String?
  }
+diff --git a/src/SecureStore.ts b/src/SecureStore.ts
+index ed18137fba62ee28c8b968d5b4672eeaea671d11..986633a0518839cbd24819784670668bad73739e 100644
+--- a/src/SecureStore.ts
++++ b/src/SecureStore.ts
+@@ -89,6 +89,13 @@ export type SecureStoreOptions = {
+    * @platform ios
+    */
+   keychainAccessible?: KeychainAccessibilityConstant;
++  /**
++   * Specifies the keychain access group to use for the keychain item. Equivalent to [`kSecAttrAccessGroup`](https://developer.apple.com/documentation/security/ksecattraccessgroup).
++   * @see Apple's documentation on [keychain access groups](https://developer.apple.com/documentation/security/keychain_services/keychain_items/sharing_access_to_keychain_items_among_a_collection_of_apps).
++   * @default The default keychain access group for the current app.
++   * @platform ios
++   */
++  keychainAccessGroup?: string;
+ };
+ 
+ // @needsAudit

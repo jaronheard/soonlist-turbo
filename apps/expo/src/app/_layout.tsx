@@ -18,11 +18,15 @@ import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 
 const tokenCache = {
   getToken: async (key: string) => {
-    const token = await SecureStore.getItemAsync(key);
+    const token = await SecureStore.getItemAsync(key, {
+      keychainAccessGroup: "group.soonlist.soonlist",
+    });
     return token;
   },
   saveToken: (key: string, value: string) => {
-    return SecureStore.setItemAsync(key, value);
+    return SecureStore.setItemAsync(key, value, {
+      keychainAccessGroup: "group.soonlist.soonlist",
+    });
   },
 };
 
