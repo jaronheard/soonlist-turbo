@@ -12,7 +12,7 @@ index 6db146996720008f9ce6f1809b6ec7f6951a78e9..8b63c33060bccc1b01e65b0e3aa51d93
    s.source         = { git: 'https://github.com/achorein/expo-share-intent' }
    s.static_framework = true
 diff --git a/plugin/build/ios/ShareExtensionViewController.swift b/plugin/build/ios/ShareExtensionViewController.swift
-index 67036867bd4a082140d2f8ae5000caea9cdb50fb..a05b950d8cf46d18d9ec5a724285abdf1559414d 100644
+index 67036867bd4a082140d2f8ae5000caea9cdb50fb..3634395410a0996a52cbc250717209c538a7cbb3 100644
 --- a/plugin/build/ios/ShareExtensionViewController.swift
 +++ b/plugin/build/ios/ShareExtensionViewController.swift
 @@ -1,496 +1,491 @@
@@ -684,7 +684,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..a05b950d8cf46d18d9ec5a724285abdf
 +      kSecAttrService as String: "app:no-auth",
 +      kSecAttrAccount as String: key,
 +      kSecReturnData as String: true,
-+      kSecAttrService as String: "group.soonlist.soonlist",
++      kSecAttrAccessGroup as String: "group.soonlist.soonlist",
 +    ]
 +
 +    var item: CFTypeRef?
@@ -709,7 +709,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..a05b950d8cf46d18d9ec5a724285abdf
 +
 +  let query: [String: Any] = [
 +    kSecClass as String: kSecClassGenericPassword,
-+    kSecAttrService as String: "group.soonlist.soonlist",
++    kSecAttrAccessGroup as String: "group.soonlist.soonlist",
 +    kSecReturnData as String: false,
 +  ]
 +
