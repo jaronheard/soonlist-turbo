@@ -12,10 +12,10 @@ index 6db146996720008f9ce6f1809b6ec7f6951a78e9..8b63c33060bccc1b01e65b0e3aa51d93
    s.source         = { git: 'https://github.com/achorein/expo-share-intent' }
    s.static_framework = true
 diff --git a/plugin/build/ios/ShareExtensionViewController.swift b/plugin/build/ios/ShareExtensionViewController.swift
-index 67036867bd4a082140d2f8ae5000caea9cdb50fb..3634395410a0996a52cbc250717209c538a7cbb3 100644
+index 67036867bd4a082140d2f8ae5000caea9cdb50fb..8fad1ca2d2c7d12bde7e2be577e4764ba8ad267e 100644
 --- a/plugin/build/ios/ShareExtensionViewController.swift
 +++ b/plugin/build/ios/ShareExtensionViewController.swift
-@@ -1,496 +1,491 @@
+@@ -1,496 +1,517 @@
 -/*!
 - * Native module created for Expo Share Intent (https://github.com/achorein/expo-share-intent)
 - * author: achorein (https://github.com/achorein)
@@ -42,15 +42,39 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..3634395410a0996a52cbc250717209c5
 -  
 -  override func isContentValid() -> Bool {
 -    return true
--  }
--      
--  override func viewDidLoad() {
--    super.viewDidLoad();
--  }
--      
 +import UIKit
 +import UniformTypeIdentifiers
 +import os.log
++
++enum Environment {
++  case development
++  case production
++}
++
++struct Config {
++  static var currentEnvironment: Environment {
++    #if DEBUG
++      return .development
++    #else
++      return .production
++    #endif
+   }
+-      
+-  override func viewDidLoad() {
+-    super.viewDidLoad();
++
++  static var baseURL: String {
++    switch currentEnvironment {
++    case .development:
++      return "https://primary-entirely-giraffe.ngrok-free.app"
++    case .production:
++      return "https://www.soonlist.com"
++    }
+   }
+-      
++}
++
++let domainURL = Config.baseURL
 +
 +class ShareViewController: UIViewController {
 +
@@ -243,7 +267,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..3634395410a0996a52cbc250717209c5
 +  guard
 +    let url = URL(
 +      string:
-+        "https://www.soonlist.com/api/trpc/ai.eventFromRawTextThenCreateThenNotification"
++        "\(domainURL)/api/trpc/ai.eventFromRawTextThenCreateThenNotification"
 +    )
 +  else {
 +    NSLog("soonlist.share-extension.shareviewcontroller: Invalid URL")
@@ -412,7 +436,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..3634395410a0996a52cbc250717209c5
 +  guard
 +    let url = URL(
 +      string:
-+        "https://www.soonlist.com/api/trpc/ai.eventFromImageThenCreateThenNotification"
++        "\(domainURL)/api/trpc/ai.eventFromImageThenCreateThenNotification"
 +    )
 +  else {
 +    NSLog("soonlist.share-extension.shareviewcontroller: Invalid URL")
@@ -516,20 +540,12 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..3634395410a0996a52cbc250717209c5
 +      NSLog("soonlist.share-extension.shareviewcontroller: Failed to get image URL")
 +      completion("")
 +      return
-     }
--    return true
++    }
 +
 +    resizeAndUploadImage(imageURL) { imageUrl in
 +      completion(imageUrl)
-+    }
-+  }
-+}
-+
-+func resizeAndUploadImage(_ imageURL: URL, completion: @escaping (String) -> Void) {
-+  guard let image = UIImage(contentsOfFile: imageURL.path) else {
-+    NSLog("soonlist.share-extension.shareviewcontroller: Failed to create UIImage from URL")
-+    completion("")
-+    return
+     }
+-    return true
    }
 -  
 -  private func getSharedMediaFile(forVideo: URL, fileName: String, fileSize: Int?, mimeType: String) -> SharedMediaFile? {
@@ -540,6 +556,14 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..3634395410a0996a52cbc250717209c5
 -    
 -    if FileManager.default.fileExists(atPath: thumbnailPath.path) {
 -      return SharedMediaFile(path: forVideo.absoluteString, thumbnail: thumbnailPath.absoluteString, fileName: fileName, fileSize: fileSize, width: nil, height: nil, duration: duration, mimeType: mimeType, type: .video)
++}
++
++func resizeAndUploadImage(_ imageURL: URL, completion: @escaping (String) -> Void) {
++  guard let image = UIImage(contentsOfFile: imageURL.path) else {
++    NSLog("soonlist.share-extension.shareviewcontroller: Failed to create UIImage from URL")
++    completion("")
++    return
++  }
 +
 +  let resizedImage = resizeImage(image, targetWidth: 1350)
 +  guard let jpegData = resizedImage.jpegData(compressionQuality: 0.8) else {
@@ -585,18 +609,18 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..3634395410a0996a52cbc250717209c5
 +      NSLog("soonlist.share-extension.shareviewcontroller: Error uploading image: \(error)")
 +      completion("")
 +      return
++    }
++
++    guard let data = data else {
++      NSLog("soonlist.share-extension.shareviewcontroller: No data received from image upload")
++      completion("")
++      return
      }
 -    
 -    var saved = false
 -    let assetImgGenerate = AVAssetImageGenerator(asset: asset)
 -    assetImgGenerate.appliesPreferredTrackTransform = true
 -    assetImgGenerate.maximumSize =  CGSize(width: 360, height: 360)
-+
-+    guard let data = data else {
-+      NSLog("soonlist.share-extension.shareviewcontroller: No data received from image upload")
-+      completion("")
-+      return
-+    }
 +
      do {
 -      let img = try assetImgGenerate.copyCGImage(at: CMTimeMakeWithSeconds(600, preferredTimescale: Int32(1.0)), actualTime: nil)
