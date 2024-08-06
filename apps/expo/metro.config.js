@@ -31,6 +31,7 @@ module.exports = withTurborepoManagedCache(
 function withMonorepoPaths(config) {
   const projectRoot = __dirname;
   const workspaceRoot = path.resolve(projectRoot, "../..");
+  require("@expo/env").load(workspaceRoot, { force: true });
 
   // #1 - Watch all files in the monorepo
   config.watchFolders = [workspaceRoot];

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useUser } from "@clerk/clerk-expo";
 
 import useAuthSync from "~/hooks/useAuthSync";
+import useEnvSync from "~/hooks/useEnvSync";
 import { api } from "~/utils/api";
 
 export default function AuthAndTokenSync({
@@ -13,11 +14,13 @@ export default function AuthAndTokenSync({
 }) {
   const { user } = useUser();
   const authData = useAuthSync({ expoPushToken });
+  const envData = useEnvSync();
   const createTokenMutation = api.pushToken.create.useMutation({});
 
   const lastSavedTokenRef = useRef<string | null>(null);
 
   console.log("authData", authData);
+  console.log("envData", envData);
 
   useEffect(() => {
     if (user && expoPushToken && expoPushToken !== lastSavedTokenRef.current) {
