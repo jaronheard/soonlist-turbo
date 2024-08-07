@@ -1,4 +1,4 @@
-import { Text, View } from "react-native";
+import { Text, View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -17,7 +17,15 @@ export default function Page() {
     eventId: id,
   });
 
-  // display event
+  if (eventQuery.isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" />
+        <Text>Loading event...</Text>
+      </View>
+    );
+  }
+
   if (!eventQuery.data) {
     return <Text>Event not found</Text>;
   }
