@@ -12,10 +12,10 @@ index 6db146996720008f9ce6f1809b6ec7f6951a78e9..8b63c33060bccc1b01e65b0e3aa51d93
    s.source         = { git: 'https://github.com/achorein/expo-share-intent' }
    s.static_framework = true
 diff --git a/plugin/build/ios/ShareExtensionViewController.swift b/plugin/build/ios/ShareExtensionViewController.swift
-index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c796341264210 100644
+index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9046f893d7ce1304c2bf006f369c72032431fb9a 100644
 --- a/plugin/build/ios/ShareExtensionViewController.swift
 +++ b/plugin/build/ios/ShareExtensionViewController.swift
-@@ -1,496 +1,587 @@
+@@ -1,496 +1,597 @@
 -/*!
 - * Native module created for Expo Share Intent (https://github.com/achorein/expo-share-intent)
 - * author: achorein (https://github.com/achorein)
@@ -168,7 +168,6 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -          userDefaults?.synchronize()
 -          this.redirectToHostApp(type: .weburl)
 +
-+  // handleImages function here
 +  private func handleImages(
 +    content: NSExtensionItem, attachment: NSItemProvider, index: Int, authData: AuthData
 +  ) {
@@ -177,28 +176,36 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 +      [weak self] (imageData, error) in
 +      guard let self = self else { return }
 +      if let imageUrl = imageData as? URL {
-+        let event = PrototypeEventCreateImageSchema(
-+          json: PrototypeEventCreateImageSchema.EventData(
-+            imageUrl: imageUrl.absoluteString,
-+            timezone: TimeZone.current.identifier,
-+            expoPushToken: authData.expoPushToken,
-+            lists: [],
-+            userId: authData.userId,
-+            username: authData.username
-+          )
-+        )
-+
-+        callAiEventFromImageThenCreateThenNotification(event: event) { result in
-+          switch result {
-+          case .success(let data):
-+            NSLog(
-+              "soonlist.share-extension.shareviewcontroller: Success: \(String(data: data, encoding: .utf8) ?? "")"
-+            )
-+          case .failure(let error):
-+            NSLog("soonlist.share-extension.shareviewcontroller: Error: \(error)")
++        self.resizeAndUploadImage(imageUrl) { uploadedImageUrl in
++          guard !uploadedImageUrl.isEmpty else {
++            NSLog("soonlist.share-extension.shareviewcontroller: Failed to upload image")
++            self.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
++            return
 +          }
 +
-+          self.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
++          let event = PrototypeEventCreateImageSchema(
++            json: PrototypeEventCreateImageSchema.EventData(
++              imageUrl: uploadedImageUrl,
++              timezone: TimeZone.current.identifier,
++              expoPushToken: authData.expoPushToken,
++              lists: [],
++              userId: authData.userId,
++              username: authData.username
++            )
++          )
++
++          self.callAiEventFromImageThenCreateThenNotification(event: event) { result in
++            switch result {
++            case .success(let data):
++              NSLog(
++                "soonlist.share-extension.shareviewcontroller: Success: \(String(data: data, encoding: .utf8) ?? "")"
++              )
++            case .failure(let error):
++              NSLog("soonlist.share-extension.shareviewcontroller: Error: \(error)")
++            }
++
++            self.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
++          }
          }
        } else {
 -        self?.dismissWithError(message: "Cannot load url content")
@@ -291,40 +298,6 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 +
 +  private func handleUnsupportedType(type: String) {
 +    NSLog("soonlist.share-extension.shareviewcontroller: Unsupported share type: \(type)")
-+  }
-+}
-+
-+// Define the method to call the API
-+func callAiEventFromRawTextThenCreateThenNotification(
-+  event: PrototypeEventCreateRawTextSchema, completion: @escaping (Result<Data, Error>) -> Void
-+) {
-+  // fetch the domain URL from the keychain
-+  guard let domainURL = KeychainHelper.getValue(forKey: "EXPO_PUBLIC_API_BASE_URL") else {
-+    NSLog(
-+      "soonlist.share-extension.shareviewcontroller: Failed to load EXPO_PUBLIC_API_BASE_URL from Keychain"
-+    )
-+    return
-+  }
-+
-+  guard
-+    let url = URL(
-+      string:
-+        "\(domainURL)/api/trpc/ai.eventFromRawTextThenCreateThenNotification"
-+    )
-+  else {
-+    NSLog("soonlist.share-extension.shareviewcontroller: Invalid URL")
-+    return
-+  }
-+
-+  let jsonData: Data
-+  do {
-+    jsonData = try JSONEncoder().encode(event)
-+    NSLog(
-+      "soonlist.share-extension.shareviewcontroller: JSON Payload: \(String(data: jsonData, encoding: .utf8) ?? "")"
-+    )
-+  } catch {
-+    NSLog("soonlist.share-extension.shareviewcontroller: Error encoding JSON: \(error)")
-+    return
    }
  
 -  private func saveScreenshot(_ image: UIImage) -> URL? {
@@ -332,19 +305,20 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -    if let screenshotData = image.pngData(), let screenshotPath = documentDirectoryPath()?.appendingPathComponent("screenshot.png") {
 -      try? screenshotData.write(to: screenshotPath)
 -      screenshotURL = screenshotPath
-+  var request = URLRequest(url: url)
-+  request.httpMethod = "POST"
-+  request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-+  request.httpBody = jsonData
-+
-+  let task = URLSession.shared.dataTask(with: request) { data, response, error in
-+    if let error = error {
-+      completion(.failure(error))
++  // Define the method to call the API
++  private func callAiEventFromRawTextThenCreateThenNotification(
++    event: PrototypeEventCreateRawTextSchema, completion: @escaping (Result<Data, Error>) -> Void
++  ) {
++    // fetch the domain URL from the keychain
++    guard let domainURL = KeychainHelper.getValue(forKey: "EXPO_PUBLIC_API_BASE_URL") else {
++      NSLog(
++        "soonlist.share-extension.shareviewcontroller: Failed to load EXPO_PUBLIC_API_BASE_URL from Keychain"
++      )
 +      return
      }
 -    return screenshotURL
 -  }
--
+ 
 -  private func handleVideos (content: NSExtensionItem, attachment: NSItemProvider, index: Int) {
 -    attachment.loadItem(forTypeIdentifier: videoContentType, options:nil) { [weak self] data, error in
 -      
@@ -373,22 +347,66 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -          userDefaults?.set(this.toData(data: this.sharedMedia), forKey: this.sharedKey)
 -          userDefaults?.synchronize()
 -          this.redirectToHostApp(type: .media)
--        }
++    guard
++      let url = URL(
++        string:
++          "\(domainURL)/api/trpc/ai.eventFromRawTextThenCreateThenNotification"
++      )
++    else {
++      NSLog("soonlist.share-extension.shareviewcontroller: Invalid URL")
++      return
++    }
++
++    let jsonData: Data
++    do {
++      jsonData = try JSONEncoder().encode(event)
++      NSLog(
++        "soonlist.share-extension.shareviewcontroller: JSON Payload: \(String(data: jsonData, encoding: .utf8) ?? "")"
++      )
++    } catch {
++      NSLog("soonlist.share-extension.shareviewcontroller: Error encoding JSON: \(error)")
++      return
++    }
++
++    var request = URLRequest(url: url)
++    request.httpMethod = "POST"
++    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
++    request.httpBody = jsonData
++
++    let task = URLSession.shared.dataTask(with: request) { data, response, error in
++      if let error = error {
++        completion(.failure(error))
++        return
++      }
++
++      if let httpResponse = response as? HTTPURLResponse {
++        NSLog(
++          "soonlist.share-extension.shareviewcontroller: HTTP Status Code: \(httpResponse.statusCode)"
++        )
++        if httpResponse.statusCode != 200 {
++          NSLog(
++            "soonlist.share-extension.shareviewcontroller: Response Headers: \(httpResponse.allHeaderFields)"
++          )
+         }
 -        
 -      } else {
 -        self?.dismissWithError(message: "Cannot load video content")
-+
-+    if let httpResponse = response as? HTTPURLResponse {
-+      NSLog(
-+        "soonlist.share-extension.shareviewcontroller: HTTP Status Code: \(httpResponse.statusCode)"
-+      )
-+      if httpResponse.statusCode != 200 {
-+        NSLog(
-+          "soonlist.share-extension.shareviewcontroller: Response Headers: \(httpResponse.allHeaderFields)"
-+        )
        }
++
++      guard let data = data else {
++        NSLog("soonlist.share-extension.shareviewcontroller: No data received")
++        return
++      }
++
++      if let responseString = String(data: data, encoding: .utf8) {
++        NSLog("soonlist.share-extension.shareviewcontroller: Response: \(responseString)")
++      }
++
++      completion(.success(data))
      }
--  }
++
++    task.resume()
+   }
 -  
 -  private func handleFiles (content: NSExtensionItem, attachment: NSItemProvider, index: Int) {
 -    attachment.loadItem(forTypeIdentifier: fileURLType, options: nil) { [weak self] data, error in
@@ -413,16 +431,63 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -          userDefaults?.set(this.toData(data: this.sharedMedia), forKey: this.sharedKey)
 -          userDefaults?.synchronize()
 -          this.redirectToHostApp(type: .file)
--        }
++
++  func callAiEventFromImageThenCreateThenNotification(
++    event: PrototypeEventCreateImageSchema, completion: @escaping (Result<Data, Error>) -> Void
++  ) {
++    guard let domainURL = KeychainHelper.getValue(forKey: "EXPO_PUBLIC_API_BASE_URL") else {
++      NSLog(
++        "soonlist.share-extension.shareviewcontroller: Failed to load EXPO_PUBLIC_API_BASE_URL from Keychain"
++      )
++      return
++    }
++
++    guard
++      let url = URL(
++        string:
++          "\(domainURL)/api/trpc/ai.eventFromImageThenCreateThenNotification"
++      )
++    else {
++      NSLog("soonlist.share-extension.shareviewcontroller: Invalid URL")
++      return
++    }
++
++    let jsonData: Data
++    do {
++      jsonData = try JSONEncoder().encode(event)
++      NSLog(
++        "soonlist.share-extension.shareviewcontroller: JSON Payload: \(String(data: jsonData, encoding: .utf8) ?? "")"
++      )
++    } catch {
++      NSLog("soonlist.share-extension.shareviewcontroller: Error encoding JSON: \(error)")
++      return
++    }
++
++    var request = URLRequest(url: url)
++    request.httpMethod = "POST"
++    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
++    request.httpBody = jsonData
++
++    let task = URLSession.shared.dataTask(with: request) { data, response, error in
++      if let error = error {
++        completion(.failure(error))
++        return
++      }
++
++      if let httpResponse = response as? HTTPURLResponse {
++        NSLog(
++          "soonlist.share-extension.shareviewcontroller: HTTP Status Code: \(httpResponse.statusCode)"
++        )
++        if httpResponse.statusCode != 200 {
++          NSLog(
++            "soonlist.share-extension.shareviewcontroller: Response Headers: \(httpResponse.allHeaderFields)"
++          )
+         }
 -        
 -      } else {
 -        self?.dismissWithError(message: "Cannot load file content")
--      }
-+
-+    guard let data = data else {
-+      NSLog("soonlist.share-extension.shareviewcontroller: No data received")
-+      return
-     }
+       }
+-    }
 -  }
 -  
 -  private func dismissWithError(message: String? = nil) {
@@ -433,16 +498,23 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -      let action = UIAlertAction(title: "OK", style: .cancel) { _ in
 -        self.dismiss(animated: true, completion: nil)
 -        self.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
--      }
++
++      guard let data = data else {
++        NSLog("soonlist.share-extension.shareviewcontroller: No data received")
++        return
+       }
 -      
 -      alert.addAction(action)
 -      self.present(alert, animated: true, completion: nil)
 +
-+    if let responseString = String(data: data, encoding: .utf8) {
-+      NSLog("soonlist.share-extension.shareviewcontroller: Response: \(responseString)")
++      if let responseString = String(data: data, encoding: .utf8) {
++        NSLog("soonlist.share-extension.shareviewcontroller: Response: \(responseString)")
++      }
++
++      completion(.success(data))
      }
 +
-+    completion(.success(data))
++    task.resume()
    }
 -  
 -  private func redirectToHostApp(type: RedirectType) {
@@ -460,59 +532,19 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -          return
 -        }
 +
-+  task.resume()
-+}
++  private func handleImageUpload(
++    _ imageItemProvider: NSItemProvider, completion: @escaping (String) -> Void
++  ) {
++    imageItemProvider.loadItem(forTypeIdentifier: UTType.image.identifier, options: nil) {
++      (imageURL, error) in
++      guard let imageURL = imageURL as? URL else {
++        NSLog("soonlist.share-extension.shareviewcontroller: Failed to get image URL")
++        completion("")
++        return
++      }
 +
-+func callAiEventFromImageThenCreateThenNotification(
-+  event: PrototypeEventCreateImageSchema, completion: @escaping (Result<Data, Error>) -> Void
-+) {
-+  guard let domainURL = KeychainHelper.getValue(forKey: "EXPO_PUBLIC_API_BASE_URL") else {
-+    NSLog(
-+      "soonlist.share-extension.shareviewcontroller: Failed to load EXPO_PUBLIC_API_BASE_URL from Keychain"
-+    )
-+    return
-+  }
-+
-+  guard
-+    let url = URL(
-+      string:
-+        "\(domainURL)/api/trpc/ai.eventFromImageThenCreateThenNotification"
-+    )
-+  else {
-+    NSLog("soonlist.share-extension.shareviewcontroller: Invalid URL")
-+    return
-+  }
-+
-+  let jsonData: Data
-+  do {
-+    jsonData = try JSONEncoder().encode(event)
-+    NSLog(
-+      "soonlist.share-extension.shareviewcontroller: JSON Payload: \(String(data: jsonData, encoding: .utf8) ?? "")"
-+    )
-+  } catch {
-+    NSLog("soonlist.share-extension.shareviewcontroller: Error encoding JSON: \(error)")
-+    return
-+  }
-+
-+  var request = URLRequest(url: url)
-+  request.httpMethod = "POST"
-+  request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-+  request.httpBody = jsonData
-+
-+  let task = URLSession.shared.dataTask(with: request) { data, response, error in
-+    if let error = error {
-+      completion(.failure(error))
-+      return
-+    }
-+
-+    if let httpResponse = response as? HTTPURLResponse {
-+      NSLog(
-+        "soonlist.share-extension.shareviewcontroller: HTTP Status Code: \(httpResponse.statusCode)"
-+      )
-+      if httpResponse.statusCode != 200 {
-+        NSLog(
-+          "soonlist.share-extension.shareviewcontroller: Response Headers: \(httpResponse.allHeaderFields)"
-+        )
++      resizeAndUploadImage(imageURL) { imageUrl in
++        completion(imageUrl)
        }
 -      responder = responder!.next
      }
@@ -524,7 +556,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -    case text
 -    case weburl
 -    case file
--  }
+   }
 -  
 -  func getExtension(from url: URL, type: SharedMediaType) -> String {
 -    let parts = url.lastPathComponent.components(separatedBy: ".")
@@ -532,8 +564,10 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -    if (parts.count > 1) {
 -      ex = parts.last
 +
-+    guard let data = data else {
-+      NSLog("soonlist.share-extension.shareviewcontroller: No data received")
++  private func resizeAndUploadImage(_ imageURL: URL, completion: @escaping (String) -> Void) {
++    guard let image = UIImage(contentsOfFile: imageURL.path) else {
++      NSLog("soonlist.share-extension.shareviewcontroller: Failed to create UIImage from URL")
++      completion("")
 +      return
      }
 -    if (ex == nil) {
@@ -546,33 +580,25 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -        ex = "TXT"
 -      }
 +
-+    if let responseString = String(data: data, encoding: .utf8) {
-+      NSLog("soonlist.share-extension.shareviewcontroller: Response: \(responseString)")
++    let resizedImage = resizeImage(image, targetWidth: 1350)
++    guard let jpegData = resizedImage.jpegData(compressionQuality: 0.8) else {
++      NSLog("soonlist.share-extension.shareviewcontroller: Failed to convert image to JPEG")
++      completion("")
++      return
      }
 -    return ex ?? "Unknown"
-+
-+    completion(.success(data))
-   }
+-  }
 -  
 -  func getFileName(from url: URL, type: SharedMediaType) -> String {
 -    var name = url.lastPathComponent
 -    if (name == "") {
 -      name = UUID().uuidString + "." + getExtension(from: url, type: type)
 +
-+  task.resume()
-+}
-+
-+func handleImageUpload(_ imageItemProvider: NSItemProvider, completion: @escaping (String) -> Void)
-+{
-+  imageItemProvider.loadItem(forTypeIdentifier: UTType.image.identifier, options: nil) {
-+    (imageURL, error) in
-+    guard let imageURL = imageURL as? URL else {
-+      NSLog("soonlist.share-extension.shareviewcontroller: Failed to get image URL")
-+      completion("")
-+      return
++    uploadImage(jpegData) { imageUrl in
++      completion(imageUrl)
      }
 -    return name
--  }
+   }
 -  
 -  func getFileSize(from url: URL) -> Int? {
 -    do {
@@ -581,77 +607,77 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -    } catch {
 -      NSLog("Error: \(error)")
 -      return nil
+-    }
 +
-+    resizeAndUploadImage(imageURL) { imageUrl in
-+      completion(imageUrl)
-     }
++  private func resizeImage(_ image: UIImage, targetWidth: CGFloat) -> UIImage {
++    let aspectRatio = image.size.height / image.size.width
++    let targetHeight = targetWidth * aspectRatio
++    let newSize = CGSize(width: targetWidth, height: targetHeight)
++
++    UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
++    image.draw(in: CGRect(origin: .zero, size: newSize))
++    let resizedImage = UIGraphicsGetImageFromCurrentImageContext()!
++    UIGraphicsEndImageContext()
++
++    return resizedImage
    }
 -  
 -  func copyFile(at srcURL: URL, to dstURL: URL) -> Bool {
 -    do {
 -      if FileManager.default.fileExists(atPath: dstURL.path) {
 -        try FileManager.default.removeItem(at: dstURL)
--      }
++
++  private func uploadImage(_ imageData: Data, completion: @escaping (String) -> Void) {
++    guard let url = URL(string: "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary")
++    else {
++      NSLog("soonlist.share-extension.shareviewcontroller: Invalid URL")
++      completion("")
++      return
++    }
++
++    var request = URLRequest(url: url)
++    request.httpMethod = "POST"
++    request.setValue(
++      "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8", forHTTPHeaderField: "Authorization")
++    request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
++    request.httpBody = imageData
++
++    let task = URLSession.shared.dataTask(with: request) { data, response, error in
++      if let error = error {
++        NSLog("soonlist.share-extension.shareviewcontroller: Error uploading image: \(error)")
++        completion("")
++        return
++      }
++
++      guard let data = data else {
++        NSLog("soonlist.share-extension.shareviewcontroller: No data received from image upload")
++        completion("")
++        return
++      }
++
++      do {
++        if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
++          let fileUrl = json["fileUrl"] as? String
++        {
++          NSLog(
++            "soonlist.share-extension.shareviewcontroller: Uploaded image file path: \(fileUrl)")
++          completion(fileUrl)
++        } else {
++          completion("")
++        }
++      } catch {
++        NSLog("soonlist.share-extension.shareviewcontroller: Error parsing JSON response: \(error)")
++        completion("")
+       }
 -      try FileManager.default.copyItem(at: srcURL, to: dstURL)
 -    } catch (let error) {
 -      NSLog("Cannot copy item at \(srcURL) to \(dstURL): \(error)")
 -      return false
-+}
-+
-+func resizeAndUploadImage(_ imageURL: URL, completion: @escaping (String) -> Void) {
-+  guard let image = UIImage(contentsOfFile: imageURL.path) else {
-+    NSLog("soonlist.share-extension.shareviewcontroller: Failed to create UIImage from URL")
-+    completion("")
-+    return
-+  }
-+
-+  let resizedImage = resizeImage(image, targetWidth: 1350)
-+  guard let jpegData = resizedImage.jpegData(compressionQuality: 0.8) else {
-+    NSLog("soonlist.share-extension.shareviewcontroller: Failed to convert image to JPEG")
-+    completion("")
-+    return
-+  }
-+
-+  uploadImage(jpegData) { imageUrl in
-+    completion(imageUrl)
-+  }
-+}
-+
-+func resizeImage(_ image: UIImage, targetWidth: CGFloat) -> UIImage {
-+  let aspectRatio = image.size.height / image.size.width
-+  let targetHeight = targetWidth * aspectRatio
-+  let newSize = CGSize(width: targetWidth, height: targetHeight)
-+
-+  UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
-+  image.draw(in: CGRect(origin: .zero, size: newSize))
-+  let resizedImage = UIGraphicsGetImageFromCurrentImageContext()!
-+  UIGraphicsEndImageContext()
-+
-+  return resizedImage
-+}
-+
-+func uploadImage(_ imageData: Data, completion: @escaping (String) -> Void) {
-+  guard let url = URL(string: "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary") else {
-+    NSLog("soonlist.share-extension.shareviewcontroller: Invalid URL")
-+    completion("")
-+    return
-+  }
-+
-+  var request = URLRequest(url: url)
-+  request.httpMethod = "POST"
-+  request.setValue(
-+    "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8", forHTTPHeaderField: "Authorization")
-+  request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
-+  request.httpBody = imageData
-+
-+  let task = URLSession.shared.dataTask(with: request) { data, response, error in
-+    if let error = error {
-+      NSLog("soonlist.share-extension.shareviewcontroller: Error uploading image: \(error)")
-+      completion("")
-+      return
      }
 -    return true
--  }
++
++    task.resume()
+   }
 -  
 -  private func getSharedMediaFile(forVideo: URL, fileName: String, fileSize: Int?, mimeType: String) -> SharedMediaFile? {
 -    let asset = AVAsset(url: forVideo)
@@ -661,36 +687,34 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -    
 -    if FileManager.default.fileExists(atPath: thumbnailPath.path) {
 -      return SharedMediaFile(path: forVideo.absoluteString, thumbnail: thumbnailPath.absoluteString, fileName: fileName, fileSize: fileSize, width: nil, height: nil, duration: duration, mimeType: mimeType, type: .video)
-+
-+    guard let data = data else {
-+      NSLog("soonlist.share-extension.shareviewcontroller: No data received from image upload")
-+      completion("")
-+      return
-     }
+-    }
 -    
 -    var saved = false
 -    let assetImgGenerate = AVAssetImageGenerator(asset: asset)
 -    assetImgGenerate.appliesPreferredTrackTransform = true
 -    assetImgGenerate.maximumSize =  CGSize(width: 360, height: 360)
-+
-     do {
+-    do {
 -      let img = try assetImgGenerate.copyCGImage(at: CMTimeMakeWithSeconds(600, preferredTimescale: Int32(1.0)), actualTime: nil)
 -      try UIImage.pngData(UIImage(cgImage: img))()?.write(to: thumbnailPath)
 -      saved = true
-+      if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-+        let fileUrl = json["fileUrl"] as? String
-+      {
-+        NSLog("soonlist.share-extension.shareviewcontroller: Uploaded image file path: \(fileUrl)")
-+        completion(fileUrl)
-+      } else {
-+        completion("")
-+      }
-     } catch {
+-    } catch {
 -      saved = false
 -    }
 -    
 -    return saved ? SharedMediaFile(path: forVideo.absoluteString, thumbnail: thumbnailPath.absoluteString, fileName: fileName, fileSize: fileSize, width: nil, height: nil, duration: duration, mimeType: mimeType, type: .video) : nil
--  }
++}
++
++struct PrototypeEventCreateRawTextSchema: Codable {
++  let json: EventData
++
++  struct EventData: Codable {
++    let rawText: String
++    let timezone: String
++    let expoPushToken: String
++    let lists: [String]
++    let userId: String
++    let username: String
+   }
 -  
 -  private func getThumbnailPath(for url: URL) -> URL {
 -    let fileName = Data(url.lastPathComponent.utf8).base64EncodedString().replacingOccurrences(of: "==", with: "")
@@ -698,7 +722,19 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -      .containerURL(forSecurityApplicationGroupIdentifier: "group.\(hostAppBundleIdentifier)")!
 -      .appendingPathComponent("\(fileName).jpg")
 -    return path
--  }
++}
++
++struct PrototypeEventCreateImageSchema: Codable {
++  let json: EventData
++
++  struct EventData: Codable {
++    let imageUrl: String
++    let timezone: String
++    let expoPushToken: String
++    let lists: [String]
++    let userId: String
++    let username: String
+   }
 -  
 -  class SharedMediaFile: Codable {
 -    var path: String; // can be image, video or url path
@@ -721,47 +757,6 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -      self.duration = duration
 -      self.mimeType = mimeType
 -      self.type = type
-+      NSLog("soonlist.share-extension.shareviewcontroller: Error parsing JSON response: \(error)")
-+      completion("")
-     }
-   }
--  
--  enum SharedMediaType: Int, Codable {
--    case image
--    case video
--    case file
-+
-+  task.resume()
-+}
-+
-+struct PrototypeEventCreateRawTextSchema: Codable {
-+  let json: EventData
-+
-+  struct EventData: Codable {
-+    let rawText: String
-+    let timezone: String
-+    let expoPushToken: String
-+    let lists: [String]
-+    let userId: String
-+    let username: String
-+  }
-+}
-+
-+struct PrototypeEventCreateImageSchema: Codable {
-+  let json: EventData
-+
-+  struct EventData: Codable {
-+    let imageUrl: String
-+    let timezone: String
-+    let expoPushToken: String
-+    let lists: [String]
-+    let userId: String
-+    let username: String
-   }
--  
--  func toData(data: [SharedMediaFile]) -> Data {
--    let encodedData = try? JSONEncoder().encode(data)
--    return encodedData!
 +}
 +
 +class KeychainHelper {
@@ -782,11 +777,58 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 +      let value = String(data: data, encoding: .utf8)
 +    else {
 +      return nil
-+    }
+     }
 +
 +    return value
    }
- }
+-  
+-  enum SharedMediaType: Int, Codable {
+-    case image
+-    case video
+-    case file
++}
++
++func loadAuthData() -> AuthData? {
++  NSLog("soonlist.share-extension.shareviewcontroller: Attempting to load auth data from Keychain")
++
++  logAllKeys()
++
++  let query: [String: Any] = [
++    kSecClass as String: kSecClassGenericPassword,
++    kSecAttrAccessGroup as String: "group.soonlist.soonlist",
++    kSecReturnData as String: false,
++  ]
++
++  let status = SecItemCopyMatching(query as CFDictionary, nil)
++
++  switch status {
++  case errSecSuccess:
++    NSLog("soonlist.share-extension.shareviewcontroller: Keychain is accessible")
++  case errSecItemNotFound:
++    NSLog(
++      "soonlist.share-extension.shareviewcontroller: Keychain item not found. This may be normal if no data has been saved yet."
++    )
++  case errSecInteractionNotAllowed:
++    NSLog(
++      "soonlist.share-extension.shareviewcontroller: Keychain access not allowed. This might be due to device lock state."
++    )
++  case errSecAuthFailed:
++    NSLog(
++      "soonlist.share-extension.shareviewcontroller: Keychain authentication failed. Check entitlements and provisioning profile."
++    )
++  default:
++    NSLog(
++      "soonlist.share-extension.shareviewcontroller: Keychain is not accessible. Error: \(status)")
+   }
+-  
+-  func toData(data: [SharedMediaFile]) -> Data {
+-    let encodedData = try? JSONEncoder().encode(data)
+-    return encodedData!
++
++  guard status == errSecSuccess else {
++    return nil
+   }
+-}
  
 -internal let mimeTypes = [
 -    "html": "text/html",
@@ -893,43 +935,6 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c7963
 -        return mimeType
 -      } else {
 -        return "application/octet-stream"
-+func loadAuthData() -> AuthData? {
-+  NSLog("soonlist.share-extension.shareviewcontroller: Attempting to load auth data from Keychain")
-+
-+  logAllKeys()
-+
-+  let query: [String: Any] = [
-+    kSecClass as String: kSecClassGenericPassword,
-+    kSecAttrAccessGroup as String: "group.soonlist.soonlist",
-+    kSecReturnData as String: false,
-+  ]
-+
-+  let status = SecItemCopyMatching(query as CFDictionary, nil)
-+
-+  switch status {
-+  case errSecSuccess:
-+    NSLog("soonlist.share-extension.shareviewcontroller: Keychain is accessible")
-+  case errSecItemNotFound:
-+    NSLog(
-+      "soonlist.share-extension.shareviewcontroller: Keychain item not found. This may be normal if no data has been saved yet."
-+    )
-+  case errSecInteractionNotAllowed:
-+    NSLog(
-+      "soonlist.share-extension.shareviewcontroller: Keychain access not allowed. This might be due to device lock state."
-+    )
-+  case errSecAuthFailed:
-+    NSLog(
-+      "soonlist.share-extension.shareviewcontroller: Keychain authentication failed. Check entitlements and provisioning profile."
-+    )
-+  default:
-+    NSLog(
-+      "soonlist.share-extension.shareviewcontroller: Keychain is not accessible. Error: \(status)")
-+  }
-+
-+  guard status == errSecSuccess else {
-+    return nil
-+  }
-+
 +  guard let authDataString = KeychainHelper.getValue(forKey: "authData") else {
 +    NSLog(
 +      "soonlist.share-extension.shareviewcontroller: Failed to retrieve authData string from Keychain"
