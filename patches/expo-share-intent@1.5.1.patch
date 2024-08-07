@@ -12,10 +12,10 @@ index 6db146996720008f9ce6f1809b6ec7f6951a78e9..8b63c33060bccc1b01e65b0e3aa51d93
    s.source         = { git: 'https://github.com/achorein/expo-share-intent' }
    s.static_framework = true
 diff --git a/plugin/build/ios/ShareExtensionViewController.swift b/plugin/build/ios/ShareExtensionViewController.swift
-index 67036867bd4a082140d2f8ae5000caea9cdb50fb..c95e4d18fe8cfe9e0be1ff0991a9cde8382428a6 100644
+index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9ad3f1fa8ac9fc830ed136a3566c796341264210 100644
 --- a/plugin/build/ios/ShareExtensionViewController.swift
 +++ b/plugin/build/ios/ShareExtensionViewController.swift
-@@ -1,496 +1,579 @@
+@@ -1,496 +1,587 @@
 -/*!
 - * Native module created for Expo Share Intent (https://github.com/achorein/expo-share-intent)
 - * author: achorein (https://github.com/achorein)
@@ -65,10 +65,18 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..c95e4d18fe8cfe9e0be1ff0991a9cde8
    override func viewDidAppear(_ animated: Bool) {
      super.viewDidAppear(animated)
 +
-+    // Dismiss the share sheet immediately
-+    self.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
++    // Dismiss the UI
++    self.dismiss(animated: true) {
++      // Perform the share operation in the background
++      DispatchQueue.global(qos: .userInitiated).async {
++        self.performShare()
 +
-+    self.performShare()
++        // Complete the request when done
++        DispatchQueue.main.async {
++          self.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
++        }
++      }
++    }
 +  }
 +
 +  func performShare() {
@@ -306,13 +314,8 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..c95e4d18fe8cfe9e0be1ff0991a9cde8
 +  else {
 +    NSLog("soonlist.share-extension.shareviewcontroller: Invalid URL")
 +    return
-   }
- 
--  private func saveScreenshot(_ image: UIImage) -> URL? {
--    var screenshotURL: URL? = nil
--    if let screenshotData = image.pngData(), let screenshotPath = documentDirectoryPath()?.appendingPathComponent("screenshot.png") {
--      try? screenshotData.write(to: screenshotPath)
--      screenshotURL = screenshotPath
++  }
++
 +  let jsonData: Data
 +  do {
 +    jsonData = try JSONEncoder().encode(event)
@@ -322,8 +325,13 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..c95e4d18fe8cfe9e0be1ff0991a9cde8
 +  } catch {
 +    NSLog("soonlist.share-extension.shareviewcontroller: Error encoding JSON: \(error)")
 +    return
-+  }
-+
+   }
+ 
+-  private func saveScreenshot(_ image: UIImage) -> URL? {
+-    var screenshotURL: URL? = nil
+-    if let screenshotData = image.pngData(), let screenshotPath = documentDirectoryPath()?.appendingPathComponent("screenshot.png") {
+-      try? screenshotData.write(to: screenshotPath)
+-      screenshotURL = screenshotPath
 +  var request = URLRequest(url: url)
 +  request.httpMethod = "POST"
 +  request.setValue("application/json", forHTTPHeaderField: "Content-Type")
