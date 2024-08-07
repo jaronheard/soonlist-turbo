@@ -944,11 +944,18 @@ export const aiRouter = createTRPCRouter({
         const endUtcDate = new Date(end.epochMilliseconds);
         const eventid = generatePublicId();
 
+        const images = [
+          input.imageUrl,
+          input.imageUrl,
+          input.imageUrl,
+          input.imageUrl,
+        ];
+
         const values = {
           id: eventid,
           userId: userId,
           userName: username || "unknown",
-          event: firstEvent,
+          event: { ...firstEvent, images },
           eventMetadata: firstEvent.eventMetadata,
           startDateTime: startUtcDate,
           endDateTime: endUtcDate,
