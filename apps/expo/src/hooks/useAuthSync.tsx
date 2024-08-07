@@ -48,7 +48,7 @@ const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
     const syncAuthData = async () => {
       if (isSignedIn) {
         const username = user.username;
-        const userId = user.id;
+        const userId = user.externalId || user.id;
         const authToken = await getToken();
 
         const newAuthData = { userId, username, authToken, expoPushToken };
