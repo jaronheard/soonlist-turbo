@@ -19,19 +19,27 @@ import {
   AccordionTrigger,
 } from "~/components/Accordian";
 import { EventListItem } from "~/components/EventDisplays";
+import { cn } from "~/lib/utils";
 
 function ListContainer({
   children,
   variant,
+  forceSingleColumn,
 }: {
   children: React.ReactNode;
   variant?: "card";
+  forceSingleColumn?: boolean;
 }) {
   if (variant === "card") {
     return (
       <ul
         role="list"
-        className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 xl:grid-cols-4"
+        className={cn(
+          "grid gap-4 sm:gap-8 ",
+          forceSingleColumn
+            ? "grid-cols-1"
+            : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+        )}
       >
         {children}
       </ul>
@@ -121,7 +129,7 @@ export async function EventList({
             {pastEventsToUse.length === 0 ? (
               <p className="mx-6 text-lg text-gray-500">No past events.</p>
             ) : (
-              <ListContainer variant={variantToUse}>
+              <ListContainer variant={variantToUse} forceSingleColumn>
                 {pastEventsToUse.map(({ event: item, similarEvents }) => (
                   <EventListItem
                     variant={variantForListItems}
@@ -160,7 +168,7 @@ export async function EventList({
             {currentEventsToUse.length === 0 ? (
               <p className="mx-6 text-lg text-gray-500">No future events.</p>
             ) : (
-              <ListContainer variant={variantToUse}>
+              <ListContainer variant={variantToUse} forceSingleColumn>
                 {currentEventsToUse.map(({ event: item, similarEvents }) => (
                   <EventListItem
                     variant={variantForListItems}
@@ -203,7 +211,7 @@ export async function EventList({
           {futureEventsToUse.length === 0 ? (
             <p className="mx-6 text-lg text-gray-500">No future events.</p>
           ) : (
-            <ListContainer variant={variantToUse}>
+            <ListContainer variant={variantToUse} forceSingleColumn>
               {futureEventsToUse.map(({ event: item, similarEvents }) => (
                 <EventListItem
                   variant={variantForListItems}

@@ -79,6 +79,7 @@ export default async function Page({ params }: Props) {
         showOtherCurators={true}
         showPrivateEvents={self}
         variant="card"
+        forceSingleColumn
       />
     </div>
   );
