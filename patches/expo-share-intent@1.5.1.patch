@@ -543,7 +543,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9046f893d7ce1304c2bf006f369c7203
 +        return
 +      }
 +
-+      resizeAndUploadImage(imageURL) { imageUrl in
++      self.resizeAndUploadImage(imageURL) { imageUrl in
 +        completion(imageUrl)
        }
 -      responder = responder!.next
