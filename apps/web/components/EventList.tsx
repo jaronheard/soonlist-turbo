@@ -72,6 +72,7 @@ export async function EventList({
   hideCurator,
   showOtherCurators,
   showPrivateEvents,
+  forceSingleColumn,
 }: {
   currentEvents: EventWithUser[];
   futureEvents: EventWithUser[];
@@ -81,6 +82,7 @@ export async function EventList({
   showOtherCurators?: boolean;
   hideCurator?: boolean;
   showPrivateEvents?: boolean;
+  forceSingleColumn?: boolean;
   children?: React.ReactNode;
 }) {
   const user = await currentUser();
@@ -129,7 +131,10 @@ export async function EventList({
             {pastEventsToUse.length === 0 ? (
               <p className="mx-6 text-lg text-gray-500">No past events.</p>
             ) : (
-              <ListContainer variant={variantToUse} forceSingleColumn>
+              <ListContainer
+                variant={variantToUse}
+                forceSingleColumn={forceSingleColumn}
+              >
                 {pastEventsToUse.map(({ event: item, similarEvents }) => (
                   <EventListItem
                     variant={variantForListItems}
@@ -168,7 +173,10 @@ export async function EventList({
             {currentEventsToUse.length === 0 ? (
               <p className="mx-6 text-lg text-gray-500">No future events.</p>
             ) : (
-              <ListContainer variant={variantToUse} forceSingleColumn>
+              <ListContainer
+                variant={variantToUse}
+                forceSingleColumn={forceSingleColumn}
+              >
                 {currentEventsToUse.map(({ event: item, similarEvents }) => (
                   <EventListItem
                     variant={variantForListItems}
@@ -211,7 +219,10 @@ export async function EventList({
           {futureEventsToUse.length === 0 ? (
             <p className="mx-6 text-lg text-gray-500">No future events.</p>
           ) : (
-            <ListContainer variant={variantToUse} forceSingleColumn>
+            <ListContainer
+              variant={variantToUse}
+              forceSingleColumn={forceSingleColumn}
+            >
               {futureEventsToUse.map(({ event: item, similarEvents }) => (
                 <EventListItem
                   variant={variantForListItems}
