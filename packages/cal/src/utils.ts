@@ -313,3 +313,42 @@ export function timeFormatDateInfo(dateInfo: DateInfo) {
   hours = hours === 0 ? 12 : hours; // Convert 0 to 12 for 12 AM
   return `${hours}:${minutes.toString().padStart(2, "0")}${ampm}`;
 }
+
+export function formatRelativeTime(dateInfo: DateInfo): string {
+  const now = new Date();
+  const startDate = new Date(
+    dateInfo.year,
+    dateInfo.month - 1,
+    dateInfo.day,
+    dateInfo.hour,
+    dateInfo.minute,
+  );
+  const difference = startDate.getTime() - now.getTime();
+  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+  const hours = Math.floor(difference / (1000 * 60 * 60));
+  const minutes = Math.floor(difference / (1000 * 60));
+
+  const isSameDay = dateInfo.day === now.getDate();
+  const isSameMonth = dateInfo.month - 1 === now.getMonth();
+  const isSameYear = dateInfo.year === now.getFullYear();
+  const isToday = isSameDay && isSameMonth && isSameYear;
+  const isTomorrow = timeIsTomorrow(now, startDate);
+
+  if (difference < 0) {
+    return "in the past";
+  }
+
+  if (days === 0 && hours === 0) {
+    return `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`;
+  }
+  if (days === 0 && hours < 1) {
+    return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
+  }
+  if (isToday) {
+    return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
+  }
+  if (isTomorrow) {
+    return `Tomorrow`;
+  }
+  return ``;
+}
