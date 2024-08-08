@@ -72,8 +72,9 @@ export function Event(props: {
 
 export default function UserEventsList(props: {
   events: RouterOutputs["event"]["getUpcomingForUser"];
+  refreshControl?: React.ReactElement;
 }) {
-  const { events } = props;
+  const { events, refreshControl } = props;
 
   return (
     <FlashList
@@ -81,6 +82,7 @@ export default function UserEventsList(props: {
       estimatedItemSize={60}
       ItemSeparatorComponent={() => <View className="h-2" />}
       renderItem={(events) => <Event event={events.item} />}
+      refreshControl={refreshControl}
     />
   );
 }
