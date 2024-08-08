@@ -129,7 +129,7 @@ export function Event(props: {
         <View className="ml-2 justify-center">
           <Pressable
             onPress={openGoogleMaps}
-            className="rounded-xl bg-interactive-1 px-4 py-2"
+            className="rounded-2xl bg-interactive-1 px-4 py-2"
           >
             <Text className="text-2xl font-bold text-white">Go</Text>
           </Pressable>
