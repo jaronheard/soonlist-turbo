@@ -83,12 +83,14 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
         <Text style={styles.fabText}>Logout</Text>
       </TouchableOpacity> */}
 
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <View style={styles.fabContainer}>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setModalVisible(true)}
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -154,14 +156,20 @@ const styles = StyleSheet.create({
     color: "red",
     textAlign: "center",
   },
+  fabContainer: {
+    position: "absolute",
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
   fab: {
     backgroundColor: "#6200EE",
-    padding: 20,
-    borderRadius: 50,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 20,
-    marginHorizontal: 20,
   },
   fabText: {
     color: "white",

@@ -1,7 +1,6 @@
 import { Image, Linking, Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { MapPin } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -13,9 +12,16 @@ export function Event(props: {
   const id = props.event.id;
   const e = props.event.event as AddToCalendarButtonPropsRestricted;
 
-  const formatDate = (date: string, time?: string) => {
+  const formatDate = (date: string, startTime?: string, endTime?: string) => {
     const d = new Date(date);
-    return `${d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} ${time || ""}`.trim();
+    const formattedDate = d.toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    const timeRange =
+      startTime && endTime ? `${startTime} - ${endTime}` : startTime || "";
+    return `${formattedDate} ${timeRange}`.trim();
   };
 
   const formatRelativeTime = (dateInfo: {
@@ -76,35 +82,68 @@ export function Event(props: {
     minute: parseInt(e.startTime?.split(":")[1] || "0", 10),
   });
 
+  const openGoogleMaps = () => {
+    if (e.location) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.location)}`;
+      void Linking.openURL(url);
+    }
+  };
+
   return (
-    <View className="flex-col rounded-lg bg-white p-4 shadow-sm">
-      <View className="mb-2 flex-row items-center justify-between">
-        <Text className="text-sm font-medium text-neutral-2">
-          {formatDate(e.startDate || "", e.startTime)}
-        </Text>
-        <Text className="text-sm font-medium text-yellow-500">
-          {relativeTime}
-        </Text>
-      </View>
-      <Link
-        asChild
-        href={{
-          pathname: "/event/[id]",
-          params: { id },
-        }}
-      >
-        <Pressable>
-          <Text className="mb-1 text-xl font-bold text-neutral-1">
-            {e.name}
+    <View
+      className={`flex-row rounded-lg bg-white p-4 ${relativeTime ? "pt-8" : ""}`}
+    >
+      <Image
+        source={{ uri: e.images?.[3] ?? "" }}
+        className="mr-4 h-20 w-20 rounded-md"
+        resizeMode="cover"
+      />
+      <View className="flex-1">
+        <View className="mb-2">
+          <Text className="text-base font-medium text-neutral-2">
+            {formatDate(e.startDate || "", e.startTime, e.endTime)}
           </Text>
-          {e.location && (
-            <View className="flex-row items-center">
-              <MapPin className="mr-1 size-4 text-neutral-2" />
-              <Text className="text-sm text-neutral-2">{e.location}</Text>
-            </View>
-          )}
-        </Pressable>
-      </Link>
+        </View>
+        <Link
+          asChild
+          href={{
+            pathname: "/event/[id]",
+            params: { id },
+          }}
+        >
+          <Pressable>
+            <Text className="mb-2 text-3xl font-bold text-neutral-1">
+              {e.name}
+            </Text>
+          </Pressable>
+        </Link>
+        {e.location && (
+          <View className="flex-row items-center">
+            <Text className="flex-1 text-sm text-neutral-2" numberOfLines={1}>
+              {e.location}
+            </Text>
+          </View>
+        )}
+      </View>
+      {relativeTime && (
+        <View className="ml-2 justify-center">
+          <Pressable
+            onPress={openGoogleMaps}
+            className="rounded-xl bg-interactive-1 px-4 py-2"
+          >
+            <Text className="text-2xl font-bold text-white">Go</Text>
+          </Pressable>
+        </View>
+      )}
+      {relativeTime && (
+        <View className="absolute left-0 right-0 top-0 flex items-center justify-center">
+          <View className="rounded-full bg-accent-yellow px-2 py-1">
+            <Text className="text-sm font-medium text-black">
+              {relativeTime}
+            </Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -119,7 +158,6 @@ export default function UserEventsList(props: {
     <FlashList
       data={events}
       estimatedItemSize={60}
-      ItemSeparatorComponent={() => <View className="h-2" />}
       renderItem={(events) => <Event event={events.item} />}
       refreshControl={refreshControl}
     />

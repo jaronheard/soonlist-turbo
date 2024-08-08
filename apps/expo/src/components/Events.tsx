@@ -1,4 +1,4 @@
-import { RefreshControl, Text, View } from "react-native";
+import { RefreshControl, View } from "react-native";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
@@ -25,7 +25,7 @@ export default function Events() {
   };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 pt-2">
       {/* Changes page title visible on the header */}
       <Stack.Screen options={{ title: "My Feed" }} />
       {eventsQuery.data && (
