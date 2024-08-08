@@ -681,8 +681,8 @@ export const aiRouter = createTRPCRouter({
         console.log("createEvent", createEvent);
         const { expoPushToken } = input;
 
-        const title = "Soonlist";
-        const body = "Your event is ready to go!";
+        const title = "New event ✨";
+        const body = firstEvent.name;
         const data = { url: `/event/${createEvent.id}` };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
@@ -1005,8 +1005,8 @@ export const aiRouter = createTRPCRouter({
         console.log("createEvent", createEvent);
         const { expoPushToken } = input;
 
-        const title = "Soonlist";
-        const body = "Your event is ready to go!";
+        const title = "✨ Added to Soonlist";
+        const body = firstEvent.name;
         const data = { url: `/event/${createEvent.id}` };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
