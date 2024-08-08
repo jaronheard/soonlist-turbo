@@ -224,8 +224,9 @@ export default function RootLayout() {
         <Stack
           screenOptions={{
             headerStyle: {
-              backgroundColor: "#f472b6",
+              backgroundColor: "#E0D9FF",
             },
+            headerTintColor: "#5A32FB", // This makes the text white
             contentStyle: {
               backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
             },

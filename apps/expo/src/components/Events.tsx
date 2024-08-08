@@ -1,6 +1,7 @@
-import { Pressable, Text, View } from "react-native";
+import { RefreshControl, Share, TouchableOpacity, View } from "react-native";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { ShareIcon } from "lucide-react-native";
 
 import SignInWithOAuth from "~/components/SignInWithOAuth";
 import UserEventsList from "~/components/UserEventsList";
@@ -20,18 +21,46 @@ export default function Events() {
   });
   const utils = api.useUtils();
 
-  return (
-    <View className="flex-1">
-      {/* Changes page title visible on the header */}
-      <Stack.Screen options={{ title: "My Feed" }} />
-      <Pressable
-        onPress={() => void utils.event.invalidate()}
-        className="m-4 flex items-center rounded-lg bg-primary p-2"
-      >
-        <Text className="text-foreground">Refresh events</Text>
-      </Pressable>
+  const onRefresh = () => {
+    void utils.event.invalidate();
+  };
 
-      {eventsQuery.data && <UserEventsList events={eventsQuery.data} />}
+  return (
+    <View className="flex-1 pt-2">
+      {/* Changes page title visible on the header */}
+      <Stack.Screen
+        options={{
+          title: "My Feed",
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={async () => {
+                const shareUrl = `${process.env.EXPO_PUBLIC_API_BASE_URL}/${user.username}/upcoming`;
+                try {
+                  await Share.share({
+                    message: shareUrl,
+                    url: shareUrl,
+                  });
+                } catch (error) {
+                  console.error("Error sharing:", error);
+                }
+              }}
+            >
+              <ShareIcon size={24} color="#5A32FB" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      {eventsQuery.data && (
+        <UserEventsList
+          events={eventsQuery.data}
+          refreshControl={
+            <RefreshControl
+              refreshing={eventsQuery.isRefetching}
+              onRefresh={onRefresh}
+            />
+          }
+        />
+      )}
     </View>
   );
 }

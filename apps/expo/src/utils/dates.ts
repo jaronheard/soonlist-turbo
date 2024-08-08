@@ -1,6 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill";
 
-import type { AddToCalendarButtonProps } from "./types";
+import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 
 export const blankEvent = {
   options: [

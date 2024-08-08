@@ -30,10 +30,10 @@ import type {
 import type { Comment, EventFollow, List, User } from "@soonlist/db/types";
 import {
   eventTimesAreDefined,
+  formatRelativeTime,
   getDateInfoUTC,
   getDateTimeInfo,
   timeFormatDateInfo,
-  timeIsTomorrow,
 } from "@soonlist/cal";
 import { Badge } from "@soonlist/ui/badge";
 import { Label } from "@soonlist/ui/label";
@@ -566,50 +566,11 @@ function HappeningSoonBadge({
     ? getDateTimeInfo(startDate, startTime, timezone, userTimezone.toString())
     : getDateInfoUTC(startDate);
 
-  const relativeTimeFormat = (dateInfo: DateInfo) => {
-    const now = new Date();
-    const startDate = new Date(
-      dateInfo.year,
-      dateInfo.month - 1,
-      dateInfo.day,
-      dateInfo.hour,
-      dateInfo.minute,
-    );
-    const difference = startDate.getTime() - now.getTime();
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(difference / (1000 * 60 * 60));
-    const minutes = Math.floor(difference / (1000 * 60));
-
-    const isSameDay = dateInfo.day === now.getDate();
-    const isSameMonth = dateInfo.month - 1 === now.getMonth();
-    const isSameYear = dateInfo.year === now.getFullYear();
-    const isToday = isSameDay && isSameMonth && isSameYear;
-    const isTomorrow = timeIsTomorrow(now, startDate);
-
-    if (difference < 0) {
-      return "in the past";
-    }
-
-    if (days === 0 && hours === 0) {
-      return `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`;
-    }
-    if (days === 0 && hours < 1) {
-      return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
-    }
-    if (isToday) {
-      return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
-    }
-    if (isTomorrow) {
-      return `Tomorrow`;
-    }
-    return ``;
-  };
-
   if (!startDateInfo) {
     return null;
   }
 
-  const relativeTimeString = relativeTimeFormat(startDateInfo);
+  const relativeTimeString = formatRelativeTime(startDateInfo);
   if (!relativeTimeString) {
     return null;
   }
