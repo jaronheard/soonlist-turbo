@@ -34,7 +34,6 @@ import {
   getDateInfoUTC,
   getDateTimeInfo,
   timeFormatDateInfo,
-  timeIsTomorrow,
 } from "@soonlist/cal";
 import { Badge } from "@soonlist/ui/badge";
 import { Label } from "@soonlist/ui/label";
