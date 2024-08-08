@@ -1,6 +1,7 @@
-import { RefreshControl, View } from "react-native";
+import { RefreshControl, Share, TouchableOpacity, View } from "react-native";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { ShareIcon } from "lucide-react-native";
 
 import SignInWithOAuth from "~/components/SignInWithOAuth";
 import UserEventsList from "~/components/UserEventsList";
@@ -27,7 +28,28 @@ export default function Events() {
   return (
     <View className="flex-1 pt-2">
       {/* Changes page title visible on the header */}
-      <Stack.Screen options={{ title: "My Feed" }} />
+      <Stack.Screen
+        options={{
+          title: "My Feed",
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={async () => {
+                const shareUrl = `${process.env.EXPO_PUBLIC_API_BASE_URL}/${user.username}/upcoming`;
+                try {
+                  await Share.share({
+                    message: shareUrl,
+                    url: shareUrl,
+                  });
+                } catch (error) {
+                  console.error("Error sharing:", error);
+                }
+              }}
+            >
+              <ShareIcon size={24} color="#5A32FB" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
       {eventsQuery.data && (
         <UserEventsList
           events={eventsQuery.data}

@@ -1,10 +1,16 @@
 import { Image, Linking, Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
+import { Navigation2 } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import {
+  formatRelativeTime,
+  getDateTimeInfo,
+  timeFormatDateInfo,
+} from "~/utils/dates";
 
 export function Event(props: {
   event: RouterOutputs["event"]["getUpcomingForUser"][number];
@@ -13,74 +19,38 @@ export function Event(props: {
   const e = props.event.event as AddToCalendarButtonPropsRestricted;
 
   const formatDate = (date: string, startTime?: string, endTime?: string) => {
-    const d = new Date(date);
-    const formattedDate = d.toLocaleDateString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-    const timeRange =
-      startTime && endTime ? `${startTime} - ${endTime}` : startTime || "";
-    return `${formattedDate} ${timeRange}`.trim();
-  };
-
-  const formatRelativeTime = (dateInfo: {
-    year: number;
-    month: number;
-    day: number;
-    hour: number;
-    minute: number;
-  }): string => {
-    const now = new Date();
-    const startDate = new Date(
-      dateInfo.year,
-      dateInfo.month - 1,
-      dateInfo.day,
-      dateInfo.hour,
-      dateInfo.minute,
+    const startDateInfo = getDateTimeInfo(
+      date,
+      startTime || "",
+      e.timeZone || "",
     );
-    const difference = startDate.getTime() - now.getTime();
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(difference / (1000 * 60 * 60));
-    const minutes = Math.floor(difference / (1000 * 60));
+    if (!startDateInfo) return { date: "", time: "" };
 
-    const isSameDay = dateInfo.day === now.getDate();
-    const isSameMonth = dateInfo.month - 1 === now.getMonth();
-    const isSameYear = dateInfo.year === now.getFullYear();
-    const isToday = isSameDay && isSameMonth && isSameYear;
-    const isTomorrow =
-      new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate() + 1,
-      ).getDate() === startDate.getDate();
+    const formattedDate = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${startDateInfo.monthName} ${startDateInfo.day}`;
+    const formattedStartTime = startTime
+      ? timeFormatDateInfo(startDateInfo)
+      : "";
+    const formattedEndTime = endTime
+      ? timeFormatDateInfo(
+          getDateTimeInfo(date, endTime, e.timeZone || "") || startDateInfo,
+        )
+      : "";
 
-    if (difference < 0) {
-      return "in the past";
-    }
-
-    if (days === 0 && hours === 0) {
-      return `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`;
-    }
-    if (days === 0 && hours < 1) {
-      return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
-    }
-    if (isToday) {
-      return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
-    }
-    if (isTomorrow) {
-      return `Tomorrow`;
-    }
-    return ``;
+    const timeRange =
+      startTime && endTime
+        ? `${formattedStartTime} - ${formattedEndTime}`
+        : formattedStartTime;
+    return { date: formattedDate, time: timeRange.trim() };
   };
 
-  const relativeTime = formatRelativeTime({
-    year: new Date(e.startDate || "").getFullYear(),
-    month: new Date(e.startDate || "").getMonth() + 1,
-    day: new Date(e.startDate || "").getDate(),
-    hour: parseInt(e.startTime?.split(":")[0] || "0", 10),
-    minute: parseInt(e.startTime?.split(":")[1] || "0", 10),
-  });
+  const { date, time } = formatDate(e.startDate || "", e.startTime, e.endTime);
+
+  const dateInfo = getDateTimeInfo(
+    e.startDate || "",
+    e.startTime || "",
+    e.timeZone || "",
+  );
+  const relativeTime = dateInfo ? formatRelativeTime(dateInfo) : "";
 
   const openGoogleMaps = () => {
     if (e.location) {
@@ -101,7 +71,7 @@ export function Event(props: {
       <View className="flex-1">
         <View className="mb-2">
           <Text className="text-base font-medium text-neutral-2">
-            {formatDate(e.startDate || "", e.startTime, e.endTime)}
+            {date} • {time}
           </Text>
         </View>
         <Link
@@ -126,12 +96,13 @@ export function Event(props: {
         )}
       </View>
       {relativeTime && (
-        <View className="ml-2 justify-center">
+        <View className="justify-center">
           <Pressable
             onPress={openGoogleMaps}
-            className="rounded-2xl bg-interactive-1 px-4 py-2"
+            className="flex-row items-center rounded-2xl bg-interactive-1 px-3 py-2"
           >
-            <Text className="text-2xl font-bold text-white">Go</Text>
+            <Navigation2 color="white" size={16} />
+            <Text className="ml-1 text-2xl font-bold text-white">Go</Text>
           </Pressable>
         </View>
       )}
