@@ -1,6 +1,6 @@
 import { RefreshControl, Share, TouchableOpacity, View } from "react-native";
 import { Stack } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
+import { SignedIn, useUser } from "@clerk/clerk-expo";
 import { ShareIcon } from "lucide-react-native";
 
 import SignInWithOAuth from "~/components/SignInWithOAuth";
@@ -39,21 +39,23 @@ export default function Events() {
           title: "My Feed",
           headerRight: () => (
             <View className="flex-row items-center gap-2">
-              <TouchableOpacity
-                onPress={async () => {
-                  const shareUrl = `${process.env.EXPO_PUBLIC_API_BASE_URL}/${user.username}/upcoming`;
-                  try {
-                    await Share.share({
-                      message: shareUrl,
-                      url: shareUrl,
-                    });
-                  } catch (error) {
-                    console.error("Error sharing:", error);
-                  }
-                }}
-              >
-                <ShareIcon size={24} color="#5A32FB" />
-              </TouchableOpacity>
+              <SignedIn>
+                <TouchableOpacity
+                  onPress={async () => {
+                    const shareUrl = `${process.env.EXPO_PUBLIC_API_BASE_URL}/${user.username}/upcoming`;
+                    try {
+                      await Share.share({
+                        message: shareUrl,
+                        url: shareUrl,
+                      });
+                    } catch (error) {
+                      console.error("Error sharing:", error);
+                    }
+                  }}
+                >
+                  <ShareIcon size={24} color="#5A32FB" />
+                </TouchableOpacity>
+              </SignedIn>
               <ProfileMenu />
             </View>
           ),

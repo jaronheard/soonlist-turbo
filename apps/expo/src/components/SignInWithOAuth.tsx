@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
+import { Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useOAuth } from "@clerk/clerk-expo";
 
@@ -31,6 +32,11 @@ const SignInWithOAuth = () => {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          title: "Soonlist",
+        }}
+      />
       <GoogleSignInButton onPress={onPress} />
     </View>
   );
