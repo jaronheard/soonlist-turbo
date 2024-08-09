@@ -154,6 +154,9 @@ importers:
       react-native-mlkit-ocr:
         specifier: ^0.3.0
         version: 0.3.0(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+      react-native-popup-menu:
+        specifier: ^0.16.1
+        version: 0.16.1
       react-native-reanimated:
         specifier: ~3.6.3
         version: 3.6.3(@babel/core@7.24.4)(@babel/plugin-proposal-nullish-coalescing-operator@7.18.6(@babel/core@7.24.4))(@babel/plugin-proposal-optional-chaining@7.21.0(@babel/core@7.24.4))(@babel/plugin-transform-arrow-functions@7.24.1(@babel/core@7.24.4))(@babel/plugin-transform-shorthand-properties@7.24.1(@babel/core@7.24.4))(@babel/plugin-transform-template-literals@7.24.1(@babel/core@7.24.4))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
@@ -7301,6 +7304,9 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
+
+  react-native-popup-menu@0.16.1:
+    resolution: {integrity: sha512-xRS7mRh0exwu7Iw8PPVHdM11d13A/KzYjy0/fZx3zVtxISxPkNaDGayau6oa7HqO3Nj0oS9ulFCYjcQfG6vahA==}
 
   react-native-reanimated@3.6.3:
     resolution: {integrity: sha512-2KkkPozoIvDbJcHuf8qeyoLROXQxizSi+2CTCkuNVkVZOxxY4B0Omvgq61aOQhSZUh/649x1YHoAaTyGMGDJUw==}
@@ -16614,6 +16620,8 @@ snapshots:
     dependencies:
       react: 18.3.1
       react-native: 0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1)
+
+  react-native-popup-menu@0.16.1: {}
 
   react-native-reanimated@3.6.3(@babel/core@7.24.4)(@babel/plugin-proposal-nullish-coalescing-operator@7.18.6(@babel/core@7.24.4))(@babel/plugin-proposal-optional-chaining@7.21.0(@babel/core@7.24.4))(@babel/plugin-transform-arrow-functions@7.24.1(@babel/core@7.24.4))(@babel/plugin-transform-shorthand-properties@7.24.1(@babel/core@7.24.4))(@babel/plugin-transform-template-literals@7.24.1(@babel/core@7.24.4))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
     dependencies:

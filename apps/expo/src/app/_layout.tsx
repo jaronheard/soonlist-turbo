@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Platform, Text } from "react-native";
+import { MenuProvider } from "react-native-popup-menu";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
@@ -221,22 +222,23 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
       <TRPCProvider>
-        <Stack
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: "#E0D9FF",
-            },
-            headerTintColor: "#5A32FB", // This makes the text white
-            contentStyle: {
-              backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
-            },
-          }}
-        />
-        <SignedIn>
-          <AuthAndTokenSync expoPushToken={expoPushToken} />
-          <AddButtonView expoPushToken={expoPushToken} />
-        </SignedIn>
-        {/* <View
+        <MenuProvider>
+          <Stack
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: "#E0D9FF",
+              },
+              headerTintColor: "#5A32FB", // This makes the text white
+              contentStyle: {
+                backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
+              },
+            }}
+          />
+          <SignedIn>
+            <AuthAndTokenSync expoPushToken={expoPushToken} />
+            <AddButtonView expoPushToken={expoPushToken} />
+          </SignedIn>
+          {/* <View
           style={{
             flex: 1,
             alignItems: "center",
@@ -255,7 +257,8 @@ export default function RootLayout() {
           </View>
           <PushNotificationSenderButton expoPushToken={expoPushToken} />
         </View> */}
-        <StatusBar />
+          <StatusBar />
+        </MenuProvider>
       </TRPCProvider>
     </ClerkProvider>
   );

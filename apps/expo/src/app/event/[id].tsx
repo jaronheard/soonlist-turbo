@@ -13,6 +13,7 @@ import { Edit, MapPin, ShareIcon } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
+import { ProfileMenu } from "~/components/ProfileMenu";
 import { api } from "~/utils/api";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
 
@@ -77,7 +78,7 @@ export default function Page() {
         options={{
           title: "Event Details",
           headerRight: () => (
-            <View className="flex-row">
+            <View className="flex-row items-center">
               <TouchableOpacity
                 onPress={() =>
                   Linking.openURL(
@@ -103,6 +104,7 @@ export default function Page() {
               >
                 <ShareIcon size={24} color="#5A32FB" />
               </TouchableOpacity>
+              <ProfileMenu />
             </View>
           ),
         }}
