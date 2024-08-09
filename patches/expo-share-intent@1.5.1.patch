@@ -12,10 +12,10 @@ index 6db146996720008f9ce6f1809b6ec7f6951a78e9..8b63c33060bccc1b01e65b0e3aa51d93
    s.source         = { git: 'https://github.com/achorein/expo-share-intent' }
    s.static_framework = true
 diff --git a/plugin/build/ios/ShareExtensionViewController.swift b/plugin/build/ios/ShareExtensionViewController.swift
-index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9046f893d7ce1304c2bf006f369c72032431fb9a 100644
+index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9c0936459b99a69c8eb9dbcee2d2297557618078 100644
 --- a/plugin/build/ios/ShareExtensionViewController.swift
 +++ b/plugin/build/ios/ShareExtensionViewController.swift
-@@ -1,496 +1,597 @@
+@@ -1,496 +1,593 @@
 -/*!
 - * Native module created for Expo Share Intent (https://github.com/achorein/expo-share-intent)
 - * author: achorein (https://github.com/achorein)
@@ -309,7 +309,6 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9046f893d7ce1304c2bf006f369c7203
 +  private func callAiEventFromRawTextThenCreateThenNotification(
 +    event: PrototypeEventCreateRawTextSchema, completion: @escaping (Result<Data, Error>) -> Void
 +  ) {
-+    // fetch the domain URL from the keychain
 +    guard let domainURL = KeychainHelper.getValue(forKey: "EXPO_PUBLIC_API_BASE_URL") else {
 +      NSLog(
 +        "soonlist.share-extension.shareviewcontroller: Failed to load EXPO_PUBLIC_API_BASE_URL from Keychain"
@@ -371,9 +370,8 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9046f893d7ce1304c2bf006f369c7203
 +    var request = URLRequest(url: url)
 +    request.httpMethod = "POST"
 +    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-+    request.httpBody = jsonData
 +
-+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
++    let task = URLSession.shared.uploadTask(with: request, from: jsonData) { data, response, error in
 +      if let error = error {
 +        completion(.failure(error))
 +        return
@@ -466,9 +464,8 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9046f893d7ce1304c2bf006f369c7203
 +    var request = URLRequest(url: url)
 +    request.httpMethod = "POST"
 +    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-+    request.httpBody = jsonData
 +
-+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
++    let task = URLSession.shared.uploadTask(with: request, from: jsonData) { data, response, error in
 +      if let error = error {
 +        completion(.failure(error))
 +        return
@@ -640,9 +637,8 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..9046f893d7ce1304c2bf006f369c7203
 +    request.setValue(
 +      "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8", forHTTPHeaderField: "Authorization")
 +    request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
-+    request.httpBody = imageData
 +
-+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
++    let task = URLSession.shared.uploadTask(with: request, from: imageData) { data, response, error in
 +      if let error = error {
 +        NSLog("soonlist.share-extension.shareviewcontroller: Error uploading image: \(error)")
 +        completion("")

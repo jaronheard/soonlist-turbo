@@ -9,7 +9,7 @@ patchedDependencies:
     hash: cwj7rupk5qsghvwsmaweq5mrgy
     path: patches/expo-secure-store@12.8.1.patch
   expo-share-intent@1.5.1:
-    hash: u4n6axsvbjcdhbi7mun5oqxpei
+    hash: dtxkknzcc7qkcgil2d4l2uj26i
     path: patches/expo-share-intent@1.5.1.patch
   xcode@3.0.1:
     hash: njoq7pmows35o3loucybo3jchy
@@ -111,7 +111,7 @@ importers:
         version: 12.8.1(patch_hash=cwj7rupk5qsghvwsmaweq5mrgy)(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
       expo-share-intent:
         specifier: ~1.5.1
-        version: 1.5.1(patch_hash=u4n6axsvbjcdhbi7mun5oqxpei)(expo-constants@15.4.6(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo-linking@6.2.2(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+        version: 1.5.1(patch_hash=dtxkknzcc7qkcgil2d4l2uj26i)(expo-constants@15.4.6(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo-linking@6.2.2(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       expo-splash-screen:
         specifier: ~0.26.5
         version: 0.26.5(encoding@0.1.13)(expo-modules-autolinking@1.10.3)(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
@@ -14270,7 +14270,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  expo-share-intent@1.5.1(patch_hash=u4n6axsvbjcdhbi7mun5oqxpei)(expo-constants@15.4.6(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo-linking@6.2.2(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
+  expo-share-intent@1.5.1(patch_hash=dtxkknzcc7qkcgil2d4l2uj26i)(expo-constants@15.4.6(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo-linking@6.2.2(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
     dependencies:
       '@expo/config-plugins': 7.9.1
       expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.73.21(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
