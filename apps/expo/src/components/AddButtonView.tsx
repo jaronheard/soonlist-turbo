@@ -7,8 +7,9 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { Sparkles } from "lucide-react-native";
+import { CalendarHeart, Globe2, Plus, Sparkles } from "lucide-react-native";
 
 import { api } from "~/utils/api";
 
@@ -44,7 +45,7 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
   }, [modalVisible]);
 
   return (
-    <View className="absolute bottom-5 left-0 right-0 items-center">
+    <View className="absolute bottom-0 left-0 right-0">
       <Modal
         animationType="fade"
         transparent={true}
@@ -85,12 +86,28 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
         </TouchableWithoutFeedback>
       </Modal>
 
-      <TouchableOpacity
-        className="h-16 w-16 items-center justify-center rounded-full border-4 border-accent-yellow bg-interactive-2"
-        onPress={() => setModalVisible(true)}
-      >
-        <Text className="mb-1 text-5xl font-bold text-interactive-1">+</Text>
-      </TouchableOpacity>
+      <View className="flex-row items-center justify-around bg-white py-2">
+        <Link href="/" asChild>
+          <TouchableOpacity className="items-center">
+            <Globe2 size={24} color="#000" />
+            <Text className="text-xs">My Feed</Text>
+          </TouchableOpacity>
+        </Link>
+
+        <TouchableOpacity
+          className="h-14 w-14 items-center justify-center rounded-full bg-interactive-2"
+          onPress={() => setModalVisible(true)}
+        >
+          <Plus size={24} color="#fff" />
+        </TouchableOpacity>
+
+        <Link href="/discover" asChild>
+          <TouchableOpacity className="items-center">
+            <CalendarHeart size={24} color="#000" />
+            <Text className="text-xs">Discover</Text>
+          </TouchableOpacity>
+        </Link>
+      </View>
     </View>
   );
 };
