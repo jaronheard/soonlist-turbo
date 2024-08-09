@@ -8,7 +8,7 @@ import "../styles.css";
 import Constants from "expo-constants";
 import * as Sentry from "@sentry/react-native";
 
-import Events from "../components/Events";
+import MyFeed from "../components/MyFeed";
 
 Sentry.init({
   dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.us.sentry.io/4506458761396224",
@@ -36,7 +36,7 @@ function App() {
         <SignInWithOAuth />
       </SignedOut>
       <SignedIn>
-        <Events />
+        <MyFeed />
       </SignedIn>
     </>
   );
