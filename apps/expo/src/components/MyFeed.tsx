@@ -1,6 +1,7 @@
-import { RefreshControl, View } from "react-native";
+import { Linking, Pressable, RefreshControl, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
+import { Navigation2 } from "lucide-react-native";
 
 import SignInWithOAuth from "~/components/SignInWithOAuth";
 import UserEventsList from "~/components/UserEventsList";
@@ -31,6 +32,25 @@ export default function MyFeed() {
     (item) => item.startDateTime >= new Date(),
   );
 
+  const openGoogleMaps = (location: string) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location)}`;
+    void Linking.openURL(url);
+  };
+
+  const goButton = (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => (
+    <Pressable
+      onPress={() =>
+        event.event.location && openGoogleMaps(event.event.location)
+      }
+      className="flex-row items-center rounded-2xl bg-interactive-1 px-3 py-2"
+    >
+      <Navigation2 color="white" size={16} />
+      <Text className="ml-1 text-2xl font-bold text-white">Go</Text>
+    </Pressable>
+  );
+
   return (
     <View className="flex-1 pt-2">
       <Stack.Screen
@@ -55,6 +75,7 @@ export default function MyFeed() {
               onRefresh={onRefresh}
             />
           }
+          actionButton={goButton}
         />
       )}
     </View>
