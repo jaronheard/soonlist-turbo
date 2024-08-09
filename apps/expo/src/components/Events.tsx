@@ -25,6 +25,11 @@ export default function Events() {
     void utils.event.invalidate();
   };
 
+  const events = eventsQuery.data ?? [];
+  const currentAndFutureEvents = events.filter(
+    (item) => item.startDateTime >= new Date(),
+  );
+
   return (
     <View className="flex-1 pt-2">
       {/* Changes page title visible on the header */}
@@ -52,7 +57,7 @@ export default function Events() {
       />
       {eventsQuery.data && (
         <UserEventsList
-          events={eventsQuery.data}
+          events={currentAndFutureEvents}
           refreshControl={
             <RefreshControl
               refreshing={eventsQuery.isRefetching}
