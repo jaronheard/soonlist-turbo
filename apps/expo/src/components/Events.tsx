@@ -38,7 +38,7 @@ export default function Events() {
         options={{
           title: "My Feed",
           headerRight: () => (
-            <View className="flex-row items-center">
+            <View className="flex-row items-center gap-2">
               <TouchableOpacity
                 onPress={async () => {
                   const shareUrl = `${process.env.EXPO_PUBLIC_API_BASE_URL}/${user.username}/upcoming`;

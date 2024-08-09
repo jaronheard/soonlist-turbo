@@ -78,7 +78,7 @@ export default function Page() {
         options={{
           title: "Event Details",
           headerRight: () => (
-            <View className="flex-row items-center">
+            <View className="flex-row items-center gap-2">
               <TouchableOpacity
                 onPress={() =>
                   Linking.openURL(
