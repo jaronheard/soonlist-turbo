@@ -63,11 +63,15 @@ export function Event(props: {
     <View
       className={`flex-row rounded-lg bg-white p-4 ${relativeTime ? "pt-8" : ""}`}
     >
-      <Image
-        source={{ uri: e.images?.[3] ?? "" }}
-        className="mr-4 h-20 w-20 rounded-md"
-        resizeMode="cover"
-      />
+      {e.images?.[3] ? (
+        <Image
+          source={{ uri: e.images[3] }}
+          className="mr-4 h-20 w-20 rounded-md"
+          resizeMode="cover"
+        />
+      ) : (
+        <View className="mr-4 h-20 w-20 rounded-md bg-accent-yellow" />
+      )}
       <View className="flex-1">
         <View className="mb-2">
           <Text className="text-base font-medium text-neutral-2">
