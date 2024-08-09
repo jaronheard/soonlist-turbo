@@ -6,6 +6,7 @@ import { ShareIcon } from "lucide-react-native";
 import SignInWithOAuth from "~/components/SignInWithOAuth";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
+import { ProfileMenu } from "./ProfileMenu";
 
 export default function Events() {
   // get user from clerk
@@ -37,21 +38,24 @@ export default function Events() {
         options={{
           title: "My Feed",
           headerRight: () => (
-            <TouchableOpacity
-              onPress={async () => {
-                const shareUrl = `${process.env.EXPO_PUBLIC_API_BASE_URL}/${user.username}/upcoming`;
-                try {
-                  await Share.share({
-                    message: shareUrl,
-                    url: shareUrl,
-                  });
-                } catch (error) {
-                  console.error("Error sharing:", error);
-                }
-              }}
-            >
-              <ShareIcon size={24} color="#5A32FB" />
-            </TouchableOpacity>
+            <View className="flex-row items-center gap-2">
+              <TouchableOpacity
+                onPress={async () => {
+                  const shareUrl = `${process.env.EXPO_PUBLIC_API_BASE_URL}/${user.username}/upcoming`;
+                  try {
+                    await Share.share({
+                      message: shareUrl,
+                      url: shareUrl,
+                    });
+                  } catch (error) {
+                    console.error("Error sharing:", error);
+                  }
+                }}
+              >
+                <ShareIcon size={24} color="#5A32FB" />
+              </TouchableOpacity>
+              <ProfileMenu />
+            </View>
           ),
         }}
       />
