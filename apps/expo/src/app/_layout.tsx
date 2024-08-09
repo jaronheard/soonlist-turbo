@@ -234,8 +234,8 @@ export default function RootLayout() {
               },
             }}
           />
+          <AuthAndTokenSync expoPushToken={expoPushToken} />
           <SignedIn>
-            <AuthAndTokenSync expoPushToken={expoPushToken} />
             <AddButtonView expoPushToken={expoPushToken} />
           </SignedIn>
           {/* <View
