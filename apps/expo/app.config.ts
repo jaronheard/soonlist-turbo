@@ -47,6 +47,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         androidMultiIntentFilters: ["image/*"],
       },
     ],
+    "expo-updates",
     [
       "@sentry/react-native/expo",
       {
@@ -55,7 +56,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-secure-store",
-    "expo-router",
   ],
   ios: {
     supportsTablet: true,
