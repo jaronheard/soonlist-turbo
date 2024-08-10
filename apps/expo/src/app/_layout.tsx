@@ -21,6 +21,11 @@ import "../styles.css";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import BottomBar from "~/components/BottomBar";
 
+export {
+  // Catch any errors thrown by the Layout component.
+  ErrorBoundary,
+} from "expo-router";
+
 const tokenCache = {
   getToken: async (key: string) => {
     const token = await SecureStore.getItemAsync(key, {
