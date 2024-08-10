@@ -54,6 +54,7 @@
     "expo-share-intent": "~1.5.1",
     "expo-splash-screen": "~0.26.5",
     "expo-status-bar": "~1.11.1",
+    "expo-updates": "~0.24.13",
     "expo-web-browser": "~12.8.2",
     "lucide-react-native": "^0.424.0",
     "nativewind": "~4.0.36",
