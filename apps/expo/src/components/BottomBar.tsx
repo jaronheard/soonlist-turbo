@@ -7,7 +7,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, usePathname } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
   CalendarHeart,
@@ -28,6 +28,7 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
       onSettled: () => void utils.event.invalidate(),
     });
   const { user } = useUser();
+  const pathname = usePathname();
 
   const handleAdd = () => {
     if (!text.trim()) return;
@@ -91,17 +92,31 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
         </TouchableWithoutFeedback>
       </Modal>
 
-      <View className="relative flex-row items-center justify-around bg-interactive-2 py-4">
+      <View className="relative flex-row items-center justify-around bg-interactive-2 pb-6 pt-1.5">
         <Link href="/" asChild>
-          <TouchableOpacity className="items-center">
-            <CalendarHeart size={24} color="#5A32FB" />
-            <Text className="text-xs text-interactive-1">My Feed</Text>
+          <TouchableOpacity className="flex-1 items-center gap-1 py-2">
+            <CalendarHeart
+              size={28}
+              color={pathname === "/" ? "#5A32FB" : "#A0A0A0"}
+            />
+            <Text
+              className={`text-xs font-medium ${pathname === "/" ? "text-interactive-1" : "text-neutral-2"}`}
+            >
+              My Feed
+            </Text>
           </TouchableOpacity>
         </Link>
         <Link href="/discover" asChild>
-          <TouchableOpacity className="items-center">
-            <Globe2 size={24} color="#5A32FB" />
-            <Text className="text-xs text-interactive-1">Discover</Text>
+          <TouchableOpacity className="flex-1 items-center gap-1 py-2">
+            <Globe2
+              size={28}
+              color={pathname === "/discover" ? "#5A32FB" : "#A0A0A0"}
+            />
+            <Text
+              className={`text-xs font-medium ${pathname === "/discover" ? "text-interactive-1" : "text-neutral-2"}`}
+            >
+              Discover
+            </Text>
           </TouchableOpacity>
         </Link>
         <TouchableOpacity

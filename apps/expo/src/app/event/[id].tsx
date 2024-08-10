@@ -14,6 +14,7 @@ import { Edit, MapPin, ShareIcon } from "lucide-react-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import { ProfileMenu } from "~/components/ProfileMenu";
+import ShareButton from "~/components/ShareButton";
 import { api } from "~/utils/api";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
 
@@ -76,9 +77,9 @@ export default function Page() {
     <ScrollView className="flex-1 bg-white">
       <Stack.Screen
         options={{
-          title: "Event Details",
+          title: "Event",
           headerRight: () => (
-            <View className="flex-row items-center gap-2">
+            <View className="-mr-2 flex-row items-center gap-2">
               <TouchableOpacity
                 onPress={() =>
                   Linking.openURL(
@@ -88,23 +89,7 @@ export default function Page() {
               >
                 <Edit size={24} color="#5A32FB" />
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={async () => {
-                  const shareUrl = `${process.env.EXPO_PUBLIC_API_BASE_URL}/event/${id}`;
-                  try {
-                    await Share.share({
-                      message: shareUrl,
-                      url: shareUrl,
-                    });
-                  } catch (error) {
-                    console.error("Error sharing:", error);
-                  }
-                }}
-                className="ml-4"
-              >
-                <ShareIcon size={24} color="#5A32FB" />
-              </TouchableOpacity>
-              <ProfileMenu />
+              <ShareButton webPath={`/event/${id}`} />
             </View>
           ),
         }}

@@ -14,8 +14,9 @@ import {
 export function UserEventListItem(props: {
   event: RouterOutputs["event"]["getUpcomingForUser"][number];
   actionButton?: React.ReactNode;
+  isLastItem?: boolean;
 }) {
-  const { event, actionButton } = props;
+  const { event, actionButton, isLastItem } = props;
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
 
@@ -57,7 +58,7 @@ export function UserEventListItem(props: {
     <View
       className={`-mx-2 flex-row items-center rounded-lg bg-white p-4 px-6 ${
         relativeTime ? "pt-8" : ""
-      } border-b border-neutral-3`}
+      } ${isLastItem ? "" : "border-b border-neutral-3"}`}
     >
       <View className="mr-4 flex-1">
         <View className="mb-2">
@@ -130,14 +131,17 @@ export default function UserEventsList(props: {
     <FlashList
       data={events}
       estimatedItemSize={60}
-      renderItem={({ item }) => (
+      renderItem={({ item, index }) => (
         <UserEventListItem
           event={item}
           actionButton={actionButton ? actionButton(item) : undefined}
+          isLastItem={index === events.length - 1}
         />
       )}
       refreshControl={refreshControl}
       ItemSeparatorComponent={() => <View className="h-2" />}
+      ListHeaderComponent={<View className="h-2" />}
+      contentContainerStyle={{ paddingBottom: 16 }}
     />
   );
 }

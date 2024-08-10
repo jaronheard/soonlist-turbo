@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable } from "react-native";
-import { Check, Plus } from "lucide-react-native";
+import { Heart } from "lucide-react-native";
 
 import { api } from "~/utils/api";
 
@@ -33,14 +33,14 @@ export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
   return (
     <Pressable
       onPress={handlePress}
-      className={`h-10 w-10 items-center justify-center rounded-2xl bg-interactive-1 px-3 py-2 ${
-        isSaved ? "bg-interactive-2" : "bg-interactive-1"
+      className={`flex-row items-center rounded-full p-2 ${
+        isSaved ? "bg-interactive-3/90" : "bg-interactive-1/90"
       }`}
     >
       {isSaved ? (
-        <Check color="white" size={16} />
+        <Heart color="#5A32FB" size={16} strokeWidth={2} fill={"#5A32FB"} />
       ) : (
-        <Plus color="white" size={16} />
+        <Heart color="white" size={16} strokeWidth={2} />
       )}
     </Pressable>
   );

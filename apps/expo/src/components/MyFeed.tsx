@@ -52,21 +52,21 @@ export default function MyFeed() {
             ? openGoogleMaps(eventData.location)
             : console.log("No location")
         }
-        className="flex-row items-center rounded-2xl bg-interactive-1 px-3 py-2"
+        className="flex-row items-center rounded-full bg-interactive-1/90 p-2"
       >
-        <Navigation2 color="white" size={16} />
-        <Text className="ml-1 text-2xl font-bold text-white">Go</Text>
+        <Navigation2 color="white" size={16} fill="white" />
+        {/* <Text className="ml-1 text-2xl font-bold text-white">Go</Text> */}
       </Pressable>
     );
   };
 
   return (
-    <View className="flex-1 pt-2">
+    <View className="flex-1">
       <Stack.Screen
         options={{
-          title: "My Feed",
+          title: "Soonlist",
           headerRight: () => (
-            <View className="flex-row items-center gap-2">
+            <View className="-mr-2 flex-row items-center gap-2">
               <SignedIn>
                 <ShareButton webPath={`/${user.username}/upcoming`} />
               </SignedIn>

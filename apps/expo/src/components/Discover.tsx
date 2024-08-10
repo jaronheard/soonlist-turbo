@@ -43,12 +43,12 @@ export default function Discover() {
   );
 
   return (
-    <View className="flex-1 pt-2">
+    <View className="flex-1">
       <Stack.Screen
         options={{
           title: "Discover",
           headerRight: () => (
-            <View className="flex-row items-center gap-2">
+            <View className="-mr-2 flex-row items-center gap-2">
               <SignedIn>
                 <ShareButton webPath={`/explore`} />
               </SignedIn>
