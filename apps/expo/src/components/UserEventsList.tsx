@@ -1,4 +1,4 @@
-import { Image, Linking, Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 
@@ -53,27 +53,11 @@ export function UserEventListItem(props: {
   );
   const relativeTime = dateInfo ? formatRelativeTime(dateInfo) : "";
 
-  const openGoogleMaps = () => {
-    if (e.location) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.location)}`;
-      void Linking.openURL(url);
-    }
-  };
-
   return (
     <View
       className={`flex-row rounded-lg bg-white p-4 ${relativeTime ? "pt-8" : ""}`}
     >
-      {e.images?.[3] ? (
-        <Image
-          source={{ uri: e.images[3] }}
-          className="mr-4 h-20 w-20 rounded-md"
-          resizeMode="cover"
-        />
-      ) : (
-        <View className="mr-4 h-20 w-20 rounded-md bg-accent-yellow" />
-      )}
-      <View className="flex-1">
+      <View className="mr-4 flex-1">
         <View className="mb-2">
           <Text className="text-base font-medium text-neutral-2">
             {date} • {time}
@@ -87,7 +71,11 @@ export function UserEventListItem(props: {
           }}
         >
           <Pressable>
-            <Text className="mb-2 text-3xl font-bold text-neutral-1">
+            <Text
+              className="mb-2 text-3xl font-bold text-neutral-1"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
               {e.name}
             </Text>
           </Pressable>
@@ -100,7 +88,20 @@ export function UserEventListItem(props: {
           </View>
         ) : null}
       </View>
-      {actionButton && <View className="justify-center">{actionButton}</View>}
+      <View className="relative">
+        {e.images?.[3] ? (
+          <Image
+            source={{ uri: e.images[3] }}
+            className="h-20 w-20 rounded-md"
+            resizeMode="cover"
+          />
+        ) : (
+          <View className="h-20 w-20 rounded-md bg-accent-yellow" />
+        )}
+        {actionButton && (
+          <View className="absolute bottom-0 right-0">{actionButton}</View>
+        )}
+      </View>
       {relativeTime && (
         <View className="absolute left-0 right-0 top-0 flex items-center justify-center">
           <View className="rounded-full bg-accent-yellow px-2 py-1">
