@@ -120,7 +120,7 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
           </TouchableOpacity>
         </Link>
         <TouchableOpacity
-          className="absolute -top-20 right-4 h-16 w-16 items-center justify-center rounded-full bg-interactive-2 shadow-lg"
+          className="absolute -top-16 right-4 items-center justify-center rounded-full bg-interactive-2 p-3 shadow-lg"
           onPress={() => setModalVisible(true)}
         >
           <CalendarPlus size={24} color="#5A32FB" />

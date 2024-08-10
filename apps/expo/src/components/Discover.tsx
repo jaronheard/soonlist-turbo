@@ -48,7 +48,7 @@ export default function Discover() {
         options={{
           title: "Discover",
           headerRight: () => (
-            <View className="-mr-2 flex-row items-center gap-2">
+            <View className="-mr-2 flex-row items-center gap-1">
               <SignedIn>
                 <ShareButton webPath={`/explore`} />
               </SignedIn>
@@ -57,18 +57,24 @@ export default function Discover() {
           ),
         }}
       />
-      {eventsQuery.data ? (
-        <UserEventsList
-          events={currentAndFutureEvents}
-          refreshControl={
-            <RefreshControl
-              refreshing={eventsQuery.isRefetching}
-              onRefresh={onRefresh}
+      {!isLoaded || !user.username ? (
+        <SignInWithOAuth />
+      ) : (
+        <>
+          <View className="flex-1">
+            <UserEventsList
+              events={currentAndFutureEvents}
+              refreshControl={
+                <RefreshControl
+                  refreshing={eventsQuery.isRefetching}
+                  onRefresh={onRefresh}
+                />
+              }
+              actionButton={saveButton}
             />
-          }
-          actionButton={saveButton}
-        />
-      ) : null}
+          </View>
+        </>
+      )}
     </View>
   );
 }

@@ -11,7 +11,6 @@ import { ProfileMenu } from "./ProfileMenu";
 import ShareButton from "./ShareButton";
 
 export default function MyFeed() {
-  // get user from clerk
   const { isLoaded, user } = useUser();
 
   // In case the user signs out while on the page.
@@ -66,7 +65,7 @@ export default function MyFeed() {
         options={{
           title: "Soonlist",
           headerRight: () => (
-            <View className="-mr-2 flex-row items-center gap-2">
+            <View className="-mr-2 flex-row items-center gap-1">
               <SignedIn>
                 <ShareButton webPath={`/${user.username}/upcoming`} />
               </SignedIn>
@@ -75,18 +74,16 @@ export default function MyFeed() {
           ),
         }}
       />
-      {eventsQuery.data ? (
-        <UserEventsList
-          events={currentAndFutureEvents}
-          refreshControl={
-            <RefreshControl
-              refreshing={eventsQuery.isRefetching}
-              onRefresh={onRefresh}
-            />
-          }
-          actionButton={goButton}
-        />
-      ) : null}
+      <UserEventsList
+        events={currentAndFutureEvents}
+        refreshControl={
+          <RefreshControl
+            refreshing={eventsQuery.isRefetching}
+            onRefresh={onRefresh}
+          />
+        }
+        actionButton={goButton}
+      />
     </View>
   );
 }
