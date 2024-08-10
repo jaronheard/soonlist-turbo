@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Platform, Text } from "react-native";
+import { Platform, Text, View } from "react-native";
 import { MenuProvider } from "react-native-popup-menu";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
@@ -14,8 +18,8 @@ import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
 
-import AddButtonView from "~/components/AddButtonView";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
+import BottomBar from "~/components/BottomBar";
 
 const tokenCache = {
   getToken: async (key: string) => {
@@ -173,6 +177,7 @@ function useNotificationObserver() {
 // It wraps your pages with the providers they need
 export default function RootLayout() {
   const [expoPushToken, setExpoPushToken] = useState("");
+  const insets = useSafeAreaInsets();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [notification, setNotification] = useState<
     Notifications.Notification | undefined
@@ -222,43 +227,30 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
       <TRPCProvider>
-        <MenuProvider>
-          <Stack
-            screenOptions={{
-              headerStyle: {
-                backgroundColor: "#E0D9FF",
-              },
-              headerTintColor: "#5A32FB", // This makes the text white
-              contentStyle: {
-                backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
-              },
-            }}
-          />
-          <AuthAndTokenSync expoPushToken={expoPushToken} />
-          <SignedIn>
-            <AddButtonView expoPushToken={expoPushToken} />
-          </SignedIn>
-          {/* <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "space-around",
-          }}
-        >
-          <Text>Your Expo push token: {expoPushToken}</Text>
-          <View style={{ alignItems: "center", justifyContent: "center" }}>
-            <Text>Title: {notification?.request.content.title} </Text>
-            <Text>Body: {notification?.request.content.body}</Text>
-            <Text>
-              Data:{" "}
-              {notification &&
-                JSON.stringify(notification.request.content.data)}
-            </Text>
-          </View>
-          <PushNotificationSenderButton expoPushToken={expoPushToken} />
-        </View> */}
-          <StatusBar />
-        </MenuProvider>
+        <SafeAreaProvider>
+          <MenuProvider>
+            <View style={{ flex: 1 }}>
+              <Stack
+                screenOptions={{
+                  headerStyle: {
+                    backgroundColor: "#E0D9FF",
+                  },
+                  headerTintColor: "#5A32FB",
+                  contentStyle: {
+                    backgroundColor:
+                      colorScheme == "dark" ? "#09090B" : "#FFFFFF",
+                  },
+                }}
+              />
+              <AuthAndTokenSync expoPushToken={expoPushToken} />
+              <SignedIn>
+                <View style={{ paddingBottom: insets.bottom + 36 }} />
+                <BottomBar expoPushToken={expoPushToken} />
+              </SignedIn>
+            </View>
+            <StatusBar />
+          </MenuProvider>
+        </SafeAreaProvider>
       </TRPCProvider>
     </ClerkProvider>
   );

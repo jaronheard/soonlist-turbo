@@ -2,18 +2,17 @@ import {
   Dimensions,
   Linking,
   ScrollView,
-  Share,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import AutoHeightImage from "react-native-auto-height-image";
 import { Link, Stack, useLocalSearchParams } from "expo-router";
-import { Edit, MapPin, ShareIcon } from "lucide-react-native";
+import { Edit, MapPin } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
-import { ProfileMenu } from "~/components/ProfileMenu";
+import ShareButton from "~/components/ShareButton";
 import { api } from "~/utils/api";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
 
@@ -21,7 +20,12 @@ export default function Page() {
   const { width } = Dimensions.get("window");
   const { id } = useLocalSearchParams();
   if (!id || typeof id !== "string") {
-    return <Text>Invalid or missing event id</Text>;
+    return (
+      <View className="flex-1 bg-white">
+        <Stack.Screen options={{ title: "Event" }} />
+        <Text>Invalid or missing event id</Text>
+      </View>
+    );
   }
 
   const eventQuery = api.event.get.useQuery({ eventId: id });
@@ -29,13 +33,19 @@ export default function Page() {
   if (eventQuery.isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
+        <Stack.Screen options={{ title: "Event" }} />
         <Text>Loading event...</Text>
       </View>
     );
   }
 
   if (!eventQuery.data) {
-    return <Text>Event not found</Text>;
+    return (
+      <View className="flex-1 bg-white">
+        <Stack.Screen options={{ title: "Event" }} />
+        <Text>Event not found</Text>
+      </View>
+    );
   }
 
   const event = eventQuery.data;
@@ -76,9 +86,9 @@ export default function Page() {
     <ScrollView className="flex-1 bg-white">
       <Stack.Screen
         options={{
-          title: "Event Details",
+          title: "Event",
           headerRight: () => (
-            <View className="flex-row items-center gap-2">
+            <View className="-mr-2 flex-row items-center gap-1">
               <TouchableOpacity
                 onPress={() =>
                   Linking.openURL(
@@ -86,59 +96,51 @@ export default function Page() {
                   )
                 }
               >
-                <Edit size={24} color="#5A32FB" />
+                <View className="rounded-full p-2">
+                  <Edit size={24} color="#5A32FB" />
+                </View>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={async () => {
-                  const shareUrl = `${process.env.EXPO_PUBLIC_API_BASE_URL}/event/${id}`;
-                  try {
-                    await Share.share({
-                      message: shareUrl,
-                      url: shareUrl,
-                    });
-                  } catch (error) {
-                    console.error("Error sharing:", error);
-                  }
-                }}
-                className="ml-4"
-              >
-                <ShareIcon size={24} color="#5A32FB" />
-              </TouchableOpacity>
-              <ProfileMenu />
+              <ShareButton webPath={`/event/${id}`} />
             </View>
           ),
         }}
       />
-      <View className="p-4">
-        <View className="flex flex-col gap-5">
-          <View>
-            <Text className="text-lg text-gray-500">{date}</Text>
-            <Text className="text-lg text-gray-500">{time}</Text>
+      {!id || typeof id !== "string" ? (
+        <Text>Invalid or missing event id</Text>
+      ) : (
+        <View className="p-4">
+          <View className="flex flex-col gap-5">
+            <View>
+              <Text className="text-lg text-neutral-2">{date}</Text>
+              <Text className="text-lg text-neutral-2">{time}</Text>
+            </View>
+            <Text className="font-heading text-4xl font-bold text-neutral-1">
+              {eventData.name}
+            </Text>
+            {eventData.location && (
+              <Link
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(eventData.location)}`}
+              >
+                <View className="flex-row items-center">
+                  <MapPin size={16} color="#6b7280" />
+                  <Text className="ml-1 text-neutral-2">
+                    {eventData.location}
+                  </Text>
+                </View>
+              </Link>
+            )}
           </View>
-          <Text className="font-heading text-4xl font-bold">
-            {eventData.name}
-          </Text>
-          {eventData.location && (
-            <Link
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(eventData.location)}`}
-            >
-              <View className="flex-row items-center">
-                <MapPin size={16} color="#6b7280" />
-                <Text className="ml-1 text-gray-500">{eventData.location}</Text>
-              </View>
-            </Link>
+          <View className="my-8">
+            <Text className="text-neutral-1">{eventData.description}</Text>
+          </View>
+          {eventData.images?.[3] && (
+            <AutoHeightImage
+              source={{ uri: eventData.images[3] }}
+              width={width - 32}
+            />
           )}
         </View>
-        <View className="mt-8">
-          <Text>{eventData.description}</Text>
-        </View>
-        {eventData.images?.[3] && (
-          <AutoHeightImage
-            source={{ uri: eventData.images[3] }}
-            width={width - 32}
-          />
-        )}
-      </View>
+      )}
     </ScrollView>
   );
 }

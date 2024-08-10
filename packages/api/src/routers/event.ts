@@ -1,6 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, gte, lte } from "drizzle-orm";
+import { and, asc, eq, gte, lte, not } from "drizzle-orm";
 import { z } from "zod";
 
 import type {
@@ -391,6 +391,38 @@ export const eventRouter = createTRPCRouter({
         where: input.excludeCurrent
           ? gte(events.endDateTime, new Date())
           : gte(events.startDateTime, new Date()),
+        with: {
+          user: true,
+          eventFollows: true,
+          comments: true,
+        },
+        orderBy: [asc(events.startDateTime)],
+        limit: input.limit,
+      });
+    }),
+  getDiscover: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().optional(),
+        excludeCurrent: z.boolean().optional(),
+      }),
+    )
+    .query(({ ctx, input }) => {
+      const { userId } = ctx.auth;
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User must be logged in to discover events",
+        });
+      }
+
+      return ctx.db.query.events.findMany({
+        where: and(
+          input.excludeCurrent
+            ? gte(events.endDateTime, new Date())
+            : gte(events.startDateTime, new Date()),
+          not(eq(events.userId, userId)),
+        ),
         with: {
           user: true,
           eventFollows: true,

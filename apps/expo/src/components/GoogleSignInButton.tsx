@@ -11,7 +11,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   return (
     <TouchableOpacity style={styles.button} onPress={onPress}>
       <Image
-        source={require("../assets/google-logo.png")} // You'll need to add this image to your assets
+        source={require("../assets/google-logo.png")}
         style={styles.logo}
       />
       <Text style={styles.text}>Sign in with Google</Text>
