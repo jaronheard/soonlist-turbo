@@ -55,9 +55,9 @@ export function UserEventListItem(props: {
 
   return (
     <View
-      className={`flex-row items-center rounded-lg bg-white p-4 ${
+      className={`-mx-2 flex-row items-center rounded-lg bg-white p-4 px-6 ${
         relativeTime ? "pt-8" : ""
-      }`}
+      } border-b border-neutral-3`}
     >
       <View className="mr-4 flex-1">
         <View className="mb-2">
@@ -101,7 +101,7 @@ export function UserEventListItem(props: {
           <View className="h-20 w-20 rounded-md bg-accent-yellow" />
         )}
         {actionButton && (
-          <View className="absolute -bottom-4 -right-2">{actionButton}</View>
+          <View className="absolute -bottom-2 -right-2">{actionButton}</View>
         )}
       </View>
       {relativeTime && (
@@ -137,6 +137,7 @@ export default function UserEventsList(props: {
         />
       )}
       refreshControl={refreshControl}
+      ItemSeparatorComponent={() => <View className="h-2" />}
     />
   );
 }
