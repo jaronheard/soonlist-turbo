@@ -9,13 +9,7 @@ import {
 } from "react-native";
 import { Link, usePathname } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import {
-  CalendarHeart,
-  CirclePlus,
-  Globe2,
-  Plus,
-  Sparkles,
-} from "lucide-react-native";
+import { CalendarHeart, Globe2, Sparkles } from "lucide-react-native";
 
 import { api } from "~/utils/api";
 
