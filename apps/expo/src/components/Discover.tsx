@@ -60,20 +60,18 @@ export default function Discover() {
       {!isLoaded || !user.username ? (
         <SignInWithOAuth />
       ) : (
-        <>
-          <View className="flex-1">
-            <UserEventsList
-              events={currentAndFutureEvents}
-              refreshControl={
-                <RefreshControl
-                  refreshing={eventsQuery.isRefetching}
-                  onRefresh={onRefresh}
-                />
-              }
-              actionButton={saveButton}
-            />
-          </View>
-        </>
+        <View className="flex-1">
+          <UserEventsList
+            events={currentAndFutureEvents}
+            refreshControl={
+              <RefreshControl
+                refreshing={eventsQuery.isRefetching}
+                onRefresh={onRefresh}
+              />
+            }
+            actionButton={saveButton}
+          />
+        </View>
       )}
     </View>
   );

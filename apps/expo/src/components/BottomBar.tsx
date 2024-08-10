@@ -30,7 +30,7 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
     eventFromRawTextAndNotification.mutate({
       rawText: text,
       timezone: "America/Los_Angeles",
-      expoPushToken: expoPushToken,
+      expoPushToken,
       lists: [],
       userId: user?.externalId || user?.id || "",
       username: user?.username || "",

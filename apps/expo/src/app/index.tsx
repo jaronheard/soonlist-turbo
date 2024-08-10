@@ -20,7 +20,6 @@ function App() {
     ?.clerkPublishableKey as string | undefined;
 
   if (!clerkPublishableKey) {
-    console.log(Constants.expoConfig);
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white">
         <Text className="mt-5 text-red-500">

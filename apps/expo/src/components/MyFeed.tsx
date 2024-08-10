@@ -1,7 +1,9 @@
-import { Linking, Pressable, RefreshControl, Text, View } from "react-native";
+import { Linking, Pressable, RefreshControl, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 import { Navigation2 } from "lucide-react-native";
+
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import SignInWithOAuth from "~/components/SignInWithOAuth";
@@ -43,6 +45,7 @@ export default function MyFeed() {
     if (!event.event) {
       return null;
     }
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     return (
       <Pressable
