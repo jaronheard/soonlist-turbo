@@ -2,23 +2,26 @@ import { RefreshControl, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 
+import type { RouterOutputs } from "~/utils/api";
 import SignInWithOAuth from "~/components/SignInWithOAuth";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
 import { ProfileMenu } from "./ProfileMenu";
+import SaveButton from "./SaveButton";
 import ShareButton from "./ShareButton";
 
 export default function Discover() {
-  // get user from clerk
   const { isLoaded, user } = useUser();
 
-  // In case the user signs out while on the page.
   if (!isLoaded || !user?.username) {
     return <SignInWithOAuth />;
   }
 
-  const eventsQuery = api.event.getNext.useQuery({
+  const eventsQuery = api.event.getDiscover.useQuery({
     limit: 50,
+  });
+  const savedEventsQuery = api.event.getSavedForUser.useQuery({
+    userName: user.username,
   });
   const utils = api.useUtils();
 
@@ -29,6 +32,14 @@ export default function Discover() {
   const events = eventsQuery.data ?? [];
   const currentAndFutureEvents = events.filter(
     (item) => item.startDateTime >= new Date(),
+  );
+
+  const savedEventIds = new Set(
+    savedEventsQuery.data?.map((event) => event.id),
+  );
+
+  const saveButton = (event: RouterOutputs["event"]["getDiscover"][number]) => (
+    <SaveButton eventId={event.id} isSaved={savedEventIds.has(event.id)} />
   );
 
   return (
@@ -46,7 +57,7 @@ export default function Discover() {
           ),
         }}
       />
-      {eventsQuery.data && (
+      {eventsQuery.data ? (
         <UserEventsList
           events={currentAndFutureEvents}
           refreshControl={
@@ -55,8 +66,9 @@ export default function Discover() {
               onRefresh={onRefresh}
             />
           }
+          actionButton={saveButton}
         />
-      )}
+      ) : null}
     </View>
   );
 }

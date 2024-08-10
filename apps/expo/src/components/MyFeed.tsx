@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 import { Navigation2 } from "lucide-react-native";
 
+import type { RouterOutputs } from "~/utils/api";
 import SignInWithOAuth from "~/components/SignInWithOAuth";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
@@ -39,17 +40,25 @@ export default function MyFeed() {
 
   const goButton = (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => (
-    <Pressable
-      onPress={() =>
-        event.event.location && openGoogleMaps(event.event.location)
-      }
-      className="flex-row items-center rounded-2xl bg-interactive-1 px-3 py-2"
-    >
-      <Navigation2 color="white" size={16} />
-      <Text className="ml-1 text-2xl font-bold text-white">Go</Text>
-    </Pressable>
-  );
+  ) => {
+    if (!event.event) {
+      return null;
+    }
+    const eventData = event.event as AddToCalendarButtonPropsRestricted;
+    return (
+      <Pressable
+        onPress={() =>
+          eventData.location
+            ? openGoogleMaps(eventData.location)
+            : console.log("No location")
+        }
+        className="flex-row items-center rounded-2xl bg-interactive-1 px-3 py-2"
+      >
+        <Navigation2 color="white" size={16} />
+        <Text className="ml-1 text-2xl font-bold text-white">Go</Text>
+      </Pressable>
+    );
+  };
 
   return (
     <View className="flex-1 pt-2">
@@ -66,7 +75,7 @@ export default function MyFeed() {
           ),
         }}
       />
-      {eventsQuery.data && (
+      {eventsQuery.data ? (
         <UserEventsList
           events={currentAndFutureEvents}
           refreshControl={
@@ -77,7 +86,7 @@ export default function MyFeed() {
           }
           actionButton={goButton}
         />
-      )}
+      ) : null}
     </View>
   );
 }

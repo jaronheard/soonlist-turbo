@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Platform, Text } from "react-native";
+import { Platform, Text, View } from "react-native";
 import { MenuProvider } from "react-native-popup-menu";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
@@ -14,8 +15,8 @@ import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
 
-import AddButtonView from "~/components/AddButtonView";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
+import BottomBar from "~/components/BottomBar";
 
 const tokenCache = {
   getToken: async (key: string) => {
@@ -228,7 +229,7 @@ export default function RootLayout() {
               headerStyle: {
                 backgroundColor: "#E0D9FF",
               },
-              headerTintColor: "#5A32FB", // This makes the text white
+              headerTintColor: "#5A32FB",
               contentStyle: {
                 backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
               },
@@ -236,27 +237,8 @@ export default function RootLayout() {
           />
           <AuthAndTokenSync expoPushToken={expoPushToken} />
           <SignedIn>
-            <AddButtonView expoPushToken={expoPushToken} />
+            <BottomBar expoPushToken={expoPushToken} />
           </SignedIn>
-          {/* <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "space-around",
-          }}
-        >
-          <Text>Your Expo push token: {expoPushToken}</Text>
-          <View style={{ alignItems: "center", justifyContent: "center" }}>
-            <Text>Title: {notification?.request.content.title} </Text>
-            <Text>Body: {notification?.request.content.body}</Text>
-            <Text>
-              Data:{" "}
-              {notification &&
-                JSON.stringify(notification.request.content.data)}
-            </Text>
-          </View>
-          <PushNotificationSenderButton expoPushToken={expoPushToken} />
-        </View> */}
           <StatusBar />
         </MenuProvider>
       </TRPCProvider>

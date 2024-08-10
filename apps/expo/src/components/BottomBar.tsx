@@ -91,27 +91,25 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
         </TouchableWithoutFeedback>
       </Modal>
 
-      <View className="flex-row items-center justify-around bg-interactive-2 pb-4">
+      <View className="relative flex-row items-center justify-around bg-interactive-2 py-4">
         <Link href="/" asChild>
           <TouchableOpacity className="items-center">
-            <Globe2 size={24} color="#5A32FB" />
+            <CalendarHeart size={24} color="#5A32FB" />
             <Text className="text-xs text-interactive-1">My Feed</Text>
           </TouchableOpacity>
         </Link>
-
-        <TouchableOpacity
-          className="h-20 w-20 items-center justify-center rounded-full bg-interactive-1"
-          onPress={() => setModalVisible(true)}
-        >
-          <CalendarPlus size={28} color="#fff" />
-        </TouchableOpacity>
-
         <Link href="/discover" asChild>
           <TouchableOpacity className="items-center">
-            <CalendarHeart size={24} color="#5A32FB" />
+            <Globe2 size={24} color="#5A32FB" />
             <Text className="text-xs text-interactive-1">Discover</Text>
           </TouchableOpacity>
         </Link>
+        <TouchableOpacity
+          className="absolute -top-20 right-4 h-16 w-16 items-center justify-center rounded-full bg-interactive-2 shadow-lg"
+          onPress={() => setModalVisible(true)}
+        >
+          <CalendarPlus size={24} color="#5A32FB" />
+        </TouchableOpacity>
       </View>
     </View>
   );

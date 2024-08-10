@@ -1,7 +1,6 @@
 import { Image, Linking, Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Navigation2 } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -93,13 +92,13 @@ export function UserEventListItem(props: {
             </Text>
           </Pressable>
         </Link>
-        {e.location && (
+        {e.location ? (
           <View className="flex-row items-center">
             <Text className="flex-1 text-sm text-neutral-2" numberOfLines={1}>
               {e.location}
             </Text>
           </View>
-        )}
+        ) : null}
       </View>
       {actionButton && <View className="justify-center">{actionButton}</View>}
       {relativeTime && (
