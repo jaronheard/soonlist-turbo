@@ -11,8 +11,9 @@ import { Link, usePathname } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
   CalendarHeart,
-  CalendarPlus,
+  CirclePlus,
   Globe2,
+  Plus,
   Sparkles,
 } from "lucide-react-native";
 
@@ -64,7 +65,7 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
               <View className="w-4/5 items-center rounded-lg bg-white p-5 shadow-lg">
                 <TextInput
                   ref={textInputRef}
-                  className="mb-4 h-24 w-full rounded-md border border-gray-300 p-2"
+                  className="mb-4 h-24 w-full rounded-md border border-neutral-3 p-2"
                   placeholder="Describe your event"
                   value={text}
                   onChangeText={setText}
@@ -97,7 +98,7 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
           <TouchableOpacity className="flex-1 items-center gap-1 py-2">
             <CalendarHeart
               size={28}
-              color={pathname === "/" ? "#5A32FB" : "#A0A0A0"}
+              color={pathname === "/" ? "#5A32FB" : "#627496"}
             />
             <Text
               className={`text-xs font-medium ${pathname === "/" ? "text-interactive-1" : "text-neutral-2"}`}
@@ -110,7 +111,7 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
           <TouchableOpacity className="flex-1 items-center gap-1 py-2">
             <Globe2
               size={28}
-              color={pathname === "/discover" ? "#5A32FB" : "#A0A0A0"}
+              color={pathname === "/discover" ? "#5A32FB" : "#627496"}
             />
             <Text
               className={`text-xs font-medium ${pathname === "/discover" ? "text-interactive-1" : "text-neutral-2"}`}
@@ -123,7 +124,7 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
           className="absolute -top-16 right-4 items-center justify-center rounded-full bg-interactive-2 p-3 shadow-lg"
           onPress={() => setModalVisible(true)}
         >
-          <CalendarPlus size={24} color="#5A32FB" />
+          <Sparkles size={24} color="#5A32FB" />
         </TouchableOpacity>
       </View>
     </View>

@@ -111,10 +111,10 @@ export default function Page() {
         <View className="p-4">
           <View className="flex flex-col gap-5">
             <View>
-              <Text className="text-lg text-gray-500">{date}</Text>
-              <Text className="text-lg text-gray-500">{time}</Text>
+              <Text className="text-lg text-neutral-2">{date}</Text>
+              <Text className="text-lg text-neutral-2">{time}</Text>
             </View>
-            <Text className="font-heading text-4xl font-bold">
+            <Text className="font-heading text-4xl font-bold text-neutral-1">
               {eventData.name}
             </Text>
             {eventData.location && (
@@ -123,15 +123,15 @@ export default function Page() {
               >
                 <View className="flex-row items-center">
                   <MapPin size={16} color="#6b7280" />
-                  <Text className="ml-1 text-gray-500">
+                  <Text className="ml-1 text-neutral-2">
                     {eventData.location}
                   </Text>
                 </View>
               </Link>
             )}
           </View>
-          <View className="mt-8">
-            <Text>{eventData.description}</Text>
+          <View className="my-8">
+            <Text className="text-neutral-1">{eventData.description}</Text>
           </View>
           {eventData.images?.[3] && (
             <AutoHeightImage
