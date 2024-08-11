@@ -324,6 +324,29 @@ export const eventRouter = createTRPCRouter({
           ) || []
       );
     }),
+  getSavedIdsForUser: publicProcedure
+    .input(z.object({ userName: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const userWithEventFollows = await ctx.db.query.users.findMany({
+        where: eq(users.username, input.userName),
+        with: {
+          eventFollows: {
+            with: {
+              event: {
+                columns: {
+                  id: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      return (
+        userWithEventFollows[0]?.eventFollows.map((eventFollow) => ({
+          id: eventFollow.event.id,
+        })) || []
+      );
+    }),
   getPossibleDuplicates: publicProcedure
     .input(z.object({ startDateTime: z.date() }))
     .query(({ ctx, input }) => {
