@@ -138,6 +138,14 @@ export default function UserEventsList(props: {
 }) {
   const { events, refreshControl, actionButton } = props;
 
+  const renderFooter = () => (
+    <View className="px-6 py-6">
+      <Text className="text-center text-base font-medium text-neutral-2">
+        End of events. Add your own!
+      </Text>
+    </View>
+  );
+
   return (
     <FlashList
       data={events}
@@ -151,6 +159,7 @@ export default function UserEventsList(props: {
       )}
       refreshControl={refreshControl}
       contentContainerStyle={{ paddingBottom: 16 }}
+      ListFooterComponent={renderFooter}
     />
   );
 }
