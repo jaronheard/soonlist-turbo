@@ -17,6 +17,7 @@
     "lint": "turbo lint --continue -- --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:ws": "pnpm dlx sherif@latest",
+    "ngrok": "ngrok http --domain=primary-entirely-giraffe.ngrok-free.app 3000",
     "typecheck": "turbo typecheck",
     "ui-add": "pnpm -F ui ui-add"
   },
