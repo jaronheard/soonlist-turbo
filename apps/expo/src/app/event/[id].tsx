@@ -1,4 +1,6 @@
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   Dimensions,
   Linking,
   ScrollView,
@@ -20,6 +22,37 @@ import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
 export default function Page() {
   const { width } = Dimensions.get("window");
   const { id } = useLocalSearchParams();
+  const pulseAnim = useRef(new Animated.Value(0)).current;
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, [pulseAnim]);
+
+  useEffect(() => {
+    if (imageLoaded) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [fadeAnim, imageLoaded]);
+
   if (!id || typeof id !== "string") {
     return (
       <View className="flex-1 bg-white">
@@ -135,10 +168,36 @@ export default function Page() {
             <Text className="text-neutral-1">{eventData.description}</Text>
           </View>
           {eventData.images?.[3] && (
-            <AutoHeightImage
-              source={{ uri: eventData.images[3] }}
-              width={width - 32}
-            />
+            <View>
+              {!imageLoaded && (
+                <Animated.View
+                  style={{
+                    width: width - 32,
+                    height: 400,
+                    backgroundColor: "#f0f0f0",
+                    opacity: pulseAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.5, 1],
+                    }),
+                  }}
+                />
+              )}
+              <Animated.View
+                style={{
+                  opacity: fadeAnim,
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                }}
+              >
+                <AutoHeightImage
+                  source={{ uri: eventData.images[3] }}
+                  width={width - 32}
+                  onLoad={() => setImageLoaded(true)}
+                />
+              </Animated.View>
+            </View>
           )}
         </View>
       )}

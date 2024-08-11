@@ -69,7 +69,7 @@ export default function MyFeed() {
           headerRight: () => (
             <View className="-mr-2 flex-row items-center gap-1">
               <SignedIn>
-                <ShareButton webPath={`/${user.username}/upcoming`} />
+                <ShareButton webPath={`/${user?.username}/upcoming`} />
               </SignedIn>
               <ProfileMenu />
             </View>
