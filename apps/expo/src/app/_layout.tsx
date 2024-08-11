@@ -223,9 +223,7 @@ export default function RootLayout() {
   }, []);
 
   const { colorScheme } = useColorScheme();
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const clerkPublishableKey = Constants.expoConfig?.extra
-    ?.clerkPublishableKey as string | undefined;
+  const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   if (!clerkPublishableKey) {
     return (
