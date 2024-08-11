@@ -30,7 +30,7 @@ export default function MyFeed() {
 
   const events = eventsQuery.data ?? [];
   const currentAndFutureEvents = events.filter(
-    (item) => item.startDateTime >= new Date(),
+    (item) => item.startDateTime >= new Date() || item.endDateTime > new Date(),
   );
 
   const openGoogleMaps = (location: string) => {

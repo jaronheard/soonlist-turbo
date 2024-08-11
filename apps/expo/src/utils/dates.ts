@@ -335,7 +335,7 @@ export function formatRelativeTime(dateInfo: DateInfo): string {
   const isTomorrow = timeIsTomorrow(now, startDate);
 
   if (difference < 0) {
-    return "in the past";
+    return "Happening now";
   }
 
   if (days === 0 && hours === 0) {
