@@ -18,8 +18,19 @@ import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
 
+import type { ErrorBoundaryProps } from "expo-router";
+
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import BottomBar from "~/components/BottomBar";
+
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return (
+    <View style={{ flex: 1, backgroundColor: "red" }}>
+      <Text>{error.message}</Text>
+      <Text onPress={retry}>Try Again?</Text>
+    </View>
+  );
+}
 
 const tokenCache = {
   getToken: async (key: string) => {
