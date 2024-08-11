@@ -5,6 +5,8 @@ import { FlashList } from "@shopify/flash-list";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import { cn } from "~/utils/cn"; // Make sure to import the cn function
+
 import {
   formatRelativeTime,
   getDateTimeInfo,
@@ -53,12 +55,16 @@ export function UserEventListItem(props: {
     e.timeZone || "",
   );
   const relativeTime = dateInfo ? formatRelativeTime(dateInfo) : "";
+  const isHappeningNow = relativeTime === "Happening now";
 
   return (
     <View
-      className={`-mx-2 flex-row items-center rounded-lg bg-white p-4 px-6 ${
-        relativeTime ? "pt-8" : ""
-      } ${isLastItem ? "" : "border-b border-neutral-3"}`}
+      className={cn(
+        "relative -mx-2 flex-row items-center rounded-lg p-4 px-6 pt-6",
+        relativeTime ? "pt-10" : "",
+        isLastItem ? "" : "border-b border-neutral-3",
+        isHappeningNow ? "bg-accent-yellow" : "bg-white",
+      )}
     >
       <View className="mr-4 flex-1">
         <View className="mb-2">
@@ -106,9 +112,14 @@ export function UserEventListItem(props: {
         )}
       </View>
       {relativeTime && (
-        <View className="absolute left-0 right-0 top-0 flex items-center justify-center">
-          <View className="rounded-full bg-accent-yellow px-2 py-1">
-            <Text className="text-sm font-medium text-black">
+        <View className="absolute left-0 right-0 top-2 flex items-center justify-center">
+          <View
+            className={cn(
+              "rounded-full bg-accent-yellow px-2 py-1",
+              isHappeningNow ? "bg-white" : "bg-accent-yellow",
+            )}
+          >
+            <Text className={cn("text-sm font-medium text-neutral-1")}>
               {relativeTime}
             </Text>
           </View>
@@ -139,8 +150,6 @@ export default function UserEventsList(props: {
         />
       )}
       refreshControl={refreshControl}
-      ItemSeparatorComponent={() => <View className="h-2" />}
-      ListHeaderComponent={<View className="h-2" />}
       contentContainerStyle={{ paddingBottom: 16 }}
     />
   );
