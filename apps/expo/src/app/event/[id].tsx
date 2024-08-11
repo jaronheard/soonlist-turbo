@@ -12,6 +12,7 @@ import { Edit, MapPin } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
+import LoadingSpinner from "~/components/LoadingSpinner";
 import ShareButton from "~/components/ShareButton";
 import { api } from "~/utils/api";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
@@ -32,9 +33,9 @@ export default function Page() {
 
   if (eventQuery.isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 bg-white">
         <Stack.Screen options={{ title: "Event" }} />
-        <Text>Loading event...</Text>
+        <LoadingSpinner />
       </View>
     );
   }

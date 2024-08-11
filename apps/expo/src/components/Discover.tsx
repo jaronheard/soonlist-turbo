@@ -3,7 +3,7 @@ import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
-import SignInWithOAuth from "~/components/SignInWithOAuth";
+import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
 import { ProfileMenu } from "./ProfileMenu";
@@ -11,23 +11,23 @@ import SaveButton from "./SaveButton";
 import ShareButton from "./ShareButton";
 
 export default function Discover() {
-  const { isLoaded, user } = useUser();
-
-  if (!isLoaded || !user?.username) {
-    return <SignInWithOAuth />;
-  }
+  const { user } = useUser();
 
   const eventsQuery = api.event.getDiscover.useQuery({
     limit: 50,
   });
   const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery({
-    userName: user.username,
+    userName: user?.username ?? "",
   });
   const utils = api.useUtils();
 
   const onRefresh = () => {
     void utils.event.invalidate();
   };
+
+  if (eventsQuery.isLoading || savedEventIdsQuery.isLoading) {
+    return <LoadingSpinner />;
+  }
 
   const events = eventsQuery.data ?? [];
   const currentAndFutureEvents = events.filter(
@@ -57,22 +57,18 @@ export default function Discover() {
           ),
         }}
       />
-      {!isLoaded || !user.username ? (
-        <SignInWithOAuth />
-      ) : (
-        <View className="flex-1">
-          <UserEventsList
-            events={currentAndFutureEvents}
-            refreshControl={
-              <RefreshControl
-                refreshing={eventsQuery.isRefetching}
-                onRefresh={onRefresh}
-              />
-            }
-            actionButton={saveButton}
-          />
-        </View>
-      )}
+      <View className="flex-1">
+        <UserEventsList
+          events={currentAndFutureEvents}
+          refreshControl={
+            <RefreshControl
+              refreshing={eventsQuery.isRefetching}
+              onRefresh={onRefresh}
+            />
+          }
+          actionButton={saveButton}
+        />
+      </View>
     </View>
   );
 }

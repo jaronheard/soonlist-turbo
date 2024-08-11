@@ -6,28 +6,27 @@ import { Navigation2 } from "lucide-react-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
-import SignInWithOAuth from "~/components/SignInWithOAuth";
+import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
 import { ProfileMenu } from "./ProfileMenu";
 import ShareButton from "./ShareButton";
 
 export default function MyFeed() {
-  const { isLoaded, user } = useUser();
-
-  // In case the user signs out while on the page.
-  if (!isLoaded || !user?.username) {
-    return <SignInWithOAuth />;
-  }
+  const { user } = useUser();
 
   const eventsQuery = api.event.getUpcomingForUser.useQuery({
-    userName: user.username,
+    userName: user?.username ?? "",
   });
   const utils = api.useUtils();
 
   const onRefresh = () => {
     void utils.event.invalidate();
   };
+
+  if (eventsQuery.isLoading) {
+    return <LoadingSpinner />;
+  }
 
   const events = eventsQuery.data ?? [];
   const currentAndFutureEvents = events.filter(

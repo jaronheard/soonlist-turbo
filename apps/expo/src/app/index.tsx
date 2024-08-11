@@ -1,10 +1,12 @@
 import { SafeAreaView, Text } from "react-native";
 import { SignedIn, SignedOut } from "@clerk/clerk-expo";
 
+import LoadingSpinner from "../components/LoadingSpinner";
 import SignInWithOAuth from "../components/SignInWithOAuth";
 
 import "../styles.css";
 
+import React from "react";
 import Constants from "expo-constants";
 import * as Sentry from "@sentry/react-native";
 
@@ -35,7 +37,9 @@ function App() {
         <SignInWithOAuth />
       </SignedOut>
       <SignedIn>
-        <MyFeed />
+        <React.Suspense fallback={<LoadingSpinner />}>
+          <MyFeed />
+        </React.Suspense>
       </SignedIn>
     </>
   );
