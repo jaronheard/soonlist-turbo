@@ -174,7 +174,7 @@ export default function Page() {
                   style={{
                     width: width - 32,
                     height: 400,
-                    backgroundColor: "#f0f0f0",
+                    backgroundColor: "#DCE0E8",
                     opacity: pulseAnim.interpolate({
                       inputRange: [0, 1],
                       outputRange: [0.5, 1],

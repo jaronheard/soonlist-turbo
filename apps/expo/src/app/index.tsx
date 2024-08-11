@@ -1,20 +1,110 @@
-import { SafeAreaView, Text } from "react-native";
-import { SignedIn, SignedOut } from "@clerk/clerk-expo";
+import React from "react";
+import {
+  Linking,
+  Pressable,
+  RefreshControl,
+  SafeAreaView,
+  Text,
+  View,
+} from "react-native";
+import Constants from "expo-constants";
+import { Stack } from "expo-router";
+import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
+import * as Sentry from "@sentry/react-native";
+import { Navigation2 } from "lucide-react-native";
 
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+
+import type { RouterOutputs } from "~/utils/api";
+import UserEventsList from "~/components/UserEventsList";
+import { api } from "~/utils/api";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { ProfileMenu } from "../components/ProfileMenu";
+import ShareButton from "../components/ShareButton";
 import SignInWithOAuth from "../components/SignInWithOAuth";
 
 import "../styles.css";
 
-import React from "react";
-import Constants from "expo-constants";
-import * as Sentry from "@sentry/react-native";
-
-import MyFeed from "../components/MyFeed";
-
 Sentry.init({
   dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.us.sentry.io/4506458761396224",
 });
+
+function MyFeed() {
+  const { user } = useUser();
+
+  const eventsQuery = api.event.getUpcomingForUser.useQuery({
+    userName: user?.username ?? "",
+  });
+  const utils = api.useUtils();
+
+  const onRefresh = () => {
+    void utils.event.invalidate();
+  };
+
+  const events = eventsQuery.data ?? [];
+  const currentAndFutureEvents = events.filter(
+    (item) => item.startDateTime >= new Date() || item.endDateTime > new Date(),
+  );
+
+  const openGoogleMaps = (location: string) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location)}`;
+    void Linking.openURL(url);
+  };
+
+  const goButton = (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => {
+    if (!event.event) {
+      return null;
+    }
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const eventData = event.event as AddToCalendarButtonPropsRestricted;
+    return (
+      <Pressable
+        onPress={() =>
+          eventData.location
+            ? openGoogleMaps(eventData.location)
+            : console.log("No location")
+        }
+        className="flex-row items-center rounded-full bg-interactive-1/90 p-2"
+      >
+        <Navigation2 color="white" size={16} fill="white" />
+      </Pressable>
+    );
+  };
+
+  return (
+    <View className="flex-1">
+      <Stack.Screen
+        options={{
+          title: "Soonlist",
+          headerRight: () => (
+            <View className="-mr-2 flex-row items-center gap-1">
+              <SignedIn>
+                <ShareButton webPath={`/${user?.username}/upcoming`} />
+              </SignedIn>
+              <ProfileMenu />
+            </View>
+          ),
+        }}
+      />
+      {eventsQuery.isLoading ? (
+        <LoadingSpinner />
+      ) : (
+        <UserEventsList
+          events={currentAndFutureEvents}
+          refreshControl={
+            <RefreshControl
+              refreshing={eventsQuery.isRefetching}
+              onRefresh={onRefresh}
+            />
+          }
+          actionButton={goButton}
+        />
+      )}
+    </View>
+  );
+}
 
 function App() {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -37,9 +127,7 @@ function App() {
         <SignInWithOAuth />
       </SignedOut>
       <SignedIn>
-        <React.Suspense fallback={<LoadingSpinner />}>
-          <MyFeed />
-        </React.Suspense>
+        <MyFeed />
       </SignedIn>
     </>
   );
