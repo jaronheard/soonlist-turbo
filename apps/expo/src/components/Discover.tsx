@@ -20,7 +20,7 @@ export default function Discover() {
   const eventsQuery = api.event.getDiscover.useQuery({
     limit: 50,
   });
-  const savedEventsQuery = api.event.getSavedForUser.useQuery({
+  const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery({
     userName: user.username,
   });
   const utils = api.useUtils();
@@ -35,7 +35,7 @@ export default function Discover() {
   );
 
   const savedEventIds = new Set(
-    savedEventsQuery.data?.map((event) => event.id),
+    savedEventIdsQuery.data?.map((event) => event.id),
   );
 
   const saveButton = (event: RouterOutputs["event"]["getDiscover"][number]) => (
