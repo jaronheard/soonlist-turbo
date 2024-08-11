@@ -57,9 +57,13 @@ export function TRPCProvider(props: { children: React.ReactNode }) {
           url: `${getBaseUrl()}/api/trpc`,
           async headers() {
             const authToken = await getToken();
-            return {
-              Authorization: authToken ?? undefined,
+            const headers: Record<string, string> = {
+              Authorization: authToken ?? "",
+              // Set a custom User-Agent header
+              "User-Agent": "SoonList-Expo-App/1.0",
             };
+
+            return headers;
           },
         }),
       ],

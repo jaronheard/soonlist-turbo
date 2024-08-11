@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import AutoHeightImage from "react-native-auto-height-image";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Link, Stack, useLocalSearchParams } from "expo-router";
 import { Edit, MapPin } from "lucide-react-native";
 
@@ -25,6 +26,7 @@ export default function Page() {
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const [imageLoaded, setImageLoaded] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     Animated.loop(
@@ -117,7 +119,12 @@ export default function Page() {
   );
 
   return (
-    <ScrollView className="flex-1 bg-white">
+    <ScrollView
+      className="flex-1 bg-white"
+      contentContainerStyle={{
+        paddingBottom: insets.bottom + 36,
+      }}
+    >
       <Stack.Screen
         options={{
           title: "Event",
@@ -168,7 +175,7 @@ export default function Page() {
             <Text className="text-neutral-1">{eventData.description}</Text>
           </View>
           {eventData.images?.[3] && (
-            <View>
+            <View className="mb-4">
               {!imageLoaded && (
                 <Animated.View
                   style={{
@@ -185,10 +192,6 @@ export default function Page() {
               <Animated.View
                 style={{
                   opacity: fadeAnim,
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
                 }}
               >
                 <AutoHeightImage

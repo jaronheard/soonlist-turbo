@@ -26,7 +26,6 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "ios": "expo run:ios",
     "lint": "eslint",
-    "ngrok": "ngrok http --domain=primary-entirely-giraffe.ngrok-free.app 3000",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env.local --",
     "with-env:production": "dotenv -e ../../.env.production --"
