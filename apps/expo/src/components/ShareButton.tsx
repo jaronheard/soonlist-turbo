@@ -11,7 +11,6 @@ const ShareButton: React.FC<ShareButtonProps> = ({ webPath }) => {
     const shareUrl = `${process.env.EXPO_PUBLIC_API_BASE_URL}${webPath}`;
     try {
       await Share.share({
-        message: shareUrl,
         url: shareUrl,
       });
     } catch (error) {
