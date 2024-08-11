@@ -22,9 +22,13 @@
     "eas:build.dev.device": "eas build --profile development-device --platform ios --platform android",
     "eas:build.prod.ios": "eas build --profile production --platform ios",
     "eas:build.prod.android": "eas build --profile production --platform android",
+    "eas:submit.prod.ios": "pnpm with-env:production npx eas submit --platform ios",
+    "eas:update.prod.ios": "pnpm with-env:production npx eas update --platform ios --branch production --clear-cache",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env.local --",
+    "with-env:production": "dotenv -e ../../.env.production --"
   },
   "dependencies": {
     "@bytescale/sdk": "^3.34.0",
