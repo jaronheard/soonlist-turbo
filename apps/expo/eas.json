@@ -18,9 +18,7 @@
       "distribution": "internal",
       "ios": {
         "simulator": true,
-        "buildArtifactPaths": [
-          "ios/build/*"
-        ]
+        "buildArtifactPaths": ["ios/build/*"]
       },
       "env": {
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dGlnaHQtbW9uZ3JlbC01LmNsZXJrLmFjY291bnRzLmRldiQ",
@@ -37,9 +35,7 @@
         "EXPO_PUBLIC_API_BASE_URL": "https://primary-entirely-giraffe.ngrok-free.app"
       },
       "ios": {
-        "buildArtifactPaths": [
-          "ios/build/*"
-        ]
+        "buildArtifactPaths": ["ios/build/*"]
       },
       "channel": "development-device"
     },
@@ -50,9 +46,7 @@
         "EXPO_PUBLIC_API_BASE_URL": "https://www.soonlist.com"
       },
       "ios": {
-        "buildArtifactPaths": [
-          "ios/build/*"
-        ]
+        "buildArtifactPaths": ["ios/build/*"]
       },
       "autoIncrement": true,
       "channel": "production"
