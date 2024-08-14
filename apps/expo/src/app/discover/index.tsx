@@ -67,6 +67,7 @@ export default function Page() {
             />
           }
           actionButton={saveButton}
+          showCreator={true}
         />
       </View>
     </View>
