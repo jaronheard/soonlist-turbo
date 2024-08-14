@@ -10,6 +10,7 @@ import { StatusBar } from "expo-status-bar";
 import { ClerkProvider, SignedIn } from "@clerk/clerk-expo";
 import { useColorScheme } from "nativewind";
 
+import { useAppStateRefresh } from "~/hooks/useAppStateRefresh"; // Add this import
 import {
   NotificationProvider,
   useNotification,
@@ -75,6 +76,7 @@ function RootLayoutContent() {
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const { expoPushToken } = useNotification();
+  useAppStateRefresh(); // Add this line
 
   return (
     <View style={{ flex: 1 }}>
