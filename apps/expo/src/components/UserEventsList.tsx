@@ -1,5 +1,6 @@
 import { Image, Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 import { MapPin, User } from "lucide-react-native"; // Add User icon
 
@@ -13,12 +14,13 @@ import {
   getDateTimeInfo,
   timeFormatDateInfo,
 } from "~/utils/dates";
+import { collapseSimilarEvents } from "~/utils/similarEvents";
 
 export function UserEventListItem(props: {
   event: RouterOutputs["event"]["getUpcomingForUser"][number];
   actionButton?: React.ReactNode;
   isLastItem?: boolean;
-  showCreator?: boolean; // Add this prop
+  showCreator?: boolean;
 }) {
   const { event, actionButton, isLastItem, showCreator } = props;
   const id = event.id;
@@ -152,9 +154,16 @@ export default function UserEventsList(props: {
   actionButton?: (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => React.ReactNode;
-  showCreator?: boolean; // Add this prop
+  showCreator?: boolean;
 }) {
   const { events, refreshControl, actionButton, showCreator } = props;
+  const { user } = useUser();
+
+  // Collapse similar events
+  const collapsedEvents = collapseSimilarEvents(
+    events,
+    user?.externalId || user?.id,
+  );
 
   const renderFooter = () => (
     <View className="px-6 py-6">
@@ -166,14 +175,14 @@ export default function UserEventsList(props: {
 
   return (
     <FlashList
-      data={events}
+      data={collapsedEvents}
       estimatedItemSize={60}
       renderItem={({ item, index }) => (
         <UserEventListItem
-          event={item}
-          actionButton={actionButton ? actionButton(item) : undefined}
-          isLastItem={index === events.length - 1}
-          showCreator={showCreator} // Pass the prop here
+          event={item.event}
+          actionButton={actionButton ? actionButton(item.event) : undefined}
+          isLastItem={index === collapsedEvents.length - 1}
+          showCreator={showCreator}
         />
       )}
       refreshControl={refreshControl}

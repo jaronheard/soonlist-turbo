@@ -61,6 +61,9 @@ importers:
       '@soonlist/cal':
         specifier: workspace:*
         version: link:../../packages/cal
+      '@soonlist/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@tanstack/react-query':
         specifier: ^5.32.1
         version: 5.32.1(react@18.3.1)
