@@ -89,6 +89,10 @@ function RootLayoutContent() {
           contentStyle: {
             backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
           },
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
+          headerBackTitleVisible: false,
         }}
       />
       <AuthAndTokenSync expoPushToken={expoPushToken} />
