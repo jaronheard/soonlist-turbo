@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
   Image,
   Linking,
+  RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -28,6 +29,13 @@ export default function Page() {
   const [imageLoaded, setImageLoaded] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    eventQuery.refetch().then(() => setRefreshing(false));
+  }, [eventQuery]);
 
   useEffect(() => {
     Animated.loop(
@@ -125,6 +133,9 @@ export default function Page() {
       contentContainerStyle={{
         paddingBottom: insets.bottom + 36,
       }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
       <Stack.Screen
         options={{
