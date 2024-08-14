@@ -1,6 +1,7 @@
 import { Image, Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
+import { MapPin, User } from "lucide-react-native"; // Add User icon
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -17,10 +18,12 @@ export function UserEventListItem(props: {
   event: RouterOutputs["event"]["getUpcomingForUser"][number];
   actionButton?: React.ReactNode;
   isLastItem?: boolean;
+  showCreator?: boolean; // Add this prop
 }) {
-  const { event, actionButton, isLastItem } = props;
+  const { event, actionButton, isLastItem, showCreator } = props;
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
+  const user = event.user;
 
   const formatDate = (date: string, startTime?: string, endTime?: string) => {
     const startDateInfo = getDateTimeInfo(
@@ -90,12 +93,26 @@ export function UserEventListItem(props: {
           </Pressable>
         </Link>
         {e.location ? (
-          <View className="flex-row items-center">
+          <View className="mb-2 flex-row items-center gap-0.5">
+            <MapPin size={10} color="#627496" />
             <Text className="flex-1 text-sm text-neutral-2" numberOfLines={1}>
               {e.location}
             </Text>
           </View>
         ) : null}
+        {showCreator && (
+          <View className="flex-row items-center gap-2">
+            {user.userImage ? (
+              <Image
+                source={{ uri: user.userImage }}
+                className="h-4 w-4 rounded-full"
+              />
+            ) : (
+              <User size={16} color="#627496" />
+            )}
+            <Text className="text-sm text-neutral-2">@{user.username}</Text>
+          </View>
+        )}
       </View>
       <View className="relative flex items-center justify-center">
         {e.images?.[3] ? (
@@ -135,8 +152,9 @@ export default function UserEventsList(props: {
   actionButton?: (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => React.ReactNode;
+  showCreator?: boolean; // Add this prop
 }) {
-  const { events, refreshControl, actionButton } = props;
+  const { events, refreshControl, actionButton, showCreator } = props;
 
   const renderFooter = () => (
     <View className="px-6 py-6">
@@ -155,6 +173,7 @@ export default function UserEventsList(props: {
           event={item}
           actionButton={actionButton ? actionButton(item) : undefined}
           isLastItem={index === events.length - 1}
+          showCreator={showCreator} // Pass the prop here
         />
       )}
       refreshControl={refreshControl}

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
+  Image,
   Linking,
   ScrollView,
   Text,
@@ -11,7 +12,7 @@ import {
 import AutoHeightImage from "react-native-auto-height-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Link, Stack, useLocalSearchParams } from "expo-router";
-import { Edit, MapPin } from "lucide-react-native";
+import { Edit, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -169,6 +170,21 @@ export default function Page() {
                   </Text>
                 </View>
               </Link>
+            )}
+            {event.user && (
+              <View className="flex-row items-center gap-2">
+                {event.user.userImage ? (
+                  <Image
+                    source={{ uri: event.user.userImage }}
+                    className="h-5 w-5 rounded-full"
+                  />
+                ) : (
+                  <User size={20} color="#627496" />
+                )}
+                <Text className="text-sm text-neutral-2">
+                  @{event.user.username}
+                </Text>
+              </View>
             )}
           </View>
           <View className="my-8">
