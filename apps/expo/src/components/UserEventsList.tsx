@@ -1,4 +1,12 @@
-import { Image, Linking, Pressable, Share, Text, View } from "react-native";
+import {
+  Alert,
+  Image,
+  Linking,
+  Pressable,
+  Share,
+  Text,
+  View,
+} from "react-native";
 import ContextMenu from "react-native-context-menu-view";
 import * as Calendar from "expo-calendar";
 import * as Haptics from "expo-haptics";
@@ -367,7 +375,10 @@ export default function UserEventsList(props: {
     try {
       const { status } = await Calendar.requestCalendarPermissionsAsync();
       if (status !== Calendar.PermissionStatus.GRANTED) {
-        alert("Calendar permission is required to add events.");
+        Alert.alert(
+          "Permission Required",
+          "Calendar permission is required to add events.",
+        );
         return;
       }
 
@@ -378,7 +389,7 @@ export default function UserEventsList(props: {
         calendars.find((cal) => cal.isPrimary) || calendars[0];
 
       if (!defaultCalendar) {
-        alert("No calendar found on the device.");
+        Alert.alert("No Calendar Found", "No calendar found on the device.");
         return;
       }
 
@@ -398,11 +409,14 @@ export default function UserEventsList(props: {
       });
 
       if (eventId) {
-        alert("Event added to calendar successfully!");
+        Alert.alert("Success", "Event added to calendar successfully!");
       }
     } catch (error) {
       console.error("Error adding event to calendar:", error);
-      alert("Failed to add event to calendar. Please try again.");
+      Alert.alert(
+        "Error",
+        "Failed to add event to calendar. Please try again.",
+      );
     }
   };
 
