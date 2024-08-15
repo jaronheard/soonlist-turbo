@@ -1,5 +1,5 @@
 diff --git a/ios/ExpoShareIntentModule.podspec b/ios/ExpoShareIntentModule.podspec
-index 6db146996720008f9ce6f1809b6ec7f6951a78e9..f9ae99b41c54da79f8bbdda2b595b12d17921327 100644
+index 6db146996720008f9ce6f1809b6ec7f6951a78e9..26b0f73292f3b34ae5a6e07f6288128f8ff0a05b 100644
 --- a/ios/ExpoShareIntentModule.podspec
 +++ b/ios/ExpoShareIntentModule.podspec
 @@ -10,12 +10,13 @@ Pod::Spec.new do |s|
@@ -13,7 +13,7 @@ index 6db146996720008f9ce6f1809b6ec7f6951a78e9..f9ae99b41c54da79f8bbdda2b595b12d
    s.static_framework = true
  
    s.dependency 'ExpoModulesCore'
-+  s.dependency 'Sentry'
++  s.dependency 'Sentry', '8.21.0'
  
    # Swift/Objective-C compatibility
    s.pod_target_xcconfig = {
