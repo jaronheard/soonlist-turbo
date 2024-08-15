@@ -84,10 +84,6 @@ export function UserEventListItem(props: {
 
   const isOwner = currentUser?.id === eventUser.id;
 
-  const handleMenuPress = () => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  };
-
   const getMenuItems = () => {
     if (isOwner) {
       return [
@@ -139,7 +135,6 @@ export function UserEventListItem(props: {
 
   return (
     <ContextMenu
-      onPress={handleMenuPress}
       actions={getMenuItems()}
       onPress={(e) => handleMenuSelect(id, e.nativeEvent.index)}
     >
