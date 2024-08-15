@@ -1,8 +1,8 @@
 diff --git a/ios/ExpoShareIntentModule.podspec b/ios/ExpoShareIntentModule.podspec
-index 6db146996720008f9ce6f1809b6ec7f6951a78e9..26b0f73292f3b34ae5a6e07f6288128f8ff0a05b 100644
+index 6db146996720008f9ce6f1809b6ec7f6951a78e9..80cbe1e21c6365fcebf6c10dda14593974a29314 100644
 --- a/ios/ExpoShareIntentModule.podspec
 +++ b/ios/ExpoShareIntentModule.podspec
-@@ -10,12 +10,13 @@ Pod::Spec.new do |s|
+@@ -10,12 +10,15 @@ Pod::Spec.new do |s|
    s.license        = package['license']
    s.author         = package['author']
    s.homepage       = package['homepage']
@@ -13,7 +13,9 @@ index 6db146996720008f9ce6f1809b6ec7f6951a78e9..26b0f73292f3b34ae5a6e07f6288128f
    s.static_framework = true
  
    s.dependency 'ExpoModulesCore'
++  # Sentry
 +  s.dependency 'Sentry', '8.21.0'
++  s.pod_target_xcconfig = { 'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/Sentry"' }
  
    # Swift/Objective-C compatibility
    s.pod_target_xcconfig = {
@@ -1189,14 +1191,17 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..97267e89a9275c14029ddd4b249a8da8
    }
  }
 diff --git a/plugin/build/ios/withIosShareExtensionXcodeTarget.js b/plugin/build/ios/withIosShareExtensionXcodeTarget.js
-index 9d192ccaebf4bae7195d1e735f5aef67a8283461..0593f3f5253da74272c711a7796ad7bb895e2658 100644
+index 9d192ccaebf4bae7195d1e735f5aef67a8283461..80fccddce992456a879ed554e25a903f504aee6e 100644
 --- a/plugin/build/ios/withIosShareExtensionXcodeTarget.js
 +++ b/plugin/build/ios/withIosShareExtensionXcodeTarget.js
-@@ -61,6 +61,7 @@ const withShareExtensionXcodeTarget = (config, parameters) => {
+@@ -61,6 +61,10 @@ const withShareExtensionXcodeTarget = (config, parameters) => {
                      buildSettingsObj["SWIFT_EMIT_LOC_STRINGS"] = "YES";
                      buildSettingsObj["SWIFT_VERSION"] = "5.0";
                      buildSettingsObj["TARGETED_DEVICE_FAMILY"] = `"1,2"`;
 +                    buildSettingsObj["IPHONEOS_DEPLOYMENT_TARGET"] = "15.0";
++                    // Sentry
++                    buildSettingsObj["FRAMEWORK_SEARCH_PATHS"] = "$(inherited) \"${PODS_ROOT}/Sentry\"";
++                    buildSettingsObj["OTHER_LDFLAGS"] = "$(inherited) -framework Sentry";
                  }
              }
          }
