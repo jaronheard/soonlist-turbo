@@ -100,6 +100,7 @@ function MyFeed() {
               onRefresh={onRefresh}
             />
           }
+          actionButton={goButton}
         />
       )}
     </View>
