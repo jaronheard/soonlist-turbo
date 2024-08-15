@@ -10,7 +10,6 @@ import {
 import Constants from "expo-constants";
 import { Stack } from "expo-router";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
-import * as Sentry from "@sentry/react-native";
 import { Navigation2 } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -24,10 +23,6 @@ import ShareButton from "../components/ShareButton";
 import SignInWithOAuth from "../components/SignInWithOAuth";
 
 import "../styles.css";
-
-Sentry.init({
-  dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.us.sentry.io/4506458761396224",
-});
 
 function MyFeed() {
   const { user } = useUser();
@@ -134,4 +129,4 @@ function App() {
   );
 }
 
-export default Sentry.wrap(App);
+export default App;

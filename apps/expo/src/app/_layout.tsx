@@ -4,10 +4,11 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { Stack } from "expo-router";
+import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider, SignedIn } from "@clerk/clerk-expo";
+import * as Sentry from "@sentry/react-native";
 import { useColorScheme } from "nativewind";
 
 import { useAppStateRefresh } from "~/hooks/useAppStateRefresh"; // Add this import
@@ -20,6 +21,8 @@ import { TRPCProvider } from "~/utils/api";
 import "../styles.css";
 
 import type { ErrorBoundaryProps } from "expo-router";
+import { useEffect } from "react";
+import Constants, { AppOwnership } from "expo-constants";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import BottomBar from "~/components/BottomBar";
@@ -47,7 +50,24 @@ const tokenCache = {
   },
 };
 
-export default function RootLayout() {
+const routingInstrumentation = new Sentry.ReactNavigationInstrumentation({
+  enableTimeToInitialDisplay: Constants.appOwnership !== AppOwnership.Expo, // Only in native builds, not in Expo Go.
+});
+
+Sentry.init({
+  dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.us.sentry.io/4506458761396224",
+  integrations: [
+    new Sentry.ReactNativeTracing({
+      routingInstrumentation,
+      enableUserInteractionTracing: true,
+      enableNativeFramesTracking: Constants.appOwnership !== AppOwnership.Expo, // Only in native builds, not in Expo Go.
+    }),
+  ],
+  attachStacktrace: true,
+  debug: true,
+});
+
+function RootLayout() {
   const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   if (!clerkPublishableKey) {
@@ -73,11 +93,20 @@ export default function RootLayout() {
   );
 }
 
+export default Sentry.wrap(RootLayout);
+
 function RootLayoutContent() {
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const { expoPushToken } = useNotification();
   useAppStateRefresh(); // Add this line
+  const ref = useNavigationContainerRef();
+
+  useEffect(() => {
+    if (ref) {
+      routingInstrumentation.registerNavigationContainer(ref);
+    }
+  }, [ref]);
 
   return (
     <View style={{ flex: 1 }}>
