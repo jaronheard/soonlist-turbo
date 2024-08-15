@@ -1,8 +1,8 @@
 diff --git a/ios/ExpoShareIntentModule.podspec b/ios/ExpoShareIntentModule.podspec
-index 6db146996720008f9ce6f1809b6ec7f6951a78e9..8b63c33060bccc1b01e65b0e3aa51d931c422dab 100644
+index 6db146996720008f9ce6f1809b6ec7f6951a78e9..f9ae99b41c54da79f8bbdda2b595b12d17921327 100644
 --- a/ios/ExpoShareIntentModule.podspec
 +++ b/ios/ExpoShareIntentModule.podspec
-@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
+@@ -10,12 +10,13 @@ Pod::Spec.new do |s|
    s.license        = package['license']
    s.author         = package['author']
    s.homepage       = package['homepage']
@@ -11,11 +11,17 @@ index 6db146996720008f9ce6f1809b6ec7f6951a78e9..8b63c33060bccc1b01e65b0e3aa51d93
    s.swift_version  = '5.4'
    s.source         = { git: 'https://github.com/achorein/expo-share-intent' }
    s.static_framework = true
+ 
+   s.dependency 'ExpoModulesCore'
++  s.dependency 'Sentry'
+ 
+   # Swift/Objective-C compatibility
+   s.pod_target_xcconfig = {
 diff --git a/plugin/build/ios/ShareExtensionViewController.swift b/plugin/build/ios/ShareExtensionViewController.swift
-index 67036867bd4a082140d2f8ae5000caea9cdb50fb..5beeac4c523a5d89b5aedf8304fefa1df0f174e8 100644
+index 67036867bd4a082140d2f8ae5000caea9cdb50fb..97267e89a9275c14029ddd4b249a8da84076aaac 100644
 --- a/plugin/build/ios/ShareExtensionViewController.swift
 +++ b/plugin/build/ios/ShareExtensionViewController.swift
-@@ -1,496 +1,734 @@
+@@ -1,496 +1,751 @@
 -/*!
 - * Native module created for Expo Share Intent (https://github.com/achorein/expo-share-intent)
 - * author: achorein (https://github.com/achorein)
@@ -32,6 +38,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..5beeac4c523a5d89b5aedf8304fefa1d
 +import UniformTypeIdentifiers
 +import os.log
 +import UserNotifications
++import Sentry
  
 -class ShareViewController: SLComposeServiceViewController {
 -  let hostAppBundleIdentifier = "<APPIDENTIFIER>"
@@ -57,11 +64,19 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..5beeac4c523a5d89b5aedf8304fefa1d
 -    return true
 -  }
 -      
--  override func viewDidLoad() {
--    super.viewDidLoad();
--  }
--      
 +  let fileURLType = kUTTypeFileURL as String
++
+   override func viewDidLoad() {
+-    super.viewDidLoad();
++    super.viewDidLoad()
++    
++    SentrySDK.start { options in
++      options.dsn = "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.us.sentry.io/4506458761396224",
++      options.debug = true // Set to false in production
++      options.enableAutoSessionTracking = true
++    }
+   }
+-      
 +
    override func viewDidAppear(_ animated: Bool) {
      super.viewDidAppear(animated)
@@ -89,6 +104,12 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..5beeac4c523a5d89b5aedf8304fefa1d
 +    NSLog("soonlist.share-extension.shareviewcontroller: Attempting to perform share")
 +    guard let authData = loadAuthData() else {
 +      NSLog("soonlist.share-extension.shareviewcontroller: Failed to load auth data in performShare()")
++      sendLoginNotification()
++      return
++    }
++
++    if authData.userId.isEmpty || authData.username.isEmpty || authData.authToken.isEmpty {
++      NSLog("soonlist.share-extension.shareviewcontroller: User ID or username or auth token is empty")
 +      sendLoginNotification()
 +      return
 +    }
@@ -913,12 +934,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..5beeac4c523a5d89b5aedf8304fefa1d
      }
 +
 +    return value
-   }
--  
--  enum SharedMediaType: Int, Codable {
--    case image
--    case video
--    case file
++  }
 +}
 +
 +func loadAuthData() -> AuthData? {
@@ -954,11 +970,23 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..5beeac4c523a5d89b5aedf8304fefa1d
 +      "soonlist.share-extension.shareviewcontroller: Keychain is not accessible. Error: \(status)")
    }
 -  
+-  enum SharedMediaType: Int, Codable {
+-    case image
+-    case video
+-    case file
++
++  guard status == errSecSuccess else {
++    return nil
+   }
+-  
 -  func toData(data: [SharedMediaFile]) -> Data {
 -    let encodedData = try? JSONEncoder().encode(data)
 -    return encodedData!
 +
-+  guard status == errSecSuccess else {
++  guard let authDataString = KeychainHelper.getValue(forKey: "authData") else {
++    NSLog(
++      "soonlist.share-extension.shareviewcontroller: Failed to retrieve authData string from Keychain"
++    )
 +    return nil
    }
 -}
@@ -1068,13 +1096,6 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..5beeac4c523a5d89b5aedf8304fefa1d
 -        return mimeType
 -      } else {
 -        return "application/octet-stream"
-+  guard let authDataString = KeychainHelper.getValue(forKey: "authData") else {
-+    NSLog(
-+      "soonlist.share-extension.shareviewcontroller: Failed to retrieve authData string from Keychain"
-+    )
-+    return nil
-+  }
-+
 +  NSLog(
 +    "soonlist.share-extension.shareviewcontroller: Retrieved authData string: \(authDataString)")
 +
