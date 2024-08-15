@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
 import * as SecureStore from "expo-secure-store";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+
+const INITIAL_CALENDAR_LIMIT = 5;
 
 export function useCalendar() {
   const [defaultCalendarId, setDefaultCalendarId] = useState<string | null>(
@@ -20,6 +22,11 @@ export function useCalendar() {
     RouterOutputs["event"]["getUpcomingForUser"][number] | null
   >(null);
 
+  const [showAllCalendars, setShowAllCalendars] = useState(false);
+  const [calendarUsage, setCalendarUsage] = useState<Record<string, number>>(
+    {},
+  );
+
   useEffect(() => {
     const loadDefaultCalendar = async () => {
       try {
@@ -33,8 +40,18 @@ export function useCalendar() {
         if (savedCalendarId) {
           setDefaultCalendarId(savedCalendarId);
         }
+
+        // Load calendar usage data
+        const usageData = await SecureStore.getItemAsync("calendarUsage", {
+          keychainAccessible: SecureStore.WHEN_UNLOCKED,
+          keychainAccessGroup: "group.soonlist.soonlist",
+        });
+        if (usageData) {
+          const parsedUsage = JSON.parse(usageData) as Record<string, number>;
+          setCalendarUsage(parsedUsage);
+        }
       } catch (error) {
-        console.error("Error loading default calendar:", error);
+        console.error("Error loading calendar data:", error);
       }
     };
     void loadDefaultCalendar();
@@ -57,16 +74,36 @@ export function useCalendar() {
         Calendar.EntityTypes.EVENT,
       );
 
-      // Sort calendars, putting the default calendar first
+      // Get the default calendar for iOS
+      let defaultCalendar: Calendar.Calendar | null = null;
+      if (Platform.OS === "ios") {
+        defaultCalendar = await Calendar.getDefaultCalendarAsync();
+      }
+
+      // Sort calendars based on usage data, default calendar, and iOS default
       calendars.sort((a, b) => {
-        if (a.id === defaultCalendarId) return -1;
-        if (b.id === defaultCalendarId) return 1;
+        const usageA = calendarUsage[a.id] || 0;
+        const usageB = calendarUsage[b.id] || 0;
+
+        if (usageA === 0 && usageB === 0) {
+          // If no usage data, prioritize default and iOS default calendars
+          if (a.id === defaultCalendarId) return -1;
+          if (b.id === defaultCalendarId) return 1;
+          if (a.id === defaultCalendar?.id) return -1;
+          if (b.id === defaultCalendar?.id) return 1;
+        } else {
+          // Sort by usage, then by whether it's the default calendar
+          if (usageA !== usageB) return usageB - usageA;
+          if (a.id === defaultCalendarId) return -1;
+          if (b.id === defaultCalendarId) return 1;
+        }
         return 0;
       });
 
       setAvailableCalendars(calendars);
       setSelectedEvent(event);
       setIsCalendarModalVisible(true);
+      setShowAllCalendars(false);
     } catch (error) {
       console.error("Error fetching calendars:", error);
       Alert.alert("Error", "Failed to fetch calendars. Please try again.");
@@ -113,6 +150,19 @@ export function useCalendar() {
           `Event "${e.name}" added to calendar: ${selectedCalendar?.title} (${selectedCalendar?.source.name})`,
         );
       }
+
+      // Update calendar usage
+      const newUsage = { ...calendarUsage };
+      newUsage[selectedCalendarId] = (newUsage[selectedCalendarId] || 0) + 1;
+      setCalendarUsage(newUsage);
+      await SecureStore.setItemAsync(
+        "calendarUsage",
+        JSON.stringify(newUsage),
+        {
+          keychainAccessible: SecureStore.WHEN_UNLOCKED,
+          keychainAccessGroup: "group.soonlist.soonlist",
+        },
+      );
     } catch (error) {
       console.error("Error adding event to calendar:", error);
       Alert.alert(
@@ -124,11 +174,34 @@ export function useCalendar() {
     }
   };
 
+  const clearCalendarData = async () => {
+    try {
+      await SecureStore.deleteItemAsync("defaultCalendarId", {
+        keychainAccessible: SecureStore.WHEN_UNLOCKED,
+        keychainAccessGroup: "group.soonlist.soonlist",
+      });
+      console.log("Calendar data cleared");
+      await SecureStore.deleteItemAsync("calendarUsage", {
+        keychainAccessible: SecureStore.WHEN_UNLOCKED,
+        keychainAccessGroup: "group.soonlist.soonlist",
+      });
+      console.log("Calendar usage data cleared");
+      setDefaultCalendarId(null);
+      setCalendarUsage({});
+    } catch (error) {
+      console.error("Error clearing calendar data:", error);
+    }
+  };
+
   return {
     isCalendarModalVisible,
     setIsCalendarModalVisible,
     availableCalendars,
     handleAddToCal,
     handleCalendarSelect,
+    showAllCalendars,
+    setShowAllCalendars,
+    INITIAL_CALENDAR_LIMIT,
+    clearCalendarData,
   };
 }

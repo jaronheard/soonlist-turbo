@@ -7,6 +7,9 @@ interface CalendarSelectionModalProps {
   calendars: Calendar.Calendar[];
   onSelect: (calendarId: string) => void;
   onDismiss: () => void;
+  showAllCalendars: boolean;
+  setShowAllCalendars: (show: boolean) => void;
+  initialLimit: number;
 }
 
 export const CalendarSelectionModal: React.FC<CalendarSelectionModalProps> = ({
@@ -14,6 +17,9 @@ export const CalendarSelectionModal: React.FC<CalendarSelectionModalProps> = ({
   calendars,
   onSelect,
   onDismiss,
+  showAllCalendars,
+  setShowAllCalendars,
+  initialLimit,
 }) => {
   const renderCalendarItem = ({ item }: { item: Calendar.Calendar }) => (
     <TouchableOpacity
@@ -27,11 +33,15 @@ export const CalendarSelectionModal: React.FC<CalendarSelectionModalProps> = ({
       <Text className="flex-1 truncate text-base font-medium">
         {item.title}
       </Text>
-      <Text className="ml-2 truncate text-sm text-gray-500">
+      <Text className="ml-2 max-w-[40%] break-all text-sm text-gray-500">
         ({item.source.name})
       </Text>
     </TouchableOpacity>
   );
+
+  const displayedCalendars = showAllCalendars
+    ? calendars
+    : calendars.slice(0, initialLimit);
 
   return (
     <Modal
@@ -44,10 +54,20 @@ export const CalendarSelectionModal: React.FC<CalendarSelectionModalProps> = ({
         <View className="max-h-[80%] w-4/5 rounded-lg bg-white p-5">
           <Text className="mb-3 text-lg font-bold">Select Calendar</Text>
           <FlatList
-            data={calendars}
+            data={displayedCalendars}
             renderItem={renderCalendarItem}
             keyExtractor={(item) => item.id}
           />
+          {!showAllCalendars && calendars.length > initialLimit && (
+            <TouchableOpacity
+              className="mt-3 items-center rounded-md bg-blue-100 p-3"
+              onPress={() => setShowAllCalendars(true)}
+            >
+              <Text className="text-base text-blue-700">
+                Show All Calendars
+              </Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             className="mt-3 items-center rounded-md bg-gray-100 p-3"
             onPress={onDismiss}

@@ -310,6 +310,9 @@ export default function UserEventsList(props: {
     availableCalendars,
     handleAddToCal,
     handleCalendarSelect,
+    showAllCalendars,
+    setShowAllCalendars,
+    INITIAL_CALENDAR_LIMIT,
   } = useCalendar();
 
   const deleteEventMutation = api.event.delete.useMutation({
@@ -420,6 +423,9 @@ export default function UserEventsList(props: {
         calendars={availableCalendars}
         onSelect={handleCalendarSelectWrapper}
         onDismiss={() => setIsCalendarModalVisible(false)}
+        showAllCalendars={showAllCalendars}
+        setShowAllCalendars={setShowAllCalendars}
+        initialLimit={INITIAL_CALENDAR_LIMIT}
       />
     </>
   );

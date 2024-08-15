@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 
+import { useCalendar } from "./useCalendar";
+
 const saveAuthData = async (authData: {
   username: string | null;
   authToken: string | null;
@@ -43,6 +45,7 @@ const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
     authToken: string | null;
     expoPushToken: string | null;
   } | null>(null);
+  const { clearCalendarData } = useCalendar();
 
   useEffect(() => {
     const syncAuthData = async () => {
@@ -60,6 +63,7 @@ const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
       } else {
         // Clear data when signed out
         await deleteAuthData();
+        await clearCalendarData();
         setAuthData(null);
       }
     };
