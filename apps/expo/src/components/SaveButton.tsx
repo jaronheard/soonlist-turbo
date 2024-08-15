@@ -38,6 +38,7 @@ export default function SaveButton({
     },
     onSettled: () => {
       void utils.event.getSavedIdsForUser.invalidate();
+      void utils.event.getUpcomingForUser.invalidate(); // Invalidate event.getUpcomingForUser
     },
   });
 
@@ -59,6 +60,7 @@ export default function SaveButton({
     },
     onSettled: () => {
       void utils.event.getSavedIdsForUser.invalidate();
+      void utils.event.getUpcomingForUser.invalidate(); // Invalidate event.getUpcomingForUser
     },
   });
 
