@@ -21,6 +21,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         ios: {
           deploymentTarget: "15.0",
+          useFrameworks: "dynamic",
         },
       },
     ],
