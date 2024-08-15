@@ -1,18 +1,7 @@
-import { useEffect, useState } from "react";
-import {
-  Alert,
-  Image,
-  Linking,
-  Pressable,
-  Share,
-  Text,
-  View,
-} from "react-native";
+import { Image, Linking, Pressable, Share, Text, View } from "react-native";
 import ContextMenu from "react-native-context-menu-view";
-import * as Calendar from "expo-calendar";
 import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 import { MapPin, User } from "lucide-react-native";
@@ -20,6 +9,7 @@ import { MapPin, User } from "lucide-react-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import { useCalendar } from "~/hooks/useCalendar";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import {
@@ -28,6 +18,7 @@ import {
   timeFormatDateInfo,
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
+import { CalendarSelectionModal } from "./CalendarSelectionModal";
 
 export function UserEventListItem(props: {
   event: RouterOutputs["event"]["getUpcomingForUser"][number];
@@ -313,29 +304,13 @@ export default function UserEventsList(props: {
   const { events, refreshControl, actionButton, showCreator } = props;
   const { user } = useUser();
   const utils = api.useUtils();
-  const [defaultCalendarId, setDefaultCalendarId] = useState<string | null>(
-    null,
-  );
-
-  useEffect(() => {
-    const loadDefaultCalendar = async () => {
-      try {
-        const savedCalendarId = await SecureStore.getItemAsync(
-          "defaultCalendarId",
-          {
-            keychainAccessible: SecureStore.WHEN_UNLOCKED,
-            keychainAccessGroup: "group.soonlist.soonlist",
-          },
-        );
-        if (savedCalendarId) {
-          setDefaultCalendarId(savedCalendarId);
-        }
-      } catch (error) {
-        console.error("Error loading default calendar:", error);
-      }
-    };
-    void loadDefaultCalendar();
-  }, []);
+  const {
+    isCalendarModalVisible,
+    setIsCalendarModalVisible,
+    availableCalendars,
+    handleAddToCal,
+    handleCalendarSelect,
+  } = useCalendar();
 
   const deleteEventMutation = api.event.delete.useMutation({
     onSuccess: () => {
@@ -393,126 +368,14 @@ export default function UserEventsList(props: {
     }
   };
 
-  const handleAddToCal = async (
+  const handleAddToCalWrapper = (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => {
-    try {
-      const { status } = await Calendar.requestCalendarPermissionsAsync();
-      if (status !== Calendar.PermissionStatus.GRANTED) {
-        Alert.alert(
-          "Permission Required",
-          "Calendar permission is required to add events.",
-        );
-        return;
-      }
+    void handleAddToCal(event);
+  };
 
-      const calendars = await Calendar.getCalendarsAsync(
-        Calendar.EntityTypes.EVENT,
-      );
-
-      // Sort calendars, putting the default calendar first
-      calendars.sort((a, b) => {
-        if (a.id === defaultCalendarId) return -1;
-        if (b.id === defaultCalendarId) return 1;
-        return 0;
-      });
-
-      const formatCalendarDetails = (cal: Calendar.Calendar) => {
-        return `${cal.title} (${cal.source.name})`;
-      };
-
-      const formatFullCalendarDetails = (cal: Calendar.Calendar) => {
-        return `${cal.title} (${cal.source.name})
-Type: ${cal.type}
-Color: ${cal.color}
-Access: ${cal.accessLevel}
-${cal.isDefault ? "(Default Calendar)" : ""}`;
-      };
-
-      // Show calendar selection dialog
-      let selectedCalendarId = await new Promise<string | null>((resolve) => {
-        Alert.alert(
-          "Select Calendar",
-          "Choose a calendar to add the event to:",
-          [
-            ...calendars.slice(0, 5).map((cal) => ({
-              text: formatCalendarDetails(cal),
-              onPress: () => resolve(cal.id),
-            })),
-            {
-              text: "More calendars",
-              onPress: () => resolve("more"),
-            },
-            {
-              text: "Cancel",
-              onPress: () => resolve(null),
-              style: "cancel",
-            },
-          ],
-        );
-      });
-
-      if (selectedCalendarId === "more") {
-        // Show full list of calendars in a modal
-        selectedCalendarId = await new Promise<string | null>((resolve) => {
-          Alert.alert(
-            "Select Calendar",
-            "Choose a calendar:",
-            calendars
-              .map((cal) => ({
-                text: formatCalendarDetails(cal),
-                onPress: () => resolve(cal.id),
-              }))
-              .concat([
-                {
-                  text: "Cancel",
-                  onPress: () => resolve(null),
-                },
-              ]),
-          );
-        });
-      }
-
-      if (!selectedCalendarId) return;
-
-      // Save the selected calendar as default using SecureStore
-      await SecureStore.setItemAsync("defaultCalendarId", selectedCalendarId, {
-        keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: "group.soonlist.soonlist",
-      });
-      setDefaultCalendarId(selectedCalendarId);
-
-      const e = event.event as AddToCalendarButtonPropsRestricted;
-      const startDate = new Date(`${e.startDate}T${e.startTime || "00:00"}:00`);
-      const endDate = e.endTime
-        ? new Date(`${e.startDate}T${e.endTime}:00`)
-        : new Date(startDate.getTime() + 60 * 60 * 1000); // Default to 1 hour if no end time
-
-      const eventId = await Calendar.createEventAsync(selectedCalendarId, {
-        title: e.name,
-        startDate,
-        endDate,
-        location: e.location,
-        notes: e.description,
-        timeZone: e.timeZone,
-      });
-
-      if (eventId) {
-        const selectedCalendar = calendars.find(
-          (cal) => cal.id === selectedCalendarId,
-        );
-        Alert.alert(
-          "Success",
-          `Event "${e.name}" added to calendar:\n\n${formatFullCalendarDetails(selectedCalendar!)}`,
-        );
-      }
-    } catch (error) {
-      console.error("Error adding event to calendar:", error);
-      Alert.alert(
-        "Error",
-        "Failed to add event to calendar. Please try again.",
-      );
-    }
+  const handleCalendarSelectWrapper = (selectedCalendarId: string) => {
+    void handleCalendarSelect(selectedCalendarId);
   };
 
   // Collapse similar events
@@ -530,26 +393,34 @@ ${cal.isDefault ? "(Default Calendar)" : ""}`;
   );
 
   return (
-    <FlashList
-      data={collapsedEvents}
-      estimatedItemSize={60}
-      renderItem={({ item, index }) => (
-        <UserEventListItem
-          event={item.event}
-          actionButton={actionButton ? actionButton(item.event) : undefined}
-          isLastItem={index === collapsedEvents.length - 1}
-          showCreator={showCreator}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onFollow={handleFollow}
-          onUnfollow={handleUnfollow}
-          onShare={handleShare}
-          onAddToCal={handleAddToCal}
-        />
-      )}
-      refreshControl={refreshControl}
-      contentContainerStyle={{ paddingBottom: 16 }}
-      ListFooterComponent={renderFooter}
-    />
+    <>
+      <FlashList
+        data={collapsedEvents}
+        estimatedItemSize={60}
+        renderItem={({ item, index }) => (
+          <UserEventListItem
+            event={item.event}
+            actionButton={actionButton ? actionButton(item.event) : undefined}
+            isLastItem={index === collapsedEvents.length - 1}
+            showCreator={showCreator}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onFollow={handleFollow}
+            onUnfollow={handleUnfollow}
+            onShare={handleShare}
+            onAddToCal={handleAddToCalWrapper}
+          />
+        )}
+        refreshControl={refreshControl}
+        contentContainerStyle={{ paddingBottom: 16 }}
+        ListFooterComponent={renderFooter}
+      />
+      <CalendarSelectionModal
+        visible={isCalendarModalVisible}
+        calendars={availableCalendars}
+        onSelect={handleCalendarSelectWrapper}
+        onDismiss={() => setIsCalendarModalVisible(false)}
+      />
+    </>
   );
 }
