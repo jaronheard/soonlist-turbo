@@ -2,7 +2,7 @@ import { Image, Linking, Pressable, Share, Text, View } from "react-native";
 import ContextMenu from "react-native-context-menu-view";
 // import * as Calendar from "expo-calendar";
 import * as Haptics from "expo-haptics";
-import { Link, useRouter } from "expo-router";
+import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 import { MapPin, User } from "lucide-react-native"; // Add User icon
