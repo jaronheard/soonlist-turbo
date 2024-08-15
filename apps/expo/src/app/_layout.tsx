@@ -59,6 +59,7 @@ Sentry.init({
   integrations: [
     new Sentry.ReactNativeTracing({
       routingInstrumentation,
+      enableUserInteractionTracing: true,
       enableNativeFramesTracking: Constants.appOwnership !== AppOwnership.Expo, // Only in native builds, not in Expo Go.
     }),
   ],
