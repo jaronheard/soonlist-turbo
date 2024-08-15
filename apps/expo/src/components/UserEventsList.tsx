@@ -1,7 +1,8 @@
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Linking, Pressable, Share, Text, View } from "react-native";
 import ContextMenu from "react-native-context-menu-view";
+// import * as Calendar from "expo-calendar";
 import * as Haptics from "expo-haptics";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 import { MapPin, User } from "lucide-react-native"; // Add User icon
@@ -9,6 +10,7 @@ import { MapPin, User } from "lucide-react-native"; // Add User icon
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import { api } from "~/utils/api";
 import { cn } from "~/utils/cn"; // Make sure to import the cn function
 
 import {
@@ -23,11 +25,24 @@ export function UserEventListItem(props: {
   actionButton?: React.ReactNode;
   isLastItem?: boolean;
   showCreator?: boolean;
-  onEdit?: (eventId: string) => void;
-  onDelete?: (eventId: string) => void;
-  onRemove?: (eventId: string) => void;
-  onShare?: (eventId: string) => void;
-  onAddToCal?: (eventId: string) => void;
+  onEdit?: (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => void;
+  onDelete?: (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => void;
+  onFollow?: (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => void;
+  onUnfollow?: (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => void;
+  onShare?: (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => void;
+  onAddToCal?: (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => void;
 }) {
   const {
     event,
@@ -36,7 +51,8 @@ export function UserEventListItem(props: {
     showCreator,
     onEdit,
     onDelete,
-    onRemove,
+    onFollow,
+    onUnfollow,
     onShare,
     onAddToCal,
   } = props;
@@ -82,7 +98,15 @@ export function UserEventListItem(props: {
   const { user: currentUser } = useUser();
   const eventUser = event.user;
 
-  const isOwner = currentUser?.id === eventUser.id;
+  const isOwner =
+    currentUser?.externalId === eventUser.id ||
+    currentUser?.id === eventUser.id;
+  const isFollowing = event.eventFollows.find(
+    (item) =>
+      item.userId === user.id ||
+      item.userId === currentUser?.id ||
+      item.userId === currentUser?.externalId,
+  );
 
   const getMenuItems = () => {
     if (isOwner) {
@@ -91,6 +115,12 @@ export function UserEventListItem(props: {
         { title: "Share", systemIcon: "square.and.arrow.up" },
         { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
         { title: "Delete", systemIcon: "trash", destructive: true },
+      ];
+    } else if (!isFollowing) {
+      return [
+        { title: "Add", systemIcon: "plus.circle" },
+        { title: "Share", systemIcon: "square.and.arrow.up" },
+        { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
       ];
     } else {
       return [
@@ -101,42 +131,57 @@ export function UserEventListItem(props: {
     }
   };
 
-  const handleMenuSelect = (eventId: string, index: number) => {
+  const handleMenuSelect = (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+    index: number,
+  ) => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     if (isOwner) {
       switch (index) {
         case 0:
-          onEdit?.(eventId);
+          onEdit?.(event);
           break;
         case 1:
-          onShare?.(eventId);
+          onShare?.(event);
           break;
         case 2:
-          onAddToCal?.(eventId);
+          onAddToCal?.(event);
           break;
         case 3:
-          onDelete?.(eventId);
+          onDelete?.(event);
+          break;
+      }
+    } else if (isFollowing) {
+      switch (index) {
+        case 0:
+          onShare?.(event);
+          break;
+        case 1:
+          onAddToCal?.(event);
+          break;
+        case 2:
+          onUnfollow?.(event);
           break;
       }
     } else {
       switch (index) {
         case 0:
-          onShare?.(eventId);
+          onFollow?.(event);
           break;
         case 1:
-          onAddToCal?.(eventId);
+          onShare?.(event);
           break;
         case 2:
-          onRemove?.(eventId);
+          onAddToCal?.(event);
           break;
       }
     }
-  };
+  }; // Add this closing brace
 
   return (
     <ContextMenu
       actions={getMenuItems()}
-      onPress={(e) => handleMenuSelect(id, e.nativeEvent.index)}
+      onPress={(e) => handleMenuSelect(event, e.nativeEvent.index)}
     >
       <View
         className={cn(
@@ -231,24 +276,72 @@ export default function UserEventsList(props: {
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => React.ReactNode;
   showCreator?: boolean;
-  onEdit?: (eventId: string) => void;
-  onDelete?: (eventId: string) => void;
-  onRemove?: (eventId: string) => void;
-  onShare?: (eventId: string) => void;
-  onAddToCal?: (eventId: string) => void;
 }) {
-  const {
-    events,
-    refreshControl,
-    actionButton,
-    showCreator,
-    onEdit,
-    onDelete,
-    onRemove,
-    onShare,
-    onAddToCal,
-  } = props;
+  const { events, refreshControl, actionButton, showCreator } = props;
   const { user } = useUser();
+  const utils = api.useUtils();
+
+  const deleteEventMutation = api.event.delete.useMutation({
+    onSuccess: () => {
+      void utils.event.invalidate();
+    },
+  });
+
+  const unfollowEventMutation = api.event.unfollow.useMutation({
+    onSuccess: () => {
+      void utils.event.invalidate();
+    },
+  });
+
+  const followEventMutation = api.event.follow.useMutation({
+    onSuccess: () => {
+      void utils.event.invalidate();
+    },
+  });
+
+  const handleEdit = (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => {
+    void Linking.openURL(
+      `${process.env.EXPO_PUBLIC_API_BASE_URL}/event/${event.id}/edit`,
+    );
+  };
+
+  const handleDelete = async (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => {
+    await deleteEventMutation.mutateAsync({ id: event.id });
+  };
+
+  const handleUnfollow = async (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => {
+    await unfollowEventMutation.mutateAsync({ id: event.id });
+  };
+
+  const handleFollow = async (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => {
+    await followEventMutation.mutateAsync({ id: event.id });
+  };
+
+  const handleShare = async (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => {
+    try {
+      await Share.share({
+        url: `${process.env.EXPO_PUBLIC_API_BASE_URL}/event/${event.id}`,
+      });
+    } catch (error) {
+      console.error("Error sharing event:", error);
+    }
+  };
+
+  const handleAddToCal = (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => {
+    console.log("handleAddToCal is not implemented yet", event);
+  };
 
   // Collapse similar events
   const collapsedEvents = collapseSimilarEvents(
@@ -274,11 +367,12 @@ export default function UserEventsList(props: {
           actionButton={actionButton ? actionButton(item.event) : undefined}
           isLastItem={index === collapsedEvents.length - 1}
           showCreator={showCreator}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onRemove={onRemove}
-          onShare={onShare}
-          onAddToCal={onAddToCal}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onFollow={handleFollow}
+          onUnfollow={handleUnfollow}
+          onShare={handleShare}
+          onAddToCal={handleAddToCal}
         />
       )}
       refreshControl={refreshControl}
