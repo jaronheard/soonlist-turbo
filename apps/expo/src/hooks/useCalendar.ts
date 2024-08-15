@@ -6,6 +6,8 @@ import * as SecureStore from "expo-secure-store";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+// Import the toast notification function (you'll need to implement this)
+import { showToast } from "~/utils/toast";
 
 const INITIAL_CALENDAR_LIMIT = 5;
 
@@ -132,23 +134,27 @@ export function useCalendar() {
         ? new Date(`${e.startDate}T${e.endTime}:00`)
         : new Date(startDate.getTime() + 60 * 60 * 1000); // Default to 1 hour if no end time
 
+      // Create the additional text using the correct environment variable
+      const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+      const additionalText =
+        selectedEvent.userName && selectedEvent.id
+          ? `Collected by @${selectedEvent.userName} on Soonlist. \nFull details: ${baseUrl}/event/${selectedEvent.id}`
+          : `Collected on Soonlist\n(${baseUrl})`;
+
+      // Combine the original description with the additional text
+      const fullDescription = `${e.description}\n\n${additionalText}`;
+
       const eventId = await Calendar.createEventAsync(selectedCalendarId, {
         title: e.name,
         startDate,
         endDate,
         location: e.location,
-        notes: e.description,
+        notes: fullDescription,
         timeZone: e.timeZone,
       });
 
       if (eventId) {
-        const selectedCalendar = availableCalendars.find(
-          (cal) => cal.id === selectedCalendarId,
-        );
-        Alert.alert(
-          "Success",
-          `Event "${e.name}" added to calendar: ${selectedCalendar?.title} (${selectedCalendar?.source.name})`,
-        );
+        showToast(`Event successfully added to calendar`, "success");
       }
 
       // Update calendar usage
@@ -165,10 +171,7 @@ export function useCalendar() {
       );
     } catch (error) {
       console.error("Error adding event to calendar:", error);
-      Alert.alert(
-        "Error",
-        "Failed to add event to calendar. Please try again.",
-      );
+      showToast("Failed to add event to calendar. Please try again.", "error");
     } finally {
       setSelectedEvent(null);
     }
