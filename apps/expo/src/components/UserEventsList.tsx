@@ -164,7 +164,7 @@ export function UserEventListItem(props: {
               params: { id },
             }}
           >
-            <Pressable>
+            <Pressable onLongPress={() => null}>
               <Text
                 className="mb-2 text-3xl font-bold text-neutral-1"
                 numberOfLines={2}
