@@ -78,7 +78,7 @@ function MyFeed() {
       <Stack.Screen
         options={{
           title: "Soonlist",
-          headerTitle: "Soonlist", // Added this line
+          headerTitle: "Soonlist",
           headerRight: () => (
             <View className="-mr-2 flex-row items-center gap-1">
               <SignedIn>

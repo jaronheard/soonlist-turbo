@@ -47,7 +47,7 @@ export default function Page() {
       <Stack.Screen
         options={{
           title: "Discover",
-          headerTitle: "Discover", // Added this line
+          headerTitle: "Discover",
           headerRight: () => (
             <View className="-mr-2 flex-row items-center gap-1">
               <SignedIn>
