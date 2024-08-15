@@ -1191,7 +1191,7 @@ index 67036867bd4a082140d2f8ae5000caea9cdb50fb..97267e89a9275c14029ddd4b249a8da8
    }
  }
 diff --git a/plugin/build/ios/withIosShareExtensionXcodeTarget.js b/plugin/build/ios/withIosShareExtensionXcodeTarget.js
-index 9d192ccaebf4bae7195d1e735f5aef67a8283461..80fccddce992456a879ed554e25a903f504aee6e 100644
+index 9d192ccaebf4bae7195d1e735f5aef67a8283461..509062f5dd5a7d50854ee8ca307038d4db2e6555 100644
 --- a/plugin/build/ios/withIosShareExtensionXcodeTarget.js
 +++ b/plugin/build/ios/withIosShareExtensionXcodeTarget.js
 @@ -61,6 +61,10 @@ const withShareExtensionXcodeTarget = (config, parameters) => {
@@ -1200,8 +1200,8 @@ index 9d192ccaebf4bae7195d1e735f5aef67a8283461..80fccddce992456a879ed554e25a903f
                      buildSettingsObj["TARGETED_DEVICE_FAMILY"] = `"1,2"`;
 +                    buildSettingsObj["IPHONEOS_DEPLOYMENT_TARGET"] = "15.0";
 +                    // Sentry
-+                    buildSettingsObj["FRAMEWORK_SEARCH_PATHS"] = "$(inherited) \"${PODS_ROOT}/Sentry\"";
-+                    buildSettingsObj["OTHER_LDFLAGS"] = "$(inherited) -framework Sentry";
++                    buildSettingsObj["FRAMEWORK_SEARCH_PATHS"] = "$(inherited) \\\"${PODS_ROOT}/Sentry\\\"";
++                    buildSettingsObj["OTHER_LDFLAGS"] = "$(inherited) -framework \\\"Sentry\\\"";
                  }
              }
          }
