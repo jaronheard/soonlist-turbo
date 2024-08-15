@@ -417,6 +417,18 @@ export default function UserEventsList(props: {
         return 0;
       });
 
+      const formatCalendarDetails = (cal: Calendar.Calendar) => {
+        return `${cal.title} (${cal.source.name})`;
+      };
+
+      const formatFullCalendarDetails = (cal: Calendar.Calendar) => {
+        return `${cal.title} (${cal.source.name})
+Type: ${cal.type}
+Color: ${cal.color}
+Access: ${cal.accessLevel}
+${cal.isDefault ? "(Default Calendar)" : ""}`;
+      };
+
       // Show calendar selection dialog
       let selectedCalendarId = await new Promise<string | null>((resolve) => {
         Alert.alert(
@@ -424,7 +436,7 @@ export default function UserEventsList(props: {
           "Choose a calendar to add the event to:",
           [
             ...calendars.slice(0, 5).map((cal) => ({
-              text: cal.title,
+              text: formatCalendarDetails(cal),
               onPress: () => resolve(cal.id),
             })),
             {
@@ -448,7 +460,7 @@ export default function UserEventsList(props: {
             "Choose a calendar:",
             calendars
               .map((cal) => ({
-                text: cal.title,
+                text: formatCalendarDetails(cal),
                 onPress: () => resolve(cal.id),
               }))
               .concat([
@@ -491,7 +503,7 @@ export default function UserEventsList(props: {
         );
         Alert.alert(
           "Success",
-          `Event ${e.name} added to calendar (${selectedCalendar?.title}) successfully!`,
+          `Event "${e.name}" added to calendar:\n\n${formatFullCalendarDetails(selectedCalendar!)}`,
         );
       }
     } catch (error) {
