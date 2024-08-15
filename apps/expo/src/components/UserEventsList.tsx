@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -11,16 +12,16 @@ import ContextMenu from "react-native-context-menu-view";
 import * as Calendar from "expo-calendar";
 import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
-import { MapPin, User } from "lucide-react-native"; // Add User icon
+import { MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import { api } from "~/utils/api";
-import { cn } from "~/utils/cn"; // Make sure to import the cn function
-
+import { cn } from "~/utils/cn";
 import {
   formatRelativeTime,
   getDateTimeInfo,
@@ -312,6 +313,29 @@ export default function UserEventsList(props: {
   const { events, refreshControl, actionButton, showCreator } = props;
   const { user } = useUser();
   const utils = api.useUtils();
+  const [defaultCalendarId, setDefaultCalendarId] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const loadDefaultCalendar = async () => {
+      try {
+        const savedCalendarId = await SecureStore.getItemAsync(
+          "defaultCalendarId",
+          {
+            keychainAccessible: SecureStore.WHEN_UNLOCKED,
+            keychainAccessGroup: "group.soonlist.soonlist",
+          },
+        );
+        if (savedCalendarId) {
+          setDefaultCalendarId(savedCalendarId);
+        }
+      } catch (error) {
+        console.error("Error loading default calendar:", error);
+      }
+    };
+    void loadDefaultCalendar();
+  }, []);
 
   const deleteEventMutation = api.event.delete.useMutation({
     onSuccess: () => {
@@ -385,13 +409,66 @@ export default function UserEventsList(props: {
       const calendars = await Calendar.getCalendarsAsync(
         Calendar.EntityTypes.EVENT,
       );
-      const defaultCalendar =
-        calendars.find((cal) => cal.isPrimary) || calendars[0];
 
-      if (!defaultCalendar) {
-        Alert.alert("No Calendar Found", "No calendar found on the device.");
-        return;
+      // Sort calendars, putting the default calendar first
+      calendars.sort((a, b) => {
+        if (a.id === defaultCalendarId) return -1;
+        if (b.id === defaultCalendarId) return 1;
+        return 0;
+      });
+
+      // Show calendar selection dialog
+      let selectedCalendarId = await new Promise<string | null>((resolve) => {
+        Alert.alert(
+          "Select Calendar",
+          "Choose a calendar to add the event to:",
+          [
+            ...calendars.slice(0, 5).map((cal) => ({
+              text: cal.title,
+              onPress: () => resolve(cal.id),
+            })),
+            {
+              text: "More calendars",
+              onPress: () => resolve("more"),
+            },
+            {
+              text: "Cancel",
+              onPress: () => resolve(null),
+              style: "cancel",
+            },
+          ],
+        );
+      });
+
+      if (selectedCalendarId === "more") {
+        // Show full list of calendars in a modal
+        selectedCalendarId = await new Promise<string | null>((resolve) => {
+          Alert.alert(
+            "Select Calendar",
+            "Choose a calendar:",
+            calendars
+              .map((cal) => ({
+                text: cal.title,
+                onPress: () => resolve(cal.id),
+              }))
+              .concat([
+                {
+                  text: "Cancel",
+                  onPress: () => resolve(null),
+                },
+              ]),
+          );
+        });
       }
+
+      if (!selectedCalendarId) return;
+
+      // Save the selected calendar as default using SecureStore
+      await SecureStore.setItemAsync("defaultCalendarId", selectedCalendarId, {
+        keychainAccessible: SecureStore.WHEN_UNLOCKED,
+        keychainAccessGroup: "group.soonlist.soonlist",
+      });
+      setDefaultCalendarId(selectedCalendarId);
 
       const e = event.event as AddToCalendarButtonPropsRestricted;
       const startDate = new Date(`${e.startDate}T${e.startTime || "00:00"}:00`);
@@ -399,7 +476,7 @@ export default function UserEventsList(props: {
         ? new Date(`${e.startDate}T${e.endTime}:00`)
         : new Date(startDate.getTime() + 60 * 60 * 1000); // Default to 1 hour if no end time
 
-      const eventId = await Calendar.createEventAsync(defaultCalendar.id, {
+      const eventId = await Calendar.createEventAsync(selectedCalendarId, {
         title: e.name,
         startDate,
         endDate,
@@ -409,7 +486,13 @@ export default function UserEventsList(props: {
       });
 
       if (eventId) {
-        Alert.alert("Success", "Event added to calendar successfully!");
+        const selectedCalendar = calendars.find(
+          (cal) => cal.id === selectedCalendarId,
+        );
+        Alert.alert(
+          "Success",
+          `Event ${e.name} added to calendar (${selectedCalendar?.title}) successfully!`,
+        );
       }
     } catch (error) {
       console.error("Error adding event to calendar:", error);
