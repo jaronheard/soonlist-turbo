@@ -51,6 +51,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-secure-store",
+    [
+      "expo-calendar",
+      {
+        calendarPermission:
+          "The app needs to access your calendar to add events.",
+      },
+    ],
   ],
   ios: {
     supportsTablet: true,

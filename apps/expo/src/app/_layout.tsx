@@ -23,6 +23,7 @@ import type { ErrorBoundaryProps } from "expo-router";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import BottomBar from "~/components/BottomBar";
+import { Toast } from "~/components/Toast";
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
@@ -100,6 +101,7 @@ function RootLayoutContent() {
         <View style={{ paddingBottom: insets.bottom + 36 }} />
         <BottomBar expoPushToken={expoPushToken} />
       </SignedIn>
+      <Toast />
       <StatusBar />
     </View>
   );

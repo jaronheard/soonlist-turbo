@@ -1,24 +1,24 @@
 import { Image, Linking, Pressable, Share, Text, View } from "react-native";
 import ContextMenu from "react-native-context-menu-view";
-// import * as Calendar from "expo-calendar";
 import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
-import { MapPin, User } from "lucide-react-native"; // Add User icon
+import { MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import { useCalendar } from "~/hooks/useCalendar";
 import { api } from "~/utils/api";
-import { cn } from "~/utils/cn"; // Make sure to import the cn function
-
+import { cn } from "~/utils/cn";
 import {
   formatRelativeTime,
   getDateTimeInfo,
   timeFormatDateInfo,
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
+import { CalendarSelectionModal } from "./CalendarSelectionModal";
 
 export function UserEventListItem(props: {
   event: RouterOutputs["event"]["getUpcomingForUser"][number];
@@ -304,6 +304,16 @@ export default function UserEventsList(props: {
   const { events, refreshControl, actionButton, showCreator } = props;
   const { user } = useUser();
   const utils = api.useUtils();
+  const {
+    isCalendarModalVisible,
+    setIsCalendarModalVisible,
+    availableCalendars,
+    handleAddToCal,
+    handleCalendarSelect,
+    showAllCalendars,
+    setShowAllCalendars,
+    INITIAL_CALENDAR_LIMIT,
+  } = useCalendar();
 
   const deleteEventMutation = api.event.delete.useMutation({
     onSuccess: () => {
@@ -361,10 +371,14 @@ export default function UserEventsList(props: {
     }
   };
 
-  const handleAddToCal = (
+  const handleAddToCalWrapper = (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => {
-    console.log("handleAddToCal is not implemented yet", event);
+    void handleAddToCal(event);
+  };
+
+  const handleCalendarSelectWrapper = (selectedCalendarId: string) => {
+    void handleCalendarSelect(selectedCalendarId);
   };
 
   // Collapse similar events
@@ -382,26 +396,37 @@ export default function UserEventsList(props: {
   );
 
   return (
-    <FlashList
-      data={collapsedEvents}
-      estimatedItemSize={60}
-      renderItem={({ item, index }) => (
-        <UserEventListItem
-          event={item.event}
-          actionButton={actionButton ? actionButton(item.event) : undefined}
-          isLastItem={index === collapsedEvents.length - 1}
-          showCreator={showCreator}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onFollow={handleFollow}
-          onUnfollow={handleUnfollow}
-          onShare={handleShare}
-          onAddToCal={handleAddToCal}
-        />
-      )}
-      refreshControl={refreshControl}
-      contentContainerStyle={{ paddingBottom: 16 }}
-      ListFooterComponent={renderFooter}
-    />
+    <>
+      <FlashList
+        data={collapsedEvents}
+        estimatedItemSize={60}
+        renderItem={({ item, index }) => (
+          <UserEventListItem
+            event={item.event}
+            actionButton={actionButton ? actionButton(item.event) : undefined}
+            isLastItem={index === collapsedEvents.length - 1}
+            showCreator={showCreator}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onFollow={handleFollow}
+            onUnfollow={handleUnfollow}
+            onShare={handleShare}
+            onAddToCal={handleAddToCalWrapper}
+          />
+        )}
+        refreshControl={refreshControl}
+        contentContainerStyle={{ paddingBottom: 16 }}
+        ListFooterComponent={renderFooter}
+      />
+      <CalendarSelectionModal
+        visible={isCalendarModalVisible}
+        calendars={availableCalendars}
+        onSelect={handleCalendarSelectWrapper}
+        onDismiss={() => setIsCalendarModalVisible(false)}
+        showAllCalendars={showAllCalendars}
+        setShowAllCalendars={setShowAllCalendars}
+        initialLimit={INITIAL_CALENDAR_LIMIT}
+      />
+    </>
   );
 }
