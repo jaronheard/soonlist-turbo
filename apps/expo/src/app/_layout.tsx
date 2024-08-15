@@ -1,5 +1,4 @@
 import { Text, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { MenuProvider } from "react-native-popup-menu";
 import {
   SafeAreaProvider,
@@ -9,7 +8,6 @@ import { Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider, SignedIn } from "@clerk/clerk-expo";
-import { ActionSheetProvider } from "@expo/react-native-action-sheet"; // Add this import
 import { useColorScheme } from "nativewind";
 
 import { useAppStateRefresh } from "~/hooks/useAppStateRefresh"; // Add this import
@@ -64,11 +62,9 @@ export default function RootLayout() {
       <TRPCProvider>
         <NotificationProvider>
           <SafeAreaProvider>
-            <ActionSheetProvider>
-              <MenuProvider>
-                <RootLayoutContent />
-              </MenuProvider>
-            </ActionSheetProvider>
+            <MenuProvider>
+              <RootLayoutContent />
+            </MenuProvider>
           </SafeAreaProvider>
         </NotificationProvider>
       </TRPCProvider>
@@ -83,7 +79,7 @@ function RootLayoutContent() {
   useAppStateRefresh(); // Add this line
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <Stack
         screenOptions={{
           headerStyle: {
@@ -105,6 +101,6 @@ function RootLayoutContent() {
         <BottomBar expoPushToken={expoPushToken} />
       </SignedIn>
       <StatusBar />
-    </GestureHandlerRootView>
+    </View>
   );
 }
