@@ -112,6 +112,7 @@ export function UserEventListItem(props: {
     if (isOwner) {
       return [
         { title: "Share", systemIcon: "square.and.arrow.up" },
+        { title: "Directions", systemIcon: "map" },
         { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
         { title: "Edit", systemIcon: "square.and.pencil" },
         { title: "Delete", systemIcon: "trash", destructive: true },
@@ -120,14 +121,28 @@ export function UserEventListItem(props: {
       return [
         { title: "Follow", systemIcon: "plus.circle" },
         { title: "Share", systemIcon: "square.and.arrow.up" },
+        { title: "Directions", systemIcon: "map" },
         { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
       ];
     } else {
       return [
         { title: "Share", systemIcon: "square.and.arrow.up" },
+        { title: "Directions", systemIcon: "map" },
         { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
         { title: "Unfollow", systemIcon: "minus.circle", destructive: true },
       ];
+    }
+  };
+
+  const handleDirections = (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+  ) => {
+    const e = event.event as AddToCalendarButtonPropsRestricted;
+    if (e.location) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.location)}`;
+      void Linking.openURL(url);
+    } else {
+      console.log("No location available for directions");
     }
   };
 
@@ -142,12 +157,15 @@ export function UserEventListItem(props: {
           onShare?.(event);
           break;
         case 1:
-          onAddToCal?.(event);
+          handleDirections(event);
           break;
         case 2:
-          onEdit?.(event);
+          onAddToCal?.(event);
           break;
         case 3:
+          onEdit?.(event);
+          break;
+        case 4:
           onDelete?.(event);
           break;
       }
@@ -157,9 +175,12 @@ export function UserEventListItem(props: {
           onShare?.(event);
           break;
         case 1:
-          onAddToCal?.(event);
+          handleDirections(event);
           break;
         case 2:
+          onAddToCal?.(event);
+          break;
+        case 3:
           onUnfollow?.(event);
           break;
       }
@@ -172,6 +193,9 @@ export function UserEventListItem(props: {
           onShare?.(event);
           break;
         case 2:
+          handleDirections(event);
+          break;
+        case 3:
           onAddToCal?.(event);
           break;
       }
