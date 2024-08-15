@@ -1,6 +1,6 @@
 import { Image, Linking, Pressable, Share, Text, View } from "react-native";
 import ContextMenu from "react-native-context-menu-view";
-// import * as Calendar from "expo-calendar";
+import * as Calendar from "expo-calendar";
 import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -361,10 +361,49 @@ export default function UserEventsList(props: {
     }
   };
 
-  const handleAddToCal = (
+  const handleAddToCal = async (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => {
-    console.log("handleAddToCal is not implemented yet", event);
+    try {
+      const { status } = await Calendar.requestCalendarPermissionsAsync();
+      if (status !== Calendar.PermissionStatus.GRANTED) {
+        alert("Calendar permission is required to add events.");
+        return;
+      }
+
+      const calendars = await Calendar.getCalendarsAsync(
+        Calendar.EntityTypes.EVENT,
+      );
+      const defaultCalendar =
+        calendars.find((cal) => cal.isPrimary) || calendars[0];
+
+      if (!defaultCalendar) {
+        alert("No calendar found on the device.");
+        return;
+      }
+
+      const e = event.event as AddToCalendarButtonPropsRestricted;
+      const startDate = new Date(`${e.startDate}T${e.startTime || "00:00"}:00`);
+      const endDate = e.endTime
+        ? new Date(`${e.startDate}T${e.endTime}:00`)
+        : new Date(startDate.getTime() + 60 * 60 * 1000); // Default to 1 hour if no end time
+
+      const eventId = await Calendar.createEventAsync(defaultCalendar.id, {
+        title: e.name,
+        startDate,
+        endDate,
+        location: e.location,
+        notes: e.description,
+        timeZone: e.timeZone,
+      });
+
+      if (eventId) {
+        alert("Event added to calendar successfully!");
+      }
+    } catch (error) {
+      console.error("Error adding event to calendar:", error);
+      alert("Failed to add event to calendar. Please try again.");
+    }
   };
 
   // Collapse similar events
