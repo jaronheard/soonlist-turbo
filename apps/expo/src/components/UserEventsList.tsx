@@ -111,14 +111,14 @@ export function UserEventListItem(props: {
   const getMenuItems = () => {
     if (isOwner) {
       return [
-        { title: "Edit", systemIcon: "square.and.pencil" },
         { title: "Share", systemIcon: "square.and.arrow.up" },
         { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
+        { title: "Edit", systemIcon: "square.and.pencil" },
         { title: "Delete", systemIcon: "trash", destructive: true },
       ];
     } else if (!isFollowing) {
       return [
-        { title: "Add", systemIcon: "plus.circle" },
+        { title: "Follow", systemIcon: "plus.circle" },
         { title: "Share", systemIcon: "square.and.arrow.up" },
         { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
       ];
@@ -126,7 +126,7 @@ export function UserEventListItem(props: {
       return [
         { title: "Share", systemIcon: "square.and.arrow.up" },
         { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
-        { title: "Remove", systemIcon: "minus.circle", destructive: true },
+        { title: "Unfollow", systemIcon: "minus.circle", destructive: true },
       ];
     }
   };
@@ -139,13 +139,13 @@ export function UserEventListItem(props: {
     if (isOwner) {
       switch (index) {
         case 0:
-          onEdit?.(event);
-          break;
-        case 1:
           onShare?.(event);
           break;
-        case 2:
+        case 1:
           onAddToCal?.(event);
+          break;
+        case 2:
+          onEdit?.(event);
           break;
         case 3:
           onDelete?.(event);
@@ -176,7 +176,7 @@ export function UserEventListItem(props: {
           break;
       }
     }
-  }; // Add this closing brace
+  };
 
   return (
     <ContextMenu
