@@ -32,7 +32,6 @@
   "pnpm": {
     "patchedDependencies": {
       "xcode@3.0.1": "patches/xcode@3.0.1.patch",
-      "expo-share-intent@1.5.1": "patches/expo-share-intent@1.5.1.patch",
       "expo-secure-store@12.8.1": "patches/expo-secure-store@12.8.1.patch"
     }
   }

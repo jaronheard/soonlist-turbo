@@ -1,0 +1,54 @@
+{
+  "name": "@soonlist/expo-share-intent",
+  "private": true,
+  "version": "0.1.0",
+  "description": "share intent for ios",
+  "license": "MIT",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "app.plugin.js",
+    "plugin/build",
+    "build",
+    "expo-module.config.json",
+    "ios",
+    "android",
+    "!android/build/"
+  ],
+  "homepage": "https://github.com/jaronheard/soonlist-turbo#readme",
+  "scripts": {
+    "release": "dotenv release-it",
+    "build": "expo-module build",
+    "build:plugin": "expo-module build plugin",
+    "postbuild": "cp plugin/src/ios/*.swift plugin/build/ios",
+    "clean": "expo-module clean",
+    "lint": "expo-module lint",
+    "test": "expo-module test",
+    "prepare": "expo-module prepare",
+    "prepublishOnly": "expo-module prepublishOnly",
+    "expo-module": "expo-module"
+  },
+  "dependencies": {
+    "@expo/config-plugins": "~7.9.1",
+    "expo-constants": "~15.4.6",
+    "expo-linking": "~6.2.2"
+  },
+  "peerDependencies": {
+    "expo": "^50",
+    "expo-constants": ">=14.4.2",
+    "expo-linking": ">=6.2.2",
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@release-it/conventional-changelog": "^8.0.1",
+    "@types/react": "^18.0.25",
+    "@types/react-native": "^0.69.5",
+    "dotenv-cli": "^7.3.0",
+    "eslint": "^8.50.0",
+    "expo-module-scripts": "^3.4.1",
+    "expo-modules-core": "^1.11.8",
+    "prettier": "^3.2.5",
+    "release-it": "^17.1.1"
+  }
+}
