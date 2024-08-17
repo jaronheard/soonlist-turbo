@@ -16,6 +16,11 @@
     "!android/build/"
   ],
   "homepage": "https://github.com/jaronheard/soonlist-turbo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/achorein/expo-share-intent.git"
+  },
+  "author": "jaronheard (https://github.com/jaronheard)",
   "scripts": {
     "release": "dotenv release-it",
     "build:module": "expo-module build",
@@ -25,10 +30,9 @@
     "clean": "expo-module clean",
     "lint": "expo-module lint",
     "test": "expo-module test",
-    "prepare": "expo-module prepare",
+    "prepare": "expo-module prepare && pnpm run build && pnpm postbuild",
     "prepublishOnly": "expo-module prepublishOnly",
-    "expo-module": "expo-module",
-    "postinstall": "CI=true pnpm run build"
+    "expo-module": "expo-module"
   },
   "dependencies": {
     "@expo/config-plugins": "~7.9.1",

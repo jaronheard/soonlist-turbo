@@ -1,5 +1,6 @@
 import { ConfigPlugin, withXcodeProject } from "@expo/config-plugins";
 
+import { Parameters } from "../types";
 import {
   getShareExtensionBundledIdentifier,
   shareExtensionName,
@@ -12,7 +13,6 @@ import {
   getShareExtensionViewControllerPath,
   writeShareExtensionFiles,
 } from "./writeIosShareExtensionFiles";
-import { Parameters } from "../types";
 
 export const withShareExtensionXcodeTarget: ConfigPlugin<Parameters> = (
   config,
@@ -123,6 +123,7 @@ export const withShareExtensionXcodeTarget: ConfigPlugin<Parameters> = (
           buildSettingsObj["SWIFT_EMIT_LOC_STRINGS"] = "YES";
           buildSettingsObj["SWIFT_VERSION"] = "5.0";
           buildSettingsObj["TARGETED_DEVICE_FAMILY"] = `"1,2"`;
+          buildSettingsObj["IPHONEOS_DEPLOYMENT_TARGET"] = "15.0";
         }
       }
     }
