@@ -65,7 +65,12 @@ export async function POST(req: Request) {
       // 👉 `webhook.type` is a string value that describes what kind of event we need to handle
 
       // 👉 If the type is "user.updated" the important values in the database will be updated in the users table
+      if (!evt.data.id) {
+        throw new Error("No user ID found in webhook data");
+      }
+
       if (evt.type === "user.updated") {
+        const userId = evt.data.external_id || evt.data.id || "";
         await db
           .update(users)
           .set({
@@ -75,13 +80,14 @@ export async function POST(req: Request) {
             email: evt.data.email_addresses[0]?.email_address || "",
             publicMetadata: evt.data.public_metadata,
           })
-          .where(eq(users.id, evt.data.id));
+          .where(eq(users.id, userId));
       }
 
       // 👉 If the type is "user.created" create a record in the users table
       if (evt.type === "user.created") {
+        const userId = evt.data.external_id || evt.data.id || "";
         await db.insert(users).values({
-          id: evt.data.id,
+          id: userId,
           username: evt.data.username || "",
           displayName: `${evt.data.first_name} ${evt.data.last_name}`,
           userImage: evt.data.image_url,
@@ -92,23 +98,16 @@ export async function POST(req: Request) {
 
       // 👉 If the type is "user.deleted", delete the user record and associated blocks
       if (evt.type === "user.deleted") {
+        const userId = evt.data.id; // doesn't exist for deleted users
         await Promise.all([
-          db.delete(users).where(eq(users.id, evt.data.id || "")),
-          db.delete(comments).where(eq(comments.userId, evt.data.id || "")),
-          db.delete(events).where(eq(events.userId, evt.data.id || "")),
-          db
-            .delete(eventFollows)
-            .where(eq(eventFollows.userId, evt.data.id || "")),
-          db.delete(lists).where(eq(lists.userId, evt.data.id || "")),
-          db
-            .delete(listFollows)
-            .where(eq(listFollows.userId, evt.data.id || "")),
-          db
-            .delete(userFollows)
-            .where(eq(userFollows.followerId, evt.data.id || "")),
-          db
-            .delete(userFollows)
-            .where(eq(userFollows.followingId, evt.data.id || "")),
+          db.delete(users).where(eq(users.id, userId)),
+          db.delete(comments).where(eq(comments.userId, userId)),
+          db.delete(events).where(eq(events.userId, userId)),
+          db.delete(eventFollows).where(eq(eventFollows.userId, userId)),
+          db.delete(lists).where(eq(lists.userId, userId)),
+          db.delete(listFollows).where(eq(listFollows.userId, userId)),
+          db.delete(userFollows).where(eq(userFollows.followerId, userId)),
+          db.delete(userFollows).where(eq(userFollows.followingId, userId)),
           // TODO: doesn't delete eventToLists, but should
         ]);
       }
