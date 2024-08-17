@@ -17,13 +17,14 @@
     "lint": "turbo lint --continue -- --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:ws": "pnpm dlx sherif@latest",
-    "ngrok": "ngrok http --domain=primary-entirely-giraffe.ngrok-free.app 3000",
+    "ngrok": "ngrok tunnel --label edge=edghts_2knemEPLdFRuLQ6wzcBEqwVGz88 http://localhost:3000",
     "typecheck": "turbo typecheck",
     "ui-add": "pnpm -F ui ui-add"
   },
   "devDependencies": {
     "@soonlist/prettier-config": "workspace:*",
     "@turbo/gen": "^1.13.3",
+    "dotenv-cli": "^7.4.1",
     "prettier": "^3.2.5",
     "turbo": "^2.0.4",
     "typescript": "^5.4.5"
