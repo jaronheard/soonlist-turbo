@@ -25,7 +25,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     [
-      "expo-share-intent",
+      "@soonlist/expo-share-intent",
       {
         iosActivationRules: {
           NSExtensionActivationSupportsText: true,
