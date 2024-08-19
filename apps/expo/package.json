@@ -55,7 +55,6 @@
     "expo-device": "~5.9.4",
     "expo-file-system": "~16.0.9",
     "expo-haptics": "~12.8.1",
-    "expo-linear-gradient": "~12.7.2",
     "expo-linking": "~6.2.2",
     "expo-notifications": "~0.27.8",
     "expo-router": "~3.4.9",

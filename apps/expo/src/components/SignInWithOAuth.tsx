@@ -1,7 +1,6 @@
 import type { OAuthStrategy } from "@clerk/types";
 import React, { useState } from "react";
 import { Image, Pressable, Text, TextInput, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
@@ -146,58 +145,12 @@ const SignInWithOAuth = () => {
         <Text className="mb-8 text-center text-xl text-gray-500">
           The best way to add, organize, and share events.
         </Text>
-        <View className="relative mb-6 overflow-hidden rounded-lg">
-          <Image
-            source={{
-              uri: "https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png",
-            }}
-            style={{ width: 285, height: 316 }}
-          />
-          <LinearGradient
-            colors={["rgba(255,255,255,0)", "rgba(255,255,255,1)"]}
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: 0,
-              height: 40,
-            }}
-          />
-          <LinearGradient
-            colors={["rgba(255,255,255,1)", "rgba(255,255,255,0)"]}
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 40,
-            }}
-          />
-          <LinearGradient
-            colors={["rgba(255,255,255,1)", "rgba(255,255,255,0)"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: 40,
-            }}
-          />
-          <LinearGradient
-            colors={["rgba(255,255,255,0)", "rgba(255,255,255,1)"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{
-              position: "absolute",
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: 40,
-            }}
-          />
-        </View>
+        <Image
+          source={{
+            uri: "https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png",
+          }}
+          style={{ width: 285, height: 316, marginBottom: 24 }}
+        />
         <Text className="mb-8 text-center text-lg text-gray-600">
           Join Soonlist to start capturing and sharing events that inspire you.
         </Text>
