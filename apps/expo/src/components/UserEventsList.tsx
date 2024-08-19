@@ -20,11 +20,13 @@ import {
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { CalendarSelectionModal } from "./CalendarSelectionModal";
 
+type ShowCreatorOption = "always" | "otherUsers" | "never";
+
 export function UserEventListItem(props: {
   event: RouterOutputs["event"]["getUpcomingForUser"][number];
   actionButton?: React.ReactNode;
   isLastItem?: boolean;
-  showCreator?: boolean;
+  showCreator: ShowCreatorOption;
   onEdit?: (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => void;
@@ -98,9 +100,15 @@ export function UserEventListItem(props: {
   const { user: currentUser } = useUser();
   const eventUser = event.user;
 
-  const isOwner =
+  const isCurrentUser =
     currentUser?.externalId === eventUser.id ||
     currentUser?.id === eventUser.id;
+
+  const shouldShowCreator =
+    showCreator === "always" ||
+    (showCreator === "otherUsers" && !isCurrentUser);
+
+  const isOwner = isCurrentUser;
   const isFollowing = event.eventFollows.find(
     (item) =>
       item.userId === user.id ||
@@ -246,7 +254,7 @@ export function UserEventListItem(props: {
               </Text>
             </View>
           ) : null}
-          {showCreator && (
+          {shouldShowCreator && (
             <View className="flex-row items-center gap-2">
               {user.userImage ? (
                 <Image
@@ -299,7 +307,7 @@ export default function UserEventsList(props: {
   actionButton?: (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => React.ReactNode;
-  showCreator?: boolean;
+  showCreator: ShowCreatorOption;
 }) {
   const { events, refreshControl, actionButton, showCreator } = props;
   const { user } = useUser();

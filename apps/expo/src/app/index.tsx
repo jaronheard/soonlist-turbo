@@ -96,6 +96,7 @@ function MyFeed() {
             />
           }
           actionButton={goButton}
+          showCreator="otherUsers"
         />
       )}
     </View>
