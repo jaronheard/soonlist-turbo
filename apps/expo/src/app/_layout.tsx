@@ -114,11 +114,7 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <AuthAndTokenSync expoPushToken={expoPushToken} />
-      <SignedOut>
-        <Stack screenOptions={{ headerShown: false }} />
-        <Redirect href="/sign-in" />
-      </SignedOut>
-      <SignedIn>
+      <ClerkLoaded>
         <Stack
           screenOptions={{
             headerStyle: {
@@ -134,9 +130,11 @@ function RootLayoutContent() {
             headerBackTitleVisible: false,
           }}
         />
-        <View style={{ paddingBottom: insets.bottom + 36 }} />
-        <BottomBar expoPushToken={expoPushToken} />
-      </SignedIn>
+        <SignedIn>
+          <View style={{ paddingBottom: insets.bottom + 36 }} />
+          <BottomBar expoPushToken={expoPushToken} />
+        </SignedIn>
+      </ClerkLoaded>
       <Toast />
       <StatusBar />
     </View>
