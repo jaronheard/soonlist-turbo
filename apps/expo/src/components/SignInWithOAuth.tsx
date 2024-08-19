@@ -1,6 +1,6 @@
 import type { OAuthStrategy } from "@clerk/types";
 import React, { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Image, Pressable, Text, TextInput, View } from "react-native";
 import { Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
@@ -136,12 +136,32 @@ const SignInWithOAuth = () => {
   }
 
   return (
-    <View className="flex-1 items-center justify-center gap-2">
-      <Stack.Screen options={{ title: "Soonlist", headerTitle: "Sign Up" }} />
-      <GoogleSignInButton
-        onPress={() => void handleOAuthFlow("oauth_google")}
-      />
-      <AppleSignInButton onPress={() => void handleOAuthFlow("oauth_apple")} />
+    <View className="flex-1 bg-interactive-3 px-6 pt-14">
+      <Stack.Screen options={{ headerShown: false }} />
+      <View className="flex-1 items-center justify-center">
+        <Text className="mb-4 text-center font-heading text-5xl font-bold text-gray-700">
+          Organize <Text className="text-interactive-1">possibilities</Text>
+        </Text>
+        <Text className="mb-8 text-center text-xl text-gray-500">
+          The best way to add, organize, and share events.
+        </Text>
+        <Image
+          source={{
+            uri: "https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png",
+          }}
+          style={{ width: 285, height: 316, marginBottom: 24 }}
+        />
+        <Text className="mb-8 text-center text-lg text-gray-600">
+          Join Soonlist to start capturing and sharing events that inspire you.
+        </Text>
+        <GoogleSignInButton
+          onPress={() => void handleOAuthFlow("oauth_google")}
+        />
+        <View className="h-4" />
+        <AppleSignInButton
+          onPress={() => void handleOAuthFlow("oauth_apple")}
+        />
+      </View>
     </View>
   );
 };
