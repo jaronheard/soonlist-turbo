@@ -11,7 +11,7 @@ import { ClerkProvider, SignedIn } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
 import { useColorScheme } from "nativewind";
 
-import { useAppStateRefresh } from "~/hooks/useAppStateRefresh"; // Add this import
+import { useAppStateRefresh } from "~/hooks/useAppStateRefresh";
 import {
   NotificationProvider,
   useNotification,
@@ -99,7 +99,7 @@ function RootLayoutContent() {
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const { expoPushToken } = useNotification();
-  useAppStateRefresh(); // Add this line
+  useAppStateRefresh();
   const ref = useNavigationContainerRef();
 
   useEffect(() => {
