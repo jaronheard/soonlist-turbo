@@ -390,7 +390,10 @@ export default function UserEventsList(props: {
   const renderFooter = () => (
     <View className="px-6 py-6">
       <Text className="text-center text-base font-medium text-neutral-2">
-        End of events. Add your own!
+        End of events.{" "}
+        <Link href="/onboarding" className="text-interactive-1">
+          <Text className="font-bold text-interactive-1">Add your own!</Text>
+        </Link>
       </Text>
     </View>
   );

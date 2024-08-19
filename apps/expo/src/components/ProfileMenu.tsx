@@ -6,11 +6,17 @@ import {
   MenuOptions,
   MenuTrigger,
 } from "react-native-popup-menu";
+import { useRouter } from "expo-router";
 import { SignedIn, useAuth } from "@clerk/clerk-expo";
-import { LogOut, User } from "lucide-react-native";
+import { HelpCircle, LogOut, User } from "lucide-react-native";
 
 export function ProfileMenu() {
   const { signOut } = useAuth();
+  const router = useRouter();
+
+  const showOnboarding = () => {
+    router.push("/onboarding");
+  };
 
   return (
     <SignedIn>
@@ -36,6 +42,14 @@ export function ProfileMenu() {
             },
           }}
         >
+          <MenuOption onSelect={showOnboarding}>
+            <View className="flex-row items-center">
+              <HelpCircle size={20} color="#5A32FB" />
+              <Text className="ml-2 text-base font-medium text-neutral-1">
+                How to Use
+              </Text>
+            </View>
+          </MenuOption>
           <MenuOption onSelect={() => signOut()}>
             <View className="flex-row items-center">
               <LogOut size={20} color="#5A32FB" />
