@@ -5,6 +5,7 @@ import { Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 
+import onboardingEventsCollage from "../../assets/onboarding-events-collage.png";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { AppleSignInButton } from "./AppleSignInButton";
 import { GoogleSignInButton } from "./GoogleSignInButton";
@@ -146,10 +147,9 @@ const SignInWithOAuth = () => {
           The best way to add, organize, and share events.
         </Text>
         <Image
-          source={{
-            uri: "https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png",
-          }}
-          style={{ width: 285, height: 316, marginBottom: 24 }}
+          source={onboardingEventsCollage as ImageSourcePropType}
+          className="mb-6 h-80 w-full"
+          resizeMode="contain"
         />
         <Text className="mb-8 text-center text-lg text-gray-600">
           Join Soonlist to start capturing and sharing events that inspire you.
