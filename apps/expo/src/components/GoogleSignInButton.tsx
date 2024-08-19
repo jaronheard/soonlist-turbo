@@ -16,7 +16,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         source={require("../assets/google-logo.png") as ImageSourcePropType}
         style={styles.logo}
       />
-      <Text style={styles.text}>Sign in with Google</Text>
+      <Text style={styles.text}>Sign up with Google</Text>
     </TouchableOpacity>
   );
 };

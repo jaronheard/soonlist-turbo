@@ -4,10 +4,15 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { Stack, useNavigationContainerRef } from "expo-router";
+import { Redirect, Slot, Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import { ClerkProvider, SignedIn } from "@clerk/clerk-expo";
+import {
+  ClerkLoaded,
+  ClerkProvider,
+  SignedIn,
+  SignedOut,
+} from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
 import { useColorScheme } from "nativewind";
 
@@ -103,30 +108,32 @@ function RootLayoutContent() {
   const ref = useNavigationContainerRef();
 
   useEffect(() => {
-    if (ref) {
-      routingInstrumentation.registerNavigationContainer(ref);
-    }
+    routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
 
   return (
     <View style={{ flex: 1 }}>
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: "#E0D9FF",
-          },
-          headerTintColor: "#5A32FB",
-          contentStyle: {
-            backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
-          },
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
-          headerBackTitleVisible: false,
-        }}
-      />
       <AuthAndTokenSync expoPushToken={expoPushToken} />
+      <SignedOut>
+        <Stack screenOptions={{ headerShown: false }} />
+        <Redirect href="/sign-in" />
+      </SignedOut>
       <SignedIn>
+        <Stack
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: "#E0D9FF",
+            },
+            headerTintColor: "#5A32FB",
+            contentStyle: {
+              backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
+            },
+            headerTitleStyle: {
+              fontWeight: "bold",
+            },
+            headerBackTitleVisible: false,
+          }}
+        />
         <View style={{ paddingBottom: insets.bottom + 36 }} />
         <BottomBar expoPushToken={expoPushToken} />
       </SignedIn>
