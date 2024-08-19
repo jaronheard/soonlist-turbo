@@ -64,7 +64,7 @@ Sentry.init({
     }),
   ],
   attachStacktrace: true,
-  debug: true,
+  debug: process.env.NODE_ENV !== "production",
 });
 
 function RootLayout() {
