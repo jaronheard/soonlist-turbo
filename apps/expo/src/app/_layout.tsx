@@ -85,15 +85,17 @@ function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
-      <TRPCProvider>
-        <NotificationProvider>
-          <SafeAreaProvider>
-            <MenuProvider>
-              <RootLayoutContent />
-            </MenuProvider>
-          </SafeAreaProvider>
-        </NotificationProvider>
-      </TRPCProvider>
+      <ClerkLoaded>
+        <TRPCProvider>
+          <NotificationProvider>
+            <SafeAreaProvider>
+              <MenuProvider>
+                <RootLayoutContent />
+              </MenuProvider>
+            </SafeAreaProvider>
+          </NotificationProvider>
+        </TRPCProvider>
+      </ClerkLoaded>
     </ClerkProvider>
   );
 }
@@ -114,7 +116,10 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <AuthAndTokenSync expoPushToken={expoPushToken} />
-      <ClerkLoaded>
+      <SignedOut>
+        <Slot />
+      </SignedOut>
+      <SignedIn>
         <Stack
           screenOptions={{
             headerStyle: {
@@ -130,11 +135,9 @@ function RootLayoutContent() {
             headerBackTitleVisible: false,
           }}
         />
-        <SignedIn>
-          <View style={{ paddingBottom: insets.bottom + 36 }} />
-          <BottomBar expoPushToken={expoPushToken} />
-        </SignedIn>
-      </ClerkLoaded>
+        <View style={{ paddingBottom: insets.bottom + 36 }} />
+        <BottomBar expoPushToken={expoPushToken} />
+      </SignedIn>
       <Toast />
       <StatusBar />
     </View>
