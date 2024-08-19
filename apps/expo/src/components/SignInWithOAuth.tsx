@@ -1,6 +1,6 @@
 import type { OAuthStrategy } from "@clerk/types";
-import React from "react";
-import { View } from "react-native";
+import React, { useState } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
@@ -23,7 +23,15 @@ const SignInWithOAuth = () => {
     strategy: "oauth_apple",
   });
 
-  if (!signIn || !signUp) return null;
+  const [username, setUsername] = useState("");
+  const [showUsernameInput, setShowUsernameInput] = useState(false);
+  const [pendingSignUp, setPendingSignUp] = useState<
+    ReturnType<typeof useSignUp>["signUp"] | null
+  >(null);
+
+  if (!signIn || !signUp) {
+    return null;
+  }
 
   const handleOAuthFlow = async (strategy: OAuthStrategy) => {
     try {
@@ -32,45 +40,104 @@ const SignInWithOAuth = () => {
           ? startGoogleOAuthFlow
           : startAppleOAuthFlow;
 
-      // If the user has an account but needs to sign in
-      const userExistsButNeedsToSignIn =
-        signUp.verifications.externalAccount.status === "transferable" &&
-        signUp.verifications.externalAccount.error?.code ===
-          "external_account_exists";
-
-      if (userExistsButNeedsToSignIn) {
-        const res = await signIn.create({ transfer: true });
-        if (res.status === "complete" && setActiveSignIn) {
-          await setActiveSignIn({ session: res.createdSessionId });
-        }
-        return;
-      }
-
-      // If the user needs to be created
-      const userNeedsToBeCreated =
-        signIn.firstFactorVerification.status === "transferable";
-
-      if (userNeedsToBeCreated) {
-        const res = await signUp.create({ transfer: true });
-        if (res.status === "complete" && setActiveSignUp) {
-          await setActiveSignUp({ session: res.createdSessionId });
-        }
-        return;
-      }
-
-      // Normal sign-in flow
       const result = await startOAuthFlow();
-      if (result.createdSessionId && setActiveSignIn) {
-        await setActiveSignIn({ session: result.createdSessionId });
+
+      if (result.createdSessionId) {
+        if (result.signIn?.status === "complete") {
+          await setActiveSignIn({ session: result.createdSessionId });
+        } else if (result.signUp?.status === "missing_requirements") {
+          setPendingSignUp(result.signUp);
+          setShowUsernameInput(true);
+        }
+      } else if (result.signUp?.status === "missing_requirements") {
+        setPendingSignUp(result.signUp);
+        setShowUsernameInput(true);
       }
     } catch (err) {
-      console.error("OAuth error", err);
+      // Handle error
     }
   };
 
+  const handleUsernameSubmit = async () => {
+    try {
+      if (!pendingSignUp) {
+        return;
+      }
+
+      const res = await pendingSignUp.update({
+        username: username,
+      });
+
+      if (res.status === "complete") {
+        await setActiveSignUp({ session: res.createdSessionId });
+        setShowUsernameInput(false);
+        setPendingSignUp(null);
+      } else if (res.status === "missing_requirements") {
+        // Handle any other missing fields here
+      }
+    } catch (err) {
+      // Handle error
+    }
+  };
+
+  if (showUsernameInput) {
+    return (
+      <View className="flex-1 justify-center bg-white p-4 pb-80">
+        <View className="flex-1 justify-center">
+          <Text className="mb-4 text-center text-2xl font-bold">
+            Choose Your Username
+          </Text>
+
+          <Text className="mb-4 text-center text-lg">
+            Pick a unique username to represent you on Soonlist.
+          </Text>
+          <TextInput
+            value={username}
+            onChangeText={setUsername}
+            placeholder="Enter your username"
+            className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg"
+            autoComplete="off"
+            autoCorrect={false}
+            autoCapitalize="none"
+            autoFocus={true}
+            onSubmitEditing={handleUsernameSubmit}
+            returnKeyType="done"
+          />
+
+          <View className="mb-6 rounded-lg bg-accent-yellow p-4">
+            <Text className="text-accent-yellow-contrast mb-2 text-base font-bold uppercase">
+              Tips
+            </Text>
+
+            <View className="mb-2">
+              <Text className="text-base">
+                • Your username will be visible on shared events
+              </Text>
+            </View>
+
+            <View>
+              <Text className="text-base">
+                • On Instagram? Consider using the same username
+              </Text>
+            </View>
+          </View>
+
+          <Pressable
+            onPress={handleUsernameSubmit}
+            className="rounded-full bg-interactive-1 px-6 py-3"
+          >
+            <Text className="text-center text-lg font-bold text-white">
+              Continue
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 items-center justify-center gap-2">
-      <Stack.Screen options={{ title: "Soonlist" }} />
+      <Stack.Screen options={{ title: "Soonlist", headerTitle: "Sign Up" }} />
       <GoogleSignInButton
         onPress={() => void handleOAuthFlow("oauth_google")}
       />

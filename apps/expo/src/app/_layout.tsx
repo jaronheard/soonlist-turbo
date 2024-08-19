@@ -103,9 +103,7 @@ function RootLayoutContent() {
   const ref = useNavigationContainerRef();
 
   useEffect(() => {
-    if (ref) {
-      routingInstrumentation.registerNavigationContainer(ref);
-    }
+    routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
 
   return (
