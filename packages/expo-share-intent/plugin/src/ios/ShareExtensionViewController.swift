@@ -14,12 +14,19 @@ struct AuthData {
   let expoPushToken: String
 }
 
-class ShareViewController: UIViewController {
+class ShareViewController: UIViewController, URLSessionDelegate {
   let imageContentType = kUTTypeImage as String
   let videoContentType = kUTTypeMovie as String
   let textContentType = kUTTypeText as String
   let urlContentType = kUTTypeURL as String
   let fileURLType = kUTTypeFileURL as String
+
+  lazy var backgroundSession: URLSession = {
+    let config = URLSessionConfiguration.background(withIdentifier: "com.soonlist.shareextension.background")
+    config.isDiscretionary = true
+    config.sessionSendsLaunchEvents = true
+    return URLSession(configuration: config, delegate: self, delegateQueue: nil)
+  }()
 
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
@@ -324,38 +331,26 @@ class ShareViewController: UIViewController {
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-    let task = URLSession.shared.uploadTask(with: request, from: jsonData) { data, response, error in
-      if let error = error {
-        NSLog("soonlist.share-extension.shareviewcontroller: Error in upload task: \(error)")
-        completion(.failure(error))
-        return
-      }
-
-      if let httpResponse = response as? HTTPURLResponse {
-        NSLog(
-          "soonlist.share-extension.shareviewcontroller: HTTP Status Code: \(httpResponse.statusCode)"
-        )
-        if httpResponse.statusCode != 200 {
-          NSLog(
-            "soonlist.share-extension.shareviewcontroller: Response Headers: \(httpResponse.allHeaderFields)"
-          )
-        }
-      }
-
-      guard let data = data else {
-        NSLog("soonlist.share-extension.shareviewcontroller: No data received")
-        return
-      }
-
-      if let responseString = String(data: data, encoding: .utf8) {
-        NSLog("soonlist.share-extension.shareviewcontroller: Response: \(responseString)")
-      }
-
-      completion(.success(data))
-    }
-
+    let task = backgroundSession.uploadTask(with: request, from: jsonData)
     task.resume()
+    
+    // Store the completion handler to be called when the background task finishes
+    completionHandlers[task.taskIdentifier] = completion
   }
+
+  // URLSessionDelegate methods
+  func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    if let error = error {
+      NSLog("soonlist.share-extension.shareviewcontroller: Background task failed with error: \(error)")
+      completionHandlers[task.taskIdentifier]?(.failure(error))
+    } else if let data = (task as? URLSessionDataTask)?.response as? Data {
+      completionHandlers[task.taskIdentifier]?(.success(data))
+    }
+    completionHandlers.removeValue(forKey: task.taskIdentifier)
+  }
+
+  // Dictionary to store completion handlers
+  var completionHandlers: [Int: (Result<Data, Error>) -> Void] = [:]
 
   private func handleImageUpload(
     _ imageItemProvider: NSItemProvider, completion: @escaping (String) -> Void
