@@ -45,12 +45,12 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 const tokenCache = {
   getToken: async (key: string) => {
     return await SecureStore.getItemAsync(key, {
-      keychainAccessGroup: "group.soonlist.soonlist",
+      keychainAccessGroup: "group.com.soonlist",
     });
   },
   saveToken: (key: string, value: string) => {
     return SecureStore.setItemAsync(key, value, {
-      keychainAccessGroup: "group.soonlist.soonlist",
+      keychainAccessGroup: "group.com.soonlist",
     });
   },
 };

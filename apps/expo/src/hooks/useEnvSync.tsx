@@ -6,11 +6,11 @@ const saveEnvVar = async (key: string, value: string | null) => {
     if (value) {
       await SecureStore.setItemAsync(key, value, {
         keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: "group.soonlist.soonlist",
+        keychainAccessGroup: "group.com.soonlist",
       });
     } else {
       await SecureStore.deleteItemAsync(key, {
-        keychainAccessGroup: "group.soonlist.soonlist",
+        keychainAccessGroup: "group.com.soonlist",
       });
     }
   } catch (error) {

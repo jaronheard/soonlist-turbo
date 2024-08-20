@@ -583,7 +583,7 @@ class KeychainHelper {
       kSecAttrService as String: "app:no-auth",
       kSecAttrAccount as String: key,
       kSecReturnData as String: true,
-      kSecAttrAccessGroup as String: "group.soonlist.soonlist",
+      kSecAttrAccessGroup as String: "group.com.soonlist",
     ]
 
     var item: CFTypeRef?
@@ -603,11 +603,11 @@ class KeychainHelper {
 func loadAuthData() -> AuthData? {
   NSLog("soonlist.share-extension.shareviewcontroller: Attempting to load auth data from Keychain")
 
-  logAllKeys()
+  // logAllKeys()
 
   let query: [String: Any] = [
     kSecClass as String: kSecClassGenericPassword,
-    kSecAttrAccessGroup as String: "group.soonlist.soonlist",
+    kSecAttrAccessGroup as String: "group.com.soonlist",
     kSecReturnData as String: false,
   ]
 
