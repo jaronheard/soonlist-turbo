@@ -36,7 +36,7 @@ export function useCalendar() {
           "defaultCalendarId",
           {
             keychainAccessible: SecureStore.WHEN_UNLOCKED,
-            keychainAccessGroup: "group.soonlist.soonlist",
+            keychainAccessGroup: "group.com.soonlist",
           },
         );
         if (savedCalendarId) {
@@ -46,7 +46,7 @@ export function useCalendar() {
         // Load calendar usage data
         const usageData = await SecureStore.getItemAsync("calendarUsage", {
           keychainAccessible: SecureStore.WHEN_UNLOCKED,
-          keychainAccessGroup: "group.soonlist.soonlist",
+          keychainAccessGroup: "group.com.soonlist",
         });
         if (usageData) {
           const parsedUsage = JSON.parse(usageData) as Record<string, number>;
@@ -124,7 +124,7 @@ export function useCalendar() {
       // Save the selected calendar as default using SecureStore
       await SecureStore.setItemAsync("defaultCalendarId", selectedCalendarId, {
         keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: "group.soonlist.soonlist",
+        keychainAccessGroup: "group.com.soonlist",
       });
       setDefaultCalendarId(selectedCalendarId);
 
@@ -166,7 +166,7 @@ export function useCalendar() {
         JSON.stringify(newUsage),
         {
           keychainAccessible: SecureStore.WHEN_UNLOCKED,
-          keychainAccessGroup: "group.soonlist.soonlist",
+          keychainAccessGroup: "group.com.soonlist",
         },
       );
     } catch (error) {
@@ -181,12 +181,12 @@ export function useCalendar() {
     try {
       await SecureStore.deleteItemAsync("defaultCalendarId", {
         keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: "group.soonlist.soonlist",
+        keychainAccessGroup: "group.com.soonlist",
       });
       console.log("Calendar data cleared");
       await SecureStore.deleteItemAsync("calendarUsage", {
         keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: "group.soonlist.soonlist",
+        keychainAccessGroup: "group.com.soonlist",
       });
       console.log("Calendar usage data cleared");
       setDefaultCalendarId(null);
