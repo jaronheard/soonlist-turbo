@@ -603,7 +603,7 @@ class KeychainHelper {
 func loadAuthData() -> AuthData? {
   NSLog("soonlist.share-extension.shareviewcontroller: Attempting to load auth data from Keychain")
 
-  logAllKeys()
+  // logAllKeys()
 
   let query: [String: Any] = [
     kSecClass as String: kSecClassGenericPassword,
