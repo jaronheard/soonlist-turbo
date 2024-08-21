@@ -88,14 +88,6 @@ export const withShareExtensionXcodeTarget: ConfigPlugin<Parameters> = (
       pbxGroupKey,
     );
 
-    // Add the ShareViewController.swift file to the ShareExtension group
-    const shareExtensionGroup = pbxProject.findPBXGroupKey({
-      name: extensionName,
-    });
-    if (shareExtensionGroup) {
-      pbxProject.addFile(viewControllerFilePath, shareExtensionGroup);
-    }
-
     // Add the resource file and include it into the target PbxResourcesBuildPhase and PbxGroup
     // (MainInterface.storyboard / PrivacyInfo.xcprivacy)
     pbxProject.addResourceFile(
