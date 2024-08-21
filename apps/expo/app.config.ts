@@ -61,13 +61,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.soonlist",
+    bundleIdentifier: "com.soonlist.expo",
     config: {
       usesNonExemptEncryption: false,
     },
   },
   android: {
-    package: "com.soonlist",
+    package: "com.soonlist.expo",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff",
