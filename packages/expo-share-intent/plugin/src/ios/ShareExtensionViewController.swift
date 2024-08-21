@@ -6,6 +6,7 @@ import UIKit
 import UniformTypeIdentifiers
 import os.log
 import UserNotifications
+import Alamofire
 
 struct AuthData {
   let userId: String
@@ -230,62 +231,20 @@ class ShareViewController: UIViewController {
       return
     }
 
-    guard
-      let url = URL(
-        string:
-          "\(domainURL)/api/trpc/ai.eventFromRawTextThenCreateThenNotification"
-      )
-    else {
-      NSLog("com.soonlist.app.share-extension.svc: Invalid URL")
-      return
-    }
+    let url = "\(domainURL)/api/trpc/ai.eventFromRawTextThenCreateThenNotification"
 
-    let jsonData: Data
-    do {
-      jsonData = try JSONEncoder().encode(event)
-      NSLog(
-        "com.soonlist.app.share-extension.svc: JSON Payload: \(String(data: jsonData, encoding: .utf8) ?? "")"
-      )
-    } catch {
-      NSLog("com.soonlist.app.share-extension.svc: Error encoding JSON: \(error)")
-      return
-    }
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    let task = URLSession.shared.uploadTask(with: request, from: jsonData) { data, response, error in
-      if let error = error {
-        NSLog("com.soonlist.app.share-extension.svc: Error in upload task: \(error)")
-        completion(.failure(error))
-        return
-      }
-
-      if let httpResponse = response as? HTTPURLResponse {
-        NSLog(
-          "com.soonlist.app.share-extension.svc: HTTP Status Code: \(httpResponse.statusCode)"
-        )
-        if httpResponse.statusCode != 200 {
-          NSLog(
-            "com.soonlist.app.share-extension.svc: Response Headers: \(httpResponse.allHeaderFields)"
-          )
+    AF.request(url, method: .post, parameters: event, encoder: JSONParameterEncoder.default)
+        .validate()
+        .responseData { response in
+            switch response.result {
+            case .success(let data):
+                NSLog("com.soonlist.app.share-extension.svc: Success: \(String(data: data, encoding: .utf8) ?? "")")
+                completion(.success(data))
+            case .failure(let error):
+                NSLog("com.soonlist.app.share-extension.svc: Error: \(error)")
+                completion(.failure(error))
+            }
         }
-      }
-
-      guard let data = data else {
-        NSLog("com.soonlist.app.share-extension.svc: No data received")
-        return
-      }
-
-      if let responseString = String(data: data, encoding: .utf8) {
-        NSLog("com.soonlist.app.share-extension.svc: Response: \(responseString)")
-      }
-
-      completion(.success(data))
-    }
-
-    task.resume()
   }
 
   func callAiEventFromImageThenCreateThenNotification(
@@ -293,68 +252,24 @@ class ShareViewController: UIViewController {
   ) {
     NSLog("com.soonlist.app.share-extension.svc: Calling AI event from image")
     guard let domainURL = KeychainHelper.getValue(forKey: "EXPO_PUBLIC_API_BASE_URL") else {
-      NSLog(
-        "com.soonlist.app.share-extension.svc: Failed to load EXPO_PUBLIC_API_BASE_URL from Keychain"
-      )
+      NSLog("com.soonlist.app.share-extension.svc: Failed to load EXPO_PUBLIC_API_BASE_URL from Keychain")
       return
     }
 
-    guard
-      let url = URL(
-        string:
-          "\(domainURL)/api/trpc/ai.eventFromImageThenCreateThenNotification"
-      )
-    else {
-      NSLog("com.soonlist.app.share-extension.svc: Invalid URL")
-      return
-    }
+    let url = "\(domainURL)/api/trpc/ai.eventFromImageThenCreateThenNotification"
 
-    let jsonData: Data
-    do {
-      jsonData = try JSONEncoder().encode(event)
-      NSLog(
-        "com.soonlist.app.share-extension.svc: JSON Payload: \(String(data: jsonData, encoding: .utf8) ?? "")"
-      )
-    } catch {
-      NSLog("com.soonlist.app.share-extension.svc: Error encoding JSON: \(error)")
-      return
-    }
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    let task = URLSession.shared.uploadTask(with: request, from: jsonData) { data, response, error in
-      if let error = error {
-        NSLog("com.soonlist.app.share-extension.svc: Error in upload task: \(error)")
-        completion(.failure(error))
-        return
-      }
-
-      if let httpResponse = response as? HTTPURLResponse {
-        NSLog(
-          "com.soonlist.app.share-extension.svc: HTTP Status Code: \(httpResponse.statusCode)"
-        )
-        if httpResponse.statusCode != 200 {
-          NSLog(
-            "com.soonlist.app.share-extension.svc: Response Headers: \(httpResponse.allHeaderFields)"
-          )
+    AF.request(url, method: .post, parameters: event, encoder: JSONParameterEncoder.default)
+        .validate()
+        .responseData { response in
+            switch response.result {
+            case .success(let data):
+                NSLog("com.soonlist.app.share-extension.svc: Success: \(String(data: data, encoding: .utf8) ?? "")")
+                completion(.success(data))
+            case .failure(let error):
+                NSLog("com.soonlist.app.share-extension.svc: Error: \(error)")
+                completion(.failure(error))
+            }
         }
-      }
-
-      guard let data = data else {
-        NSLog("com.soonlist.app.share-extension.svc: No data received")
-        return
-      }
-
-      if let responseString = String(data: data, encoding: .utf8) {
-        NSLog("com.soonlist.app.share-extension.svc: Response: \(responseString)")
-      }
-
-      completion(.success(data))
-    }
-
-    task.resume()
   }
 
   private func handleImageUpload(
@@ -410,49 +325,25 @@ class ShareViewController: UIViewController {
 
   private func uploadImage(_ imageData: Data, completion: @escaping (String) -> Void) {
     NSLog("com.soonlist.app.share-extension.svc: Uploading image")
-    guard let url = URL(string: "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary")
-    else {
-      NSLog("com.soonlist.app.share-extension.svc: Invalid URL")
-      completion("")
-      return
-    }
+    let url = "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary"
 
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue(
-      "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8", forHTTPHeaderField: "Authorization")
-    request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
+    let headers: HTTPHeaders = [
+        "Authorization": "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
+        "Content-Type": "image/jpeg"
+    ]
 
-    let task = URLSession.shared.uploadTask(with: request, from: imageData) { data, response, error in
-      if let error = error {
-        NSLog("com.soonlist.app.share-extension.svc: Error uploading image: \(error)")
-        completion("")
-        return
-      }
-
-      guard let data = data else {
-        NSLog("com.soonlist.app.share-extension.svc: No data received from image upload")
-        completion("")
-        return
-      }
-
-      do {
-        if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-          let fileUrl = json["fileUrl"] as? String
-        {
-          NSLog(
-            "com.soonlist.app.share-extension.svc: Uploaded image file path: \(fileUrl)")
-          completion(fileUrl)
-        } else {
-          completion("")
+    AF.upload(imageData, to: url, method: .post, headers: headers)
+        .validate()
+        .responseDecodable(of: ImageUploadResponse.self) { response in
+            switch response.result {
+            case .success(let uploadResponse):
+                NSLog("com.soonlist.app.share-extension.svc: Uploaded image file path: \(uploadResponse.fileUrl)")
+                completion(uploadResponse.fileUrl)
+            case .failure(let error):
+                NSLog("com.soonlist.app.share-extension.svc: Error uploading image: \(error)")
+                completion("")
+            }
         }
-      } catch {
-        NSLog("com.soonlist.app.share-extension.svc: Error parsing JSON response: \(error)")
-        completion("")
-      }
-    }
-
-    task.resume()
   }
 
   // Add this new method
@@ -463,10 +354,7 @@ class ShareViewController: UIViewController {
       return
     }
 
-    guard let url = URL(string: "\(domainURL)/api/trpc/notification.sendSingleNotification") else {
-      NSLog("com.soonlist.app.share-extension.svc: Invalid URL")
-      return
-    }
+    let url = "\(domainURL)/api/trpc/notification.sendSingleNotification"
 
     let notificationData: [String: Any] = [
       "expoPushToken": "",  // Leave this empty as we don't have a token
@@ -475,31 +363,15 @@ class ShareViewController: UIViewController {
       "data": [String: String]()
     ]
 
-    guard let jsonData = try? JSONSerialization.data(withJSONObject: notificationData) else {
-      NSLog("com.soonlist.app.share-extension.svc: Failed to serialize notification data")
-      return
-    }
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    let task = URLSession.shared.uploadTask(with: request, from: jsonData) { data, response, error in
-      if let error = error {
-        NSLog("com.soonlist.app.share-extension.svc: Error sending notification: \(error)")
-        return
-      }
-
-      if let httpResponse = response as? HTTPURLResponse {
-        NSLog("com.soonlist.app.share-extension.svc: Notification HTTP Status Code: \(httpResponse.statusCode)")
-      }
-
-      if let data = data, let responseString = String(data: data, encoding: .utf8) {
-        NSLog("com.soonlist.app.share-extension.svc: Notification Response: \(responseString)")
-      }
-    }
-
-    task.resume()
+    AF.request(url, method: .post, parameters: notificationData, encoding: JSONEncoding.default)
+        .validate()
+        .response { response in
+            if let error = response.error {
+                NSLog("com.soonlist.app.share-extension.svc: Error sending notification: \(error)")
+            } else if let data = response.data, let responseString = String(data: data, encoding: .utf8) {
+                NSLog("com.soonlist.app.share-extension.svc: Notification Response: \(responseString)")
+            }
+        }
   }
 
   // Add this new method
@@ -510,10 +382,7 @@ class ShareViewController: UIViewController {
       return
     }
 
-    guard let url = URL(string: "\(domainURL)/api/trpc/notification.sendSingleNotification") else {
-      NSLog("com.soonlist.app.share-extension.svc: Invalid URL")
-      return
-    }
+    let url = "\(domainURL)/api/trpc/notification.sendSingleNotification"
 
     let notificationData: [String: Any] = [
       "expoPushToken": authData.expoPushToken,
@@ -522,31 +391,15 @@ class ShareViewController: UIViewController {
       "data": [String: String]()
     ]
 
-    guard let jsonData = try? JSONSerialization.data(withJSONObject: notificationData) else {
-      NSLog("com.soonlist.app.share-extension.svc: Failed to serialize notification data")
-      return
-    }
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    let task = URLSession.shared.uploadTask(with: request, from: jsonData) { data, response, error in
-      if let error = error {
-        NSLog("com.soonlist.app.share-extension.svc: Error sending notification: \(error)")
-        return
-      }
-
-      if let httpResponse = response as? HTTPURLResponse {
-        NSLog("com.soonlist.app.share-extension.svc: Notification HTTP Status Code: \(httpResponse.statusCode)")
-      }
-
-      if let data = data, let responseString = String(data: data, encoding: .utf8) {
-        NSLog("com.soonlist.app.share-extension.svc: Notification Response: \(responseString)")
-      }
-    }
-
-    task.resume()
+    AF.request(url, method: .post, parameters: notificationData, encoding: JSONEncoding.default)
+        .validate()
+        .response { response in
+            if let error = response.error {
+                NSLog("com.soonlist.app.share-extension.svc: Error sending notification: \(error)")
+            } else if let data = response.data, let responseString = String(data: data, encoding: .utf8) {
+                NSLog("com.soonlist.app.share-extension.svc: Notification Response: \(responseString)")
+            }
+        }
   }
 }
 
@@ -731,4 +584,9 @@ func logAllKeys() {
       NSLog("com.soonlist.app.share-extension.svc: Item \(index + 1) - \(key): \(value)")
     }
   }
+}
+
+// Add this struct for decoding the image upload response
+struct ImageUploadResponse: Decodable {
+    let fileUrl: String
 }
