@@ -21,6 +21,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         ios: {
           deploymentTarget: "15.0",
+          extraPods: [{ name: "Alamofire", version: "~> 5.9.1" }],
         },
       },
     ],
