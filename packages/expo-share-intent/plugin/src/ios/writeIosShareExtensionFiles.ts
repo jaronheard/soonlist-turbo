@@ -1,16 +1,16 @@
-import plist from "@expo/plist";
 import fs from "node:fs";
 import path from "node:path";
+import plist from "@expo/plist";
 
+import { Parameters } from "../types";
 import {
-  shareExtensionName,
   getAppGroups,
   shareExtensionEntitlementsFileName,
   shareExtensionInfoFileName,
+  shareExtensionName,
   shareExtensionStoryBoardFileName,
   shareExtensionViewControllerFileName,
 } from "./constants";
-import { Parameters } from "../types";
 
 export async function writeShareExtensionFiles(
   platformProjectRoot: string,
