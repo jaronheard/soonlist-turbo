@@ -7,10 +7,8 @@ import { mergeContents } from "@expo/config-plugins/build/utils/generateCode";
 const SRC_TO_ADD_TO_PODFILE = `
 target 'ShareExtension' do
   pod 'Alamofire', '~> 5.9.1'
-  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '8.21.0'
+  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '8.35.0'
 end
-
-use_frameworks! # This is important for Sentry
 `;
 
 export const withAddPodDepsToTargets: ConfigPlugin = (config) => {
