@@ -248,7 +248,7 @@ export function UserEventListItem(props: {
               </Text>
             </View>
           ) : null}
-          {shouldShowCreator && (
+          {shouldShowCreator ? (
             <View className="flex-row items-center gap-2">
               {user.userImage ? (
                 <Image
@@ -260,7 +260,20 @@ export function UserEventListItem(props: {
               )}
               <Text className="text-sm text-neutral-2">@{user.username}</Text>
             </View>
-          )}
+          ) : isOwner ? (
+            <View className="flex-row items-center gap-2">
+              {event.visibility === "public" ? (
+                <Globe size={16} color="#627496" />
+              ) : (
+                <Lock size={16} color="#627496" />
+              )}
+              <Text className="text-sm text-neutral-2">
+                {event.visibility === "public"
+                  ? "Your event is on Discover"
+                  : "Your event is unlisted"}
+              </Text>
+            </View>
+          ) : null}
         </View>
         <View className="relative flex items-center justify-center">
           {e.images?.[3] ? (
