@@ -53,6 +53,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     config: {
       usesNonExemptEncryption: false,
     },
+    entitlements: {
+      "com.apple.security.application-groups": ["group.com.soonlist"],
+    },
   },
   android: {
     package: "com.soonlist.app",
