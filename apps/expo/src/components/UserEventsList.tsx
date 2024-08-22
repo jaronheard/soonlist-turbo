@@ -113,7 +113,6 @@ export function UserEventListItem(props: {
     showCreator === "always" ||
     (showCreator === "otherUsers" && !isCurrentUser);
 
-  const isOwner = isCurrentUser;
   const isFollowing = event.eventFollows.find(
     (item) =>
       item.userId === user.id ||
@@ -128,7 +127,7 @@ export function UserEventListItem(props: {
       { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
     ];
 
-    if (isOwner) {
+    if (isCurrentUser) {
       return [
         ...baseItems,
         {
@@ -180,11 +179,12 @@ export function UserEventListItem(props: {
           onAddToCal?.(event);
           break;
         case "Make Public":
-        case "Make Private":
+        case "Make Private": {
           const newVisibility =
             event.visibility === "public" ? "private" : "public";
           onToggleVisibility?.(event, newVisibility);
           break;
+        }
         case "Edit":
           onEdit?.(event);
           break;
@@ -215,10 +215,19 @@ export function UserEventListItem(props: {
         )}
       >
         <View className="mr-4 flex-1">
-          <View className="mb-2">
+          <View className="mb-2 flex-row items-center justify-between">
             <Text className="text-base font-medium text-neutral-2">
               {date} • {time}
             </Text>
+            {isCurrentUser && (
+              <View className="ml-2">
+                {event.visibility === "public" ? (
+                  <Globe size={16} color="#627496" />
+                ) : (
+                  <Lock size={16} color="#627496" />
+                )}
+              </View>
+            )}
           </View>
           <Link
             asChild
