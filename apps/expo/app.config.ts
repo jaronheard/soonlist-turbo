@@ -40,6 +40,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           "The app needs to access your calendar to add events.",
       },
     ],
+    [
+      "@bacons/apple-targets",
+      {
+        appleTeamId: "GQ59Z4XZHZ",
+      },
+    ],
   ],
   ios: {
     supportsTablet: true,
