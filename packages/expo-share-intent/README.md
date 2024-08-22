@@ -1,1 +1,0 @@
-# @soonlist/expo-share-intent
