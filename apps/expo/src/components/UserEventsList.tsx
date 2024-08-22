@@ -49,7 +49,7 @@ export function UserEventListItem(props: {
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
     newVisibility: "public" | "private",
   ) => void;
-}) {
+}): React.ReactNode {
   const {
     event,
     actionButton,
@@ -113,6 +113,7 @@ export function UserEventListItem(props: {
     showCreator === "always" ||
     (showCreator === "otherUsers" && !isCurrentUser);
 
+  const isOwner = isCurrentUser;
   const isFollowing = event.eventFollows.find(
     (item) =>
       item.userId === user.id ||
@@ -127,11 +128,14 @@ export function UserEventListItem(props: {
       { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
     ];
 
-    if (isCurrentUser) {
+    if (isOwner) {
       return [
         ...baseItems,
         {
-          title: event.visibility === "public" ? "Make Private" : "Make Public",
+          title:
+            event.visibility === "public"
+              ? "Remove From Discover"
+              : "Add to Discover",
           systemIcon: event.visibility === "public" ? "lock" : "globe",
         },
         { title: "Edit", systemIcon: "square.and.pencil" },
@@ -178,13 +182,12 @@ export function UserEventListItem(props: {
         case "Add to Calendar":
           onAddToCal?.(event);
           break;
-        case "Make Public":
-        case "Make Private": {
+        case "Add to Discover":
+        case "Remove From Discover":
           const newVisibility =
             event.visibility === "public" ? "private" : "public";
           onToggleVisibility?.(event, newVisibility);
           break;
-        }
         case "Edit":
           onEdit?.(event);
           break;
@@ -215,19 +218,10 @@ export function UserEventListItem(props: {
         )}
       >
         <View className="mr-4 flex-1">
-          <View className="mb-2 flex-row items-center justify-between">
+          <View className="mb-2">
             <Text className="text-base font-medium text-neutral-2">
               {date} • {time}
             </Text>
-            {isCurrentUser && (
-              <View className="ml-2">
-                {event.visibility === "public" ? (
-                  <Globe size={16} color="#627496" />
-                ) : (
-                  <Lock size={16} color="#627496" />
-                )}
-              </View>
-            )}
           </View>
           <Link
             asChild
