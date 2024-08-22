@@ -24,24 +24,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
-    [
-      "@soonlist/expo-share-intent",
-      {
-        iosActivationRules: {
-          NSExtensionActivationSupportsText: true,
-          // TODO: SUPPORT TEXT
-          // NSExtensionActivationSupportsWebURLWithMaxCount: 1,
-          // NSExtensionActivationSupportsWebPageWithMaxCount: 1,
-          NSExtensionActivationSupportsImageWithMaxCount: 1,
-          // NSExtensionActivationSupportsMovieWithMaxCount: 1,
-          // NSExtensionActivationSupportsFileWithMaxCount: 1,
-        },
-        androidIntentFilters: ["image/*"],
-        // TODO: SUPPORT TEXT
-        // androidIntentFilters: ["text/*", "image/*"],
-        androidMultiIntentFilters: ["image/*"],
-      },
-    ],
     "expo-updates",
     [
       "@sentry/react-native/expo",
@@ -58,12 +40,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           "The app needs to access your calendar to add events.",
       },
     ],
+    [
+      "@bacons/apple-targets",
+      {
+        appleTeamId: "GQ59Z4XZHZ",
+      },
+    ],
   ],
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.soonlist.app",
     config: {
       usesNonExemptEncryption: false,
+    },
+    entitlements: {
+      "com.apple.security.application-groups": ["group.com.soonlist"],
     },
   },
   android: {
