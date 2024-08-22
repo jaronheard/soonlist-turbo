@@ -37,6 +37,9 @@ importers:
 
   apps/expo:
     dependencies:
+      '@bacons/apple-targets':
+        specifier: ^0.0.5
+        version: 0.0.5
       '@bytescale/sdk':
         specifier: ^3.34.0
         version: 3.37.0
@@ -1600,6 +1603,12 @@ packages:
     resolution: {integrity: sha512-6mQNsaLeXTw0nxYUYu+NSa4Hx4BlF1x1x8/PMFbiR+GBSr+2DkECc69b8hgy2frEodNcvPffeH8YfWd3LI6jhQ==}
     engines: {node: '>=6.9.0'}
 
+  '@bacons/apple-targets@0.0.5':
+    resolution: {integrity: sha512-7NJrTZfyccC7u+bIXRmHyVz7CWNB9yX48QNm+CxGvgw9cwwm19VvJJByb+q2Qgyld06ckXkqI0vcqOhSjw0PPw==}
+
+  '@bacons/xcode@1.0.0-alpha.15':
+    resolution: {integrity: sha512-qURX00TJIbJJd2NfbeUp6uzZusPF8noaNZ+N4gbzFc/+O33XNs5N8pqYC/5I9BLHaLNkPzwi+/Fn5usqXnlW2Q==}
+
   '@bytescale/sdk@3.37.0':
     resolution: {integrity: sha512-tACs7lIKQaYA95vktae3IX+kH+8+c8hIqCmupkkVq9b5bOn8JRE2F8L04sM3mtUnKUYK4FYxsUTn74JLLre5vQ==}
 
@@ -2074,6 +2083,9 @@ packages:
 
   '@expo/package-manager@1.5.2':
     resolution: {integrity: sha512-IuA9XtGBilce0q8cyxtWINqbzMB1Fia0Yrug/O53HNuRSwQguV/iqjV68bsa4z8mYerePhcFgtvISWLAlNEbUA==}
+
+  '@expo/plist@0.0.18':
+    resolution: {integrity: sha512-+48gRqUiz65R21CZ/IXa7RNBXgAI/uPSdvJqoN9x1hfL44DNbUoWHgHiEXTx7XelcATpDwNTz6sHLfy0iNqf+w==}
 
   '@expo/plist@0.1.1':
     resolution: {integrity: sha512-90qbbblHYWR/z0R+HP2t7yRx0IG5AsEL0BqTY/vXcj4emhGhm39Dbwg4BO2t6qfdLljJISzUwEtWWTl1HNHAAg==}
@@ -9776,6 +9788,23 @@ snapshots:
       '@babel/helper-validator-identifier': 7.24.5
       to-fast-properties: 2.0.0
 
+  '@bacons/apple-targets@0.0.5':
+    dependencies:
+      '@bacons/xcode': 1.0.0-alpha.15
+      '@react-native/normalize-color': 2.1.0
+      fs-extra: 11.2.0
+      glob: 10.3.12
+    transitivePeerDependencies:
+      - supports-color
+
+  '@bacons/xcode@1.0.0-alpha.15':
+    dependencies:
+      '@expo/plist': 0.0.18
+      debug: 4.3.4
+      uuid: 8.3.2
+    transitivePeerDependencies:
+      - supports-color
+
   '@bytescale/sdk@3.37.0': {}
 
   '@bytescale/upload-widget-react@4.18.0(react@18.3.1)':
@@ -10383,6 +10412,12 @@ snapshots:
       ora: 3.4.0
       split: 1.0.1
       sudo-prompt: 9.1.1
+
+  '@expo/plist@0.0.18':
+    dependencies:
+      '@xmldom/xmldom': 0.7.13
+      base64-js: 1.5.1
+      xmlbuilder: 14.0.0
 
   '@expo/plist@0.1.1':
     dependencies:

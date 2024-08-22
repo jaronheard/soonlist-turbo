@@ -31,6 +31,7 @@
     "with-env:production": "dotenv -e ../../.env.production --"
   },
   "dependencies": {
+    "@bacons/apple-targets": "^0.0.5",
     "@bytescale/sdk": "^3.34.0",
     "@clerk/clerk-expo": "^1.1.0",
     "@expo/metro-config": "^0.17.6",
