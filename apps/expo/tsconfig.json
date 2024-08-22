@@ -17,7 +17,8 @@
     "eslint.config.mjs",
     "src/app",
     "src/components",
-    "src/hooks"
+    "src/hooks",
+    "plugins"
   ],
   "exclude": ["node_modules"]
 }

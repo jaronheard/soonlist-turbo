@@ -92,6 +92,8 @@
     "@soonlist/tsconfig": "workspace:*",
     "@types/babel__core": "^7.20.5",
     "@types/react": "^18.3.1",
+    "esbuild": "^0.23.1",
+    "esbuild-register": "^3.6.0",
     "eslint": "^9.1.1",
     "prettier": "^3.2.5",
     "tailwindcss": "^3.4.3",

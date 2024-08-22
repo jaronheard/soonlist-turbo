@@ -1,3 +1,5 @@
+import "esbuild-register";
+
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
@@ -46,6 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         appleTeamId: "GQ59Z4XZHZ",
       },
     ],
+    require("./plugins/with-add-pod-deps-to-targets").withAddPodDepsToTargets,
   ],
   ios: {
     supportsTablet: true,
