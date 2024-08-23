@@ -25,7 +25,7 @@ pnpm install
 
 ## Setup environment variables
 
-You'll need to create a `.env.local` file in the root of the project and an .env.production file in the root of the project. Contact @jaronheard for the values for these files.
+You'll need to create a `.env.local` file in the root of the project and an `.env.production file` in the root of the project. Contact @jaronheard for the values for these files.
 
 ## Ngrok Setup
 
@@ -72,7 +72,7 @@ Note: Each developer will need to create their own ngrok endpoint and set up the
 pnpm dev
 ```
 
-In another terminal:
+Simulataneously in another terminal, for webhooks:
 
 ```bash
 pnpm ngrok
