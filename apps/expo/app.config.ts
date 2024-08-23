@@ -48,6 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         appleTeamId: "GQ59Z4XZHZ",
       },
     ],
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     require("./plugins/with-add-pod-deps-to-targets").withAddPodDepsToTargets,
   ],
   ios: {
