@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { RefreshControl, View } from "react-native";
+import { View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 
