@@ -6,6 +6,6 @@ For more info, visit soonlist.com
 
 Contact @jaronheard for dev info
 
-## notes
+## Notes
 
-[overview of expo process](https://medium.com/@lucksp_22012/no-need-to-eject-when-youve-got-eas-managed-workflow-6df148b888ce)
+[Overview of Expo process](https://medium.com/@lucksp_22012/no-need-to-eject-when-youve-got-eas-managed-workflow-6df148b888ce)
