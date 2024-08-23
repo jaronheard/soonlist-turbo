@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -28,6 +29,7 @@ import {
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { CalendarSelectionModal } from "./CalendarSelectionModal";
+import SaveButton from "./SaveButton";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
 
@@ -58,6 +60,7 @@ export function UserEventListItem(props: {
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
     newVisibility: "public" | "private",
   ) => void;
+  isSaved: boolean;
 }): React.ReactNode {
   const {
     event,
@@ -71,6 +74,7 @@ export function UserEventListItem(props: {
     onShare,
     onAddToCal,
     onToggleVisibility,
+    isSaved,
   } = props;
   const id = event.id;
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -124,12 +128,6 @@ export function UserEventListItem(props: {
     (showCreator === "otherUsers" && !isCurrentUser);
 
   const isOwner = isCurrentUser;
-  const isFollowing = event.eventFollows.find(
-    (item) =>
-      item.userId === user.id ||
-      item.userId === currentUser?.id ||
-      item.userId === currentUser?.externalId,
-  );
 
   const getMenuItems = () => {
     const baseItems = [
@@ -151,7 +149,7 @@ export function UserEventListItem(props: {
         { title: "Edit", systemIcon: "square.and.pencil" },
         { title: "Delete", systemIcon: "trash", destructive: true },
       ];
-    } else if (!isFollowing) {
+    } else if (!isSaved) {
       return [{ title: "Follow", systemIcon: "plus.circle" }, ...baseItems];
     } else {
       return [
@@ -332,6 +330,7 @@ export default function UserEventsList(props: {
 }) {
   const { events, actionButton, showCreator, isRefetching, onRefresh } = props;
   const { user } = useUser();
+  const username = user?.username || "";
   const utils = api.useUtils();
   const {
     isCalendarModalVisible,
@@ -353,16 +352,17 @@ export default function UserEventsList(props: {
   const unfollowEventMutation = api.event.unfollow.useMutation({
     onMutate: async (variables) => {
       await utils.event.getSavedIdsForUser.cancel();
-      const prevData = utils.event.getSavedIdsForUser.getData();
-      utils.event.getSavedIdsForUser.setData(
-        { userName: user?.username || "" },
-        (old) => (old ? old.filter((event) => event.id !== variables.id) : []),
+      const prevData = utils.event.getSavedIdsForUser.getData({
+        userName: username,
+      });
+      utils.event.getSavedIdsForUser.setData({ userName: username }, (old) =>
+        old ? old.filter((event) => event.id !== variables.id) : [],
       );
       return { prevData };
     },
     onError: (_, __, context) => {
       utils.event.getSavedIdsForUser.setData(
-        { userName: user?.username || "" },
+        { userName: username },
         context?.prevData,
       );
     },
@@ -376,17 +376,17 @@ export default function UserEventsList(props: {
   const followEventMutation = api.event.follow.useMutation({
     onMutate: async (variables) => {
       await utils.event.getSavedIdsForUser.cancel();
-      const prevData = utils.event.getSavedIdsForUser.getData();
-      utils.event.getSavedIdsForUser.setData(
-        { userName: user?.username || "" },
-        (old) =>
-          old ? [...old, { id: variables.id }] : [{ id: variables.id }],
+      const prevData = utils.event.getSavedIdsForUser.getData({
+        userName: username,
+      });
+      utils.event.getSavedIdsForUser.setData({ userName: username }, (old) =>
+        old ? [...old, { id: variables.id }] : [{ id: variables.id }],
       );
       return { prevData };
     },
     onError: (_, __, context) => {
       utils.event.getSavedIdsForUser.setData(
-        { userName: user?.username || "" },
+        { userName: username },
         context?.prevData,
       );
     },
@@ -478,26 +478,43 @@ export default function UserEventsList(props: {
     </View>
   );
 
+  // Use the getSavedIdsForUser query to get the saved status
+  const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
+    userName: username,
+  });
+
   return (
     <>
       <FlashList
         data={collapsedEvents}
         estimatedItemSize={60}
-        renderItem={({ item, index }) => (
-          <UserEventListItem
-            event={item.event}
-            actionButton={actionButton ? actionButton(item.event) : undefined}
-            isLastItem={index === collapsedEvents.length - 1}
-            showCreator={showCreator}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onFollow={handleFollow}
-            onUnfollow={handleUnfollow}
-            onShare={handleShare}
-            onAddToCal={handleAddToCalWrapper}
-            onToggleVisibility={handleToggleVisibility}
-          />
-        )}
+        renderItem={({ item, index }) => {
+          const isSaved =
+            savedIdsQuery.data?.some(
+              (savedEvent) => savedEvent.id === item.event.id,
+            ) ?? false;
+
+          return (
+            <UserEventListItem
+              event={item.event}
+              actionButton={
+                actionButton ? (
+                  <SaveButton eventId={item.event.id} isSaved={isSaved} />
+                ) : undefined
+              }
+              isLastItem={index === collapsedEvents.length - 1}
+              showCreator={showCreator}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onFollow={handleFollow}
+              onUnfollow={handleUnfollow}
+              onShare={handleShare}
+              onAddToCal={handleAddToCalWrapper}
+              onToggleVisibility={handleToggleVisibility}
+              isSaved={isSaved}
+            />
+          );
+        }}
         refreshControl={
           <RefreshControl
             refreshing={false}
