@@ -351,14 +351,49 @@ export default function UserEventsList(props: {
   });
 
   const unfollowEventMutation = api.event.unfollow.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
+    onMutate: async (variables) => {
+      await utils.event.getSavedIdsForUser.cancel();
+      const prevData = utils.event.getSavedIdsForUser.getData();
+      utils.event.getSavedIdsForUser.setData(
+        { userName: user?.username || "" },
+        (old) => (old ? old.filter((event) => event.id !== variables.id) : []),
+      );
+      return { prevData };
+    },
+    onError: (_, __, context) => {
+      utils.event.getSavedIdsForUser.setData(
+        { userName: user?.username || "" },
+        context?.prevData,
+      );
+    },
+    onSettled: () => {
+      void utils.event.getSavedIdsForUser.invalidate();
+      void utils.event.getUpcomingForUser.invalidate();
+      void utils.event.getDiscover.invalidate();
     },
   });
 
   const followEventMutation = api.event.follow.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
+    onMutate: async (variables) => {
+      await utils.event.getSavedIdsForUser.cancel();
+      const prevData = utils.event.getSavedIdsForUser.getData();
+      utils.event.getSavedIdsForUser.setData(
+        { userName: user?.username || "" },
+        (old) =>
+          old ? [...old, { id: variables.id }] : [{ id: variables.id }],
+      );
+      return { prevData };
+    },
+    onError: (_, __, context) => {
+      utils.event.getSavedIdsForUser.setData(
+        { userName: user?.username || "" },
+        context?.prevData,
+      );
+    },
+    onSettled: () => {
+      void utils.event.getSavedIdsForUser.invalidate();
+      void utils.event.getUpcomingForUser.invalidate();
+      void utils.event.getDiscover.invalidate();
     },
   });
 
