@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm with-env next build",
-    "clean": "git clean -xdf .next .turbo node_modules",
+    "clean": "git clean -xdf .cache .next .turbo node_modules",
     "dev": "pnpm with-env next dev --turbo",
     "dev:production": "pnpm with-env:production next dev --turbo",
     "dev:tunnel": "concurrently \"pnpm run tunnel\" \"pnpm with-env next dev --turbo\"",
