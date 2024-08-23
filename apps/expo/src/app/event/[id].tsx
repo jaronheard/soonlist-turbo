@@ -13,7 +13,8 @@ import {
 import AutoHeightImage from "react-native-auto-height-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Link, Stack, useLocalSearchParams } from "expo-router";
-import { Edit, MapPin, User } from "lucide-react-native";
+import { useUser } from "@clerk/clerk-expo";
+import { Edit, Globe, Lock, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -29,12 +30,15 @@ export default function Page() {
   const [imageLoaded, setImageLoaded] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
+  const { user: currentUser } = useUser();
 
   const [refreshing, setRefreshing] = useState(false);
 
+  const eventQuery = api.event.get.useQuery({ eventId: id as string });
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    eventQuery.refetch().then(() => setRefreshing(false));
+    void eventQuery.refetch().then(() => setRefreshing(false));
   }, [eventQuery]);
 
   useEffect(() => {
@@ -72,8 +76,6 @@ export default function Page() {
       </View>
     );
   }
-
-  const eventQuery = api.event.get.useQuery({ eventId: id });
 
   if (eventQuery.isLoading) {
     return (
@@ -127,6 +129,10 @@ export default function Page() {
     eventData.endTime,
   );
 
+  const isCurrentUserEvent =
+    currentUser?.id === event.userId ||
+    currentUser?.externalId === event.userId;
+
   return (
     <ScrollView
       className="flex-1 bg-white"
@@ -140,7 +146,7 @@ export default function Page() {
       <Stack.Screen
         options={{
           title: "Event",
-          headerTitle: "Event", // Added this line
+          headerTitle: "Event",
           headerRight: () => (
             <View className="-mr-2 flex-row items-center gap-1">
               <TouchableOpacity
@@ -183,20 +189,37 @@ export default function Page() {
                 </View>
               </Link>
             )}
-            {event.user && (
+            {isCurrentUserEvent ? (
+              // Show visibility status for the event owner
               <View className="flex-row items-center gap-2">
-                {event.user.userImage ? (
-                  <Image
-                    source={{ uri: event.user.userImage }}
-                    className="h-5 w-5 rounded-full"
-                  />
+                {event.visibility === "public" ? (
+                  <Globe size={16} color="#627496" />
                 ) : (
-                  <User size={20} color="#627496" />
+                  <Lock size={16} color="#627496" />
                 )}
                 <Text className="text-sm text-neutral-2">
-                  @{event.user.username}
+                  {event.visibility === "public"
+                    ? "Your event is on Discover"
+                    : "Your event is unlisted"}
                 </Text>
               </View>
+            ) : (
+              // Show user info for other users
+              event.user && (
+                <View className="flex-row items-center gap-2">
+                  {event.user.userImage ? (
+                    <Image
+                      source={{ uri: event.user.userImage }}
+                      className="h-5 w-5 rounded-full"
+                    />
+                  ) : (
+                    <User size={20} color="#627496" />
+                  )}
+                  <Text className="text-sm text-neutral-2">
+                    @{event.user.username}
+                  </Text>
+                </View>
+              )
             )}
           </View>
           <View className="my-8">

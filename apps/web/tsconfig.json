@@ -8,7 +8,7 @@
       "~/*": ["./*"]
     },
     "plugins": [{ "name": "next" }],
-    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
+
     "module": "esnext",
     "strictNullChecks": true // Next.js really wants this event though it's in the base tsconfig
   },

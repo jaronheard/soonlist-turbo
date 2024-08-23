@@ -5,7 +5,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "android": "expo run:android",
-    "clean": "git clean -xdf .expo .turbo node_modules dist",
+    "clean": "git clean -xdf .cache .expo .turbo ios android node_modules dist",
     "debug.eas": "open 'rndebugger://set-debugger-loc?host=localhost&port=8081'",
     "debug": "open 'rndebugger://set-debugger-loc?host=localhost&port=19000'",
     "dev:android": "expo start --android",

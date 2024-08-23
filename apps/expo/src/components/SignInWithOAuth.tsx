@@ -1,11 +1,11 @@
 import type { OAuthStrategy } from "@clerk/types";
+import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
 import { Image, Pressable, Text, TextInput, View } from "react-native";
 import { Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 
-import onboardingEventsCollage from "../../assets/onboarding-events-collage.png";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { AppleSignInButton } from "./AppleSignInButton";
 import { GoogleSignInButton } from "./GoogleSignInButton";
@@ -147,7 +147,10 @@ const SignInWithOAuth = () => {
           The best way to add, organize, and share events.
         </Text>
         <Image
-          source={onboardingEventsCollage as ImageSourcePropType}
+          source={
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
+            require("../assets/onboarding-events-collage.png") as ImageSourcePropType
+          }
           className="mb-6 h-80 w-full"
           resizeMode="contain"
         />
