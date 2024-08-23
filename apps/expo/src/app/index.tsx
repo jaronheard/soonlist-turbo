@@ -1,12 +1,5 @@
-import React from "react";
-import {
-  Linking,
-  Pressable,
-  RefreshControl,
-  SafeAreaView,
-  Text,
-  View,
-} from "react-native";
+import React, { useCallback } from "react";
+import { Linking, Pressable, SafeAreaView, Text, View } from "react-native";
 import Constants from "expo-constants";
 import { Stack } from "expo-router";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
@@ -32,9 +25,9 @@ function MyFeed() {
   });
   const utils = api.useUtils();
 
-  const onRefresh = () => {
-    void utils.event.invalidate();
-  };
+  const onRefresh = useCallback(() => {
+    void utils.event.getUpcomingForUser.invalidate();
+  }, [utils]);
 
   const events = eventsQuery.data ?? [];
   const currentAndFutureEvents = events.filter(
@@ -89,12 +82,8 @@ function MyFeed() {
       ) : (
         <UserEventsList
           events={currentAndFutureEvents}
-          refreshControl={
-            <RefreshControl
-              refreshing={eventsQuery.isRefetching}
-              onRefresh={onRefresh}
-            />
-          }
+          isRefetching={eventsQuery.isRefetching}
+          onRefresh={onRefresh}
           actionButton={goButton}
           showCreator="otherUsers"
         />

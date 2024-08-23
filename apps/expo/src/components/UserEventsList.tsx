@@ -1,4 +1,13 @@
-import { Image, Linking, Pressable, Share, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Linking,
+  Pressable,
+  RefreshControl,
+  Share,
+  Text,
+  View,
+} from "react-native";
 import ContextMenu from "react-native-context-menu-view";
 import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
@@ -64,6 +73,7 @@ export function UserEventListItem(props: {
     onToggleVisibility,
   } = props;
   const id = event.id;
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const e = event.event as AddToCalendarButtonPropsRestricted;
   const user = event.user;
 
@@ -154,6 +164,7 @@ export function UserEventListItem(props: {
   const handleDirections = (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const e = event.event as AddToCalendarButtonPropsRestricted;
     if (e.location) {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.location)}`;
@@ -316,8 +327,10 @@ export default function UserEventsList(props: {
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => React.ReactNode;
   showCreator: ShowCreatorOption;
+  isRefetching: boolean;
+  onRefresh: () => void;
 }) {
-  const { events, refreshControl, actionButton, showCreator } = props;
+  const { events, actionButton, showCreator, isRefetching, onRefresh } = props;
   const { user } = useUser();
   const utils = api.useUtils();
   const {
@@ -450,9 +463,28 @@ export default function UserEventsList(props: {
             onToggleVisibility={handleToggleVisibility}
           />
         )}
-        refreshControl={refreshControl}
+        refreshControl={
+          <RefreshControl
+            refreshing={false}
+            onRefresh={onRefresh}
+            tintColor="#5A32FB"
+          />
+        }
+        onEndReached={onRefresh}
+        onEndReachedThreshold={0.1}
         contentContainerStyle={{ paddingBottom: 16 }}
-        ListFooterComponent={renderFooter}
+        ListFooterComponent={
+          <>
+            {renderFooter()}
+            {isRefetching && (
+              <ActivityIndicator
+                size="small"
+                color="#5A32FB"
+                style={{ marginTop: 10 }}
+              />
+            )}
+          </>
+        }
       />
       <CalendarSelectionModal
         visible={isCalendarModalVisible}

@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { RefreshControl, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
@@ -21,9 +22,10 @@ export default function Page() {
   });
   const utils = api.useUtils();
 
-  const onRefresh = () => {
-    void utils.event.invalidate();
-  };
+  const onRefresh = useCallback(() => {
+    void utils.event.getDiscover.invalidate();
+    void utils.event.getSavedIdsForUser.invalidate();
+  }, [utils]);
 
   if (eventsQuery.isLoading || savedEventIdsQuery.isLoading) {
     return <LoadingSpinner />;
@@ -61,12 +63,10 @@ export default function Page() {
       <View className="flex-1">
         <UserEventsList
           events={currentAndFutureEvents}
-          refreshControl={
-            <RefreshControl
-              refreshing={eventsQuery.isRefetching}
-              onRefresh={onRefresh}
-            />
+          isRefetching={
+            eventsQuery.isRefetching || savedEventIdsQuery.isRefetching
           }
+          onRefresh={onRefresh}
           actionButton={saveButton}
           showCreator="always"
         />
