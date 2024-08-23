@@ -29,7 +29,7 @@ You'll need to create a `.env.local` file in the root of the project and an `.en
 
 ## Ngrok Setup
 
-Ngrok is used for exposing your local development server to receive webhooks from services such as Clerk and Stripe. Follow these steps:
+Ngrok is used for exposing your local development server to receive webhooks from services such as Clerk and Stripe, and is also necessary for developing the mobile app. Follow these steps:
 
 1. Sign up for a free account at [ngrok.com](https://ngrok.com/).
 
@@ -72,7 +72,7 @@ Note: Each developer will need to create their own ngrok endpoint and set up the
 pnpm dev
 ```
 
-Simulataneously in another terminal, for webhooks:
+Simultaneously in another terminal, for webhooks and mobile app development:
 
 ```bash
 pnpm ngrok
