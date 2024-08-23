@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { MoreHorizontal, PlusCircle, ShareIcon } from "lucide-react-native";
 
-import onboardingEventsCollage from "../../assets/onboarding-events-collage.png";
 import { SoonlistAppIcon } from "./SoonlistAppIcon";
 
 export function Onboarding({ onComplete }: { onComplete: () => void }) {
@@ -16,7 +15,10 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
       </Text>
 
       <Image
-        source={onboardingEventsCollage as ImageSourcePropType}
+        source={
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
+          require("../assets/onboarding-events-collage.png") as ImageSourcePropType
+        }
         className="mb-6 h-40 w-full"
         resizeMode="contain"
       />

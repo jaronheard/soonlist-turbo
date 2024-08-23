@@ -34,9 +34,11 @@ export default function Page() {
 
   const [refreshing, setRefreshing] = useState(false);
 
+  const eventQuery = api.event.get.useQuery({ eventId: id as string });
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    eventQuery.refetch().then(() => setRefreshing(false));
+    void eventQuery.refetch().then(() => setRefreshing(false));
   }, [eventQuery]);
 
   useEffect(() => {
@@ -74,8 +76,6 @@ export default function Page() {
       </View>
     );
   }
-
-  const eventQuery = api.event.get.useQuery({ eventId: id });
 
   if (eventQuery.isLoading) {
     return (

@@ -183,11 +183,12 @@ export function UserEventListItem(props: {
           onAddToCal?.(event);
           break;
         case "Add to Discover":
-        case "Remove From Discover":
+        case "Remove From Discover": {
           const newVisibility =
             event.visibility === "public" ? "private" : "public";
           onToggleVisibility?.(event, newVisibility);
           break;
+        }
         case "Edit":
           onEdit?.(event);
           break;
