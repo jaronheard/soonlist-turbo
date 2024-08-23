@@ -1,6 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    /** Base Options */
     "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "ES2022",
@@ -9,13 +10,16 @@
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,
+    /** Keep TSC performant in monorepos */
     "incremental": true,
     "disableSourceOfProjectReferenceRedirect": true,
+    /** Strictness */
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "checkJs": true,
     "forceConsistentCasingInFileNames": true,
     "strictNullChecks": true,
+    /** Transpile using Bundler (not tsc) */
     "module": "Preserve",
     "moduleResolution": "Bundler",
     "noEmit": true
