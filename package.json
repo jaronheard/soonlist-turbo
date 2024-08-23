@@ -16,6 +16,7 @@
     "format:fix": "turbo format --continue -- --write --cache --cache-location node_modules/.cache/.prettiercache",
     "lint": "turbo lint --continue -- --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
+    "lint:quiet": "turbo lint --continue -- --quiet --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:ws": "pnpm dlx sherif@latest",
     "ngrok": "ngrok tunnel --label edge=edghts_2knemEPLdFRuLQ6wzcBEqwVGz88 http://localhost:3000",
     "typecheck": "turbo typecheck",

@@ -4,7 +4,7 @@ import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
-import { MapPin, User } from "lucide-react-native";
+import { Globe, Lock, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -45,7 +45,11 @@ export function UserEventListItem(props: {
   onAddToCal?: (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => void;
-}) {
+  onToggleVisibility?: (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+    newVisibility: "public" | "private",
+  ) => void;
+}): React.ReactNode {
   const {
     event,
     actionButton,
@@ -57,6 +61,7 @@ export function UserEventListItem(props: {
     onUnfollow,
     onShare,
     onAddToCal,
+    onToggleVisibility,
   } = props;
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
@@ -117,26 +122,30 @@ export function UserEventListItem(props: {
   );
 
   const getMenuItems = () => {
+    const baseItems = [
+      { title: "Share", systemIcon: "square.and.arrow.up" },
+      { title: "Directions", systemIcon: "map" },
+      { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
+    ];
+
     if (isOwner) {
       return [
-        { title: "Share", systemIcon: "square.and.arrow.up" },
-        { title: "Directions", systemIcon: "map" },
-        { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
+        ...baseItems,
+        {
+          title:
+            event.visibility === "public"
+              ? "Remove From Discover"
+              : "Add to Discover",
+          systemIcon: event.visibility === "public" ? "lock" : "globe",
+        },
         { title: "Edit", systemIcon: "square.and.pencil" },
         { title: "Delete", systemIcon: "trash", destructive: true },
       ];
     } else if (!isFollowing) {
-      return [
-        { title: "Follow", systemIcon: "plus.circle" },
-        { title: "Share", systemIcon: "square.and.arrow.up" },
-        { title: "Directions", systemIcon: "map" },
-        { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
-      ];
+      return [{ title: "Follow", systemIcon: "plus.circle" }, ...baseItems];
     } else {
       return [
-        { title: "Share", systemIcon: "square.and.arrow.up" },
-        { title: "Directions", systemIcon: "map" },
-        { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
+        ...baseItems,
         { title: "Unfollow", systemIcon: "minus.circle", destructive: true },
       ];
     }
@@ -159,52 +168,38 @@ export function UserEventListItem(props: {
     index: number,
   ) => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    if (isOwner) {
-      switch (index) {
-        case 0:
+    const menuItems = getMenuItems();
+    const selectedItem = menuItems[index];
+
+    if (selectedItem) {
+      switch (selectedItem.title) {
+        case "Share":
           onShare?.(event);
           break;
-        case 1:
+        case "Directions":
           handleDirections(event);
           break;
-        case 2:
+        case "Add to Calendar":
           onAddToCal?.(event);
           break;
-        case 3:
+        case "Add to Discover":
+        case "Remove From Discover": {
+          const newVisibility =
+            event.visibility === "public" ? "private" : "public";
+          onToggleVisibility?.(event, newVisibility);
+          break;
+        }
+        case "Edit":
           onEdit?.(event);
           break;
-        case 4:
+        case "Delete":
           onDelete?.(event);
           break;
-      }
-    } else if (isFollowing) {
-      switch (index) {
-        case 0:
-          onShare?.(event);
-          break;
-        case 1:
-          handleDirections(event);
-          break;
-        case 2:
-          onAddToCal?.(event);
-          break;
-        case 3:
-          onUnfollow?.(event);
-          break;
-      }
-    } else {
-      switch (index) {
-        case 0:
+        case "Follow":
           onFollow?.(event);
           break;
-        case 1:
-          onShare?.(event);
-          break;
-        case 2:
-          handleDirections(event);
-          break;
-        case 3:
-          onAddToCal?.(event);
+        case "Unfollow":
+          onUnfollow?.(event);
           break;
       }
     }
@@ -254,7 +249,7 @@ export function UserEventListItem(props: {
               </Text>
             </View>
           ) : null}
-          {shouldShowCreator && (
+          {shouldShowCreator ? (
             <View className="flex-row items-center gap-2">
               {user.userImage ? (
                 <Image
@@ -266,7 +261,20 @@ export function UserEventListItem(props: {
               )}
               <Text className="text-sm text-neutral-2">@{user.username}</Text>
             </View>
-          )}
+          ) : isOwner ? (
+            <View className="flex-row items-center gap-2">
+              {event.visibility === "public" ? (
+                <Globe size={16} color="#627496" />
+              ) : (
+                <Lock size={16} color="#627496" />
+              )}
+              <Text className="text-sm text-neutral-2">
+                {event.visibility === "public"
+                  ? "Your event is on Discover"
+                  : "Your event is unlisted"}
+              </Text>
+            </View>
+          ) : null}
         </View>
         <View className="relative flex items-center justify-center">
           {e.images?.[3] ? (
@@ -341,6 +349,12 @@ export default function UserEventsList(props: {
     },
   });
 
+  const toggleVisibilityMutation = api.event.toggleVisibility.useMutation({
+    onSuccess: () => {
+      void utils.event.invalidate();
+    },
+  });
+
   const handleEdit = (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => {
@@ -389,6 +403,16 @@ export default function UserEventsList(props: {
     void handleCalendarSelect(selectedCalendarId);
   };
 
+  const handleToggleVisibility = async (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+    newVisibility: "public" | "private",
+  ) => {
+    await toggleVisibilityMutation.mutateAsync({
+      id: event.id,
+      visibility: newVisibility,
+    });
+  };
+
   // Collapse similar events
   const collapsedEvents = collapseSimilarEvents(
     events,
@@ -423,6 +447,7 @@ export default function UserEventsList(props: {
             onUnfollow={handleUnfollow}
             onShare={handleShare}
             onAddToCal={handleAddToCalWrapper}
+            onToggleVisibility={handleToggleVisibility}
           />
         )}
         refreshControl={refreshControl}

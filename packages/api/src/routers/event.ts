@@ -787,4 +787,41 @@ export const eventRouter = createTRPCRouter({
           ),
         );
     }),
+  toggleVisibility: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        visibility: z.enum(["public", "private"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, visibility } = input;
+      const userId = ctx.auth.userId;
+      // Check if the event exists and belongs to the user
+      const event = await ctx.db.query.events.findFirst({
+        where: (events, { eq }) => eq(events.id, id),
+        columns: { userId: true },
+      });
+
+      if (!event) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Event not found",
+        });
+      }
+
+      if (event.userId !== userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have permission to modify this event",
+        });
+      }
+      // Update the event visibility
+      const updatedEvent = await ctx.db
+        .update(events)
+        .set({ visibility })
+        .where(eq(events.id, id));
+
+      return updatedEvent;
+    }),
 });
