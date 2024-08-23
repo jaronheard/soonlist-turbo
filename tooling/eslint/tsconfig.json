@@ -1,8 +1,6 @@
 {
   "extends": "@soonlist/tsconfig/base.json",
-  "compilerOptions": {
-    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
-  },
+  "compilerOptions": {},
   "include": ["."],
   "exclude": ["node_modules"]
 }
