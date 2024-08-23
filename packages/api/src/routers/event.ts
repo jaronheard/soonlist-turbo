@@ -716,37 +716,78 @@ export const eventRouter = createTRPCRouter({
         })
         .then(() => ({ id: eventid }));
     }),
-  follow: protectedProcedure.input(eventIdSchema).mutation(({ ctx, input }) => {
-    const { userId } = ctx.auth;
-    if (!userId) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "No user id found in session",
-      });
-    }
-    return ctx.db.insert(eventFollows).values({
-      userId: userId,
-      eventId: input.id,
-    });
-  }),
-  unfollow: protectedProcedure
-    .input(eventIdSchema)
-    .mutation(({ ctx, input }) => {
-      const { userId } = ctx.auth;
+  follow: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id } = input;
+      const userId = ctx.auth.userId;
+
       if (!userId) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "No user id found in session",
         });
       }
-      return ctx.db
-        .delete(eventFollows)
-        .where(
-          and(
-            eq(eventFollows.userId, userId),
-            eq(eventFollows.eventId, input.id),
-          ),
-        );
+
+      // Check if the follow relationship already exists
+      const existingFollow = await ctx.db.query.eventFollows.findFirst({
+        where: (eventFollows, { and, eq }) =>
+          and(eq(eventFollows.userId, userId), eq(eventFollows.eventId, id)),
+      });
+
+      // If the follow relationship doesn't exist, create it
+      if (!existingFollow) {
+        await ctx.db.insert(eventFollows).values({
+          userId: userId,
+          eventId: id,
+        });
+      }
+
+      // Return the event data regardless of whether a new follow was created
+      return ctx.db.query.events.findFirst({
+        where: (events, { eq }) => eq(events.id, id),
+        with: {
+          eventFollows: true,
+          user: true,
+        },
+      });
+    }),
+  unfollow: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id } = input;
+      const userId = ctx.auth.userId;
+
+      if (!userId) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "No user id found in session",
+        });
+      }
+
+      // Check if the follow relationship exists
+      const existingFollow = await ctx.db.query.eventFollows.findFirst({
+        where: (eventFollows, { and, eq }) =>
+          and(eq(eventFollows.userId, userId), eq(eventFollows.eventId, id)),
+      });
+
+      // If the follow relationship exists, delete it
+      if (existingFollow) {
+        await ctx.db
+          .delete(eventFollows)
+          .where(
+            and(eq(eventFollows.userId, userId), eq(eventFollows.eventId, id)),
+          );
+      }
+
+      // Return the event data regardless of whether an unfollow was performed
+      return ctx.db.query.events.findFirst({
+        where: (events, { eq }) => eq(events.id, id),
+        with: {
+          eventFollows: true,
+          user: true,
+        },
+      });
     }),
   addToList: protectedProcedure
     .input(z.object({ eventId: z.string(), listId: z.string() }))
