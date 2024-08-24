@@ -19,6 +19,7 @@ import { Edit, Globe, Lock, MapPin, User } from "lucide-react-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import { api } from "~/utils/api";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
@@ -161,6 +162,7 @@ export default function Page() {
                 </View>
               </TouchableOpacity>
               <ShareButton webPath={`/event/${id}`} />
+              <ProfileMenu />
             </View>
           ),
         }}

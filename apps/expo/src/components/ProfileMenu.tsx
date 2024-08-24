@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import {
   Menu,
   MenuOption,
@@ -7,11 +7,12 @@ import {
   MenuTrigger,
 } from "react-native-popup-menu";
 import { useRouter } from "expo-router";
-import { SignedIn, useAuth } from "@clerk/clerk-expo";
-import { HelpCircle, LogOut, User } from "lucide-react-native";
+import { SignedIn, useAuth, useUser } from "@clerk/clerk-expo";
+import { HelpCircle, LogOut } from "lucide-react-native";
 
 export function ProfileMenu() {
   const { signOut } = useAuth();
+  const { user } = useUser();
   const router = useRouter();
 
   const showOnboarding = () => {
@@ -29,8 +30,15 @@ export function ProfileMenu() {
             },
           }}
         >
-          <View className="rounded-full p-2">
-            <User size={24} color="#5A32FB" />
+          <View className="rounded-full p-1">
+            {user?.imageUrl ? (
+              <Image
+                source={{ uri: user.imageUrl }}
+                className="h-10 w-10 rounded-full border-2 border-accent-yellow"
+              />
+            ) : (
+              <View className="h-8 w-8 rounded-full bg-gray-300" />
+            )}
           </View>
         </MenuTrigger>
         <MenuOptions
