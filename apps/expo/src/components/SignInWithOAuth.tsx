@@ -141,7 +141,7 @@ const SignInWithOAuth = () => {
     <View className="flex-1 bg-interactive-3 px-6 pt-14">
       <Stack.Screen options={{ headerShown: false }} />
       <View className="items-center pt-8">
-        <Logo className="w-48 h-12" />
+        <Logo className="h-12 w-48" />
       </View>
       <View className="flex-1 items-center justify-center">
         <Text className="mb-4 text-center font-heading text-5xl font-bold text-gray-700">
