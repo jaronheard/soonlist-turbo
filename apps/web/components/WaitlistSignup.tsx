@@ -146,14 +146,15 @@ export function WaitlistButtonWithDrawer({
       <DialogTrigger asChild>
         <Button size={size} variant={variant}>
           <TicketPlus className="mr-2 size-4 rotate-[-20deg]"></TicketPlus>
-          Join waitlist
+          Early Access
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Join the waitlist</DialogTitle>
+          <DialogTitle>Get early access</DialogTitle>
           <DialogDescription>
-            Be one of the first to get early access.
+            Be one of the first to experience Soonlist. We'll send you an email
+            when you've reached the front of the line.
           </DialogDescription>
         </DialogHeader>
         <WaitlistSignup afterSubmit={() => setOpen(false)} />
