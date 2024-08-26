@@ -9,6 +9,7 @@ import { useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { AppleSignInButton } from "./AppleSignInButton";
 import { GoogleSignInButton } from "./GoogleSignInButton";
+import { Logo } from "./Logo";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -139,6 +140,9 @@ const SignInWithOAuth = () => {
   return (
     <View className="flex-1 bg-interactive-3 px-6 pt-14">
       <Stack.Screen options={{ headerShown: false }} />
+      <View className="items-center pt-8">
+        <Logo className="w-48 h-12" />
+      </View>
       <View className="flex-1 items-center justify-center">
         <Text className="mb-4 text-center font-heading text-5xl font-bold text-gray-700">
           Organize <Text className="text-interactive-1">possibilities</Text>
