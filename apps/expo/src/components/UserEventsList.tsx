@@ -467,21 +467,41 @@ export default function UserEventsList(props: {
     user?.externalId || user?.id,
   );
 
-  const renderFooter = () => (
-    <View className="px-6 py-6">
-      <Text className="text-center text-base font-medium text-neutral-2">
-        End of events.{" "}
-        <Link href="/onboarding" className="text-interactive-1">
-          <Text className="font-bold text-interactive-1">Add your own!</Text>
-        </Link>
+  const renderEmptyState = () => (
+    <View className="flex-1 justify-center px-6 py-10">
+      <Text className="mb-4 text-center text-2xl font-bold text-neutral-1">
+        Ready to start your Soonlist? 🎉
       </Text>
+      <Text className="mb-6 text-center text-base text-neutral-2">
+        Your feed is empty, but it's easy to add events! Let's get you started with capturing your first possibility.
+      </Text>
+      <View className="items-center">
+        <Link href="/onboarding">
+          <View className="rounded-full bg-interactive-1 px-6 py-3">
+            <Text className="text-center text-base font-bold text-white">
+              Learn how to add events
+            </Text>
+          </View>
+        </Link>
+      </View>
     </View>
   );
 
-  // Use the getSavedIdsForUser query to get the saved status
-  const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
-    userName: username,
-  });
+  const renderFooter = () => (
+    <>
+      {isRefetching && (
+        <ActivityIndicator
+          size="small"
+          color="#5A32FB"
+          style={{ marginTop: 10 }}
+        />
+      )}
+    </>
+  );
+
+  if (collapsedEvents.length === 0 && !isRefetching) {
+    return renderEmptyState();
+  }
 
   return (
     <>
@@ -525,18 +545,7 @@ export default function UserEventsList(props: {
         onEndReached={onRefresh}
         onEndReachedThreshold={0.1}
         contentContainerStyle={{ paddingBottom: 16 }}
-        ListFooterComponent={
-          <>
-            {renderFooter()}
-            {isRefetching && (
-              <ActivityIndicator
-                size="small"
-                color="#5A32FB"
-                style={{ marginTop: 10 }}
-              />
-            )}
-          </>
-        }
+        ListFooterComponent={renderFooter()}
       />
       <CalendarSelectionModal
         visible={isCalendarModalVisible}
