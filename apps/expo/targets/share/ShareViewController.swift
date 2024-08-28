@@ -583,7 +583,7 @@ class KeychainHelper {
       kSecAttrService as String: "app:no-auth",
       kSecAttrAccount as String: key,
       kSecReturnData as String: true,
-      kSecAttrAccessGroup as String: ProcessInfo.processInfo.environment["APP_ENV"] == "development"
+      kSecAttrAccessGroup as String: ProcessInfo.processInfo.environment["EXPO_PUBLIC_APP_ENV"] == "development"
         ? "group.com.soonlist.dev"
         : "group.com.soonlist",
     ]
@@ -609,7 +609,7 @@ func loadAuthData() -> AuthData? {
 
   let query: [String: Any] = [
     kSecClass as String: kSecClassGenericPassword,
-    kSecAttrAccessGroup as String: ProcessInfo.processInfo.environment["APP_ENV"] == "development"
+    kSecAttrAccessGroup as String: ProcessInfo.processInfo.environment["EXPO_PUBLIC_APP_ENV"] == "development"
       ? "group.com.soonlist.dev"
       : "group.com.soonlist",
     kSecReturnData as String: false,

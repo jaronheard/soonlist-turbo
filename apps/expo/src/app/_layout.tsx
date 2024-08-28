@@ -43,7 +43,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 }
 
 const getKeychainAccessGroup = () => {
-  const appEnv = process.env.APP_ENV || "";
+  const appEnv = process.env.EXPO_PUBLIC_APP_ENV || "";
   return appEnv === "development"
     ? "group.com.soonlist.dev"
     : "group.com.soonlist";
