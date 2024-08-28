@@ -42,15 +42,22 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   );
 }
 
+const getKeychainAccessGroup = () => {
+  const appEnv = process.env.APP_ENV || "";
+  return appEnv === "development"
+    ? "group.com.soonlist.dev"
+    : "group.com.soonlist";
+};
+
 const tokenCache = {
   getToken: async (key: string) => {
     return await SecureStore.getItemAsync(key, {
-      keychainAccessGroup: "group.com.soonlist",
+      keychainAccessGroup: getKeychainAccessGroup(),
     });
   },
   saveToken: (key: string, value: string) => {
     return SecureStore.setItemAsync(key, value, {
-      keychainAccessGroup: "group.com.soonlist",
+      keychainAccessGroup: getKeychainAccessGroup(),
     });
   },
 };

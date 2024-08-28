@@ -49,16 +49,26 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.soonlist.app",
+    bundleIdentifier:
+      process.env.APP_ENV === "development"
+        ? "com.soonlist.app.dev"
+        : "com.soonlist.app",
     config: {
       usesNonExemptEncryption: false,
     },
     entitlements: {
-      "com.apple.security.application-groups": ["group.com.soonlist"],
+      "com.apple.security.application-groups": [
+        process.env.APP_ENV === "development"
+          ? "group.com.soonlist.dev"
+          : "group.com.soonlist",
+      ],
     },
   },
   android: {
-    package: "com.soonlist.app",
+    package:
+      process.env.APP_ENV === "development"
+        ? "com.soonlist.app.dev"
+        : "com.soonlist.app",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff",
