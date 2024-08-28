@@ -49,7 +49,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.soonlist.app",
+    bundleIdentifier:
+      process.env.APP_ENV === "development"
+        ? "com.soonlist.app.dev"
+        : "com.soonlist.app",
     config: {
       usesNonExemptEncryption: false,
     },
