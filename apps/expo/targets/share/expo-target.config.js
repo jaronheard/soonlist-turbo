@@ -5,6 +5,10 @@ module.exports = {
   icon: "../../assets/icon.png",
   deploymentTarget: "15.0",
   entitlements: {
-    "com.apple.security.application-groups": ["group.com.soonlist"],
+    "com.apple.security.application-groups": [
+      process.env.APP_ENV === "development"
+        ? "group.com.soonlist.dev"
+        : "group.com.soonlist",
+    ],
   },
 };
