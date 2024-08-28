@@ -13,7 +13,7 @@ const saveAuthData = async (authData: {
     await SecureStore.setItemAsync("authData", JSON.stringify(authData), {
       keychainAccessible: SecureStore.WHEN_UNLOCKED,
       keychainAccessGroup:
-        process.env.APP_ENV === "development"
+        process.env.EXPO_PUBLIC_APP_ENV === "development"
           ? "group.com.soonlist.dev"
           : "group.com.soonlist",
     });
@@ -30,7 +30,7 @@ const deleteAuthData = async () => {
   try {
     await SecureStore.deleteItemAsync("authData", {
       keychainAccessGroup:
-        process.env.APP_ENV === "development"
+        process.env.EXPO_PUBLIC_APP_ENV === "development"
           ? "group.com.soonlist.dev"
           : "group.com.soonlist",
     });

@@ -50,7 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier:
-      process.env.APP_ENV === "development"
+      process.env.EXPO_PUBLIC_APP_ENV === "development"
         ? "com.soonlist.app.dev"
         : "com.soonlist.app",
     config: {
@@ -58,7 +58,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     entitlements: {
       "com.apple.security.application-groups": [
-        process.env.APP_ENV === "development"
+        process.env.EXPO_PUBLIC_APP_ENV === "development"
           ? "group.com.soonlist.dev"
           : "group.com.soonlist",
       ],
@@ -66,7 +66,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package:
-      process.env.APP_ENV === "development"
+      process.env.EXPO_PUBLIC_APP_ENV === "development"
         ? "com.soonlist.app.dev"
         : "com.soonlist.app",
     adaptiveIcon: {
