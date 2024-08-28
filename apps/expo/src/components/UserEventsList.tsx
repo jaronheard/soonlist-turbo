@@ -348,6 +348,8 @@ export default function UserEventsList(props: {
     INITIAL_CALENDAR_LIMIT,
   } = useCalendar();
 
+  const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({ userName: username });
+
   const deleteEventMutation = api.event.delete.useMutation({
     onSuccess: () => {
       void utils.event.invalidate();
@@ -512,10 +514,9 @@ export default function UserEventsList(props: {
         data={collapsedEvents}
         estimatedItemSize={60}
         renderItem={({ item, index }) => {
-          const isSaved =
-            savedIdsQuery.data?.some(
-              (savedEvent) => savedEvent.id === item.event.id,
-            ) ?? false;
+          const isSaved = savedIdsQuery.data?.some(
+            (savedEvent) => savedEvent.id === item.event.id,
+          ) ?? false;
 
           return (
             <UserEventListItem
