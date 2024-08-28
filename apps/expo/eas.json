@@ -21,6 +21,7 @@
         "buildArtifactPaths": ["ios/build/*"]
       },
       "env": {
+        "APP_ENV": "development",
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dGlnaHQtbW9uZ3JlbC01LmNsZXJrLmFjY291bnRzLmRldiQ",
         "EXPO_PUBLIC_API_BASE_URL": "${process.env.EXPO_PUBLIC_API_BASE_URL}"
       },
@@ -31,6 +32,7 @@
       "distribution": "internal",
       "developmentClient": true,
       "env": {
+        "APP_ENV": "development",
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dGlnaHQtbW9uZ3JlbC01LmNsZXJrLmFjY291bnRzLmRldiQ",
         "EXPO_PUBLIC_API_BASE_URL": "${process.env.EXPO_PUBLIC_API_BASE_URL}"
       },
@@ -42,6 +44,7 @@
     "production": {
       "extends": "base",
       "env": {
+        "APP_ENV": "production",
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuc29vbmxpc3QuY29tJA",
         "EXPO_PUBLIC_API_BASE_URL": "${process.env.EXPO_PUBLIC_API_BASE_URL}"
       },
@@ -53,6 +56,10 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "6499180772"
+      }
+    }
   }
 }

@@ -6,11 +6,17 @@ const saveEnvVar = async (key: string, value: string | null) => {
     if (value) {
       await SecureStore.setItemAsync(key, value, {
         keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: "group.com.soonlist",
+        keychainAccessGroup:
+          process.env.APP_ENV === "development"
+            ? "group.com.soonlist.dev"
+            : "group.com.soonlist",
       });
     } else {
       await SecureStore.deleteItemAsync(key, {
-        keychainAccessGroup: "group.com.soonlist",
+        keychainAccessGroup:
+          process.env.APP_ENV === "development"
+            ? "group.com.soonlist.dev"
+            : "group.com.soonlist",
       });
     }
   } catch (error) {
@@ -23,6 +29,7 @@ const useEnvSync = () => {
     EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || null,
     EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL || null,
+    APP_ENV: process.env.APP_ENV || null,
   });
 
   useEffect(() => {
@@ -34,6 +41,7 @@ const useEnvSync = () => {
         EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY:
           process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || null,
         EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL || null,
+        APP_ENV: process.env.APP_ENV || null,
       };
 
       await Promise.all(
