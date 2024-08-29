@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import { Linking, Pressable, SafeAreaView, Text, View } from "react-native";
-import Constants from "expo-constants";
 import { Stack } from "expo-router";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 import { Navigation2 } from "lucide-react-native";
@@ -16,6 +15,8 @@ import ShareButton from "../components/ShareButton";
 import SignInWithOAuth from "../components/SignInWithOAuth";
 
 import "../styles.css";
+
+import Config from "~/utils/config";
 
 function MyFeed() {
   const { user } = useUser();
@@ -93,9 +94,7 @@ function MyFeed() {
 }
 
 function App() {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const clerkPublishableKey = Constants.expoConfig?.extra
-    ?.clerkPublishableKey as string | undefined;
+  const clerkPublishableKey = Config.clerkPublishableKey;
 
   if (!clerkPublishableKey) {
     return (

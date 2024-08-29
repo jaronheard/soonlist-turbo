@@ -8,7 +8,7 @@ import os.log
 import UserNotifications
 
 // Define isProdBundle at the top level
-let isProdBundle = !Bundle.main.bundleIdentifier!.hasSuffix(".dev")
+let isProdBundle = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share")
 
 struct AuthData {
   let userId: String

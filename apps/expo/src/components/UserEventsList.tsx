@@ -80,7 +80,6 @@ export function UserEventListItem(props: {
   const id = event.id;
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const e = event.event as AddToCalendarButtonPropsRestricted;
-  const user = event.user;
 
   const formatDate = (date: string, startTime?: string, endTime?: string) => {
     const startDateInfo = getDateTimeInfo(
@@ -119,6 +118,9 @@ export function UserEventListItem(props: {
 
   const { user: currentUser } = useUser();
   const eventUser = event.user;
+  // guard against null user
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!eventUser) return null;
 
   const isCurrentUser =
     currentUser?.externalId === eventUser.id ||
@@ -261,15 +263,17 @@ export function UserEventListItem(props: {
           ) : null}
           {shouldShowCreator ? (
             <View className="flex-row items-center gap-2">
-              {user.userImage ? (
+              {eventUser.userImage ? (
                 <Image
-                  source={{ uri: user.userImage }}
+                  source={{ uri: eventUser.userImage }}
                   className="h-4 w-4 rounded-full"
                 />
               ) : (
                 <User size={16} color="#627496" />
               )}
-              <Text className="text-sm text-neutral-2">@{user.username}</Text>
+              <Text className="text-sm text-neutral-2">
+                @{eventUser.username}
+              </Text>
             </View>
           ) : isOwner ? (
             <View className="flex-row items-center gap-2">
