@@ -32,6 +32,7 @@ import Constants, { AppOwnership } from "expo-constants";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import BottomBar from "~/components/BottomBar";
 import { Toast } from "~/components/Toast";
+import Config from "~/utils/config";
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
@@ -43,8 +44,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 }
 
 const getKeychainAccessGroup = () => {
-  const appEnv = process.env.EXPO_PUBLIC_APP_ENV || "";
-  return appEnv === "development"
+  return Config.env === "development"
     ? "group.com.soonlist.dev"
     : "group.com.soonlist";
 };
@@ -80,7 +80,7 @@ Sentry.init({
 });
 
 function RootLayout() {
-  const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const clerkPublishableKey = Config.clerkPublishableKey;
 
   if (!clerkPublishableKey) {
     return (

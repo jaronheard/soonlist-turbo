@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 
+import Config from "~/utils/config";
 import { useCalendar } from "./useCalendar";
 
 const saveAuthData = async (authData: {
@@ -13,7 +14,7 @@ const saveAuthData = async (authData: {
     await SecureStore.setItemAsync("authData", JSON.stringify(authData), {
       keychainAccessible: SecureStore.WHEN_UNLOCKED,
       keychainAccessGroup:
-        process.env.EXPO_PUBLIC_APP_ENV === "development"
+        Config.env === "development"
           ? "group.com.soonlist.dev"
           : "group.com.soonlist",
     });
@@ -30,7 +31,7 @@ const deleteAuthData = async () => {
   try {
     await SecureStore.deleteItemAsync("authData", {
       keychainAccessGroup:
-        process.env.EXPO_PUBLIC_APP_ENV === "development"
+        Config.env === "development"
           ? "group.com.soonlist.dev"
           : "group.com.soonlist",
     });
