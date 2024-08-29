@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import { Linking, Pressable, SafeAreaView, Text, View } from "react-native";
-import Constants from "expo-constants";
 import { Stack } from "expo-router";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 import { Navigation2 } from "lucide-react-native";
