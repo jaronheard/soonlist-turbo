@@ -81,6 +81,8 @@ export function UserEventListItem(props: {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const e = event.event as AddToCalendarButtonPropsRestricted;
   const user = event.user;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!user) return null;
 
   const formatDate = (date: string, startTime?: string, endTime?: string) => {
     const startDateInfo = getDateTimeInfo(
