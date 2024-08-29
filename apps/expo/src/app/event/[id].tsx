@@ -22,6 +22,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import { api } from "~/utils/api";
+import Config from "~/utils/config";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
 
 export default function Page() {
@@ -152,9 +153,7 @@ export default function Page() {
             <View className="-mr-2 flex-row items-center gap-1">
               <TouchableOpacity
                 onPress={() =>
-                  Linking.openURL(
-                    `${process.env.EXPO_PUBLIC_API_BASE_URL}/event/${id}/edit`,
-                  )
+                  Linking.openURL(`${Config.apiBaseUrl}/event/${id}/edit`)
                 }
               >
                 <View className="rounded-full p-2">

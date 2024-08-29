@@ -21,9 +21,7 @@
         "buildArtifactPaths": ["ios/build/*"]
       },
       "env": {
-        "EXPO_PUBLIC_APP_ENV": "development",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dGlnaHQtbW9uZ3JlbC01LmNsZXJrLmFjY291bnRzLmRldiQ",
-        "EXPO_PUBLIC_API_BASE_URL": "https://primary-entirely-giraffe.ngrok-free.app"
+        "APP_VARIANT": "development"
       },
       "channel": "development"
     },
@@ -32,9 +30,7 @@
       "distribution": "internal",
       "developmentClient": true,
       "env": {
-        "EXPO_PUBLIC_APP_ENV": "development",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dGlnaHQtbW9uZ3JlbC01LmNsZXJrLmFjY291bnRzLmRldiQ",
-        "EXPO_PUBLIC_API_BASE_URL": "https://primary-entirely-giraffe.ngrok-free.app"
+        "APP_VARIANT": "development"
       },
       "ios": {
         "buildArtifactPaths": ["ios/build/*"]
@@ -43,11 +39,7 @@
     },
     "production": {
       "extends": "base",
-      "env": {
-        "EXPO_PUBLIC_APP_ENV": "production",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuc29vbmxpc3QuY29tJA",
-        "EXPO_PUBLIC_API_BASE_URL": "https://www.soonlist.com"
-      },
+      "env": {},
       "ios": {
         "buildArtifactPaths": ["ios/build/*"]
       },

@@ -2,13 +2,15 @@ import React from "react";
 import { Share, TouchableOpacity } from "react-native";
 import { ShareIcon } from "lucide-react-native";
 
+import Config from "~/utils/config";
+
 interface ShareButtonProps {
   webPath: string;
 }
 
 const ShareButton: React.FC<ShareButtonProps> = ({ webPath }) => {
   const handleShare = async () => {
-    const shareUrl = `${process.env.EXPO_PUBLIC_API_BASE_URL}${webPath}`;
+    const shareUrl = `${Config.apiBaseUrl}${webPath}`;
     try {
       await Share.share({
         url: shareUrl,
