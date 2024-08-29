@@ -1,10 +1,12 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
+const IS_DEV = process.env.APP_VARIANT === "development";
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "Soonlist",
+  name: IS_DEV ? "Soonlist (Dev)" : "Soonlist",
   slug: "timetimecc",
-  scheme: "soonlist",
+  scheme: IS_DEV ? "soonlist.dev" : "soonlist",
   version: "1.0.1",
   orientation: "portrait",
   icon: "./assets/icon.png",
@@ -49,26 +51,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   ios: {
     supportsTablet: true,
-    bundleIdentifier:
-      process.env.EXPO_PUBLIC_APP_ENV === "development"
-        ? "com.soonlist.app.dev"
-        : "com.soonlist.app",
+    bundleIdentifier: IS_DEV ? "com.soonlist.app.dev" : "com.soonlist.app",
     config: {
       usesNonExemptEncryption: false,
     },
     entitlements: {
       "com.apple.security.application-groups": [
-        process.env.EXPO_PUBLIC_APP_ENV === "development"
-          ? "group.com.soonlist.dev"
-          : "group.com.soonlist",
+        IS_DEV ? "group.com.soonlist.dev" : "group.com.soonlist",
       ],
     },
   },
   android: {
-    package:
-      process.env.EXPO_PUBLIC_APP_ENV === "development"
-        ? "com.soonlist.app.dev"
-        : "com.soonlist.app",
+    package: IS_DEV ? "com.soonlist.app.dev" : "com.soonlist.app",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff",
@@ -89,7 +83,5 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "a8acc202-ed8c-48ed-9e5a-2570f510fe8a",
     },
-    clerkPublishableKey: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
-    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
   },
 });

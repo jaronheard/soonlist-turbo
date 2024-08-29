@@ -28,6 +28,7 @@ import {
   timeFormatDateInfo,
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
+import Config from "../utils/config";
 import { CalendarSelectionModal } from "./CalendarSelectionModal";
 import SaveButton from "./SaveButton";
 
@@ -408,9 +409,7 @@ export default function UserEventsList(props: {
   const handleEdit = (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
   ) => {
-    void Linking.openURL(
-      `${process.env.EXPO_PUBLIC_API_BASE_URL}/event/${event.id}/edit`,
-    );
+    void Linking.openURL(`${Config.apiBaseUrl}/event/${event.id}/edit`);
   };
 
   const handleDelete = async (
@@ -436,7 +435,7 @@ export default function UserEventsList(props: {
   ) => {
     try {
       await Share.share({
-        url: `${process.env.EXPO_PUBLIC_API_BASE_URL}/event/${event.id}`,
+        url: `${Config.apiBaseUrl}/event/${event.id}`,
       });
     } catch (error) {
       console.error("Error sharing event:", error);

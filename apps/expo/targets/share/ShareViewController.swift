@@ -7,6 +7,9 @@ import UniformTypeIdentifiers
 import os.log
 import UserNotifications
 
+// Define isProdBundle at the top level
+let isProdBundle = !Bundle.main.bundleIdentifier!.hasSuffix(".dev")
+
 struct AuthData {
   let userId: String
   let username: String
@@ -583,9 +586,9 @@ class KeychainHelper {
       kSecAttrService as String: "app:no-auth",
       kSecAttrAccount as String: key,
       kSecReturnData as String: true,
-      kSecAttrAccessGroup as String: ProcessInfo.processInfo.environment["EXPO_PUBLIC_APP_ENV"] == "development"
-        ? "group.com.soonlist.dev"
-        : "group.com.soonlist",
+      kSecAttrAccessGroup as String: isProdBundle
+        ? "group.com.soonlist"
+        : "group.com.soonlist.dev",
     ]
 
     var item: CFTypeRef?
@@ -605,13 +608,15 @@ class KeychainHelper {
 func loadAuthData() -> AuthData? {
   NSLog("com.soonlist.app.share-extension.svc: Attempting to load auth data from Keychain")
 
+  let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
+  NSLog("com.soonlist.app.share-extension.svc: Bundle Identifier: \(bundleIdentifier)")
+  NSLog("com.soonlist.app.share-extension.svc: Environment (Bundle): \(isProdBundle ? "Production" : "Development")")
+
   // logAllKeys()
 
   let query: [String: Any] = [
     kSecClass as String: kSecClassGenericPassword,
-    kSecAttrAccessGroup as String: ProcessInfo.processInfo.environment["EXPO_PUBLIC_APP_ENV"] == "development"
-      ? "group.com.soonlist.dev"
-      : "group.com.soonlist",
+    kSecAttrAccessGroup as String: isProdBundle ? "group.com.soonlist" : "group.com.soonlist.dev",
     kSecReturnData as String: false,
   ]
 
