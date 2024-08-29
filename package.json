@@ -18,7 +18,7 @@
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location .cache/.eslintcache",
     "lint:quiet": "turbo lint --continue -- --quiet --cache --cache-location .cache/.eslintcache",
     "lint:ws": "pnpm dlx sherif@latest",
-    "ngrok": "ngrok tunnel --label edge=${NGROK_EDGE} http://localhost:3000",
+    "ngrok-jaron": "ngrok tunnel --label edge=edghts_2knemEPLdFRuLQ6wzcBEqwVGz88 http://localhost:3000",
     "typecheck": "turbo typecheck",
     "ui-add": "pnpm -F ui ui-add"
   },
