@@ -35,14 +35,16 @@ const useEnvSync = () => {
 
   useEffect(() => {
     const syncEnvVars = async () => {
-      console.log("syncing env vars");
-      console.log("process.env", process.env);
+      console.log("syncing env vars from Config");
+      console.log("Config", process.env);
 
       const newEnvVars = {
         EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.clerkPublishableKey,
         EXPO_PUBLIC_API_BASE_URL: Config.apiBaseUrl,
         EXPO_PUBLIC_APP_ENV: Config.env,
       };
+
+      console.log("newEnvVars", newEnvVars);
 
       await Promise.all(
         Object.entries(newEnvVars).map(([key, value]) =>
