@@ -35,10 +35,21 @@ import { Toast } from "~/components/Toast";
 import Config from "~/utils/config";
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={{ flex: 1, backgroundColor: "red" }}>
-      <Text>{error.message}</Text>
-      <Text onPress={retry}>Try Again?</Text>
+    <View className="flex-1 bg-red-500 px-4 py-6">
+      <View style={{ paddingTop: insets.top }} />
+      <Text className="mb-4 text-lg font-semibold text-white">
+        {error.message}
+      </Text>
+      <Text className="text-base text-white underline" onPress={retry}>
+        Try Again
+      </Text>
+      <Text className="mt-4 text-sm text-white">
+        Shake your device to open JS debugger for more details.
+      </Text>
+      <View style={{ paddingBottom: insets.bottom }} />
     </View>
   );
 }
