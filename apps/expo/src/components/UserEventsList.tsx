@@ -538,7 +538,7 @@ export default function UserEventsList(props: {
         }}
         refreshControl={
           <RefreshControl
-            refreshing={false}
+            refreshing={isRefetching}
             onRefresh={onRefresh}
             tintColor="#5A32FB"
           />
