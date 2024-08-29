@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: IS_DEV ? "Soonlist (Dev)" : "Soonlist",
   slug: "timetimecc",
-  scheme: "soonlist",
+  scheme: IS_DEV ? "soonlist.dev" : "soonlist",
   version: "1.0.1",
   orientation: "portrait",
   icon: "./assets/icon.png",
