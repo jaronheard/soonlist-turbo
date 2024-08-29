@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Constants from "expo-constants";
 import { useAuth } from "@clerk/clerk-expo";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, loggerLink } from "@trpc/client";
