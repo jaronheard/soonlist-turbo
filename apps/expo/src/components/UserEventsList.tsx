@@ -348,7 +348,9 @@ export default function UserEventsList(props: {
     INITIAL_CALENDAR_LIMIT,
   } = useCalendar();
 
-  const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({ userName: username });
+  const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
+    userName: username,
+  });
 
   const deleteEventMutation = api.event.delete.useMutation({
     onSuccess: () => {
@@ -478,7 +480,8 @@ export default function UserEventsList(props: {
         Ready to start your Soonlist? 🎉
       </Text>
       <Text className="mb-6 text-center text-base text-neutral-2">
-        Your feed is empty, but it's easy to add events! Let's get you started with capturing your first possibility.
+        Your feed is empty, but it's easy to add events! Let's get you started
+        with capturing your first possibility.
       </Text>
       <View className="items-center">
         <Link href="/onboarding">
@@ -514,9 +517,10 @@ export default function UserEventsList(props: {
         data={collapsedEvents}
         estimatedItemSize={60}
         renderItem={({ item, index }) => {
-          const isSaved = savedIdsQuery.data?.some(
-            (savedEvent) => savedEvent.id === item.event.id,
-          ) ?? false;
+          const isSaved =
+            savedIdsQuery.data?.some(
+              (savedEvent) => savedEvent.id === item.event.id,
+            ) ?? false;
 
           return (
             <UserEventListItem
