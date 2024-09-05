@@ -495,17 +495,7 @@ export default function UserEventsList(props: {
     </View>
   );
 
-  const renderFooter = () => (
-    <>
-      {isRefetching && (
-        <ActivityIndicator
-          size="small"
-          color="#5A32FB"
-          style={{ marginTop: 10 }}
-        />
-      )}
-    </>
-  );
+  const renderFooter = () => <></>;
 
   if (collapsedEvents.length === 0 && !isRefetching) {
     return renderEmptyState();
