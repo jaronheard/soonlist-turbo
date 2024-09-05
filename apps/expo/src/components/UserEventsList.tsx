@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  ActivityIndicator,
   Image,
   Linking,
   Pressable,
