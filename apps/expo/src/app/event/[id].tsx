@@ -18,6 +18,8 @@ import { Edit, Globe, Lock, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
+import type { RouterOutputs } from "~/utils/api";
+import { EventMenu } from "~/components/EventMenu";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
@@ -37,6 +39,10 @@ export default function Page() {
   const [refreshing, setRefreshing] = useState(false);
 
   const eventQuery = api.event.get.useQuery({ eventId: id as string });
+  const username = currentUser?.username || "";
+  const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
+    userName: username,
+  });
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -161,6 +167,19 @@ export default function Page() {
                 </View>
               </TouchableOpacity>
               <ShareButton webPath={`/event/${id}`} />
+              <EventMenu
+                event={
+                  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+                  eventQuery.data as RouterOutputs["event"]["getUpcomingForUser"][number]
+                }
+                isOwner={isCurrentUserEvent}
+                isSaved={
+                  savedIdsQuery.data?.some(
+                    (savedEvent) => savedEvent.id === eventQuery.data?.id,
+                  ) ?? false
+                }
+                menuType="popup"
+              />
               <ProfileMenu />
             </View>
           ),
@@ -206,21 +225,19 @@ export default function Page() {
               </View>
             ) : (
               // Show user info for other users
-              event.user && (
-                <View className="flex-row items-center gap-2">
-                  {event.user.userImage ? (
-                    <Image
-                      source={{ uri: event.user.userImage }}
-                      className="h-5 w-5 rounded-full"
-                    />
-                  ) : (
-                    <User size={20} color="#627496" />
-                  )}
-                  <Text className="text-sm text-neutral-2">
-                    @{event.user.username}
-                  </Text>
-                </View>
-              )
+              <View className="flex-row items-center gap-2">
+                {event.user.userImage ? (
+                  <Image
+                    source={{ uri: event.user.userImage }}
+                    className="h-5 w-5 rounded-full"
+                  />
+                ) : (
+                  <User size={20} color="#627496" />
+                )}
+                <Text className="text-sm text-neutral-2">
+                  @{event.user.username}
+                </Text>
+              </View>
             )}
           </View>
           <View className="my-8">

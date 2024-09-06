@@ -1,15 +1,5 @@
 import React from "react";
-import {
-  Image,
-  Linking,
-  Pressable,
-  RefreshControl,
-  Share,
-  Text,
-  View,
-} from "react-native";
-import ContextMenu from "react-native-context-menu-view";
-import * as Haptics from "expo-haptics";
+import { Image, Pressable, RefreshControl, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
@@ -27,8 +17,8 @@ import {
   timeFormatDateInfo,
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
-import Config from "../utils/config";
 import { CalendarSelectionModal } from "./CalendarSelectionModal";
+import { EventMenu } from "./EventMenu";
 import SaveButton from "./SaveButton";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
@@ -38,44 +28,9 @@ export function UserEventListItem(props: {
   actionButton?: React.ReactNode;
   isLastItem?: boolean;
   showCreator: ShowCreatorOption;
-  onEdit?: (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => void;
-  onDelete?: (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => void;
-  onFollow?: (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => void;
-  onUnfollow?: (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => void;
-  onShare?: (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => void;
-  onAddToCal?: (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => void;
-  onToggleVisibility?: (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-    newVisibility: "public" | "private",
-  ) => void;
   isSaved: boolean;
 }): React.ReactNode {
-  const {
-    event,
-    actionButton,
-    isLastItem,
-    showCreator,
-    onEdit,
-    onDelete,
-    onFollow,
-    onUnfollow,
-    onShare,
-    onAddToCal,
-    onToggleVisibility,
-    isSaved,
-  } = props;
+  const { event, actionButton, isLastItem, showCreator, isSaved } = props;
   const id = event.id;
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const e = event.event as AddToCalendarButtonPropsRestricted;
@@ -131,95 +86,12 @@ export function UserEventListItem(props: {
 
   const isOwner = isCurrentUser;
 
-  const getMenuItems = () => {
-    const baseItems = [
-      { title: "Share", systemIcon: "square.and.arrow.up" },
-      { title: "Directions", systemIcon: "map" },
-      { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
-    ];
-
-    if (isOwner) {
-      return [
-        ...baseItems,
-        {
-          title:
-            event.visibility === "public"
-              ? "Remove From Discover"
-              : "Add to Discover",
-          systemIcon: event.visibility === "public" ? "lock" : "globe",
-        },
-        { title: "Edit", systemIcon: "square.and.pencil" },
-        { title: "Delete", systemIcon: "trash", destructive: true },
-      ];
-    } else if (!isSaved) {
-      return [{ title: "Follow", systemIcon: "plus.circle" }, ...baseItems];
-    } else {
-      return [
-        ...baseItems,
-        { title: "Unfollow", systemIcon: "minus.circle", destructive: true },
-      ];
-    }
-  };
-
-  const handleDirections = (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const e = event.event as AddToCalendarButtonPropsRestricted;
-    if (e.location) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.location)}`;
-      void Linking.openURL(url);
-    } else {
-      console.log("No location available for directions");
-    }
-  };
-
-  const handleMenuSelect = (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-    index: number,
-  ) => {
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const menuItems = getMenuItems();
-    const selectedItem = menuItems[index];
-
-    if (selectedItem) {
-      switch (selectedItem.title) {
-        case "Share":
-          onShare?.(event);
-          break;
-        case "Directions":
-          handleDirections(event);
-          break;
-        case "Add to Calendar":
-          onAddToCal?.(event);
-          break;
-        case "Add to Discover":
-        case "Remove From Discover": {
-          const newVisibility =
-            event.visibility === "public" ? "private" : "public";
-          onToggleVisibility?.(event, newVisibility);
-          break;
-        }
-        case "Edit":
-          onEdit?.(event);
-          break;
-        case "Delete":
-          onDelete?.(event);
-          break;
-        case "Follow":
-          onFollow?.(event);
-          break;
-        case "Unfollow":
-          onUnfollow?.(event);
-          break;
-      }
-    }
-  };
-
   return (
-    <ContextMenu
-      actions={getMenuItems()}
-      onPress={(e) => handleMenuSelect(event, e.nativeEvent.index)}
+    <EventMenu
+      event={event}
+      isOwner={isOwner}
+      isSaved={isSaved}
+      menuType="context"
     >
       <View
         className={cn(
@@ -318,7 +190,7 @@ export function UserEventListItem(props: {
           </View>
         )}
       </View>
-    </ContextMenu>
+    </EventMenu>
   );
 }
 
@@ -335,12 +207,10 @@ export default function UserEventsList(props: {
   const { events, actionButton, showCreator, isRefetching, onRefresh } = props;
   const { user } = useUser();
   const username = user?.username || "";
-  const utils = api.useUtils();
   const {
     isCalendarModalVisible,
     setIsCalendarModalVisible,
     availableCalendars,
-    handleAddToCal,
     handleCalendarSelect,
     showAllCalendars,
     setShowAllCalendars,
@@ -350,122 +220,6 @@ export default function UserEventsList(props: {
   const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
     userName: username,
   });
-
-  const deleteEventMutation = api.event.delete.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
-    },
-  });
-
-  const unfollowEventMutation = api.event.unfollow.useMutation({
-    onMutate: async (variables) => {
-      await utils.event.getSavedIdsForUser.cancel();
-      const prevData = utils.event.getSavedIdsForUser.getData({
-        userName: username,
-      });
-      utils.event.getSavedIdsForUser.setData({ userName: username }, (old) =>
-        old ? old.filter((event) => event.id !== variables.id) : [],
-      );
-      return { prevData };
-    },
-    onError: (_, __, context) => {
-      utils.event.getSavedIdsForUser.setData(
-        { userName: username },
-        context?.prevData,
-      );
-    },
-    onSettled: () => {
-      void utils.event.getSavedIdsForUser.invalidate();
-      void utils.event.getUpcomingForUser.invalidate();
-      void utils.event.getDiscover.invalidate();
-    },
-  });
-
-  const followEventMutation = api.event.follow.useMutation({
-    onMutate: async (variables) => {
-      await utils.event.getSavedIdsForUser.cancel();
-      const prevData = utils.event.getSavedIdsForUser.getData({
-        userName: username,
-      });
-      utils.event.getSavedIdsForUser.setData({ userName: username }, (old) =>
-        old ? [...old, { id: variables.id }] : [{ id: variables.id }],
-      );
-      return { prevData };
-    },
-    onError: (_, __, context) => {
-      utils.event.getSavedIdsForUser.setData(
-        { userName: username },
-        context?.prevData,
-      );
-    },
-    onSettled: () => {
-      void utils.event.getSavedIdsForUser.invalidate();
-      void utils.event.getUpcomingForUser.invalidate();
-      void utils.event.getDiscover.invalidate();
-    },
-  });
-
-  const toggleVisibilityMutation = api.event.toggleVisibility.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
-    },
-  });
-
-  const handleEdit = (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => {
-    void Linking.openURL(`${Config.apiBaseUrl}/event/${event.id}/edit`);
-  };
-
-  const handleDelete = async (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => {
-    await deleteEventMutation.mutateAsync({ id: event.id });
-  };
-
-  const handleUnfollow = async (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => {
-    await unfollowEventMutation.mutateAsync({ id: event.id });
-  };
-
-  const handleFollow = async (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => {
-    await followEventMutation.mutateAsync({ id: event.id });
-  };
-
-  const handleShare = async (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => {
-    try {
-      await Share.share({
-        url: `${Config.apiBaseUrl}/event/${event.id}`,
-      });
-    } catch (error) {
-      console.error("Error sharing event:", error);
-    }
-  };
-
-  const handleAddToCalWrapper = (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => {
-    void handleAddToCal(event);
-  };
-
-  const handleCalendarSelectWrapper = (selectedCalendarId: string) => {
-    void handleCalendarSelect(selectedCalendarId);
-  };
-
-  const handleToggleVisibility = async (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-    newVisibility: "public" | "private",
-  ) => {
-    await toggleVisibilityMutation.mutateAsync({
-      id: event.id,
-      visibility: newVisibility,
-    });
-  };
 
   // Collapse similar events
   const collapsedEvents = collapseSimilarEvents(
@@ -521,13 +275,6 @@ export default function UserEventsList(props: {
               }
               isLastItem={index === collapsedEvents.length - 1}
               showCreator={showCreator}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onFollow={handleFollow}
-              onUnfollow={handleUnfollow}
-              onShare={handleShare}
-              onAddToCal={handleAddToCalWrapper}
-              onToggleVisibility={handleToggleVisibility}
               isSaved={isSaved}
             />
           );
@@ -547,7 +294,7 @@ export default function UserEventsList(props: {
       <CalendarSelectionModal
         visible={isCalendarModalVisible}
         calendars={availableCalendars}
-        onSelect={handleCalendarSelectWrapper}
+        onSelect={handleCalendarSelect}
         onDismiss={() => setIsCalendarModalVisible(false)}
         showAllCalendars={showAllCalendars}
         setShowAllCalendars={setShowAllCalendars}
