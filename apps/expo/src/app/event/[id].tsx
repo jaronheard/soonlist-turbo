@@ -131,9 +131,7 @@ export default function Page() {
     eventData.endTime,
   );
 
-  const isCurrentUserEvent =
-    currentUser?.id === event.userId ||
-    currentUser?.externalId === event.userId;
+  const isCurrentUserEvent = currentUser?.id === event.userId;
 
   return (
     <ScrollView

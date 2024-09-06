@@ -31,10 +31,7 @@ export function DeleteButton(props: DeleteButtonProps) {
   });
 
   const roles = user?.unsafeMetadata.roles as string[] | undefined;
-  const isOwner =
-    user?.id === props.userId ||
-    user?.externalId === props.userId ||
-    roles?.includes("admin");
+  const isOwner = user?.id === props.userId || roles?.includes("admin");
 
   if (!isOwner) {
     return null;

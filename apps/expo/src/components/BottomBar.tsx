@@ -32,7 +32,7 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
       timezone: "America/Los_Angeles",
       expoPushToken,
       lists: [],
-      userId: user?.externalId || user?.id || "",
+      userId: user?.id || "",
       username: user?.username || "",
     });
     setText("");

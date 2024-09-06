@@ -1,6 +1,5 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 
-import { env } from "~/env";
 import { api } from "~/trpc/server";
 import { EventsFromImage } from "./EventsFromImage";
 import { EventsFromRawText } from "./EventsFromRawText";
@@ -25,14 +24,9 @@ export default async function Page({ searchParams }: Props) {
     unauthenticatedUrl: "/sign-up",
     unauthorizedUrl: "/",
   });
-  // get externalId, but only in dev
-  let externalId;
-  if (env.NODE_ENV === "development") {
-    const user = await currentUser();
-    externalId = user?.externalId;
-  }
+
   const lists = await api.list.getAllForUserId({
-    userId: externalId || userId,
+    userId: userId,
   });
   const timezone = searchParams.timezone || "America/Los_Angeles";
   // image only

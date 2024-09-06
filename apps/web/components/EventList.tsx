@@ -94,15 +94,15 @@ export async function EventList({
 
   const currentEventsToUse = collapseSimilarEvents(
     getVisibleEvents(currentEvents),
-    user?.externalId || user?.id,
+    user?.id,
   );
   const pastEventsToUse = collapseSimilarEvents(
     getVisibleEvents(pastEvents),
-    user?.externalId || user?.id,
+    user?.id,
   );
   const futureEventsToUse = collapseSimilarEvents(
     getVisibleEvents(futureEvents),
-    user?.externalId || user?.id,
+    user?.id,
   );
   const showPastEvents =
     variant !== "future-minimal" && pastEventsToUse.length > 0;

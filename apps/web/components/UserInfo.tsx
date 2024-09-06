@@ -46,7 +46,7 @@ export async function UserInfo(props: UserInfoProps) {
   const following =
     activeUser?.id &&
     (await api.user.getIfFollowing({
-      followerId: activeUser.externalId || activeUser.id,
+      followerId: activeUser.id,
       followingId: user.id,
     }));
 
