@@ -18,14 +18,13 @@ import {
   useRouter,
 } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { ChevronLeft, Globe, Lock, MapPin, User } from "lucide-react-native";
+import { Globe, Lock, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import { EventMenu } from "~/components/EventMenu";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import { api } from "~/utils/api";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
@@ -45,15 +44,6 @@ export default function Page() {
 
   useEffect(() => {
     navigation.setOptions({
-      headerLeft: () => (
-        <Pressable
-          onPress={() => navigation.goBack()}
-          className="-ml-4 flex-row items-center gap-1"
-        >
-          <ChevronLeft size={24} color="#5A32FB" />
-          <Text className="text-xl font-medium text-interactive-1">Back</Text>
-        </Pressable>
-      ),
       headerRight: () => (
         <View className="-mr-6 flex-row items-center gap-1">
           <EventMenu
@@ -71,7 +61,6 @@ export default function Page() {
             onDelete={handleDelete}
           />
           <ShareButton webPath={`/event/${id}`} />
-          <ProfileMenu />
         </View>
       ),
     });
@@ -79,7 +68,7 @@ export default function Page() {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  const eventQuery = api.event.get.useQuery({ eventId: id! });
+  const eventQuery = api.event.get.useQuery({ eventId: id });
   const username = currentUser?.username || "";
   const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
     userName: username,
@@ -125,7 +114,7 @@ export default function Page() {
   });
 
   const handleDelete = useCallback(async () => {
-    await deleteEventMutation.mutateAsync({ id: id! });
+    await deleteEventMutation.mutateAsync({ id: id });
   }, [deleteEventMutation, id]);
 
   if (!id || typeof id !== "string") {

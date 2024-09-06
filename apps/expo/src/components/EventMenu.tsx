@@ -251,7 +251,7 @@ export function EventMenu({
           }}
         >
           <View className="rounded-full p-1">
-            <MoreVertical size={20} color="#5A32FB" />
+            <MoreVertical size={20} color="#FFF" />
           </View>
         </MenuTrigger>
         <MenuOptions

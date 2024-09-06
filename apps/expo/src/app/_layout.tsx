@@ -5,7 +5,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import {
-  Slot,
+  Stack,
   useNavigationContainerRef,
   useRouter,
   useSegments,
@@ -138,7 +138,36 @@ const InitialLayout = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]);
 
-  return <Slot />;
+  return (
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: "#5A32FB",
+        },
+        headerTintColor: "#fff",
+        headerTitleStyle: {
+          fontWeight: "bold",
+        },
+      }}
+    >
+      <Stack.Screen
+        name="(tabs)"
+        options={{
+          headerShown: false,
+          headerRight: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="event/[id]"
+        options={{
+          title: "Event Details",
+          headerShown: true,
+          headerBackTitle: "Back",
+          headerBackVisible: true,
+        }}
+      />
+    </Stack>
+  );
 };
 
 function RootLayoutContent() {
