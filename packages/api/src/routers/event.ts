@@ -488,6 +488,10 @@ export const eventRouter = createTRPCRouter({
             await tx
               .delete(eventToLists)
               .where(eq(eventToLists.eventId, input.id));
+            await tx
+              .delete(eventFollows)
+              .where(eq(eventFollows.eventId, input.id));
+            await tx.delete(comments).where(eq(comments.eventId, input.id));
           })
           .then(() => ({ id: input.id }));
       })
