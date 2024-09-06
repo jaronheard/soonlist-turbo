@@ -50,19 +50,17 @@ export function ProfileMenu() {
         }}
       >
         <MenuOption onSelect={showOnboarding}>
-          <View className="flex-row items-center">
+          <View className="flex-row items-center py-2">
             <HelpCircle size={20} color="#5A32FB" />
-            <Text className="ml-2 text-base font-medium text-neutral-1">
+            <Text className="ml-3 text-base font-medium text-neutral-1">
               How to Use
             </Text>
           </View>
         </MenuOption>
         <MenuOption onSelect={() => signOut()}>
-          <View className="flex-row items-center">
-            <LogOut size={20} color="#5A32FB" />
-            <Text className="ml-2 text-base font-medium text-neutral-1">
-              Sign Out
-            </Text>
+          <View className="flex-row items-center py-2">
+            <LogOut size={20} color="#BA2727" />
+            <Text className="ml-3 font-medium text-[#BA2727]">Sign Out</Text>
           </View>
         </MenuOption>
       </MenuOptions>
