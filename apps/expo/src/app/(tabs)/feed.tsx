@@ -7,6 +7,7 @@ import { Navigation2 } from "lucide-react-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
@@ -59,8 +60,8 @@ function MyFeed() {
     <View className="flex-1">
       <Stack.Screen
         options={{
-          title: "Soonlist",
-          headerTitle: "Soonlist",
+          title: "My Feed",
+          headerTitle: "My Feed",
           headerRight: () => (
             <View className="flex-row items-center gap-1">
               <SignedIn>
@@ -82,6 +83,7 @@ function MyFeed() {
           showCreator="otherUsers"
         />
       )}
+      <AddEventButton />
     </View>
   );
 }
