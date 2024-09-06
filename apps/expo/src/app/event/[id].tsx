@@ -18,14 +18,13 @@ import {
   useRouter,
 } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { ChevronLeft, Globe, Lock, MapPin, User } from "lucide-react-native";
+import { Globe, Lock, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import { EventMenu } from "~/components/EventMenu";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import { api } from "~/utils/api";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
@@ -62,7 +61,6 @@ export default function Page() {
             onDelete={handleDelete}
           />
           <ShareButton webPath={`/event/${id}`} />
-          <ProfileMenu />
         </View>
       ),
     });

@@ -5,7 +5,6 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import {
-  Slot,
   Stack,
   useNavigationContainerRef,
   useRouter,
@@ -140,11 +139,28 @@ const InitialLayout = () => {
   }, [isSignedIn]);
 
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: true }} />
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: "#5A32FB",
+        },
+        headerTintColor: "#fff",
+        headerTitleStyle: {
+          fontWeight: "bold",
+        },
+      }}
+    >
+      <Stack.Screen
+        name="(tabs)"
+        options={{
+          headerShown: false,
+          headerRight: undefined,
+        }}
+      />
       <Stack.Screen
         name="event/[id]"
         options={{
+          title: "Event Details",
           headerShown: true,
           headerBackTitle: "Back",
           headerBackVisible: true,
