@@ -121,9 +121,7 @@ export function UserEventListItem(props: {
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!eventUser) return null;
 
-  const isCurrentUser =
-    currentUser?.externalId === eventUser.id ||
-    currentUser?.id === eventUser.id;
+  const isCurrentUser = currentUser?.id === eventUser.id;
 
   const shouldShowCreator =
     showCreator === "always" ||
@@ -468,10 +466,7 @@ export default function UserEventsList(props: {
   };
 
   // Collapse similar events
-  const collapsedEvents = collapseSimilarEvents(
-    events,
-    user?.externalId || user?.id,
-  );
+  const collapsedEvents = collapseSimilarEvents(events, user?.id);
 
   const renderEmptyState = () => (
     <View className="flex-1 justify-center px-6 py-10">

@@ -37,33 +37,21 @@ interface AuthContextProps {
 }
 
 export const createContextInner = ({ auth, user }: AuthContextProps) => {
-  // const session = getAuth(opts)
-
-  const externalId = auth.sessionClaims?.externalId as string | undefined;
-  const authToUse = externalId ? { ...auth, userId: externalId } : auth;
-  const userToUse = user !== null ? { ...user } : null;
-  if (externalId && userToUse) {
-    userToUse.id = externalId;
-  }
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const currentUser = userToUse as User | null;
-
   return {
     db,
-    auth: authToUse,
-    currentUser: currentUser,
+    auth,
+    currentUser: user,
   };
 };
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
-
   console.log(">>> tRPC Request from", source);
   const user = await currentUser();
 
   return createContextInner({
     auth: auth(),
-    user: user,
+    user,
   });
 };
 
@@ -121,23 +109,14 @@ export const publicProcedure = t.procedure;
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure.use(async ({ next }) => {
-  console.log("TRPC Protected: ");
-  const session = auth();
   const user = await currentUser();
   if (!user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
-  const externalId = session.sessionClaims?.externalId as string | undefined;
-  // const authToUse = externalId ? { ...session, userId: externalId } : session;
-  const userToUse = { ...user };
-  if (externalId) {
-    userToUse.id = externalId;
-  }
-
   return next({
     ctx: {
-      user: user,
+      user,
     },
   });
 });

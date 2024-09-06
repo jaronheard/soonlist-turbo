@@ -740,12 +740,11 @@ export function UserInfoMini({
 
   const followingQuery = api.user.getIfFollowing.useQuery(
     {
-      followerId: activeUser?.externalId || activeUser?.id || "",
+      followerId: activeUser?.id || "",
       followingId: userQuery.data?.id || "",
     },
     {
-      enabled:
-        !!(activeUser?.externalId || activeUser?.id) && !!userQuery.data?.id,
+      enabled: !!activeUser?.id && !!userQuery.data?.id,
     },
   );
 
@@ -786,12 +785,9 @@ export function EventListItem(props: EventListItemProps) {
   const { user: clerkUser } = useUser();
   const { user, eventFollows, id, event, filePath, visibility, lists } = props;
   const roles = clerkUser?.unsafeMetadata.roles as string[] | undefined;
-  const isSelf =
-    clerkUser?.id === user?.id || clerkUser?.externalId === user?.id;
+  const isSelf = clerkUser?.id === user?.id;
   const isOwner = isSelf || roles?.includes("admin");
-  const isFollowing = !!eventFollows.find(
-    (item) => item.userId === user?.id || item.userId === clerkUser?.externalId,
-  );
+  const isFollowing = !!eventFollows.find((item) => item.userId === user?.id);
   const image =
     event.images?.[3] ||
     (filePath ? buildDefaultUrl(props.filePath || "") : undefined);
@@ -1115,12 +1111,10 @@ export function EventPage(props: EventPageProps) {
     visibility,
   } = props;
   const roles = clerkUser?.unsafeMetadata.roles as string[] | undefined;
-  const isSelf =
-    clerkUser?.id === user?.id || clerkUser?.externalId === user?.id;
+  const isSelf = clerkUser?.id === user?.id;
   const isOwner = isSelf || roles?.includes("admin");
   const isFollowing = !!eventFollows.find(
-    (item) =>
-      clerkUser?.id === item.userId || clerkUser?.externalId === item.userId,
+    (item) => clerkUser?.id === item.userId,
   );
   const comment = props.comments
     .filter((item) => user?.id === item.userId)

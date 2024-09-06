@@ -15,10 +15,7 @@ export function ListEditButton(props: ListEditButtonProps) {
   const { user } = useUser();
 
   const roles = user?.unsafeMetadata.roles as string[] | undefined;
-  const isOwner =
-    user?.id === props.listUserId ||
-    user?.externalId === props.listUserId ||
-    roles?.includes("admin");
+  const isOwner = user?.id === props.listUserId || roles?.includes("admin");
   if (!isOwner) return null;
 
   return (
