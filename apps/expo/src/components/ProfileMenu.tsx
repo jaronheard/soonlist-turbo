@@ -34,6 +34,8 @@ export function ProfileMenu() {
             <Image
               source={{ uri: user.imageUrl }}
               className="h-10 w-10 rounded-full border-2 border-accent-yellow"
+              width={28}
+              height={28}
             />
           ) : (
             <User size={20} color="#5A32FB" />
