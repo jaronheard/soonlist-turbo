@@ -1,3 +1,4 @@
+import type { Href } from "expo-router";
 import React, {
   createContext,
   useContext,
@@ -131,9 +132,11 @@ export function NotificationProvider({
     let isMounted = true;
 
     function redirect(notification: Notifications.Notification) {
-      const url = notification.request.content.data.url as string | undefined;
-      if (url) {
-        router.push(url);
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const url = notification.request.content.data.url as unknown;
+      if (typeof url === "string") {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        router.push(url as Href<string>);
       }
     }
 
