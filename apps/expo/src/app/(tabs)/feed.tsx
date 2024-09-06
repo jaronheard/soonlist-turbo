@@ -1,22 +1,17 @@
 import React, { useCallback } from "react";
-import { Linking, Pressable, SafeAreaView, Text, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
 import { Stack } from "expo-router";
-import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
+import { SignedIn, useUser } from "@clerk/clerk-expo";
 import { Navigation2 } from "lucide-react-native";
-
-import type { RouterOutputs } from "~/utils/api";
-import UserEventsList from "~/components/UserEventsList";
-import { api } from "~/utils/api";
-import LoadingSpinner from "../components/LoadingSpinner";
-import { ProfileMenu } from "../components/ProfileMenu";
-import ShareButton from "../components/ShareButton";
-import SignInWithOAuth from "../components/SignInWithOAuth";
-
-import "../styles.css";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
-import Config from "~/utils/config";
+import type { RouterOutputs } from "~/utils/api";
+import LoadingSpinner from "~/components/LoadingSpinner";
+import { ProfileMenu } from "~/components/ProfileMenu";
+import ShareButton from "~/components/ShareButton";
+import UserEventsList from "~/components/UserEventsList";
+import { api } from "~/utils/api";
 
 function GoButton({
   event,
@@ -67,7 +62,7 @@ function MyFeed() {
           title: "Soonlist",
           headerTitle: "Soonlist",
           headerRight: () => (
-            <View className="-mr-2 flex-row items-center gap-1">
+            <View className="flex-row items-center gap-1">
               <SignedIn>
                 <ShareButton webPath={`/${user?.username}/upcoming`} />
               </SignedIn>
@@ -91,29 +86,4 @@ function MyFeed() {
   );
 }
 
-function App() {
-  const clerkPublishableKey = Config.clerkPublishableKey;
-
-  if (!clerkPublishableKey) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <Text className="mt-5 text-red-500">
-          No Clerk Publishable Key found. Please check your environment.
-        </Text>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <>
-      <SignedOut>
-        <SignInWithOAuth />
-      </SignedOut>
-      <SignedIn>
-        <MyFeed />
-      </SignedIn>
-    </>
-  );
-}
-
-export default App;
+export default MyFeed;

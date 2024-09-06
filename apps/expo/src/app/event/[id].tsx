@@ -12,6 +12,7 @@ import AutoHeightImage from "react-native-auto-height-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { useNavigation } from "@react-navigation/native";
 import { Globe, Lock, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -34,6 +35,7 @@ export default function Page() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
+  const navigation = useNavigation();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -90,7 +92,7 @@ export default function Page() {
   if (!id || typeof id !== "string") {
     return (
       <View className="flex-1 bg-white">
-        <Stack.Screen options={{ title: "Event" }} />
+        <Stack.Screen options={{ title: "Event Detail" }} />
         <Text>Invalid or missing event id</Text>
       </View>
     );
@@ -99,7 +101,7 @@ export default function Page() {
   if (eventQuery.isLoading) {
     return (
       <View className="flex-1 bg-white">
-        <Stack.Screen options={{ title: "Event" }} />
+        <Stack.Screen options={{ title: "Event Detail" }} />
         <LoadingSpinner />
       </View>
     );
@@ -108,7 +110,7 @@ export default function Page() {
   if (!eventQuery.data) {
     return (
       <View className="flex-1 bg-white">
-        <Stack.Screen options={{ title: "Event" }} />
+        <Stack.Screen options={{ title: "Event Detail" }} />
         <Text>Event not found</Text>
       </View>
     );
@@ -162,8 +164,13 @@ export default function Page() {
     >
       <Stack.Screen
         options={{
-          title: "Event",
-          headerTitle: "Event",
+          title: "Event Details",
+          headerTitle: "Event Details",
+          headerBackTitle:
+            navigation.getState().routes[navigation.getState().index - 1]
+              ?.name === "feed"
+              ? "My Feed"
+              : "Discover",
           headerRight: () => (
             <View className="-mr-2 flex-row items-center gap-1">
               <ShareButton webPath={`/event/${id}`} />

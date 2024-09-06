@@ -4,17 +4,11 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { Slot, Stack, useNavigationContainerRef } from "expo-router";
+import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import {
-  ClerkLoaded,
-  ClerkProvider,
-  SignedIn,
-  SignedOut,
-} from "@clerk/clerk-expo";
+import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
-import { useColorScheme } from "nativewind";
 
 import { useAppStateRefresh } from "~/hooks/useAppStateRefresh";
 import {
@@ -30,7 +24,6 @@ import { useEffect } from "react";
 import Constants, { AppOwnership } from "expo-constants";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
-import BottomBar from "~/components/BottomBar";
 import { Toast } from "~/components/Toast";
 import Config from "~/utils/config";
 
@@ -121,11 +114,10 @@ function RootLayout() {
 export default Sentry.wrap(RootLayout);
 
 function RootLayoutContent() {
-  const insets = useSafeAreaInsets();
-  const { colorScheme } = useColorScheme();
   const { expoPushToken } = useNotification();
   useAppStateRefresh();
   const ref = useNavigationContainerRef();
+  const { isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);
@@ -134,28 +126,13 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <AuthAndTokenSync expoPushToken={expoPushToken} />
-      <SignedOut>
-        <Slot />
-      </SignedOut>
-      <SignedIn>
-        <Stack
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: "#E0D9FF",
-            },
-            headerTintColor: "#5A32FB",
-            contentStyle: {
-              backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
-            },
-            headerTitleStyle: {
-              fontWeight: "bold",
-            },
-            headerBackTitleVisible: false,
-          }}
-        />
-        <View style={{ paddingBottom: insets.bottom + 36 }} />
-        <BottomBar expoPushToken={expoPushToken} />
-      </SignedIn>
+      <Stack>
+        {isLoaded && isSignedIn ? (
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        ) : (
+          <Stack.Screen name="(auth)/index" options={{ headerShown: false }} />
+        )}
+      </Stack>
       <Toast />
       <StatusBar />
     </View>
