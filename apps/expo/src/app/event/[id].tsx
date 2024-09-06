@@ -55,8 +55,7 @@ export default function Page() {
         </Pressable>
       ),
       headerRight: () => (
-        <View className="-mr-2 flex-row items-center gap-1">
-          <ShareButton webPath={`/event/${id}`} />
+        <View className="-mr-6 flex-row items-center gap-1">
           <EventMenu
             event={
               // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -71,6 +70,7 @@ export default function Page() {
             menuType="popup"
             onDelete={handleDelete}
           />
+          <ShareButton webPath={`/event/${id}`} />
           <ProfileMenu />
         </View>
       ),
