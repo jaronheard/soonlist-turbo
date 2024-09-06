@@ -3,7 +3,11 @@ import { CalendarHeart, Globe2 } from "lucide-react-native";
 
 export default function TabLayout() {
   return (
-    <Tabs>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: "#5A32FB",
+      }}
+    >
       <Tabs.Screen
         name="feed"
         options={{
