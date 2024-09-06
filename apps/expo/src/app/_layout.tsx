@@ -6,6 +6,7 @@ import {
 } from "react-native-safe-area-context";
 import {
   Slot,
+  Stack,
   useNavigationContainerRef,
   useRouter,
   useSegments,
@@ -138,7 +139,19 @@ const InitialLayout = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]);
 
-  return <Slot />;
+  return (
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: true }} />
+      <Stack.Screen
+        name="event/[id]"
+        options={{
+          headerShown: true,
+          headerBackTitle: "Back",
+          headerBackVisible: true,
+        }}
+      />
+    </Stack>
+  );
 };
 
 function RootLayoutContent() {
