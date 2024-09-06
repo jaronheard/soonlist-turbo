@@ -4,7 +4,12 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { Stack, useNavigationContainerRef } from "expo-router";
+import {
+  Slot,
+  useNavigationContainerRef,
+  useRouter,
+  useSegments,
+} from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
@@ -113,11 +118,33 @@ function RootLayout() {
 
 export default Sentry.wrap(RootLayout);
 
+const InitialLayout = () => {
+  const { isLoaded, isSignedIn } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  // If the user is signed in, redirect them to the home page
+  // If the user is not signed in, redirect them to the login page
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (isSignedIn && inAuthGroup) {
+      router.replace("/feed");
+    } else if (!isSignedIn) {
+      router.replace("/sign-in");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignedIn]);
+
+  return <Slot />;
+};
+
 function RootLayoutContent() {
   const { expoPushToken } = useNotification();
   useAppStateRefresh();
   const ref = useNavigationContainerRef();
-  const { isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);
@@ -126,13 +153,7 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <AuthAndTokenSync expoPushToken={expoPushToken} />
-      <Stack>
-        {isLoaded && isSignedIn ? (
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        ) : (
-          <Stack.Screen name="(auth)/index" options={{ headerShown: false }} />
-        )}
-      </Stack>
+      <InitialLayout />
       <Toast />
       <StatusBar />
     </View>
