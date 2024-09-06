@@ -22,7 +22,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ webPath }) => {
 
   return (
     <TouchableOpacity onPress={handleShare}>
-      <ShareIcon size={24} color="#5A32FB" />
+      <ShareIcon size={24} color="#FFF" />
     </TouchableOpacity>
   );
 };

@@ -57,7 +57,7 @@ function MyFeed() {
   );
 
   return (
-    <View className="flex-1">
+    <>
       <Stack.Screen
         options={{
           title: "My Feed",
@@ -72,21 +72,23 @@ function MyFeed() {
           ),
         }}
       />
-      {eventsQuery.isLoading ? (
-        <LoadingSpinner />
-      ) : (
-        <View className="flex-1">
-          <UserEventsList
-            events={currentAndFutureEvents}
-            isRefetching={eventsQuery.isRefetching}
-            onRefresh={onRefresh}
-            ActionButton={GoButton}
-            showCreator="otherUsers"
-          />
-          <AddEventButton />
-        </View>
-      )}
-    </View>
+      <View className="flex-1">
+        {eventsQuery.isLoading ? (
+          <LoadingSpinner />
+        ) : (
+          <View className="flex-1">
+            <UserEventsList
+              events={currentAndFutureEvents}
+              isRefetching={eventsQuery.isRefetching}
+              onRefresh={onRefresh}
+              ActionButton={GoButton}
+              showCreator="otherUsers"
+            />
+            <AddEventButton />
+          </View>
+        )}
+      </View>
+    </>
   );
 }
 
