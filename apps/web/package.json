@@ -12,7 +12,6 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "start": "pnpm with-env next start",
-    "sync-users": "node scripts/sync-users.mjs",
     "tunnel": "lt --port 3000 --subdomain soonlist",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env.local --",
