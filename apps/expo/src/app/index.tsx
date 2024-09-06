@@ -4,8 +4,6 @@ import { Stack } from "expo-router";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 import { Navigation2 } from "lucide-react-native";
 
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
-
 import type { RouterOutputs } from "~/utils/api";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
@@ -16,7 +14,34 @@ import SignInWithOAuth from "../components/SignInWithOAuth";
 
 import "../styles.css";
 
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+
 import Config from "~/utils/config";
+
+function GoButton({
+  event,
+}: {
+  event: RouterOutputs["event"]["getUpcomingForUser"][number];
+}) {
+  const openGoogleMaps = (location: string) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location)}`;
+    void Linking.openURL(url);
+  };
+
+  const eventData = event.event as AddToCalendarButtonPropsRestricted;
+  const location = eventData.location;
+
+  return (
+    <Pressable
+      onPress={() =>
+        location ? openGoogleMaps(location) : console.log("No location")
+      }
+      className="flex-row items-center rounded-full bg-interactive-1/90 p-2"
+    >
+      <Navigation2 color="white" size={20} fill="white" />
+    </Pressable>
+  );
+}
 
 function MyFeed() {
   const { user } = useUser();
@@ -34,33 +59,6 @@ function MyFeed() {
   const currentAndFutureEvents = events.filter(
     (item) => item.startDateTime >= new Date() || item.endDateTime > new Date(),
   );
-
-  const openGoogleMaps = (location: string) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location)}`;
-    void Linking.openURL(url);
-  };
-
-  const goButton = (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => {
-    if (!event.event) {
-      return null;
-    }
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const eventData = event.event as AddToCalendarButtonPropsRestricted;
-    return (
-      <Pressable
-        onPress={() =>
-          eventData.location
-            ? openGoogleMaps(eventData.location)
-            : console.log("No location")
-        }
-        className="flex-row items-center rounded-full bg-interactive-1/90 p-2"
-      >
-        <Navigation2 color="white" size={16} fill="white" />
-      </Pressable>
-    );
-  };
 
   return (
     <View className="flex-1">
@@ -85,7 +83,7 @@ function MyFeed() {
           events={currentAndFutureEvents}
           isRefetching={eventsQuery.isRefetching}
           onRefresh={onRefresh}
-          actionButton={goButton}
+          ActionButton={GoButton}
           showCreator="otherUsers"
         />
       )}
