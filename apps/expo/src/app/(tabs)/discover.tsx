@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
+import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
@@ -57,7 +58,7 @@ export default function Page() {
           title: "Discover",
           headerTitle: "Discover",
           headerRight: () => (
-            <View className="-mr-2 flex-row items-center gap-1">
+            <View className="flex-row items-center gap-1">
               <SignedIn>
                 <ShareButton webPath={`/explore`} />
               </SignedIn>
@@ -77,6 +78,7 @@ export default function Page() {
           showCreator="always"
         />
       </View>
+      <AddEventButton />
     </View>
   );
 }

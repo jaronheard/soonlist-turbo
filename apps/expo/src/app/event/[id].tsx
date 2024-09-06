@@ -3,6 +3,7 @@ import {
   Animated,
   Dimensions,
   Image,
+  Pressable,
   RefreshControl,
   ScrollView,
   Text,
@@ -10,9 +11,14 @@ import {
 } from "react-native";
 import AutoHeightImage from "react-native-auto-height-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  Link,
+  useLocalSearchParams,
+  useNavigation,
+  useRouter,
+} from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { Globe, Lock, MapPin, User } from "lucide-react-native";
+import { ChevronLeft, Globe, Lock, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -28,16 +34,52 @@ export default function Page() {
   const router = useRouter();
   const utils = api.useUtils();
   const { width } = Dimensions.get("window");
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const [imageLoaded, setImageLoaded] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
 
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <Pressable
+          onPress={() => navigation.goBack()}
+          className="-ml-4 flex-row items-center gap-1"
+        >
+          <ChevronLeft size={24} color="#5A32FB" />
+          <Text className="text-xl font-medium text-interactive-1">Back</Text>
+        </Pressable>
+      ),
+      headerRight: () => (
+        <View className="-mr-6 flex-row items-center gap-1">
+          <EventMenu
+            event={
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+              eventQuery.data as RouterOutputs["event"]["getUpcomingForUser"][number]
+            }
+            isOwner={isCurrentUserEvent}
+            isSaved={
+              savedIdsQuery.data?.some(
+                (savedEvent) => savedEvent.id === eventQuery.data?.id,
+              ) ?? false
+            }
+            menuType="popup"
+            onDelete={handleDelete}
+          />
+          <ShareButton webPath={`/event/${id}`} />
+          <ProfileMenu />
+        </View>
+      ),
+    });
+  }, [navigation]);
+
   const [refreshing, setRefreshing] = useState(false);
 
-  const eventQuery = api.event.get.useQuery({ eventId: id as string });
+  const eventQuery = api.event.get.useQuery({ eventId: id! });
   const username = currentUser?.username || "";
   const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
     userName: username,
@@ -78,19 +120,17 @@ export default function Page() {
   const deleteEventMutation = api.event.delete.useMutation({
     onSuccess: () => {
       void utils.event.invalidate();
-      // Redirect to the home page after successful deletion
       router.replace("/");
     },
   });
 
   const handleDelete = useCallback(async () => {
-    await deleteEventMutation.mutateAsync({ id: id as string });
+    await deleteEventMutation.mutateAsync({ id: id! });
   }, [deleteEventMutation, id]);
 
   if (!id || typeof id !== "string") {
     return (
       <View className="flex-1 bg-white">
-        <Stack.Screen options={{ title: "Event" }} />
         <Text>Invalid or missing event id</Text>
       </View>
     );
@@ -99,7 +139,6 @@ export default function Page() {
   if (eventQuery.isLoading) {
     return (
       <View className="flex-1 bg-white">
-        <Stack.Screen options={{ title: "Event" }} />
         <LoadingSpinner />
       </View>
     );
@@ -108,7 +147,6 @@ export default function Page() {
   if (!eventQuery.data) {
     return (
       <View className="flex-1 bg-white">
-        <Stack.Screen options={{ title: "Event" }} />
         <Text>Event not found</Text>
       </View>
     );
@@ -160,120 +198,91 @@ export default function Page() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <Stack.Screen
-        options={{
-          title: "Event",
-          headerTitle: "Event",
-          headerRight: () => (
-            <View className="-mr-2 flex-row items-center gap-1">
-              <ShareButton webPath={`/event/${id}`} />
-              <EventMenu
-                event={
-                  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-                  eventQuery.data as RouterOutputs["event"]["getUpcomingForUser"][number]
-                }
-                isOwner={isCurrentUserEvent}
-                isSaved={
-                  savedIdsQuery.data?.some(
-                    (savedEvent) => savedEvent.id === eventQuery.data?.id,
-                  ) ?? false
-                }
-                menuType="popup"
-                onDelete={handleDelete}
-              />
-              <ProfileMenu />
-            </View>
-          ),
-        }}
-      />
-      {!id || typeof id !== "string" ? (
-        <Text>Invalid or missing event id</Text>
-      ) : (
-        <View className="p-4">
-          <View className="flex flex-col gap-5">
-            <View>
-              <Text className="text-lg text-neutral-2">{date}</Text>
-              <Text className="text-lg text-neutral-2">{time}</Text>
-            </View>
-            <Text className="font-heading text-4xl font-bold text-neutral-1">
-              {eventData.name}
-            </Text>
-            {eventData.location && (
-              <Link
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(eventData.location)}`}
-              >
+      <View className="p-4">
+        <View className="flex flex-col gap-5">
+          <View>
+            <Text className="text-lg text-neutral-2">{date}</Text>
+            <Text className="text-lg text-neutral-2">{time}</Text>
+          </View>
+          <Text className="font-heading text-4xl font-bold text-neutral-1">
+            {eventData.name}
+          </Text>
+          {eventData.location && (
+            <Link
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(eventData.location)}`}
+              asChild
+            >
+              <Pressable>
                 <View className="flex-row items-center">
                   <MapPin size={16} color="#6b7280" />
                   <Text className="ml-1 text-neutral-2">
                     {eventData.location}
                   </Text>
                 </View>
-              </Link>
-            )}
-            {isCurrentUserEvent ? (
-              // Show visibility status for the event owner
-              <View className="flex-row items-center gap-2">
-                {event.visibility === "public" ? (
-                  <Globe size={16} color="#627496" />
-                ) : (
-                  <Lock size={16} color="#627496" />
-                )}
-                <Text className="text-sm text-neutral-2">
-                  {event.visibility === "public"
-                    ? "Your event is on Discover"
-                    : "Your event is unlisted"}
-                </Text>
-              </View>
-            ) : (
-              // Show user info for other users
-              <View className="flex-row items-center gap-2">
-                {event.user.userImage ? (
-                  <Image
-                    source={{ uri: event.user.userImage }}
-                    className="h-5 w-5 rounded-full"
-                  />
-                ) : (
-                  <User size={20} color="#627496" />
-                )}
-                <Text className="text-sm text-neutral-2">
-                  @{event.user.username}
-                </Text>
-              </View>
-            )}
-          </View>
-          <View className="my-8">
-            <Text className="text-neutral-1">{eventData.description}</Text>
-          </View>
-          {eventData.images?.[3] && (
-            <View className="mb-4">
-              {!imageLoaded && (
-                <Animated.View
-                  style={{
-                    width: width - 32,
-                    height: 400,
-                    backgroundColor: "#DCE0E8",
-                    opacity: pulseAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.5, 1],
-                    }),
-                  }}
-                />
+              </Pressable>
+            </Link>
+          )}
+          {isCurrentUserEvent ? (
+            <View className="flex-row items-center gap-2">
+              {event.visibility === "public" ? (
+                <Globe size={16} color="#627496" />
+              ) : (
+                <Lock size={16} color="#627496" />
               )}
-              <Animated.View
-                style={{
-                  opacity: fadeAnim,
-                }}
-              >
-                <AutoHeightImage
-                  source={{ uri: eventData.images[3] }}
-                  width={width - 32}
-                  onLoad={() => setImageLoaded(true)}
+              <Text className="text-sm text-neutral-2">
+                {event.visibility === "public"
+                  ? "Your event is on Discover"
+                  : "Your event is unlisted"}
+              </Text>
+            </View>
+          ) : (
+            <View className="flex-row items-center gap-2">
+              {event.user.userImage ? (
+                <Image
+                  source={{ uri: event.user.userImage }}
+                  className="h-5 w-5 rounded-full"
                 />
-              </Animated.View>
+              ) : (
+                <User size={20} color="#627496" />
+              )}
+              <Text className="text-sm text-neutral-2">
+                @{event.user.username}
+              </Text>
             </View>
           )}
         </View>
-      )}
+        <View className="my-8">
+          <Text className="text-neutral-1">{eventData.description}</Text>
+        </View>
+        {eventData.images?.[3] && (
+          <View className="mb-4">
+            {!imageLoaded && (
+              <Animated.View
+                style={{
+                  width: width - 32,
+                  height: 400,
+                  backgroundColor: "#DCE0E8",
+                  opacity: pulseAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.5, 1],
+                  }),
+                }}
+              />
+            )}
+            <Animated.View
+              style={{
+                opacity: fadeAnim,
+              }}
+            >
+              <AutoHeightImage
+                source={{ uri: eventData.images[3] }}
+                width={width - 32}
+                onLoad={() => setImageLoaded(true)}
+              />
+            </Animated.View>
+          </View>
+        )}
+      </View>
     </ScrollView>
   );
 }

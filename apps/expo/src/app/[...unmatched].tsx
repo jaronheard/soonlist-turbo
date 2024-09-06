@@ -1,5 +1,13 @@
-// for iOS deeplink redirect to this unmatched page
-// catched link: exposhareintentexample:///dataUrl=exposhareintentexampleShareKey
-import Home from "./index";
+import { useEffect } from "react";
+import { Redirect, usePathname } from "expo-router";
 
-export default Home;
+export default function UnmatchedRoute() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    console.warn(`Attempted to access unmatched route: ${pathname}`);
+  }, [pathname]);
+
+  // Redirect to the home screen or another appropriate route
+  return <Redirect href="/onboarding" />;
+}

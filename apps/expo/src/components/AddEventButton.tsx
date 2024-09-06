@@ -7,13 +7,14 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { Link, usePathname } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { CalendarHeart, Globe2, Sparkles } from "lucide-react-native";
+import { Sparkles } from "lucide-react-native";
 
+import { useNotification } from "~/providers/NotificationProvider";
 import { api } from "~/utils/api";
 
-const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
+const AddEventButton = () => {
+  const { expoPushToken } = useNotification();
   const [text, setText] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const textInputRef = useRef<TextInput>(null);
@@ -23,7 +24,6 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
       onSettled: () => void utils.event.invalidate(),
     });
   const { user } = useUser();
-  const pathname = usePathname();
 
   const handleAdd = () => {
     if (!text.trim()) return;
@@ -46,7 +46,7 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
   }, [modalVisible]);
 
   return (
-    <View className="absolute bottom-0 left-0 right-0">
+    <View className="absolute bottom-4 right-4 z-10">
       <Modal
         animationType="fade"
         transparent={true}
@@ -87,42 +87,14 @@ const AddButtonView = ({ expoPushToken }: { expoPushToken: string }) => {
         </TouchableWithoutFeedback>
       </Modal>
 
-      <View className="relative flex-row items-center justify-around bg-interactive-2 pb-6 pt-1.5">
-        <Link href="/" asChild>
-          <TouchableOpacity className="flex-1 items-center gap-1 py-2">
-            <CalendarHeart
-              size={28}
-              color={pathname === "/" ? "#5A32FB" : "#627496"}
-            />
-            <Text
-              className={`text-xs font-medium ${pathname === "/" ? "text-interactive-1" : "text-neutral-2"}`}
-            >
-              My Feed
-            </Text>
-          </TouchableOpacity>
-        </Link>
-        <Link href="/discover" asChild>
-          <TouchableOpacity className="flex-1 items-center gap-1 py-2">
-            <Globe2
-              size={28}
-              color={pathname === "/discover" ? "#5A32FB" : "#627496"}
-            />
-            <Text
-              className={`text-xs font-medium ${pathname === "/discover" ? "text-interactive-1" : "text-neutral-2"}`}
-            >
-              Discover
-            </Text>
-          </TouchableOpacity>
-        </Link>
-        <TouchableOpacity
-          className="absolute -top-16 right-4 items-center justify-center rounded-full bg-interactive-2 p-3 shadow-lg"
-          onPress={() => setModalVisible(true)}
-        >
-          <Sparkles size={24} color="#5A32FB" />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        className="items-center justify-center rounded-full bg-interactive-2 p-4 shadow-lg"
+        onPress={() => setModalVisible(true)}
+      >
+        <Sparkles size={24} color="#5A32FB" />
+      </TouchableOpacity>
     </View>
   );
 };
 
-export default AddButtonView;
+export default AddEventButton;
