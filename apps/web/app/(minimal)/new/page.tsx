@@ -1,6 +1,5 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 
-import { env } from "~/env";
 import { api } from "~/trpc/server";
 import { EventsFromImage } from "./EventsFromImage";
 import { EventsFromRawText } from "./EventsFromRawText";
