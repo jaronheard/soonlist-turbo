@@ -76,7 +76,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   experiments: {
     tsconfigPaths: true,
-    // typedRoutes: true,
+    typedRoutes: true,
   },
   // plugins: ["expo-router"],
   extra: {

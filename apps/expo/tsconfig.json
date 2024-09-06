@@ -16,7 +16,9 @@
     "eslint.config.mjs",
     "src/app",
     "src/components",
-    "src/hooks"
+    "src/hooks",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ],
   "exclude": ["node_modules"]
 }
