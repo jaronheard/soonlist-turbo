@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react-native";
 import React from "react";
 import { Linking, Share, Text, TouchableOpacity, View } from "react-native";
 import ContextMenu from "react-native-context-menu-view";
@@ -8,7 +9,18 @@ import {
   MenuTrigger,
 } from "react-native-popup-menu";
 import * as Haptics from "expo-haptics";
-import { MoreVertical } from "lucide-react-native";
+import {
+  CalendarPlus,
+  Globe,
+  Lock,
+  Map,
+  MinusCircle,
+  MoreVertical,
+  PenSquare,
+  PlusCircle,
+  Share2,
+  Trash2,
+} from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -22,6 +34,13 @@ interface EventMenuProps {
   isSaved: boolean;
   menuType: "context" | "popup";
   children?: React.ReactNode;
+}
+
+interface MenuItem {
+  title: string;
+  lucideIcon: LucideIcon;
+  systemIcon: string;
+  destructive?: boolean;
 }
 
 export function EventMenu({
@@ -57,11 +76,15 @@ export function EventMenu({
     },
   });
 
-  const getMenuItems = () => {
-    const baseItems = [
-      { title: "Share", systemIcon: "square.and.arrow.up" },
-      { title: "Directions", systemIcon: "map" },
-      { title: "Add to Calendar", systemIcon: "calendar.badge.plus" },
+  const getMenuItems = (): MenuItem[] => {
+    const baseItems: MenuItem[] = [
+      { title: "Share", lucideIcon: Share2, systemIcon: "square.and.arrow.up" },
+      { title: "Directions", lucideIcon: Map, systemIcon: "map" },
+      {
+        title: "Add to Calendar",
+        lucideIcon: CalendarPlus,
+        systemIcon: "calendar.badge.plus",
+      },
     ];
 
     if (isOwner) {
@@ -72,17 +95,35 @@ export function EventMenu({
             event.visibility === "public"
               ? "Remove From Discover"
               : "Add to Discover",
+          lucideIcon: event.visibility === "public" ? Lock : Globe,
           systemIcon: event.visibility === "public" ? "lock" : "globe",
         },
-        { title: "Edit", systemIcon: "square.and.pencil" },
-        { title: "Delete", systemIcon: "trash", destructive: true },
+        {
+          title: "Edit",
+          lucideIcon: PenSquare,
+          systemIcon: "square.and.pencil",
+        },
+        {
+          title: "Delete",
+          lucideIcon: Trash2,
+          systemIcon: "trash",
+          destructive: true,
+        },
       ];
     } else if (!isSaved) {
-      return [{ title: "Follow", systemIcon: "plus.circle" }, ...baseItems];
+      return [
+        { title: "Follow", lucideIcon: PlusCircle, systemIcon: "plus.circle" },
+        ...baseItems,
+      ];
     } else {
       return [
         ...baseItems,
-        { title: "Unfollow", systemIcon: "minus.circle", destructive: true },
+        {
+          title: "Unfollow",
+          lucideIcon: MinusCircle,
+          systemIcon: "minus.circle",
+          destructive: true,
+        },
       ];
     }
   };
@@ -174,7 +215,11 @@ export function EventMenu({
   if (menuType === "context") {
     return (
       <ContextMenu
-        actions={getMenuItems()}
+        actions={getMenuItems().map((item) => ({
+          title: item.title,
+          systemIcon: item.systemIcon,
+          destructive: item.destructive,
+        }))}
         onPress={(e) => {
           const menuItems = getMenuItems();
           const selectedItem = menuItems[e.nativeEvent.index];
@@ -215,9 +260,16 @@ export function EventMenu({
               key={index}
               onSelect={() => handleMenuSelect(item.title)}
             >
-              <View className="flex-row items-center">
-                {/* You can add an icon here if needed */}
-                <Text className="ml-2 text-base font-medium text-neutral-1">
+              <View className="flex-row items-center py-2">
+                <item.lucideIcon
+                  size={20}
+                  color={item.destructive ? "#FF3B30" : "#5A32FB"}
+                />
+                <Text
+                  className={`ml-3 text-base font-medium ${
+                    item.destructive ? "text-red-500" : "text-neutral-1"
+                  }`}
+                >
                   {item.title}
                 </Text>
               </View>
