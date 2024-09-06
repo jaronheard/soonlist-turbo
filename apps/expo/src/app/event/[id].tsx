@@ -3,18 +3,16 @@ import {
   Animated,
   Dimensions,
   Image,
-  Linking,
   RefreshControl,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import AutoHeightImage from "react-native-auto-height-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Link, Stack, useLocalSearchParams } from "expo-router";
+import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { Edit, Globe, Lock, MapPin, User } from "lucide-react-native";
+import { Globe, Lock, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -24,10 +22,11 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import { api } from "~/utils/api";
-import Config from "~/utils/config";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
 
 export default function Page() {
+  const router = useRouter();
+  const utils = api.useUtils();
   const { width } = Dimensions.get("window");
   const { id } = useLocalSearchParams();
   const pulseAnim = useRef(new Animated.Value(0)).current;
@@ -75,6 +74,18 @@ export default function Page() {
       }).start();
     }
   }, [fadeAnim, imageLoaded]);
+
+  const deleteEventMutation = api.event.delete.useMutation({
+    onSuccess: () => {
+      void utils.event.invalidate();
+      // Redirect to the home page after successful deletion
+      router.replace("/");
+    },
+  });
+
+  const handleDelete = useCallback(async () => {
+    await deleteEventMutation.mutateAsync({ id: id as string });
+  }, [deleteEventMutation, id]);
 
   if (!id || typeof id !== "string") {
     return (
@@ -157,15 +168,6 @@ export default function Page() {
           headerTitle: "Event",
           headerRight: () => (
             <View className="-mr-2 flex-row items-center gap-1">
-              <TouchableOpacity
-                onPress={() =>
-                  Linking.openURL(`${Config.apiBaseUrl}/event/${id}/edit`)
-                }
-              >
-                <View className="rounded-full p-2">
-                  <Edit size={24} color="#5A32FB" />
-                </View>
-              </TouchableOpacity>
               <ShareButton webPath={`/event/${id}`} />
               <EventMenu
                 event={
@@ -179,6 +181,7 @@ export default function Page() {
                   ) ?? false
                 }
                 menuType="popup"
+                onDelete={handleDelete}
               />
               <ProfileMenu />
             </View>

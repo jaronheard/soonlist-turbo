@@ -26,6 +26,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import { api } from "~/utils/api";
+import { cn } from "~/utils/cn";
 import Config from "~/utils/config";
 
 interface EventMenuProps {
@@ -34,6 +35,7 @@ interface EventMenuProps {
   isSaved: boolean;
   menuType: "context" | "popup";
   children?: React.ReactNode;
+  onDelete?: () => Promise<void>;
 }
 
 interface MenuItem {
@@ -49,6 +51,7 @@ export function EventMenu({
   isSaved,
   menuType,
   children,
+  onDelete,
 }: EventMenuProps) {
   const utils = api.useUtils();
 
@@ -143,7 +146,12 @@ export function EventMenu({
   };
 
   const handleDelete = async () => {
-    await deleteEventMutation.mutateAsync({ id: event.id });
+    if (onDelete) {
+      await onDelete();
+    } else {
+      await deleteEventMutation.mutateAsync({ id: event.id });
+      // We remove the navigation here, as it should be handled by the parent component
+    }
   };
 
   const handleUnfollow = async () => {
@@ -263,12 +271,13 @@ export function EventMenu({
               <View className="flex-row items-center py-2">
                 <item.lucideIcon
                   size={20}
-                  color={item.destructive ? "#FF3B30" : "#5A32FB"}
+                  color={item.destructive ? "#BA2727" : "#5A32FB"}
                 />
                 <Text
-                  className={`ml-3 text-base font-medium ${
-                    item.destructive ? "text-red-500" : "text-neutral-1"
-                  }`}
+                  className={cn("ml-3 font-medium", {
+                    "text-[#BA2727]": item.destructive,
+                    "text-base": !item.destructive,
+                  })}
                 >
                   {item.title}
                 </Text>
