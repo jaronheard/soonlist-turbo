@@ -17,7 +17,6 @@ import {
   useNavigation,
   useRouter,
 } from "expo-router";
-import { Stack } from "expo-router/stack";
 import { useUser } from "@clerk/clerk-expo";
 import { ChevronLeft, Globe, Lock, MapPin, User } from "lucide-react-native";
 
