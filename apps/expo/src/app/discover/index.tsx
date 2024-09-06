@@ -40,9 +40,15 @@ export default function Page() {
     savedEventIdsQuery.data?.map((event) => event.id),
   );
 
-  const saveButton = (event: RouterOutputs["event"]["getDiscover"][number]) => (
-    <SaveButton eventId={event.id} isSaved={savedEventIds.has(event.id)} />
-  );
+  function SaveButtonWrapper({
+    event,
+  }: {
+    event: RouterOutputs["event"]["getDiscover"][number];
+  }) {
+    return (
+      <SaveButton eventId={event.id} isSaved={savedEventIds.has(event.id)} />
+    );
+  }
 
   return (
     <View className="flex-1">
@@ -67,7 +73,7 @@ export default function Page() {
             eventsQuery.isRefetching || savedEventIdsQuery.isRefetching
           }
           onRefresh={onRefresh}
-          actionButton={saveButton}
+          ActionButton={SaveButtonWrapper}
           showCreator="always"
         />
       </View>

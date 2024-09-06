@@ -19,18 +19,21 @@ import {
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { CalendarSelectionModal } from "./CalendarSelectionModal";
 import { EventMenu } from "./EventMenu";
-import SaveButton from "./SaveButton";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
 
+interface ActionButtonProps {
+  event: RouterOutputs["event"]["getUpcomingForUser"][number];
+}
+
 export function UserEventListItem(props: {
   event: RouterOutputs["event"]["getUpcomingForUser"][number];
-  actionButton?: React.ReactNode;
+  ActionButton?: React.ComponentType<ActionButtonProps>;
   isLastItem?: boolean;
   showCreator: ShowCreatorOption;
   isSaved: boolean;
-}): React.ReactNode {
-  const { event, actionButton, isLastItem, showCreator, isSaved } = props;
+}) {
+  const { event, ActionButton, isLastItem, showCreator, isSaved } = props;
   const id = event.id;
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const e = event.event as AddToCalendarButtonPropsRestricted;
@@ -169,8 +172,10 @@ export function UserEventListItem(props: {
           ) : (
             <View className="h-20 w-20 rounded-md bg-accent-yellow" />
           )}
-          {actionButton && (
-            <View className="absolute -bottom-2 -right-2">{actionButton}</View>
+          {ActionButton && (
+            <View className="absolute -bottom-2 -right-2">
+              <ActionButton event={event} />
+            </View>
           )}
         </View>
         {relativeTime && (
@@ -195,14 +200,12 @@ export function UserEventListItem(props: {
 export default function UserEventsList(props: {
   events: RouterOutputs["event"]["getUpcomingForUser"];
   refreshControl?: React.ReactElement;
-  actionButton?: (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
-  ) => React.ReactNode;
+  ActionButton?: React.ComponentType<ActionButtonProps>;
   showCreator: ShowCreatorOption;
   isRefetching: boolean;
   onRefresh: () => void;
 }) {
-  const { events, actionButton, showCreator, isRefetching, onRefresh } = props;
+  const { events, ActionButton, showCreator, isRefetching, onRefresh } = props;
   const { user } = useUser();
   const username = user?.username || "";
   const {
@@ -263,11 +266,7 @@ export default function UserEventsList(props: {
           return (
             <UserEventListItem
               event={item.event}
-              actionButton={
-                actionButton ? (
-                  <SaveButton eventId={item.event.id} isSaved={isSaved} />
-                ) : undefined
-              }
+              ActionButton={ActionButton}
               isLastItem={index === collapsedEvents.length - 1}
               showCreator={showCreator}
               isSaved={isSaved}
