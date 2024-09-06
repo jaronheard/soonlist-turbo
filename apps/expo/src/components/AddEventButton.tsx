@@ -46,7 +46,7 @@ const AddEventButton = () => {
   }, [modalVisible]);
 
   return (
-    <View className="absolute bottom-0 left-0 right-0">
+    <View className="absolute bottom-4 right-4 z-10">
       <Modal
         animationType="fade"
         transparent={true}
@@ -87,14 +87,12 @@ const AddEventButton = () => {
         </TouchableWithoutFeedback>
       </Modal>
 
-      <View className="relative">
-        <TouchableOpacity
-          className="absolute bottom-24 right-2 items-center justify-center rounded-full bg-interactive-2 p-3 shadow-lg"
-          onPress={() => setModalVisible(true)}
-        >
-          <Sparkles size={24} color="#5A32FB" />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        className="items-center justify-center rounded-full bg-interactive-2 p-4 shadow-lg"
+        onPress={() => setModalVisible(true)}
+      >
+        <Sparkles size={24} color="#5A32FB" />
+      </TouchableOpacity>
     </View>
   );
 };

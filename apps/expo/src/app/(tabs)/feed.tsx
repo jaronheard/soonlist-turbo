@@ -75,15 +75,17 @@ function MyFeed() {
       {eventsQuery.isLoading ? (
         <LoadingSpinner />
       ) : (
-        <UserEventsList
-          events={currentAndFutureEvents}
-          isRefetching={eventsQuery.isRefetching}
-          onRefresh={onRefresh}
-          ActionButton={GoButton}
-          showCreator="otherUsers"
-        />
+        <View className="flex-1">
+          <UserEventsList
+            events={currentAndFutureEvents}
+            isRefetching={eventsQuery.isRefetching}
+            onRefresh={onRefresh}
+            ActionButton={GoButton}
+            showCreator="otherUsers"
+          />
+          <AddEventButton />
+        </View>
       )}
-      <AddEventButton />
     </View>
   );
 }

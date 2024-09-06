@@ -8,7 +8,7 @@ export default function OnboardingScreen() {
   const router = useRouter();
 
   const handleComplete = () => {
-    router.back();
+    router.push("/feed");
   };
 
   return (
