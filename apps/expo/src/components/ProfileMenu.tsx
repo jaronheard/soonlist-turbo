@@ -7,8 +7,11 @@ import {
   MenuTrigger,
 } from "react-native-popup-menu";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { HelpCircle, LogOut, User } from "lucide-react-native";
+
+import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
 export function ProfileMenu() {
   const { signOut } = useAuth();
@@ -17,6 +20,13 @@ export function ProfileMenu() {
 
   const showOnboarding = () => {
     router.push("/onboarding");
+  };
+
+  const handleSignOut = async () => {
+    await SecureStore.deleteItemAsync("hasCompletedOnboarding", {
+      keychainAccessGroup: getKeyChainAccessGroup(),
+    });
+    await signOut();
   };
 
   return (
@@ -59,7 +69,7 @@ export function ProfileMenu() {
             </Text>
           </View>
         </MenuOption>
-        <MenuOption onSelect={() => signOut()}>
+        <MenuOption onSelect={handleSignOut}>
           <View className="flex-row items-center py-2">
             <LogOut size={20} color="#BA2727" />
             <Text className="ml-3 font-medium text-[#BA2727]">Sign Out</Text>

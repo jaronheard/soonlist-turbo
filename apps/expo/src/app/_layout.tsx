@@ -7,6 +7,7 @@ import {
 import {
   Stack,
   useNavigationContainerRef,
+  useRootNavigationState,
   useRouter,
   useSegments,
 } from "expo-router";
@@ -31,6 +32,7 @@ import Constants, { AppOwnership } from "expo-constants";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { Toast } from "~/components/Toast";
 import Config from "~/utils/config";
+import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const insets = useSafeAreaInsets();
@@ -52,21 +54,15 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   );
 }
 
-const getKeychainAccessGroup = () => {
-  return Config.env === "development"
-    ? "group.com.soonlist.dev"
-    : "group.com.soonlist";
-};
-
 const tokenCache = {
   getToken: async (key: string) => {
     return await SecureStore.getItemAsync(key, {
-      keychainAccessGroup: getKeychainAccessGroup(),
+      keychainAccessGroup: getKeyChainAccessGroup(),
     });
   },
   saveToken: (key: string, value: string) => {
     return SecureStore.setItemAsync(key, value, {
-      keychainAccessGroup: getKeychainAccessGroup(),
+      keychainAccessGroup: getKeyChainAccessGroup(),
     });
   },
 };
@@ -122,21 +118,37 @@ const InitialLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
 
   // If the user is signed in, redirect them to the home page
   // If the user is not signed in, redirect them to the login page
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !rootNavigationState.key) return;
 
     const inAuthGroup = segments[0] === "(auth)";
 
-    if (isSignedIn && inAuthGroup) {
-      router.replace("/feed");
-    } else if (!isSignedIn) {
-      router.replace("/sign-in");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSignedIn]);
+    const checkOnboardingStatus = async () => {
+      if (isSignedIn && inAuthGroup) {
+        const status = await SecureStore.getItemAsync(
+          "hasCompletedOnboarding",
+          {
+            keychainAccessGroup: getKeyChainAccessGroup(),
+          },
+        );
+        console.log("status", status);
+        if (status === "true") {
+          router.replace("/feed");
+        } else {
+          router.replace("/onboarding");
+        }
+      }
+      if (!isSignedIn && !inAuthGroup) {
+        router.replace("/sign-in");
+      }
+    };
+
+    void checkOnboardingStatus();
+  }, [isSignedIn, rootNavigationState.key, router, segments, isLoaded]);
 
   return (
     <Stack
