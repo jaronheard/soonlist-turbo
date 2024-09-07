@@ -31,6 +31,10 @@ jobs:
         shell: bash
         run: cp .env.example .env
 
+      - name: Generate typed routes for Expo Router
+        working-directory: apps/expo
+        run: npx expo customize tsconfig.json
+
       - name: Lint
         run: pnpm lint && pnpm lint:ws
 
@@ -52,6 +56,10 @@ jobs:
 
       - name: Setup
         uses: ./tooling/github/setup
+
+      - name: Generate typed routes for Expo Router
+        working-directory: apps/expo
+        run: npx expo customize tsconfig.json
 
       - name: Typecheck
         run: pnpm typecheck
