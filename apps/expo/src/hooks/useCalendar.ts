@@ -6,17 +6,11 @@ import * as SecureStore from "expo-secure-store";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 // Import the toast notification function (you'll need to implement this)
 import { showToast } from "~/utils/toast";
 
 const INITIAL_CALENDAR_LIMIT = 5;
-
-const getKeychainAccessGroup = () => {
-  const appEnv = process.env.EXPO_PUBLIC_APP_ENV || "";
-  return appEnv === "development"
-    ? "group.com.soonlist.dev"
-    : "group.com.soonlist";
-};
 
 export function useCalendar() {
   const [defaultCalendarId, setDefaultCalendarId] = useState<string | null>(
@@ -43,7 +37,7 @@ export function useCalendar() {
           "defaultCalendarId",
           {
             keychainAccessible: SecureStore.WHEN_UNLOCKED,
-            keychainAccessGroup: getKeychainAccessGroup(),
+            keychainAccessGroup: getKeyChainAccessGroup(),
           },
         );
         if (savedCalendarId) {
@@ -53,7 +47,7 @@ export function useCalendar() {
         // Load calendar usage data
         const usageData = await SecureStore.getItemAsync("calendarUsage", {
           keychainAccessible: SecureStore.WHEN_UNLOCKED,
-          keychainAccessGroup: getKeychainAccessGroup(),
+          keychainAccessGroup: getKeyChainAccessGroup(),
         });
         if (usageData) {
           const parsedUsage = JSON.parse(usageData) as Record<string, number>;
@@ -131,7 +125,7 @@ export function useCalendar() {
       // Save the selected calendar as default using SecureStore
       await SecureStore.setItemAsync("defaultCalendarId", selectedCalendarId, {
         keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: getKeychainAccessGroup(),
+        keychainAccessGroup: getKeyChainAccessGroup(),
       });
       setDefaultCalendarId(selectedCalendarId);
 
@@ -173,7 +167,7 @@ export function useCalendar() {
         JSON.stringify(newUsage),
         {
           keychainAccessible: SecureStore.WHEN_UNLOCKED,
-          keychainAccessGroup: getKeychainAccessGroup(),
+          keychainAccessGroup: getKeyChainAccessGroup(),
         },
       );
     } catch (error) {
@@ -188,12 +182,12 @@ export function useCalendar() {
     try {
       await SecureStore.deleteItemAsync("defaultCalendarId", {
         keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: getKeychainAccessGroup(),
+        keychainAccessGroup: getKeyChainAccessGroup(),
       });
       console.log("Calendar data cleared");
       await SecureStore.deleteItemAsync("calendarUsage", {
         keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: getKeychainAccessGroup(),
+        keychainAccessGroup: getKeyChainAccessGroup(),
       });
       console.log("Calendar usage data cleared");
       setDefaultCalendarId(null);
