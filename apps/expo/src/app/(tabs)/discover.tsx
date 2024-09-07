@@ -58,7 +58,7 @@ export default function Page() {
           title: "Discover",
           headerTitle: "Discover",
           headerRight: () => (
-            <View className="flex-row items-center gap-1">
+            <View className="mr-2 flex-row items-center gap-2">
               <SignedIn>
                 <ShareButton webPath={`/explore`} />
               </SignedIn>

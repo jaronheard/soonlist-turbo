@@ -63,7 +63,7 @@ function MyFeed() {
           title: "My Feed",
           headerTitle: "My Feed",
           headerRight: () => (
-            <View className="flex-row items-center gap-1">
+            <View className="mr-2 flex-row items-center gap-2">
               <SignedIn>
                 <ShareButton webPath={`/${user?.username}/upcoming`} />
               </SignedIn>

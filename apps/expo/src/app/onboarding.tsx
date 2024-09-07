@@ -18,7 +18,9 @@ export default function OnboardingScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: "How to Use" }} />
+      <Stack.Screen
+        options={{ title: "How to Use", headerBackTitle: "Back" }}
+      />
       <Onboarding onComplete={handleComplete} />
     </View>
   );

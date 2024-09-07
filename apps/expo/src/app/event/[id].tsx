@@ -45,7 +45,7 @@ export default function Page() {
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <View className="-mr-6 flex-row items-center gap-1">
+        <View className="-mr-4 flex-row items-center gap-2">
           <EventMenu
             event={
               // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
