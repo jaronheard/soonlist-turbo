@@ -94,28 +94,28 @@ export function UserEventListItem(props: {
       isSaved={isSaved}
       menuType="context"
     >
-      <View
-        className={cn(
-          "relative -mx-2 flex-row items-center rounded-lg p-4 px-6 pt-6",
-          relativeTime ? "pt-10" : "",
-          isLastItem ? "" : "border-b border-neutral-3",
-          isHappeningNow ? "bg-accent-yellow" : "bg-white",
-        )}
+      <Link
+        href={{
+          pathname: "/event/[id]",
+          params: { id },
+        }}
+        asChild
       >
-        <View className="mr-4 flex-1">
-          <View className="mb-2">
-            <Text className="text-base font-medium text-neutral-2">
-              {date} • {time}
-            </Text>
-          </View>
-          <Link
-            asChild
-            href={{
-              pathname: "/event/[id]",
-              params: { id },
-            }}
+        <Pressable>
+          <View
+            className={cn(
+              "relative -mx-2 flex-row items-center rounded-lg p-4 px-6 pt-6",
+              relativeTime ? "pt-10" : "",
+              isLastItem ? "" : "border-b border-neutral-3",
+              isHappeningNow ? "bg-accent-yellow" : "bg-white",
+            )}
           >
-            <Pressable onLongPress={() => null}>
+            <View className="mr-4 flex-1">
+              <View className="mb-2">
+                <Text className="text-base font-medium text-neutral-2">
+                  {date} • {time}
+                </Text>
+              </View>
               <Text
                 className="mb-2 text-3xl font-bold text-neutral-1"
                 numberOfLines={2}
@@ -123,76 +123,79 @@ export function UserEventListItem(props: {
               >
                 {e.name}
               </Text>
-            </Pressable>
-          </Link>
-          {e.location ? (
-            <View className="mb-2 flex-row items-center gap-0.5">
-              <MapPin size={10} color="#627496" />
-              <Text className="flex-1 text-sm text-neutral-2" numberOfLines={1}>
-                {e.location}
-              </Text>
+              {e.location ? (
+                <View className="mb-2 flex-row items-center gap-0.5">
+                  <MapPin size={10} color="#627496" />
+                  <Text
+                    className="flex-1 text-sm text-neutral-2"
+                    numberOfLines={1}
+                  >
+                    {e.location}
+                  </Text>
+                </View>
+              ) : null}
+              {shouldShowCreator ? (
+                <View className="flex-row items-center gap-2">
+                  {eventUser.userImage ? (
+                    <Image
+                      source={{ uri: eventUser.userImage }}
+                      className="h-4 w-4 rounded-full"
+                    />
+                  ) : (
+                    <User size={16} color="#627496" />
+                  )}
+                  <Text className="text-sm text-neutral-2">
+                    @{eventUser.username}
+                  </Text>
+                </View>
+              ) : isOwner ? (
+                <View className="flex-row items-center gap-2">
+                  {event.visibility === "public" ? (
+                    <Globe size={16} color="#627496" />
+                  ) : (
+                    <Lock size={16} color="#627496" />
+                  )}
+                  <Text className="text-sm text-neutral-2">
+                    {event.visibility === "public"
+                      ? "Your event is on Discover"
+                      : "Your event is unlisted"}
+                  </Text>
+                </View>
+              ) : null}
             </View>
-          ) : null}
-          {shouldShowCreator ? (
-            <View className="flex-row items-center gap-2">
-              {eventUser.userImage ? (
+            <View className="relative flex items-center justify-center">
+              {e.images?.[3] ? (
                 <Image
-                  source={{ uri: eventUser.userImage }}
-                  className="h-4 w-4 rounded-full"
+                  source={{ uri: e.images[3] }}
+                  className="h-20 w-20 rounded-md"
+                  resizeMode="cover"
                 />
               ) : (
-                <User size={16} color="#627496" />
+                <View className="h-20 w-20 rounded-md bg-accent-yellow" />
               )}
-              <Text className="text-sm text-neutral-2">
-                @{eventUser.username}
-              </Text>
-            </View>
-          ) : isOwner ? (
-            <View className="flex-row items-center gap-2">
-              {event.visibility === "public" ? (
-                <Globe size={16} color="#627496" />
-              ) : (
-                <Lock size={16} color="#627496" />
+              {ActionButton && (
+                <View className="absolute -bottom-2 -right-2">
+                  <ActionButton event={event} />
+                </View>
               )}
-              <Text className="text-sm text-neutral-2">
-                {event.visibility === "public"
-                  ? "Your event is on Discover"
-                  : "Your event is unlisted"}
-              </Text>
             </View>
-          ) : null}
-        </View>
-        <View className="relative flex items-center justify-center">
-          {e.images?.[3] ? (
-            <Image
-              source={{ uri: e.images[3] }}
-              className="h-20 w-20 rounded-md"
-              resizeMode="cover"
-            />
-          ) : (
-            <View className="h-20 w-20 rounded-md bg-accent-yellow" />
-          )}
-          {ActionButton && (
-            <View className="absolute -bottom-2 -right-2">
-              <ActionButton event={event} />
-            </View>
-          )}
-        </View>
-        {relativeTime && (
-          <View className="absolute left-0 right-0 top-2 flex items-center justify-center">
-            <View
-              className={cn(
-                "rounded-full bg-accent-yellow px-2 py-1",
-                isHappeningNow ? "bg-white" : "bg-accent-yellow",
-              )}
-            >
-              <Text className={cn("text-sm font-medium text-neutral-1")}>
-                {relativeTime}
-              </Text>
-            </View>
+            {relativeTime && (
+              <View className="absolute left-0 right-0 top-2 flex items-center justify-center">
+                <View
+                  className={cn(
+                    "rounded-full bg-accent-yellow px-2 py-1",
+                    isHappeningNow ? "bg-white" : "bg-accent-yellow",
+                  )}
+                >
+                  <Text className={cn("text-sm font-medium text-neutral-1")}>
+                    {relativeTime}
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
-        )}
-      </View>
+        </Pressable>
+      </Link>
     </EventMenu>
   );
 }
