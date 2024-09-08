@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, Text } from "react-native";
+import { TouchableOpacity } from "react-native";
+import { Sparkles } from "lucide-react-native";
 
 interface AddEventButtonProps {
   onPress: () => void;
@@ -7,12 +8,12 @@ interface AddEventButtonProps {
 
 const AddEventButton: React.FC<AddEventButtonProps> = ({ onPress }) => {
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
-      className="absolute bottom-4 right-4 rounded-full bg-blue-500 p-4"
+      className="absolute bottom-4 right-4 items-center justify-center rounded-full bg-interactive-2 p-4 shadow-lg"
     >
-      <Text className="font-bold text-white">Add Event</Text>
-    </Pressable>
+      <Sparkles size={24} color="#5A32FB" />
+    </TouchableOpacity>
   );
 };
 

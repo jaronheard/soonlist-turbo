@@ -90,10 +90,7 @@ function MyFeed() {
               showCreator="otherUsers"
             />
             <AddEventButton onPress={handlePresentModalPress} />
-            <CustomBottomSheetModal ref={bottomSheetRef}>
-              <Text className="text-2xl font-semibold">Add Event</Text>
-              {/* Add your event creation form or content here */}
-            </CustomBottomSheetModal>
+            <CustomBottomSheetModal ref={bottomSheetRef} />
           </View>
         )}
       </View>
