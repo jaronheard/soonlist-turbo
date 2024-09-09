@@ -1,6 +1,8 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
 import React, { useCallback, useMemo, useState } from "react";
 import { Image, Switch, Text, TouchableOpacity, View } from "react-native";
+import * as FileSystem from "expo-file-system";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -33,6 +35,10 @@ const CustomBottomSheetModal = React.forwardRef<
     api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
       onSettled: () => void utils.event.invalidate(),
     });
+  const eventFromImageThenCreateThenNotification =
+    api.ai.eventFromImageThenCreateThenNotification.useMutation({
+      onSettled: () => void utils.event.invalidate(),
+    });
   const { user } = useUser();
 
   const handleSheetChanges = useCallback((index: number) => {
@@ -55,11 +61,62 @@ const CustomBottomSheetModal = React.forwardRef<
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.8,
     });
-    if (!result.canceled) {
-      setImagePreview(result.assets[0]?.uri || "");
-      setInput(result.assets[0]?.uri.split("/").pop() || "");
+
+    if (!result.canceled && result.assets[0]) {
+      const imageUri = result.assets[0].uri;
+      setInput(imageUri.split("/").pop() || "");
+
+      try {
+        setImagePreview(imageUri); // Set preview immediately
+        const uploadedImageUrl = await uploadImage(imageUri);
+        setImagePreview(uploadedImageUrl); // Update with the uploaded URL
+      } catch (error) {
+        console.error("Error processing image:", error);
+        setImagePreview(null);
+        // Handle error (e.g., show an error message to the user)
+      }
+    }
+  };
+
+  const resizeImage = async (
+    uri: string,
+    targetWidth: number,
+  ): Promise<string> => {
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: targetWidth } }],
+      { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+    );
+
+    return result.uri;
+  };
+
+  const uploadImage = async (imageUri: string): Promise<string> => {
+    try {
+      const response = await FileSystem.uploadAsync(
+        "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
+        imageUri,
+        {
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+          httpMethod: "POST",
+          headers: {
+            "Content-Type": "image/jpeg",
+            Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
+          },
+        },
+      );
+
+      if (response.status !== 200) {
+        throw new Error(`Upload failed with status ${response.status}`);
+      }
+
+      const data = JSON.parse(response.body) as { fileUrl: string };
+      return data.fileUrl;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
     }
   };
 
@@ -68,16 +125,29 @@ const CustomBottomSheetModal = React.forwardRef<
     setInput("");
   };
 
-  const renderFooter = useCallback(
-    (props: React.JSX.IntrinsicAttributes & BottomSheetDefaultFooterProps) => {
-      const handleDismiss = () => {
-        (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-      };
+  const handleCreateEvent = async () => {
+    if (!input.trim() && !imagePreview) return;
+    setIsCreating(true);
 
-      const handleCreateEvent = () => {
-        if (!input.trim() && !imagePreview) return;
-        setIsCreating(true);
-
+    try {
+      if (imagePreview) {
+        eventFromImageThenCreateThenNotification.mutate(
+          {
+            imageUrl: imagePreview, // Now this is the uploaded image URL
+            timezone: "America/Los_Angeles",
+            expoPushToken,
+            lists: [],
+            userId: user?.id || "",
+            username: user?.username || "",
+            visibility: isPublic ? "public" : "private",
+          },
+          {
+            onSuccess: handleSuccess,
+            onError: handleError,
+          },
+        );
+      } else {
+        // Handle text input
         eventFromRawTextAndNotification.mutate(
           {
             rawText: input,
@@ -89,20 +159,31 @@ const CustomBottomSheetModal = React.forwardRef<
             visibility: isPublic ? "public" : "private",
           },
           {
-            onSuccess: () => {
-              setIsCreating(false);
-              setInput("");
-              setImagePreview(null);
-              handleDismiss();
-            },
-            onError: (error) => {
-              console.error("Failed to create event:", error);
-              setIsCreating(false);
-            },
+            onSuccess: handleSuccess,
+            onError: handleError,
           },
         );
-      };
+      }
+    } catch (error) {
+      console.error("Error processing event creation:", error);
+      setIsCreating(false);
+    }
+  };
 
+  const handleSuccess = () => {
+    setIsCreating(false);
+    setInput("");
+    setImagePreview(null);
+    (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
+  };
+
+  const handleError = (error: unknown) => {
+    console.error("Failed to create event:", error);
+    setIsCreating(false);
+  };
+
+  const renderFooter = useCallback(
+    (props: React.JSX.IntrinsicAttributes & BottomSheetDefaultFooterProps) => {
       return (
         <BottomSheetFooter {...props} bottomInset={24}>
           <View className="px-4 pb-4">
@@ -128,17 +209,7 @@ const CustomBottomSheetModal = React.forwardRef<
         </BottomSheetFooter>
       );
     },
-    [
-      isCreating,
-      input,
-      imagePreview,
-      eventFromRawTextAndNotification,
-      expoPushToken,
-      user?.id,
-      user?.username,
-      isPublic,
-      ref, // Add ref to the dependency array
-    ],
+    [handleCreateEvent, isCreating, input, imagePreview, ref],
   );
 
   return (
