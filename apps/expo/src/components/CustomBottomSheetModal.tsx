@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 import { BottomSheetBackdrop, BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -16,6 +16,7 @@ const CustomBottomSheetModal = React.forwardRef<
   CustomBottomSheetModalProps
 >((props, ref) => {
   const snapPoints = useMemo(() => ["33%", "66%"], []);
+  const [text, setText] = useState("");
   const textInputRef = useRef<TextInput>(null);
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
@@ -30,7 +31,7 @@ const CustomBottomSheetModal = React.forwardRef<
   }, []);
 
   const renderBackdrop = useCallback(
-    (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
+    (props: any) => (
       <BottomSheetBackdrop
         {...props}
         disappearsOnIndex={-1}
@@ -41,8 +42,8 @@ const CustomBottomSheetModal = React.forwardRef<
   );
 
   const handleAdd = () => {
-    const text = textInputRef.current?.value;
-    if (!text?.trim()) return;
+    console.log("handleAdd", text);
+    if (!text.trim()) return;
     eventFromRawTextAndNotification.mutate({
       rawText: text,
       timezone: "America/Los_Angeles",
@@ -51,9 +52,7 @@ const CustomBottomSheetModal = React.forwardRef<
       userId: user?.id || "",
       username: user?.username || "",
     });
-    if (textInputRef.current) {
-      textInputRef.current.clear();
-    }
+    setText("");
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
   };
 
@@ -71,6 +70,8 @@ const CustomBottomSheetModal = React.forwardRef<
           ref={textInputRef}
           className="mb-4 h-24 w-full rounded-md border border-neutral-3 p-2"
           placeholder="Describe your event"
+          defaultValue={text}
+          onChangeText={setText}
           multiline
           numberOfLines={4}
           onSubmitEditing={handleAdd}
