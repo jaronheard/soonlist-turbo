@@ -1,3 +1,4 @@
+import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
 import React, { useCallback, useMemo, useState } from "react";
 import { Image, Switch, Text, TouchableOpacity, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -57,8 +58,8 @@ const CustomBottomSheetModal = React.forwardRef<
       quality: 1,
     });
     if (!result.canceled) {
-      setImagePreview(result.assets[0].uri);
-      setInput(result.assets[0].uri.split("/").pop() || "");
+      setImagePreview(result.assets[0]?.uri || "");
+      setInput(result.assets[0]?.uri.split("/").pop() || "");
     }
   };
 
@@ -68,7 +69,11 @@ const CustomBottomSheetModal = React.forwardRef<
   };
 
   const renderFooter = useCallback(
-    (props) => {
+    (props: React.JSX.IntrinsicAttributes & BottomSheetDefaultFooterProps) => {
+      const handleDismiss = () => {
+        (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
+      };
+
       const handleCreateEvent = () => {
         if (!input.trim() && !imagePreview) return;
         setIsCreating(true);
@@ -88,7 +93,7 @@ const CustomBottomSheetModal = React.forwardRef<
               setIsCreating(false);
               setInput("");
               setImagePreview(null);
-              (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
+              handleDismiss();
             },
             onError: (error) => {
               console.error("Failed to create event:", error);
@@ -124,14 +129,15 @@ const CustomBottomSheetModal = React.forwardRef<
       );
     },
     [
+      isCreating,
       input,
       imagePreview,
-      isCreating,
-      isPublic,
       eventFromRawTextAndNotification,
       expoPushToken,
-      user,
-      ref,
+      user?.id,
+      user?.username,
+      isPublic,
+      ref, // Add ref to the dependency array
     ],
   );
 
