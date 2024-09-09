@@ -1,7 +1,11 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useMemo } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
-import { BottomSheetBackdrop, BottomSheetModal } from "@gorhom/bottom-sheet";
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetTextInput,
+} from "@gorhom/bottom-sheet";
 import { Sparkles } from "lucide-react-native";
 
 import { useNotification } from "~/providers/NotificationProvider";
@@ -16,8 +20,7 @@ const CustomBottomSheetModal = React.forwardRef<
   CustomBottomSheetModalProps
 >((props, ref) => {
   const snapPoints = useMemo(() => ["33%", "66%"], []);
-  const [text, setText] = useState("");
-  const textInputRef = useRef<TextInput>(null);
+  const [text, setText] = React.useState("");
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
   const eventFromRawTextAndNotification =
@@ -31,7 +34,7 @@ const CustomBottomSheetModal = React.forwardRef<
   }, []);
 
   const renderBackdrop = useCallback(
-    (props: any) => (
+    (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
       <BottomSheetBackdrop
         {...props}
         disappearsOnIndex={-1}
@@ -42,7 +45,6 @@ const CustomBottomSheetModal = React.forwardRef<
   );
 
   const handleAdd = () => {
-    console.log("handleAdd", text);
     if (!text.trim()) return;
     eventFromRawTextAndNotification.mutate({
       rawText: text,
@@ -66,16 +68,16 @@ const CustomBottomSheetModal = React.forwardRef<
     >
       <View className="flex-1 p-4">
         <Text className="mb-4 text-2xl font-semibold">Add Event</Text>
-        <TextInput
-          ref={textInputRef}
-          className="mb-4 h-24 w-full rounded-md border border-neutral-3 p-2"
-          placeholder="Describe your event"
-          defaultValue={text}
-          onChangeText={setText}
-          multiline
-          numberOfLines={4}
-          onSubmitEditing={handleAdd}
-        />
+        <View className="mb-4 h-24 w-full overflow-hidden rounded-md border border-neutral-3 px-3 py-2">
+          <BottomSheetTextInput
+            className="h-full w-full"
+            placeholder="Describe your event"
+            defaultValue={text}
+            onChangeText={setText}
+            multiline
+            textAlignVertical="top"
+          />
+        </View>
         <TouchableOpacity
           className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2"
           onPress={handleAdd}
