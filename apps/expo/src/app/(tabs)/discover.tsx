@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from "@discord/bottom-sheet";
 import React, { useCallback, useRef } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 

@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from "@discord/bottom-sheet";
 import React, { useCallback, useRef } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 import { Navigation2 } from "lucide-react-native";
