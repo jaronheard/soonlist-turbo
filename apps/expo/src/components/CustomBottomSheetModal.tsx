@@ -1,9 +1,10 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Image, Switch, Text, TouchableOpacity, View } from "react-native";
-// import * as ImagePicker from "expo-image-picker";
+import * as ImagePicker from "expo-image-picker";
 import { useUser } from "@clerk/clerk-expo";
 import {
   BottomSheetBackdrop,
+  BottomSheetFooter,
   BottomSheetModal,
   BottomSheetTextInput,
 } from "@discord/bottom-sheet";
@@ -20,10 +21,9 @@ const CustomBottomSheetModal = React.forwardRef<
   BottomSheetModal,
   CustomBottomSheetModalProps
 >((props, ref) => {
-  const snapPoints = useMemo(() => ["25%", "40%"], []);
+  const snapPoints = useMemo(() => [388], []);
   const [input, setInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [visibility, setVisibility] = useState("private");
   const [isCreating, setIsCreating] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const { expoPushToken } = useNotification();
@@ -50,16 +50,16 @@ const CustomBottomSheetModal = React.forwardRef<
   );
 
   const handleImageUpload = async () => {
-    // const result = await ImagePicker.launchImageLibraryAsync({
-    //   mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    //   allowsEditing: true,
-    //   aspect: [4, 3],
-    //   quality: 1,
-    // });
-    // if (!result.canceled) {
-    //   setImagePreview(result.assets[0].uri);
-    //   setInput(result.assets[0].uri.split("/").pop() || "");
-    // }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setImagePreview(result.assets[0].uri);
+      setInput(result.assets[0].uri.split("/").pop() || "");
+    }
   };
 
   const clearImage = () => {
@@ -67,45 +67,83 @@ const CustomBottomSheetModal = React.forwardRef<
     setInput("");
   };
 
-  const handleCreateEvent = () => {
-    if (!input.trim() && !imagePreview) return;
-    setIsCreating(true);
+  const renderFooter = useCallback(
+    (props) => {
+      const handleCreateEvent = () => {
+        if (!input.trim() && !imagePreview) return;
+        setIsCreating(true);
 
-    eventFromRawTextAndNotification.mutate(
-      {
-        rawText: input,
-        timezone: "America/Los_Angeles",
-        expoPushToken,
-        lists: [],
-        userId: user?.id || "",
-        username: user?.username || "",
-        visibility: isPublic ? "public" : "private",
-        // Remove the imageUrl property if it's not expected in the mutation input
-        // imageUrl: imagePreview,
-      },
-      {
-        onSuccess: () => {
-          setIsCreating(false);
-          setInput("");
-          setImagePreview(null);
-          (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-        },
-        onError: (error) => {
-          console.error("Failed to create event:", error);
-          setIsCreating(false);
-        },
-      },
-    );
-  };
+        eventFromRawTextAndNotification.mutate(
+          {
+            rawText: input,
+            timezone: "America/Los_Angeles",
+            expoPushToken,
+            lists: [],
+            userId: user?.id || "",
+            username: user?.username || "",
+            visibility: isPublic ? "public" : "private",
+          },
+          {
+            onSuccess: () => {
+              setIsCreating(false);
+              setInput("");
+              setImagePreview(null);
+              (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
+            },
+            onError: (error) => {
+              console.error("Failed to create event:", error);
+              setIsCreating(false);
+            },
+          },
+        );
+      };
+
+      return (
+        <BottomSheetFooter {...props} bottomInset={24}>
+          <View className="px-4 pb-4">
+            <TouchableOpacity
+              className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2"
+              onPress={handleCreateEvent}
+              disabled={isCreating || (!input.trim() && !imagePreview)}
+            >
+              {isCreating ? (
+                <Text className="text-xl font-bold text-white">
+                  Creating...
+                </Text>
+              ) : (
+                <>
+                  <Sparkles size={16} color="white" />
+                  <Text className="ml-2 text-xl font-bold text-white">
+                    Create Event
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </BottomSheetFooter>
+      );
+    },
+    [
+      input,
+      imagePreview,
+      isCreating,
+      isPublic,
+      eventFromRawTextAndNotification,
+      expoPushToken,
+      user,
+      ref,
+    ],
+  );
 
   return (
     <BottomSheetModal
       ref={ref}
-      index={1}
+      index={0}
       snapPoints={snapPoints}
       onChange={handleSheetChanges}
       backdropComponent={renderBackdrop}
       keyboardBehavior="interactive"
+      renderFooter={renderFooter}
     >
       <View className="flex-1 p-4">
         <Text className="mb-4 text-2xl font-semibold">Add New Event</Text>
@@ -118,17 +156,17 @@ const CustomBottomSheetModal = React.forwardRef<
             >
               <View className="flex-row items-center">
                 <ImageIcon size={16} color="black" />
-                <Text className="ml-2">
+                <Text className="ml-2 font-medium">
                   {imagePreview ? "Change Image" : "Upload Image"}
                 </Text>
               </View>
             </TouchableOpacity>
           </View>
           {imagePreview ? (
-            <View className="relative mb-4">
+            <View className="relative">
               <Image
                 source={{ uri: imagePreview }}
-                style={{ width: "100%", height: 150 }}
+                style={{ width: "100%", height: 124 }}
                 className="rounded-md"
               />
               <TouchableOpacity
@@ -139,11 +177,11 @@ const CustomBottomSheetModal = React.forwardRef<
               </TouchableOpacity>
             </View>
           ) : (
-            <View className="mb-4 h-24 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
+            <View className="mb-4 h-32 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
               <BottomSheetTextInput
                 className="h-full w-full"
                 placeholder="Enter event details or paste a URL"
-                value={input}
+                defaultValue={input}
                 onChangeText={setInput}
                 multiline
                 textAlignVertical="top"
@@ -155,22 +193,6 @@ const CustomBottomSheetModal = React.forwardRef<
           <Text className="text-base font-medium">Show on Discover</Text>
           <Switch value={isPublic} onValueChange={setIsPublic} />
         </View>
-        <TouchableOpacity
-          className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2"
-          onPress={handleCreateEvent}
-          disabled={isCreating || (!input.trim() && !imagePreview)}
-        >
-          {isCreating ? (
-            <Text className="text-xl font-bold text-white">Creating...</Text>
-          ) : (
-            <>
-              <Sparkles size={16} color="white" />
-              <Text className="ml-2 text-xl font-bold text-white">
-                Create Event
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
       </View>
     </BottomSheetModal>
   );
