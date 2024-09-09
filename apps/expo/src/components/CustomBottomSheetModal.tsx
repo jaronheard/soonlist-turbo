@@ -5,7 +5,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetTextInput,
-} from "@gorhom/bottom-sheet";
+} from "@discord/bottom-sheet";
 import { Sparkles } from "lucide-react-native";
 
 import { useNotification } from "~/providers/NotificationProvider";
@@ -19,7 +19,7 @@ const CustomBottomSheetModal = React.forwardRef<
   BottomSheetModal,
   CustomBottomSheetModalProps
 >((props, ref) => {
-  const snapPoints = useMemo(() => ["33%", "66%"], []);
+  const snapPoints = useMemo(() => ["33%", "50%"], []);
   const [text, setText] = React.useState("");
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
@@ -65,6 +65,7 @@ const CustomBottomSheetModal = React.forwardRef<
       snapPoints={snapPoints}
       onChange={handleSheetChanges}
       backdropComponent={renderBackdrop}
+      keyboardBehavior="interactive"
     >
       <View className="flex-1 p-4">
         <Text className="mb-4 text-2xl font-semibold">Add Event</Text>

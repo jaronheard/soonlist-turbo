@@ -1,4 +1,4 @@
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import type { BottomSheetModal } from "@discord/bottom-sheet";
 import React, { useCallback, useRef } from "react";
 import { Text, View } from "react-native";
 import { Stack } from "expo-router";
