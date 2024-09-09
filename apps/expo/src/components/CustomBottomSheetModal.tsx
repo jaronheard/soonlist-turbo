@@ -2,7 +2,6 @@ import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/co
 import React, { useCallback, useMemo, useState } from "react";
 import { Image, Switch, Text, TouchableOpacity, View } from "react-native";
 import * as FileSystem from "expo-file-system";
-import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -78,19 +77,6 @@ const CustomBottomSheetModal = React.forwardRef<
         // Handle error (e.g., show an error message to the user)
       }
     }
-  };
-
-  const resizeImage = async (
-    uri: string,
-    targetWidth: number,
-  ): Promise<string> => {
-    const result = await ImageManipulator.manipulateAsync(
-      uri,
-      [{ resize: { width: targetWidth } }],
-      { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
-    );
-
-    return result.uri;
   };
 
   const uploadImage = async (imageUri: string): Promise<string> => {
@@ -180,6 +166,19 @@ const CustomBottomSheetModal = React.forwardRef<
   const handleError = (error: unknown) => {
     console.error("Failed to create event:", error);
     setIsCreating(false);
+
+    // Check if the error message matches the specific error
+    if (
+      error instanceof Error &&
+      error.message.includes("Must use physical device for push notifications")
+    ) {
+      // Dismiss the sheet
+      (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
+
+      // Optionally, you can show an alert or toast to inform the user
+      // For example, using Alert from react-native:
+      // Alert.alert("Error", "This feature requires a physical device for push notifications.");
+    }
   };
 
   const renderFooter = useCallback(
