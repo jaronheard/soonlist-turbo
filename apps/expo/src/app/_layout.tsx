@@ -129,39 +129,48 @@ const InitialLayout = () => {
   const segments = useSegments();
   const router = useRouter();
   const rootNavigationState = useRootNavigationState();
+  useIntentHandler();
 
   useEffect(() => {
     if (!isLoaded || !rootNavigationState.key) return;
 
     const inAuthGroup = segments[0] === "(auth)";
 
-    const checkOnboardingStatus = async () => {
+    const checkAuthAndOnboarding = async () => {
       if (isSignedIn && inAuthGroup) {
-        const status = await SecureStore.getItemAsync(
+        const hasCompletedOnboarding = await SecureStore.getItemAsync(
           "hasCompletedOnboarding",
-          {
-            keychainAccessGroup: getKeyChainAccessGroup(),
-          },
+          { keychainAccessGroup: getKeyChainAccessGroup() },
         );
-        if (status === "true") {
-          const intentType = await SecureStore.getItemAsync("intentType", {
-            keychainAccessGroup: getKeyChainAccessGroup(),
-          });
-          if (intentType === "new") {
-            router.replace("/feed");
-          } else {
-            router.replace("/feed");
-          }
+
+        if (hasCompletedOnboarding === "true") {
+          router.replace("/feed");
         } else {
           router.replace("/onboarding");
         }
-      }
-      if (!isSignedIn && !inAuthGroup) {
+      } else if (!isSignedIn && !inAuthGroup) {
         router.replace("/sign-in");
       }
     };
 
-    void checkOnboardingStatus();
+    const handleIntentRedirect = async () => {
+      if (isSignedIn) {
+        const intentType = await SecureStore.getItemAsync("intentType", {
+          keychainAccessGroup: getKeyChainAccessGroup(),
+        });
+        if (intentType === "new") {
+          // Handle new intent type
+          router.replace("/feed"); // Adjust this route as needed
+        }
+        // Clear the intent type after handling
+        await SecureStore.deleteItemAsync("intentType", {
+          keychainAccessGroup: getKeyChainAccessGroup(),
+        });
+      }
+    };
+
+    void checkAuthAndOnboarding();
+    void handleIntentRedirect();
   }, [isSignedIn, rootNavigationState.key, router, segments, isLoaded]);
 
   return (
@@ -200,7 +209,6 @@ function RootLayoutContent() {
   const { expoPushToken } = useNotification();
   useAppStateRefresh();
   const ref = useNavigationContainerRef();
-  useIntentHandler();
 
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);

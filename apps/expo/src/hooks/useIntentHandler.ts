@@ -4,6 +4,14 @@ import * as SecureStore from "expo-secure-store";
 
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
+type IntentType = "new";
+const scheme =
+  process.env.EXPO_PUBLIC_APP_ENV === "development"
+    ? "soonlist.dev"
+    : "soonlist";
+
+const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
+
 export function useIntentHandler() {
   useEffect(() => {
     const handleInitialURL = async () => {
@@ -26,27 +34,47 @@ export function useIntentHandler() {
 }
 
 async function handleIntent(url: string) {
+  // Ensure the third slash for consistency
+  if (url.startsWith(`${scheme}://`) && !url.startsWith(`${scheme}:///`)) {
+    url = url.replace(`${scheme}://`, `${scheme}:///`);
+  }
+
   const parsedUrl = new URL(url);
+  const [_, intent, intentType] = parsedUrl.pathname.split("/");
 
-  if (parsedUrl.pathname === "/intent/new") {
-    const text = parsedUrl.searchParams.get("text");
-    const imageUri = parsedUrl.searchParams.get("imageUri");
+  if (intent !== "intent") return;
 
-    await SecureStore.setItemAsync("intentType", "new", {
-      keychainAccessGroup: getKeyChainAccessGroup(),
-    });
-    if (text) {
-      await SecureStore.setItemAsync("intentText", decodeURIComponent(text), {
+  const params = parsedUrl.searchParams;
+
+  switch (intentType as IntentType) {
+    case "new": {
+      const text = params.get("text");
+      const imageUri = params.get("imageUri");
+
+      await SecureStore.setItemAsync("intentType", "new", {
         keychainAccessGroup: getKeyChainAccessGroup(),
       });
-    } else if (imageUri) {
-      await SecureStore.setItemAsync(
-        "intentImageUri",
-        decodeURIComponent(imageUri),
-        {
+
+      if (text) {
+        await SecureStore.setItemAsync("intentText", decodeURIComponent(text), {
           keychainAccessGroup: getKeyChainAccessGroup(),
-        },
-      );
+        });
+      } else if (imageUri) {
+        if (VALID_IMAGE_REGEX.test(imageUri)) {
+          await SecureStore.setItemAsync(
+            "intentImageUri",
+            decodeURIComponent(imageUri),
+            {
+              keychainAccessGroup: getKeyChainAccessGroup(),
+            },
+          );
+        }
+      }
+      break;
+    }
+    default: {
+      // Handle unknown intent types
+      console.warn(`Unknown intent type: ${intentType}`);
     }
   }
 }
