@@ -54,7 +54,7 @@ const CustomBottomSheetModal = React.forwardRef<
         setInput(initialParams.text);
       } else if (initialParams.imageUri) {
         const [uri, width, height] = initialParams.imageUri.split("|");
-        setImagePreview(uri ?? null);
+        handleImageUploadFromUri(uri);
         setInput(`Image: ${width}x${height}`);
       }
     }
@@ -75,6 +75,18 @@ const CustomBottomSheetModal = React.forwardRef<
     [],
   );
 
+  const handleImageUploadFromUri = async (uri: string) => {
+    try {
+      setImagePreview(uri); // Set preview immediately
+      const uploadedImageUrl = await uploadImage(uri);
+      setImagePreview(uploadedImageUrl); // Update with the uploaded URL
+    } catch (error) {
+      console.error("Error processing image:", error);
+      setImagePreview(null);
+      // Handle error (e.g., show an error message to the user)
+    }
+  };
+
   const handleImageUpload = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -86,16 +98,7 @@ const CustomBottomSheetModal = React.forwardRef<
     if (!result.canceled && result.assets[0]) {
       const imageUri = result.assets[0].uri;
       setInput(imageUri.split("/").pop() || "");
-
-      try {
-        setImagePreview(imageUri); // Set preview immediately
-        const uploadedImageUrl = await uploadImage(imageUri);
-        setImagePreview(uploadedImageUrl); // Update with the uploaded URL
-      } catch (error) {
-        console.error("Error processing image:", error);
-        setImagePreview(null);
-        // Handle error (e.g., show an error message to the user)
-      }
+      await handleImageUploadFromUri(imageUri);
     }
   };
 
