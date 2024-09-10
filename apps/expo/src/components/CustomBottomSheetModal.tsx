@@ -12,6 +12,7 @@ import {
 } from "@discord/bottom-sheet";
 import { Image as ImageIcon, Sparkles, X } from "lucide-react-native";
 
+import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useNotification } from "~/providers/NotificationProvider";
 import { api } from "~/utils/api";
 
@@ -39,6 +40,13 @@ const CustomBottomSheetModal = React.forwardRef<
       onSettled: () => void utils.event.invalidate(),
     });
   const { user } = useUser();
+
+  // Use the intent handler
+  useIntentHandler({
+    bottomSheetModalRef: ref as React.RefObject<BottomSheetModal>,
+    setInput,
+    setImagePreview,
+  });
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);
