@@ -58,22 +58,26 @@ class ShareViewController: UIViewController {
   }
 
   private func handleImage(item: NSItemProvider) async {
+    var valid = true
+    var imageUriInfo: String?
+
     do {
-      var imageUriInfo: String?
+        if let dataUri = try await item.loadItem(forTypeIdentifier: "public.image") as? URL {
+            let data = try Data(contentsOf: dataUri)
+            let image = UIImage(data: data)
+            imageUriInfo = self.saveImageWithInfo(image)
+        } else if let image = try await item.loadItem(forTypeIdentifier: "public.image") as? UIImage {
+            imageUriInfo = self.saveImageWithInfo(image)
+        }
+    } catch {
+        valid = false
+    }
 
-      if let dataUri = try await item.loadItem(forTypeIdentifier: "public.image") as? URL {
-        let data = try Data(contentsOf: dataUri)
-        let image = UIImage(data: data)
-        imageUriInfo = self.saveImageWithInfo(image)
-      } else if let image = try await item.loadItem(forTypeIdentifier: "public.image") as? UIImage {
-        imageUriInfo = self.saveImageWithInfo(image)
-      }
-
-      if let imageUriInfo = imageUriInfo,
-         let encoded = imageUriInfo.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-         let url = URL(string: "\(self.appScheme)://intent/new?imageUri=\(encoded)") {
+    if valid,
+       let imageUriInfo = imageUriInfo,
+       let encoded = imageUriInfo.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
+       let url = URL(string: "\(self.appScheme)://intent/new?imageUri=\(encoded)") {
         _ = self.openURL(url)
-      }
     }
 
     self.completeRequest()
