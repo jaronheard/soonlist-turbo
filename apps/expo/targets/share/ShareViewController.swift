@@ -10,7 +10,6 @@ class ShareViewController: UIViewController {
     super.viewDidAppear(animated)
 
     guard let extensionItem = extensionContext?.inputItems.first as? NSExtensionItem,
-          let attachments = extensionItem.attachments,
           let firstAttachment = extensionItem.attachments?.first
     else {
       self.completeRequest()
@@ -23,7 +22,7 @@ class ShareViewController: UIViewController {
       } else if firstAttachment.hasItemConformingToTypeIdentifier("public.url") {
         await self.handleUrl(item: firstAttachment)
       } else if firstAttachment.hasItemConformingToTypeIdentifier("public.image") {
-        await self.handleImages(items: attachments)
+        await self.handleImage(item: firstAttachment)
       } else {
         self.completeRequest()
       }
@@ -58,48 +57,23 @@ class ShareViewController: UIViewController {
     }
   }
 
-  private func handleImages(items: [NSItemProvider]) async {
-    let firstFourItems: [NSItemProvider]
-    if items.count < 4 {
-      firstFourItems = items
-    } else {
-      firstFourItems = Array(items[0...3])
-    }
-
-    var valid = true
-    var imageUris = ""
-
-    for (index, item) in firstFourItems.enumerated() {
+  private func handleImage(item: NSItemProvider) async {
+    do {
       var imageUriInfo: String?
 
-      do {
-        if let dataUri = try await item.loadItem(forTypeIdentifier: "public.image") as? URL {
-          // We need to duplicate this image, since we don't have access to the outgoing temp directory
-          // We also will get the image dimensions here, sinze RN makes it difficult to get those dimensions for local files
-          let data = try Data(contentsOf: dataUri)
-          let image = UIImage(data: data)
-          imageUriInfo = self.saveImageWithInfo(image)
-        } else if let image = try await item.loadItem(forTypeIdentifier: "public.image") as? UIImage {
-          imageUriInfo = self.saveImageWithInfo(image)
-        }
-      } catch {
-        valid = false
+      if let dataUri = try await item.loadItem(forTypeIdentifier: "public.image") as? URL {
+        let data = try Data(contentsOf: dataUri)
+        let image = UIImage(data: data)
+        imageUriInfo = self.saveImageWithInfo(image)
+      } else if let image = try await item.loadItem(forTypeIdentifier: "public.image") as? UIImage {
+        imageUriInfo = self.saveImageWithInfo(image)
       }
 
-      if let imageUriInfo = imageUriInfo {
-        imageUris.append(imageUriInfo)
-        if index < items.count - 1 {
-          imageUris.append(",")
-        }
-      } else {
-        valid = false
+      if let imageUriInfo = imageUriInfo,
+         let encoded = imageUriInfo.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
+         let url = URL(string: "\(self.appScheme)://intent/new?imageUri=\(encoded)") {
+        _ = self.openURL(url)
       }
-    }
-
-    if valid,
-       let encoded = imageUris.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-       let url = URL(string: "\(self.appScheme)://intent/new?imageUris=\(encoded)") {
-      _ = self.openURL(url)
     }
 
     self.completeRequest()
