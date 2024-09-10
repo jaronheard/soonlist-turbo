@@ -1,0 +1,36 @@
+diff --git a/src/components/bottomSheet/BottomSheet.tsx b/src/components/bottomSheet/BottomSheet.tsx
+index 2897fef6f6397b2b9773fd2e3a0511e7c4b4faaa..b1aeef2ed081bd3560d380a5725774a9db2e7198 100644
+--- a/src/components/bottomSheet/BottomSheet.tsx
++++ b/src/components/bottomSheet/BottomSheet.tsx
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import React, {
+   useMemo,
+   useCallback,
+diff --git a/src/components/bottomSheetModalProvider/BottomSheetModalProvider.tsx b/src/components/bottomSheetModalProvider/BottomSheetModalProvider.tsx
+index 23a9f4dc925c0ab158438b8d3cff7e1ea1a8d232..1514896af920796654143a46b851f25292cc047e 100644
+--- a/src/components/bottomSheetModalProvider/BottomSheetModalProvider.tsx
++++ b/src/components/bottomSheetModalProvider/BottomSheetModalProvider.tsx
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import React, { useCallback, useMemo, useRef } from 'react';
+ import { useSharedValue } from 'react-native-reanimated';
+ import { PortalProvider } from '@gorhom/portal';
+diff --git a/src/hooks/useGestureEventsHandlersDefault.tsx b/src/hooks/useGestureEventsHandlersDefault.tsx
+index a5aa3140e549ba188979f028218e3143ddaa483e..1a3fef2db063b4281c76b97a3275e02cc8fb3b3b 100644
+--- a/src/hooks/useGestureEventsHandlersDefault.tsx
++++ b/src/hooks/useGestureEventsHandlersDefault.tsx
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { Keyboard, Platform } from 'react-native';
+ import { runOnJS, useWorkletCallback } from 'react-native-reanimated';
+ import { useBottomSheetInternal } from './useBottomSheetInternal';
+diff --git a/src/utilities/snapPoint.ts b/src/utilities/snapPoint.ts
+index 1b99e1653b2651103bfb348f7d9cd409d3784c41..6aee0f91d8d564d1968daae5ac7a7dea9b00a334 100644
+--- a/src/utilities/snapPoint.ts
++++ b/src/utilities/snapPoint.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ export const snapPoint = (
+   value: number,
+   velocity: number,

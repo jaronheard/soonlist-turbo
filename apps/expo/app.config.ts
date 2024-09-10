@@ -39,7 +39,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-calendar",
       {
         calendarPermission:
-          "The app needs to access your calendar to add events.",
+          "The app needs to access your calendars to add events.",
+      },
+    ],
+    [
+      "expo-image-picker",
+      {
+        photosPermission: "The app accesses photos you select to add events.",
       },
     ],
     [

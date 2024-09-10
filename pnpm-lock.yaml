@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
+  '@discord/bottom-sheet@4.6.1':
+    hash: 6pstke3fpgakyzhlll4wzjheey
+    path: patches/@discord__bottom-sheet@4.6.1.patch
   expo-secure-store@12.8.1:
     hash: cwj7rupk5qsghvwsmaweq5mrgy
     path: patches/expo-secure-store@12.8.1.patch
@@ -46,6 +49,9 @@ importers:
       '@clerk/clerk-expo':
         specifier: ^1.1.0
         version: 1.1.0(@types/react@18.3.1)(expo-auth-session@5.4.0(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(expo-web-browser@12.8.2(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)))(react-dom@18.3.1(react@18.3.1))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+      '@discord/bottom-sheet':
+        specifier: bluesky-social/react-native-bottom-sheet#28a87d1bb55e10fc355fa1455545a30734995908
+        version: https://codeload.github.com/bluesky-social/react-native-bottom-sheet/tar.gz/28a87d1bb55e10fc355fa1455545a30734995908(patch_hash=6pstke3fpgakyzhlll4wzjheey)(@shopify/flash-list@1.6.3(@babel/runtime@7.24.4)(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1))(@types/react@18.3.1)(react-native-gesture-handler@2.14.1(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1))(react-native-reanimated@3.6.3(@babel/core@7.24.4)(@babel/plugin-proposal-nullish-coalescing-operator@7.18.6(@babel/core@7.24.4))(@babel/plugin-proposal-optional-chaining@7.21.0(@babel/core@7.24.4))(@babel/plugin-transform-arrow-functions@7.24.1(@babel/core@7.24.4))(@babel/plugin-transform-shorthand-properties@7.24.1(@babel/core@7.24.4))(@babel/plugin-transform-template-literals@7.24.1(@babel/core@7.24.4))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       '@expo/metro-config':
         specifier: ^0.17.6
         version: 0.17.7(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))
@@ -109,6 +115,12 @@ importers:
       expo-haptics:
         specifier: ~12.8.1
         version: 12.8.1(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
+      expo-image-manipulator:
+        specifier: ~11.8.0
+        version: 11.8.0(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
+      expo-image-picker:
+        specifier: ~14.7.1
+        version: 14.7.1(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
       expo-linking:
         specifier: ~6.2.2
         version: 6.2.2(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
@@ -212,6 +224,9 @@ importers:
       '@types/babel__core':
         specifier: ^7.20.5
         version: 7.20.5
+      '@types/invariant':
+        specifier: ^2.2.37
+        version: 2.2.37
       '@types/react':
         specifier: ^18.3.1
         version: 18.3.1
@@ -1683,6 +1698,23 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
+  '@discord/bottom-sheet@https://codeload.github.com/bluesky-social/react-native-bottom-sheet/tar.gz/28a87d1bb55e10fc355fa1455545a30734995908':
+    resolution: {tarball: https://codeload.github.com/bluesky-social/react-native-bottom-sheet/tar.gz/28a87d1bb55e10fc355fa1455545a30734995908}
+    version: 4.6.1
+    peerDependencies:
+      '@shopify/flash-list': '*'
+      '@types/react': '*'
+      '@types/react-native': '*'
+      react: '*'
+      react-native: '*'
+      react-native-gesture-handler: '>=1.10.1'
+      react-native-reanimated: '>=2.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-native':
+        optional: true
+
   '@egjs/hammerjs@2.0.17':
     resolution: {integrity: sha512-XQsZgjm2EcVUiZQf11UBJQfmZeEmOW8DpI1gsFeln6w0ae0ii4dMQEQ0kjl6DspdWX1aGY1/loyXnP0JS06e/A==}
     engines: {node: '>=0.8.0'}
@@ -2158,6 +2190,12 @@ packages:
 
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
+
+  '@gorhom/portal@1.0.14':
+    resolution: {integrity: sha512-MXyL4xvCjmgaORr/rtryDNFy3kU4qUbKlwtQqqsygd0xX3mhKjOLn6mQK8wfu0RkoE0pBE0nAasRoHua+/QZ7A==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
 
   '@graphql-typed-document-node/core@3.2.0':
     resolution: {integrity: sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==}
@@ -3437,6 +3475,9 @@ packages:
 
   '@types/inquirer@6.5.0':
     resolution: {integrity: sha512-rjaYQ9b9y/VFGOpqBEXRavc3jh0a+e6evAbI31tMda8VlPaSy0AZJfXsvmIe3wklc7W6C3zCSfleuMXR7NOyXw==}
+
+  '@types/invariant@2.2.37':
+    resolution: {integrity: sha512-IwpIMieE55oGWiXkQPSBY1nw1nFs6bsKXTFskNY8sdS17K24vyEBRQZEwlRS7ZmXCWnJcQtbxWzly+cODWGs2A==}
 
   '@types/istanbul-lib-coverage@2.0.6':
     resolution: {integrity: sha512-2QF/t/auWm0lsy8XtKVPG19v3sSOQlJe/YHZgfjb/KBBHOGSV+J2q/S671rcq9uTBrLAXmZpqJiaQbMT+zNU1w==}
@@ -5126,6 +5167,21 @@ packages:
 
   expo-haptics@12.8.1:
     resolution: {integrity: sha512-ntLsHkfle8K8w9MW8pZEw92ZN3sguaGUSSIxv30fPKNeQFu7Cq/h47Qv3tONv2MO3wU48N9FbKnant6XlfptpA==}
+    peerDependencies:
+      expo: '*'
+
+  expo-image-loader@4.6.0:
+    resolution: {integrity: sha512-RHQTDak7/KyhWUxikn2yNzXL7i2cs16cMp6gEAgkHOjVhoCJQoOJ0Ljrt4cKQ3IowxgCuOrAgSUzGkqs7omj8Q==}
+    peerDependencies:
+      expo: '*'
+
+  expo-image-manipulator@11.8.0:
+    resolution: {integrity: sha512-ZWVrHnYmwJq6h7auk+ropsxcNi+LyZcPFKQc8oy+JA0SaJosfShvkCm7RADWAunHmfPCmjHrhwPGEu/rs7WG/A==}
+    peerDependencies:
+      expo: '*'
+
+  expo-image-picker@14.7.1:
+    resolution: {integrity: sha512-ILQVOJgI3aEzrDmCFGDPtpAepYkn8mot8G7vfQ51BfFdQbzL6N3Wm1fS/ofdWlAZJl/qT2DwaIh5xYmf3SyGZA==}
     peerDependencies:
       expo: '*'
 
@@ -9917,6 +9973,18 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
+  ? '@discord/bottom-sheet@https://codeload.github.com/bluesky-social/react-native-bottom-sheet/tar.gz/28a87d1bb55e10fc355fa1455545a30734995908(patch_hash=6pstke3fpgakyzhlll4wzjheey)(@shopify/flash-list@1.6.3(@babel/runtime@7.24.4)(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1))(@types/react@18.3.1)(react-native-gesture-handler@2.14.1(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1))(react-native-reanimated@3.6.3(@babel/core@7.24.4)(@babel/plugin-proposal-nullish-coalescing-operator@7.18.6(@babel/core@7.24.4))(@babel/plugin-proposal-optional-chaining@7.21.0(@babel/core@7.24.4))(@babel/plugin-transform-arrow-functions@7.24.1(@babel/core@7.24.4))(@babel/plugin-transform-shorthand-properties@7.24.1(@babel/core@7.24.4))(@babel/plugin-transform-template-literals@7.24.1(@babel/core@7.24.4))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)'
+  : dependencies:
+      '@gorhom/portal': 1.0.14(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+      '@shopify/flash-list': 1.6.3(@babel/runtime@7.24.4)(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+      invariant: 2.2.4
+      react: 18.3.1
+      react-native: 0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1)
+      react-native-gesture-handler: 2.14.1(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+      react-native-reanimated: 3.6.3(@babel/core@7.24.4)(@babel/plugin-proposal-nullish-coalescing-operator@7.18.6(@babel/core@7.24.4))(@babel/plugin-proposal-optional-chaining@7.21.0(@babel/core@7.24.4))(@babel/plugin-transform-arrow-functions@7.24.1(@babel/core@7.24.4))(@babel/plugin-transform-shorthand-properties@7.24.1(@babel/core@7.24.4))(@babel/plugin-transform-template-literals@7.24.1(@babel/core@7.24.4))(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+    optionalDependencies:
+      '@types/react': 18.3.1
+
   '@egjs/hammerjs@2.0.17':
     dependencies:
       '@types/hammerjs': 2.0.45
@@ -10523,6 +10591,12 @@ snapshots:
   '@formkit/auto-animate@0.8.2': {}
 
   '@gar/promisify@1.1.3': {}
+
+  '@gorhom/portal@1.0.14(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      nanoid: 3.3.7
+      react: 18.3.1
+      react-native: 0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1)
 
   '@graphql-typed-document-node/core@3.2.0(graphql@15.8.0)':
     dependencies:
@@ -12273,6 +12347,8 @@ snapshots:
     dependencies:
       '@types/through': 0.0.33
       rxjs: 6.6.7
+
+  '@types/invariant@2.2.37': {}
 
   '@types/istanbul-lib-coverage@2.0.6': {}
 
@@ -14331,6 +14407,20 @@ snapshots:
   expo-haptics@12.8.1(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
     dependencies:
       expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
+
+  expo-image-loader@4.6.0(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
+    dependencies:
+      expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
+
+  expo-image-manipulator@11.8.0(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
+    dependencies:
+      expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
+      expo-image-loader: 4.6.0(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
+
+  expo-image-picker@14.7.1(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
+    dependencies:
+      expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
+      expo-image-loader: 4.6.0(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
 
   expo-json-utils@0.12.3: {}
 

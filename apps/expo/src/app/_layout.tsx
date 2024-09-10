@@ -27,7 +27,9 @@ import "../styles.css";
 
 import type { ErrorBoundaryProps } from "expo-router";
 import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Constants, { AppOwnership } from "expo-constants";
+import { BottomSheetModalProvider } from "@discord/bottom-sheet";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { Toast } from "~/components/Toast";
@@ -96,19 +98,26 @@ function RootLayout() {
   }
 
   return (
-    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
-      <ClerkLoaded>
-        <TRPCProvider>
-          <NotificationProvider>
-            <SafeAreaProvider>
-              <MenuProvider>
-                <RootLayoutContent />
-              </MenuProvider>
-            </SafeAreaProvider>
-          </NotificationProvider>
-        </TRPCProvider>
-      </ClerkLoaded>
-    </ClerkProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ClerkProvider
+        publishableKey={clerkPublishableKey}
+        tokenCache={tokenCache}
+      >
+        <ClerkLoaded>
+          <TRPCProvider>
+            <NotificationProvider>
+              <SafeAreaProvider>
+                <MenuProvider>
+                  <BottomSheetModalProvider>
+                    <RootLayoutContent />
+                  </BottomSheetModalProvider>
+                </MenuProvider>
+              </SafeAreaProvider>
+            </NotificationProvider>
+          </TRPCProvider>
+        </ClerkLoaded>
+      </ClerkProvider>
+    </GestureHandlerRootView>
   );
 }
 

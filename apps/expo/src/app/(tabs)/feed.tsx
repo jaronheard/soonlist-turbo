@@ -1,4 +1,5 @@
-import React, { useCallback } from "react";
+import type { BottomSheetModal } from "@discord/bottom-sheet";
+import React, { useCallback, useRef } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
@@ -8,6 +9,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
+import CustomBottomSheetModal from "~/components/CustomBottomSheetModal";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
@@ -41,6 +43,7 @@ function GoButton({
 
 function MyFeed() {
   const { user } = useUser();
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
 
   const eventsQuery = api.event.getUpcomingForUser.useQuery({
     userName: user?.username ?? "",
@@ -55,6 +58,8 @@ function MyFeed() {
   const currentAndFutureEvents = events.filter(
     (item) => item.startDateTime >= new Date() || item.endDateTime > new Date(),
   );
+
+  const handlePresentModalPress = () => bottomSheetRef.current?.present();
 
   return (
     <>
@@ -84,7 +89,8 @@ function MyFeed() {
               ActionButton={GoButton}
               showCreator="otherUsers"
             />
-            <AddEventButton />
+            <AddEventButton onPress={handlePresentModalPress} />
+            <CustomBottomSheetModal ref={bottomSheetRef} />
           </View>
         )}
       </View>

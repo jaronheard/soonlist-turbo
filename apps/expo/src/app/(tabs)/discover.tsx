@@ -1,10 +1,12 @@
-import { useCallback } from "react";
+import type { BottomSheetModal } from "@discord/bottom-sheet";
+import React, { useCallback, useRef } from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
+import CustomBottomSheetModal from "~/components/CustomBottomSheetModal";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
@@ -14,6 +16,7 @@ import ShareButton from "../../components/ShareButton";
 
 export default function Page() {
   const { user } = useUser();
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
 
   const eventsQuery = api.event.getDiscover.useQuery({
     limit: 50,
@@ -51,6 +54,8 @@ export default function Page() {
     );
   }
 
+  const handlePresentModalPress = () => bottomSheetRef.current?.present();
+
   return (
     <View className="flex-1">
       <Stack.Screen
@@ -78,7 +83,8 @@ export default function Page() {
           showCreator="always"
         />
       </View>
-      <AddEventButton />
+      <AddEventButton onPress={handlePresentModalPress} />
+      <CustomBottomSheetModal ref={bottomSheetRef} />
     </View>
   );
 }
