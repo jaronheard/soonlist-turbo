@@ -2,8 +2,8 @@ import UIKit
 
 class ShareViewController: UIViewController {
   let isProdBundle = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share")
-  let appScheme = isProdBundle ? "soonlist" : "soonlist.dev"
-  let appGroup = isProdBundle ? "group.com.soonlist" : "group.com.soonlist.dev"
+  let appScheme = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share") ? "soonlist" : "soonlist.dev"
+  let appGroup = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share") ? "group.com.soonlist" : "group.com.soonlist.dev"
 
   //
   override func viewDidAppear(_ animated: Bool) {
