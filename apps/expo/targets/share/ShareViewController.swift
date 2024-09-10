@@ -1,9 +1,9 @@
 import UIKit
 
 class ShareViewController: UIViewController {
-  // This allows other forks to use this extension while also changing their
-  // scheme.
-  let appScheme = Bundle.main.object(forInfoDictionaryKey: "MainAppScheme") as? String ?? "bluesky"
+  let isProdBundle = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share")
+  let appScheme = isProdBundle ? "soonlist" : "soonlist.dev"
+  let appGroup = isProdBundle ? "group.com.soonlist" : "group.com.soonlist.dev"
 
   //
   override func viewDidAppear(_ animated: Bool) {
@@ -34,7 +34,7 @@ class ShareViewController: UIViewController {
     do {
       if let data = try await item.loadItem(forTypeIdentifier: "public.text") as? String {
         if let encoded = data.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-           let url = URL(string: "\(self.appScheme)://intent/compose?text=\(encoded)") {
+           let url = URL(string: "\(self.appScheme)://intent/new?text=\(encoded)") {
           _ = self.openURL(url)
         }
       }
@@ -48,7 +48,7 @@ class ShareViewController: UIViewController {
     do {
       if let data = try await item.loadItem(forTypeIdentifier: "public.url") as? URL {
         if let encoded = data.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-           let url = URL(string: "\(self.appScheme)://intent/compose?text=\(encoded)") {
+           let url = URL(string: "\(self.appScheme)://intent/new?text=\(encoded)") {
           _ = self.openURL(url)
         }
       }
@@ -98,7 +98,7 @@ class ShareViewController: UIViewController {
 
     if valid,
        let encoded = imageUris.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-       let url = URL(string: "\(self.appScheme)://intent/compose?imageUris=\(encoded)") {
+       let url = URL(string: "\(self.appScheme)://intent/new?imageUris=\(encoded)") {
       _ = self.openURL(url)
     }
 
@@ -116,7 +116,7 @@ class ShareViewController: UIViewController {
       // extension does.
       if let dir = FileManager()
         .containerURL(
-          forSecurityApplicationGroupIdentifier: "group.app.bsky") {
+          forSecurityApplicationGroupIdentifier: self.appGroup) {
         let filePath = "\(dir.absoluteString)\(ProcessInfo.processInfo.globallyUniqueString).jpeg"
 
         if let newUri = URL(string: filePath),
