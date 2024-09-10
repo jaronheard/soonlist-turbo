@@ -1,7 +1,8 @@
 import type { BottomSheetModal } from "@discord/bottom-sheet";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { Stack } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 import { Navigation2 } from "lucide-react-native";
 
@@ -15,6 +16,7 @@ import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
+import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
 function GoButton({
   event,
@@ -44,6 +46,10 @@ function GoButton({
 function MyFeed() {
   const { user } = useUser();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const [intentParams, setIntentParams] = useState<{
+    text?: string;
+    imageUri?: string;
+  } | null>(null);
 
   const eventsQuery = api.event.getUpcomingForUser.useQuery({
     userName: user?.username ?? "",
@@ -60,6 +66,43 @@ function MyFeed() {
   );
 
   const handlePresentModalPress = () => bottomSheetRef.current?.present();
+
+  useEffect(() => {
+    const checkForIntent = async () => {
+      const keyChainAccessGroup = getKeyChainAccessGroup();
+      const intentType = await SecureStore.getItemAsync("intentType", {
+        keychainAccessGroup: keyChainAccessGroup,
+      });
+      if (intentType === "new") {
+        const text = await SecureStore.getItemAsync("intentText", {
+          keychainAccessGroup: keyChainAccessGroup,
+        });
+        const imageUri = await SecureStore.getItemAsync("intentImageUri", {
+          keychainAccessGroup: keyChainAccessGroup,
+        });
+        setIntentParams({
+          text: text ?? undefined,
+          imageUri: imageUri ?? undefined,
+        });
+
+        // Clear the stored intent data
+        await SecureStore.deleteItemAsync("intentType", {
+          keychainAccessGroup: keyChainAccessGroup,
+        });
+        await SecureStore.deleteItemAsync("intentText", {
+          keychainAccessGroup: keyChainAccessGroup,
+        });
+        await SecureStore.deleteItemAsync("intentImageUri", {
+          keychainAccessGroup: keyChainAccessGroup,
+        });
+
+        // Open the bottom sheet
+        bottomSheetRef.current?.present();
+      }
+    };
+
+    void checkForIntent();
+  }, []);
 
   return (
     <>
@@ -90,7 +133,10 @@ function MyFeed() {
               showCreator="otherUsers"
             />
             <AddEventButton onPress={handlePresentModalPress} />
-            <CustomBottomSheetModal ref={bottomSheetRef} />
+            <CustomBottomSheetModal
+              ref={bottomSheetRef}
+              initialParams={intentParams}
+            />
           </View>
         )}
       </View>

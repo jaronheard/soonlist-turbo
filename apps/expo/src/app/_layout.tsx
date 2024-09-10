@@ -33,6 +33,7 @@ import { BottomSheetModalProvider } from "@discord/bottom-sheet";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { Toast } from "~/components/Toast";
+import { useIntentHandler } from "~/hooks/useIntentHandler";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
@@ -129,8 +130,6 @@ const InitialLayout = () => {
   const router = useRouter();
   const rootNavigationState = useRootNavigationState();
 
-  // If the user is signed in, redirect them to the home page
-  // If the user is not signed in, redirect them to the login page
   useEffect(() => {
     if (!isLoaded || !rootNavigationState.key) return;
 
@@ -144,9 +143,15 @@ const InitialLayout = () => {
             keychainAccessGroup: getKeyChainAccessGroup(),
           },
         );
-        console.log("status", status);
         if (status === "true") {
-          router.replace("/feed");
+          const intentType = await SecureStore.getItemAsync("intentType", {
+            keychainAccessGroup: getKeyChainAccessGroup(),
+          });
+          if (intentType === "new") {
+            router.replace("/feed");
+          } else {
+            router.replace("/feed");
+          }
         } else {
           router.replace("/onboarding");
         }
@@ -195,6 +200,7 @@ function RootLayoutContent() {
   const { expoPushToken } = useNotification();
   useAppStateRefresh();
   const ref = useNavigationContainerRef();
+  useIntentHandler();
 
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);

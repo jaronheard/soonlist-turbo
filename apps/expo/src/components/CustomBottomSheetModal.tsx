@@ -1,5 +1,5 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Image, Switch, Text, TouchableOpacity, View } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
@@ -18,12 +18,16 @@ import { api } from "~/utils/api";
 
 interface CustomBottomSheetModalProps {
   children?: React.ReactNode;
+  initialParams?: {
+    text?: string;
+    imageUri?: string;
+  } | null;
 }
 
 const CustomBottomSheetModal = React.forwardRef<
   BottomSheetModal,
   CustomBottomSheetModalProps
->((props, ref) => {
+>(({ initialParams }, ref) => {
   const snapPoints = useMemo(() => [388], []);
   const [input, setInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -42,11 +46,19 @@ const CustomBottomSheetModal = React.forwardRef<
   const { user } = useUser();
 
   // Use the intent handler
-  useIntentHandler({
-    bottomSheetModalRef: ref as React.RefObject<BottomSheetModal>,
-    setInput,
-    setImagePreview,
-  });
+  useIntentHandler();
+
+  useEffect(() => {
+    if (initialParams) {
+      if (initialParams.text) {
+        setInput(initialParams.text);
+      } else if (initialParams.imageUri) {
+        const [uri, width, height] = initialParams.imageUri.split("|");
+        setImagePreview(uri ?? null);
+        setInput(`Image: ${width}x${height}`);
+      }
+    }
+  }, [initialParams]);
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);
@@ -119,7 +131,31 @@ const CustomBottomSheetModal = React.forwardRef<
     setInput("");
   };
 
-  const handleCreateEvent = async () => {
+  const handleSuccess = useCallback(() => {
+    setIsCreating(false);
+    setInput("");
+    setImagePreview(null);
+    (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
+  }, [ref]);
+
+  const handleError = useCallback(
+    (error: unknown) => {
+      console.error("Failed to create event:", error);
+      setIsCreating(false);
+
+      if (
+        error instanceof Error &&
+        error.message.includes(
+          "Must use physical device for push notifications",
+        )
+      ) {
+        (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
+      }
+    },
+    [ref],
+  );
+
+  const handleCreateEvent = useCallback(async () => {
     if (!input.trim() && !imagePreview) return;
     setIsCreating(true);
 
@@ -127,7 +163,7 @@ const CustomBottomSheetModal = React.forwardRef<
       if (imagePreview) {
         eventFromImageThenCreateThenNotification.mutate(
           {
-            imageUrl: imagePreview, // Now this is the uploaded image URL
+            imageUrl: imagePreview,
             timezone: "America/Los_Angeles",
             expoPushToken,
             lists: [],
@@ -141,7 +177,6 @@ const CustomBottomSheetModal = React.forwardRef<
           },
         );
       } else {
-        // Handle text input
         eventFromRawTextAndNotification.mutate(
           {
             rawText: input,
@@ -162,32 +197,17 @@ const CustomBottomSheetModal = React.forwardRef<
       console.error("Error processing event creation:", error);
       setIsCreating(false);
     }
-  };
-
-  const handleSuccess = () => {
-    setIsCreating(false);
-    setInput("");
-    setImagePreview(null);
-    (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-  };
-
-  const handleError = (error: unknown) => {
-    console.error("Failed to create event:", error);
-    setIsCreating(false);
-
-    // Check if the error message matches the specific error
-    if (
-      error instanceof Error &&
-      error.message.includes("Must use physical device for push notifications")
-    ) {
-      // Dismiss the sheet
-      (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-
-      // Optionally, you can show an alert or toast to inform the user
-      // For example, using Alert from react-native:
-      // Alert.alert("Error", "This feature requires a physical device for push notifications.");
-    }
-  };
+  }, [
+    input,
+    imagePreview,
+    isPublic,
+    expoPushToken,
+    user,
+    eventFromImageThenCreateThenNotification,
+    eventFromRawTextAndNotification,
+    handleSuccess,
+    handleError,
+  ]);
 
   const renderFooter = useCallback(
     (props: React.JSX.IntrinsicAttributes & BottomSheetDefaultFooterProps) => {
@@ -216,7 +236,7 @@ const CustomBottomSheetModal = React.forwardRef<
         </BottomSheetFooter>
       );
     },
-    [handleCreateEvent, isCreating, input, imagePreview, ref],
+    [handleCreateEvent, isCreating, input, imagePreview],
   );
 
   return (
