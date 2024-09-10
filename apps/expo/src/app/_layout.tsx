@@ -201,6 +201,14 @@ const InitialLayout = () => {
           headerBackVisible: true,
         }}
       />
+      {/* Add this new Stack.Screen for the modal group */}
+      <Stack.Screen
+        name="(modals)/intent/new"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 };
