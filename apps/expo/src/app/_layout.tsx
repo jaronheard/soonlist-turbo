@@ -159,7 +159,7 @@ const InitialLayout = () => {
           keychainAccessGroup: getKeyChainAccessGroup(),
         });
         if (intentType === "new") {
-          // Handle new intent type
+          //
           router.replace("/feed"); // Adjust this route as needed
         }
         // Clear the intent type after handling

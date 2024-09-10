@@ -74,6 +74,7 @@ function MyFeed() {
         keychainAccessGroup: keyChainAccessGroup,
       });
       if (intentType === "new") {
+        console.log("intentType is new");
         const text = await SecureStore.getItemAsync("intentText", {
           keychainAccessGroup: keyChainAccessGroup,
         });
@@ -96,8 +97,8 @@ function MyFeed() {
           keychainAccessGroup: keyChainAccessGroup,
         });
 
-        // Open the bottom sheet
-        bottomSheetRef.current?.present();
+        // Open the bottom sheet if not already open
+        handlePresentModalPress();
       }
     };
 
