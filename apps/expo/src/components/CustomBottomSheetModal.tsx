@@ -1,5 +1,11 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Image,
@@ -56,9 +62,13 @@ const CustomBottomSheetModal = React.forwardRef<
   useIntentHandler();
 
   const [isImageLoading, setIsImageLoading] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  const uploadedImageUrlRef = useRef<string | null>(null);
+  const uploadPromiseRef = useRef<Promise<string> | null>(null);
 
   const handleImageUploadFromUri = useCallback(async (uri: string) => {
     setIsImageLoading(true);
+    setIsImageUploading(true);
     const uploadImage = async (imageUri: string): Promise<string> => {
       try {
         const response = await FileSystem.uploadAsync(
@@ -88,13 +98,18 @@ const CustomBottomSheetModal = React.forwardRef<
 
     try {
       setImagePreview(uri);
-      const uploadedImageUrl = await uploadImage(uri);
+      uploadPromiseRef.current = uploadImage(uri);
+      const uploadedImageUrl = await uploadPromiseRef.current;
       setImagePreview(uploadedImageUrl);
+      uploadedImageUrlRef.current = uploadedImageUrl;
     } catch (error) {
       console.error("Error processing image:", error);
       setImagePreview(null);
+      uploadedImageUrlRef.current = null;
     } finally {
       setIsImageLoading(false);
+      setIsImageUploading(false);
+      uploadPromiseRef.current = null;
     }
   }, []);
 
@@ -173,11 +188,22 @@ const CustomBottomSheetModal = React.forwardRef<
     if (!input.trim() && !imagePreview) return;
     setIsCreating(true);
 
-    try {
-      if (imagePreview) {
+    const createEvent = async () => {
+      let finalImageUrl = uploadedImageUrlRef.current;
+      if (isImageUploading && uploadPromiseRef.current) {
+        try {
+          finalImageUrl = await uploadPromiseRef.current;
+        } catch (error) {
+          console.error("Error waiting for image upload:", error);
+          setIsCreating(false);
+          return;
+        }
+      }
+
+      if (finalImageUrl) {
         eventFromImageThenCreateThenNotification.mutate(
           {
-            imageUrl: imagePreview,
+            imageUrl: finalImageUrl,
             timezone: "America/Los_Angeles",
             expoPushToken,
             lists: [],
@@ -207,10 +233,9 @@ const CustomBottomSheetModal = React.forwardRef<
           },
         );
       }
-    } catch (error) {
-      console.error("Error processing event creation:", error);
-      setIsCreating(false);
-    }
+    };
+
+    void createEvent();
   }, [
     input,
     imagePreview,
@@ -221,7 +246,13 @@ const CustomBottomSheetModal = React.forwardRef<
     eventFromRawTextAndNotification,
     handleSuccess,
     handleError,
+    isImageUploading,
   ]);
+
+  const handleDismiss = useCallback(() => {
+    // Allow the modal to be dismissed, but don't cancel the upload
+    (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
+  }, [ref]);
 
   const renderFooter = useMemo(() => {
     return (
@@ -245,10 +276,15 @@ const CustomBottomSheetModal = React.forwardRef<
               </>
             )}
           </TouchableOpacity>
+          {isImageUploading && (
+            <Text className="mt-2 text-center text-sm text-gray-500">
+              Image upload in progress...
+            </Text>
+          )}
         </View>
       </BottomSheetFooter>
     );
-  }, [handleCreateEvent, isCreating, input, imagePreview]);
+  }, [handleCreateEvent, isCreating, isImageUploading, input, imagePreview]);
 
   return (
     <BottomSheetModal
@@ -259,6 +295,7 @@ const CustomBottomSheetModal = React.forwardRef<
       backdropComponent={renderBackdrop}
       keyboardBehavior="interactive"
       renderFooter={renderFooter}
+      onDismiss={handleDismiss}
     >
       <View className="flex-1 p-4">
         <Text className="mb-4 text-2xl font-semibold">Add New Event</Text>
