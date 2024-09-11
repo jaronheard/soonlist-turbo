@@ -12,6 +12,7 @@ import {
   Switch,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
@@ -189,6 +190,11 @@ const CustomBottomSheetModal = React.forwardRef<
     if (!input.trim() && !imagePreview) return;
     setIsCreating(true);
 
+    // Clear the modal state
+    setInput("");
+    setImagePreview(null);
+    // Don't reset the public state
+
     // Dismiss the modal immediately
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
 
@@ -254,7 +260,7 @@ const CustomBottomSheetModal = React.forwardRef<
     handleSuccess,
     handleError,
     isImageUploading,
-    ref, // Add ref to the dependency array
+    ref,
   ]);
 
   const handleDismiss = useCallback(() => {
@@ -284,15 +290,16 @@ const CustomBottomSheetModal = React.forwardRef<
               </>
             )}
           </TouchableOpacity>
-          {isImageUploading && (
-            <Text className="mt-2 text-center text-sm text-gray-500">
-              Image upload in progress...
-            </Text>
-          )}
         </View>
       </BottomSheetFooter>
     );
-  }, [handleCreateEvent, isCreating, isImageUploading, input, imagePreview]);
+  }, [handleCreateEvent, isCreating, input, imagePreview]);
+
+  const inputRef = useRef<React.ElementRef<typeof BottomSheetTextInput>>(null);
+
+  const focusInput = useCallback(() => {
+    inputRef.current?.focus();
+  }, []);
 
   return (
     <BottomSheetModal
@@ -342,16 +349,19 @@ const CustomBottomSheetModal = React.forwardRef<
               )}
             </View>
           ) : (
-            <View className="mb-4 h-32 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
-              <BottomSheetTextInput
-                className="h-full w-full"
-                placeholder="Enter event details or paste a URL"
-                defaultValue={input}
-                onChangeText={setInput}
-                multiline
-                textAlignVertical="top"
-              />
-            </View>
+            <TouchableWithoutFeedback onPress={focusInput}>
+              <View className="mb-4 h-32 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
+                <BottomSheetTextInput
+                  ref={inputRef}
+                  className="h-full w-full"
+                  placeholder="Enter event details or paste a URL"
+                  defaultValue={input}
+                  onChangeText={setInput}
+                  multiline
+                  textAlignVertical="top"
+                />
+              </View>
+            </TouchableWithoutFeedback>
           )}
         </View>
         <View className="mb-4 flex-row items-center justify-between">
