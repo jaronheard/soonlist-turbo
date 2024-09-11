@@ -32,6 +32,7 @@ export const showToast = (
     delay: 0,
     shadow: false,
     backgroundColor: style.backgroundColor,
+    opacity: 0.95,
     containerStyle: {
       borderRadius: 16,
       paddingHorizontal: 16,

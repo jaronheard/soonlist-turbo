@@ -289,15 +289,10 @@ const CustomBottomSheetModal = React.forwardRef<
               </>
             )}
           </TouchableOpacity>
-          {isImageUploading && (
-            <Text className="mt-2 text-center text-sm text-gray-500">
-              Image upload in progress...
-            </Text>
-          )}
         </View>
       </BottomSheetFooter>
     );
-  }, [handleCreateEvent, isCreating, isImageUploading, input, imagePreview]);
+  }, [handleCreateEvent, isCreating, input, imagePreview]);
 
   return (
     <BottomSheetModal
