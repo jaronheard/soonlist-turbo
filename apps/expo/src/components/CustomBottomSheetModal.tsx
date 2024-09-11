@@ -48,17 +48,57 @@ const CustomBottomSheetModal = React.forwardRef<
   // Use the intent handler
   useIntentHandler();
 
+  const handleImageUploadFromUri = useCallback(async (uri: string) => {
+    const uploadImage = async (imageUri: string): Promise<string> => {
+      try {
+        const response = await FileSystem.uploadAsync(
+          "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
+          imageUri,
+          {
+            uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+            httpMethod: "POST",
+            headers: {
+              "Content-Type": "image/jpeg",
+              Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
+            },
+          },
+        );
+
+        if (response.status !== 200) {
+          throw new Error(`Upload failed with status ${response.status}`);
+        }
+
+        const data = JSON.parse(response.body) as { fileUrl: string };
+        return data.fileUrl;
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        throw error;
+      }
+    };
+
+    try {
+      setImagePreview(uri);
+      const uploadedImageUrl = await uploadImage(uri);
+      setImagePreview(uploadedImageUrl);
+    } catch (error) {
+      console.error("Error processing image:", error);
+      setImagePreview(null);
+    }
+  }, []);
+
   useEffect(() => {
     if (initialParams) {
       if (initialParams.text) {
         setInput(initialParams.text);
       } else if (initialParams.imageUri) {
         const [uri, width, height] = initialParams.imageUri.split("|");
-        handleImageUploadFromUri(uri);
-        setInput(`Image: ${width}x${height}`);
+        if (uri) {
+          void handleImageUploadFromUri(uri);
+        }
+        setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
       }
     }
-  }, [initialParams]);
+  }, [handleImageUploadFromUri, initialParams]);
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);
@@ -75,19 +115,7 @@ const CustomBottomSheetModal = React.forwardRef<
     [],
   );
 
-  const handleImageUploadFromUri = async (uri: string) => {
-    try {
-      setImagePreview(uri); // Set preview immediately
-      const uploadedImageUrl = await uploadImage(uri);
-      setImagePreview(uploadedImageUrl); // Update with the uploaded URL
-    } catch (error) {
-      console.error("Error processing image:", error);
-      setImagePreview(null);
-      // Handle error (e.g., show an error message to the user)
-    }
-  };
-
-  const handleImageUpload = async () => {
+  const handleImageUpload = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
@@ -98,34 +126,7 @@ const CustomBottomSheetModal = React.forwardRef<
       setInput(imageUri.split("/").pop() || "");
       await handleImageUploadFromUri(imageUri);
     }
-  };
-
-  const uploadImage = async (imageUri: string): Promise<string> => {
-    try {
-      const response = await FileSystem.uploadAsync(
-        "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
-        imageUri,
-        {
-          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-          httpMethod: "POST",
-          headers: {
-            "Content-Type": "image/jpeg",
-            Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
-          },
-        },
-      );
-
-      if (response.status !== 200) {
-        throw new Error(`Upload failed with status ${response.status}`);
-      }
-
-      const data = JSON.parse(response.body) as { fileUrl: string };
-      return data.fileUrl;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw error;
-    }
-  };
+  }, [handleImageUploadFromUri, setInput]);
 
   const clearImage = () => {
     setImagePreview(null);
@@ -156,7 +157,7 @@ const CustomBottomSheetModal = React.forwardRef<
     [ref],
   );
 
-  const handleCreateEvent = useCallback(async () => {
+  const handleCreateEvent = useCallback(() => {
     if (!input.trim() && !imagePreview) return;
     setIsCreating(true);
 
@@ -210,35 +211,32 @@ const CustomBottomSheetModal = React.forwardRef<
     handleError,
   ]);
 
-  const renderFooter = useCallback(
-    (props: React.JSX.IntrinsicAttributes & BottomSheetDefaultFooterProps) => {
-      return (
-        <BottomSheetFooter {...props} bottomInset={24}>
-          <View className="px-4 pb-4">
-            <TouchableOpacity
-              className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2"
-              onPress={handleCreateEvent}
-              disabled={isCreating || (!input.trim() && !imagePreview)}
-            >
-              {isCreating ? (
-                <Text className="text-xl font-bold text-white">
-                  Creating...
+  const renderFooter = useMemo(() => {
+    return (
+      props: React.JSX.IntrinsicAttributes & BottomSheetDefaultFooterProps,
+    ) => (
+      <BottomSheetFooter {...props} bottomInset={24}>
+        <View className="px-4 pb-4">
+          <TouchableOpacity
+            className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2"
+            onPress={handleCreateEvent}
+            disabled={isCreating || (!input.trim() && !imagePreview)}
+          >
+            {isCreating ? (
+              <Text className="text-xl font-bold text-white">Creating...</Text>
+            ) : (
+              <>
+                <Sparkles size={16} color="white" />
+                <Text className="ml-2 text-xl font-bold text-white">
+                  Create Event
                 </Text>
-              ) : (
-                <>
-                  <Sparkles size={16} color="white" />
-                  <Text className="ml-2 text-xl font-bold text-white">
-                    Create Event
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        </BottomSheetFooter>
-      );
-    },
-    [handleCreateEvent, isCreating, input, imagePreview],
-  );
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </BottomSheetFooter>
+    );
+  }, [handleCreateEvent, isCreating, input, imagePreview]);
 
   return (
     <BottomSheetModal
