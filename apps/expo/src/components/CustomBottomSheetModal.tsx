@@ -189,6 +189,11 @@ const CustomBottomSheetModal = React.forwardRef<
     if (!input.trim() && !imagePreview) return;
     setIsCreating(true);
 
+    // Clear the modal state
+    setInput("");
+    setImagePreview(null);
+    // Don't reset the public state
+
     // Dismiss the modal immediately
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
 
@@ -254,7 +259,7 @@ const CustomBottomSheetModal = React.forwardRef<
     handleSuccess,
     handleError,
     isImageUploading,
-    ref, // Add ref to the dependency array
+    ref,
   ]);
 
   const handleDismiss = useCallback(() => {
