@@ -153,24 +153,7 @@ const InitialLayout = () => {
       }
     };
 
-    const handleIntentRedirect = async () => {
-      if (isSignedIn) {
-        const intentType = await SecureStore.getItemAsync("intentType", {
-          keychainAccessGroup: getKeyChainAccessGroup(),
-        });
-        if (intentType === "new") {
-          //
-          router.replace("/feed"); // Adjust this route as needed
-        }
-        // Clear the intent type after handling
-        await SecureStore.deleteItemAsync("intentType", {
-          keychainAccessGroup: getKeyChainAccessGroup(),
-        });
-      }
-    };
-
     void checkAuthAndOnboarding();
-    void handleIntentRedirect();
   }, [isSignedIn, rootNavigationState.key, router, segments, isLoaded]);
 
   return (
@@ -221,6 +204,8 @@ function RootLayoutContent() {
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
+
+  // Remove the effect for handling initial URL and deep links
 
   return (
     <View style={{ flex: 1 }}>

@@ -1,8 +1,4 @@
-import { useEffect } from "react";
-import { Linking } from "react-native";
-import * as SecureStore from "expo-secure-store";
-
-import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
+import { useCallback } from "react";
 
 type IntentType = "new";
 const scheme =
@@ -13,68 +9,36 @@ const scheme =
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
 export function useIntentHandler() {
-  useEffect(() => {
-    const handleInitialURL = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        await handleIntent(initialUrl);
-      }
-    };
+  const handleIntent = useCallback((url: string) => {
+    if (url.startsWith(`${scheme}://`) && !url.startsWith(`${scheme}:///`)) {
+      url = url.replace(`${scheme}://`, `${scheme}:///`);
+    }
 
-    void handleInitialURL();
+    const parsedUrl = new URL(url);
+    const params = parsedUrl.searchParams;
+    const intentType = params.get("intent") as IntentType | null;
 
-    const subscription = Linking.addEventListener("url", ({ url }) => {
-      void handleIntent(url);
-    });
+    if (!intentType) return null;
 
-    return () => {
-      subscription.remove();
-    };
-  }, []);
-}
+    switch (intentType) {
+      case "new": {
+        const text = params.get("text");
+        const imageUri = params.get("imageUri");
 
-async function handleIntent(url: string) {
-  // Ensure the third slash for consistency
-  if (url.startsWith(`${scheme}://`) && !url.startsWith(`${scheme}:///`)) {
-    url = url.replace(`${scheme}://`, `${scheme}:///`);
-  }
-
-  const parsedUrl = new URL(url);
-  const [_, intent, intentType] = parsedUrl.pathname.split("/");
-
-  if (intent !== "intent") return;
-
-  const params = parsedUrl.searchParams;
-
-  switch (intentType as IntentType) {
-    case "new": {
-      const text = params.get("text");
-      const imageUri = params.get("imageUri");
-
-      await SecureStore.setItemAsync("intentType", "new", {
-        keychainAccessGroup: getKeyChainAccessGroup(),
-      });
-
-      if (text) {
-        await SecureStore.setItemAsync("intentText", decodeURIComponent(text), {
-          keychainAccessGroup: getKeyChainAccessGroup(),
-        });
-      } else if (imageUri) {
-        if (VALID_IMAGE_REGEX.test(imageUri)) {
-          await SecureStore.setItemAsync(
-            "intentImageUri",
-            decodeURIComponent(imageUri),
-            {
-              keychainAccessGroup: getKeyChainAccessGroup(),
-            },
-          );
+        if (text) {
+          return { type: "new", text: decodeURIComponent(text) };
+        } else if (imageUri && VALID_IMAGE_REGEX.test(imageUri)) {
+          return { type: "new", imageUri: decodeURIComponent(imageUri) };
         }
+        break;
       }
-      break;
+      default: {
+        console.warn(`Unknown intent type: ${intentType as string}`);
+      }
     }
-    default: {
-      // Handle unknown intent types
-      console.warn(`Unknown intent type: ${intentType}`);
-    }
-  }
+
+    return null;
+  }, []);
+
+  return { handleIntent };
 }

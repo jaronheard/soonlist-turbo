@@ -2,7 +2,6 @@ import type { BottomSheetModal } from "@discord/bottom-sheet";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { Stack } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 import { Navigation2 } from "lucide-react-native";
 
@@ -15,8 +14,8 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
+import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { api } from "~/utils/api";
-import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
 function GoButton({
   event,
@@ -50,6 +49,7 @@ function MyFeed() {
     text?: string;
     imageUri?: string;
   } | null>(null);
+  const { handleIntent } = useIntentHandler();
 
   const eventsQuery = api.event.getUpcomingForUser.useQuery({
     userName: user?.username ?? "",
@@ -68,42 +68,37 @@ function MyFeed() {
   const handlePresentModalPress = () => bottomSheetRef.current?.present();
 
   useEffect(() => {
-    const checkForIntent = async () => {
-      const keyChainAccessGroup = getKeyChainAccessGroup();
-      const intentType = await SecureStore.getItemAsync("intentType", {
-        keychainAccessGroup: keyChainAccessGroup,
-      });
-      if (intentType === "new") {
-        console.log("intentType is new");
-        const text = await SecureStore.getItemAsync("intentText", {
-          keychainAccessGroup: keyChainAccessGroup,
-        });
-        const imageUri = await SecureStore.getItemAsync("intentImageUri", {
-          keychainAccessGroup: keyChainAccessGroup,
-        });
-        setIntentParams({
-          text: text ?? undefined,
-          imageUri: imageUri ?? undefined,
-        });
-
-        // Clear the stored intent data
-        await SecureStore.deleteItemAsync("intentType", {
-          keychainAccessGroup: keyChainAccessGroup,
-        });
-        await SecureStore.deleteItemAsync("intentText", {
-          keychainAccessGroup: keyChainAccessGroup,
-        });
-        await SecureStore.deleteItemAsync("intentImageUri", {
-          keychainAccessGroup: keyChainAccessGroup,
-        });
-
-        // Open the bottom sheet if not already open
-        handlePresentModalPress();
+    const handleInitialURL = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        const intent = handleIntent(initialUrl);
+        if (intent && intent.type === "new") {
+          setIntentParams({
+            text: intent.text,
+            imageUri: intent.imageUri,
+          });
+          handlePresentModalPress();
+        }
       }
     };
 
-    void checkForIntent();
-  }, []);
+    void handleInitialURL();
+
+    const subscription = Linking.addEventListener("url", ({ url }) => {
+      const intent = handleIntent(url);
+      if (intent && intent.type === "new") {
+        setIntentParams({
+          text: intent.text,
+          imageUri: intent.imageUri,
+        });
+        handlePresentModalPress();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handleIntent]);
 
   return (
     <>
