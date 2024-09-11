@@ -31,7 +31,7 @@ import { useNotification } from "~/providers/NotificationProvider";
 import { api } from "~/utils/api";
 import { showToast } from "~/utils/toast";
 
-interface CustomBottomSheetModalProps {
+interface NewEventBottomSheetProps {
   children?: React.ReactNode;
   initialParams?: {
     text?: string;
@@ -39,9 +39,9 @@ interface CustomBottomSheetModalProps {
   } | null;
 }
 
-const CustomBottomSheetModal = React.forwardRef<
+const NewEventBottomSheet = React.forwardRef<
   BottomSheetModal,
-  CustomBottomSheetModalProps
+  NewEventBottomSheetProps
 >(({ initialParams }, ref) => {
   const snapPoints = useMemo(() => [388], []);
   const [input, setInput] = useState("");
@@ -373,4 +373,4 @@ const CustomBottomSheetModal = React.forwardRef<
   );
 });
 
-export default CustomBottomSheetModal;
+export default NewEventBottomSheet;

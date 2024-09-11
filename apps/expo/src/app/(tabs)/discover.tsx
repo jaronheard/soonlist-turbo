@@ -6,8 +6,8 @@ import { SignedIn, useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
-import CustomBottomSheetModal from "~/components/CustomBottomSheetModal";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import NewEventBottomSheet from "~/components/NewEventBottomSheet";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
 import { ProfileMenu } from "../../components/ProfileMenu";
@@ -84,7 +84,7 @@ export default function Page() {
         />
       </View>
       <AddEventButton onPress={handlePresentModalPress} />
-      <CustomBottomSheetModal ref={bottomSheetRef} />
+      <NewEventBottomSheet ref={bottomSheetRef} />
     </View>
   );
 }

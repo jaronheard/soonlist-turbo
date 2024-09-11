@@ -9,8 +9,8 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
-import CustomBottomSheetModal from "~/components/CustomBottomSheetModal";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import NewEventBottomSheet from "~/components/NewEventBottomSheet";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
@@ -129,7 +129,7 @@ function MyFeed() {
               showCreator="otherUsers"
             />
             <AddEventButton onPress={handlePresentModalPress} />
-            <CustomBottomSheetModal
+            <NewEventBottomSheet
               ref={bottomSheetRef}
               initialParams={intentParams}
             />
