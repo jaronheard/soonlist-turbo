@@ -12,7 +12,7 @@ const toastStyles: Record<
   { backgroundColor: string; textColor: string }
 > = {
   success: { backgroundColor: "#C4DA9D", textColor: "#162135" },
-  error: { backgroundColor: "#FFD1BA", textColor: "#162135" },
+  error: { backgroundColor: "#ba2727", textColor: "#F7F7F7" },
   info: { backgroundColor: "#7ACEFC", textColor: "#162135" },
   loading: { backgroundColor: "#FFD1BA", textColor: "#162135" },
 };
