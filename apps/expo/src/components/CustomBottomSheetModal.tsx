@@ -12,6 +12,7 @@ import {
   Switch,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
@@ -294,6 +295,12 @@ const CustomBottomSheetModal = React.forwardRef<
     );
   }, [handleCreateEvent, isCreating, input, imagePreview]);
 
+  const inputRef = useRef<React.ElementRef<typeof BottomSheetTextInput>>(null);
+
+  const focusInput = useCallback(() => {
+    inputRef.current?.focus();
+  }, []);
+
   return (
     <BottomSheetModal
       ref={ref}
@@ -342,16 +349,19 @@ const CustomBottomSheetModal = React.forwardRef<
               )}
             </View>
           ) : (
-            <View className="mb-4 h-32 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
-              <BottomSheetTextInput
-                className="h-full w-full"
-                placeholder="Enter event details or paste a URL"
-                defaultValue={input}
-                onChangeText={setInput}
-                multiline
-                textAlignVertical="top"
-              />
-            </View>
+            <TouchableWithoutFeedback onPress={focusInput}>
+              <View className="mb-4 h-32 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
+                <BottomSheetTextInput
+                  ref={inputRef}
+                  className="h-full w-full"
+                  placeholder="Enter event details or paste a URL"
+                  defaultValue={input}
+                  onChangeText={setInput}
+                  multiline
+                  textAlignVertical="top"
+                />
+              </View>
+            </TouchableWithoutFeedback>
           )}
         </View>
         <View className="mb-4 flex-row items-center justify-between">
