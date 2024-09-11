@@ -33,7 +33,6 @@ import { BottomSheetModalProvider } from "@discord/bottom-sheet";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { Toast } from "~/components/Toast";
-import { useIntentHandler } from "~/hooks/useIntentHandler";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
@@ -129,31 +128,35 @@ const InitialLayout = () => {
   const segments = useSegments();
   const router = useRouter();
   const rootNavigationState = useRootNavigationState();
-  useIntentHandler();
 
+  // If the user is signed in, redirect them to the home page
+  // If the user is not signed in, redirect them to the login page
   useEffect(() => {
     if (!isLoaded || !rootNavigationState.key) return;
 
     const inAuthGroup = segments[0] === "(auth)";
 
-    const checkAuthAndOnboarding = async () => {
+    const checkOnboardingStatus = async () => {
       if (isSignedIn && inAuthGroup) {
-        const hasCompletedOnboarding = await SecureStore.getItemAsync(
+        const status = await SecureStore.getItemAsync(
           "hasCompletedOnboarding",
-          { keychainAccessGroup: getKeyChainAccessGroup() },
+          {
+            keychainAccessGroup: getKeyChainAccessGroup(),
+          },
         );
-
-        if (hasCompletedOnboarding === "true") {
+        console.log("status", status);
+        if (status === "true") {
           router.replace("/feed");
         } else {
           router.replace("/onboarding");
         }
-      } else if (!isSignedIn && !inAuthGroup) {
+      }
+      if (!isSignedIn && !inAuthGroup) {
         router.replace("/sign-in");
       }
     };
 
-    void checkAuthAndOnboarding();
+    void checkOnboardingStatus();
   }, [isSignedIn, rootNavigationState.key, router, segments, isLoaded]);
 
   return (
@@ -184,14 +187,6 @@ const InitialLayout = () => {
           headerBackVisible: true,
         }}
       />
-      {/* Add this new Stack.Screen for the modal group */}
-      <Stack.Screen
-        name="(modals)/intent/new"
-        options={{
-          presentation: "modal",
-          headerShown: false,
-        }}
-      />
     </Stack>
   );
 };
@@ -204,8 +199,6 @@ function RootLayoutContent() {
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
-
-  // Remove the effect for handling initial URL and deep links
 
   return (
     <View style={{ flex: 1 }}>
