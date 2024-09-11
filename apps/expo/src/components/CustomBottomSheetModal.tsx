@@ -1,6 +1,13 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Image, Switch, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useUser } from "@clerk/clerk-expo";
@@ -48,7 +55,10 @@ const CustomBottomSheetModal = React.forwardRef<
   // Use the intent handler
   useIntentHandler();
 
+  const [isImageLoading, setIsImageLoading] = useState(false);
+
   const handleImageUploadFromUri = useCallback(async (uri: string) => {
+    setIsImageLoading(true);
     const uploadImage = async (imageUri: string): Promise<string> => {
       try {
         const response = await FileSystem.uploadAsync(
@@ -83,6 +93,8 @@ const CustomBottomSheetModal = React.forwardRef<
     } catch (error) {
       console.error("Error processing image:", error);
       setImagePreview(null);
+    } finally {
+      setIsImageLoading(false);
     }
   }, []);
 
@@ -278,6 +290,11 @@ const CustomBottomSheetModal = React.forwardRef<
               >
                 <X size={16} color="black" />
               </TouchableOpacity>
+              {isImageLoading && (
+                <View className="absolute bottom-2 right-2">
+                  <ActivityIndicator size="small" color="#DCE0E8" />
+                </View>
+              )}
             </View>
           ) : (
             <View className="mb-4 h-32 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
