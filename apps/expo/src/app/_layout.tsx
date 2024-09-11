@@ -28,11 +28,11 @@ import "../styles.css";
 import type { ErrorBoundaryProps } from "expo-router";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { RootSiblingParent } from "react-native-root-siblings";
 import Constants, { AppOwnership } from "expo-constants";
 import { BottomSheetModalProvider } from "@discord/bottom-sheet";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
-import { Toast } from "~/components/Toast";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
@@ -201,11 +201,12 @@ function RootLayoutContent() {
   }, [ref]);
 
   return (
-    <View style={{ flex: 1 }}>
-      <AuthAndTokenSync expoPushToken={expoPushToken} />
-      <InitialLayout />
-      <Toast />
-      <StatusBar />
-    </View>
+    <RootSiblingParent>
+      <View style={{ flex: 1 }}>
+        <AuthAndTokenSync expoPushToken={expoPushToken} />
+        <InitialLayout />
+        <StatusBar />
+      </View>
+    </RootSiblingParent>
   );
 }

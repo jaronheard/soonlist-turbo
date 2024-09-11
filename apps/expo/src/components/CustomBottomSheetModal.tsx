@@ -28,6 +28,7 @@ import { Image as ImageIcon, Sparkles, X } from "lucide-react-native";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useNotification } from "~/providers/NotificationProvider";
 import { api } from "~/utils/api";
+import { showToast } from "~/utils/toast";
 
 interface CustomBottomSheetModalProps {
   children?: React.ReactNode;
@@ -188,6 +189,12 @@ const CustomBottomSheetModal = React.forwardRef<
     if (!input.trim() && !imagePreview) return;
     setIsCreating(true);
 
+    // Dismiss the modal immediately
+    (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
+
+    // Show the toast message
+    showToast("Adding to Soonlist...", "loading");
+
     const createEvent = async () => {
       let finalImageUrl = uploadedImageUrlRef.current;
       if (isImageUploading && uploadPromiseRef.current) {
@@ -247,6 +254,7 @@ const CustomBottomSheetModal = React.forwardRef<
     handleSuccess,
     handleError,
     isImageUploading,
+    ref, // Add ref to the dependency array
   ]);
 
   const handleDismiss = useCallback(() => {

@@ -155,7 +155,7 @@ export function useCalendar() {
       });
 
       if (eventId) {
-        showToast(`Event successfully added to calendar`, "success");
+        showToast("Event successfully added to calendar", "success");
       }
 
       // Update calendar usage
