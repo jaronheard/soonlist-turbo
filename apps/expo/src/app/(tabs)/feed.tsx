@@ -1,5 +1,5 @@
 import type { BottomSheetModal } from "@discord/bottom-sheet";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
@@ -14,6 +14,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
+import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { api } from "~/utils/api";
 
 function GoButton({
@@ -44,6 +45,11 @@ function GoButton({
 function MyFeed() {
   const { user } = useUser();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const [intentParams, setIntentParams] = useState<{
+    text?: string;
+    imageUri?: string;
+  } | null>(null);
+  const { handleIntent } = useIntentHandler();
 
   const eventsQuery = api.event.getUpcomingForUser.useQuery({
     userName: user?.username ?? "",
@@ -60,6 +66,39 @@ function MyFeed() {
   );
 
   const handlePresentModalPress = () => bottomSheetRef.current?.present();
+
+  useEffect(() => {
+    const handleInitialURL = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        const intent = handleIntent(initialUrl);
+        if (intent && intent.type === "new") {
+          setIntentParams({
+            text: intent.text,
+            imageUri: intent.imageUri,
+          });
+          handlePresentModalPress();
+        }
+      }
+    };
+
+    void handleInitialURL();
+
+    const subscription = Linking.addEventListener("url", ({ url }) => {
+      const intent = handleIntent(url);
+      if (intent && intent.type === "new") {
+        setIntentParams({
+          text: intent.text,
+          imageUri: intent.imageUri,
+        });
+        handlePresentModalPress();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handleIntent]);
 
   return (
     <>
@@ -90,7 +129,10 @@ function MyFeed() {
               showCreator="otherUsers"
             />
             <AddEventButton onPress={handlePresentModalPress} />
-            <CustomBottomSheetModal ref={bottomSheetRef} />
+            <CustomBottomSheetModal
+              ref={bottomSheetRef}
+              initialParams={intentParams}
+            />
           </View>
         )}
       </View>
