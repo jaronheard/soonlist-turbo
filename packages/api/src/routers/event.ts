@@ -274,6 +274,10 @@ export const eventRouter = createTRPCRouter({
       });
 
       // Step 2: Fetch upcoming events
+      if (eventIds.size === 0) {
+        return []; // Return an empty array if there are no events to fetch
+      }
+
       const upcomingEvents = await ctx.db.query.events.findMany({
         where: and(
           inArray(events.id, Array.from(eventIds)),
@@ -464,7 +468,7 @@ export const eventRouter = createTRPCRouter({
       });
     }
 
-    const roles = stringArraySchema.safeParse(sessionClaims?.roles).data || [];
+    const roles = stringArraySchema.safeParse(sessionClaims.roles).data || [];
     const isAdmin = roles.includes("admin");
 
     return ctx.db.query.events
@@ -509,8 +513,7 @@ export const eventRouter = createTRPCRouter({
         });
       }
 
-      const roles =
-        stringArraySchema.safeParse(sessionClaims?.roles).data || [];
+      const roles = stringArraySchema.safeParse(sessionClaims.roles).data || [];
       const isAdmin = roles.includes("admin");
 
       const { event, eventMetadata } = input;
