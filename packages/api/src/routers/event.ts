@@ -346,9 +346,13 @@ export const eventRouter = createTRPCRouter({
         },
       });
       return (
-        userWithEventFollows[0]?.eventFollows.map((eventFollow) => ({
-          id: eventFollow.event.id,
-        })) || []
+        userWithEventFollows[0]?.eventFollows
+          // event could be undefined if it was deleted
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+          .filter((eventFollow) => eventFollow.event?.id)
+          .map((eventFollow) => ({
+            id: eventFollow.event.id,
+          })) || []
       );
     }),
   getPossibleDuplicates: publicProcedure
