@@ -24,7 +24,12 @@ import {
   BottomSheetModal,
   BottomSheetTextInput,
 } from "@discord/bottom-sheet";
-import { Image as ImageIcon, Sparkles, X } from "lucide-react-native";
+import {
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Sparkles,
+  X,
+} from "lucide-react-native";
 
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useNotification } from "~/providers/NotificationProvider";
@@ -46,6 +51,7 @@ const NewEventBottomSheet = React.forwardRef<
   const snapPoints = useMemo(() => [388], []);
   const [input, setInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [linkPreview, setLinkPreview] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const { expoPushToken } = useNotification();
@@ -56,6 +62,10 @@ const NewEventBottomSheet = React.forwardRef<
     });
   const eventFromImageThenCreateThenNotification =
     api.ai.eventFromImageThenCreateThenNotification.useMutation({
+      onSettled: () => void utils.event.invalidate(),
+    });
+  const eventFromUrlThenCreateThenNotification =
+    api.ai.eventFromUrlThenCreateThenNotification.useMutation({
       onSettled: () => void utils.event.invalidate(),
     });
   const { user } = useUser();
@@ -115,19 +125,49 @@ const NewEventBottomSheet = React.forwardRef<
     }
   }, []);
 
+  const handleLinkPreview = useCallback(async (url: string) => {
+    // Here you would typically fetch the link preview data
+    // For this example, we'll just set the URL as the preview
+    setLinkPreview(url);
+    setInput(url);
+  }, []);
+
+  const handleTextChange = useCallback(
+    (text: string) => {
+      setInput(text);
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const urls = text.match(urlRegex);
+      if (urls && urls.length > 0) {
+        void handleLinkPreview(urls[0]);
+      } else {
+        setLinkPreview(null);
+      }
+    },
+    [handleLinkPreview],
+  );
+
   useEffect(() => {
     if (initialParams) {
       if (initialParams.text) {
-        setInput(initialParams.text);
+        handleTextChange(initialParams.text);
       } else if (initialParams.imageUri) {
         const [uri, width, height] = initialParams.imageUri.split("|");
         if (uri) {
-          void handleImageUploadFromUri(uri);
+          if (uri.startsWith("http")) {
+            void handleLinkPreview(uri);
+          } else {
+            void handleImageUploadFromUri(uri);
+          }
         }
         setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
       }
     }
-  }, [handleImageUploadFromUri, initialParams]);
+  }, [
+    handleImageUploadFromUri,
+    handleLinkPreview,
+    handleTextChange,
+    initialParams,
+  ]);
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);
@@ -157,8 +197,9 @@ const NewEventBottomSheet = React.forwardRef<
     }
   }, [handleImageUploadFromUri, setInput]);
 
-  const clearImage = () => {
+  const clearPreview = () => {
     setImagePreview(null);
+    setLinkPreview(null);
     setInput("");
   };
 
@@ -166,6 +207,7 @@ const NewEventBottomSheet = React.forwardRef<
     setIsCreating(false);
     setInput("");
     setImagePreview(null);
+    setLinkPreview(null);
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
   }, [ref]);
 
@@ -187,12 +229,13 @@ const NewEventBottomSheet = React.forwardRef<
   );
 
   const handleCreateEvent = useCallback(() => {
-    if (!input.trim() && !imagePreview) return;
+    if (!input.trim() && !imagePreview && !linkPreview) return;
     setIsCreating(true);
 
     // Clear the modal state
     setInput("");
     setImagePreview(null);
+    setLinkPreview(null);
     // Don't reset the public state
 
     // Dismiss the modal immediately
@@ -202,21 +245,10 @@ const NewEventBottomSheet = React.forwardRef<
     showToast("Adding to Soonlist...", "loading");
 
     const createEvent = async () => {
-      let finalImageUrl = uploadedImageUrlRef.current;
-      if (isImageUploading && uploadPromiseRef.current) {
-        try {
-          finalImageUrl = await uploadPromiseRef.current;
-        } catch (error) {
-          console.error("Error waiting for image upload:", error);
-          setIsCreating(false);
-          return;
-        }
-      }
-
-      if (finalImageUrl) {
-        eventFromImageThenCreateThenNotification.mutate(
+      if (linkPreview) {
+        eventFromUrlThenCreateThenNotification.mutate(
           {
-            imageUrl: finalImageUrl,
+            url: linkPreview,
             timezone: "America/Los_Angeles",
             expoPushToken,
             lists: [],
@@ -230,21 +262,50 @@ const NewEventBottomSheet = React.forwardRef<
           },
         );
       } else {
-        eventFromRawTextAndNotification.mutate(
-          {
-            rawText: input,
-            timezone: "America/Los_Angeles",
-            expoPushToken,
-            lists: [],
-            userId: user?.id || "",
-            username: user?.username || "",
-            visibility: isPublic ? "public" : "private",
-          },
-          {
-            onSuccess: handleSuccess,
-            onError: handleError,
-          },
-        );
+        let finalImageUrl = uploadedImageUrlRef.current;
+        if (isImageUploading && uploadPromiseRef.current) {
+          try {
+            finalImageUrl = await uploadPromiseRef.current;
+          } catch (error) {
+            console.error("Error waiting for image upload:", error);
+            setIsCreating(false);
+            return;
+          }
+        }
+
+        if (finalImageUrl) {
+          eventFromImageThenCreateThenNotification.mutate(
+            {
+              imageUrl: finalImageUrl,
+              timezone: "America/Los_Angeles",
+              expoPushToken,
+              lists: [],
+              userId: user?.id || "",
+              username: user?.username || "",
+              visibility: isPublic ? "public" : "private",
+            },
+            {
+              onSuccess: handleSuccess,
+              onError: handleError,
+            },
+          );
+        } else {
+          eventFromRawTextAndNotification.mutate(
+            {
+              rawText: input,
+              timezone: "America/Los_Angeles",
+              expoPushToken,
+              lists: [],
+              userId: user?.id || "",
+              username: user?.username || "",
+              visibility: isPublic ? "public" : "private",
+            },
+            {
+              onSuccess: handleSuccess,
+              onError: handleError,
+            },
+          );
+        }
       }
     };
 
@@ -252,9 +313,11 @@ const NewEventBottomSheet = React.forwardRef<
   }, [
     input,
     imagePreview,
+    linkPreview,
     isPublic,
     expoPushToken,
     user,
+    eventFromUrlThenCreateThenNotification,
     eventFromImageThenCreateThenNotification,
     eventFromRawTextAndNotification,
     handleSuccess,
@@ -277,7 +340,9 @@ const NewEventBottomSheet = React.forwardRef<
           <TouchableOpacity
             className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2"
             onPress={handleCreateEvent}
-            disabled={isCreating || (!input.trim() && !imagePreview)}
+            disabled={
+              isCreating || (!input.trim() && !imagePreview && !linkPreview)
+            }
           >
             {isCreating ? (
               <Text className="text-xl font-bold text-white">Creating...</Text>
@@ -293,7 +358,7 @@ const NewEventBottomSheet = React.forwardRef<
         </View>
       </BottomSheetFooter>
     );
-  }, [handleCreateEvent, isCreating, input, imagePreview]);
+  }, [handleCreateEvent, isCreating, input, imagePreview, linkPreview]);
 
   const inputRef = useRef<React.ElementRef<typeof BottomSheetTextInput>>(null);
 
@@ -324,7 +389,7 @@ const NewEventBottomSheet = React.forwardRef<
               <View className="flex-row items-center">
                 <ImageIcon size={16} color="black" />
                 <Text className="ml-2 font-medium">
-                  {imagePreview ? "Change Image" : "Upload Image"}
+                  {imagePreview || linkPreview ? "Change" : "Upload"}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -337,7 +402,7 @@ const NewEventBottomSheet = React.forwardRef<
                 className="rounded-md"
               />
               <TouchableOpacity
-                onPress={clearImage}
+                onPress={clearPreview}
                 className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
               >
                 <X size={16} color="black" />
@@ -348,6 +413,25 @@ const NewEventBottomSheet = React.forwardRef<
                 </View>
               )}
             </View>
+          ) : linkPreview ? (
+            <View className="relative">
+              <View className="h-[124px] w-full items-center justify-center rounded-md bg-neutral-200">
+                <LinkIcon size={32} color="black" />
+                <Text
+                  className="mt-2 text-sm font-medium"
+                  numberOfLines={2}
+                  ellipsizeMode="middle"
+                >
+                  {linkPreview}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={clearPreview}
+                className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+              >
+                <X size={16} color="black" />
+              </TouchableOpacity>
+            </View>
           ) : (
             <TouchableWithoutFeedback onPress={focusInput}>
               <View className="mb-4 h-32 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
@@ -356,7 +440,7 @@ const NewEventBottomSheet = React.forwardRef<
                   className="h-full w-full"
                   placeholder="Enter event details or paste a URL"
                   defaultValue={input}
-                  onChangeText={setInput}
+                  onChangeText={handleTextChange}
                   multiline
                   textAlignVertical="top"
                 />
