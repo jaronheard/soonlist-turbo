@@ -200,7 +200,7 @@ const AddEventBottomSheet = React.forwardRef<
 
   const handleCameraCapture = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
+    if (status !== ImagePicker.PermissionStatus.GRANTED) {
       showToast("Camera permission is required to take a photo", "error");
       return;
     }
