@@ -1,7 +1,6 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 const IS_DEV = process.env.APP_VARIANT === "development";
-const INTERCOM_APP_ID = "xn0q41hi";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
