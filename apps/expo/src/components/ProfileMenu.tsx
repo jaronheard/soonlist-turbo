@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
 import {
   Menu,
   MenuOption,
@@ -12,7 +12,11 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { HelpCircle, LogOut, MessageCircle, User } from "lucide-react-native";
 
+import { cn } from "~/utils/cn";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
+
+const screenWidth = Dimensions.get("window").width;
+const menuMinWidth = screenWidth * 0.6; // 60% of screen width
 
 export function ProfileMenu() {
   const { signOut } = useAuth();
@@ -36,9 +40,19 @@ export function ProfileMenu() {
       await Intercom.present();
     } catch (error) {
       console.error("Error presenting Intercom:", error);
-      // You might want to add some user-facing error handling here
     }
   };
+
+  const menuItems = [
+    { title: "How to Use", icon: HelpCircle, onSelect: showOnboarding },
+    { title: "Support", icon: MessageCircle, onSelect: presentIntercom },
+    {
+      title: "Sign Out",
+      icon: LogOut,
+      onSelect: handleSignOut,
+      destructive: true,
+    },
+  ];
 
   return (
     <Menu>
@@ -66,34 +80,44 @@ export function ProfileMenu() {
       <MenuOptions
         customStyles={{
           optionsContainer: {
-            backgroundColor: "white",
-            borderRadius: 8,
-            padding: 8,
+            overflow: "hidden",
+            marginTop: 8,
+            marginHorizontal: 8,
+            borderRadius: 14,
+            minWidth: menuMinWidth,
+            borderWidth: 1,
+            borderColor: "#C7C7C7",
           },
         }}
       >
-        <MenuOption onSelect={showOnboarding}>
-          <View className="flex-row items-center py-2">
-            <HelpCircle size={20} color="#5A32FB" />
-            <Text className="ml-3 text-base font-medium text-neutral-1">
-              How to Use
-            </Text>
-          </View>
-        </MenuOption>
-        <MenuOption onSelect={presentIntercom}>
-          <View className="flex-row items-center py-2">
-            <MessageCircle size={20} color="#5A32FB" />
-            <Text className="ml-3 text-base font-medium text-neutral-1">
-              Support
-            </Text>
-          </View>
-        </MenuOption>
-        <MenuOption onSelect={handleSignOut}>
-          <View className="flex-row items-center py-2">
-            <LogOut size={20} color="#BA2727" />
-            <Text className="ml-3 font-medium text-[#BA2727]">Sign Out</Text>
-          </View>
-        </MenuOption>
+        {menuItems.map((item, index) => (
+          <MenuOption
+            key={index}
+            onSelect={item.onSelect}
+            customStyles={{
+              optionWrapper: {
+                padding: 0,
+                borderBottomWidth: index < menuItems.length - 1 ? 0.5 : 0,
+                borderBottomColor: "#C7C7C7",
+              },
+            }}
+          >
+            <View className="flex-row items-center justify-between px-4 py-3">
+              <Text
+                className={cn("font-base text-xl", {
+                  "text-[#FF3B30]": item.destructive,
+                  "text-black": !item.destructive,
+                })}
+              >
+                {item.title}
+              </Text>
+              <item.icon
+                size={20}
+                color={item.destructive ? "#FF3B30" : "#000000"}
+              />
+            </View>
+          </MenuOption>
+        ))}
       </MenuOptions>
     </Menu>
   );
