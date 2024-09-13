@@ -2,13 +2,14 @@ import type { OAuthStrategy } from "@clerk/types";
 import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
 import { Image, Pressable, Text, TextInput, View } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { AppleSignInButton } from "./AppleSignInButton";
+import { EmailSignInButton } from "./EmailSignInButton"; // You'll need to create this component
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Logo } from "./Logo";
 
@@ -16,6 +17,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 const SignInWithOAuth = () => {
   useWarmUpBrowser();
+  const router = useRouter();
 
   const { signIn, setActive: setActiveSignIn } = useSignIn();
   const { signUp, setActive: setActiveSignUp } = useSignUp();
@@ -91,6 +93,10 @@ const SignInWithOAuth = () => {
       // Handle error
       console.error("Username submission error:", err);
     }
+  };
+
+  const navigateToEmailSignUp = () => {
+    router.push("/sign-up-email");
   };
 
   if (showUsernameInput) {
@@ -179,6 +185,8 @@ const SignInWithOAuth = () => {
         <AppleSignInButton
           onPress={() => void handleOAuthFlow("oauth_apple")}
         />
+        <View className="h-4" />
+        <EmailSignInButton onPress={navigateToEmailSignUp} />
       </View>
     </View>
   );
