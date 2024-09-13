@@ -5,9 +5,9 @@ import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
+import AddEventBottomSheet from "~/components/AddEventBottomSheet";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import NewEventBottomSheet from "~/components/NewEventBottomSheet";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
 import { ProfileMenu } from "../../components/ProfileMenu";
@@ -84,7 +84,7 @@ export default function Page() {
         />
       </View>
       <AddEventButton onPress={handlePresentModalPress} />
-      <NewEventBottomSheet ref={bottomSheetRef} />
+      <AddEventBottomSheet ref={bottomSheetRef} />
     </View>
   );
 }

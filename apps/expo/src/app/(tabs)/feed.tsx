@@ -8,9 +8,9 @@ import { Navigation2 } from "lucide-react-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import AddEventBottomSheet from "~/components/AddEventBottomSheet";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import NewEventBottomSheet from "~/components/NewEventBottomSheet";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
@@ -129,7 +129,7 @@ function MyFeed() {
               showCreator="otherUsers"
             />
             <AddEventButton onPress={handlePresentModalPress} />
-            <NewEventBottomSheet
+            <AddEventBottomSheet
               ref={bottomSheetRef}
               initialParams={intentParams}
             />

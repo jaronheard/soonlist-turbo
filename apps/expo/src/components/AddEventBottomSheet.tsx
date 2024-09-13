@@ -25,6 +25,7 @@ import {
   BottomSheetTextInput,
 } from "@discord/bottom-sheet";
 import {
+  Camera as CameraIcon,
   Image as ImageIcon,
   Link as LinkIcon,
   Sparkles,
@@ -36,7 +37,7 @@ import { useNotification } from "~/providers/NotificationProvider";
 import { api } from "~/utils/api";
 import { showToast } from "~/utils/toast";
 
-interface NewEventBottomSheetProps {
+interface AddEventBottomSheetProps {
   children?: React.ReactNode;
   initialParams?: {
     text?: string;
@@ -44,9 +45,9 @@ interface NewEventBottomSheetProps {
   } | null;
 }
 
-const NewEventBottomSheet = React.forwardRef<
+const AddEventBottomSheet = React.forwardRef<
   BottomSheetModal,
-  NewEventBottomSheetProps
+  AddEventBottomSheetProps
 >(({ initialParams }, ref) => {
   const snapPoints = useMemo(() => [388], []);
   const [input, setInput] = useState("");
@@ -186,6 +187,25 @@ const NewEventBottomSheet = React.forwardRef<
 
   const handleImageUpload = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const imageUri = result.assets[0].uri;
+      setInput(imageUri.split("/").pop() || "");
+      await handleImageUploadFromUri(imageUri);
+    }
+  }, [handleImageUploadFromUri, setInput]);
+
+  const handleCameraCapture = useCallback(async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== ImagePicker.PermissionStatus.GRANTED) {
+      showToast("Camera permission is required to take a photo", "error");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
     });
@@ -382,17 +402,28 @@ const NewEventBottomSheet = React.forwardRef<
         <View className="mb-4">
           <View className="mb-2 flex flex-row items-center justify-between">
             <Text className="text-base font-medium">Event Details</Text>
-            <TouchableOpacity
-              onPress={handleImageUpload}
-              className="rounded-md bg-neutral-200 px-3 py-2"
-            >
-              <View className="flex-row items-center">
-                <ImageIcon size={16} color="black" />
-                <Text className="ml-2 font-medium">
-                  {imagePreview || linkPreview ? "Change" : "Upload"}
-                </Text>
-              </View>
-            </TouchableOpacity>
+            <View className="flex-row">
+              <TouchableOpacity
+                onPress={handleCameraCapture}
+                className="mr-2 rounded-md bg-neutral-200 px-3 py-2"
+              >
+                <View className="flex-row items-center">
+                  <CameraIcon size={16} color="black" />
+                  <Text className="ml-2 font-medium">Camera</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleImageUpload}
+                className="rounded-md bg-neutral-200 px-3 py-2"
+              >
+                <View className="flex-row items-center">
+                  <ImageIcon size={16} color="black" />
+                  <Text className="ml-2 font-medium">
+                    {imagePreview || linkPreview ? "Change" : "Upload"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
           {imagePreview ? (
             <View className="relative">
@@ -457,4 +488,4 @@ const NewEventBottomSheet = React.forwardRef<
   );
 });
 
-export default NewEventBottomSheet;
+export default AddEventBottomSheet;
