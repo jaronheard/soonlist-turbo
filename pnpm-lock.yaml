@@ -55,6 +55,9 @@ importers:
       '@expo/metro-config':
         specifier: ^0.17.6
         version: 0.17.7(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))
+      '@intercom/intercom-react-native':
+        specifier: ^7.2.1
+        version: 7.2.1(encoding@0.1.13)(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       '@react-native-async-storage/async-storage':
         specifier: 1.21.0
         version: 1.21.0(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))
@@ -2247,6 +2250,13 @@ packages:
 
   '@ide/backoff@1.0.0':
     resolution: {integrity: sha512-F0YfUDjvT+Mtt/R4xdl2X0EYCHMMiJqNLdxHD++jDT5ydEFIyqbCHh51Qx2E211dgZprPKhV7sHmnXKpLuvc5g==}
+
+  '@intercom/intercom-react-native@7.2.1':
+    resolution: {integrity: sha512-idpA36sM0nNB3iJStwv4klw+6e+MuzvbMyPe1PFyJzjwHkZWXsz67g//RogTMFOvf6asTbYCLIadTQGeiCrz9Q==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -10663,6 +10673,14 @@ snapshots:
       - supports-color
 
   '@ide/backoff@1.0.0': {}
+
+  '@intercom/intercom-react-native@7.2.1(encoding@0.1.13)(react-native@0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      node-fetch: 2.7.0(encoding@0.1.13)
+      react: 18.3.1
+      react-native: 0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.3.1)
+    transitivePeerDependencies:
+      - encoding
 
   '@isaacs/cliui@8.0.2':
     dependencies:

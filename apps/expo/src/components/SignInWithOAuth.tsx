@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { Image, Pressable, Text, TextInput, View } from "react-native";
 import { Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
+import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
+import Intercom from "@intercom/intercom-react-native";
 
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { AppleSignInButton } from "./AppleSignInButton";
@@ -43,10 +44,16 @@ const SignInWithOAuth = () => {
           : startAppleOAuthFlow;
 
       const result = await startOAuthFlow();
-
       if (result.createdSessionId) {
         if (result.signIn?.status === "complete") {
           await setActiveSignIn({ session: result.createdSessionId });
+          const email = Clerk.session?.user.emailAddresses[0]?.emailAddress;
+          const userId = Clerk.session?.user.id;
+          const intercomLogin = await Intercom.loginUserWithUserAttributes({
+            email,
+            userId,
+          });
+          console.log(intercomLogin, "intercomLogin");
         } else if (result.signUp?.status === "missing_requirements") {
           setPendingSignUp(result.signUp);
           setShowUsernameInput(true);
@@ -57,6 +64,7 @@ const SignInWithOAuth = () => {
       }
     } catch (err) {
       // Handle error
+      console.error("OAuth flow error:", err);
     }
   };
 
@@ -72,6 +80,8 @@ const SignInWithOAuth = () => {
 
       if (res.status === "complete") {
         await setActiveSignUp({ session: res.createdSessionId });
+        // Register user with Intercom
+        await Intercom.loginUnidentifiedUser();
         setShowUsernameInput(false);
         setPendingSignUp(null);
       } else if (res.status === "missing_requirements") {
@@ -79,6 +89,7 @@ const SignInWithOAuth = () => {
       }
     } catch (err) {
       // Handle error
+      console.error("Username submission error:", err);
     }
   };
 
