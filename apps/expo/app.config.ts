@@ -1,6 +1,7 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 const IS_DEV = process.env.APP_VARIANT === "development";
+const INTERCOM_APP_ID = "xn0q41hi";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -52,6 +53,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "@bacons/apple-targets",
       {
         appleTeamId: "GQ59Z4XZHZ",
+      },
+    ],
+    [
+      "@intercom/intercom-react-native",
+      {
+        appId: "xn0q41hi",
+        androidApiKey: "android_sdk-a26b2f3e5307db04134c71c8e59f7465a578109d",
+        iosApiKey: "ios_sdk-34383d2c19fe53cc172a8be023b3dfc92fa87004",
       },
     ],
   ],
