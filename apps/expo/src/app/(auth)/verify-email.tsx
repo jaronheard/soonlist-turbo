@@ -17,15 +17,14 @@ const VerifyEmail = () => {
         code,
       });
 
-      if (completeSignUp.status !== "complete") {
+      if (completeSignUp.status === "complete") {
+        // Verification successful
+        await setActive({ session: completeSignUp.createdSessionId });
+        router.replace("/feed");
+      } else {
         // Verification failed
         console.log(JSON.stringify(completeSignUp, null, 2));
-      } else {
-        // Verification successful
-        if (completeSignUp.createdSessionId) {
-          await setActive({ session: completeSignUp.createdSessionId });
-        }
-        router.push("/feed");
+        // Handle the error (show error message to user)
       }
     } catch (err) {
       console.error("Error during verification:", err);
