@@ -30,49 +30,38 @@ import { api } from "~/utils/api";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
 
 export default function Page() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const utils = api.useUtils();
   const { width } = Dimensions.get("window");
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const pulseAnim = useRef(new Animated.Value(0)).current;
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const { user: currentUser } = useUser();
 
-  const navigation = useNavigation();
-
-  useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <View className="-mr-4 flex-row items-center gap-2">
-          <EventMenu
-            event={
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-              eventQuery.data as RouterOutputs["event"]["getUpcomingForUser"][number]
-            }
-            isOwner={isCurrentUserEvent}
-            isSaved={
-              savedIdsQuery.data?.some(
-                (savedEvent) => savedEvent.id === eventQuery.data?.id,
-              ) ?? false
-            }
-            menuType="popup"
-            onDelete={handleDelete}
-          />
-          <ShareButton webPath={`/event/${id}`} />
-        </View>
-      ),
-    });
-  }, [navigation]);
-
   const [refreshing, setRefreshing] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
-  const eventQuery = api.event.get.useQuery({ eventId: id });
+  const pulseAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
   const username = currentUser?.username || "";
+  const eventQuery = api.event.get.useQuery({ eventId: id });
   const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
     userName: username,
   });
+
+  const deleteEventMutation = api.event.delete.useMutation({
+    onSuccess: () => {
+      void utils.event.invalidate();
+      router.replace("/");
+    },
+  });
+
+  const handleDelete = useCallback(async () => {
+    if (id && typeof id === "string") {
+      await deleteEventMutation.mutateAsync({ id });
+    }
+  }, [deleteEventMutation, id]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -106,16 +95,36 @@ export default function Page() {
     }
   }, [fadeAnim, imageLoaded]);
 
-  const deleteEventMutation = api.event.delete.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
-      router.replace("/");
-    },
-  });
-
-  const handleDelete = useCallback(async () => {
-    await deleteEventMutation.mutateAsync({ id: id });
-  }, [deleteEventMutation, id]);
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View className="-mr-4 flex-row items-center gap-2">
+          <EventMenu
+            event={
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+              eventQuery.data as RouterOutputs["event"]["getUpcomingForUser"][number]
+            }
+            isOwner={eventQuery.data?.userId === currentUser?.id}
+            isSaved={
+              savedIdsQuery.data?.some(
+                (savedEvent) => savedEvent.id === eventQuery.data?.id,
+              ) ?? false
+            }
+            menuType="popup"
+            onDelete={handleDelete}
+          />
+          <ShareButton webPath={`/event/${id}`} />
+        </View>
+      ),
+    });
+  }, [
+    navigation,
+    eventQuery.data,
+    savedIdsQuery.data,
+    currentUser?.id,
+    id,
+    handleDelete,
+  ]);
 
   if (!id || typeof id !== "string") {
     return (
@@ -143,6 +152,8 @@ export default function Page() {
 
   const event = eventQuery.data;
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
+  const isCurrentUserEvent = currentUser?.id === event.userId;
+
   const formatDate = (date: string, startTime?: string, endTime?: string) => {
     const startDateInfo = getDateTimeInfo(
       date,
@@ -174,8 +185,6 @@ export default function Page() {
     eventData.startTime,
     eventData.endTime,
   );
-
-  const isCurrentUserEvent = currentUser?.id === event.userId;
 
   return (
     <ScrollView
