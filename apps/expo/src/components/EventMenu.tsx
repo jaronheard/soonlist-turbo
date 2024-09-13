@@ -15,7 +15,6 @@ import {
   MenuOptions,
   MenuTrigger,
 } from "react-native-popup-menu";
-import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import {
   CalendarPlus,
@@ -277,42 +276,40 @@ export function EventMenu({
               marginHorizontal: 8,
               borderRadius: 14,
               minWidth: menuMinWidth,
+              borderWidth: 1,
+              borderColor: "#C7C7C7",
             },
           }}
         >
-          <BlurView intensity={80} tint="light" style={{ flex: 1 }}>
-            <View style={{ borderWidth: 1, borderColor: "#C7C7C7" }}>
-              {getMenuItems().map((item, index) => (
-                <MenuOption
-                  key={index}
-                  onSelect={() => handleMenuSelect(item.title)}
-                  customStyles={{
-                    optionWrapper: {
-                      padding: 0,
-                      borderBottomWidth:
-                        index < getMenuItems().length - 1 ? 0.5 : 0,
-                      borderBottomColor: "#C7C7C7",
-                    },
-                  }}
+          {getMenuItems().map((item, index) => (
+            <MenuOption
+              key={index}
+              onSelect={() => handleMenuSelect(item.title)}
+              customStyles={{
+                optionWrapper: {
+                  padding: 0,
+                  borderBottomWidth:
+                    index < getMenuItems().length - 1 ? 0.5 : 0,
+                  borderBottomColor: "#C7C7C7",
+                },
+              }}
+            >
+              <View className="flex-row items-center justify-between px-4 py-3">
+                <Text
+                  className={cn("font-base text-xl", {
+                    "text-[#FF3B30]": item.destructive,
+                    "text-black": !item.destructive,
+                  })}
                 >
-                  <View className="flex-row items-center justify-between px-4 py-3">
-                    <Text
-                      className={cn("font-base text-xl", {
-                        "text-[#FF3B30]": item.destructive,
-                        "text-black": !item.destructive,
-                      })}
-                    >
-                      {item.title}
-                    </Text>
-                    <item.lucideIcon
-                      size={22}
-                      color={item.destructive ? "#FF3B30" : "#000000"}
-                    />
-                  </View>
-                </MenuOption>
-              ))}
-            </View>
-          </BlurView>
+                  {item.title}
+                </Text>
+                <item.lucideIcon
+                  size={20}
+                  color={item.destructive ? "#FF3B30" : "#000000"}
+                />
+              </View>
+            </MenuOption>
+          ))}
         </MenuOptions>
       </Menu>
     );
