@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { useUser } from "@clerk/clerk-expo";
-import Intercom from "@intercom/intercom-react-native";
 
 import useAuthSync from "~/hooks/useAuthSync";
 import useEnvSync from "~/hooks/useEnvSync";
@@ -13,7 +12,7 @@ export default function AuthAndTokenSync({
 }: {
   expoPushToken: string;
 }) {
-  const { user, isSignedIn } = useUser();
+  const { user } = useUser();
   const authData = useAuthSync({ expoPushToken });
   const envData = useEnvSync();
   const createTokenMutation = api.pushToken.create.useMutation({});
@@ -32,18 +31,6 @@ export default function AuthAndTokenSync({
       lastSavedTokenRef.current = expoPushToken;
     }
   }, [user, expoPushToken, createTokenMutation]);
-
-  useEffect(() => {
-    if (isSignedIn && user.id) {
-      void Intercom.loginUserWithUserAttributes({
-        userId: user.id,
-        email: user.primaryEmailAddress?.emailAddress,
-        name: `${user.firstName} ${user.lastName}`,
-      });
-    } else {
-      void Intercom.logout();
-    }
-  }, [isSignedIn, user]);
 
   return null; // This component doesn't render anything
 }

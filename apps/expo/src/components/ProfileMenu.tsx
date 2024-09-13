@@ -9,7 +9,8 @@ import {
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { HelpCircle, LogOut, User } from "lucide-react-native";
+import Intercom from "@intercom/intercom-react-native";
+import { HelpCircle, LogOut, MessageCircle, User } from "lucide-react-native";
 
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
@@ -27,6 +28,15 @@ export function ProfileMenu() {
       keychainAccessGroup: getKeyChainAccessGroup(),
     });
     await signOut();
+  };
+
+  const presentIntercom = async () => {
+    try {
+      await Intercom.present();
+    } catch (error) {
+      console.error("Error presenting Intercom:", error);
+      // You might want to add some user-facing error handling here
+    }
   };
 
   return (
@@ -66,6 +76,14 @@ export function ProfileMenu() {
             <HelpCircle size={20} color="#5A32FB" />
             <Text className="ml-3 text-base font-medium text-neutral-1">
               How to Use
+            </Text>
+          </View>
+        </MenuOption>
+        <MenuOption onSelect={presentIntercom}>
+          <View className="flex-row items-center py-2">
+            <MessageCircle size={20} color="#5A32FB" />
+            <Text className="ml-3 text-base font-medium text-neutral-1">
+              Support
             </Text>
           </View>
         </MenuOption>
