@@ -1,6 +1,13 @@
 import type { LucideIcon } from "lucide-react-native";
 import React from "react";
-import { Linking, Share, Text, TouchableOpacity, View } from "react-native";
+import {
+  Dimensions,
+  Linking,
+  Share,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import ContextMenu from "react-native-context-menu-view";
 import {
   Menu,
@@ -8,6 +15,7 @@ import {
   MenuOptions,
   MenuTrigger,
 } from "react-native-popup-menu";
+import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import {
   CalendarPlus,
@@ -18,7 +26,7 @@ import {
   MoreVertical,
   PenSquare,
   PlusCircle,
-  Share2,
+  ShareIcon,
   Trash2,
 } from "lucide-react-native";
 
@@ -28,6 +36,9 @@ import type { RouterOutputs } from "~/utils/api";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import Config from "~/utils/config";
+
+const screenWidth = Dimensions.get("window").width;
+const menuMinWidth = screenWidth * 0.6; // 60% of screen width
 
 interface EventMenuProps {
   event: RouterOutputs["event"]["getUpcomingForUser"][number];
@@ -81,7 +92,11 @@ export function EventMenu({
 
   const getMenuItems = (): MenuItem[] => {
     const baseItems: MenuItem[] = [
-      { title: "Share", lucideIcon: Share2, systemIcon: "square.and.arrow.up" },
+      {
+        title: "Share",
+        lucideIcon: ShareIcon,
+        systemIcon: "square.and.arrow.up",
+      },
       { title: "Directions", lucideIcon: Map, systemIcon: "map" },
       {
         title: "Add to Calendar",
@@ -257,33 +272,47 @@ export function EventMenu({
         <MenuOptions
           customStyles={{
             optionsContainer: {
-              backgroundColor: "white",
-              borderRadius: 8,
-              padding: 8,
+              overflow: "hidden",
+              marginTop: 8,
+              marginHorizontal: 8,
+              borderRadius: 14,
+              minWidth: menuMinWidth,
             },
           }}
         >
-          {getMenuItems().map((item, index) => (
-            <MenuOption
-              key={index}
-              onSelect={() => handleMenuSelect(item.title)}
-            >
-              <View className="flex-row items-center py-2">
-                <item.lucideIcon
-                  size={20}
-                  color={item.destructive ? "#BA2727" : "#5A32FB"}
-                />
-                <Text
-                  className={cn("ml-3 font-medium", {
-                    "text-[#BA2727]": item.destructive,
-                    "text-base": !item.destructive,
-                  })}
+          <BlurView intensity={80} tint="light" style={{ flex: 1 }}>
+            <View style={{ borderWidth: 1, borderColor: "#C7C7C7" }}>
+              {getMenuItems().map((item, index) => (
+                <MenuOption
+                  key={index}
+                  onSelect={() => handleMenuSelect(item.title)}
+                  customStyles={{
+                    optionWrapper: {
+                      padding: 0,
+                      borderBottomWidth:
+                        index < getMenuItems().length - 1 ? 0.5 : 0,
+                      borderBottomColor: "#C7C7C7",
+                    },
+                  }}
                 >
-                  {item.title}
-                </Text>
-              </View>
-            </MenuOption>
-          ))}
+                  <View className="flex-row items-center justify-between px-4 py-3">
+                    <Text
+                      className={cn("font-base text-xl", {
+                        "text-[#FF3B30]": item.destructive,
+                        "text-black": !item.destructive,
+                      })}
+                    >
+                      {item.title}
+                    </Text>
+                    <item.lucideIcon
+                      size={22}
+                      color={item.destructive ? "#FF3B30" : "#000000"}
+                    />
+                  </View>
+                </MenuOption>
+              ))}
+            </View>
+          </BlurView>
         </MenuOptions>
       </Menu>
     );
