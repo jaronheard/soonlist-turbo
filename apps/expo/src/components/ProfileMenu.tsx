@@ -28,6 +28,7 @@ export function ProfileMenu() {
       keychainAccessGroup: getKeyChainAccessGroup(),
     });
     await signOut();
+    await Intercom.logout();
   };
 
   const presentIntercom = async () => {
