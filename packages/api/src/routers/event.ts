@@ -463,6 +463,52 @@ export const eventRouter = createTRPCRouter({
         limit: input.limit,
       });
     }),
+  getDiscoverInfinite: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(20),
+        cursor: z.string().nullish(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { userId } = ctx.auth;
+      const { limit, cursor } = input;
+      const now = new Date();
+
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User must be logged in to discover events",
+        });
+      }
+
+      const e = await ctx.db.query.events.findMany({
+        where: and(
+          gte(events.startDateTime, now),
+          not(eq(events.userId, userId)),
+          eq(events.visibility, "public"),
+        ),
+        orderBy: [asc(events.startDateTime)],
+        limit: limit + 1,
+        offset: cursor ? parseInt(cursor) : 0,
+        with: {
+          user: true,
+          eventFollows: true,
+          comments: true,
+        },
+      });
+
+      let nextCursor: typeof cursor | undefined = undefined;
+      if (e.length > limit) {
+        const nextItem = e.pop();
+        nextCursor = nextItem?.id;
+      }
+
+      return {
+        events: e,
+        nextCursor,
+      };
+    }),
   delete: protectedProcedure.input(eventIdSchema).mutation(({ ctx, input }) => {
     const { userId, sessionClaims } = ctx.auth;
     if (!userId) {
