@@ -23,6 +23,17 @@ export default function SignUpScreen() {
   const [password, setPassword] = React.useState("");
   const [username, setUsername] = React.useState("");
 
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const lastNameRef = React.useRef<TextInput>(null);
+  const usernameRef = React.useRef<TextInput>(null);
+  const emailRef = React.useRef<TextInput>(null);
+  const passwordRef = React.useRef<TextInput>(null);
+
+  const focusNextField = (nextField: React.RefObject<TextInput>) => {
+    nextField.current?.focus();
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
   const onSignUpPress = async () => {
     if (!isLoaded) return;
 
@@ -64,6 +75,7 @@ export default function SignUpScreen() {
         }}
       />
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
@@ -87,6 +99,9 @@ export default function SignUpScreen() {
                   value={firstName}
                   onChangeText={setFirstName}
                   className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                  returnKeyType="next"
+                  onSubmitEditing={() => focusNextField(lastNameRef)}
+                  blurOnSubmit={false}
                 />
               </View>
               <View className="flex-1">
@@ -94,9 +109,13 @@ export default function SignUpScreen() {
                   Last Name
                 </Text>
                 <TextInput
+                  ref={lastNameRef}
                   value={lastName}
                   onChangeText={setLastName}
                   className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                  returnKeyType="next"
+                  onSubmitEditing={() => focusNextField(usernameRef)}
+                  blurOnSubmit={false}
                 />
               </View>
             </View>
@@ -105,10 +124,14 @@ export default function SignUpScreen() {
                 Username
               </Text>
               <TextInput
+                ref={usernameRef}
                 autoCapitalize="none"
                 value={username}
                 onChangeText={setUsername}
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                returnKeyType="next"
+                onSubmitEditing={() => focusNextField(emailRef)}
+                blurOnSubmit={false}
               />
               <Text className="mt-1 text-sm text-gray-500">
                 On Instagram? Consider using the same username
@@ -119,10 +142,15 @@ export default function SignUpScreen() {
                 Email
               </Text>
               <TextInput
+                ref={emailRef}
                 autoCapitalize="none"
                 value={emailAddress}
                 onChangeText={setEmailAddress}
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                returnKeyType="next"
+                onSubmitEditing={() => focusNextField(passwordRef)}
+                blurOnSubmit={false}
+                keyboardType="email-address"
               />
             </View>
             <View className="mb-6 w-full">
@@ -130,10 +158,13 @@ export default function SignUpScreen() {
                 Password
               </Text>
               <TextInput
+                ref={passwordRef}
                 value={password}
                 secureTextEntry={true}
                 onChangeText={setPassword}
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                returnKeyType="done"
+                onSubmitEditing={onSignUpPress}
               />
             </View>
             <Pressable

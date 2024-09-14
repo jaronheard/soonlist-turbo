@@ -20,6 +20,15 @@ export default function SignInScreen() {
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
 
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const emailRef = React.useRef<TextInput>(null);
+  const passwordRef = React.useRef<TextInput>(null);
+
+  const focusNextField = (nextField: React.RefObject<TextInput>) => {
+    nextField.current?.focus();
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
   const onSignInPress = async () => {
     if (!isLoaded) return;
 
@@ -58,6 +67,7 @@ export default function SignInScreen() {
         }}
       />
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
@@ -73,18 +83,26 @@ export default function SignInScreen() {
               Sign in to your Soonlist account
             </Text>
             <TextInput
+              ref={emailRef}
               autoCapitalize="none"
               value={emailAddress}
               placeholder="Email"
               onChangeText={setEmailAddress}
               className="mb-4 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+              returnKeyType="next"
+              onSubmitEditing={() => focusNextField(passwordRef)}
+              blurOnSubmit={false}
+              keyboardType="email-address"
             />
             <TextInput
+              ref={passwordRef}
               value={password}
               placeholder="Password"
               secureTextEntry={true}
               onChangeText={setPassword}
               className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+              returnKeyType="done"
+              onSubmitEditing={onSignInPress}
             />
             <Pressable
               onPress={onSignInPress}
