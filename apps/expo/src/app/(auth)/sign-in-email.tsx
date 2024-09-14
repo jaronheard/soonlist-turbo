@@ -12,6 +12,9 @@ export default function SignInScreen() {
 
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [emailError, setEmailError] = React.useState("");
+  const [passwordError, setPasswordError] = React.useState("");
+  const [generalError, setGeneralError] = React.useState("");
 
   const emailRef = React.useRef<TextInput>(null);
   const passwordRef = React.useRef<TextInput>(null);
@@ -20,8 +23,32 @@ export default function SignInScreen() {
     nextField.current?.focus();
   };
 
+  const validateForm = () => {
+    let isValid = true;
+    setEmailError("");
+    setPasswordError("");
+    setGeneralError("");
+
+    if (!emailAddress) {
+      setEmailError("Email is required");
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(emailAddress)) {
+      setEmailError("Invalid email format");
+      isValid = false;
+    }
+
+    if (!password) {
+      setPasswordError("Password is required");
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
   const onSignInPress = async () => {
     if (!isLoaded) return;
+
+    if (!validateForm()) return;
 
     try {
       const completeSignIn = await signIn.create({
@@ -31,8 +58,9 @@ export default function SignInScreen() {
 
       await setActive({ session: completeSignIn.createdSessionId });
       router.replace("/feed");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error during sign in:", err);
+      setGeneralError(err.message || "An error occurred during sign in");
     }
   };
 
@@ -83,6 +111,9 @@ export default function SignInScreen() {
             blurOnSubmit={false}
             keyboardType="email-address"
           />
+          {emailError ? (
+            <Text className="mt-1 text-red-500">{emailError}</Text>
+          ) : null}
           <TextInput
             ref={passwordRef}
             value={password}
@@ -93,6 +124,9 @@ export default function SignInScreen() {
             returnKeyType="done"
             onSubmitEditing={onSignInPress}
           />
+          {passwordError ? (
+            <Text className="mt-1 text-red-500">{passwordError}</Text>
+          ) : null}
           <Pressable
             onPress={onSignInPress}
             className="w-full rounded-full bg-interactive-1 px-6 py-3"
@@ -107,6 +141,11 @@ export default function SignInScreen() {
               <Text className="font-bold text-interactive-1">Sign Up</Text>
             </Text>
           </Pressable>
+          {generalError ? (
+            <Text className="mb-4 text-center text-red-500">
+              {generalError}
+            </Text>
+          ) : null}
         </View>
       </View>
     </KeyboardAwareScrollView>

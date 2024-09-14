@@ -16,6 +16,13 @@ export default function SignUpScreen() {
   const [password, setPassword] = React.useState("");
   const [username, setUsername] = React.useState("");
 
+  const [firstNameError, setFirstNameError] = React.useState("");
+  const [lastNameError, setLastNameError] = React.useState("");
+  const [emailError, setEmailError] = React.useState("");
+  const [passwordError, setPasswordError] = React.useState("");
+  const [usernameError, setUsernameError] = React.useState("");
+  const [generalError, setGeneralError] = React.useState("");
+
   const lastNameRef = React.useRef<TextInput>(null);
   const usernameRef = React.useRef<TextInput>(null);
   const emailRef = React.useRef<TextInput>(null);
@@ -25,8 +32,53 @@ export default function SignUpScreen() {
     nextField.current?.focus();
   };
 
+  const validateForm = () => {
+    let isValid = true;
+    setFirstNameError("");
+    setLastNameError("");
+    setEmailError("");
+    setPasswordError("");
+    setUsernameError("");
+    setGeneralError("");
+
+    if (!firstName) {
+      setFirstNameError("First name is required");
+      isValid = false;
+    }
+
+    if (!lastName) {
+      setLastNameError("Last name is required");
+      isValid = false;
+    }
+
+    if (!username) {
+      setUsernameError("Username is required");
+      isValid = false;
+    }
+
+    if (!emailAddress) {
+      setEmailError("Email is required");
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(emailAddress)) {
+      setEmailError("Invalid email format");
+      isValid = false;
+    }
+
+    if (!password) {
+      setPasswordError("Password is required");
+      isValid = false;
+    } else if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters long");
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
   const onSignUpPress = async () => {
     if (!isLoaded) return;
+
+    if (!validateForm()) return;
 
     try {
       await signUp.create({
@@ -39,8 +91,9 @@ export default function SignUpScreen() {
 
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       router.push("/verify-email");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error during sign up:", err);
+      setGeneralError(err.message || "An error occurred during sign up");
     }
   };
 
@@ -79,6 +132,11 @@ export default function SignUpScreen() {
           <Text className="mb-8 text-center text-lg text-gray-500">
             Sign up for your Soonlist account
           </Text>
+          {generalError ? (
+            <Text className="mb-4 text-center text-red-500">
+              {generalError}
+            </Text>
+          ) : null}
           <View className="mb-4 w-full flex-row gap-4">
             <View className="flex-1">
               <Text className="mb-1 text-sm font-medium text-gray-700">
@@ -92,6 +150,9 @@ export default function SignUpScreen() {
                 onSubmitEditing={() => focusNextField(lastNameRef)}
                 blurOnSubmit={false}
               />
+              {firstNameError ? (
+                <Text className="mt-1 text-red-500">{firstNameError}</Text>
+              ) : null}
             </View>
             <View className="flex-1">
               <Text className="mb-1 text-sm font-medium text-gray-700">
@@ -106,6 +167,9 @@ export default function SignUpScreen() {
                 onSubmitEditing={() => focusNextField(usernameRef)}
                 blurOnSubmit={false}
               />
+              {lastNameError ? (
+                <Text className="mt-1 text-red-500">{lastNameError}</Text>
+              ) : null}
             </View>
           </View>
           <View className="mb-4 w-full">
@@ -122,6 +186,9 @@ export default function SignUpScreen() {
               onSubmitEditing={() => focusNextField(emailRef)}
               blurOnSubmit={false}
             />
+            {usernameError ? (
+              <Text className="mt-1 text-red-500">{usernameError}</Text>
+            ) : null}
             <Text className="mt-1 text-sm text-gray-500">
               On Instagram? Consider using the same username
             </Text>
@@ -141,6 +208,9 @@ export default function SignUpScreen() {
               blurOnSubmit={false}
               keyboardType="email-address"
             />
+            {emailError ? (
+              <Text className="mt-1 text-red-500">{emailError}</Text>
+            ) : null}
           </View>
           <View className="mb-6 w-full">
             <Text className="mb-1 text-sm font-medium text-gray-700">
@@ -155,6 +225,9 @@ export default function SignUpScreen() {
               returnKeyType="done"
               onSubmitEditing={onSignUpPress}
             />
+            {passwordError ? (
+              <Text className="mt-1 text-red-500">{passwordError}</Text>
+            ) : null}
           </View>
           <Pressable
             onPress={onSignUpPress}
