@@ -78,8 +78,8 @@ export default function SignUpScreen() {
             <Text className="mb-8 text-center text-lg text-gray-500">
               Sign up for your Soonlist account
             </Text>
-            <View className="mb-4 w-full flex-row justify-between">
-              <View className="w-[48%]">
+            <View className="mb-4 w-full flex-row gap-4">
+              <View className="flex-1">
                 <Text className="mb-1 text-sm font-medium text-gray-700">
                   First Name
                 </Text>
@@ -89,7 +89,7 @@ export default function SignUpScreen() {
                   className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
                 />
               </View>
-              <View className="w-[48%]">
+              <View className="flex-1">
                 <Text className="mb-1 text-sm font-medium text-gray-700">
                   Last Name
                 </Text>
