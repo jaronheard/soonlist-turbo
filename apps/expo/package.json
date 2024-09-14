@@ -48,6 +48,7 @@
     "@trpc/react-query": "11.0.0-rc.364",
     "@trpc/server": "11.0.0-rc.334",
     "expo": "~50.0.14",
+    "expo-apple-authentication": "~6.3.0",
     "expo-application": "^5.8.4",
     "expo-auth-session": "^5.4.0",
     "expo-blur": "~12.9.2",

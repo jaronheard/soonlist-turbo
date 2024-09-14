@@ -62,6 +62,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         iosApiKey: "ios_sdk-34383d2c19fe53cc172a8be023b3dfc92fa87004",
       },
     ],
+    ["expo-apple-authentication"],
   ],
   ios: {
     supportsTablet: true,
@@ -74,6 +75,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         IS_DEV ? "group.com.soonlist.dev" : "group.com.soonlist",
       ],
     },
+    usesAppleSignIn: true,
   },
   android: {
     package: IS_DEV ? "com.soonlist.app.dev" : "com.soonlist.app",
