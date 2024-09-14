@@ -4,6 +4,7 @@ import { View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 
+import type { RouterOutputs } from "~/utils/api";
 import AddEventBottomSheet from "~/components/AddEventBottomSheet";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
@@ -49,7 +50,11 @@ export default function Page() {
     savedEventIdsQuery.data?.map((event) => event.id),
   );
 
-  function SaveButtonWrapper({ event }) {
+  function SaveButtonWrapper({
+    event,
+  }: {
+    event: RouterOutputs["event"]["getDiscoverInfinite"]["events"][number];
+  }) {
     return (
       <SaveButton eventId={event.id} isSaved={savedEventIds.has(event.id)} />
     );

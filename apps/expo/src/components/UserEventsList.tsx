@@ -29,12 +29,14 @@ import { EventMenu } from "./EventMenu";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
 
+type Event = RouterOutputs["event"]["getDiscoverInfinite"]["events"][number];
+
 interface ActionButtonProps {
-  event: RouterOutputs["event"]["getEventsForUser"]["events"][number];
+  event: Event;
 }
 
 export function UserEventListItem(props: {
-  event: RouterOutputs["event"]["getEventsForUser"]["events"][number];
+  event: Event;
   ActionButton?: React.ComponentType<ActionButtonProps>;
   isLastItem?: boolean;
   showCreator: ShowCreatorOption;
@@ -208,7 +210,7 @@ export function UserEventListItem(props: {
 }
 
 export default function UserEventsList(props: {
-  events: RouterOutputs["event"]["getEventsForUser"]["events"];
+  events: Event[];
   refreshControl?: React.ReactElement;
   ActionButton?: React.ComponentType<ActionButtonProps>;
   showCreator: ShowCreatorOption;
