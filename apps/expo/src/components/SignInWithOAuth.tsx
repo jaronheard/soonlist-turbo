@@ -1,14 +1,23 @@
 import type { OAuthStrategy } from "@clerk/types";
 import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
-import { Image, Pressable, Text, TextInput, View } from "react-native";
-import { Stack } from "expo-router";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import { Stack, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { AppleSignInButton } from "./AppleSignInButton";
+import { EmailSignInButton } from "./EmailSignInButton"; // You'll need to create this component
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Logo } from "./Logo";
 
@@ -16,6 +25,8 @@ WebBrowser.maybeCompleteAuthSession();
 
 const SignInWithOAuth = () => {
   useWarmUpBrowser();
+  const router = useRouter();
+  const { height } = useWindowDimensions();
 
   const { signIn, setActive: setActiveSignIn } = useSignIn();
   const { signUp, setActive: setActiveSignUp } = useSignUp();
@@ -93,10 +104,14 @@ const SignInWithOAuth = () => {
     }
   };
 
+  const navigateToEmailSignUp = () => {
+    router.push("/sign-up-email");
+  };
+
   if (showUsernameInput) {
     return (
-      <View className="flex-1 justify-center bg-white p-4 pb-80">
-        <View className="flex-1 justify-center">
+      <ScrollView className="flex-1 bg-white px-4 py-6">
+        <View className="min-h-screen justify-center">
           <Text className="mb-4 text-center text-2xl font-bold">
             Choose Your Username
           </Text>
@@ -144,43 +159,53 @@ const SignInWithOAuth = () => {
             </Text>
           </Pressable>
         </View>
-      </View>
+      </ScrollView>
     );
   }
 
   return (
-    <View className="flex-1 bg-interactive-3 px-6 pt-14">
+    <ScrollView
+      className="flex-1 bg-interactive-3"
+      contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+    >
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="items-center pt-8">
-        <Logo className="h-12 w-48" />
+      <View className="px-4 py-8">
+        <View className="mb-8 items-center">
+          <Logo className="h-10 w-40" />
+        </View>
+        <View className="items-center">
+          <Text className="mb-2 text-center font-heading text-4xl font-bold text-gray-700">
+            Organize <Text className="text-interactive-1">possibilities</Text>
+          </Text>
+          <Text className="mb-4 text-center text-lg text-gray-500">
+            The best way to add, organize, and share events.
+          </Text>
+          <Image
+            source={
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
+              require("../assets/onboarding-events-collage.png") as ImageSourcePropType
+            }
+            style={{ height: height * 0.3, width: "100%", maxHeight: 250 }}
+            resizeMode="contain"
+          />
+          <Text className="my-4 text-center text-base text-gray-600">
+            Join Soonlist to start capturing and sharing events that inspire
+            you.
+          </Text>
+        </View>
+        <View className="mt-4 w-full">
+          <GoogleSignInButton
+            onPress={() => void handleOAuthFlow("oauth_google")}
+          />
+          <View className="h-3" />
+          <AppleSignInButton
+            onPress={() => void handleOAuthFlow("oauth_apple")}
+          />
+          <View className="h-3" />
+          <EmailSignInButton onPress={navigateToEmailSignUp} />
+        </View>
       </View>
-      <View className="flex-1 items-center justify-center">
-        <Text className="mb-4 text-center font-heading text-5xl font-bold text-gray-700">
-          Organize <Text className="text-interactive-1">possibilities</Text>
-        </Text>
-        <Text className="mb-8 text-center text-xl text-gray-500">
-          The best way to add, organize, and share events.
-        </Text>
-        <Image
-          source={
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
-            require("../assets/onboarding-events-collage.png") as ImageSourcePropType
-          }
-          className="mb-6 h-80 w-full"
-          resizeMode="contain"
-        />
-        <Text className="mb-8 text-center text-lg text-gray-600">
-          Join Soonlist to start capturing and sharing events that inspire you.
-        </Text>
-        <GoogleSignInButton
-          onPress={() => void handleOAuthFlow("oauth_google")}
-        />
-        <View className="h-4" />
-        <AppleSignInButton
-          onPress={() => void handleOAuthFlow("oauth_apple")}
-        />
-      </View>
-    </View>
+    </ScrollView>
   );
 };
 
