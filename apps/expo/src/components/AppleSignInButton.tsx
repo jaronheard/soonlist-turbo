@@ -11,7 +11,7 @@ export const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
 }) => (
   <TouchableOpacity style={styles.button} onPress={onPress}>
     <Ionicons name="logo-apple" size={24} color="white" style={styles.icon} />
-    <Text style={styles.text}>Sign up with Apple</Text>
+    <Text style={styles.text}>Continue with Apple</Text>
   </TouchableOpacity>
 );
 

@@ -49,26 +49,20 @@ export default function SignInScreen() {
         <Text className="mb-8 text-center text-xl text-gray-500">
           Sign in to your Soonlist account
         </Text>
-        <View className="mb-4 w-full">
-          <Text className="mb-1 text-sm font-medium text-gray-700">Email</Text>
-          <TextInput
-            autoCapitalize="none"
-            value={emailAddress}
-            onChangeText={setEmailAddress}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-          />
-        </View>
-        <View className="mb-6 w-full">
-          <Text className="mb-1 text-sm font-medium text-gray-700">
-            Password
-          </Text>
-          <TextInput
-            value={password}
-            secureTextEntry={true}
-            onChangeText={setPassword}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-          />
-        </View>
+        <TextInput
+          autoCapitalize="none"
+          value={emailAddress}
+          placeholder="Email"
+          onChangeText={setEmailAddress}
+          className="mb-4 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+        />
+        <TextInput
+          value={password}
+          placeholder="Password"
+          secureTextEntry={true}
+          onChangeText={setPassword}
+          className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+        />
         <Pressable
           onPress={onSignInPress}
           className="w-full rounded-full bg-interactive-1 px-6 py-3"

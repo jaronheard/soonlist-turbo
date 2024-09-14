@@ -12,7 +12,7 @@ export function EmailSignInButton({ onPress }: EmailSignInButtonProps) {
       <View style={styles.iconContainer}>
         <Mail size={24} color="#162135" />
       </View>
-      <Text style={styles.text}>Sign up with Email</Text>
+      <Text style={styles.text}>Continue with Email</Text>
     </TouchableOpacity>
   );
 }
