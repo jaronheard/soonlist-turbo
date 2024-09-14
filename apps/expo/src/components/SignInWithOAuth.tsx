@@ -182,6 +182,7 @@ const SignInWithOAuth = () => {
           </Text>
           <Image
             source={
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
               require("../assets/onboarding-events-collage.png") as ImageSourcePropType
             }
             style={{ height: height * 0.3, width: "100%", maxHeight: 250 }}

@@ -55,18 +55,13 @@ const VerifyEmail = () => {
           <Text className="mb-8 text-center text-xl text-gray-500">
             Please enter the verification code sent to your email.
           </Text>
-          <View className="w-full">
-            <Text className="mb-2 text-sm font-medium text-gray-700">
-              Verification Code
-            </Text>
-            <TextInput
-              value={code}
-              onChangeText={setCode}
-              placeholder="Enter your 6-digit code"
-              keyboardType="number-pad"
-              className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-            />
-          </View>
+          <TextInput
+            value={code}
+            onChangeText={setCode}
+            placeholder="Verification Code"
+            keyboardType="number-pad"
+            className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+          />
           <Pressable
             onPress={handleVerification}
             disabled={isVerifying}

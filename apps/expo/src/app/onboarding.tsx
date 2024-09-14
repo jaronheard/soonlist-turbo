@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
@@ -19,9 +19,11 @@ export default function OnboardingScreen() {
   return (
     <View style={{ flex: 1 }}>
       <Stack.Screen
-        options={{ title: "How to Use", headerBackTitle: "Back" }}
+        options={{ title: "How to Use", headerBackVisible: false }}
       />
-      <Onboarding onComplete={handleComplete} />
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <Onboarding onComplete={handleComplete} />
+      </ScrollView>
     </View>
   );
 }

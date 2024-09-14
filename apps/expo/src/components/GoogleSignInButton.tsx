@@ -13,6 +13,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     <TouchableOpacity style={styles.button} onPress={onPress}>
       <View style={styles.contentContainer}>
         <Image
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
           source={require("../assets/google-logo.png") as ImageSourcePropType}
           style={styles.logo}
         />
