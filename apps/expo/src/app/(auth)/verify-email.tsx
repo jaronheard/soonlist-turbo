@@ -1,13 +1,6 @@
 import React, { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Stack, useRouter } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 
@@ -43,9 +36,12 @@ const VerifyEmail = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-interactive-3"
+    <KeyboardAwareScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      keyboardShouldPersistTaps="handled"
+      enableAutomaticScroll={true}
+      extraScrollHeight={150}
+      enableOnAndroid={true}
     >
       <Stack.Screen
         options={{
@@ -55,41 +51,36 @@ const VerifyEmail = () => {
           headerBackTitleVisible: true,
         }}
       />
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="flex-1 justify-between px-6">
-          <View className="items-center pt-8">
-            <Logo className="h-12 w-48" />
-          </View>
-          <View className="items-center justify-center py-8">
-            <Text className="mb-4 text-center font-heading text-4xl font-bold text-gray-700">
-              Verify Email
-            </Text>
-            <Text className="mb-8 text-center text-lg text-gray-500">
-              Please enter the verification code sent to your email.
-            </Text>
-            <TextInput
-              value={code}
-              onChangeText={setCode}
-              placeholder="Verification Code"
-              keyboardType="number-pad"
-              className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-            />
-            <Pressable
-              onPress={handleVerification}
-              disabled={isVerifying}
-              className="w-full rounded-full bg-interactive-1 px-6 py-3"
-            >
-              <Text className="text-center text-lg font-bold text-white">
-                {isVerifying ? "Verifying..." : "Verify Email"}
-              </Text>
-            </Pressable>
-          </View>
+      <View className="flex-1 bg-interactive-3 px-6">
+        <View className="items-center pt-8">
+          <Logo className="h-12 w-48" />
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <View className="items-center justify-center py-8">
+          <Text className="mb-4 text-center font-heading text-4xl font-bold text-gray-700">
+            Verify Email
+          </Text>
+          <Text className="mb-8 text-center text-lg text-gray-500">
+            Please enter the verification code sent to your email.
+          </Text>
+          <TextInput
+            value={code}
+            onChangeText={setCode}
+            placeholder="Verification Code"
+            keyboardType="number-pad"
+            className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+          />
+          <Pressable
+            onPress={handleVerification}
+            disabled={isVerifying}
+            className="w-full rounded-full bg-interactive-1 px-6 py-3"
+          >
+            <Text className="text-center text-lg font-bold text-white">
+              {isVerifying ? "Verifying..." : "Verify Email"}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </KeyboardAwareScrollView>
   );
 };
 
