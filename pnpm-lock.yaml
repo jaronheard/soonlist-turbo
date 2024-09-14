@@ -91,6 +91,9 @@ importers:
       expo:
         specifier: ~50.0.14
         version: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
+      expo-apple-authentication:
+        specifier: ~6.3.0
+        version: 6.3.0(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
       expo-application:
         specifier: ^5.8.4
         version: 5.8.4(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
@@ -5117,6 +5120,11 @@ packages:
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
     engines: {node: '>=10'}
+
+  expo-apple-authentication@6.3.0:
+    resolution: {integrity: sha512-eYoRMlh7qKkWdbNe5TV5n0/1mLMRDFDxt+uetyu0XMdn70vZSTaPr5yewyGzoFHRx5t4QCEj8wTobcjoqH5PGw==}
+    peerDependencies:
+      expo: '*'
 
   expo-application@5.8.4:
     resolution: {integrity: sha512-mH0gSlFzMuiT20TkZnBppzUtdF6TFHwcaTRnvkSZanN9iTOeEEfQQ60hHT4lBizHjFWRs/QYZVtXGvkQ/cyMpg==}
@@ -14364,6 +14372,10 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
       strip-final-newline: 2.0.0
+
+  expo-apple-authentication@6.3.0(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
+    dependencies:
+      expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
 
   expo-application@5.8.4(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
     dependencies:
