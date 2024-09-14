@@ -9,24 +9,28 @@ interface EmailSignInButtonProps {
 export function EmailSignInButton({ onPress }: EmailSignInButtonProps) {
   return (
     <TouchableOpacity style={styles.button} onPress={onPress}>
-      <View style={styles.iconContainer}>
-        <Mail size={24} color="#162135" />
+      <View style={styles.contentContainer}>
+        <View style={styles.iconContainer}>
+          <Mail size={24} color="#162135" />
+        </View>
+        <Text style={styles.text}>Continue with Email</Text>
       </View>
-      <Text style={styles.text}>Continue with Email</Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
+    backgroundColor: "#DCE0E8",
+    borderWidth: 1,
+    borderColor: "#DCE0E8",
+    borderRadius: 100,
+    paddingVertical: 12,
+  },
+  contentContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E0D9FF",
-    borderWidth: 1,
-    borderColor: "#E0D9FF",
-    borderRadius: 4,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
+    justifyContent: "center",
   },
   iconContainer: {
     width: 24,
