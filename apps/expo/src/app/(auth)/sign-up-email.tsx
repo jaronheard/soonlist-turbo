@@ -2,6 +2,7 @@ import * as React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
+import { ArrowLeft } from "lucide-react-native";
 
 import { Logo } from "../../components/Logo";
 
@@ -14,12 +15,14 @@ export default function SignUpScreen() {
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [username, setUsername] = React.useState("");
+  const [pendingVerification, setPendingVerification] = React.useState(false);
+  const [code, setCode] = React.useState("");
 
   const onSignUpPress = async () => {
     if (!isLoaded) return;
 
     try {
-      const completeSignUp = await signUp.create({
+      await signUp.create({
         firstName,
         lastName,
         emailAddress,
@@ -29,19 +32,37 @@ export default function SignUpScreen() {
 
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
 
-      if (completeSignUp.status === "complete") {
-        await setActive({ session: completeSignUp.createdSessionId });
-        router.replace("/feed");
-      } else {
-        router.push("/verify-email");
-      }
+      setPendingVerification(true);
     } catch (err) {
       console.error("Error during sign up:", err);
     }
   };
 
+  const onPressVerify = async () => {
+    if (!isLoaded) return;
+
+    try {
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code,
+      });
+
+      if (completeSignUp.status === "complete") {
+        await setActive({ session: completeSignUp.createdSessionId });
+        router.replace("/feed");
+      } else {
+        console.error("Verification failed:", completeSignUp);
+      }
+    } catch (err) {
+      console.error("Error during verification:", err);
+    }
+  };
+
   const navigateToSignIn = () => {
     router.push("/sign-in-email");
+  };
+
+  const navigateBack = () => {
+    router.push("/sign-in");
   };
 
   if (!isLoaded) {
