@@ -48,9 +48,13 @@ const VerifyEmail = () => {
         console.log(JSON.stringify(completeSignUp, null, 2));
         setGeneralError("Verification failed. Please try again.");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error during verification:", err);
-      setGeneralError(err.message || "An error occurred during verification");
+      if (err instanceof Error) {
+        setGeneralError(err.message);
+      } else {
+        setGeneralError("An error occurred during verification");
+      }
     } finally {
       setIsVerifying(false);
     }

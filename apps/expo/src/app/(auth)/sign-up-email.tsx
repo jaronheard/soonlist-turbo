@@ -91,9 +91,13 @@ export default function SignUpScreen() {
 
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       router.push("/verify-email");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error during sign up:", err);
-      setGeneralError(err.message || "An error occurred during sign up");
+      if (err instanceof Error) {
+        setGeneralError(err.message);
+      } else {
+        setGeneralError("An error occurred during sign up");
+      }
     }
   };
 
