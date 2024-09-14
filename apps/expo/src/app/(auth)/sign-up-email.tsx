@@ -72,86 +72,81 @@ export default function SignUpScreen() {
       </View>
       <View className="flex-1 items-center justify-center">
         <Text className="mb-4 text-center font-heading text-5xl font-bold text-gray-700">
-          Join <Text className="text-interactive-1">Soonlist</Text>
+          Create Account
         </Text>
         <Text className="mb-8 text-center text-xl text-gray-500">
-          Create your account to start organizing events.
+          Sign up for your Soonlist account
         </Text>
-        {!pendingVerification ? (
-          <>
+        <View className="mb-4 w-full flex-row justify-between">
+          <View className="w-[48%]">
+            <Text className="mb-1 text-sm font-medium text-gray-700">
+              First Name
+            </Text>
             <TextInput
               value={firstName}
-              placeholder="First Name"
               onChangeText={setFirstName}
-              className="mb-4 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
             />
+          </View>
+          <View className="w-[48%]">
+            <Text className="mb-1 text-sm font-medium text-gray-700">
+              Last Name
+            </Text>
             <TextInput
               value={lastName}
-              placeholder="Last Name"
               onChangeText={setLastName}
-              className="mb-4 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
             />
-            <TextInput
-              autoCapitalize="none"
-              value={emailAddress}
-              placeholder="Email"
-              onChangeText={setEmailAddress}
-              className="mb-4 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-            />
-            <TextInput
-              value={password}
-              placeholder="Password"
-              secureTextEntry={true}
-              onChangeText={setPassword}
-              className="mb-4 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-            />
-            <TextInput
-              value={username}
-              placeholder="Username"
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-            />
-            <Pressable
-              onPress={onSignUpPress}
-              className="w-full rounded-full bg-interactive-1 px-6 py-3"
-            >
-              <Text className="text-center text-lg font-bold text-white">
-                Sign Up
-              </Text>
-            </Pressable>
-            <Pressable onPress={navigateToSignIn} className="mt-4">
-              <Text className="text-center text-gray-600">
-                Already have an account?{" "}
-                <Text className="font-bold text-interactive-1">Sign In</Text>
-              </Text>
-            </Pressable>
-          </>
-        ) : (
-          <>
-            <Text className="mb-4 text-center text-2xl font-bold">
-              Verify Your Email
-            </Text>
-            <Text className="mb-4 text-center text-gray-600">
-              We've sent a verification code to your email. Please enter it
-              below.
-            </Text>
-            <TextInput
-              value={code}
-              placeholder="Verification Code"
-              onChangeText={setCode}
-              className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-            />
-            <Pressable
-              onPress={onPressVerify}
-              className="w-full rounded-full bg-interactive-1 px-6 py-3"
-            >
-              <Text className="text-center text-lg font-bold text-white">
-                Verify Email
-              </Text>
-            </Pressable>
-          </>
-        )}
+          </View>
+        </View>
+        <View className="mb-4 w-full">
+          <Text className="mb-1 text-sm font-medium text-gray-700">
+            Username
+          </Text>
+          <TextInput
+            autoCapitalize="none"
+            value={username}
+            onChangeText={setUsername}
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+          />
+          <Text className="mt-1 text-sm text-gray-500">
+            On Instagram? Consider using the same username
+          </Text>
+        </View>
+        <View className="mb-4 w-full">
+          <Text className="mb-1 text-sm font-medium text-gray-700">Email</Text>
+          <TextInput
+            autoCapitalize="none"
+            value={emailAddress}
+            onChangeText={setEmailAddress}
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+          />
+        </View>
+        <View className="mb-6 w-full">
+          <Text className="mb-1 text-sm font-medium text-gray-700">
+            Password
+          </Text>
+          <TextInput
+            value={password}
+            secureTextEntry={true}
+            onChangeText={setPassword}
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+          />
+        </View>
+        <Pressable
+          onPress={onSignUpPress}
+          className="w-full rounded-full bg-interactive-1 px-6 py-3"
+        >
+          <Text className="text-center text-lg font-bold text-white">
+            Sign Up
+          </Text>
+        </Pressable>
+        <Pressable onPress={navigateToSignIn} className="mt-4">
+          <Text className="text-center text-gray-600">
+            Already have an account?{" "}
+            <Text className="font-bold text-interactive-1">Sign In</Text>
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
