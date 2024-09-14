@@ -1,5 +1,13 @@
 import * as React from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 
@@ -43,7 +51,10 @@ export default function SignUpScreen() {
   }
 
   return (
-    <View className="flex-1 bg-interactive-3">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      className="flex-1 bg-interactive-3"
+    >
       <Stack.Screen
         options={{
           headerShown: true,
@@ -52,91 +63,96 @@ export default function SignUpScreen() {
           headerBackTitleVisible: true,
         }}
       />
-      <View className="flex-1 px-6">
-        <View className="items-center pt-8">
-          <Logo className="h-12 w-48" />
-        </View>
-        <View className="flex-1 items-center justify-center">
-          <Text className="mb-4 text-center font-heading text-5xl font-bold text-gray-700">
-            Create Account
-          </Text>
-          <Text className="mb-8 text-center text-xl text-gray-500">
-            Sign up for your Soonlist account
-          </Text>
-          <View className="mb-4 w-full flex-row justify-between">
-            <View className="w-[48%]">
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="flex-1 justify-between px-6">
+          <View className="items-center pt-8">
+            <Logo className="h-12 w-48" />
+          </View>
+          <View className="items-center justify-center py-8">
+            <Text className="mb-4 text-center font-heading text-4xl font-bold text-gray-700">
+              Create Account
+            </Text>
+            <Text className="mb-8 text-center text-lg text-gray-500">
+              Sign up for your Soonlist account
+            </Text>
+            <View className="mb-4 w-full flex-row justify-between">
+              <View className="w-[48%]">
+                <Text className="mb-1 text-sm font-medium text-gray-700">
+                  First Name
+                </Text>
+                <TextInput
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                />
+              </View>
+              <View className="w-[48%]">
+                <Text className="mb-1 text-sm font-medium text-gray-700">
+                  Last Name
+                </Text>
+                <TextInput
+                  value={lastName}
+                  onChangeText={setLastName}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                />
+              </View>
+            </View>
+            <View className="mb-4 w-full">
               <Text className="mb-1 text-sm font-medium text-gray-700">
-                First Name
+                Username
               </Text>
               <TextInput
-                value={firstName}
-                onChangeText={setFirstName}
+                autoCapitalize="none"
+                value={username}
+                onChangeText={setUsername}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+              />
+              <Text className="mt-1 text-sm text-gray-500">
+                On Instagram? Consider using the same username
+              </Text>
+            </View>
+            <View className="mb-4 w-full">
+              <Text className="mb-1 text-sm font-medium text-gray-700">
+                Email
+              </Text>
+              <TextInput
+                autoCapitalize="none"
+                value={emailAddress}
+                onChangeText={setEmailAddress}
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
               />
             </View>
-            <View className="w-[48%]">
+            <View className="mb-6 w-full">
               <Text className="mb-1 text-sm font-medium text-gray-700">
-                Last Name
+                Password
               </Text>
               <TextInput
-                value={lastName}
-                onChangeText={setLastName}
+                value={password}
+                secureTextEntry={true}
+                onChangeText={setPassword}
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
               />
             </View>
+            <Pressable
+              onPress={onSignUpPress}
+              className="w-full rounded-full bg-interactive-1 px-6 py-3"
+            >
+              <Text className="text-center text-lg font-bold text-white">
+                Sign Up
+              </Text>
+            </Pressable>
+            <Pressable onPress={navigateToSignIn} className="mt-4">
+              <Text className="text-center text-gray-600">
+                Already have an account?{" "}
+                <Text className="font-bold text-interactive-1">Sign In</Text>
+              </Text>
+            </Pressable>
           </View>
-          <View className="mb-4 w-full">
-            <Text className="mb-1 text-sm font-medium text-gray-700">
-              Username
-            </Text>
-            <TextInput
-              autoCapitalize="none"
-              value={username}
-              onChangeText={setUsername}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-            />
-            <Text className="mt-1 text-sm text-gray-500">
-              On Instagram? Consider using the same username
-            </Text>
-          </View>
-          <View className="mb-4 w-full">
-            <Text className="mb-1 text-sm font-medium text-gray-700">
-              Email
-            </Text>
-            <TextInput
-              autoCapitalize="none"
-              value={emailAddress}
-              onChangeText={setEmailAddress}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-            />
-          </View>
-          <View className="mb-6 w-full">
-            <Text className="mb-1 text-sm font-medium text-gray-700">
-              Password
-            </Text>
-            <TextInput
-              value={password}
-              secureTextEntry={true}
-              onChangeText={setPassword}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-            />
-          </View>
-          <Pressable
-            onPress={onSignUpPress}
-            className="w-full rounded-full bg-interactive-1 px-6 py-3"
-          >
-            <Text className="text-center text-lg font-bold text-white">
-              Sign Up
-            </Text>
-          </Pressable>
-          <Pressable onPress={navigateToSignIn} className="mt-4">
-            <Text className="text-center text-gray-600">
-              Already have an account?{" "}
-              <Text className="font-bold text-interactive-1">Sign In</Text>
-            </Text>
-          </Pressable>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
