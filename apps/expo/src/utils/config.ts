@@ -6,18 +6,21 @@ interface Config {
   env: "development" | "production";
   apiBaseUrl: string;
   clerkPublishableKey: string;
+  posthogApiKey: string;
 }
 
 const Config: Config = {
   env: "development",
   apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || "",
   clerkPublishableKey: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "",
+  posthogApiKey: process.env.EXPO_PUBLIC_POSTHOG_API_KEY || "",
 };
 
 if (Updates.channel === "production") {
   Config.env = "production";
   Config.apiBaseUrl = "https://www.soonlist.com";
   Config.clerkPublishableKey = "pk_live_Y2xlcmsuc29vbmxpc3QuY29tJA";
+  Config.posthogApiKey = "phc_CZ7eKsvi0Z2wXAhGV9ynYJMwCwLPbK6BXSYKceIMKU";
 }
 
 export default Config;
