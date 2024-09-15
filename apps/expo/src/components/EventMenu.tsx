@@ -35,6 +35,7 @@ import type { RouterOutputs } from "~/utils/api";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import Config from "~/utils/config";
+import { showToast } from "~/utils/toast";
 
 const screenWidth = Dimensions.get("window").width;
 const menuMinWidth = screenWidth * 0.6; // 60% of screen width
@@ -66,26 +67,58 @@ export function EventMenu({
   const utils = api.useUtils();
 
   const deleteEventMutation = api.event.delete.useMutation({
+    onMutate: () => {
+      showToast("Deleting event...", "loading");
+    },
     onSuccess: () => {
       void utils.event.invalidate();
+      showToast("Event deleted successfully", "success");
+    },
+    onError: (error) => {
+      showToast(`Failed to delete event: ${error.message}`, "error");
     },
   });
 
   const unfollowEventMutation = api.event.unfollow.useMutation({
+    onMutate: () => {
+      showToast("Unfollowing event...", "loading");
+    },
     onSuccess: () => {
       void utils.event.invalidate();
+      showToast("Event unfollowed", "success");
+    },
+    onError: (error) => {
+      showToast(`Failed to unfollow event: ${error.message}`, "error");
     },
   });
 
   const followEventMutation = api.event.follow.useMutation({
+    onMutate: () => {
+      showToast("Following event...", "loading");
+    },
     onSuccess: () => {
       void utils.event.invalidate();
+      showToast("Event followed", "success");
+    },
+    onError: (error) => {
+      showToast(`Failed to follow event: ${error.message}`, "error");
     },
   });
 
   const toggleVisibilityMutation = api.event.toggleVisibility.useMutation({
-    onSuccess: () => {
+    onMutate: (variables) => {
+      const action =
+        variables.visibility === "public" ? "Adding to" : "Removing from";
+      showToast(`${action} Discover...`, "loading");
+    },
+    onSuccess: (_, variables) => {
       void utils.event.invalidate();
+      const action =
+        variables.visibility === "public" ? "added to" : "removed from";
+      showToast(`Event ${action} Discover`, "success");
+    },
+    onError: (error) => {
+      showToast(`Failed to update event visibility: ${error.message}`, "error");
     },
   });
 
@@ -160,20 +193,38 @@ export function EventMenu({
   };
 
   const handleDelete = async () => {
-    if (onDelete) {
-      await onDelete();
-    } else {
-      await deleteEventMutation.mutateAsync({ id: event.id });
-      // We remove the navigation here, as it should be handled by the parent component
+    showToast("Deleting event...", "loading");
+    try {
+      if (onDelete) {
+        await onDelete();
+        showToast("Event deleted successfully", "success");
+      } else {
+        await deleteEventMutation.mutateAsync({ id: event.id });
+      }
+    } catch (error) {
+      showToast(`Failed to delete event: ${(error as Error).message}`, "error");
     }
   };
 
   const handleUnfollow = async () => {
-    await unfollowEventMutation.mutateAsync({ id: event.id });
+    showToast("Unfollowing event...", "loading");
+    try {
+      await unfollowEventMutation.mutateAsync({ id: event.id });
+    } catch (error) {
+      showToast(
+        `Failed to unfollow event: ${(error as Error).message}`,
+        "error",
+      );
+    }
   };
 
   const handleFollow = async () => {
-    await followEventMutation.mutateAsync({ id: event.id });
+    showToast("Following event...", "loading");
+    try {
+      await followEventMutation.mutateAsync({ id: event.id });
+    } catch (error) {
+      showToast(`Failed to follow event: ${(error as Error).message}`, "error");
+    }
   };
 
   const handleShare = async () => {
@@ -194,10 +245,19 @@ export function EventMenu({
   const handleToggleVisibility = async (
     newVisibility: "public" | "private",
   ) => {
-    await toggleVisibilityMutation.mutateAsync({
-      id: event.id,
-      visibility: newVisibility,
-    });
+    const action = newVisibility === "public" ? "Adding to" : "Removing from";
+    showToast(`${action} Discover...`, "loading");
+    try {
+      await toggleVisibilityMutation.mutateAsync({
+        id: event.id,
+        visibility: newVisibility,
+      });
+    } catch (error) {
+      showToast(
+        `Failed to update event visibility: ${(error as Error).message}`,
+        "error",
+      );
+    }
   };
 
   const handleMenuSelect = (title: string) => {
