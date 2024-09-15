@@ -316,32 +316,39 @@ export function timeFormatDateInfo(dateInfo: DateInfo) {
 
 export function formatRelativeTime(dateInfo: DateInfo): string {
   const now = new Date();
-  const eventStart = new Date(
+  const startDate = new Date(
     dateInfo.year,
     dateInfo.month - 1,
     dateInfo.day,
     dateInfo.hour,
     dateInfo.minute,
   );
-  const eventEnd = new Date(eventStart.getTime() + 2 * 60 * 60 * 1000); // Assuming 2 hours duration
+  const difference = startDate.getTime() - now.getTime();
+  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+  const hours = Math.floor(difference / (1000 * 60 * 60));
+  const minutes = Math.floor(difference / (1000 * 60));
 
-  if (now >= eventStart && now <= eventEnd) {
+  const isSameDay = dateInfo.day === now.getDate();
+  const isSameMonth = dateInfo.month - 1 === now.getMonth();
+  const isSameYear = dateInfo.year === now.getFullYear();
+  const isToday = isSameDay && isSameMonth && isSameYear;
+  const isTomorrow = timeIsTomorrow(now, startDate);
+
+  if (difference < 0) {
     return "Happening now";
   }
 
-  const diffMs = eventStart.getTime() - now.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMs < 0) {
-    // Past event
-    return "";
-  } else if (diffDays === 0) {
-    return "Today";
-  } else if (diffDays === 1) {
-    return "Tomorrow";
-  } else if (diffDays < 7) {
-    return `In ${diffDays} days`;
-  } else {
-    return "";
+  if (days === 0 && hours === 0) {
+    return `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`;
   }
+  if (days === 0 && hours < 1) {
+    return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
+  }
+  if (isToday) {
+    return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
+  }
+  if (isTomorrow) {
+    return `Tomorrow`;
+  }
+  return ``;
 }

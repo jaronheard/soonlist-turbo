@@ -80,12 +80,22 @@ export function UserEventListItem(props: {
     e.timeZone || "",
   );
   const relativeTime = dateInfo ? formatRelativeTime(dateInfo) : "";
-  const isHappeningNow = relativeTime === "Happening now";
+  const isOver =
+    dateInfo &&
+    new Date() >
+      new Date(
+        dateInfo.year,
+        dateInfo.month - 1,
+        dateInfo.day,
+        dateInfo.hour,
+        dateInfo.minute,
+      );
+  const isHappeningNow = relativeTime === "Happening now" && !isOver;
 
   const { user: currentUser } = useUser();
   const eventUser = event.user;
-  // guard against null user
 
+  // guard against null user
   if (!eventUser) return null;
 
   const isCurrentUser = currentUser?.id === eventUser.id;
