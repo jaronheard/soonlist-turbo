@@ -43,12 +43,13 @@ interface AddEventBottomSheetProps {
     text?: string;
     imageUri?: string;
   } | null;
+  onDismiss?: () => void;
 }
 
 const AddEventBottomSheet = React.forwardRef<
   BottomSheetModal,
   AddEventBottomSheetProps
->(({ initialParams }, ref) => {
+>(({ initialParams, onDismiss }, ref) => {
   const snapPoints = useMemo(() => [388], []);
   const [input, setInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -72,7 +73,7 @@ const AddEventBottomSheet = React.forwardRef<
   const { user } = useUser();
 
   // Use the intent handler
-  useIntentHandler();
+  const { clearIntent } = useIntentHandler();
 
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [isImageUploading, setIsImageUploading] = useState(false);
@@ -147,8 +148,16 @@ const AddEventBottomSheet = React.forwardRef<
     [handleLinkPreview],
   );
 
+  const clearInputs = useCallback(() => {
+    setInput("");
+    setImagePreview(null);
+    setLinkPreview(null);
+    uploadedImageUrlRef.current = null;
+  }, []);
+
   useEffect(() => {
     if (initialParams) {
+      clearInputs();
       if (initialParams.text) {
         handleTextChange(initialParams.text);
       } else if (initialParams.imageUri) {
@@ -164,6 +173,7 @@ const AddEventBottomSheet = React.forwardRef<
       }
     }
   }, [
+    clearInputs,
     handleImageUploadFromUri,
     handleLinkPreview,
     handleTextChange,
@@ -252,11 +262,8 @@ const AddEventBottomSheet = React.forwardRef<
     if (!input.trim() && !imagePreview && !linkPreview) return;
     setIsCreating(true);
 
-    // Clear the modal state
-    setInput("");
-    setImagePreview(null);
-    setLinkPreview(null);
-    // Don't reset the public state
+    clearInputs();
+    clearIntent(); // Clear the intent after creating an event
 
     // Dismiss the modal immediately
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
@@ -334,22 +341,26 @@ const AddEventBottomSheet = React.forwardRef<
     input,
     imagePreview,
     linkPreview,
-    isPublic,
-    expoPushToken,
-    user,
+    clearInputs,
+    clearIntent,
+    ref,
     eventFromUrlThenCreateThenNotification,
-    eventFromImageThenCreateThenNotification,
-    eventFromRawTextAndNotification,
+    expoPushToken,
+    user?.id,
+    user?.username,
+    isPublic,
     handleSuccess,
     handleError,
     isImageUploading,
-    ref,
+    eventFromImageThenCreateThenNotification,
+    eventFromRawTextAndNotification,
   ]);
 
   const handleDismiss = useCallback(() => {
+    onDismiss?.();
     // Allow the modal to be dismissed, but don't cancel the upload
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-  }, [ref]);
+  }, [onDismiss, ref]);
 
   const renderFooter = useMemo(() => {
     return (

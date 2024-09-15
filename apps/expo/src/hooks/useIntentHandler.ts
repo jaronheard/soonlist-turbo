@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 type IntentType = "new";
 const scheme =
@@ -8,8 +8,16 @@ const scheme =
 
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
+type Intent = {
+  type: IntentType;
+  text?: string;
+  imageUri?: string;
+} | null;
+
 export function useIntentHandler() {
-  const handleIntent = useCallback((url: string) => {
+  const [currentIntent, setCurrentIntent] = useState<Intent>(null);
+
+  const handleIntent = useCallback((url: string): Intent => {
     if (url.startsWith(`${scheme}://`) && !url.startsWith(`${scheme}:///`)) {
       url = url.replace(`${scheme}://`, `${scheme}:///`);
     }
@@ -20,15 +28,17 @@ export function useIntentHandler() {
 
     if (!intentType) return null;
 
+    let result: Intent = null;
+
     switch (intentType) {
       case "new": {
         const text = params.get("text");
         const imageUri = params.get("imageUri");
 
         if (text) {
-          return { type: "new", text: decodeURIComponent(text) };
+          result = { type: "new", text: decodeURIComponent(text) };
         } else if (imageUri && VALID_IMAGE_REGEX.test(imageUri)) {
-          return { type: "new", imageUri: decodeURIComponent(imageUri) };
+          result = { type: "new", imageUri: decodeURIComponent(imageUri) };
         }
         break;
       }
@@ -37,8 +47,13 @@ export function useIntentHandler() {
       }
     }
 
-    return null;
+    setCurrentIntent(result);
+    return result;
   }, []);
 
-  return { handleIntent };
+  const clearIntent = useCallback(() => {
+    setCurrentIntent(null);
+  }, []);
+
+  return { handleIntent, clearIntent, currentIntent };
 }

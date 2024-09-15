@@ -77,11 +77,9 @@ function MyFeed() {
     text?: string;
     imageUri?: string;
   } | null>(null);
-  const { handleIntent } = useIntentHandler();
+  const { handleIntent, clearIntent, currentIntent } = useIntentHandler();
 
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
-  // Remove the unused 'cursor' state
-  // const [cursor, setCursor] = useState<string | null>(null);
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -93,9 +91,6 @@ function MyFeed() {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   );
-
-  // Remove the unused 'utils' variable
-  // const utils = api.useUtils();
 
   const onRefresh = useCallback(() => {
     void eventsQuery.refetch();
@@ -109,7 +104,9 @@ function MyFeed() {
 
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
-  const handlePresentModalPress = () => bottomSheetRef.current?.present();
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetRef.current?.present();
+  }, []);
 
   useEffect(() => {
     const handleInitialURL = async () => {
@@ -142,7 +139,23 @@ function MyFeed() {
     return () => {
       subscription.remove();
     };
-  }, [handleIntent]);
+  }, [handleIntent, handlePresentModalPress]);
+
+  // Handle currentIntent changes
+  useEffect(() => {
+    if (currentIntent && currentIntent.type === "new") {
+      setIntentParams({
+        text: currentIntent.text,
+        imageUri: currentIntent.imageUri,
+      });
+      handlePresentModalPress();
+    }
+  }, [currentIntent, handlePresentModalPress]);
+
+  const handleBottomSheetDismiss = useCallback(() => {
+    setIntentParams(null);
+    clearIntent();
+  }, [clearIntent]);
 
   return (
     <>
@@ -190,6 +203,7 @@ function MyFeed() {
             <AddEventBottomSheet
               ref={bottomSheetRef}
               initialParams={intentParams}
+              onDismiss={handleBottomSheetDismiss}
             />
           </View>
         )}
