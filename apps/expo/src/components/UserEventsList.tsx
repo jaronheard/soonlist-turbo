@@ -16,6 +16,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import { useCalendar } from "~/hooks/useCalendar";
+import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import {
@@ -243,12 +244,11 @@ export default function UserEventsList(props: {
   const {
     isCalendarModalVisible,
     setIsCalendarModalVisible,
-    availableCalendars,
-    handleCalendarSelect,
     showAllCalendars,
     setShowAllCalendars,
-    INITIAL_CALENDAR_LIMIT,
-  } = useCalendar();
+  } = useAppStore();
+  const { availableCalendars, handleCalendarSelect, INITIAL_CALENDAR_LIMIT } =
+    useCalendar();
 
   const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
     userName: username,
