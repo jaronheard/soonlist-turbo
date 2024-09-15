@@ -68,5 +68,6 @@ Expo Specific:
 - Implement expo-router for navigation
 - Use react-native specific components and APIs
 - Optimize performance using React Native best practices
+- Use Zustand for client-side state management with a single global store
 
 Follow Next.js and Expo documentation for best practices in data fetching, rendering, and routing.
