@@ -80,8 +80,6 @@ function MyFeed() {
   const { handleIntent } = useIntentHandler();
 
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
-  // Remove the unused 'cursor' state
-  // const [cursor, setCursor] = useState<string | null>(null);
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -93,9 +91,6 @@ function MyFeed() {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   );
-
-  // Remove the unused 'utils' variable
-  // const utils = api.useUtils();
 
   const onRefresh = useCallback(() => {
     void eventsQuery.refetch();

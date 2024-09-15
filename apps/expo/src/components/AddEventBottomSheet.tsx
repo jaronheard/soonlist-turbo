@@ -1,11 +1,5 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -34,6 +28,7 @@ import {
 
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useNotification } from "~/providers/NotificationProvider";
+import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { showToast } from "~/utils/toast";
 
@@ -50,11 +45,6 @@ const AddEventBottomSheet = React.forwardRef<
   AddEventBottomSheetProps
 >(({ initialParams }, ref) => {
   const snapPoints = useMemo(() => [388], []);
-  const [input, setInput] = useState("");
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [linkPreview, setLinkPreview] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isPublic, setIsPublic] = useState(false);
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
   const eventFromRawTextAndNotification =
@@ -71,67 +61,95 @@ const AddEventBottomSheet = React.forwardRef<
     });
   const { user } = useUser();
 
+  const {
+    input,
+    imagePreview,
+    linkPreview,
+    isCreating,
+    isPublic,
+    isImageLoading,
+    isImageUploading,
+    uploadedImageUrl,
+    setInput,
+    setImagePreview,
+    setLinkPreview,
+    setIsCreating,
+    setIsPublic,
+    setIsImageLoading,
+    setIsImageUploading,
+    setUploadedImageUrl,
+    resetAddEventState,
+  } = useAppStore();
+
   // Use the intent handler
   useIntentHandler();
 
-  const [isImageLoading, setIsImageLoading] = useState(false);
-  const [isImageUploading, setIsImageUploading] = useState(false);
-  const uploadedImageUrlRef = useRef<string | null>(null);
   const uploadPromiseRef = useRef<Promise<string> | null>(null);
 
-  const handleImageUploadFromUri = useCallback(async (uri: string) => {
-    setIsImageLoading(true);
-    setIsImageUploading(true);
-    const uploadImage = async (imageUri: string): Promise<string> => {
-      try {
-        const response = await FileSystem.uploadAsync(
-          "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
-          imageUri,
-          {
-            uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-            httpMethod: "POST",
-            headers: {
-              "Content-Type": "image/jpeg",
-              Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
+  const handleImageUploadFromUri = useCallback(
+    async (uri: string) => {
+      setIsImageLoading(true);
+      setIsImageUploading(true);
+      const uploadImage = async (imageUri: string): Promise<string> => {
+        try {
+          const response = await FileSystem.uploadAsync(
+            "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
+            imageUri,
+            {
+              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+              httpMethod: "POST",
+              headers: {
+                "Content-Type": "image/jpeg",
+                Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
+              },
             },
-          },
-        );
+          );
 
-        if (response.status !== 200) {
-          throw new Error(`Upload failed with status ${response.status}`);
+          if (response.status !== 200) {
+            throw new Error(`Upload failed with status ${response.status}`);
+          }
+
+          const data = JSON.parse(response.body) as { fileUrl: string };
+          return data.fileUrl;
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          throw error;
         }
+      };
 
-        const data = JSON.parse(response.body) as { fileUrl: string };
-        return data.fileUrl;
+      try {
+        setImagePreview(uri);
+        uploadPromiseRef.current = uploadImage(uri);
+        const uploadedImageUrl = await uploadPromiseRef.current;
+        setImagePreview(uploadedImageUrl);
+        setUploadedImageUrl(uploadedImageUrl);
       } catch (error) {
-        console.error("Error uploading image:", error);
-        throw error;
+        console.error("Error processing image:", error);
+        setImagePreview(null);
+        setUploadedImageUrl(null);
+      } finally {
+        setIsImageLoading(false);
+        setIsImageUploading(false);
+        uploadPromiseRef.current = null;
       }
-    };
+    },
+    [
+      setImagePreview,
+      setIsImageLoading,
+      setIsImageUploading,
+      setUploadedImageUrl,
+    ],
+  );
 
-    try {
-      setImagePreview(uri);
-      uploadPromiseRef.current = uploadImage(uri);
-      const uploadedImageUrl = await uploadPromiseRef.current;
-      setImagePreview(uploadedImageUrl);
-      uploadedImageUrlRef.current = uploadedImageUrl;
-    } catch (error) {
-      console.error("Error processing image:", error);
-      setImagePreview(null);
-      uploadedImageUrlRef.current = null;
-    } finally {
-      setIsImageLoading(false);
-      setIsImageUploading(false);
-      uploadPromiseRef.current = null;
-    }
-  }, []);
-
-  const handleLinkPreview = useCallback(async (url: string) => {
-    // Here you would typically fetch the link preview data
-    // For this example, we'll just set the URL as the preview
-    setLinkPreview(url);
-    setInput(url);
-  }, []);
+  const handleLinkPreview = useCallback(
+    async (url: string) => {
+      // Here you would typically fetch the link preview data
+      // For this example, we'll just set the URL as the preview
+      setLinkPreview(url);
+      setInput(url);
+    },
+    [setLinkPreview, setInput],
+  );
 
   const handleTextChange = useCallback(
     (text: string) => {
@@ -144,7 +162,7 @@ const AddEventBottomSheet = React.forwardRef<
         setLinkPreview(null);
       }
     },
-    [handleLinkPreview],
+    [handleLinkPreview, setInput, setLinkPreview],
   );
 
   useEffect(() => {
@@ -168,6 +186,7 @@ const AddEventBottomSheet = React.forwardRef<
     handleLinkPreview,
     handleTextChange,
     initialParams,
+    setInput,
   ]);
 
   const handleSheetChanges = useCallback((index: number) => {
@@ -229,7 +248,7 @@ const AddEventBottomSheet = React.forwardRef<
     setImagePreview(null);
     setLinkPreview(null);
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-  }, [ref]);
+  }, [ref, setIsCreating, setInput, setImagePreview, setLinkPreview]);
 
   const handleError = useCallback(
     (error: unknown) => {
@@ -245,7 +264,7 @@ const AddEventBottomSheet = React.forwardRef<
         (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
       }
     },
-    [ref],
+    [ref, setIsCreating],
   );
 
   const handleCreateEvent = useCallback(() => {
@@ -253,10 +272,7 @@ const AddEventBottomSheet = React.forwardRef<
     setIsCreating(true);
 
     // Clear the modal state
-    setInput("");
-    setImagePreview(null);
-    setLinkPreview(null);
-    // Don't reset the public state
+    resetAddEventState();
 
     // Dismiss the modal immediately
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
@@ -282,7 +298,7 @@ const AddEventBottomSheet = React.forwardRef<
           },
         );
       } else {
-        let finalImageUrl = uploadedImageUrlRef.current;
+        let finalImageUrl = uploadedImageUrl;
         if (isImageUploading && uploadPromiseRef.current) {
           try {
             finalImageUrl = await uploadPromiseRef.current;
@@ -343,7 +359,10 @@ const AddEventBottomSheet = React.forwardRef<
     handleSuccess,
     handleError,
     isImageUploading,
+    uploadedImageUrl,
     ref,
+    resetAddEventState,
+    setIsCreating,
   ]);
 
   const handleDismiss = useCallback(() => {

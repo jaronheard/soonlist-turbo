@@ -88,7 +88,8 @@
     "react-native-screens": "~3.29.0",
     "react-native-svg": "14.1.0",
     "react-native-webview": "^13.6.4",
-    "superjson": "2.2.1"
+    "superjson": "2.2.1",
+    "zustand": "4.5.5"
   },
   "devDependencies": {
     "@babel/core": "^7.24.4",
