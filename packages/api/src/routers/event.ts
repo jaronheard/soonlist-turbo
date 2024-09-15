@@ -1,6 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, gte, lte, not } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lt, lte, not } from "drizzle-orm";
 import { z } from "zod";
 
 import type {
@@ -463,6 +463,52 @@ export const eventRouter = createTRPCRouter({
         limit: input.limit,
       });
     }),
+  getDiscoverInfinite: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(20),
+        cursor: z.string().nullish(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { userId } = ctx.auth;
+      const { limit, cursor } = input;
+      const now = new Date();
+
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User must be logged in to discover events",
+        });
+      }
+
+      const e = await ctx.db.query.events.findMany({
+        where: and(
+          gte(events.startDateTime, now),
+          not(eq(events.userId, userId)),
+          eq(events.visibility, "public"),
+        ),
+        orderBy: [asc(events.startDateTime)],
+        limit: limit + 1,
+        offset: cursor ? parseInt(cursor) : 0,
+        with: {
+          user: true,
+          eventFollows: true,
+          comments: true,
+        },
+      });
+
+      let nextCursor: typeof cursor | undefined = undefined;
+      if (e.length > limit) {
+        const nextItem = e.pop();
+        nextCursor = nextItem?.id;
+      }
+
+      return {
+        events: e,
+        nextCursor,
+      };
+    }),
   delete: protectedProcedure.input(eventIdSchema).mutation(({ ctx, input }) => {
     const { userId, sessionClaims } = ctx.auth;
     if (!userId) {
@@ -762,6 +808,68 @@ export const eventRouter = createTRPCRouter({
           user: true,
         },
       });
+    }),
+  getEventsForUser: protectedProcedure
+    .input(
+      z.object({
+        userName: z.string(),
+        filter: z.enum(["upcoming", "past"]),
+        limit: z.number().min(1).max(100).default(20),
+        cursor: z.string().nullish(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { userName, filter, limit, cursor } = input;
+      const now = new Date();
+
+      const e = await ctx.db.query.events.findMany({
+        where: and(
+          eq(events.userName, userName),
+          filter === "upcoming"
+            ? gte(events.startDateTime, now)
+            : lt(events.endDateTime, now),
+        ),
+        orderBy: [
+          filter === "upcoming"
+            ? asc(events.startDateTime)
+            : desc(events.endDateTime),
+        ],
+        limit: limit + 1,
+        offset: cursor ? parseInt(cursor) : 0,
+        with: {
+          eventFollows: true,
+          comments: true,
+          user: true,
+          eventToLists: {
+            with: {
+              list: true,
+            },
+          },
+        },
+      });
+
+      let nextCursor: typeof cursor | undefined = undefined;
+      if (e.length > limit) {
+        const nextItem = e.pop();
+        nextCursor = nextItem?.id;
+      }
+
+      // Convert Drizzle objects to plain JavaScript objects
+      const plainEvents = e.map((event) => ({
+        ...event,
+        eventFollows: event.eventFollows.map((ef) => ({ ...ef })),
+        comments: event.comments.map((c) => ({ ...c })),
+        user: { ...event.user },
+        eventToLists: event.eventToLists.map((etl) => ({
+          ...etl,
+          list: { ...etl.list },
+        })),
+      }));
+
+      return {
+        events: plainEvents,
+        nextCursor,
+      };
     }),
   unfollow: protectedProcedure
     .input(z.object({ id: z.string() }))

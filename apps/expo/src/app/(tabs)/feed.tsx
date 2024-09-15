@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from "@discord/bottom-sheet";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Linking, Pressable, View } from "react-native";
+import { Linking, Pressable, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 import { Navigation2 } from "lucide-react-native";
@@ -42,6 +42,34 @@ function GoButton({
   );
 }
 
+function FilterButton({
+  label,
+  isActive,
+  onPress,
+}: {
+  label: string;
+  isActive: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="px-3 py-2"
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+    >
+      <View className={`${isActive ? "border-b-2 border-interactive-1" : ""}`}>
+        <Text
+          className={`text-sm font-medium ${
+            isActive ? "text-interactive-1" : "text-gray-400"
+          }`}
+        >
+          {label}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
 function MyFeed() {
   const { user } = useUser();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
@@ -51,19 +79,35 @@ function MyFeed() {
   } | null>(null);
   const { handleIntent } = useIntentHandler();
 
-  const eventsQuery = api.event.getUpcomingForUser.useQuery({
-    userName: user?.username ?? "",
-  });
-  const utils = api.useUtils();
+  const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
+  // Remove the unused 'cursor' state
+  // const [cursor, setCursor] = useState<string | null>(null);
+
+  const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
+    {
+      userName: user?.username ?? "",
+      filter,
+      limit: 20,
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
+
+  // Remove the unused 'utils' variable
+  // const utils = api.useUtils();
 
   const onRefresh = useCallback(() => {
-    void utils.event.getUpcomingForUser.invalidate();
-  }, [utils]);
+    void eventsQuery.refetch();
+  }, [eventsQuery]);
 
-  const events = eventsQuery.data ?? [];
-  const currentAndFutureEvents = events.filter(
-    (item) => item.startDateTime >= new Date() || item.endDateTime > new Date(),
-  );
+  const loadMore = useCallback(() => {
+    if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
+      void eventsQuery.fetchNextPage();
+    }
+  }, [eventsQuery]);
+
+  const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
   const handlePresentModalPress = () => bottomSheetRef.current?.present();
 
@@ -121,10 +165,24 @@ function MyFeed() {
           <LoadingSpinner />
         ) : (
           <View className="flex-1">
+            <View className="flex-row justify-center border-b border-gray-200">
+              <FilterButton
+                label="Upcoming"
+                isActive={filter === "upcoming"}
+                onPress={() => setFilter("upcoming")}
+              />
+              <FilterButton
+                label="Past"
+                isActive={filter === "past"}
+                onPress={() => setFilter("past")}
+              />
+            </View>
             <UserEventsList
-              events={currentAndFutureEvents}
+              events={events}
               isRefetching={eventsQuery.isRefetching}
               onRefresh={onRefresh}
+              onEndReached={loadMore}
+              isFetchingNextPage={eventsQuery.isFetchingNextPage}
               ActionButton={GoButton}
               showCreator="otherUsers"
             />

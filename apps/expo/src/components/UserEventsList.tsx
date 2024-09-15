@@ -1,5 +1,12 @@
 import React from "react";
-import { Image, Pressable, RefreshControl, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  RefreshControl,
+  Text,
+  View,
+} from "react-native";
 import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
@@ -22,12 +29,14 @@ import { EventMenu } from "./EventMenu";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
 
+type Event = RouterOutputs["event"]["getDiscoverInfinite"]["events"][number];
+
 interface ActionButtonProps {
-  event: RouterOutputs["event"]["getUpcomingForUser"][number];
+  event: Event;
 }
 
 export function UserEventListItem(props: {
-  event: RouterOutputs["event"]["getUpcomingForUser"][number];
+  event: Event;
   ActionButton?: React.ComponentType<ActionButtonProps>;
   isLastItem?: boolean;
   showCreator: ShowCreatorOption;
@@ -71,12 +80,22 @@ export function UserEventListItem(props: {
     e.timeZone || "",
   );
   const relativeTime = dateInfo ? formatRelativeTime(dateInfo) : "";
-  const isHappeningNow = relativeTime === "Happening now";
+  const isOver =
+    dateInfo &&
+    new Date() >
+      new Date(
+        dateInfo.year,
+        dateInfo.month - 1,
+        dateInfo.day,
+        dateInfo.hour,
+        dateInfo.minute,
+      );
+  const isHappeningNow = relativeTime === "Happening now" && !isOver;
 
   const { user: currentUser } = useUser();
   const eventUser = event.user;
+
   // guard against null user
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!eventUser) return null;
 
   const isCurrentUser = currentUser?.id === eventUser.id;
@@ -201,14 +220,24 @@ export function UserEventListItem(props: {
 }
 
 export default function UserEventsList(props: {
-  events: RouterOutputs["event"]["getUpcomingForUser"];
+  events: Event[];
   refreshControl?: React.ReactElement;
   ActionButton?: React.ComponentType<ActionButtonProps>;
   showCreator: ShowCreatorOption;
   isRefetching: boolean;
   onRefresh: () => void;
+  onEndReached: () => void;
+  isFetchingNextPage: boolean;
 }) {
-  const { events, ActionButton, showCreator, isRefetching, onRefresh } = props;
+  const {
+    events,
+    ActionButton,
+    showCreator,
+    isRefetching,
+    onRefresh,
+    onEndReached,
+    isFetchingNextPage,
+  } = props;
   const { user } = useUser();
   const username = user?.username || "";
   const {
@@ -249,7 +278,12 @@ export default function UserEventsList(props: {
     </View>
   );
 
-  const renderFooter = () => <></>;
+  const renderFooter = () =>
+    isFetchingNextPage ? (
+      <View className="py-4">
+        <ActivityIndicator size="large" color="#5A32FB" />
+      </View>
+    ) : null;
 
   if (collapsedEvents.length === 0 && !isRefetching) {
     return renderEmptyState();
@@ -283,7 +317,7 @@ export default function UserEventsList(props: {
             tintColor="#5A32FB"
           />
         }
-        onEndReached={onRefresh}
+        onEndReached={onEndReached}
         onEndReachedThreshold={0.1}
         contentContainerStyle={{ paddingBottom: 16 }}
         ListFooterComponent={renderFooter()}

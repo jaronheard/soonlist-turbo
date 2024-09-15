@@ -18,27 +18,33 @@ export default function Page() {
   const { user } = useUser();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
 
-  const eventsQuery = api.event.getDiscover.useQuery({
-    limit: 50,
-  });
+  const eventsQuery = api.event.getDiscoverInfinite.useInfiniteQuery(
+    {
+      limit: 20,
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
+
   const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery({
     userName: user?.username ?? "",
   });
+
   const utils = api.useUtils();
 
   const onRefresh = useCallback(() => {
-    void utils.event.getDiscover.invalidate();
+    void eventsQuery.refetch();
     void utils.event.getSavedIdsForUser.invalidate();
-  }, [utils]);
+  }, [eventsQuery, utils]);
 
-  if (eventsQuery.isLoading || savedEventIdsQuery.isLoading) {
-    return <LoadingSpinner />;
-  }
+  const loadMore = useCallback(() => {
+    if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
+      void eventsQuery.fetchNextPage();
+    }
+  }, [eventsQuery]);
 
-  const events = eventsQuery.data ?? [];
-  const currentAndFutureEvents = events.filter(
-    (item) => item.startDateTime >= new Date(),
-  );
+  const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
   const savedEventIds = new Set(
     savedEventIdsQuery.data?.map((event) => event.id),
@@ -47,7 +53,7 @@ export default function Page() {
   function SaveButtonWrapper({
     event,
   }: {
-    event: RouterOutputs["event"]["getDiscover"][number];
+    event: RouterOutputs["event"]["getDiscoverInfinite"]["events"][number];
   }) {
     return (
       <SaveButton eventId={event.id} isSaved={savedEventIds.has(event.id)} />
@@ -55,6 +61,10 @@ export default function Page() {
   }
 
   const handlePresentModalPress = () => bottomSheetRef.current?.present();
+
+  if (eventsQuery.isLoading || savedEventIdsQuery.isLoading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <View className="flex-1">
@@ -74,11 +84,13 @@ export default function Page() {
       />
       <View className="flex-1">
         <UserEventsList
-          events={currentAndFutureEvents}
+          events={events}
           isRefetching={
             eventsQuery.isRefetching || savedEventIdsQuery.isRefetching
           }
           onRefresh={onRefresh}
+          onEndReached={loadMore}
+          isFetchingNextPage={eventsQuery.isFetchingNextPage}
           ActionButton={SaveButtonWrapper}
           showCreator="always"
         />
