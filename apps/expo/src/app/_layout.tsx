@@ -15,6 +15,7 @@ import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
+import { PostHogProvider } from "posthog-react-native";
 
 import { useAppStateRefresh } from "~/hooks/useAppStateRefresh";
 import {
@@ -109,7 +110,14 @@ function RootLayout() {
               <SafeAreaProvider>
                 <MenuProvider>
                   <BottomSheetModalProvider>
-                    <RootLayoutContent />
+                    <PostHogProvider
+                      apiKey={Config.posthogApiKey}
+                      options={{
+                        host: "https://us.i.posthog.com",
+                      }}
+                    >
+                      <RootLayoutContent />
+                    </PostHogProvider>
                   </BottomSheetModalProvider>
                 </MenuProvider>
               </SafeAreaProvider>
