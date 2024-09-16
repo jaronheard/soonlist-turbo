@@ -14,6 +14,7 @@ import { Stack, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
+import { usePostHog } from "posthog-react-native";
 
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { AppleSignInButton } from "./AppleSignInButton";
@@ -27,6 +28,7 @@ const SignInWithOAuth = () => {
   useWarmUpBrowser();
   const router = useRouter();
   const { height } = useWindowDimensions();
+  const posthog = usePostHog();
 
   const { signIn, setActive: setActiveSignIn } = useSignIn();
   const { signUp, setActive: setActiveSignUp } = useSignUp();
@@ -63,6 +65,9 @@ const SignInWithOAuth = () => {
           const intercomLogin = await Intercom.loginUserWithUserAttributes({
             email,
             userId,
+          });
+          posthog.identify(userId, {
+            email,
           });
           console.log(intercomLogin, "intercomLogin");
         } else if (result.signUp?.status === "missing_requirements") {
