@@ -3,6 +3,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Stack, useRouter } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
+import { usePostHog } from "posthog-react-native";
 
 import { Logo } from "../../components/Logo";
 
@@ -13,6 +14,7 @@ const VerifyEmail = () => {
   const [generalError, setGeneralError] = useState("");
   const { signUp, setActive } = useSignUp();
   const router = useRouter();
+  const posthog = usePostHog();
 
   const validateCode = () => {
     setCodeError("");
@@ -43,6 +45,10 @@ const VerifyEmail = () => {
 
       if (completeSignUp.status === "complete") {
         await setActive({ session: completeSignUp.createdSessionId });
+        posthog.identify(completeSignUp.emailAddress ?? "", {
+          email: completeSignUp.emailAddress,
+          username: completeSignUp.username,
+        });
         router.replace("/feed");
       } else {
         console.log(JSON.stringify(completeSignUp, null, 2));

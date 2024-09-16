@@ -3,12 +3,14 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Stack, useRouter } from "expo-router";
 import { useSignIn } from "@clerk/clerk-expo";
+import { usePostHog } from "posthog-react-native";
 
 import { Logo } from "../../components/Logo";
 
 export default function SignInScreen() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
+  const posthog = usePostHog();
 
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -55,7 +57,9 @@ export default function SignInScreen() {
         identifier: emailAddress,
         password,
       });
-
+      posthog.identify(emailAddress, {
+        email: emailAddress,
+      });
       await setActive({ session: completeSignIn.createdSessionId });
       router.replace("/feed");
     } catch (err: unknown) {
