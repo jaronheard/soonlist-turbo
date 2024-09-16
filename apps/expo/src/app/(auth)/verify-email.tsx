@@ -45,7 +45,7 @@ const VerifyEmail = () => {
 
       if (completeSignUp.status === "complete") {
         await setActive({ session: completeSignUp.createdSessionId });
-        posthog.identify(completeSignUp.id, {
+        posthog.identify(completeSignUp.emailAddress, {
           email: completeSignUp.emailAddress,
           username: completeSignUp.username,
         });

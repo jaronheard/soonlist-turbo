@@ -57,7 +57,7 @@ export default function SignInScreen() {
         identifier: emailAddress,
         password,
       });
-      posthog.identify(completeSignIn.id, {
+      posthog.identify(emailAddress, {
         email: emailAddress,
       });
       await setActive({ session: completeSignIn.createdSessionId });

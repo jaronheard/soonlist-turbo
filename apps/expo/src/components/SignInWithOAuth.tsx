@@ -66,9 +66,11 @@ const SignInWithOAuth = () => {
             email,
             userId,
           });
-          posthog.identify(userId, {
-            email,
-          });
+          if (email) {
+            posthog.identify(email, {
+              email,
+            });
+          }
           console.log(intercomLogin, "intercomLogin");
         } else if (result.signUp?.status === "missing_requirements") {
           setPendingSignUp(result.signUp);
