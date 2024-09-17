@@ -20,7 +20,7 @@ export default function Page() {
 
   const eventsQuery = api.event.getDiscoverInfinite.useInfiniteQuery(
     {
-      limit: 5,
+      limit: 20,
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
