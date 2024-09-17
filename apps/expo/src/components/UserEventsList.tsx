@@ -80,7 +80,6 @@ export function UserEventListItem(props: {
     e.startTime || "",
     e.timeZone || "",
   );
-  const relativeTime = dateInfo ? formatRelativeTime(dateInfo) : "";
   const isOver =
     dateInfo &&
     new Date() >
@@ -91,6 +90,7 @@ export function UserEventListItem(props: {
         dateInfo.hour,
         dateInfo.minute,
       );
+  const relativeTime = dateInfo && !isOver ? formatRelativeTime(dateInfo) : "";
   const isHappeningNow = relativeTime === "Happening now" && !isOver;
 
   const { user: currentUser } = useUser();
