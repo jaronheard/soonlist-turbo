@@ -139,6 +139,10 @@ function MyFeed() {
     };
   }, [handleIntent]);
 
+  useEffect(() => {
+    console.log("Events length:", events.length);
+  }, [events]);
+
   return (
     <>
       <Stack.Screen
