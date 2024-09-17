@@ -4,6 +4,7 @@
 
 - **Voice**: Friendly, engaging, and approachable. The language should be clear, concise, and focus on simplicity while conveying enthusiasm for the product's potential and impact.
 - **Tone**: Positive, inspiring, and community-driven. Emphasize connection, exploration, and the transformative power of organizing possibilities.
+- **Framing**: Emphasize user empowerment and intentional engagement.Present events and time as opportunities for active choice. Use language that encourages proactive decision-making. Frame the user's relationship with possibilities as one of active "showing up"
 
 ### **2. Core Messaging**
 
