@@ -832,7 +832,7 @@ export const eventRouter = createTRPCRouter({
         orderBy: [
           filter === "upcoming"
             ? asc(events.startDateTime)
-            : desc(events.endDateTime),
+            : desc(events.startDateTime),
         ],
         limit: limit + 1,
         offset: cursor ? parseInt(cursor) : 0,
