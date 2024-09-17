@@ -318,7 +318,7 @@ export default function UserEventsList(props: {
           />
         }
         onEndReached={onEndReached}
-        onEndReachedThreshold={0.1}
+        onEndReachedThreshold={0.5}
         contentContainerStyle={{ paddingBottom: 16 }}
         ListFooterComponent={renderFooter()}
       />
