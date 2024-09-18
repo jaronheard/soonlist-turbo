@@ -1,5 +1,7 @@
 import { useCallback } from "react";
 
+import { useAppStore } from "~/store";
+
 type IntentType = "new";
 const scheme =
   process.env.EXPO_PUBLIC_APP_ENV === "development"
@@ -9,36 +11,43 @@ const scheme =
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
 export function useIntentHandler() {
-  const handleIntent = useCallback((url: string) => {
-    if (url.startsWith(`${scheme}://`) && !url.startsWith(`${scheme}:///`)) {
-      url = url.replace(`${scheme}://`, `${scheme}:///`);
-    }
+  const setActiveIntent = useAppStore((state) => state.setActiveIntent);
 
-    const parsedUrl = new URL(url);
-    const params = parsedUrl.searchParams;
-    const intentType = params.get("intent") as IntentType | null;
+  const handleIntent = useCallback(
+    (url: string) => {
+      setActiveIntent(true);
 
-    if (!intentType) return null;
+      if (url.startsWith(`${scheme}://`) && !url.startsWith(`${scheme}:///`)) {
+        url = url.replace(`${scheme}://`, `${scheme}:///`);
+      }
 
-    switch (intentType) {
-      case "new": {
-        const text = params.get("text");
-        const imageUri = params.get("imageUri");
+      const parsedUrl = new URL(url);
+      const params = parsedUrl.searchParams;
+      const intentType = params.get("intent") as IntentType | null;
 
-        if (text) {
-          return { type: "new", text: decodeURIComponent(text) };
-        } else if (imageUri && VALID_IMAGE_REGEX.test(imageUri)) {
-          return { type: "new", imageUri: decodeURIComponent(imageUri) };
+      if (!intentType) return null;
+
+      switch (intentType) {
+        case "new": {
+          const text = params.get("text");
+          const imageUri = params.get("imageUri");
+
+          if (text) {
+            return { type: "new", text: decodeURIComponent(text) };
+          } else if (imageUri && VALID_IMAGE_REGEX.test(imageUri)) {
+            return { type: "new", imageUri: decodeURIComponent(imageUri) };
+          }
+          break;
         }
-        break;
+        default: {
+          console.warn(`Unknown intent type: ${intentType as string}`);
+        }
       }
-      default: {
-        console.warn(`Unknown intent type: ${intentType as string}`);
-      }
-    }
 
-    return null;
-  }, []);
+      return null;
+    },
+    [setActiveIntent],
+  );
 
   return { handleIntent };
 }

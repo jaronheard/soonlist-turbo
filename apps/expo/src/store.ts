@@ -46,6 +46,9 @@ interface AppState {
     event: RouterOutputs["event"]["getUpcomingForUser"][number] | null,
   ) => void;
   setCalendarUsage: (usage: Record<string, number>) => void;
+
+  activeIntent: boolean;
+  setActiveIntent: (active: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -98,4 +101,7 @@ export const useAppStore = create<AppState>((set) => ({
   setAvailableCalendars: (calendars) => set({ availableCalendars: calendars }),
   setSelectedEvent: (event) => set({ selectedEvent: event }),
   setCalendarUsage: (usage) => set({ calendarUsage: usage }),
+
+  activeIntent: false,
+  setActiveIntent: (active) => set({ activeIntent: active }),
 }));
