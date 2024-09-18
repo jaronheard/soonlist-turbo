@@ -241,14 +241,8 @@ export default function UserEventsList(props: {
   } = props;
   const { user } = useUser();
   const username = user?.username || "";
-  const {
-    isCalendarModalVisible,
-    setIsCalendarModalVisible,
-    showAllCalendars,
-    setShowAllCalendars,
-  } = useAppStore();
-  const { availableCalendars, handleCalendarSelect, INITIAL_CALENDAR_LIMIT } =
-    useCalendar();
+  const { setIsCalendarModalVisible } = useAppStore();
+  const { handleCalendarSelect, INITIAL_CALENDAR_LIMIT } = useCalendar();
 
   const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
     userName: username,
@@ -323,12 +317,8 @@ export default function UserEventsList(props: {
         ListFooterComponent={renderFooter()}
       />
       <CalendarSelectionModal
-        visible={isCalendarModalVisible}
-        calendars={availableCalendars}
         onSelect={handleCalendarSelect}
         onDismiss={() => setIsCalendarModalVisible(false)}
-        showAllCalendars={showAllCalendars}
-        setShowAllCalendars={setShowAllCalendars}
         initialLimit={INITIAL_CALENDAR_LIMIT}
       />
     </>

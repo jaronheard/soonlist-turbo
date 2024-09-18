@@ -1,4 +1,7 @@
+import type * as Calendar from "expo-calendar";
 import { create } from "zustand";
+
+import type { RouterOutputs } from "~/utils/api";
 
 interface AppState {
   filter: "upcoming" | "past";
@@ -29,6 +32,20 @@ interface AppState {
   setIsImageUploading: (isUploading: boolean) => void;
   setUploadedImageUrl: (url: string | null) => void;
   resetAddEventState: () => void;
+
+  // Calendar-related state
+  defaultCalendarId: string | null;
+  availableCalendars: Calendar.Calendar[];
+  selectedEvent: RouterOutputs["event"]["getUpcomingForUser"][number] | null;
+  calendarUsage: Record<string, number>;
+
+  // Calendar-related actions
+  setDefaultCalendarId: (id: string | null) => void;
+  setAvailableCalendars: (calendars: Calendar.Calendar[]) => void;
+  setSelectedEvent: (
+    event: RouterOutputs["event"]["getUpcomingForUser"][number] | null,
+  ) => void;
+  setCalendarUsage: (usage: Record<string, number>) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -69,4 +86,16 @@ export const useAppStore = create<AppState>((set) => ({
       isImageUploading: false,
       uploadedImageUrl: null,
     }),
+
+  // Calendar-related state
+  defaultCalendarId: null,
+  availableCalendars: [],
+  selectedEvent: null,
+  calendarUsage: {},
+
+  // Calendar-related actions
+  setDefaultCalendarId: (id) => set({ defaultCalendarId: id }),
+  setAvailableCalendars: (calendars) => set({ availableCalendars: calendars }),
+  setSelectedEvent: (event) => set({ selectedEvent: event }),
+  setCalendarUsage: (usage) => set({ calendarUsage: usage }),
 }));

@@ -85,7 +85,9 @@ export default function Page() {
       <View className="flex-1">
         <UserEventsList
           events={events}
-          isRefetching={eventsQuery.isRefetching}
+          isRefetching={
+            eventsQuery.isRefetching || savedEventIdsQuery.isRefetching
+          }
           onRefresh={onRefresh}
           onEndReached={loadMore}
           isFetchingNextPage={eventsQuery.isFetchingNextPage}

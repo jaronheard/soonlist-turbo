@@ -2,27 +2,27 @@ import type * as Calendar from "expo-calendar";
 import React from "react";
 import { FlatList, Modal, Text, TouchableOpacity, View } from "react-native";
 
+import { useAppStore } from "~/store";
 import { cn } from "~/utils/cn";
 
 interface CalendarSelectionModalProps {
-  visible: boolean;
-  calendars: Calendar.Calendar[];
   onSelect: (calendarId: string) => void;
   onDismiss: () => void;
-  showAllCalendars: boolean;
-  setShowAllCalendars: (show: boolean) => void;
   initialLimit: number;
 }
 
 export const CalendarSelectionModal: React.FC<CalendarSelectionModalProps> = ({
-  visible,
-  calendars,
   onSelect,
   onDismiss,
-  showAllCalendars,
-  setShowAllCalendars,
   initialLimit,
 }) => {
+  const {
+    isCalendarModalVisible,
+    availableCalendars,
+    showAllCalendars,
+    setShowAllCalendars,
+  } = useAppStore();
+
   const renderCalendarItem = ({
     item,
     index,
@@ -61,12 +61,12 @@ export const CalendarSelectionModal: React.FC<CalendarSelectionModalProps> = ({
   );
 
   const displayedCalendars = showAllCalendars
-    ? calendars
-    : calendars.slice(0, initialLimit);
+    ? availableCalendars
+    : availableCalendars.slice(0, initialLimit);
 
   return (
     <Modal
-      visible={visible}
+      visible={isCalendarModalVisible}
       transparent={true}
       animationType="slide"
       onRequestClose={onDismiss}
@@ -81,7 +81,7 @@ export const CalendarSelectionModal: React.FC<CalendarSelectionModalProps> = ({
             renderItem={renderCalendarItem}
             keyExtractor={(item) => item.id}
           />
-          {!showAllCalendars && calendars.length > initialLimit && (
+          {!showAllCalendars && availableCalendars.length > initialLimit && (
             <TouchableOpacity
               className="mt-3 items-center justify-center rounded-lg bg-interactive-1 px-4 py-2"
               onPress={() => setShowAllCalendars(true)}
