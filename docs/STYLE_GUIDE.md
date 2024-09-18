@@ -3,67 +3,68 @@
 ### **1. Brand Voice and Tone**
 
 - **Voice**: Friendly, engaging, and approachable. The language should be clear, concise, and focus on simplicity while conveying enthusiasm for the product's potential and impact.
-- **Tone**: Positive, inspiring, and community-driven. Emphasize connection, exploration, and the transformative power of organizing possibilities.
-- **Framing**: Emphasize user empowerment and intentional engagement.Present events and time as opportunities for active choice. Use language that encourages proactive decision-making. Frame the user's relationship with possibilities as one of active "showing up"
+- **Tone**: Positive, inspiring, and supportive. Emphasize guidance, curation, and the transformative power of organizing possibilities.
+- **Framing**: Position Soonlist as a trusted companion and personal curator. Emphasize user empowerment and intentional engagement with events that align with personal goals and interests.
 
 ### **2. Core Messaging**
 
 - **Taglines/Slogans**:
 
-  - "Organize and expand your possibilities"
+  - "Transform Possibilities into Experiences"
+  - "Your personal event concierge"
   - "From a world of possibilities, to your possibilities"
-  - "Connect to what you care about"
-  - "Tools to gather, organize, and share events"
+  - "Curating opportunities tailored just for you"
 
 - **Product Descriptions**:
-  - **Short (under 50 characters)**: "Organize and expand your possibilities."
-  - **Elevator Pitch (1-2 sentences)**: "Soonlist is a mobile and web app that helps you capture, organize, and explore events that matter to you. Move from event discovery to decision-making with ease."
-  - **Extended Description**: "Soonlist is a platform designed to help users navigate the space between discovering events and deciding to attend them. By enabling effortless event capture and organization, Soonlist helps people make intentional choices, build community, and connect with what matters most to them."
+  - **Short (under 50 characters)**: "Transform possibilities into experiences."
+  - **Elevator Pitch (1-2 sentences)**: "Soonlist is your personal event concierge, curating a world of opportunities tailored just for you. We help you capture, organize, and explore events that matter to you."
+  - **Extended Description**: "Soonlist isn't just an app – it's your trusted companion in navigating life's endless possibilities. We understand that in today's fast-paced world, capturing and organizing events that truly matter can be overwhelming. That's where we step in, not as a mere tool, but as your personal curator and guide. Soonlist helps you effortlessly save events from any source, transforming them into a beautifully organized tapestry of possibilities. We gently nudge you towards experiences that align with your deepest interests and aspirations, empowering you to live a life rich with meaningful experiences."
 
 ### **3. Key Terms**
 
 - **Possibilities**: Events users have saved or are considering attending.
 - **Capture**: The process of saving an event in various formats (e.g., screenshots, websites, text, or photos).
-- **Organize**: Categorizing and managing saved events in lists or feeds.
-- **Engage**: The actions users take to explore, share, or decide on saved events.
+- **Curate**: Organizing and presenting saved events in a way that's tailored to the user's interests and goals.
+- **Transform**: The process of turning saved event possibilities into actual experiences.
 
 ### **4. Language and Style**
 
 - **Conciseness**: Keep language clear and direct. Avoid jargon or overly technical language unless targeting a developer audience.
-- **Active Voice**: Use active voice to make content more engaging and direct (e.g., "Capture events effortlessly" instead of "Events can be captured effortlessly").
+- **Active Voice**: Use active voice to make content more engaging and direct (e.g., "Soonlist curates your events" instead of "Events are curated by Soonlist").
 - **Consistent Terminology**: Use the same terms throughout all content to maintain clarity and prevent confusion (e.g., always refer to saved events as "possibilities").
-- **Inclusive Language**: Ensure the language is inclusive and community-focused, reflecting Soonlist's mission to build connections through shared interests.
+- **Inclusive Language**: Ensure the language is inclusive and supportive, reflecting Soonlist's role as a personal guide and curator.
 
 ### **5. Content Structure**
 
-- **Headlines and Subheadings**: Use clear, compelling headlines that convey benefits (e.g., "Save Events in Seconds," "Explore Your Possibilities").
+- **Headlines and Subheadings**: Use clear, compelling headlines that convey benefits (e.g., "Transform Possibilities into Experiences," "Your Personal Event Concierge").
 - **Paragraphs**: Keep paragraphs short and focused. Use bullet points or numbered lists where appropriate to enhance readability.
-- **Calls to Action (CTAs)**: Use action-oriented phrases like "Capture Your First Event," "Share Your Possibilities," or "Organize with Purpose."
+- **Calls to Action (CTAs)**: Use action-oriented phrases like "Discover Your Possibilities," "Start Curating Your Experiences," or "Transform Your Intentions into Reality."
 
 ### **6. Content Types and Formats**
 
 - **Website and App Content**:
 
-  - **Homepage**: Highlight Soonlist's core benefits (capturing, organizing, sharing events).
-  - **Features Pages**: Focus on individual features like event capture, LLM integration, and sharing tools.
-  - **FAQs**: Address common questions about saving events, using LLMs, and organizing possibilities.
+  - **Homepage**: Highlight Soonlist's role as a personal event concierge and its ability to transform possibilities into experiences.
+  - **Features Pages**: Focus on how Soonlist captures, curates, and guides users towards meaningful events.
+  - **FAQs**: Address common questions about event curation, personalized recommendations, and organizing possibilities.
 
 - **Marketing Content**:
-  - **Social Media**: Use engaging visuals, concise captions, and stories that showcase user experiences.
-  - **Email Campaigns**: Highlight user testimonials, product updates, and tips on maximizing the use of Soonlist.
-  - **Blog Content**: Write about event organization tips, community stories, and the importance of meaningful connections.
+  - **Social Media**: Use engaging visuals and concise captions that emphasize Soonlist's role as a curator and guide.
+  - **Email Campaigns**: Highlight user testimonials, curated event suggestions, and tips on maximizing the use of Soonlist.
+  - **Blog Content**: Write about event curation, the art of transforming possibilities into experiences, and the importance of aligning events with personal goals.
 
 ### **7. Design Considerations**
 
-- **Visual Style**: Clean, modern, and minimalistic. Use colors that evoke a sense of creativity and community.
+- **Visual Style**: Clean, modern, and inviting. Use colors and imagery that evoke a sense of possibility and personalized curation.
 - **Typography**: Use simple, easy-to-read fonts. Maintain consistency across headings, body text, and CTAs.
 
 ### **8. Examples and Templates**
 
-- **Example Headline**: "Discover Events That Matter to You"
-- **Example CTA**: "Start Organizing Your Possibilities Now"
+- **Example Headline**: "Transform Possibilities into Experiences"
+- **Example Subheadline**: "Your personal event concierge, curating a world of opportunities tailored just for you"
+- **Example CTA**: "Start Curating Your Experiences Now"
 
 ### **9. Additional Guidelines**
 
 - **Accessibility**: Ensure all content is accessible. Use alt text for images, provide captions for videos, and maintain readable font sizes.
-- **SEO Considerations**: Use keywords like "event organization," "event sharing," "possibilities," and "community connection."
+- **SEO Considerations**: Use keywords like "event curation," "personal concierge," "transform possibilities," and "tailored experiences."
