@@ -10,7 +10,7 @@ import {
 import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
-import { Globe, Lock, MapPin, User } from "lucide-react-native";
+import { Globe2, Lock, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -171,7 +171,7 @@ export function UserEventListItem(props: {
               ) : isOwner ? (
                 <View className="flex-row items-center gap-2">
                   {event.visibility === "public" ? (
-                    <Globe size={16} color="#627496" />
+                    <Globe2 size={16} color="#627496" />
                   ) : (
                     <Lock size={16} color="#627496" />
                   )}
