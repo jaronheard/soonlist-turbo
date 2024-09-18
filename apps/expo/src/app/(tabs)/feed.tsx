@@ -160,7 +160,7 @@ function MyFeed() {
           <LoadingSpinner />
         ) : (
           <View className="flex-1">
-            <View className="flex-row justify-center border-b border-gray-200">
+            <View className="flex-row justify-center border-b border-gray-200 bg-interactive-3">
               <FilterButton
                 label="Upcoming"
                 isActive={filter === "upcoming"}
