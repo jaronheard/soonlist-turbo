@@ -1,6 +1,5 @@
 import type * as Calendar from "expo-calendar";
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 
 import type { RouterOutputs } from "~/utils/api";
 
@@ -52,61 +51,57 @@ interface AppState {
   setActiveIntent: (active: boolean) => void;
 }
 
-export const useAppStore = create<AppState>()(
-  devtools((set) => ({
-    filter: "upcoming",
-    intentParams: null,
-    isCalendarModalVisible: false,
-    showAllCalendars: false,
-    setFilter: (filter) => set({ filter }),
-    setIntentParams: (params) => set({ intentParams: params }),
-    setIsCalendarModalVisible: (isVisible) =>
-      set({ isCalendarModalVisible: isVisible }),
-    setShowAllCalendars: (show) => set({ showAllCalendars: show }),
-    resetIntentParams: () => set({ intentParams: null }),
-    input: "",
-    imagePreview: null,
-    linkPreview: null,
-    isCreating: false,
-    isPublic: false,
-    isImageLoading: false,
-    isImageUploading: false,
-    uploadedImageUrl: null,
-    setInput: (input) => set({ input }),
-    setImagePreview: (preview) => set({ imagePreview: preview }),
-    setLinkPreview: (preview) => set({ linkPreview: preview }),
-    setIsCreating: (isCreating) => set({ isCreating }),
-    setIsPublic: (isPublic) => set({ isPublic }),
-    setIsImageLoading: (isLoading) => set({ isImageLoading: isLoading }),
-    setIsImageUploading: (isUploading) =>
-      set({ isImageUploading: isUploading }),
-    setUploadedImageUrl: (url) => set({ uploadedImageUrl: url }),
-    resetAddEventState: () =>
-      set({
-        input: "",
-        imagePreview: null,
-        linkPreview: null,
-        isCreating: false,
-        isPublic: false,
-        isImageLoading: false,
-        isImageUploading: false,
-        uploadedImageUrl: null,
-      }),
+export const useAppStore = create<AppState>((set) => ({
+  filter: "upcoming",
+  intentParams: null,
+  isCalendarModalVisible: false,
+  showAllCalendars: false,
+  setFilter: (filter) => set({ filter }),
+  setIntentParams: (params) => set({ intentParams: params }),
+  setIsCalendarModalVisible: (isVisible) =>
+    set({ isCalendarModalVisible: isVisible }),
+  setShowAllCalendars: (show) => set({ showAllCalendars: show }),
+  resetIntentParams: () => set({ intentParams: null }),
+  input: "",
+  imagePreview: null,
+  linkPreview: null,
+  isCreating: false,
+  isPublic: false,
+  isImageLoading: false,
+  isImageUploading: false,
+  uploadedImageUrl: null,
+  setInput: (input) => set({ input }),
+  setImagePreview: (preview) => set({ imagePreview: preview }),
+  setLinkPreview: (preview) => set({ linkPreview: preview }),
+  setIsCreating: (isCreating) => set({ isCreating }),
+  setIsPublic: (isPublic) => set({ isPublic }),
+  setIsImageLoading: (isLoading) => set({ isImageLoading: isLoading }),
+  setIsImageUploading: (isUploading) => set({ isImageUploading: isUploading }),
+  setUploadedImageUrl: (url) => set({ uploadedImageUrl: url }),
+  resetAddEventState: () =>
+    set({
+      input: "",
+      imagePreview: null,
+      linkPreview: null,
+      isCreating: false,
+      isPublic: false,
+      isImageLoading: false,
+      isImageUploading: false,
+      uploadedImageUrl: null,
+    }),
 
-    // Calendar-related state
-    defaultCalendarId: null,
-    availableCalendars: [],
-    selectedEvent: null,
-    calendarUsage: {},
+  // Calendar-related state
+  defaultCalendarId: null,
+  availableCalendars: [],
+  selectedEvent: null,
+  calendarUsage: {},
 
-    // Calendar-related actions
-    setDefaultCalendarId: (id) => set({ defaultCalendarId: id }),
-    setAvailableCalendars: (calendars) =>
-      set({ availableCalendars: calendars }),
-    setSelectedEvent: (event) => set({ selectedEvent: event }),
-    setCalendarUsage: (usage) => set({ calendarUsage: usage }),
+  // Calendar-related actions
+  setDefaultCalendarId: (id) => set({ defaultCalendarId: id }),
+  setAvailableCalendars: (calendars) => set({ availableCalendars: calendars }),
+  setSelectedEvent: (event) => set({ selectedEvent: event }),
+  setCalendarUsage: (usage) => set({ calendarUsage: usage }),
 
-    activeIntent: false,
-    setActiveIntent: (active) => set({ activeIntent: active }),
-  })),
-);
+  activeIntent: false,
+  setActiveIntent: (active) => set({ activeIntent: active }),
+}));
