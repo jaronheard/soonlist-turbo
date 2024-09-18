@@ -467,7 +467,7 @@ export const eventRouter = createTRPCRouter({
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(20),
-        cursor: z.string().nullish(),
+        cursor: z.number().nullish(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -490,7 +490,7 @@ export const eventRouter = createTRPCRouter({
         ),
         orderBy: [asc(events.startDateTime)],
         limit: limit + 1,
-        offset: cursor ? parseInt(cursor) : 0,
+        offset: cursor || 0,
         with: {
           user: true,
           eventFollows: true,
@@ -500,8 +500,8 @@ export const eventRouter = createTRPCRouter({
 
       let nextCursor: typeof cursor | undefined = undefined;
       if (e.length > limit) {
-        const nextItem = e.pop();
-        nextCursor = nextItem?.id;
+        e.pop();
+        nextCursor = cursor ? cursor + limit : limit;
       }
 
       return {
@@ -815,7 +815,7 @@ export const eventRouter = createTRPCRouter({
         userName: z.string(),
         filter: z.enum(["upcoming", "past"]),
         limit: z.number().min(1).max(100).default(20),
-        cursor: z.string().nullish(),
+        cursor: z.number().nullish(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -832,10 +832,10 @@ export const eventRouter = createTRPCRouter({
         orderBy: [
           filter === "upcoming"
             ? asc(events.startDateTime)
-            : desc(events.endDateTime),
+            : desc(events.startDateTime),
         ],
         limit: limit + 1,
-        offset: cursor ? parseInt(cursor) : 0,
+        offset: cursor || 0,
         with: {
           eventFollows: true,
           comments: true,
@@ -848,10 +848,10 @@ export const eventRouter = createTRPCRouter({
         },
       });
 
-      let nextCursor: typeof cursor | undefined = undefined;
+      let nextCursor: number | undefined = undefined;
       if (e.length > limit) {
-        const nextItem = e.pop();
-        nextCursor = nextItem?.id;
+        e.pop();
+        nextCursor = (cursor || 0) + limit;
       }
 
       // Convert Drizzle objects to plain JavaScript objects
