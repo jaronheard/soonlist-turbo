@@ -1,5 +1,6 @@
 import type * as Calendar from "expo-calendar";
 import { create } from "zustand";
+import { devtools } from 'zustand/middleware'
 
 import type { RouterOutputs } from "~/utils/api";
 
@@ -51,7 +52,7 @@ interface AppState {
   setActiveIntent: (active: boolean) => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>()(devtools((set) => ({
   filter: "upcoming",
   intentParams: null,
   isCalendarModalVisible: false,
