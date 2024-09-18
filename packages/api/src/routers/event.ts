@@ -500,7 +500,7 @@ export const eventRouter = createTRPCRouter({
 
       let nextCursor: typeof cursor | undefined = undefined;
       if (e.length > limit) {
-        const nextItem = e.pop();
+        e.pop();
         nextCursor = cursor ? cursor + limit : limit;
       }
 
