@@ -3,6 +3,8 @@ import { Alert, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
 import * as SecureStore from "expo-secure-store";
 
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+
 import type { RouterOutputs } from "~/utils/api";
 import { useAppStore } from "~/store";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";

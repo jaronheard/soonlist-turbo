@@ -239,8 +239,8 @@ export function EventMenu({
     }
   };
 
-  const handleAddToCal = () => {
-    addToCalendar(event);
+  const handleAddToCal = async () => {
+    await addToCalendar(event);
   };
 
   const handleToggleVisibility = async (
@@ -271,7 +271,7 @@ export function EventMenu({
         handleDirections();
         break;
       case "Add to Calendar":
-        handleAddToCal();
+        void handleAddToCal();
         break;
       case "Add to Discover":
       case "Remove From Discover": {

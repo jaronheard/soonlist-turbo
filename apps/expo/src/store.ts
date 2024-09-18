@@ -1,6 +1,8 @@
 import type * as Calendar from "expo-calendar";
 import { create } from "zustand";
 
+import type { RouterOutputs } from "~/utils/api";
+
 interface AppState {
   filter: "upcoming" | "past";
   intentParams: { text?: string; imageUri?: string } | null;
