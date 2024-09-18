@@ -32,6 +32,7 @@ import {
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import { useCalendar } from "~/hooks/useCalendar";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import Config from "~/utils/config";
@@ -65,6 +66,7 @@ export function EventMenu({
   onDelete,
 }: EventMenuProps) {
   const utils = api.useUtils();
+  const { handleAddToCal: addToCalendar } = useCalendar();
 
   const deleteEventMutation = api.event.delete.useMutation({
     onMutate: () => {
@@ -238,8 +240,7 @@ export function EventMenu({
   };
 
   const handleAddToCal = () => {
-    // Implement calendar functionality
-    console.log("Add to calendar:", event.id);
+    addToCalendar(event);
   };
 
   const handleToggleVisibility = async (
