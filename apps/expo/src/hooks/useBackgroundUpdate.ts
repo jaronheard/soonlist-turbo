@@ -2,17 +2,19 @@ import { useCallback, useEffect, useRef } from "react";
 import { AppState } from "react-native";
 import * as Updates from "expo-updates";
 
+import { useAppStore } from "~/store";
+
 const CHECK_INTERVAL = 600 * 1000; // Check every 10 minutes
 
 export function useBackgroundUpdate() {
-  // Check if we're in production
   const isProduction = !__DEV__;
+  const activeIntent = useAppStore((state) => state.activeIntent);
 
   const appState = useRef(AppState.currentState);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const checkForUpdate = useCallback(async () => {
-    if (!isProduction) return;
+    if (!isProduction || activeIntent) return;
 
     try {
       const update = await Updates.checkForUpdateAsync();
@@ -23,13 +25,18 @@ export function useBackgroundUpdate() {
     } catch (error) {
       console.error("Error checking for update:", error);
     }
-  }, [isProduction]);
+  }, [isProduction, activeIntent]);
 
   const scheduleNextCheck = useCallback(() => {
     if (!isProduction) return;
 
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
     timeoutRef.current = setTimeout(() => {
       void checkForUpdate();
+      scheduleNextCheck();
     }, CHECK_INTERVAL);
   }, [checkForUpdate, isProduction]);
 
@@ -39,7 +46,8 @@ export function useBackgroundUpdate() {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (
         appState.current.match(/inactive|background/) &&
-        nextAppState === "active"
+        nextAppState === "active" &&
+        !activeIntent
       ) {
         void checkForUpdate();
       }
@@ -55,7 +63,7 @@ export function useBackgroundUpdate() {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [checkForUpdate, scheduleNextCheck, isProduction]);
+  }, [checkForUpdate, scheduleNextCheck, isProduction, activeIntent]);
 
   return null;
 }
