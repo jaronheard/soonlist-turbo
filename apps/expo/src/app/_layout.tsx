@@ -34,7 +34,6 @@ import Constants, { AppOwnership } from "expo-constants";
 import { BottomSheetModalProvider } from "@discord/bottom-sheet";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
-import { useBackgroundUpdate } from "~/hooks/useBackgroundUpdate";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
@@ -203,7 +202,6 @@ const InitialLayout = () => {
 function RootLayoutContent() {
   const { expoPushToken } = useNotification();
   useAppStateRefresh();
-  useBackgroundUpdate();
   const ref = useNavigationContainerRef();
 
   useEffect(() => {
