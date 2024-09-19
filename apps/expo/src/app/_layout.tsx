@@ -5,6 +5,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import {
+  Redirect,
   Stack,
   useNavigationContainerRef,
   useRootNavigationState,
@@ -134,15 +135,7 @@ function RootLayout() {
 export default Sentry.wrap(RootLayout);
 
 const InitialLayout = () => {
-  const { checkOnboardingStatus } = useAuthRedirect();
-  const rootNavigationState = useRootNavigationState();
-
   useOTAUpdates();
-
-  // Call checkOnboardingStatus when the component mounts or when rootNavigationState changes
-  if (rootNavigationState.key) {
-    checkOnboardingStatus();
-  }
 
   return (
     <Stack
@@ -158,6 +151,13 @@ const InitialLayout = () => {
     >
       <Stack.Screen
         name="(tabs)"
+        options={{
+          headerShown: false,
+          headerRight: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="(auth)"
         options={{
           headerShown: false,
           headerRight: undefined,

@@ -51,6 +51,7 @@ interface AppState {
 
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (status: boolean) => void;
+  resetStore: () => void; // Add this line
 }
 
 export const useAppStore = create<AppState>()(
@@ -111,6 +112,26 @@ export const useAppStore = create<AppState>()(
       hasCompletedOnboarding: false,
       setHasCompletedOnboarding: (status) =>
         set({ hasCompletedOnboarding: status }),
+      resetStore: () =>
+        set((state) => ({
+          filter: "upcoming",
+          intentParams: null,
+          isCalendarModalVisible: false,
+          showAllCalendars: false,
+          input: "",
+          imagePreview: null,
+          linkPreview: null,
+          isCreating: false,
+          isPublic: false,
+          isImageLoading: false,
+          isImageUploading: false,
+          uploadedImageUrl: null,
+          defaultCalendarId: null,
+          availableCalendars: [],
+          selectedEvent: null,
+          calendarUsage: {},
+          hasCompletedOnboarding: false,
+        })),
     }),
     {
       name: "app-storage",

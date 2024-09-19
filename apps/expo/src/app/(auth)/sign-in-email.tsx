@@ -61,7 +61,6 @@ export default function SignInScreen() {
         email: emailAddress,
       });
       await setActive({ session: completeSignIn.createdSessionId });
-      router.replace("/feed");
     } catch (err: unknown) {
       console.error("Error during sign in:", err);
       if (err instanceof Error) {
