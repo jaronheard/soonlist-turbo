@@ -203,7 +203,7 @@ const InitialLayout = () => {
 function RootLayoutContent() {
   const { expoPushToken } = useNotification();
   useAppStateRefresh();
-  useBackgroundUpdate(); // This line remains the same
+  useBackgroundUpdate();
   const ref = useNavigationContainerRef();
 
   useEffect(() => {

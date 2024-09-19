@@ -11,18 +11,14 @@ export function useBackgroundUpdate() {
   const appState = useRef(AppState.currentState);
 
   const checkForUpdate = useCallback(async () => {
-    if (!isProduction || activeIntent) return;
+    if (!isProduction) return;
 
     try {
-      const update = await Updates.checkForUpdateAsync();
-      if (update.isAvailable) {
-        await Updates.fetchUpdateAsync();
-        await Updates.reloadAsync();
-      }
+      await Updates.checkForUpdateAsync();
     } catch (error) {
       console.error("Error checking for update:", error);
     }
-  }, [isProduction, activeIntent]);
+  }, [isProduction]);
 
   useEffect(() => {
     if (!isProduction) return;
@@ -30,8 +26,7 @@ export function useBackgroundUpdate() {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (
         appState.current.match(/inactive|background/) &&
-        nextAppState === "active" &&
-        !activeIntent
+        nextAppState === "active"
       ) {
         void checkForUpdate();
       }
