@@ -34,6 +34,7 @@ import Constants, { AppOwnership } from "expo-constants";
 import { BottomSheetModalProvider } from "@discord/bottom-sheet";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
+import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
@@ -136,6 +137,8 @@ const InitialLayout = () => {
   const segments = useSegments();
   const router = useRouter();
   const rootNavigationState = useRootNavigationState();
+
+  useOTAUpdates();
 
   // If the user is signed in, redirect them to the home page
   // If the user is not signed in, redirect them to the login page
