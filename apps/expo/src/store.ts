@@ -113,7 +113,7 @@ export const useAppStore = create<AppState>()(
       setHasCompletedOnboarding: (status) =>
         set({ hasCompletedOnboarding: status }),
       resetStore: () =>
-        set((state) => ({
+        set(() => ({
           filter: "upcoming",
           intentParams: null,
           isCalendarModalVisible: false,

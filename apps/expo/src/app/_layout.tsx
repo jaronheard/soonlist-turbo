@@ -4,17 +4,10 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import {
-  Redirect,
-  Stack,
-  useNavigationContainerRef,
-  useRootNavigationState,
-  useRouter,
-  useSegments,
-} from "expo-router";
+import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
 import { PostHogProvider } from "posthog-react-native";
 
@@ -35,7 +28,6 @@ import Constants, { AppOwnership } from "expo-constants";
 import { BottomSheetModalProvider } from "@discord/bottom-sheet";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
-import { useAuthRedirect } from "~/hooks/useAuthRedirect";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
