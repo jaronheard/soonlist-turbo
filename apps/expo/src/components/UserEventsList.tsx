@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -36,6 +36,30 @@ interface ActionButtonProps {
   event: Event;
 }
 
+function formatDate(
+  date: string,
+  startTime: string | undefined,
+  endTime: string | undefined,
+  timeZone: string,
+) {
+  const startDateInfo = getDateTimeInfo(date, startTime || "", timeZone);
+  if (!startDateInfo) return { date: "", time: "" };
+
+  const formattedDate = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${startDateInfo.monthName} ${startDateInfo.day}`;
+  const formattedStartTime = startTime ? timeFormatDateInfo(startDateInfo) : "";
+  const formattedEndTime = endTime
+    ? timeFormatDateInfo(
+        getDateTimeInfo(date, endTime, timeZone) || startDateInfo,
+      )
+    : "";
+
+  const timeRange =
+    startTime && endTime
+      ? `${formattedStartTime} - ${formattedEndTime}`
+      : formattedStartTime;
+  return { date: formattedDate, time: timeRange.trim() };
+}
+
 export function UserEventListItem(props: {
   event: Event;
   ActionButton?: React.ComponentType<ActionButtonProps>;
@@ -48,49 +72,37 @@ export function UserEventListItem(props: {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const e = event.event as AddToCalendarButtonPropsRestricted;
 
-  const formatDate = (date: string, startTime?: string, endTime?: string) => {
-    const startDateInfo = getDateTimeInfo(
-      date,
-      startTime || "",
-      e.timeZone || "",
-    );
-    if (!startDateInfo) return { date: "", time: "" };
-
-    const formattedDate = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${startDateInfo.monthName} ${startDateInfo.day}`;
-    const formattedStartTime = startTime
-      ? timeFormatDateInfo(startDateInfo)
-      : "";
-    const formattedEndTime = endTime
-      ? timeFormatDateInfo(
-          getDateTimeInfo(date, endTime, e.timeZone || "") || startDateInfo,
-        )
-      : "";
-
-    const timeRange =
-      startTime && endTime
-        ? `${formattedStartTime} - ${formattedEndTime}`
-        : formattedStartTime;
-    return { date: formattedDate, time: timeRange.trim() };
-  };
-
-  const { date, time } = formatDate(e.startDate || "", e.startTime, e.endTime);
-
-  const dateInfo = getDateTimeInfo(
-    e.startDate || "",
-    e.startTime || "",
-    e.timeZone || "",
+  const { date, time } = useMemo(
+    () =>
+      formatDate(e.startDate || "", e.startTime, e.endTime, e.timeZone || ""),
+    [e.startDate, e.startTime, e.endTime, e.timeZone],
   );
-  const isOver =
-    dateInfo &&
-    new Date() >
+
+  const dateInfo = useMemo(
+    () =>
+      getDateTimeInfo(e.startDate || "", e.startTime || "", e.timeZone || ""),
+    [e.startDate, e.startTime, e.timeZone],
+  );
+
+  const isOver = useMemo(() => {
+    if (!dateInfo) return false;
+    return (
+      new Date() >
       new Date(
         dateInfo.year,
         dateInfo.month - 1,
         dateInfo.day,
         dateInfo.hour,
         dateInfo.minute,
-      );
-  const relativeTime = dateInfo && !isOver ? formatRelativeTime(dateInfo) : "";
+      )
+    );
+  }, [dateInfo]);
+
+  const relativeTime = useMemo(() => {
+    if (!dateInfo || isOver) return "";
+    return formatRelativeTime(dateInfo);
+  }, [dateInfo, isOver]);
+
   const isHappeningNow = relativeTime === "Happening now" && !isOver;
 
   const { user: currentUser } = useUser();
