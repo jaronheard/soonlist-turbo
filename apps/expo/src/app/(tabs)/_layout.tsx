@@ -17,6 +17,10 @@ export default function TabLayout() {
         options={{
           title: "My Feed",
           tabBarLabel: "My Feed",
+          tabBarLabelStyle: {
+            fontSize: 14,
+            fontWeight: "500",
+          },
           tabBarIcon: ({ color }) => <CalendarHeart color={color} />,
           headerShown: true,
           headerStyle: {
@@ -33,6 +37,10 @@ export default function TabLayout() {
         options={{
           title: "Discover",
           tabBarLabel: "Discover",
+          tabBarLabelStyle: {
+            fontSize: 14,
+            fontWeight: "500",
+          },
           tabBarIcon: ({ color }) => <Globe2 color={color} />,
           headerShown: true,
           headerStyle: {
