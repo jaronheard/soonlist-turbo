@@ -1,5 +1,5 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -34,16 +34,12 @@ import { showToast } from "~/utils/toast";
 
 interface AddEventBottomSheetProps {
   children?: React.ReactNode;
-  initialParams?: {
-    text?: string;
-    imageUri?: string;
-  } | null;
 }
 
 const AddEventBottomSheet = React.forwardRef<
   BottomSheetModal,
   AddEventBottomSheetProps
->(({ initialParams }, ref) => {
+>((props, ref) => {
   const snapPoints = useMemo(() => [388], []);
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
@@ -79,6 +75,8 @@ const AddEventBottomSheet = React.forwardRef<
     setIsImageUploading,
     setUploadedImageUrl,
     resetAddEventState,
+    intentParams,
+    resetIntentParams,
   } = useAppStore();
 
   // Use the intent handler
@@ -165,12 +163,12 @@ const AddEventBottomSheet = React.forwardRef<
     [handleLinkPreview, setInput, setLinkPreview],
   );
 
-  useEffect(() => {
-    if (initialParams) {
-      if (initialParams.text) {
-        handleTextChange(initialParams.text);
-      } else if (initialParams.imageUri) {
-        const [uri, width, height] = initialParams.imageUri.split("|");
+  const handleInitialParams = useCallback(() => {
+    if (intentParams) {
+      if (intentParams.text) {
+        handleTextChange(intentParams.text);
+      } else if (intentParams.imageUri) {
+        const [uri, width, height] = intentParams.imageUri.split("|");
         if (uri) {
           if (uri.startsWith("http")) {
             void handleLinkPreview(uri);
@@ -180,14 +178,18 @@ const AddEventBottomSheet = React.forwardRef<
         }
         setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
       }
+      resetIntentParams();
     }
   }, [
     handleImageUploadFromUri,
     handleLinkPreview,
     handleTextChange,
-    initialParams,
+    intentParams,
+    resetIntentParams,
     setInput,
   ]);
+
+  handleInitialParams();
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);

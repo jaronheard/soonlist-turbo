@@ -16,6 +16,7 @@ import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
+import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 
 function GoButton({
@@ -74,10 +75,7 @@ function FilterButton({
 function MyFeed() {
   const { user } = useUser();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const [intentParams, setIntentParams] = useState<{
-    text?: string;
-    imageUri?: string;
-  } | null>(null);
+  const { setIntentParams } = useAppStore();
   const { handleIntent } = useIntentHandler();
 
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
@@ -121,7 +119,7 @@ function MyFeed() {
         handlePresentModalPress();
       }
     }
-  }, [handleIntent, handlePresentModalPress]);
+  }, [handleIntent, handlePresentModalPress, setIntentParams]);
 
   const handleURLChange = useCallback(
     ({ url }: { url: string }) => {
@@ -134,7 +132,7 @@ function MyFeed() {
         handlePresentModalPress();
       }
     },
-    [handleIntent, handlePresentModalPress],
+    [handleIntent, handlePresentModalPress, setIntentParams],
   );
 
   useFocusEffect(
@@ -192,10 +190,7 @@ function MyFeed() {
               showCreator="otherUsers"
             />
             <AddEventButton onPress={handlePresentModalPress} />
-            <AddEventBottomSheet
-              ref={bottomSheetRef}
-              initialParams={intentParams}
-            />
+            <AddEventBottomSheet ref={bottomSheetRef} />
           </View>
         )}
       </View>
