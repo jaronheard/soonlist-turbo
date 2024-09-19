@@ -11,8 +11,6 @@ import {
 } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
-import { useUpdates } from "expo-updates";
-import * as Updates from "expo-updates";
 import { useUser } from "@clerk/clerk-expo";
 import {
   BottomSheetBackdrop,
@@ -49,36 +47,18 @@ const AddEventBottomSheet = React.forwardRef<
   const snapPoints = useMemo(() => [388], []);
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
-  const { downloadedUpdate } = useUpdates();
-
-  const applyUpdateIfAvailable = useCallback(async () => {
-    if (downloadedUpdate) {
-      try {
-        await Updates.reloadAsync();
-      } catch (error) {
-        console.error("Error applying update:", error);
-      }
-    }
-  }, [downloadedUpdate]);
-
   const eventFromRawTextAndNotification =
     api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
-      onMutate: applyUpdateIfAvailable,
       onSettled: () => void utils.event.invalidate(),
     });
-
   const eventFromImageThenCreateThenNotification =
     api.ai.eventFromImageThenCreateThenNotification.useMutation({
-      onMutate: applyUpdateIfAvailable,
       onSettled: () => void utils.event.invalidate(),
     });
-
   const eventFromUrlThenCreateThenNotification =
     api.ai.eventFromUrlThenCreateThenNotification.useMutation({
-      onMutate: applyUpdateIfAvailable,
       onSettled: () => void utils.event.invalidate(),
     });
-
   const { user } = useUser();
 
   const {
@@ -99,8 +79,6 @@ const AddEventBottomSheet = React.forwardRef<
     setIsImageUploading,
     setUploadedImageUrl,
     resetAddEventState,
-    resetIntentParams,
-    setActiveIntent,
   } = useAppStore();
 
   // Use the intent handler
@@ -270,15 +248,7 @@ const AddEventBottomSheet = React.forwardRef<
     setImagePreview(null);
     setLinkPreview(null);
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-    void applyUpdateIfAvailable();
-  }, [
-    setIsCreating,
-    setInput,
-    setImagePreview,
-    setLinkPreview,
-    applyUpdateIfAvailable,
-    ref,
-  ]);
+  }, [ref, setIsCreating, setInput, setImagePreview, setLinkPreview]);
 
   const handleError = useCallback(
     (error: unknown) => {
@@ -293,9 +263,8 @@ const AddEventBottomSheet = React.forwardRef<
       ) {
         (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
       }
-      void applyUpdateIfAvailable();
     },
-    [ref, setIsCreating, applyUpdateIfAvailable],
+    [ref, setIsCreating],
   );
 
   const handleCreateEvent = useCallback(() => {
@@ -304,8 +273,6 @@ const AddEventBottomSheet = React.forwardRef<
 
     // Clear the modal state
     resetAddEventState();
-    resetIntentParams();
-    setActiveIntent(false);
 
     // Dismiss the modal immediately
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();

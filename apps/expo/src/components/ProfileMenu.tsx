@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
 import {
   Menu,
@@ -8,8 +8,6 @@ import {
 } from "react-native-popup-menu";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { useUpdates } from "expo-updates";
-import * as Updates from "expo-updates";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { HelpCircle, LogOut, MessageCircle, User } from "lucide-react-native";
@@ -24,17 +22,6 @@ export function ProfileMenu() {
   const { signOut } = useAuth();
   const { user } = useUser();
   const router = useRouter();
-  const { downloadedUpdate } = useUpdates();
-
-  const applyUpdateIfAvailable = useCallback(async () => {
-    if (downloadedUpdate) {
-      try {
-        await Updates.reloadAsync();
-      } catch (error) {
-        console.error("Error applying update:", error);
-      }
-    }
-  }, [downloadedUpdate]);
 
   const showOnboarding = () => {
     router.push("/onboarding");
@@ -76,7 +63,6 @@ export function ProfileMenu() {
             activeOpacity: 0.6,
           },
         }}
-        onPress={applyUpdateIfAvailable}
       >
         <View className="rounded-full p-1">
           {user?.imageUrl ? (
