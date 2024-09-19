@@ -18,7 +18,7 @@ export default function TabLayout() {
           title: "My Feed",
           tabBarLabel: "My Feed",
           tabBarLabelStyle: {
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: "500",
           },
           tabBarIcon: ({ color }) => <CalendarHeart color={color} />,
@@ -38,7 +38,7 @@ export default function TabLayout() {
           title: "Discover",
           tabBarLabel: "Discover",
           tabBarLabelStyle: {
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: "500",
           },
           tabBarIcon: ({ color }) => <Globe2 color={color} />,
