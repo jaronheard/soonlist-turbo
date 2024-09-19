@@ -100,13 +100,18 @@ export function useOTAUpdates() {
 
   useEffect(() => {
     if (isUpdatingApp) {
-      // Check if there's any data in the store after the update
-      if (input || imagePreview || linkPreview) {
-        // Set the flag to present the AddEventBottomSheet
-        setShouldPresentAddEventSheet(true);
-      }
-      showToast("App updated successfully!", "success");
+      // Immediately set isUpdatingApp to false
       setIsUpdatingApp(false);
+
+      // Delay other actions by 2 seconds
+      setTimeout(() => {
+        // Check if there's any data in the store after the update
+        if (input || imagePreview || linkPreview) {
+          // Set the flag to present the AddEventBottomSheet
+          setShouldPresentAddEventSheet(true);
+        }
+        showToast("App updated successfully!", "success");
+      }, 2000);
     }
   }, [
     isUpdatingApp,
