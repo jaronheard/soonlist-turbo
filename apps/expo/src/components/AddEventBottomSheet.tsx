@@ -417,7 +417,7 @@ const AddEventBottomSheet = React.forwardRef<
       onDismiss={handleDismiss}
     >
       <View className="flex-1 p-4">
-        <Text className="mb-4 text-2xl font-semibold">Add New Event</Text>
+        <Text className="mb-4 text-2xl font-semibold">Add Event</Text>
         <View className="mb-4">
           <View className="mb-2 flex flex-row items-center justify-between">
             <Text className="text-base font-medium">Event Details</Text>

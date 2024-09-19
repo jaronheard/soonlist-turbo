@@ -1,4 +1,3 @@
-import type { BottomSheetModal } from "@discord/bottom-sheet";
 import { useCallback, useEffect, useRef } from "react";
 import { Alert, AppState, Platform } from "react-native";
 import * as Application from "expo-application";
@@ -41,8 +40,6 @@ export function useOTAUpdates() {
     linkPreview,
     setShouldPresentAddEventSheet,
   } = useAppStore();
-
-  const addEventBottomSheetRef = useRef<BottomSheetModal>(null);
 
   ///////////////////////////////////////////////////////////////////////////
 
@@ -172,6 +169,4 @@ export function useOTAUpdates() {
       subscription.remove();
     };
   }, [isUpdatePending, setCheckTimeout, setIsUpdatingApp]);
-
-  return { addEventBottomSheetRef };
 }
