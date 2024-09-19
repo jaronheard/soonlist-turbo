@@ -11,8 +11,6 @@ import {
 } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
-import { useUpdates } from "expo-updates";
-import * as Updates from "expo-updates";
 import { useUser } from "@clerk/clerk-expo";
 import {
   BottomSheetBackdrop,
@@ -49,37 +47,18 @@ const AddEventBottomSheet = React.forwardRef<
   const snapPoints = useMemo(() => [388], []);
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
-  const { availableUpdate } = useUpdates();
-
-  const applyUpdateIfAvailable = useCallback(async () => {
-    if (availableUpdate) {
-      try {
-        await Updates.fetchUpdateAsync();
-        await Updates.reloadAsync();
-      } catch (error) {
-        console.error("Error applying update:", error);
-      }
-    }
-  }, [availableUpdate]);
-
   const eventFromRawTextAndNotification =
     api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
-      onMutate: applyUpdateIfAvailable,
       onSettled: () => void utils.event.invalidate(),
     });
-
   const eventFromImageThenCreateThenNotification =
     api.ai.eventFromImageThenCreateThenNotification.useMutation({
-      onMutate: applyUpdateIfAvailable,
       onSettled: () => void utils.event.invalidate(),
     });
-
   const eventFromUrlThenCreateThenNotification =
     api.ai.eventFromUrlThenCreateThenNotification.useMutation({
-      onMutate: applyUpdateIfAvailable,
       onSettled: () => void utils.event.invalidate(),
     });
-
   const { user } = useUser();
 
   const {
