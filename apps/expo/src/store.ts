@@ -1,5 +1,7 @@
 import type * as Calendar from "expo-calendar";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { RouterOutputs } from "~/utils/api";
 
@@ -48,35 +50,19 @@ interface AppState {
   setCalendarUsage: (usage: Record<string, number>) => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  filter: "upcoming",
-  intentParams: null,
-  isCalendarModalVisible: false,
-  showAllCalendars: false,
-  setFilter: (filter) => set({ filter }),
-  setIntentParams: (params) => set({ intentParams: params }),
-  setIsCalendarModalVisible: (isVisible) =>
-    set({ isCalendarModalVisible: isVisible }),
-  setShowAllCalendars: (show) => set({ showAllCalendars: show }),
-  resetIntentParams: () => set({ intentParams: null }),
-  input: "",
-  imagePreview: null,
-  linkPreview: null,
-  isCreating: false,
-  isPublic: false,
-  isImageLoading: false,
-  isImageUploading: false,
-  uploadedImageUrl: null,
-  setInput: (input) => set({ input }),
-  setImagePreview: (preview) => set({ imagePreview: preview }),
-  setLinkPreview: (preview) => set({ linkPreview: preview }),
-  setIsCreating: (isCreating) => set({ isCreating }),
-  setIsPublic: (isPublic) => set({ isPublic }),
-  setIsImageLoading: (isLoading) => set({ isImageLoading: isLoading }),
-  setIsImageUploading: (isUploading) => set({ isImageUploading: isUploading }),
-  setUploadedImageUrl: (url) => set({ uploadedImageUrl: url }),
-  resetAddEventState: () =>
-    set({
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      filter: "upcoming",
+      intentParams: null,
+      isCalendarModalVisible: false,
+      showAllCalendars: false,
+      setFilter: (filter) => set({ filter }),
+      setIntentParams: (params) => set({ intentParams: params }),
+      setIsCalendarModalVisible: (isVisible) =>
+        set({ isCalendarModalVisible: isVisible }),
+      setShowAllCalendars: (show) => set({ showAllCalendars: show }),
+      resetIntentParams: () => set({ intentParams: null }),
       input: "",
       imagePreview: null,
       linkPreview: null,
@@ -85,17 +71,43 @@ export const useAppStore = create<AppState>((set) => ({
       isImageLoading: false,
       isImageUploading: false,
       uploadedImageUrl: null,
+      setInput: (input) => set({ input }),
+      setImagePreview: (preview) => set({ imagePreview: preview }),
+      setLinkPreview: (preview) => set({ linkPreview: preview }),
+      setIsCreating: (isCreating) => set({ isCreating }),
+      setIsPublic: (isPublic) => set({ isPublic }),
+      setIsImageLoading: (isLoading) => set({ isImageLoading: isLoading }),
+      setIsImageUploading: (isUploading) =>
+        set({ isImageUploading: isUploading }),
+      setUploadedImageUrl: (url) => set({ uploadedImageUrl: url }),
+      resetAddEventState: () =>
+        set({
+          input: "",
+          imagePreview: null,
+          linkPreview: null,
+          isCreating: false,
+          isPublic: false,
+          isImageLoading: false,
+          isImageUploading: false,
+          uploadedImageUrl: null,
+        }),
+
+      // Calendar-related state
+      defaultCalendarId: null,
+      availableCalendars: [],
+      selectedEvent: null,
+      calendarUsage: {},
+
+      // Calendar-related actions
+      setDefaultCalendarId: (id) => set({ defaultCalendarId: id }),
+      setAvailableCalendars: (calendars) =>
+        set({ availableCalendars: calendars }),
+      setSelectedEvent: (event) => set({ selectedEvent: event }),
+      setCalendarUsage: (usage) => set({ calendarUsage: usage }),
     }),
-
-  // Calendar-related state
-  defaultCalendarId: null,
-  availableCalendars: [],
-  selectedEvent: null,
-  calendarUsage: {},
-
-  // Calendar-related actions
-  setDefaultCalendarId: (id) => set({ defaultCalendarId: id }),
-  setAvailableCalendars: (calendars) => set({ availableCalendars: calendars }),
-  setSelectedEvent: (event) => set({ selectedEvent: event }),
-  setCalendarUsage: (usage) => set({ calendarUsage: usage }),
-}));
+    {
+      name: "app-storage",
+      storage: createJSONStorage(() => AsyncStorage),
+    },
+  ),
+);
