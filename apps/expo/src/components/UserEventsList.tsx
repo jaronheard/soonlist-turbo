@@ -144,10 +144,10 @@ export function UserEventListItem(props: {
                 {e.name}
               </Text>
               {e.location ? (
-                <View className="mb-2 flex-row items-center gap-0.5">
-                  <MapPin size={10} color="#627496" />
+                <View className="mb-2 flex-row items-center gap-1">
+                  <MapPin size={16} color="#627496" />
                   <Text
-                    className="flex-1 text-sm text-neutral-2"
+                    className="flex-1 text-base text-neutral-2"
                     numberOfLines={1}
                   >
                     {e.location}
@@ -169,11 +169,11 @@ export function UserEventListItem(props: {
                   </Text>
                 </View>
               ) : isOwner ? (
-                <View className="flex-row items-center gap-2">
+                <View className="flex-row items-center gap-1">
                   {event.visibility === "public" ? (
-                    <Globe2 size={16} color="#627496" />
+                    <Globe2 size={10} color="#627496" />
                   ) : (
-                    <Lock size={16} color="#627496" />
+                    <Lock size={10} color="#627496" />
                   )}
                   <Text className="text-sm text-neutral-2">
                     {event.visibility === "public"
