@@ -48,11 +48,6 @@ interface AppState {
     event: RouterOutputs["event"]["getUpcomingForUser"][number] | null,
   ) => void;
   setCalendarUsage: (usage: Record<string, number>) => void;
-
-  isUpdatingApp: boolean;
-  setIsUpdatingApp: (isUpdating: boolean) => void;
-  shouldPresentAddEventSheet: boolean;
-  setShouldPresentAddEventSheet: (should: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -109,15 +104,6 @@ export const useAppStore = create<AppState>()(
         set({ availableCalendars: calendars }),
       setSelectedEvent: (event) => set({ selectedEvent: event }),
       setCalendarUsage: (usage) => set({ calendarUsage: usage }),
-
-      isUpdatingApp: false,
-      setIsUpdatingApp: (isUpdating) => set({ isUpdatingApp: isUpdating }),
-      isAddEventBottomSheetVisible: false,
-      setIsAddEventBottomSheetVisible: (visible) =>
-        set({ isAddEventBottomSheetVisible: visible }),
-      shouldPresentAddEventSheet: false,
-      setShouldPresentAddEventSheet: (should) =>
-        set({ shouldPresentAddEventSheet: should }),
     }),
     {
       name: "app-storage",

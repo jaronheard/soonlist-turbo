@@ -1,5 +1,5 @@
 import type { BottomSheetModal } from "@discord/bottom-sheet";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
@@ -9,7 +9,6 @@ import AddEventBottomSheet from "~/components/AddEventBottomSheet";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
-import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { ProfileMenu } from "../../components/ProfileMenu";
 import SaveButton from "../../components/SaveButton";
@@ -18,8 +17,6 @@ import ShareButton from "../../components/ShareButton";
 export default function Page() {
   const { user } = useUser();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const { shouldPresentAddEventSheet, setShouldPresentAddEventSheet } =
-    useAppStore();
 
   const eventsQuery = api.event.getDiscoverInfinite.useInfiniteQuery(
     {
@@ -64,13 +61,6 @@ export default function Page() {
   }
 
   const handlePresentModalPress = () => bottomSheetRef.current?.present();
-
-  useEffect(() => {
-    if (shouldPresentAddEventSheet) {
-      bottomSheetRef.current?.present();
-      setShouldPresentAddEventSheet(false);
-    }
-  }, [shouldPresentAddEventSheet, setShouldPresentAddEventSheet]);
 
   if (eventsQuery.isLoading || savedEventIdsQuery.isLoading) {
     return <LoadingSpinner />;
