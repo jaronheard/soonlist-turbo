@@ -34,6 +34,7 @@ import Constants, { AppOwnership } from "expo-constants";
 import { BottomSheetModalProvider } from "@discord/bottom-sheet";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
+import { useAuthRedirect } from "~/hooks/useAuthRedirect";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
@@ -133,42 +134,15 @@ function RootLayout() {
 export default Sentry.wrap(RootLayout);
 
 const InitialLayout = () => {
-  const { isLoaded, isSignedIn } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
+  const { checkOnboardingStatus } = useAuthRedirect();
   const rootNavigationState = useRootNavigationState();
 
   useOTAUpdates();
 
-  // If the user is signed in, redirect them to the home page
-  // If the user is not signed in, redirect them to the login page
-  useEffect(() => {
-    if (!isLoaded || !rootNavigationState.key) return;
-
-    const inAuthGroup = segments[0] === "(auth)";
-
-    const checkOnboardingStatus = async () => {
-      if (isSignedIn && inAuthGroup) {
-        const status = await SecureStore.getItemAsync(
-          "hasCompletedOnboarding",
-          {
-            keychainAccessGroup: getKeyChainAccessGroup(),
-          },
-        );
-        console.log("status", status);
-        if (status === "true") {
-          router.replace("/feed");
-        } else {
-          router.replace("/onboarding");
-        }
-      }
-      if (!isSignedIn && !inAuthGroup) {
-        router.replace("/sign-in");
-      }
-    };
-
-    void checkOnboardingStatus();
-  }, [isSignedIn, rootNavigationState.key, router, segments, isLoaded]);
+  // Call checkOnboardingStatus when the component mounts or when rootNavigationState changes
+  if (rootNavigationState.key) {
+    checkOnboardingStatus();
+  }
 
   return (
     <Stack

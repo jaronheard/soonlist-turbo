@@ -48,6 +48,9 @@ interface AppState {
     event: RouterOutputs["event"]["getUpcomingForUser"][number] | null,
   ) => void;
   setCalendarUsage: (usage: Record<string, number>) => void;
+
+  hasCompletedOnboarding: boolean;
+  setHasCompletedOnboarding: (status: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -104,6 +107,10 @@ export const useAppStore = create<AppState>()(
         set({ availableCalendars: calendars }),
       setSelectedEvent: (event) => set({ selectedEvent: event }),
       setCalendarUsage: (usage) => set({ calendarUsage: usage }),
+
+      hasCompletedOnboarding: false,
+      setHasCompletedOnboarding: (status) =>
+        set({ hasCompletedOnboarding: status }),
     }),
     {
       name: "app-storage",
