@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 
-type IntentType = "new";
 const scheme =
   process.env.EXPO_PUBLIC_APP_ENV === "development"
     ? "soonlist.dev"
@@ -16,7 +15,7 @@ export function useIntentHandler() {
 
     const parsedUrl = new URL(url);
     const params = parsedUrl.searchParams;
-    const intentType = params.get("intent") as IntentType | null;
+    const intentType = params.get("intent");
 
     if (!intentType) return null;
 
@@ -33,7 +32,7 @@ export function useIntentHandler() {
         break;
       }
       default: {
-        console.warn(`Unknown intent type: ${intentType as string}`);
+        console.warn(`Unknown intent type: ${intentType}`);
       }
     }
 
