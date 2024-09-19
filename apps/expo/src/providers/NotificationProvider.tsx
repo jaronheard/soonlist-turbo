@@ -12,8 +12,6 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 
-import { api } from "~/utils/api";
-
 interface NotificationContextType {
   expoPushToken: string;
 }
@@ -99,7 +97,6 @@ export function NotificationProvider({
   );
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
-  const utils = api.useUtils();
 
   useEffect(() => {
     registerForPushNotificationsAsync()
@@ -109,13 +106,11 @@ export function NotificationProvider({
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         setNotification(notification);
-        void utils.event.invalidate();
       });
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log(response);
-        void utils.event.invalidate();
       });
 
     return () => {
@@ -126,7 +121,7 @@ export function NotificationProvider({
       responseListener.current &&
         Notifications.removeNotificationSubscription(responseListener.current);
     };
-  }, [utils]);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;

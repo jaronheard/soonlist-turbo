@@ -31,12 +31,9 @@ export default function Page() {
     userName: user?.username ?? "",
   });
 
-  const utils = api.useUtils();
-
   const onRefresh = useCallback(() => {
     void eventsQuery.refetch();
-    void utils.event.getSavedIdsForUser.invalidate();
-  }, [eventsQuery, utils]);
+  }, [eventsQuery]);
 
   const loadMore = useCallback(() => {
     if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
