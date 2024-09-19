@@ -100,8 +100,6 @@ const AddEventBottomSheet = React.forwardRef<
     setIsImageUploading,
     setUploadedImageUrl,
     resetAddEventState,
-    resetIntentParams,
-    setActiveIntent,
   } = useAppStore();
 
   // Use the intent handler
@@ -296,8 +294,6 @@ const AddEventBottomSheet = React.forwardRef<
 
     // Clear the modal state
     resetAddEventState();
-    resetIntentParams();
-    setActiveIntent(false);
 
     // Dismiss the modal immediately
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
