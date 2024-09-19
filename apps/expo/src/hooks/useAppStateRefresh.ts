@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { AppState } from "react-native";
 
 import { api } from "~/utils/api";
@@ -8,13 +8,16 @@ export function useAppStateRefresh() {
   const appState = useRef(AppState.currentState);
   const lastRefreshTime = useRef<number | null>(null);
 
-  const refreshEvents = () => {
+  const refreshEvents = useCallback(() => {
     const now = Date.now();
-    if (!lastRefreshTime.current || now - lastRefreshTime.current > 1000) {
+    if (
+      !lastRefreshTime.current ||
+      now - lastRefreshTime.current > 1000 * 60 * 15
+    ) {
       void utils.event.invalidate();
       lastRefreshTime.current = now;
     }
-  };
+  }, [utils]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
@@ -30,7 +33,7 @@ export function useAppStateRefresh() {
     return () => {
       subscription.remove();
     };
-  }, [utils]);
+  }, [refreshEvents, utils]);
 
   return refreshEvents;
 }

@@ -39,21 +39,21 @@ interface AddEventBottomSheetProps {
 const AddEventBottomSheet = React.forwardRef<
   BottomSheetModal,
   AddEventBottomSheetProps
->((props, ref) => {
+>((_props, ref) => {
   const snapPoints = useMemo(() => [388], []);
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
   const eventFromRawTextAndNotification =
     api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
-      onSettled: () => void utils.event.invalidate(),
+      onSettled: () => void utils.event.getEventsForUser.invalidate(),
     });
   const eventFromImageThenCreateThenNotification =
     api.ai.eventFromImageThenCreateThenNotification.useMutation({
-      onSettled: () => void utils.event.invalidate(),
+      onSettled: () => void utils.event.getEventsForUser.invalidate(),
     });
   const eventFromUrlThenCreateThenNotification =
     api.ai.eventFromUrlThenCreateThenNotification.useMutation({
-      onSettled: () => void utils.event.invalidate(),
+      onSettled: () => void utils.event.getEventsForUser.invalidate(),
     });
   const { user } = useUser();
 

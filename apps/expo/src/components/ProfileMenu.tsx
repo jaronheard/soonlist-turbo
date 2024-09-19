@@ -11,6 +11,7 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { HelpCircle, LogOut, MessageCircle, User } from "lucide-react-native";
 
+import { deleteAuthData } from "~/hooks/useAuthSync";
 import { useAppStore } from "~/store";
 import { cn } from "~/utils/cn";
 
@@ -30,6 +31,7 @@ export function ProfileMenu() {
   const handleSignOut = async () => {
     await signOut();
     await Intercom.logout();
+    await deleteAuthData();
     resetStore();
     router.replace("/sign-in");
   };

@@ -52,6 +52,9 @@ interface AppState {
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (status: boolean) => void;
   resetStore: () => void; // Add this line
+
+  // Add this new action
+  clearCalendarData: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -132,6 +135,11 @@ export const useAppStore = create<AppState>()(
           calendarUsage: {},
           hasCompletedOnboarding: false,
         })),
+      clearCalendarData: () =>
+        set({
+          defaultCalendarId: null,
+          calendarUsage: {},
+        }),
     }),
     {
       name: "app-storage",

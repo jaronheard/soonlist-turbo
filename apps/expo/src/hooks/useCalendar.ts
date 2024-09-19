@@ -1,13 +1,10 @@
-import { useEffect } from "react";
 import { Alert, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
-import * as SecureStore from "expo-secure-store";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import { useAppStore } from "~/store";
-import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 import { showToast } from "~/utils/toast";
 
 const INITIAL_CALENDAR_LIMIT = 5;
@@ -26,36 +23,8 @@ export function useCalendar() {
     setSelectedEvent,
     setShowAllCalendars,
     setCalendarUsage,
+    clearCalendarData, // Add this line
   } = useAppStore();
-
-  useEffect(() => {
-    const loadDefaultCalendar = async () => {
-      try {
-        const savedCalendarId = await SecureStore.getItemAsync(
-          "defaultCalendarId",
-          {
-            keychainAccessible: SecureStore.WHEN_UNLOCKED,
-            keychainAccessGroup: getKeyChainAccessGroup(),
-          },
-        );
-        if (savedCalendarId) {
-          setDefaultCalendarId(savedCalendarId);
-        }
-
-        const usageData = await SecureStore.getItemAsync("calendarUsage", {
-          keychainAccessible: SecureStore.WHEN_UNLOCKED,
-          keychainAccessGroup: getKeyChainAccessGroup(),
-        });
-        if (usageData) {
-          const parsedUsage = JSON.parse(usageData) as Record<string, number>;
-          setCalendarUsage(parsedUsage);
-        }
-      } catch (error) {
-        console.error("Error loading calendar data:", error);
-      }
-    };
-    void loadDefaultCalendar();
-  }, [setDefaultCalendarId, setCalendarUsage]);
 
   const handleAddToCal = async (
     event: RouterOutputs["event"]["getUpcomingForUser"][number],
@@ -115,10 +84,6 @@ export function useCalendar() {
     }
 
     try {
-      await SecureStore.setItemAsync("defaultCalendarId", selectedCalendarId, {
-        keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: getKeyChainAccessGroup(),
-      });
       setDefaultCalendarId(selectedCalendarId);
 
       const e = selectedEvent.event as AddToCalendarButtonPropsRestricted;
@@ -151,36 +116,11 @@ export function useCalendar() {
       const newUsage = { ...calendarUsage };
       newUsage[selectedCalendarId] = (newUsage[selectedCalendarId] || 0) + 1;
       setCalendarUsage(newUsage);
-      await SecureStore.setItemAsync(
-        "calendarUsage",
-        JSON.stringify(newUsage),
-        {
-          keychainAccessible: SecureStore.WHEN_UNLOCKED,
-          keychainAccessGroup: getKeyChainAccessGroup(),
-        },
-      );
     } catch (error) {
       console.error("Error adding event to calendar:", error);
       showToast("Failed to add event to calendar. Please try again.", "error");
     } finally {
       setSelectedEvent(null);
-    }
-  };
-
-  const clearCalendarData = async () => {
-    try {
-      await SecureStore.deleteItemAsync("defaultCalendarId", {
-        keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: getKeyChainAccessGroup(),
-      });
-      await SecureStore.deleteItemAsync("calendarUsage", {
-        keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        keychainAccessGroup: getKeyChainAccessGroup(),
-      });
-      setDefaultCalendarId(null);
-      setCalendarUsage({});
-    } catch (error) {
-      console.error("Error clearing calendar data:", error);
     }
   };
 
@@ -193,6 +133,6 @@ export function useCalendar() {
     showAllCalendars,
     setShowAllCalendars,
     INITIAL_CALENDAR_LIMIT,
-    clearCalendarData,
+    clearCalendarData, // Add this line
   };
 }
