@@ -1,3 +1,4 @@
+import type { BottomSheetModal } from "@discord/bottom-sheet";
 import { useCallback, useEffect, useRef } from "react";
 import { Alert, AppState, Platform } from "react-native";
 import * as Application from "expo-application";
@@ -35,11 +36,13 @@ export function useOTAUpdates() {
   const {
     setIsUpdatingApp,
     isUpdatingApp,
-    setIsCalendarModalVisible,
     input,
     imagePreview,
     linkPreview,
+    setShouldPresentAddEventSheet,
   } = useAppStore();
+
+  const addEventBottomSheetRef = useRef<BottomSheetModal>(null);
 
   ///////////////////////////////////////////////////////////////////////////
 
@@ -102,7 +105,8 @@ export function useOTAUpdates() {
     if (isUpdatingApp) {
       // Check if there's any data in the store after the update
       if (input || imagePreview || linkPreview) {
-        setIsCalendarModalVisible(true);
+        // Set the flag to present the AddEventBottomSheet
+        setShouldPresentAddEventSheet(true);
       }
       showToast("App updated successfully!", "success");
       setIsUpdatingApp(false);
@@ -112,8 +116,8 @@ export function useOTAUpdates() {
     input,
     imagePreview,
     linkPreview,
-    setIsCalendarModalVisible,
     setIsUpdatingApp,
+    setShouldPresentAddEventSheet,
   ]);
 
   useEffect(() => {
@@ -168,4 +172,6 @@ export function useOTAUpdates() {
       subscription.remove();
     };
   }, [isUpdatePending, setCheckTimeout, setIsUpdatingApp]);
+
+  return { addEventBottomSheetRef };
 }

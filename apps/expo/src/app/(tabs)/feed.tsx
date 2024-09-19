@@ -15,6 +15,7 @@ import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
+import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 
 function GoButton({
@@ -73,6 +74,8 @@ function FilterButton({
 function MyFeed() {
   const { user } = useUser();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const { shouldPresentAddEventSheet, setShouldPresentAddEventSheet } =
+    useAppStore();
   const [intentParams, setIntentParams] = useState<{
     text?: string;
     imageUri?: string;
@@ -138,6 +141,13 @@ function MyFeed() {
       subscription.remove();
     };
   }, [handleIntent]);
+
+  useEffect(() => {
+    if (shouldPresentAddEventSheet) {
+      bottomSheetRef.current?.present();
+      setShouldPresentAddEventSheet(false);
+    }
+  }, [shouldPresentAddEventSheet, setShouldPresentAddEventSheet]);
 
   return (
     <>

@@ -51,6 +51,8 @@ interface AppState {
 
   isUpdatingApp: boolean;
   setIsUpdatingApp: (isUpdating: boolean) => void;
+  shouldPresentAddEventSheet: boolean;
+  setShouldPresentAddEventSheet: (should: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -110,6 +112,12 @@ export const useAppStore = create<AppState>()(
 
       isUpdatingApp: false,
       setIsUpdatingApp: (isUpdating) => set({ isUpdatingApp: isUpdating }),
+      isAddEventBottomSheetVisible: false,
+      setIsAddEventBottomSheetVisible: (visible) =>
+        set({ isAddEventBottomSheetVisible: visible }),
+      shouldPresentAddEventSheet: false,
+      setShouldPresentAddEventSheet: (should) =>
+        set({ shouldPresentAddEventSheet: should }),
     }),
     {
       name: "app-storage",
