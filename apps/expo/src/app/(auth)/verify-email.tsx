@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { usePostHog } from "posthog-react-native";
 
@@ -13,7 +13,6 @@ const VerifyEmail = () => {
   const [codeError, setCodeError] = useState("");
   const [generalError, setGeneralError] = useState("");
   const { signUp, setActive } = useSignUp();
-  const router = useRouter();
   const posthog = usePostHog();
 
   const validateCode = () => {
@@ -49,7 +48,6 @@ const VerifyEmail = () => {
           email: completeSignUp.emailAddress,
           username: completeSignUp.username,
         });
-        router.replace("/feed");
       } else {
         console.log(JSON.stringify(completeSignUp, null, 2));
         setGeneralError("Verification failed. Please try again.");

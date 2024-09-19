@@ -7,13 +7,12 @@ import {
   MenuTrigger,
 } from "react-native-popup-menu";
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { HelpCircle, LogOut, MessageCircle, User } from "lucide-react-native";
 
+import { useAppStore } from "~/store";
 import { cn } from "~/utils/cn";
-import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
 const screenWidth = Dimensions.get("window").width;
 const menuMinWidth = screenWidth * 0.6; // 60% of screen width
@@ -22,17 +21,17 @@ export function ProfileMenu() {
   const { signOut } = useAuth();
   const { user } = useUser();
   const router = useRouter();
+  const resetStore = useAppStore((state) => state.resetStore);
 
   const showOnboarding = () => {
     router.push("/onboarding");
   };
 
   const handleSignOut = async () => {
-    await SecureStore.deleteItemAsync("hasCompletedOnboarding", {
-      keychainAccessGroup: getKeyChainAccessGroup(),
-    });
     await signOut();
     await Intercom.logout();
+    resetStore();
+    router.replace("/sign-in");
   };
 
   const presentIntercom = async () => {

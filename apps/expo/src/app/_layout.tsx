@@ -4,16 +4,10 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import {
-  Stack,
-  useNavigationContainerRef,
-  useRootNavigationState,
-  useRouter,
-  useSegments,
-} from "expo-router";
+import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
 import { PostHogProvider } from "posthog-react-native";
 
@@ -133,42 +127,7 @@ function RootLayout() {
 export default Sentry.wrap(RootLayout);
 
 const InitialLayout = () => {
-  const { isLoaded, isSignedIn } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
-  const rootNavigationState = useRootNavigationState();
-
   useOTAUpdates();
-
-  // If the user is signed in, redirect them to the home page
-  // If the user is not signed in, redirect them to the login page
-  useEffect(() => {
-    if (!isLoaded || !rootNavigationState.key) return;
-
-    const inAuthGroup = segments[0] === "(auth)";
-
-    const checkOnboardingStatus = async () => {
-      if (isSignedIn && inAuthGroup) {
-        const status = await SecureStore.getItemAsync(
-          "hasCompletedOnboarding",
-          {
-            keychainAccessGroup: getKeyChainAccessGroup(),
-          },
-        );
-        console.log("status", status);
-        if (status === "true") {
-          router.replace("/feed");
-        } else {
-          router.replace("/onboarding");
-        }
-      }
-      if (!isSignedIn && !inAuthGroup) {
-        router.replace("/sign-in");
-      }
-    };
-
-    void checkOnboardingStatus();
-  }, [isSignedIn, rootNavigationState.key, router, segments, isLoaded]);
 
   return (
     <Stack
@@ -184,6 +143,13 @@ const InitialLayout = () => {
     >
       <Stack.Screen
         name="(tabs)"
+        options={{
+          headerShown: false,
+          headerRight: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="(auth)"
         options={{
           headerShown: false,
           headerRight: undefined,

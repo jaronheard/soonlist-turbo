@@ -48,6 +48,10 @@ interface AppState {
     event: RouterOutputs["event"]["getUpcomingForUser"][number] | null,
   ) => void;
   setCalendarUsage: (usage: Record<string, number>) => void;
+
+  hasCompletedOnboarding: boolean;
+  setHasCompletedOnboarding: (status: boolean) => void;
+  resetStore: () => void; // Add this line
 }
 
 export const useAppStore = create<AppState>()(
@@ -104,6 +108,30 @@ export const useAppStore = create<AppState>()(
         set({ availableCalendars: calendars }),
       setSelectedEvent: (event) => set({ selectedEvent: event }),
       setCalendarUsage: (usage) => set({ calendarUsage: usage }),
+
+      hasCompletedOnboarding: false,
+      setHasCompletedOnboarding: (status) =>
+        set({ hasCompletedOnboarding: status }),
+      resetStore: () =>
+        set(() => ({
+          filter: "upcoming",
+          intentParams: null,
+          isCalendarModalVisible: false,
+          showAllCalendars: false,
+          input: "",
+          imagePreview: null,
+          linkPreview: null,
+          isCreating: false,
+          isPublic: false,
+          isImageLoading: false,
+          isImageUploading: false,
+          uploadedImageUrl: null,
+          defaultCalendarId: null,
+          availableCalendars: [],
+          selectedEvent: null,
+          calendarUsage: {},
+          hasCompletedOnboarding: false,
+        })),
     }),
     {
       name: "app-storage",

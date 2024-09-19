@@ -24,6 +24,8 @@ Syntax and Formatting:
 - Use the "function" keyword for pure functions
 - Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements
 - Use declarative JSX
+- Always specify types for props and return values
+- Use async/await for asynchronous code, and use void where appropriate
 
 Error Handling and Validation:
 

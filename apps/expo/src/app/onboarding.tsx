@@ -1,19 +1,19 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 
 import { Onboarding } from "~/components/Onboarding";
-import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
+import { useAppStore } from "~/store";
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const setHasCompletedOnboarding = useAppStore(
+    (state) => state.setHasCompletedOnboarding,
+  );
 
-  const handleComplete = async () => {
-    await SecureStore.setItemAsync("hasCompletedOnboarding", "true", {
-      keychainAccessGroup: getKeyChainAccessGroup(),
-    });
-    router.push("/feed");
+  const handleOnboardingComplete = () => {
+    setHasCompletedOnboarding(true);
+    router.replace("/feed");
   };
 
   return (
@@ -22,7 +22,7 @@ export default function OnboardingScreen() {
         options={{ title: "How to Use", headerBackVisible: false }}
       />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <Onboarding onComplete={handleComplete} />
+        <Onboarding onComplete={handleOnboardingComplete} />
       </ScrollView>
     </View>
   );
