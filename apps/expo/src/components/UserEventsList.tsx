@@ -169,7 +169,7 @@ export function UserEventListItem(props: {
                   </Text>
                 </View>
               ) : isOwner ? (
-                <View className="flex-row items-center gap-1">
+                <View className="ml-0.5 flex-row items-center gap-1">
                   {event.visibility === "public" ? (
                     <Globe2 size={10} color="#627496" />
                   ) : (
