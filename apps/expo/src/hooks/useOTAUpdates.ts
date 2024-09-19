@@ -3,7 +3,8 @@ import { Alert, AppState, Platform } from "react-native";
 import * as Application from "expo-application";
 import * as Updates from "expo-updates";
 
-const MINIMUM_MINIMIZE_TIME = 15 * 60e3;
+// temporarily set to 1 minute for testing, original value is 15 minutes
+const MINIMUM_MINIMIZE_TIME = 1 * 60e3;
 const IS_TESTFLIGHT = Application.applicationId?.endsWith(".beta");
 const isIOS = Platform.OS === "ios";
 const nativeBuildVersion = Application.nativeBuildVersion;
