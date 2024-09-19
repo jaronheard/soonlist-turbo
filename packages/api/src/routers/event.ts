@@ -1,6 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, gte, lt, lte, not } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lt, lte, not, or } from "drizzle-orm";
 import { z } from "zod";
 
 import type {
@@ -822,9 +822,30 @@ export const eventRouter = createTRPCRouter({
       const { userName, filter, limit, cursor } = input;
       const now = new Date();
 
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.username, userName),
+        columns: { id: true },
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+
       const e = await ctx.db.query.events.findMany({
         where: and(
-          eq(events.userName, userName),
+          or(
+            eq(events.userName, userName),
+            inArray(
+              events.id,
+              ctx.db
+                .select({ eventId: eventFollows.eventId })
+                .from(eventFollows)
+                .where(eq(eventFollows.userId, user.id)),
+            ),
+          ),
           filter === "upcoming"
             ? gte(events.startDateTime, now)
             : lt(events.endDateTime, now),
