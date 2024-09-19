@@ -92,7 +92,7 @@ export default function Page() {
   const HeaderRight = useCallback(() => {
     if (!eventQuery.data) return null;
     return (
-      <View className="-mr-4 flex-row items-center gap-2">
+      <View className="flex-row items-center gap-2">
         <EventMenu
           event={
             eventQuery.data as RouterOutputs["event"]["getUpcomingForUser"][number]
