@@ -49,17 +49,18 @@ const AddEventBottomSheet = React.forwardRef<
   const snapPoints = useMemo(() => [388], []);
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
-  const { downloadedUpdate } = useUpdates();
+  const { availableUpdate } = useUpdates();
 
   const applyUpdateIfAvailable = useCallback(async () => {
-    if (downloadedUpdate) {
+    if (availableUpdate) {
       try {
+        await Updates.fetchUpdateAsync();
         await Updates.reloadAsync();
       } catch (error) {
         console.error("Error applying update:", error);
       }
     }
-  }, [downloadedUpdate]);
+  }, [availableUpdate]);
 
   const eventFromRawTextAndNotification =
     api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
@@ -270,15 +271,7 @@ const AddEventBottomSheet = React.forwardRef<
     setImagePreview(null);
     setLinkPreview(null);
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-    void applyUpdateIfAvailable();
-  }, [
-    setIsCreating,
-    setInput,
-    setImagePreview,
-    setLinkPreview,
-    applyUpdateIfAvailable,
-    ref,
-  ]);
+  }, [ref, setIsCreating, setInput, setImagePreview, setLinkPreview]);
 
   const handleError = useCallback(
     (error: unknown) => {
@@ -293,9 +286,8 @@ const AddEventBottomSheet = React.forwardRef<
       ) {
         (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
       }
-      void applyUpdateIfAvailable();
     },
-    [ref, setIsCreating, applyUpdateIfAvailable],
+    [ref, setIsCreating],
   );
 
   const handleCreateEvent = useCallback(() => {
