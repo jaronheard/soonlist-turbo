@@ -48,6 +48,9 @@ interface AppState {
     event: RouterOutputs["event"]["getUpcomingForUser"][number] | null,
   ) => void;
   setCalendarUsage: (usage: Record<string, number>) => void;
+
+  isUpdatingApp: boolean;
+  setIsUpdatingApp: (isUpdating: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -104,6 +107,9 @@ export const useAppStore = create<AppState>()(
         set({ availableCalendars: calendars }),
       setSelectedEvent: (event) => set({ selectedEvent: event }),
       setCalendarUsage: (usage) => set({ calendarUsage: usage }),
+
+      isUpdatingApp: false,
+      setIsUpdatingApp: (isUpdating) => set({ isUpdatingApp: isUpdating }),
     }),
     {
       name: "app-storage",

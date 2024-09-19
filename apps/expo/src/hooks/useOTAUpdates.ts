@@ -3,6 +3,9 @@ import { Alert, AppState, Platform } from "react-native";
 import * as Application from "expo-application";
 import * as Updates from "expo-updates";
 
+import { useAppStore } from "~/store";
+import { showToast } from "~/utils/toast";
+
 // temporarily set to 1 minute for testing, original value is 15 minutes
 const MINIMUM_MINIMIZE_TIME = 1 * 60e3;
 const IS_TESTFLIGHT = Application.applicationId?.endsWith(".beta");
@@ -29,6 +32,14 @@ export function useOTAUpdates() {
   const ranInitialCheck = useRef(false);
   const timeout = useRef<NodeJS.Timeout>();
   const { isUpdatePending } = Updates.useUpdates();
+  const {
+    setIsUpdatingApp,
+    isUpdatingApp,
+    setIsCalendarModalVisible,
+    input,
+    imagePreview,
+    linkPreview,
+  } = useAppStore();
 
   ///////////////////////////////////////////////////////////////////////////
 
@@ -88,6 +99,24 @@ export function useOTAUpdates() {
   }, []);
 
   useEffect(() => {
+    if (isUpdatingApp) {
+      // Check if there's any data in the store after the update
+      if (input || imagePreview || linkPreview) {
+        setIsCalendarModalVisible(true);
+      }
+      showToast("App updated successfully!", "success");
+      setIsUpdatingApp(false);
+    }
+  }, [
+    isUpdatingApp,
+    input,
+    imagePreview,
+    linkPreview,
+    setIsCalendarModalVisible,
+    setIsUpdatingApp,
+  ]);
+
+  useEffect(() => {
     // We use this setTimeout to allow Statsig to initialize before we check for an update
     // For Testflight users, we can prompt the user to update immediately whenever there's an available update. This
     // is suspect however with the Apple App Store guidelines, so we don't want to prompt production users to update
@@ -120,7 +149,8 @@ export function useOTAUpdates() {
           // chances are that there isn't anything important going on in the current session.
           if (lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME) {
             if (isUpdatePending) {
-              await Updates.reloadAsync();
+              setIsUpdatingApp(true);
+              void Updates.reloadAsync();
             } else {
               setCheckTimeout();
             }
@@ -137,5 +167,5 @@ export function useOTAUpdates() {
       clearTimeout(timeout.current);
       subscription.remove();
     };
-  }, [isUpdatePending, setCheckTimeout]);
+  }, [isUpdatePending, setCheckTimeout, setIsUpdatingApp]);
 }
