@@ -164,14 +164,18 @@ export function EventMenu({
       ];
     } else if (!isSaved) {
       return [
-        { title: "Follow", lucideIcon: PlusCircle, systemIcon: "plus.circle" },
+        {
+          title: "Add to My Feed",
+          lucideIcon: PlusCircle,
+          systemIcon: "plus.circle",
+        },
         ...baseItems,
       ];
     } else {
       return [
         ...baseItems,
         {
-          title: "Unfollow",
+          title: "Remove from My Feed",
           lucideIcon: MinusCircle,
           systemIcon: "minus.circle",
           destructive: true,
@@ -286,10 +290,10 @@ export function EventMenu({
       case "Delete":
         void handleDelete();
         break;
-      case "Follow":
+      case "Add to My Feed":
         void handleFollow();
         break;
-      case "Unfollow":
+      case "Remove from My Feed":
         void handleUnfollow();
         break;
     }
