@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import * as SecureStore from "expo-secure-store";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 
 import Config from "~/utils/config";
-import { useCalendar } from "./useCalendar";
 
 const saveAuthData = async (authData: {
   username: string | null;
@@ -27,7 +26,7 @@ const saveAuthData = async (authData: {
   }
 };
 
-const deleteAuthData = async () => {
+export const deleteAuthData = async () => {
   try {
     await SecureStore.deleteItemAsync("authData", {
       keychainAccessGroup:
@@ -46,37 +45,37 @@ const deleteAuthData = async () => {
 
 const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
   const { getToken } = useAuth();
-  const { isSignedIn, user } = useUser();
-  const [authData, setAuthData] = useState<{
-    username: string | null;
-    authToken: string | null;
-    expoPushToken: string | null;
-  } | null>(null);
-  const { clearCalendarData } = useCalendar();
+  const { user } = useUser();
+
+  const username = user?.username;
+  const userId = user?.id;
+  const hasUserInfo = username && userId;
+
+  const authData = useMemo(() => {
+    if (hasUserInfo) {
+      return {
+        userId: userId,
+        username: username,
+        expoPushToken,
+      };
+    }
+    return null;
+  }, [hasUserInfo, userId, username, expoPushToken]);
+
+  const syncAuthData = useCallback(async () => {
+    if (authData?.username && authData.userId) {
+      const authToken = await getToken();
+      await saveAuthData({
+        username: authData.username,
+        authToken,
+        expoPushToken: authData.expoPushToken,
+      });
+    }
+  }, [authData, getToken]);
 
   useEffect(() => {
-    const syncAuthData = async () => {
-      if (isSignedIn) {
-        const username = user.username;
-        const userId = user.id;
-        const authToken = await getToken();
-
-        const newAuthData = { userId, username, authToken, expoPushToken };
-        // Store in SecureStore (all one entry)
-        await saveAuthData(newAuthData);
-
-        // Update state
-        setAuthData(newAuthData);
-      } else {
-        // Clear data when signed out
-        await deleteAuthData();
-        await clearCalendarData();
-        setAuthData(null);
-      }
-    };
-
     void syncAuthData();
-  }, [expoPushToken, getToken, isSignedIn, user]);
+  }, [syncAuthData]);
 
   return authData;
 };
