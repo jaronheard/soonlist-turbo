@@ -1,9 +1,8 @@
 import type { BottomSheetModal } from "@discord/bottom-sheet";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
-import { useFocusEffect } from "@react-navigation/native";
 import { Navigation2 } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -75,10 +74,10 @@ function FilterButton({
 function MyFeed() {
   const { user } = useUser();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const { setIntentParams } = useAppStore();
   const { handleIntent } = useIntentHandler();
-
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
+  const [isBottomSheetMounted, setIsBottomSheetMounted] = useState(false);
+  const pendingPresentRef = useRef(false);
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -104,48 +103,51 @@ function MyFeed() {
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
   const handlePresentModalPress = useCallback(() => {
-    bottomSheetRef.current?.present();
-  }, []);
-
-  const handleInitialURL = useCallback(async () => {
-    const initialUrl = await Linking.getInitialURL();
-    if (initialUrl) {
-      const intent = handleIntent(initialUrl);
-      if (intent && intent.type === "new") {
-        setIntentParams({
-          text: intent.text,
-          imageUri: intent.imageUri,
-        });
-        handlePresentModalPress();
-      }
+    console.log("Attempting to present modal");
+    if (isBottomSheetMounted && bottomSheetRef.current) {
+      console.log("Presenting modal immediately");
+      bottomSheetRef.current.present();
+    } else {
+      console.log("Queueing modal presentation");
+      pendingPresentRef.current = true;
     }
-  }, [handleIntent, handlePresentModalPress, setIntentParams]);
+  }, [isBottomSheetMounted]);
 
-  const handleURLChange = useCallback(
-    ({ url }: { url: string }) => {
-      const intent = handleIntent(url);
-      if (intent && intent.type === "new") {
-        setIntentParams({
-          text: intent.text,
-          imageUri: intent.imageUri,
-        });
-        handlePresentModalPress();
+  useEffect(() => {
+    console.log("Setting up URL handling effect");
+
+    const handleInitialURL = async () => {
+      console.log("Handling initial URL");
+      const initialUrl = await Linking.getInitialURL();
+      console.log("Initial URL:", initialUrl);
+      if (initialUrl) {
+        handleIntent(initialUrl);
       }
-    },
-    [handleIntent, handlePresentModalPress, setIntentParams],
-  );
+    };
 
-  useFocusEffect(
-    useCallback(() => {
-      void handleInitialURL();
+    void handleInitialURL();
 
-      const subscription = Linking.addEventListener("url", handleURLChange);
+    const subscription = Linking.addEventListener("url", ({ url }) => {
+      handleIntent(url);
+    });
 
-      return () => {
-        subscription.remove();
-      };
-    }, [handleInitialURL, handleURLChange]),
-  );
+    return () => {
+      console.log("Cleaning up URL handling effect");
+      subscription.remove();
+    };
+  }, [handleIntent]);
+
+  useEffect(() => {
+    if (
+      isBottomSheetMounted &&
+      bottomSheetRef.current &&
+      pendingPresentRef.current
+    ) {
+      console.log("Presenting queued modal");
+      bottomSheetRef.current.present();
+      pendingPresentRef.current = false;
+    }
+  }, [isBottomSheetMounted]);
 
   return (
     <>
@@ -190,7 +192,10 @@ function MyFeed() {
               showCreator="otherUsers"
             />
             <AddEventButton onPress={handlePresentModalPress} />
-            <AddEventBottomSheet ref={bottomSheetRef} />
+            <AddEventBottomSheet
+              ref={bottomSheetRef}
+              onMount={() => setIsBottomSheetMounted(true)}
+            />
           </View>
         )}
       </View>

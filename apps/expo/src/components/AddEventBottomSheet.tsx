@@ -1,5 +1,11 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
-import React, { useCallback, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
 import {
   ActivityIndicator,
   Image,
@@ -34,12 +40,13 @@ import { showToast } from "~/utils/toast";
 
 interface AddEventBottomSheetProps {
   children?: React.ReactNode;
+  onMount?: () => void;
 }
 
 const AddEventBottomSheet = React.forwardRef<
   BottomSheetModal,
   AddEventBottomSheetProps
->((_props, ref) => {
+>(({ onMount }, ref) => {
   const snapPoints = useMemo(() => [388], []);
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
@@ -163,8 +170,19 @@ const AddEventBottomSheet = React.forwardRef<
     [handleLinkPreview, setInput, setLinkPreview],
   );
 
+  const bottomSheetRef = useRef<BottomSheetModal | null>(null);
+
+  // Assign the forwarded ref to our local ref
+  useImperativeHandle(ref, () => bottomSheetRef.current!);
+
   const handleInitialParams = useCallback(() => {
     if (intentParams) {
+      // Clear existing content
+      setInput("");
+      setImagePreview(null);
+      setLinkPreview(null);
+      setUploadedImageUrl(null);
+
       if (intentParams.text) {
         handleTextChange(intentParams.text);
       } else if (intentParams.imageUri) {
@@ -179,6 +197,9 @@ const AddEventBottomSheet = React.forwardRef<
         setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
       }
       resetIntentParams();
+
+      // Present the bottom sheet
+      bottomSheetRef.current?.present();
     }
   }, [
     handleImageUploadFromUri,
@@ -187,9 +208,14 @@ const AddEventBottomSheet = React.forwardRef<
     intentParams,
     resetIntentParams,
     setInput,
+    setImagePreview,
+    setLinkPreview,
+    setUploadedImageUrl,
   ]);
 
-  handleInitialParams();
+  useEffect(() => {
+    handleInitialParams();
+  }, [handleInitialParams]);
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);
@@ -407,9 +433,15 @@ const AddEventBottomSheet = React.forwardRef<
     inputRef.current?.focus();
   }, []);
 
+  useEffect(() => {
+    if (onMount) {
+      onMount();
+    }
+  }, [onMount]);
+
   return (
     <BottomSheetModal
-      ref={ref}
+      ref={bottomSheetRef}
       index={0}
       snapPoints={snapPoints}
       onChange={handleSheetChanges}
