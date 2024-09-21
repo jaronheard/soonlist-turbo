@@ -130,10 +130,7 @@ function MyFeed() {
             text: intent.text,
             imageUri: intent.imageUri,
           });
-          // Use setTimeout with a longer delay
-          setTimeout(() => {
-            handlePresentModalPress();
-          }, 500); // Increased delay to 500ms
+          handlePresentModalPress();
         }
       }
     };
@@ -150,10 +147,7 @@ function MyFeed() {
           text: intent.text,
           imageUri: intent.imageUri,
         });
-        // Use setTimeout with a longer delay
-        setTimeout(() => {
-          handlePresentModalPress();
-        }, 500); // Increased delay to 500ms
+        handlePresentModalPress();
       }
     });
 
