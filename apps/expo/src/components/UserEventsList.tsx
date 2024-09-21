@@ -29,6 +29,7 @@ import { cn } from "~/utils/cn";
 import {
   formatRelativeTime,
   getDateTimeInfo,
+  isOver,
   timeFormatDateInfo,
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
@@ -97,32 +98,33 @@ export function UserEventListItem(props: {
     [e.startDate, e.startTime, e.endTime, e.timeZone],
   );
 
-  const dateInfo = useMemo(
+  const startDateInfo = useMemo(
     () =>
       getDateTimeInfo(e.startDate || "", e.startTime || "", e.timeZone || ""),
     [e.startDate, e.startTime, e.timeZone],
   );
 
-  const isOver = useMemo(() => {
-    if (!dateInfo) return false;
-    return (
-      new Date() >
-      new Date(
-        dateInfo.year,
-        dateInfo.month - 1,
-        dateInfo.day,
-        dateInfo.hour,
-        dateInfo.minute,
-      )
-    );
-  }, [dateInfo]);
+  const endDateInfo = useMemo(
+    () =>
+      getDateTimeInfo(
+        e.endDate || e.startDate || "",
+        e.endTime || e.startTime || "",
+        e.timeZone || "",
+      ),
+    [e.endDate, e.startDate, e.endTime, e.startTime, e.timeZone],
+  );
+
+  const eventIsOver = useMemo(() => {
+    if (!endDateInfo) return false;
+    return isOver(endDateInfo);
+  }, [endDateInfo]);
 
   const relativeTime = useMemo(() => {
-    if (!dateInfo || isOver) return "";
-    return formatRelativeTime(dateInfo);
-  }, [dateInfo, isOver]);
+    if (!startDateInfo || eventIsOver) return "";
+    return formatRelativeTime(startDateInfo);
+  }, [startDateInfo, eventIsOver]);
 
-  const isHappeningNow = relativeTime === "Happening now" && !isOver;
+  const isHappeningNow = relativeTime === "Happening now" && !eventIsOver;
 
   const { user: currentUser } = useUser();
   const eventUser = event.user;

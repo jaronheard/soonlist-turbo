@@ -352,3 +352,16 @@ export function formatRelativeTime(dateInfo: DateInfo): string {
   }
   return ``;
 }
+
+export function isOver(endDateInfo: DateInfo): boolean {
+  const now = new Date();
+  const endDate = new Date(
+    endDateInfo.year,
+    endDateInfo.month - 1,
+    endDateInfo.day,
+    endDateInfo.hour,
+    endDateInfo.minute,
+  );
+
+  return now > endDate;
+}
