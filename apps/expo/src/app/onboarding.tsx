@@ -19,7 +19,7 @@ export default function OnboardingScreen() {
   return (
     <View style={{ flex: 1 }}>
       <Stack.Screen
-        options={{ title: "How to Use", headerBackVisible: false }}
+        options={{ title: "About Soonlist", headerBackVisible: false }}
       />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <Onboarding onComplete={handleOnboardingComplete} />
