@@ -1,5 +1,11 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
-import React, { useCallback, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Image,
@@ -34,12 +40,13 @@ import { showToast } from "~/utils/toast";
 
 interface AddEventBottomSheetProps {
   children?: React.ReactNode;
+  onMount?: () => void;
 }
 
 const AddEventBottomSheet = React.forwardRef<
   BottomSheetModal,
   AddEventBottomSheetProps
->((_props, ref) => {
+>(({ onMount }, ref) => {
   const snapPoints = useMemo(() => [388], []);
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
@@ -189,7 +196,9 @@ const AddEventBottomSheet = React.forwardRef<
     setInput,
   ]);
 
-  handleInitialParams();
+  useEffect(() => {
+    handleInitialParams();
+  }, [handleInitialParams]);
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);
@@ -406,6 +415,12 @@ const AddEventBottomSheet = React.forwardRef<
   const focusInput = useCallback(() => {
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (onMount) {
+      onMount();
+    }
+  }, [onMount]);
 
   return (
     <BottomSheetModal
