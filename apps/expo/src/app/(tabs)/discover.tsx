@@ -27,12 +27,8 @@ export default function Page() {
     },
   );
 
-  const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery({
-    userName: user?.username ?? "",
-  });
-
-  const onRefresh = useCallback(() => {
-    void eventsQuery.refetch();
+  const onRefresh = useCallback(async () => {
+    await eventsQuery.refetch();
   }, [eventsQuery]);
 
   const loadMore = useCallback(() => {
@@ -42,6 +38,10 @@ export default function Page() {
   }, [eventsQuery]);
 
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
+
+  const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery({
+    userName: user?.username ?? "",
+  });
 
   const savedEventIds = new Set(
     savedEventIdsQuery.data?.map((event) => event.id),
