@@ -89,8 +89,8 @@ function MyFeed() {
     },
   );
 
-  const onRefresh = useCallback(() => {
-    void eventsQuery.refetch();
+  const onRefresh = useCallback(async () => {
+    await eventsQuery.refetch();
   }, [eventsQuery]);
 
   const loadMore = useCallback(() => {

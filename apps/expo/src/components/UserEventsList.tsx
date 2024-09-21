@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -255,11 +255,10 @@ export function UserEventListItem(props: {
 
 export default function UserEventsList(props: {
   events: Event[];
-  refreshControl?: React.ReactElement;
   ActionButton?: React.ComponentType<ActionButtonProps>;
   showCreator: ShowCreatorOption;
   isRefetching: boolean;
-  onRefresh: () => void;
+  onRefresh: () => Promise<void>;
   onEndReached: () => void;
   isFetchingNextPage: boolean;
 }) {
@@ -342,6 +341,19 @@ export default function UserEventsList(props: {
       </View>
     ) : null;
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (!isRefetching && isRefreshing) {
+      setIsRefreshing(false);
+    }
+  }, [isRefetching, isRefreshing]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await onRefresh();
+  };
+
   if (collapsedEvents.length === 0 && !isRefetching) {
     return renderEmptyState();
   }
@@ -369,8 +381,8 @@ export default function UserEventsList(props: {
         }}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={onRefresh}
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
             tintColor="#5A32FB"
           />
         }
