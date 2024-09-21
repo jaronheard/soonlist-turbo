@@ -74,7 +74,6 @@ function FilterButton({
 function MyFeed() {
   const { user } = useUser();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const { setIntentParams } = useAppStore();
   const { handleIntent } = useIntentHandler();
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
   const [isBottomSheetMounted, setIsBottomSheetMounted] = useState(false);
