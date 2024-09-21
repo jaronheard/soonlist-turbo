@@ -1,5 +1,11 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
 import {
   ActivityIndicator,
   Image,
@@ -164,8 +170,19 @@ const AddEventBottomSheet = React.forwardRef<
     [handleLinkPreview, setInput, setLinkPreview],
   );
 
+  const bottomSheetRef = useRef<BottomSheetModal | null>(null);
+
+  // Assign the forwarded ref to our local ref
+  useImperativeHandle(ref, () => bottomSheetRef.current!);
+
   const handleInitialParams = useCallback(() => {
     if (intentParams) {
+      // Clear existing content
+      setInput("");
+      setImagePreview(null);
+      setLinkPreview(null);
+      setUploadedImageUrl(null);
+
       if (intentParams.text) {
         handleTextChange(intentParams.text);
       } else if (intentParams.imageUri) {
@@ -180,6 +197,9 @@ const AddEventBottomSheet = React.forwardRef<
         setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
       }
       resetIntentParams();
+
+      // Present the bottom sheet
+      bottomSheetRef.current?.present();
     }
   }, [
     handleImageUploadFromUri,
@@ -188,6 +208,9 @@ const AddEventBottomSheet = React.forwardRef<
     intentParams,
     resetIntentParams,
     setInput,
+    setImagePreview,
+    setLinkPreview,
+    setUploadedImageUrl,
   ]);
 
   useEffect(() => {
@@ -418,7 +441,7 @@ const AddEventBottomSheet = React.forwardRef<
 
   return (
     <BottomSheetModal
-      ref={ref}
+      ref={bottomSheetRef}
       index={0}
       snapPoints={snapPoints}
       onChange={handleSheetChanges}

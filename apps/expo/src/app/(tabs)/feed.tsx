@@ -122,40 +122,21 @@ function MyFeed() {
       const initialUrl = await Linking.getInitialURL();
       console.log("Initial URL:", initialUrl);
       if (initialUrl) {
-        const intent = handleIntent(initialUrl);
-        console.log("Parsed intent:", intent);
-        if (intent && intent.type === "new") {
-          console.log("Setting intent params for new event");
-          setIntentParams({
-            text: intent.text,
-            imageUri: intent.imageUri,
-          });
-          handlePresentModalPress();
-        }
+        handleIntent(initialUrl);
       }
     };
 
     void handleInitialURL();
 
     const subscription = Linking.addEventListener("url", ({ url }) => {
-      console.log("Received URL:", url);
-      const intent = handleIntent(url);
-      console.log("Parsed intent:", intent);
-      if (intent && intent.type === "new") {
-        console.log("Setting intent params for new event");
-        setIntentParams({
-          text: intent.text,
-          imageUri: intent.imageUri,
-        });
-        handlePresentModalPress();
-      }
+      handleIntent(url);
     });
 
     return () => {
       console.log("Cleaning up URL handling effect");
       subscription.remove();
     };
-  }, [handleIntent, setIntentParams, handlePresentModalPress]);
+  }, [handleIntent]);
 
   useEffect(() => {
     if (
