@@ -1,9 +1,8 @@
 import type { BottomSheetModal } from "@discord/bottom-sheet";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
-import { useFocusEffect } from "@react-navigation/native";
 import { Navigation2 } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -102,27 +101,28 @@ function MyFeed() {
   }, [eventsQuery]);
 
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
+  const handlePresentModalPress = () => bottomSheetRef.current?.present();
 
-  const handlePresentModalPress = useCallback(() => {
-    bottomSheetRef.current?.present();
-  }, []);
+  useEffect(() => {
+    const handlePresentModalPress = () => bottomSheetRef.current?.present();
 
-  const handleInitialURL = useCallback(async () => {
-    const initialUrl = await Linking.getInitialURL();
-    if (initialUrl) {
-      const intent = handleIntent(initialUrl);
-      if (intent && intent.type === "new") {
-        setIntentParams({
-          text: intent.text,
-          imageUri: intent.imageUri,
-        });
-        handlePresentModalPress();
+    const handleInitialURL = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        const intent = handleIntent(initialUrl);
+        if (intent && intent.type === "new") {
+          setIntentParams({
+            text: intent.text,
+            imageUri: intent.imageUri,
+          });
+          handlePresentModalPress();
+        }
       }
-    }
-  }, [handleIntent, handlePresentModalPress, setIntentParams]);
+    };
 
-  const handleURLChange = useCallback(
-    ({ url }: { url: string }) => {
+    void handleInitialURL();
+
+    const subscription = Linking.addEventListener("url", ({ url }) => {
       const intent = handleIntent(url);
       if (intent && intent.type === "new") {
         setIntentParams({
@@ -131,21 +131,12 @@ function MyFeed() {
         });
         handlePresentModalPress();
       }
-    },
-    [handleIntent, handlePresentModalPress, setIntentParams],
-  );
+    });
 
-  useFocusEffect(
-    useCallback(() => {
-      void handleInitialURL();
-
-      const subscription = Linking.addEventListener("url", handleURLChange);
-
-      return () => {
-        subscription.remove();
-      };
-    }, [handleInitialURL, handleURLChange]),
-  );
+    return () => {
+      subscription.remove();
+    };
+  }, [handleIntent, setIntentParams]);
 
   return (
     <>
