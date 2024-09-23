@@ -6,7 +6,7 @@ import { appRouter } from "@soonlist/api";
 import { createTRPCContext } from "@soonlist/api/trpc";
 
 export const dynamic = "force-dynamic";
-
+export const maxDuration = 300;
 export async function GET() {
   const ctx = await createTRPCContext({ headers: new Headers() });
   const caller = appRouter.createCaller(ctx);
