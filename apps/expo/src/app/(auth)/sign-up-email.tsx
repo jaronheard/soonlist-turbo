@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Linking, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Stack, useRouter } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
@@ -247,6 +247,16 @@ export default function SignUpScreen() {
               <Text className="font-bold text-interactive-1">Sign In</Text>
             </Text>
           </Pressable>
+          <Text className="mt-6 text-center text-sm text-gray-500">
+            Having trouble signing up?{" "}
+            <Text
+              className="text-interactive-1"
+              onPress={() => Linking.openURL("mailto:jaron@soonlist.com")}
+            >
+              Email us
+            </Text>{" "}
+            for support.
+          </Text>
         </View>
       </View>
     </KeyboardAwareScrollView>

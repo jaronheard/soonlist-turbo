@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Linking, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Stack, useRouter } from "expo-router";
 import { useSignIn } from "@clerk/clerk-expo";
@@ -154,6 +154,16 @@ export default function SignInScreen() {
             </Text>
           ) : null}
         </View>
+        <Text className="mt-6 text-center text-sm text-gray-500">
+          Having trouble signing in?{" "}
+          <Text
+            className="text-interactive-1"
+            onPress={() => Linking.openURL("mailto:jaron@soonlist.com")}
+          >
+            Email us
+          </Text>{" "}
+          for support.
+        </Text>
       </View>
     </KeyboardAwareScrollView>
   );
