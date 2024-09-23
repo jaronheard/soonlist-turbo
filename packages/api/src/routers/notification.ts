@@ -3,12 +3,12 @@ import { Expo } from "expo-server-sdk";
 import { anthropic } from "@ai-sdk/anthropic";
 import { waitUntil } from "@vercel/functions";
 import { generateText } from "ai";
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 import { Langfuse } from "langfuse";
 import { z } from "zod";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
-import { db } from "@soonlist/db";
+import { db, lt } from "@soonlist/db";
 import { events, pushTokens, users } from "@soonlist/db/schema";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -78,7 +78,10 @@ export const notificationRouter = createTRPCRouter({
         expoPushToken: pushTokens.expoPushToken,
       })
       .from(pushTokens)
-      .innerJoin(users, eq(users.id, pushTokens.userId));
+      .innerJoin(
+        users,
+        sql`${users.id} COLLATE utf8mb4_unicode_ci = ${pushTokens.userId} COLLATE utf8mb4_unicode_ci`,
+      );
 
     for (const user of usersWithTokens) {
       // Fetch upcoming events for the user
@@ -89,7 +92,7 @@ export const notificationRouter = createTRPCRouter({
           and(
             eq(events.userId, user.userId),
             gt(events.startDateTime, now),
-            gt(events.endDateTime, oneWeekFromNow),
+            lt(events.endDateTime, oneWeekFromNow),
           ),
         );
 
@@ -98,7 +101,7 @@ export const notificationRouter = createTRPCRouter({
         const eventDescriptions = upcomingEvents
           .map((event) => {
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-            const eventData = event as AddToCalendarButtonProps;
+            const eventData = event.event as AddToCalendarButtonProps;
             return `${eventData.name} ${eventData.description}`;
           })
           .join("\n");
@@ -177,9 +180,9 @@ Remember to vary your output for different weeks, maintaining the exciting and u
             const message: ExpoPushMessage = {
               to: user.expoPushToken,
               sound: "default",
-              title: "Your Exciting Week Ahead",
+              title: "✨ Your week of possibilities",
               body: summary,
-              data: { url: "/upcoming" },
+              data: { url: "/feed" },
             };
 
             await expo.sendPushNotificationsAsync([message]);
