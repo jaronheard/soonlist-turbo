@@ -8,7 +8,7 @@ import { Langfuse } from "langfuse";
 import { z } from "zod";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
-import { db } from "@soonlist/db";
+import { db, ne } from "@soonlist/db";
 import { events, pushTokens, users } from "@soonlist/db/schema";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -86,8 +86,6 @@ export const notificationRouter = createTRPCRouter({
         sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
       );
 
-    console.log("usersWithTokens", usersWithTokens);
-
     for (const user of usersWithTokens) {
       // Fetch upcoming events for the user
       const upcomingEvents = await db
@@ -106,11 +104,11 @@ export const notificationRouter = createTRPCRouter({
           const eventData = event.event as AddToCalendarButtonProps;
           return `${eventData.name} ${eventData.description}`;
         })
-        .join("\n");
+        .join(" NEXT EVENT ");
 
       let prompt = `You are tasked with creating an exciting and rich notification for a user's upcoming week based on their saved events. Your goal is to generate a concise, engaging message that fits into a single notification and captures the essence of the week's possibilities.
 
-Here is the list of events for the upcoming week:
+Here is the list of events for the upcoming week separated by "NEXT EVENT":
 <events>
 ${eventDescriptions}
 </events>
@@ -145,7 +143,14 @@ Remember to vary your output for different weeks, maintaining the exciting and u
         const publicEvents = await db
           .select()
           .from(events)
-          .where(eq(events.visibility, "public"))
+          .where(
+            and(
+              ne(events.userId, user.userId),
+              gt(events.startDateTime, now),
+              lt(events.endDateTime, oneWeekFromNow),
+              eq(events.visibility, "public"),
+            ),
+          )
           .limit(20);
 
         eventDescriptions = publicEvents
@@ -153,11 +158,11 @@ Remember to vary your output for different weeks, maintaining the exciting and u
             const eventData = event.event as AddToCalendarButtonProps;
             return `${eventData.name} ${eventData.description}`;
           })
-          .join("\n");
+          .join(" NEXT EVENT ");
 
         prompt = `You are tasked with creating an exciting and rich notification of events other users have posted to Soonlist
 
-Here is the list of events for the upcoming week:
+Here is the list of events for the upcoming week separated by "NEXT EVENT":
 <events>
 ${eventDescriptions}
 </events>
