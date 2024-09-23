@@ -444,6 +444,9 @@ importers:
 
   packages/api:
     dependencies:
+      '@ai-sdk/anthropic':
+        specifier: ^0.0.50
+        version: 0.0.50(zod@3.23.4)
       '@ai-sdk/openai':
         specifier: ^0.0.18
         version: 0.0.18(zod@3.23.4)
@@ -829,6 +832,12 @@ importers:
 
 packages:
 
+  '@ai-sdk/anthropic@0.0.50':
+    resolution: {integrity: sha512-++mqmFcUoQgjoCchAU6eVG3QfKdwkeJVNdMZ+jUiNdawn8diA6BlARlu7xFT4F7W3bcStfYv4hK1jwRyzAQtCg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
+
   '@ai-sdk/openai@0.0.18':
     resolution: {integrity: sha512-5iJ+/mbns0uLbNpACMYGUONUqQmqGJYrPbQvmGC+XVD4DZLvyZqBi0NDoQguOrZTz6u5O7rl51o9PDO+bEtmcA==}
     engines: {node: '>=18'}
@@ -843,6 +852,19 @@ packages:
     peerDependenciesMeta:
       zod:
         optional: true
+
+  '@ai-sdk/provider-utils@1.0.19':
+    resolution: {integrity: sha512-p02Fq5Mnc8T6nwRBN1Iaou8YXvN1sDS6hbmJaD5UaRbXjizbh+8rpFS/o7jqAHTwf3uHCDitP3pnODyHdc/CDQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
+
+  '@ai-sdk/provider@0.0.23':
+    resolution: {integrity: sha512-oAc49O5+xypVrKM7EUU5P/Y4DUL4JZUWVxhejoAVOTOl3WZUEWsMbP3QZR+TrimQIsS0WR/n9UuF6U0jPdp0tQ==}
+    engines: {node: '>=18'}
 
   '@ai-sdk/provider@0.0.8':
     resolution: {integrity: sha512-+gcMvyPUDfDXV9caN3CG5Le0M5K4CjqTdMV1ODg/AosApQiJW9ByN5imJPdI043zVdt+HS9WG+s0j4am7ca4bg==}
@@ -9007,6 +9029,12 @@ packages:
 
 snapshots:
 
+  '@ai-sdk/anthropic@0.0.50(zod@3.23.4)':
+    dependencies:
+      '@ai-sdk/provider': 0.0.23
+      '@ai-sdk/provider-utils': 1.0.19(zod@3.23.4)
+      zod: 3.23.4
+
   '@ai-sdk/openai@0.0.18(zod@3.23.4)':
     dependencies:
       '@ai-sdk/provider': 0.0.8
@@ -9021,6 +9049,19 @@ snapshots:
       secure-json-parse: 2.7.0
     optionalDependencies:
       zod: 3.23.4
+
+  '@ai-sdk/provider-utils@1.0.19(zod@3.23.4)':
+    dependencies:
+      '@ai-sdk/provider': 0.0.23
+      eventsource-parser: 1.1.2
+      nanoid: 3.3.6
+      secure-json-parse: 2.7.0
+    optionalDependencies:
+      zod: 3.23.4
+
+  '@ai-sdk/provider@0.0.23':
+    dependencies:
+      json-schema: 0.4.0
 
   '@ai-sdk/provider@0.0.8':
     dependencies:
