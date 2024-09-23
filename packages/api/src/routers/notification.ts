@@ -3,12 +3,12 @@ import { Expo } from "expo-server-sdk";
 import { anthropic } from "@ai-sdk/anthropic";
 import { waitUntil } from "@vercel/functions";
 import { generateText } from "ai";
-import { and, eq, gt, sql } from "drizzle-orm";
+import { and, eq, gt, lt, sql } from "drizzle-orm";
 import { Langfuse } from "langfuse";
 import { z } from "zod";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
-import { db, lt } from "@soonlist/db";
+import { db } from "@soonlist/db";
 import { events, pushTokens, users } from "@soonlist/db/schema";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -101,16 +101,14 @@ export const notificationRouter = createTRPCRouter({
           ),
         );
 
-      if (upcomingEvents.length > 0) {
-        // Format events for the AI prompt
-        const eventDescriptions = upcomingEvents
-          .map((event) => {
-            const eventData = event.event as AddToCalendarButtonProps;
-            return `${eventData.name} ${eventData.description}`;
-          })
-          .join("\n");
+      let eventDescriptions = upcomingEvents
+        .map((event) => {
+          const eventData = event.event as AddToCalendarButtonProps;
+          return `${eventData.name} ${eventData.description}`;
+        })
+        .join("\n");
 
-        const prompt = `You are tasked with creating an exciting and rich notification for a user's upcoming week based on their saved events. Your goal is to generate a concise, engaging message that fits into a single notification and captures the essence of the week's possibilities.
+      let prompt = `You are tasked with creating an exciting and rich notification for a user's upcoming week based on their saved events. Your goal is to generate a concise, engaging message that fits into a single notification and captures the essence of the week's possibilities.
 
 Here is the list of events for the upcoming week:
 <events>
@@ -139,90 +137,131 @@ Example output:
 
 Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
 
-        const trace = langfuse.trace({
-          name: "sendWeeklyNotifications",
-          userId: user.userId,
-          input: eventDescriptions,
+      let title = "✨ Your week of possibilities";
+      let link = "/feed";
+
+      if (upcomingEvents.length < 3) {
+        // Fetch public events if user has less than 3 upcoming events
+        const publicEvents = await db
+          .select()
+          .from(events)
+          .where(eq(events.visibility, "public"))
+          .limit(20);
+
+        eventDescriptions = publicEvents
+          .map((event) => {
+            const eventData = event.event as AddToCalendarButtonProps;
+            return `${eventData.name} ${eventData.description}`;
+          })
+          .join("\n");
+
+        prompt = `You are tasked with creating an exciting and rich notification of events other users have posted to Soonlist
+
+Here is the list of events for the upcoming week:
+<events>
+${eventDescriptions}
+</events>
+
+Follow these steps to create the notification:
+
+1. For each event, identify the most specific and evocative single-word adjective-noun pairs that uniquely apply to that event. Be creative and don't hesitate to use esoteric or simple adjectives.
+
+2. Use Spotify's Daylists as inspiration for the tone and style. Incorporate uncommon emojis where appropriate.
+
+3. Do not preface or add anything other than the adjective-noun pairs.
+
+Example output:
+🧠 Cerebral discussions, 🌀 Mesmerizing animations, 🎭 Avant-garde showcases, 🤹‍♂️ Quirky performances, 🛹 Skateboarding prowess, 🖼️ Handmade marvels, ♻️ Upcycled elegance, 💃 Pulsating dancefloors, 📚 Intellectual discourses, 🕰️ Retro-inspired revelry, 🦉 Ornithological wonders
+
+Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
+
+        title = "✨ Discover possibilities this week";
+        link = "/discover";
+      }
+
+      const trace = langfuse.trace({
+        name: "sendWeeklyNotifications",
+        userId: user.userId,
+        input: eventDescriptions,
+      });
+
+      const generation = trace.generation({
+        name: "generateWeeklyNotification",
+        input: eventDescriptions,
+        model: "claude-3-5-sonnet-20240620",
+      });
+
+      generation.update({
+        completionStartTime: new Date(),
+      });
+
+      try {
+        const { text: summary } = await generateText({
+          model: anthropic("claude-3-5-sonnet-20240620"),
+          prompt,
+          temperature: 0,
+          maxTokens: 1000,
         });
 
-        const generation = trace.generation({
-          name: "generateWeeklyNotification",
-          input: eventDescriptions,
-          model: "claude-3-5-sonnet-20240620",
+        generation.end({
+          output: summary,
         });
 
-        generation.update({
-          completionStartTime: new Date(),
+        generation.score({
+          name: "notificationGeneration",
+          value: summary ? 1 : 0,
         });
 
-        try {
-          const { text: summary } = await generateText({
-            model: anthropic("claude-3-5-sonnet-20240620"),
-            prompt,
-            temperature: 0,
-            maxTokens: 1000,
-          });
+        trace.update({
+          output: summary,
+          metadata: {
+            eventDescriptions,
+          },
+        });
 
-          generation.end({
-            output: summary,
-          });
+        // Prepare and send the notification to each valid push token
+        const validPushTokens = usersWithTokens
+          .filter(
+            (token) =>
+              token.expoPushToken !==
+              "Error: Must use physical device for push notifications",
+          )
+          .map((token) => token.expoPushToken);
 
-          generation.score({
-            name: "notificationGeneration",
-            value: summary ? 1 : 0,
-          });
+        for (const expoPushToken of validPushTokens) {
+          if (Expo.isExpoPushToken(expoPushToken)) {
+            const message: ExpoPushMessage = {
+              to: expoPushToken,
+              sound: "default",
+              title,
+              body: summary,
+              data: { url: link },
+            };
 
-          trace.update({
-            output: summary,
-            metadata: {
-              eventDescriptions,
-            },
-          });
-
-          // Prepare and send the notification to each valid push token
-          const validPushTokens = usersWithTokens
-            .filter(
-              (token) =>
-                token.expoPushToken !==
-                "Error: Must use physical device for push notifications",
-            )
-            .map((token) => token.expoPushToken);
-
-          for (const expoPushToken of validPushTokens) {
-            if (Expo.isExpoPushToken(expoPushToken)) {
-              const message: ExpoPushMessage = {
-                to: expoPushToken,
-                sound: "default",
-                title: "✨ Your week of possibilities",
-                body: summary,
-                data: { url: "/feed" },
-              };
-
-              await expo.sendPushNotificationsAsync([message]);
-            }
+            await expo.sendPushNotificationsAsync([message]);
           }
-        } catch (error) {
-          console.error(
-            "An error occurred while generating the notification:",
-            error,
-          );
-
-          generation.score({
-            name: "notificationGeneration",
-            value: 0,
-          });
-
-          trace.update({
-            output: null,
-            metadata: {
-              error: (error as Error).message,
-            },
-          });
-
-          throw error;
-        } finally {
-          waitUntil(langfuse.flushAsync());
         }
+      } catch (error) {
+        console.error(
+          "An error occurred while generating the notification:",
+          error,
+        );
+
+        generation.score({
+          name: "notificationGeneration",
+          value: 0,
+        });
+
+        trace.update({
+          output: null,
+          metadata: {
+            error: (error as Error).message,
+          },
+        });
+
+        throw error;
+      } finally {
+        waitUntil(langfuse.flushAsync());
       }
     }
 
