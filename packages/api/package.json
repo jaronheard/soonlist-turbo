@@ -28,7 +28,7 @@
     "@soonlist/validators": "workspace:*",
     "@trpc/server": "11.0.0-rc.334",
     "@vercel/functions": "^1.0.2",
-    "ai": "^3.4.0",
+    "ai": "3.1.22",
     "expo-server-sdk": "^3.10.0",
     "langfuse": "^3.11.0",
     "nanoid": "^5.0.7",

@@ -202,6 +202,7 @@ Remember to vary your output for different weeks, maintaining the exciting and u
 
       try {
         const { text: summary } = await generateText({
+          // @ts-expect-error need to update ai sdk
           model: anthropic("claude-3-5-sonnet-20240620"),
           prompt,
           temperature: 0,
