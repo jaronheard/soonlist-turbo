@@ -71,7 +71,7 @@ export const notificationRouter = createTRPCRouter({
     const now = new Date();
     const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    // Fetch all users with push tokens
+    // Fetch all users with valid push tokens
     const usersWithTokens = await db
       .select({
         userId: pushTokens.userId,
@@ -81,7 +81,12 @@ export const notificationRouter = createTRPCRouter({
       .innerJoin(
         users,
         sql`${users.id} COLLATE utf8mb4_unicode_ci = ${pushTokens.userId} COLLATE utf8mb4_unicode_ci`,
+      )
+      .where(
+        sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
       );
+
+    console.log("usersWithTokens", usersWithTokens);
 
     for (const user of usersWithTokens) {
       // Fetch upcoming events for the user
@@ -100,7 +105,6 @@ export const notificationRouter = createTRPCRouter({
         // Format events for the AI prompt
         const eventDescriptions = upcomingEvents
           .map((event) => {
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             const eventData = event.event as AddToCalendarButtonProps;
             return `${eventData.name} ${eventData.description}`;
           })
@@ -175,17 +179,27 @@ Remember to vary your output for different weeks, maintaining the exciting and u
             },
           });
 
-          // Prepare and send the notification
-          if (Expo.isExpoPushToken(user.expoPushToken)) {
-            const message: ExpoPushMessage = {
-              to: user.expoPushToken,
-              sound: "default",
-              title: "✨ Your week of possibilities",
-              body: summary,
-              data: { url: "/feed" },
-            };
+          // Prepare and send the notification to each valid push token
+          const validPushTokens = usersWithTokens
+            .filter(
+              (token) =>
+                token.expoPushToken !==
+                "Error: Must use physical device for push notifications",
+            )
+            .map((token) => token.expoPushToken);
 
-            await expo.sendPushNotificationsAsync([message]);
+          for (const expoPushToken of validPushTokens) {
+            if (Expo.isExpoPushToken(expoPushToken)) {
+              const message: ExpoPushMessage = {
+                to: expoPushToken,
+                sound: "default",
+                title: "✨ Your week of possibilities",
+                body: summary,
+                data: { url: "/feed" },
+              };
+
+              await expo.sendPushNotificationsAsync([message]);
+            }
           }
         } catch (error) {
           console.error(
