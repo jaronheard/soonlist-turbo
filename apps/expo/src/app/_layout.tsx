@@ -71,11 +71,20 @@ const routingInstrumentation = new Sentry.ReactNavigationInstrumentation({
 
 Sentry.init({
   dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.us.sentry.io/4506458761396224",
+  _experiments: {
+    replaysSessionSampleRate: 1.0,
+    replaysOnErrorSampleRate: 1.0,
+  },
   integrations: [
-    new Sentry.ReactNativeTracing({
+    Sentry.reactNativeTracingIntegration({
       routingInstrumentation,
       enableUserInteractionTracing: true,
       enableNativeFramesTracking: Constants.appOwnership !== AppOwnership.Expo, // Only in native builds, not in Expo Go.
+    }),
+    Sentry.mobileReplayIntegration({
+      maskAllText: false,
+      maskAllImages: false,
+      maskAllVectors: false,
     }),
   ],
   attachStacktrace: true,
