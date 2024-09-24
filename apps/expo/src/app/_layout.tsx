@@ -71,20 +71,11 @@ const routingInstrumentation = new Sentry.ReactNavigationInstrumentation({
 
 Sentry.init({
   dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.us.sentry.io/4506458761396224",
-  _experiments: {
-    replaysSessionSampleRate: 1.0,
-    replaysOnErrorSampleRate: 1.0,
-  },
   integrations: [
     Sentry.reactNativeTracingIntegration({
       routingInstrumentation,
       enableUserInteractionTracing: true,
       enableNativeFramesTracking: Constants.appOwnership !== AppOwnership.Expo, // Only in native builds, not in Expo Go.
-    }),
-    Sentry.mobileReplayIntegration({
-      maskAllText: false,
-      maskAllImages: false,
-      maskAllVectors: false,
     }),
   ],
   attachStacktrace: true,
@@ -118,6 +109,26 @@ function RootLayout() {
                       apiKey={Config.posthogApiKey}
                       options={{
                         host: "https://us.i.posthog.com",
+                        enableSessionReplay: true,
+                        sessionReplayConfig: {
+                          // Whether text inputs are masked. Default is true.
+                          // Password inputs are always masked regardless
+                          maskAllTextInputs: false,
+                          // Whether images are masked. Default is true.
+                          maskAllImages: false,
+                          // Capture logs automatically. Default is true.
+                          // Android only (Native Logcat only)
+                          captureLog: false,
+                          // Whether network requests are captured in recordings. Default is true
+                          // Only metric-like data like speed, size, and response code are captured.
+                          // No data is captured from the request or response body.
+                          // iOS only
+                          captureNetworkTelemetry: true,
+                          // Deboucer delay used to reduce the number of snapshots captured and reduce performance impact. Default is 500ms
+                          androidDebouncerDelayMs: 500,
+                          // Deboucer delay used to reduce the number of snapshots captured and reduce performance impact. Default is 1000ms
+                          iOSdebouncerDelayMs: 1000,
+                        },
                       }}
                     >
                       <RootLayoutContent />
