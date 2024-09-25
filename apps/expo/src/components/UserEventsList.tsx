@@ -391,11 +391,6 @@ export default function UserEventsList(props: {
         contentContainerStyle={{ paddingBottom: 16 }}
         ListFooterComponent={renderFooter()}
       />
-      <CalendarSelectionModal
-        onSelect={handleCalendarSelect}
-        onDismiss={() => setIsCalendarModalVisible(false)}
-        initialLimit={INITIAL_CALENDAR_LIMIT}
-      />
     </>
   );
 }
