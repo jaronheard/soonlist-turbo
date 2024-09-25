@@ -22,8 +22,6 @@ import { Globe2, Lock, MapPin, User } from "lucide-react-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
-import { useCalendar } from "~/hooks/useCalendar";
-import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import {
@@ -33,7 +31,6 @@ import {
   timeFormatDateInfo,
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
-import { CalendarSelectionModal } from "./CalendarSelectionModal";
 import { EventMenu } from "./EventMenu";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
@@ -273,8 +270,6 @@ export default function UserEventsList(props: {
   } = props;
   const { user } = useUser();
   const username = user?.username || "";
-  const { setIsCalendarModalVisible } = useAppStore();
-  const { handleCalendarSelect, INITIAL_CALENDAR_LIMIT } = useCalendar();
 
   const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
     userName: username,
