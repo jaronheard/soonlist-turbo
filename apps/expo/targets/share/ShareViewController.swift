@@ -19,10 +19,10 @@ class ShareViewController: UIViewController {
     Task {
       if firstAttachment.hasItemConformingToTypeIdentifier("public.text") {
         await self.handleText(item: firstAttachment)
-      } else if firstAttachment.hasItemConformingToTypeIdentifier("public.url") {
-        await self.handleUrl(item: firstAttachment)
       } else if firstAttachment.hasItemConformingToTypeIdentifier("public.image") {
         await self.handleImage(item: firstAttachment)
+      } else if firstAttachment.hasItemConformingToTypeIdentifier("public.url") {
+        await self.handleUrl(item: firstAttachment)
       } else {
         self.completeRequest()
       }
