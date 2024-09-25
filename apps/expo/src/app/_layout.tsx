@@ -28,7 +28,10 @@ import Constants, { AppOwnership } from "expo-constants";
 import { BottomSheetModalProvider } from "@discord/bottom-sheet";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
+import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
+import { useCalendar } from "~/hooks/useCalendar";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
+import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
@@ -190,6 +193,8 @@ const InitialLayout = () => {
 
 function RootLayoutContent() {
   const { expoPushToken } = useNotification();
+  const { handleCalendarSelect, INITIAL_CALENDAR_LIMIT } = useCalendar();
+  const { setIsCalendarModalVisible } = useAppStore();
   useAppStateRefresh();
   const ref = useNavigationContainerRef();
 
@@ -203,6 +208,11 @@ function RootLayoutContent() {
         <AuthAndTokenSync expoPushToken={expoPushToken} />
         <InitialLayout />
         <StatusBar />
+        <CalendarSelectionModal
+          onSelect={handleCalendarSelect}
+          onDismiss={() => setIsCalendarModalVisible(false)}
+          initialLimit={INITIAL_CALENDAR_LIMIT}
+        />
       </View>
     </RootSiblingParent>
   );
