@@ -686,7 +686,7 @@ function EventActionButtons({
         )}
         {visibility === "private" && (
           <div className="text-lg font-medium leading-none text-neutral-1">
-            <EyeOff className="mr-2 inline" /> Unlisted event
+            <EyeOff className="mr-2 inline size-4" /> Not Discoverable
           </div>
         )}
         <Link
@@ -855,7 +855,9 @@ export function EventListItem(props: EventListItemProps) {
                 />
               )}
             {visibility === "private" && (
-              <Badge variant="destructive">Unlisted Event</Badge>
+              <Badge variant="destructive">
+                <EyeOff className="mr-2 inline size-4" /> Not Discoverable
+              </Badge>
             )}
           </div>
           {props.variant === "minimal" && (
@@ -1155,14 +1157,6 @@ export function EventPage(props: EventPageProps) {
 
   return (
     <div className="">
-      {visibility === "private" && (
-        <>
-          <Badge className="max-w-fit" variant="destructive">
-            Unlisted Event
-          </Badge>
-          <div className="p-1"></div>
-        </>
-      )}
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
         <div>
           <div className="flex flex-col gap-5">
@@ -1188,6 +1182,7 @@ export function EventPage(props: EventPageProps) {
               )}
             </div>
             <PersonalNote text={comment?.content} />
+
             {!hasLists && user && (
               <UserAllEventsCard
                 username={user.username}
@@ -1203,6 +1198,13 @@ export function EventPage(props: EventPageProps) {
                   id={list.id}
                 />
               ))}
+            {visibility === "private" && (
+              <>
+                <Badge className="max-w-fit" variant="destructive">
+                  <EyeOff className="mr-1 inline" size={16} /> Not Discoverable
+                </Badge>
+              </>
+            )}
           </div>
           <div className="flex flex-col gap-8 pt-8">
             <EventDescription

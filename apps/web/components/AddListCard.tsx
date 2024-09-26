@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { EyeOff, Globe2 } from "lucide-react";
 
 import { Input } from "@soonlist/ui/input";
 import {
@@ -99,8 +100,14 @@ export function AddListCard({ ...initialProps }: AddListCardProps) {
             <SelectValue placeholder="Public" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="public">Public</SelectItem>
-            <SelectItem value="private">Unlisted</SelectItem>
+            <SelectItem value="public">
+              <Globe2 className="mr-2 inline size-4" />
+              Discoverable
+            </SelectItem>
+            <SelectItem value="private">
+              <EyeOff className="mr-2 inline size-4" />
+              Not Discoverable
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>

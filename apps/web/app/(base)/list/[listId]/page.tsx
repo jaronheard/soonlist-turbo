@@ -1,5 +1,6 @@
 import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
+import { EyeOff } from "lucide-react";
 
 import { Badge } from "@soonlist/ui/badge";
 
@@ -93,7 +94,7 @@ export default async function Page({ params }: Props) {
       {list.visibility === "private" && (
         <>
           <Badge className="max-w-fit" variant="destructive">
-            Unlisted List
+            <EyeOff className="mr-2 inline size-4" /> Not Discoverable
           </Badge>
           <div className="p-1"></div>
         </>

@@ -26,6 +26,7 @@ import {
 } from "@discord/bottom-sheet";
 import {
   Camera as CameraIcon,
+  Globe2,
   Image as ImageIcon,
   Link as LinkIcon,
   Sparkles,
@@ -533,7 +534,10 @@ const AddEventBottomSheet = React.forwardRef<
           )}
         </View>
         <View className="mb-4 flex-row items-center justify-between">
-          <Text className="text-base font-medium">Show on Discover</Text>
+          <View className="flex-row items-center gap-2">
+            <Globe2 size={20} color="black" />
+            <Text className="text-base font-medium">Make Discoverable</Text>
+          </View>
           <Switch value={isPublic} onValueChange={setIsPublic} />
         </View>
       </View>
