@@ -93,7 +93,6 @@ export const useAppStore = create<AppState>()(
           imagePreview: null,
           linkPreview: null,
           isCreating: false,
-          isPublic: false,
           isImageLoading: false,
           isImageUploading: false,
           uploadedImageUrl: null,
