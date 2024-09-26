@@ -259,7 +259,7 @@ You will
 4. Extract and format these details into a valid JSON response, strictly following the schema below. 
 5. Infer any missing information based on event context, type, or general conventions.
 6. Write your JSON response by summarizing the event details from the provided data or your own inferred knowledge. Your response must be detailed, specific, and directly relevant to the JSON schema requirements.
-7. Limit events to a single time within a single day. No multi-day events. All-day events should have a specific time assigned within that day.
+7. Limit events to a single time within a <24 hour period. Only the first event from multi-day events should be captured. All-day events should have a specific time assigned within that day. Late night events can extend into the next day.
 
 Stylistically write in short, approachable, and professional language, like an editor of the Village Voice event section.
 Stick to known facts, and be concise. Use proper capitalization for all fields.
@@ -295,7 +295,7 @@ export const getPrompt = (timezone = "America/Los_Angeles") => {
   return {
     text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2024.09.26.1", // Increment the version number
+    version: "v2024.09.26.2", // Increment the version number
   };
 };
 
