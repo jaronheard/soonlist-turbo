@@ -228,7 +228,7 @@ export const systemMessage = (schema?: string) =>
 
   **Schema Adherence:**
   * **Only Valid Options**: Enum fields must only use values explicitly defined in the schema.
-  * **Omit Unknowns:** Omit fields if their values are undefined or cannot be reasonably inferred from the input.
+  * **Always Omit Unknowns:** Always completely omit fields if their values are undefined or cannot be reasonably inferred from the input. No placeholders, null, or undefined values.
 
   **Reasoning and Assumptions:**
 
