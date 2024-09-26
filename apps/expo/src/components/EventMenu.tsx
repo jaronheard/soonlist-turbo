@@ -18,8 +18,8 @@ import {
 import * as Haptics from "expo-haptics";
 import {
   CalendarPlus,
+  EyeOff,
   Globe2,
-  Lock,
   Map,
   MinusCircle,
   MoreVertical,
@@ -145,10 +145,10 @@ export function EventMenu({
         {
           title:
             event.visibility === "public"
-              ? "Remove From Discover"
-              : "Add to Discover",
-          lucideIcon: event.visibility === "public" ? Lock : Globe2,
-          systemIcon: event.visibility === "public" ? "lock" : "globe",
+              ? "Make Not Discoverable"
+              : "Make Discoverable",
+          lucideIcon: event.visibility === "public" ? EyeOff : Globe2,
+          systemIcon: event.visibility === "public" ? "eye.slash" : "globe",
         },
         {
           title: "Edit",
@@ -277,8 +277,8 @@ export function EventMenu({
       case "Add to Calendar":
         void handleAddToCal();
         break;
-      case "Add to Discover":
-      case "Remove From Discover": {
+      case "Make Not Discoverable":
+      case "Make Discoverable": {
         const newVisibility =
           event.visibility === "public" ? "private" : "public";
         void handleToggleVisibility(newVisibility);

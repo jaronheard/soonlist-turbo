@@ -6,7 +6,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera, LinkIcon, Plus, Sparkles, Text } from "lucide-react";
+import {
+  Camera,
+  EyeOff,
+  Globe2,
+  LinkIcon,
+  Plus,
+  Sparkles,
+  Text,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import type { List } from "@soonlist/db/types";
@@ -452,8 +460,14 @@ function Organize({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="public">Public</SelectItem>
-                  <SelectItem value="private">Unlisted</SelectItem>
+                  <SelectItem value="public">
+                    <Globe2 className="mr-2 inline size-4" />
+                    Discoverable
+                  </SelectItem>
+                  <SelectItem value="private">
+                    <EyeOff className="mr-2 inline size-4" />
+                    Not Discoverable
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

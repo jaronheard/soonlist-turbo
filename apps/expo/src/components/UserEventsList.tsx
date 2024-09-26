@@ -17,7 +17,7 @@ import Svg, { Path } from "react-native-svg";
 import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
-import { Globe2, Lock, MapPin, User } from "lucide-react-native";
+import { EyeOff, Globe2, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -160,6 +160,15 @@ export function UserEventListItem(props: {
               isHappeningNow ? "bg-accent-yellow" : "bg-white",
             )}
           >
+            {isOwner && (
+              <View className="absolute right-4 top-2 opacity-60">
+                {event.visibility === "public" ? (
+                  <Globe2 size={16} color="#627496" />
+                ) : (
+                  <EyeOff size={16} color="#627496" />
+                )}
+              </View>
+            )}
             <View className="mr-4 flex-1">
               <View className="mb-2">
                 <Text className="text-base font-medium text-neutral-2">
@@ -196,19 +205,6 @@ export function UserEventListItem(props: {
                   )}
                   <Text className="text-sm text-neutral-2">
                     @{eventUser.username}
-                  </Text>
-                </View>
-              ) : isOwner ? (
-                <View className="ml-0.5 flex-row items-center gap-1">
-                  {event.visibility === "public" ? (
-                    <Globe2 size={10} color="#627496" />
-                  ) : (
-                    <Lock size={10} color="#627496" />
-                  )}
-                  <Text className="text-sm text-neutral-2">
-                    {event.visibility === "public"
-                      ? "Your event is on Discover"
-                      : "Your event is unlisted"}
                   </Text>
                 </View>
               ) : null}

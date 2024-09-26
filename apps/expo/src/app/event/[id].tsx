@@ -13,7 +13,7 @@ import AutoHeightImage from "react-native-auto-height-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { Globe2, Lock, MapPin, User } from "lucide-react-native";
+import { EyeOff, Globe2, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -225,12 +225,12 @@ export default function Page() {
                 {event.visibility === "public" ? (
                   <Globe2 size={16} color="#627496" />
                 ) : (
-                  <Lock size={16} color="#627496" />
+                  <EyeOff size={16} color="#627496" />
                 )}
                 <Text className="text-sm text-neutral-2">
                   {event.visibility === "public"
-                    ? "Your event is on Discover"
-                    : "Your event is unlisted"}
+                    ? "Discoverable"
+                    : "Not Discoverable"}
                 </Text>
               </View>
             ) : (

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { SignedIn } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PenSquare, Plus } from "lucide-react";
+import { EyeOff, Globe2, PenSquare, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -181,8 +181,14 @@ export function YourDetails({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="public">Public</SelectItem>
-                        <SelectItem value="private">Unlisted</SelectItem>
+                        <SelectItem value="public">
+                          <Globe2 className="mr-2 inline size-4" />
+                          Discoverable
+                        </SelectItem>
+                        <SelectItem value="private">
+                          <EyeOff className="mr-2 inline size-4" />
+                          Not Discoverable
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
