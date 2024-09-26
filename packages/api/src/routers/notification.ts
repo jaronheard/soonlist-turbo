@@ -86,6 +86,8 @@ export const notificationRouter = createTRPCRouter({
         sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
       );
 
+    const messages: ExpoPushMessage[] = [];
+
     for (const user of usersWithTokens) {
       // Fetch upcoming events for the user
       const upcomingEvents = await db
@@ -225,27 +227,15 @@ Remember to vary your output for different weeks, maintaining the exciting and u
           },
         });
 
-        // Prepare and send the notification to each valid push token
-        const validPushTokens = usersWithTokens
-          .filter(
-            (token) =>
-              token.expoPushToken !==
-              "Error: Must use physical device for push notifications",
-          )
-          .map((token) => token.expoPushToken);
-
-        for (const expoPushToken of validPushTokens) {
-          if (Expo.isExpoPushToken(expoPushToken)) {
-            const message: ExpoPushMessage = {
-              to: expoPushToken,
-              sound: "default",
-              title,
-              body: summary,
-              data: { url: link },
-            };
-
-            await expo.sendPushNotificationsAsync([message]);
-          }
+        // Prepare the notification message for this user
+        if (Expo.isExpoPushToken(user.expoPushToken)) {
+          messages.push({
+            to: user.expoPushToken,
+            sound: "default",
+            title,
+            body: summary,
+            data: { url: link },
+          });
         }
       } catch (error) {
         console.error(
@@ -269,6 +259,16 @@ Remember to vary your output for different weeks, maintaining the exciting and u
       } finally {
         waitUntil(langfuse.flushAsync());
       }
+    }
+
+    // Send all notifications in a single batch
+    try {
+      const chunks = expo.chunkPushNotifications(messages);
+      for (const chunk of chunks) {
+        await expo.sendPushNotificationsAsync(chunk);
+      }
+    } catch (error) {
+      console.error("Error sending notifications:", error);
     }
 
     return { success: true };
