@@ -12,7 +12,6 @@ import {
   Switch,
   Text,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
@@ -430,10 +429,6 @@ const AddEventBottomSheet = React.forwardRef<
 
   const inputRef = useRef<React.ElementRef<typeof BottomSheetTextInput>>(null);
 
-  const focusInput = useCallback(() => {
-    inputRef.current?.focus();
-  }, []);
-
   useEffect(() => {
     if (onMount) {
       onMount();
@@ -518,19 +513,21 @@ const AddEventBottomSheet = React.forwardRef<
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableWithoutFeedback onPress={focusInput}>
-              <View className="mb-4 h-32 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
-                <BottomSheetTextInput
-                  ref={inputRef}
-                  className="h-full w-full"
-                  placeholder="Enter event details or paste a URL"
-                  defaultValue={input}
-                  onChangeText={handleTextChange}
-                  multiline
-                  textAlignVertical="top"
-                />
-              </View>
-            </TouchableWithoutFeedback>
+            <View className="mb-4 h-32 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
+              <BottomSheetTextInput
+                ref={inputRef}
+                // className prop doesn't work properly here, so we use style
+                style={{
+                  height: "100%",
+                  width: "100%",
+                  textAlignVertical: "top",
+                }}
+                placeholder="Enter event details or paste a URL"
+                defaultValue={input}
+                onChangeText={handleTextChange}
+                multiline
+              />
+            </View>
           )}
         </View>
         <View className="mb-4 flex-row items-center justify-between">
