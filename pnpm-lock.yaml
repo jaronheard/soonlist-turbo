@@ -124,6 +124,9 @@ importers:
       expo-haptics:
         specifier: ~12.8.1
         version: 12.8.1(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
+      expo-image:
+        specifier: ~1.10.6
+        version: 1.10.6(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
       expo-image-manipulator:
         specifier: ~11.8.0
         version: 11.8.0(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
@@ -5255,6 +5258,11 @@ packages:
 
   expo-image-picker@14.7.1:
     resolution: {integrity: sha512-ILQVOJgI3aEzrDmCFGDPtpAepYkn8mot8G7vfQ51BfFdQbzL6N3Wm1fS/ofdWlAZJl/qT2DwaIh5xYmf3SyGZA==}
+    peerDependencies:
+      expo: '*'
+
+  expo-image@1.10.6:
+    resolution: {integrity: sha512-vcnAIym1eU8vQgV1re1E7rVQZStJimBa4aPDhjFfzMzbddAF7heJuagyewiUkTzbZUwYzPaZAie6VJPyWx9Ueg==}
     peerDependencies:
       expo: '*'
 
@@ -14618,6 +14626,11 @@ snapshots:
     dependencies:
       expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
       expo-image-loader: 4.6.0(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
+
+  expo-image@1.10.6(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
+    dependencies:
+      '@react-native/assets-registry': 0.73.1
+      expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
 
   expo-json-utils@0.12.3: {}
 
