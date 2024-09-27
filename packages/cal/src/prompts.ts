@@ -135,9 +135,8 @@ export const EventSchema = z.object({
     .describe("Start date in YYYY-MM-DD format."),
   startTime: z
     .string()
-    .optional()
     .describe(
-      "Start time. ALWAYS include if known. Omit ONLY if known to be an all-day event.",
+      "Start time in 24-hour format HH:MM:SS (e.g., 14:30:00 for 2:30 PM). Always include seconds, even if they're 00.",
     ),
   endDate: z
     .string()
@@ -145,9 +144,8 @@ export const EventSchema = z.object({
     .describe("End date in YYYY-MM-DD format."),
   endTime: z
     .string()
-    .optional()
     .describe(
-      "End time. ALWAYS include, inferring if necessary. Omit ONLY known to be an all-day event.",
+      "End time in 24-hour format HH:MM:SS (e.g., 14:30:00 for 2:30 PM). Always include seconds, even if they're 00.",
     ),
   timeZone: z.string().describe("Timezone in IANA format."),
   location: z.string().describe("Location of the event."),
@@ -204,8 +202,8 @@ export const addCommonAddToCalendarProps = (events: EventWithMetadata[]) => {
       location: event.location,
       startDate: event.startDate,
       endDate: event.endDate,
-      startTime: event.startTime || undefined,
-      endTime: event.endTime || undefined,
+      startTime: event.startTime,
+      endTime: event.endTime,
       timeZone: event.timeZone,
       eventMetadata: event.eventMetadata || undefined,
     };
@@ -253,19 +251,32 @@ The current date is ${date}, and the default timezone is ${timezone} unless spec
 Below, I pasted a text or image from which to extract calendar event details.
 
 You will
-1. Identify details of the primary event mentioned in the text or image.
+1. Identify details of the primary event mentioned in the text or image.Only the first event from multi-day events should be captured.
 2. Identify the platform from which the input text was extracted, and extract all usernames @-mentioned.
 3. Remove the perspective or opinion from the input, focusing only on factual details.
 4. Extract and format these details into a valid JSON response, strictly following the schema below. 
 5. Infer any missing information based on event context, type, or general conventions.
 6. Write your JSON response by summarizing the event details from the provided data or your own inferred knowledge. Your response must be detailed, specific, and directly relevant to the JSON schema requirements.
-7. Limit events to a single time within a <24 hour period. Only the first event from multi-day events should be captured. All-day events should have a specific time assigned within that day. Late night events can extend into the next day.
+7. Limit event to a single time within a <24 hour period. Late night events can extend into the next day.
 
 Stylistically write in short, approachable, and professional language, like an editor of the Village Voice event section.
 Stick to known facts, and be concise. Use proper capitalization for all fields.
 No new adjectives/adverbs not in source text. No editorializing. No fluff. Nothing should be described as "engaging", "compelling", etc...
 Avoid using phrases like 'join us,' 'come celebrate,' or any other invitations. Instead, maintain a neutral and descriptive tone. For example, instead of saying 'Join a family-friendly bike ride,' describe it as 'A family-friendly bike ride featuring murals, light installations, and a light-up dance party.'"
 Use they/them pronouns when referring to people whose gender is not explicitly stated.
+
+## DATE AND TIME PARSING AND FORMATTING
+The system using the output requires specific date and time formatting.
+
+- There are no all-day events. Always provide start and end times.
+- Events must be limited to a single time within a 24 hour period. Only the first event from multi-day events should be captured.
+- Dates MUST be in the format YYYY-MM-DD (e.g., 2024-03-15).
+- Times MUST be in 24-hour format HH:MM:SS (e.g., 14:30:00 for 2:30 PM).
+- Always include seconds in the time, even if they're 00.
+- Always provide both startTime and endTime.
+- If start time is not explicitly stated, infer a reasonable start time based on the event type and context (e.g., 19:00:00 for an evening concert, 10:00:00 for a morning workshop).
+- If end time is not explicitly stated, infer a reasonable duration based on the event type and context (e.g., 2 hours for a movie, 3 hours for a concert, etc.).
+- Ensure the endDate is always provided and is either the same as or later than the startDate.
 `;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -295,7 +306,7 @@ export const getPrompt = (timezone = "America/Los_Angeles") => {
   return {
     text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2024.09.26.2", // Increment the version number
+    version: "v2024.09.26.3", // Increment the version number
   };
 };
 

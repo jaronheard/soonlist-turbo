@@ -336,8 +336,6 @@ export const aiRouter = createTRPCRouter({
       const systemMetadata = getSystemMessageMetadata();
       const prompt = getPrompt(input.timezone);
 
-      console.log("systemMetadata", systemMetadata);
-
       // START - duplicated except for input with eventFromRawText
       const generateObjectWithLogging = async <T>(
         generateObjectOptions: Parameters<typeof generateObject<T>>[0],
