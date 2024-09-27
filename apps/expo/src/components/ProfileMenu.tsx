@@ -73,9 +73,9 @@ export function ProfileMenu() {
               style={{
                 width: 40,
                 height: 40,
-                borderRadius: 20,
+                borderRadius: 9999,
                 borderWidth: 2,
-                borderColor: "#FFD700",
+                borderColor: "#FEEA9F",
               }}
               contentFit="cover"
             />

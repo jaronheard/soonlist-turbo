@@ -198,7 +198,7 @@ export function UserEventListItem(props: {
                   {eventUser.userImage ? (
                     <Image
                       source={{ uri: eventUser.userImage }}
-                      style={{ width: 16, height: 16, borderRadius: 8 }}
+                      style={{ width: 16, height: 16, borderRadius: 9999 }}
                       contentFit="cover"
                     />
                   ) : (
@@ -214,7 +214,7 @@ export function UserEventListItem(props: {
               {e.images?.[3] ? (
                 <Image
                   source={{ uri: e.images[3] }}
-                  style={{ width: 80, height: 80, borderRadius: 8 }}
+                  style={{ width: 80, height: 80, borderRadius: 20 }}
                   contentFit="cover"
                 />
               ) : (
