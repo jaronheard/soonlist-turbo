@@ -16,9 +16,8 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
             require("../assets/onboarding-events-collage.png") as ImageSourcePropType
           }
-          style={{ width: "100%", height: 160 }}
+          style={{ width: "100%", height: 160, marginBottom: 24 }}
           contentFit="contain"
-          className="mb-6"
         />
 
         <Text className="mb-6 text-center text-xl">
