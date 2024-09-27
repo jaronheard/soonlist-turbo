@@ -1,11 +1,12 @@
 import React from "react";
-import { Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import {
   Menu,
   MenuOption,
   MenuOptions,
   MenuTrigger,
 } from "react-native-popup-menu";
+import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
@@ -67,11 +68,16 @@ export function ProfileMenu() {
       >
         <View className="rounded-full p-1">
           {user?.imageUrl ? (
-            <Image
+            <ExpoImage
               source={{ uri: user.imageUrl }}
-              className="h-10 w-10 rounded-full border-2 border-accent-yellow"
-              width={28}
-              height={28}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 9999,
+                borderWidth: 2,
+                borderColor: "#FEEA9F",
+              }}
+              contentFit="cover"
             />
           ) : (
             <User size={20} color="#5A32FB" />

@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   RefreshControl,
   Text,
@@ -14,6 +13,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
+import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
@@ -198,7 +198,8 @@ export function UserEventListItem(props: {
                   {eventUser.userImage ? (
                     <Image
                       source={{ uri: eventUser.userImage }}
-                      className="h-4 w-4 rounded-full"
+                      style={{ width: 16, height: 16, borderRadius: 9999 }}
+                      contentFit="cover"
                     />
                   ) : (
                     <User size={16} color="#627496" />
@@ -213,8 +214,8 @@ export function UserEventListItem(props: {
               {e.images?.[3] ? (
                 <Image
                   source={{ uri: e.images[3] }}
-                  className="h-20 w-20 rounded-md"
-                  resizeMode="cover"
+                  style={{ width: 80, height: 80, borderRadius: 20 }}
+                  contentFit="cover"
                 />
               ) : (
                 <View className="h-20 w-20 rounded-md bg-accent-yellow" />

@@ -1,6 +1,7 @@
 import type { ImageSourcePropType } from "react-native";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image } from "expo-image";
 
 interface GoogleSignInButtonProps {
   onPress: () => void;
@@ -16,6 +17,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
           // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
           source={require("../assets/google-logo.png") as ImageSourcePropType}
           style={styles.logo}
+          contentFit="contain"
         />
         <Text style={styles.text}>Continue with Google</Text>
       </View>

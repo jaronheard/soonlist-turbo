@@ -8,13 +8,13 @@ import React, {
 } from "react";
 import {
   ActivityIndicator,
-  Image,
   Switch,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
+import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -479,7 +479,7 @@ const AddEventBottomSheet = React.forwardRef<
               <Image
                 source={{ uri: imagePreview }}
                 style={{ width: "100%", height: 124 }}
-                className="rounded-md"
+                contentFit="cover"
               />
               <TouchableOpacity
                 onPress={clearPreview}

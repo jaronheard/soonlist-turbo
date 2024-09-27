@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
-  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,6 +10,7 @@ import {
 } from "react-native";
 import AutoHeightImage from "react-native-auto-height-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Image } from "expo-image";
 import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { EyeOff, Globe2, MapPin, User } from "lucide-react-native";
@@ -238,7 +238,8 @@ export default function Page() {
                 {event.user.userImage ? (
                   <Image
                     source={{ uri: event.user.userImage }}
-                    className="h-5 w-5 rounded-full"
+                    style={{ width: 20, height: 20, borderRadius: 10 }}
+                    contentFit="cover"
                   />
                 ) : (
                   <User size={20} color="#627496" />
