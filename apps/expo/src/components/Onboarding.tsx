@@ -1,6 +1,7 @@
 import type { ImageSourcePropType } from "react-native";
 import React from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Image } from "expo-image";
 
 export function Onboarding({ onComplete }: { onComplete: () => void }) {
   return (
@@ -15,8 +16,9 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
             require("../assets/onboarding-events-collage.png") as ImageSourcePropType
           }
-          className="mb-6 h-40 w-full"
-          resizeMode="contain"
+          style={{ width: "100%", height: 160 }}
+          contentFit="contain"
+          className="mb-6"
         />
 
         <Text className="mb-6 text-center text-xl">

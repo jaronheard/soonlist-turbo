@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import { Stack, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
@@ -187,13 +188,10 @@ const SignInWithOAuth = () => {
           <Text className="mb-4 text-center text-lg text-gray-500">
             The best way to add, organize, and share events.
           </Text>
-          <Image
-            source={
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
-              require("../assets/onboarding-events-collage.png") as ImageSourcePropType
-            }
+          <ExpoImage
+            source={require("../assets/onboarding-events-collage.png")}
             style={{ height: height * 0.3, width: "100%", maxHeight: 250 }}
-            resizeMode="contain"
+            contentFit="contain"
           />
           <Text className="my-4 text-center text-base text-gray-600">
             Join Soonlist to start capturing and sharing events that inspire
