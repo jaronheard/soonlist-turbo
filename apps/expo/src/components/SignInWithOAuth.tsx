@@ -1,8 +1,6 @@
 import type { OAuthStrategy } from "@clerk/types";
-import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
 import {
-  Image,
   Pressable,
   ScrollView,
   Text,
@@ -189,6 +187,7 @@ const SignInWithOAuth = () => {
             The best way to add, organize, and share events.
           </Text>
           <ExpoImage
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             source={require("../assets/onboarding-events-collage.png")}
             style={{ height: height * 0.3, width: "100%", maxHeight: 250 }}
             contentFit="contain"

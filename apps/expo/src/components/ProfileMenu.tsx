@@ -1,5 +1,5 @@
 import React from "react";
-import { Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import {
   Menu,
   MenuOption,
