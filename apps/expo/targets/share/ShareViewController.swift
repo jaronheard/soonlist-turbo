@@ -1,4 +1,7 @@
 import UIKit
+import UniformTypeIdentifiers
+import ImageIO
+import MobileCoreServices
 
 class ShareViewController: UIViewController {
   let isProdBundle = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share")
@@ -64,10 +67,11 @@ class ShareViewController: UIViewController {
     do {
         if let dataUri = try await item.loadItem(forTypeIdentifier: "public.image") as? URL {
             let data = try Data(contentsOf: dataUri)
-            let image = UIImage(data: data)
-            imageUriInfo = self.saveImageWithInfo(image)
+            if let image = UIImage(data: data) {
+                imageUriInfo = self.compressAndSaveImage(image)
+            }
         } else if let image = try await item.loadItem(forTypeIdentifier: "public.image") as? UIImage {
-            imageUriInfo = self.saveImageWithInfo(image)
+            imageUriInfo = self.compressAndSaveImage(image)
         }
     } catch {
         valid = false
@@ -81,6 +85,57 @@ class ShareViewController: UIViewController {
     }
 
     self.completeRequest()
+  }
+
+  private func compressAndSaveImage(_ image: UIImage) -> String? {
+    guard let dir = FileManager().containerURL(forSecurityApplicationGroupIdentifier: self.appGroup) else {
+        return nil
+    }
+
+    let fileName = "\(ProcessInfo.processInfo.globallyUniqueString).jpeg"
+    let fileURL = dir.appendingPathComponent(fileName)
+
+    guard let destination = CGImageDestinationCreateWithURL(fileURL as CFURL, UTType.jpeg.identifier as CFString, 1, nil) else {
+        return nil
+    }
+
+    let maxDimension: CGFloat = 1200
+    let options: [CFString: Any] = [
+        kCGImageSourceCreateThumbnailFromImageAlways: true,
+        kCGImageSourceCreateThumbnailWithTransform: true,
+        kCGImageSourceThumbnailMaxPixelSize: maxDimension,
+        kCGImageDestinationLossyCompressionQuality: 0.7
+    ]
+
+    CGImageDestinationAddImage(destination, image.cgImage!, options as CFDictionary)
+    
+    if CGImageDestinationFinalize(destination) {
+        return "\(fileURL.absoluteString)|\(image.size.width)|\(image.size.height)"
+    } else {
+        return nil
+    }
+  }
+
+  private func resizeImage(_ image: UIImage, targetSize: CGSize) -> UIImage {
+    let size = image.size
+    let widthRatio  = targetSize.width  / size.width
+    let heightRatio = targetSize.height / size.height
+    let newSize: CGSize
+    
+    if widthRatio > heightRatio {
+        newSize = CGSize(width: size.width * heightRatio, height: size.height * heightRatio)
+    } else {
+        newSize = CGSize(width: size.width * widthRatio,  height: size.height * widthRatio)
+    }
+    
+    let rect = CGRect(x: 0, y: 0, width: newSize.width, height: newSize.height)
+    
+    UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+    image.draw(in: rect)
+    let newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+    
+    return newImage ?? image
   }
 
   private func saveImageWithInfo(_ image: UIImage?) -> String? {
