@@ -9,6 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Mirror main to preview
-        uses: zofrex/mirror-branch@v1
+        uses: zofrex/mirror-branch@v1.0.4
         with:
           target-branch: "preview"
