@@ -1,4 +1,4 @@
-name: Sync main branch to preview
+name: Mirror main to preview
 
 on:
   push:
@@ -6,9 +6,14 @@ on:
       - main
 
 jobs:
-  mirror-to-main:
+  sync-branch:
+    name: Update test branch
     runs-on: ubuntu-latest
     steps:
-      - uses: zofrex/mirror-branch@v1
+      - name: Checkout repository
+        uses: actions/checkout@master
+      - uses: connor-baer/action-sync-branch@main
         with:
-          target-branch: preview
+          branch: preview
+          token: ${{ secrets.GITHUB_TOKEN }}
+          force: false
