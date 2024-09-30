@@ -30,6 +30,7 @@ import type {
 import type { Comment, EventFollow, List, User } from "@soonlist/db/types";
 import {
   eventTimesAreDefined,
+  formatCompactTimeRange,
   formatRelativeTime,
   getDateInfoUTC,
   getDateTimeInfo,
@@ -1069,22 +1070,10 @@ function DateAndTimeDisplay({
           suppressHydrationWarning
         >
           <div>
-            {startDateInfo.dayOfWeek.substring(0, 3)}
-            {", "}
-            {startDateInfo.month}/{startDateInfo.day}/
-            {startDateInfo.year.toString().substring(2, 4)}
-          </div>
-          <div
-            className={cn(
-              "mx-1 hidden text-neutral-3 sm:block",
-              variant === "compact" && "sm:hidden",
-            )}
-          >
-            {"//"}
-          </div>
-          <div>
-            {timeFormatDateInfo(startDateInfo)}-
-            {timeFormatDateInfo(endDateInfo)}
+            {startDateInfo.dayOfWeek.substring(0, 3)}{" "}
+            {startDateInfo.monthName.substring(0, 3)} {startDateInfo.day}
+            {" • "}
+            {formatCompactTimeRange(startDateInfo, endDateInfo)}
           </div>
         </div>
       )}
