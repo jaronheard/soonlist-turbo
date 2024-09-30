@@ -490,13 +490,11 @@ function EventDetails({
       <div className="flex w-full flex-col items-start gap-2">
         <Link
           href={preview ? "" : `/event/${id}`}
-          className={
-            "line-clamp-3 pr-12 text-2.5xl font-bold leading-9 tracking-[0.56px] text-neutral-1"
-          }
+          className={"line-clamp-3 font-bold text-neutral-1"}
         >
           {name}
         </Link>
-        <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
+        <div className="flex-start flex gap-2 ">
           {location && (
             <Link
               href={`https://www.google.com/maps/search/?api=1&query=${location}`}
@@ -792,14 +790,10 @@ export function EventListItem(props: EventListItemProps) {
   const image =
     event.images?.[3] ||
     (filePath ? buildDefaultUrl(props.filePath || "") : undefined);
-  // const comment = props.comments?.filter((item) => item.userId === user?.id).pop();
-  // always show curator if !isSelf
-  // const showOtherCurators = !isSelf && props.showOtherCurators;
-  // const showCurator = showOtherCurators || !props.hideCurator;
 
   if (!props.variant || props.variant === "minimal") {
     return (
-      <div className="relative">
+      <div className="relative border-b border-neutral-3 pb-6 last:border-b-0">
         {image && (
           <Link href={`/event/${id}`}>
             <Image
@@ -828,10 +822,10 @@ export function EventListItem(props: EventListItemProps) {
           />
         )}
         <li
-          className={cn(
-            "relative grid overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
-            { "lg:pl-16": !!image, "bg-accent-yellow/50": props.happeningNow },
-          )}
+          className={cn("relative", {
+            "lg:pl-16": !!image,
+            "bg-accent-yellow/50": props.happeningNow,
+          })}
         >
           <div className="absolute bottom-2 left-2 z-10 flex gap-2 p-1">
             {user &&
@@ -875,7 +869,7 @@ export function EventListItem(props: EventListItemProps) {
               />
             </div>
           )}
-          <div className="flex w-full items-start gap-7">
+          <div className="flex w-full items-start">
             <EventDetails
               id={id}
               name={event.name!}
@@ -886,7 +880,6 @@ export function EventListItem(props: EventListItemProps) {
               endTime={event.endTime!}
               timezone={event.timeZone || "America/Los_Angeles"}
               location={event.location}
-              // description={event.description}
               EventActionButtons={
                 <EventActionButtons
                   user={user}
@@ -1050,11 +1043,11 @@ function DateAndTimeDisplay({
   variant?: "default" | "compact";
 }) {
   return (
-    <div className="flex flex-col gap-2 pr-12 text-lg font-medium leading-none">
+    <div className="flex flex-col gap-2 leading-none">
       {isClient && eventTimesAreDefined(startTime, endTime) && (
         <div
           className={cn(
-            "flex flex-col text-neutral-2 sm:flex-row",
+            "flex flex-col text-xs text-neutral-2 sm:flex-row",
             variant === "compact" && "sm:flex-col",
           )}
           suppressHydrationWarning
