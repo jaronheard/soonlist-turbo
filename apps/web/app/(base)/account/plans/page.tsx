@@ -24,11 +24,13 @@ export default async function Page() {
     {},
   );
 
-  const currentPlan = sessionClaims.publicMetadata?.plan?.name || "free";
   const currentPlanStatus =
     sessionClaims.publicMetadata?.plan?.status || "no plan";
   const planActive =
     currentPlanStatus === "active" || currentPlanStatus === "trialing";
+  const currentPlan = planActive
+    ? sessionClaims.publicMetadata?.plan?.name || "free"
+    : "free";
 
   return (
     <Pricing

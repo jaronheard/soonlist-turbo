@@ -29,7 +29,7 @@ You'll need to create a `.env.local` file in the root of the project and an `.en
 
 ## Ngrok Setup
 
-Ngrok is used for exposing your local development server to receive webhooks from services such as Clerk and Stripe, and is also necessary for developing the mobile app. Follow these steps:
+Ngrok is used for exposing your local development server for developing the mobile app. Follow these steps:
 
 1. Sign up for a free account at [ngrok.com](https://ngrok.com/).
 
@@ -53,18 +53,18 @@ Ngrok is used for exposing your local development server to receive webhooks fro
    - IMPORTANT: you'll need to create new webooks for each service and add the signing secret for each one. Contact @jaronheard for this.
    - Note the edge ID (it should look like `edghts_XXXXXXXXXXXXXXXXX`).
 
-5. Update your `.env` file with the new edge ID:
+5. Add your personal ngrok script to the package.json file:
 
-   ```
-   NGROK_EDGE=edghts_XXXXXXXXXXXXXXXXX
+   ```diff
+   + "ngrok-YOURNAME": "ngrok tunnel --label edge=edghts_XXXXXXXXXXXXXXXXX http://localhost:3000",
    ```
 
 6. Run the ngrok tunnel:
    ```bash
-   pnpm ngrok
+   pnpm ngrok-YOURNAME
    ```
 
-Note: Each developer will need to create their own ngrok endpoint and set up their own webhooks. Signing secrets should not be shared and should be kept secure in each developer's individual `.env` file.
+Note: Each developer will need to create their own ngrok endpoint for mobile app development.
 
 ## Run the project
 
@@ -75,7 +75,7 @@ pnpm dev
 Simultaneously in another terminal, for webhooks and mobile app development:
 
 ```bash
-pnpm ngrok
+pnpm ngrok-YOURNAME
 ```
 
 # Notes
