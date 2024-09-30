@@ -370,8 +370,8 @@ export function formatCompactTimeRange(start: DateInfo, end: DateInfo): string {
   const endPeriod = end.hour < 12 ? 'am' : 'pm';
 
   if (startPeriod === endPeriod) {
-    return `${startHour}${startMinute}-${endHour}${endMinute}${endPeriod}`;
+    return `${startHour}${startMinute}–${endHour}${endMinute}${endPeriod}`;
   } else {
-    return `${startHour}${startMinute}${startPeriod}-${endHour}${endMinute}${endPeriod}`;
+    return `${startHour}${startMinute}${startPeriod}–${endHour}${endMinute}${endPeriod}`;
   }
 }
