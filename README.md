@@ -27,44 +27,9 @@ pnpm install
 
 You'll need to create a `.env.local` file in the root of the project and an `.env.production file` in the root of the project. Contact @jaronheard for the values for these files.
 
-## Ngrok Setup
+## Local webhooks
 
-Ngrok is used for exposing your local development server to receive webhooks from services such as Clerk and Stripe, and is also necessary for developing the mobile app. Follow these steps:
-
-1. Sign up for a free account at [ngrok.com](https://ngrok.com/).
-
-2. Install the ngrok CLI globally:
-
-   ```bash
-   npm install -g ngrok
-   ```
-
-3. Authenticate your ngrok CLI:
-
-   ```bash
-   ngrok authtoken YOUR_NGROK_AUTH_TOKEN
-   ```
-
-4. Create a new ngrok edge:
-
-   - Go to the [ngrok dashboard](https://dashboard.ngrok.com/).
-   - Navigate to "Cloud Edge" > "Edges" and click "New Edge".
-   - Configure the edge with the appropriate settings for this project. Contact @jaronheard for this.
-   - IMPORTANT: you'll need to create new webooks for each service and add the signing secret for each one. Contact @jaronheard for this.
-   - Note the edge ID (it should look like `edghts_XXXXXXXXXXXXXXXXX`).
-
-5. Update your `.env` file with the new edge ID:
-
-   ```
-   NGROK_EDGE=edghts_XXXXXXXXXXXXXXXXX
-   ```
-
-6. Run the ngrok tunnel:
-   ```bash
-   pnpm ngrok
-   ```
-
-Note: Each developer will need to create their own ngrok endpoint and set up their own webhooks. Signing secrets should not be shared and should be kept secure in each developer's individual `.env` file.
+A webhook server for the development environment is deployed to Vercel. No local development webhook server is needed.
 
 ## Run the project
 
