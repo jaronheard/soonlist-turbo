@@ -479,7 +479,7 @@ function EventDetails({
   }
 
   return (
-    <div className="flex w-full flex-col items-start justify-center gap-2">
+    <div className="">
       <DateAndTimeDisplay
         endDateInfo={endDateInfo}
         endTime={endTime}
@@ -487,56 +487,32 @@ function EventDetails({
         startDateInfo={startDateInfo}
         startTime={startTime}
       />
-      <div className="flex w-full flex-col items-start gap-2">
+      <div className="">
         <Link
           href={preview ? "" : `/event/${id}`}
-          className={"line-clamp-3 font-bold text-neutral-1"}
+          className={
+            "line-clamp-2 pb-1 text-lg font-bold leading-tight text-neutral-1"
+          }
         >
           {name}
         </Link>
-        <div className="flex-start flex gap-2 ">
+        <div className="text-xs">
           {location && (
             <Link
               href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-              className="line-clamp-1 flex shrink items-center gap-0.5 break-all text-neutral-2"
+              className="line-clamp-1  break-all text-neutral-2"
             >
-              <MapPin className="size-4 flex-shrink-0" />
-              <span className="line-clamp-1">{location}</span>
+              <MapPin className="-mt-0.5 inline size-3" />
+              <span className="inline">{location}</span>
             </Link>
           )}
         </div>
-        {/* full width image with a max height, fill container to width */}
-        {image && (
-          <div
-            className={cn("relative h-32 w-full grow sm:h-56", {
-              "lg:hidden": !preview,
-            })}
-          >
-            <Image
-              className="rounded-xl object-cover"
-              src={image}
-              alt=""
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-              priority
-            />
-          </div>
-        )}
+
+        {/* TODO: 
         <div className="pt-2">
           <EventDescription description={description} truncate />
         </div>
-        {/* {!preview && (
-          <Link
-            href={`/event/${id}`}
-            className={cn(
-              buttonVariants({ variant: "link" }),
-              "group h-full p-0",
-            )}
-          >
-            Learn more{" "}
-            <ArrowRight className="ml-1 size-4 text-interactive-2 " />
-          </Link>
-        )} */}
+        */}
         {preview && (
           <div className="w-full">
             <EventMetadataDisplay metadata={metadata} />
@@ -765,7 +741,7 @@ export function UserInfoMini({
         />
       </Link>
       <Link href={`/${username}/events`} className="group flex items-center">
-        <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
+        <p className="text-xs text-gray-500 group-hover:text-gray-700">
           @{username}
         </p>
       </Link>
@@ -793,17 +769,25 @@ export function EventListItem(props: EventListItemProps) {
 
   if (!props.variant || props.variant === "minimal") {
     return (
-      <div className="relative border-b border-neutral-3 pb-6 last:border-b-0">
+      <div className="relative border-b border-neutral-100 pb-1 last:border-b-0">
         {image && (
-          <Link href={`/event/${id}`}>
-            <Image
-              className="absolute left-0 top-7 z-10 hidden size-20 -translate-x-1/2 rounded-xl object-cover lg:block"
-              src={image}
-              alt=""
-              width={375}
-              height={375}
-            />
-          </Link>
+          <div className="absolute right-0 top-0 h-full w-[75px] overflow-hidden rounded-xl">
+            <Link
+              href={`/event/${id}`}
+              className="relative block h-full w-full"
+            >
+              <div className="relative h-[calc(100%-8px)] w-full overflow-hidden rounded-xl">
+                <Image
+                  className="object-cover"
+                  src={image}
+                  alt=""
+                  fill
+                  sizes="75px"
+                  style={{ objectPosition: "center" }}
+                />
+              </div>
+            </Link>
+          </div>
         )}
         {props.happeningNow && (
           <Badge
@@ -822,12 +806,35 @@ export function EventListItem(props: EventListItemProps) {
           />
         )}
         <li
-          className={cn("relative", {
-            "lg:pl-16": !!image,
+          className={cn("relative pr-[85px]", {
             "bg-accent-yellow/50": props.happeningNow,
           })}
         >
-          <div className="absolute bottom-2 left-2 z-10 flex gap-2 p-1">
+          <div className="flex w-full items-start">
+            <EventDetails
+              id={id}
+              name={event.name!}
+              image={image}
+              startDate={event.startDate!}
+              endDate={event.endDate!}
+              startTime={event.startTime!}
+              endTime={event.endTime!}
+              timezone={event.timeZone || "America/Los_Angeles"}
+              location={event.location}
+              EventActionButtons={
+                <EventActionButtons
+                  user={user}
+                  event={event as AddToCalendarButtonPropsRestricted}
+                  id={id}
+                  isOwner={!!isOwner}
+                  isFollowing={isFollowing}
+                  visibility={props.visibility}
+                  variant={props.variant === "minimal" ? "none" : undefined}
+                />
+              }
+            />
+          </div>
+          <div className=" p-1">
             {user &&
               lists &&
               lists.length > 0 &&
@@ -855,8 +862,10 @@ export function EventListItem(props: EventListItemProps) {
               </Badge>
             )}
           </div>
+          {/* TODO: Add back in the action buttons
+          
           {props.variant === "minimal" && (
-            <div className="absolute bottom-2 right-2 z-10 p-1">
+            <div className="">
               <EventActionButtons
                 user={user}
                 event={event as AddToCalendarButtonPropsRestricted}
@@ -868,31 +877,7 @@ export function EventListItem(props: EventListItemProps) {
                 size="sm"
               />
             </div>
-          )}
-          <div className="flex w-full items-start">
-            <EventDetails
-              id={id}
-              name={event.name!}
-              image={image}
-              startDate={event.startDate!}
-              endDate={event.endDate!}
-              startTime={event.startTime!}
-              endTime={event.endTime!}
-              timezone={event.timeZone || "America/Los_Angeles"}
-              location={event.location}
-              EventActionButtons={
-                <EventActionButtons
-                  user={user}
-                  event={event as AddToCalendarButtonPropsRestricted}
-                  id={id}
-                  isOwner={!!isOwner}
-                  isFollowing={isFollowing}
-                  visibility={props.visibility}
-                  variant={props.variant === "minimal" ? "none" : undefined}
-                />
-              }
-            />
-          </div>
+          )} */}
         </li>
       </div>
     );
@@ -949,7 +934,7 @@ export function EventListItem(props: EventListItemProps) {
         </div>
       </div>
       <div className="p-3"></div>
-      <div className="absolute bottom-2 left-2 z-10 flex gap-2 p-1">
+      <div className="absolute bottom-2 left-2 z-10 flex gap-2">
         {user &&
           lists &&
           lists.length > 0 &&
@@ -1047,17 +1032,15 @@ function DateAndTimeDisplay({
       {isClient && eventTimesAreDefined(startTime, endTime) && (
         <div
           className={cn(
-            "flex flex-col text-xs text-neutral-2 sm:flex-row",
+            "flex flex-col text-xs uppercase text-neutral-2 sm:flex-row",
             variant === "compact" && "sm:flex-col",
           )}
           suppressHydrationWarning
         >
-          <div>
-            {startDateInfo.dayOfWeek.substring(0, 3)}{" "}
-            {startDateInfo.monthName.substring(0, 3)} {startDateInfo.day}
-            {" • "}
-            {formatCompactTimeRange(startDateInfo, endDateInfo)}
-          </div>
+          {startDateInfo.dayOfWeek.substring(0, 3)}{" "}
+          {startDateInfo.monthName.substring(0, 3)} {startDateInfo.day}
+          {" • "}
+          {formatCompactTimeRange(startDateInfo, endDateInfo)}
         </div>
       )}
     </div>

@@ -47,7 +47,7 @@ function ListContainer({
   }
 
   return (
-    <ul role="list" className="flex max-w-full flex-col gap-4">
+    <ul role="list" className="flex max-w-full flex-col gap-3">
       {children}
     </ul>
   );
