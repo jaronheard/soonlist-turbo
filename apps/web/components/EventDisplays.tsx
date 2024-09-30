@@ -429,6 +429,7 @@ function EventDetails({
   preview,
   EventActionButtons,
   metadata,
+  happeningNow,
 }: {
   id: string;
   name: string;
@@ -444,6 +445,7 @@ function EventDetails({
   preview?: boolean;
   metadata?: EventMetadataDisplay;
   variant?: "minimal";
+  happeningNow?: boolean;
 }) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
@@ -486,6 +488,7 @@ function EventDetails({
         isClient={isClient}
         startDateInfo={startDateInfo}
         startTime={startTime}
+        happeningNow={happeningNow}
       />
       <div className="">
         <Link
@@ -789,27 +792,23 @@ export function EventListItem(props: EventListItemProps) {
             </Link>
           </div>
         )}
-        {props.happeningNow && (
+        {/* {props.happeningNow && (
           <Badge
             className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1"
             disabled
             variant="yellow"
           >
-            Happening Now
+            Happening Now, dude
           </Badge>
-        )}
-        {event.startTime && event.startDate && (
+        )} */}
+        {/* {event.startTime && event.startDate && (
           <HappeningSoonBadge
             startTime={event.startTime}
             startDate={event.startDate}
             timezone={event.timeZone || "America/Los_Angeles"}
           />
-        )}
-        <li
-          className={cn("relative pr-[85px]", {
-            "bg-accent-yellow/50": props.happeningNow,
-          })}
-        >
+        )} */}
+        <li className="relative pr-[85px]">
           <div className="flex w-full items-start">
             <EventDetails
               id={id}
@@ -821,6 +820,7 @@ export function EventListItem(props: EventListItemProps) {
               endTime={event.endTime!}
               timezone={event.timeZone || "America/Los_Angeles"}
               location={event.location}
+              happeningNow={props.happeningNow}
               EventActionButtons={
                 <EventActionButtons
                   user={user}
@@ -1013,6 +1013,7 @@ export function EventPreview(
 }
 
 function DateAndTimeDisplay({
+  happeningNow,
   endDateInfo,
   endTime,
   isClient,
@@ -1020,6 +1021,7 @@ function DateAndTimeDisplay({
   startTime,
   variant = "default",
 }: {
+  happeningNow?: boolean;
   endDateInfo: DateInfo;
   endTime?: string;
   isClient: boolean;
@@ -1032,15 +1034,34 @@ function DateAndTimeDisplay({
       {isClient && eventTimesAreDefined(startTime, endTime) && (
         <div
           className={cn(
-            "flex flex-col text-xs uppercase text-neutral-2 sm:flex-row",
+            " text-xs uppercase text-neutral-2",
             variant === "compact" && "sm:flex-col",
           )}
           suppressHydrationWarning
         >
-          {startDateInfo.dayOfWeek.substring(0, 3)}{" "}
-          {startDateInfo.monthName.substring(0, 3)} {startDateInfo.day}
-          {" • "}
-          {formatCompactTimeRange(startDateInfo, endDateInfo)}
+          <span>
+            {startDateInfo.dayOfWeek.substring(0, 3)}{" "}
+            {startDateInfo.monthName.substring(0, 3)} {startDateInfo.day}
+            {" • "}
+            {formatCompactTimeRange(startDateInfo, endDateInfo)}
+          </span>
+          {happeningNow && (
+            <span className="ml-1 rounded-full bg-yellow-100 px-1 text-yellow-700">
+              Now!
+            </span>
+          )}
+          {/* {happeningNow && (
+            <span className="ml-1 rounded-full bg-yellow-100 px-1 text-yellow-700">
+              Soon!
+            </span>
+          )} */}
+          {/* {startTime && startDateInfo && (
+            <HappeningSoonBadge
+              startTime={startTime}
+            startDate={startDate}
+            timezone={timeZone || "America/Los_Angeles"}
+            />
+          )} */}
         </div>
       )}
     </div>
