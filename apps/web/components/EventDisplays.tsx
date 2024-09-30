@@ -875,16 +875,6 @@ export function EventListItem(props: EventListItemProps) {
               />
             </div>
           )}
-          <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
-          <div className="absolute right-0 top-0 p-3">
-            <EventDateDisplaySimple
-              startDate={event.startDate}
-              startTime={event.startTime}
-              endDate={event.endDate}
-              endTime={event.endTime}
-              timezone={event.timeZone || "America/Los_Angeles"}
-            />
-          </div>
           <div className="flex w-full items-start gap-7">
             <EventDetails
               id={id}
