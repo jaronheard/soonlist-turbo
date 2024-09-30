@@ -1,0 +1,14 @@
+name: Mirror Main to Preview
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  mirror-to-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mirror main to preview
+        uses: zofrex/mirror-branch@v1
+        with:
+          target-branch: "preview"
