@@ -195,6 +195,7 @@ export default function Page() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        maximumZoomScale={5}
       >
         <View className="p-4">
           <View className="flex flex-col gap-5">
