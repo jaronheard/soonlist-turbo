@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Dimensions,
   Pressable,
   RefreshControl,
   Text,
@@ -138,7 +137,6 @@ export function UserEventListItem(props: {
 
   const isOwner = isCurrentUser;
 
-  const { width } = Dimensions.get("window");
   const maxImageWidth = 1284; // 3x the largest iPhone width (428 * 3)
   const imageWidth = Math.min(160 * 3, maxImageWidth);
   const roundedImageWidth = Math.ceil(imageWidth / 100) * 100;
