@@ -107,7 +107,19 @@ class ShareViewController: UIViewController {
         kCGImageDestinationLossyCompressionQuality: 0.7
     ]
 
-    CGImageDestinationAddImage(destination, image.cgImage!, options as CFDictionary)
+    // Create a drawing context and draw the image with the correct orientation
+    UIGraphicsBeginImageContextWithOptions(image.size, false, image.scale)
+    defer { UIGraphicsEndImageContext() }
+    
+    image.draw(in: CGRect(origin: .zero, size: image.size))
+    
+    guard let normalizedImage = UIGraphicsGetImageFromCurrentImageContext(),
+          let cgImage = normalizedImage.cgImage else {
+        return nil
+    }
+
+    // Add the normalized image to the destination
+    CGImageDestinationAddImage(destination, cgImage, options as CFDictionary)
     
     if CGImageDestinationFinalize(destination) {
         return "\(fileURL.absoluteString)|\(image.size.width)|\(image.size.height)"
