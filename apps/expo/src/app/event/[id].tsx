@@ -275,7 +275,9 @@ export default function Page() {
                 }}
               >
                 <AutoHeightImage
-                  source={{ uri: eventData.images[3] }}
+                  source={{
+                    uri: `${eventData.images[3]}?max-w=1284&fit=cover&f=webp&q=80`,
+                  }}
                   width={width - 32}
                   onLoad={() => setImageLoaded(true)}
                 />

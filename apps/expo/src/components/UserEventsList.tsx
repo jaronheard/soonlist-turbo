@@ -213,7 +213,9 @@ export function UserEventListItem(props: {
             <View className="relative flex items-center justify-center">
               {e.images?.[3] ? (
                 <Image
-                  source={{ uri: e.images[3] }}
+                  source={{
+                    uri: `${e.images[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
+                  }}
                   style={{ width: 80, height: 80, borderRadius: 20 }}
                   contentFit="cover"
                 />
