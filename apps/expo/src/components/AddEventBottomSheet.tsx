@@ -11,6 +11,7 @@ import {
   Switch,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
@@ -48,7 +49,15 @@ const AddEventBottomSheet = React.forwardRef<
   BottomSheetModal,
   AddEventBottomSheetProps
 >(({ onMount }, ref) => {
-  const snapPoints = useMemo(() => [388], []);
+  const { fontScale } = useWindowDimensions();
+
+  const snapPoints = useMemo(() => {
+    const baseHeight = 388;
+    const additionalHeight = Math.round(baseHeight * (fontScale - 1) * 0.25);
+    const scaledHeight = baseHeight + additionalHeight;
+    return [scaledHeight];
+  }, [fontScale]);
+
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
   const eventFromRawTextAndNotification =
@@ -411,7 +420,7 @@ const AddEventBottomSheet = React.forwardRef<
       props: React.JSX.IntrinsicAttributes & BottomSheetDefaultFooterProps,
     ) => (
       <BottomSheetFooter {...props} bottomInset={24}>
-        <View className="px-4 pb-4">
+        <View className={`px-4 pb-4 ${fontScale > 1.3 ? "pt-4" : ""}`}>
           <TouchableOpacity
             className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2"
             onPress={handleCreateEvent}
@@ -433,7 +442,14 @@ const AddEventBottomSheet = React.forwardRef<
         </View>
       </BottomSheetFooter>
     );
-  }, [handleCreateEvent, isCreating, input, imagePreview, linkPreview]);
+  }, [
+    handleCreateEvent,
+    isCreating,
+    input,
+    imagePreview,
+    linkPreview,
+    fontScale,
+  ]);
 
   const inputRef = useRef<React.ElementRef<typeof BottomSheetTextInput>>(null);
 
@@ -538,7 +554,9 @@ const AddEventBottomSheet = React.forwardRef<
             </View>
           )}
         </View>
-        <View className="mb-4 flex-row items-center justify-between">
+        <View
+          className={`mb-4 flex-row items-center justify-between ${fontScale > 1.3 ? "pb-4" : ""}`}
+        >
           <View className="flex-row items-center gap-2">
             <Globe2 size={20} color="black" />
             <Text className="text-base font-medium">Make Discoverable</Text>
