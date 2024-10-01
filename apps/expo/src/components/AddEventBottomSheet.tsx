@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import * as FileSystem from "expo-file-system";
 import { Image } from "expo-image";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -97,9 +98,16 @@ const AddEventBottomSheet = React.forwardRef<
       setIsImageUploading(true);
       const uploadImage = async (imageUri: string): Promise<string> => {
         try {
+          // Resize and compress the image
+          const manipulatedImage = await ImageManipulator.manipulateAsync(
+            imageUri,
+            [{ resize: { width: 1284 } }],
+            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+          );
+
           const response = await FileSystem.uploadAsync(
             "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
-            imageUri,
+            manipulatedImage.uri,
             {
               uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
               httpMethod: "POST",
