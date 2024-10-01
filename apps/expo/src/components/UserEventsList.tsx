@@ -4,6 +4,7 @@ import {
   Pressable,
   RefreshControl,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import Animated, {
@@ -85,6 +86,7 @@ export function UserEventListItem(props: {
   isSaved: boolean;
 }) {
   const { event, ActionButton, isLastItem, showCreator, isSaved } = props;
+  const { fontScale } = useWindowDimensions();
   const id = event.id;
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const e = event.event as AddToCalendarButtonPropsRestricted;
@@ -137,6 +139,9 @@ export function UserEventListItem(props: {
 
   const isOwner = isCurrentUser;
 
+  const iconSize = 16 * fontScale;
+  const imageSize = 80 * fontScale;
+
   return (
     <EventMenu
       event={event}
@@ -154,18 +159,19 @@ export function UserEventListItem(props: {
         <Pressable>
           <View
             className={cn(
-              "relative -mx-2 flex-row items-center rounded-lg p-4 px-6 pt-6",
-              relativeTime ? "pt-10" : "",
+              "-mx-2 flex-row items-center rounded-lg p-4 px-6",
+              relativeTime ? "pt-12" : "pt-8",
               isLastItem ? "" : "border-b border-neutral-3",
               isHappeningNow ? "bg-accent-yellow" : "bg-white",
+              "relative",
             )}
           >
             {isOwner && (
               <View className="absolute right-4 top-2 opacity-60">
                 {event.visibility === "public" ? (
-                  <Globe2 size={16} color="#627496" />
+                  <Globe2 size={iconSize} color="#627496" />
                 ) : (
-                  <EyeOff size={16} color="#627496" />
+                  <EyeOff size={iconSize} color="#627496" />
                 )}
               </View>
             )}
@@ -184,7 +190,7 @@ export function UserEventListItem(props: {
               </Text>
               {e.location ? (
                 <View className="mb-2 flex-row items-center gap-1">
-                  <MapPin size={16} color="#627496" />
+                  <MapPin size={iconSize} color="#627496" />
                   <Text
                     className="flex-1 text-base text-neutral-2"
                     numberOfLines={1}
@@ -198,11 +204,15 @@ export function UserEventListItem(props: {
                   {eventUser.userImage ? (
                     <Image
                       source={{ uri: eventUser.userImage }}
-                      style={{ width: 16, height: 16, borderRadius: 9999 }}
+                      style={{
+                        width: iconSize,
+                        height: iconSize,
+                        borderRadius: 9999,
+                      }}
                       contentFit="cover"
                     />
                   ) : (
-                    <User size={16} color="#627496" />
+                    <User size={iconSize} color="#627496" />
                   )}
                   <Text className="text-sm text-neutral-2">
                     @{eventUser.username}
@@ -216,11 +226,21 @@ export function UserEventListItem(props: {
                   source={{
                     uri: `${e.images[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
                   }}
-                  style={{ width: 80, height: 80, borderRadius: 20 }}
+                  style={{
+                    width: imageSize,
+                    height: imageSize,
+                    borderRadius: 20,
+                  }}
                   contentFit="cover"
                 />
               ) : (
-                <View className="h-20 w-20 rounded-md bg-accent-yellow" />
+                <View
+                  className="rounded-2xl bg-accent-yellow"
+                  style={{
+                    width: imageSize,
+                    height: imageSize,
+                  }}
+                />
               )}
               {ActionButton && (
                 <View className="absolute -bottom-2 -right-2">
@@ -232,11 +252,11 @@ export function UserEventListItem(props: {
               <View className="absolute left-0 right-0 top-2 flex items-center justify-center">
                 <View
                   className={cn(
-                    "rounded-full bg-accent-yellow px-2 py-1",
+                    "rounded-full px-2 py-1",
                     isHappeningNow ? "bg-white" : "bg-accent-yellow",
                   )}
                 >
-                  <Text className={cn("text-sm font-medium text-neutral-1")}>
+                  <Text className="text-sm font-medium text-neutral-1">
                     {relativeTime}
                   </Text>
                 </View>
