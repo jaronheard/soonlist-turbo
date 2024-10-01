@@ -34,7 +34,6 @@ export function ProfileMenu() {
     await Intercom.logout();
     await deleteAuthData();
     resetStore();
-    router.replace("/sign-in");
   };
 
   const presentIntercom = async () => {

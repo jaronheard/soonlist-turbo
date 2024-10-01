@@ -66,6 +66,11 @@ const tokenCache = {
       keychainAccessGroup: getKeyChainAccessGroup(),
     });
   },
+  clearToken: (key: string) => {
+    return SecureStore.deleteItemAsync(key, {
+      keychainAccessGroup: getKeyChainAccessGroup(),
+    });
+  },
 };
 
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation({
