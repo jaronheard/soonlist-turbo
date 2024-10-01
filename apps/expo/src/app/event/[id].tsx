@@ -4,7 +4,6 @@ import {
   Dimensions,
   Pressable,
   RefreshControl,
-  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -21,6 +20,7 @@ import type { RouterOutputs } from "~/utils/api";
 import { EventMenu } from "~/components/EventMenu";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import ShareButton from "~/components/ShareButton";
+import ZoomableScrollView from "~/components/ZoomableScrollView";
 import { api } from "~/utils/api";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
 
@@ -187,11 +187,7 @@ export default function Page() {
           headerRight: HeaderRight,
         }}
       />
-      <ScrollView
-        className="flex-1 bg-white"
-        contentContainerStyle={{
-          paddingBottom: insets.bottom + 36,
-        }}
+      <ZoomableScrollView
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -282,7 +278,7 @@ export default function Page() {
             </View>
           )}
         </View>
-      </ScrollView>
+      </ZoomableScrollView>
     </>
   );
 }
