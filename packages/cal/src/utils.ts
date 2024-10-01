@@ -339,13 +339,13 @@ export function formatRelativeTime(dateInfo: DateInfo): string {
   }
 
   if (days === 0 && hours === 0) {
-    return `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    return `~${minutes} min${minutes === 1 ? "" : "s"}`;
   }
   if (days === 0 && hours < 1) {
-    return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    return `~${hours} hr${hours === 1 ? "" : "s"} ${minutes} min${minutes === 1 ? "" : "s"}`;
   }
   if (isToday) {
-    return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
+    return `~${hours} hr${hours === 1 ? "" : "s"}`;
   }
   if (isTomorrow) {
     return `Tomorrow`;

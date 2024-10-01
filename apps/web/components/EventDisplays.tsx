@@ -529,25 +529,7 @@ function EventDetails({
   );
 }
 
-function HappeningSoonBadge({
-  startDate,
-  startTime,
-  timezone,
-}: {
-  startDate: string;
-  startTime?: string;
-  timezone: string;
-}) {
-  const { timezone: userTimezone } = useContext(TimezoneContext);
-
-  const startDateInfo = startTime
-    ? getDateTimeInfo(startDate, startTime, timezone, userTimezone.toString())
-    : getDateInfoUTC(startDate);
-
-  if (!startDateInfo) {
-    return null;
-  }
-
+function HappeningSoonBadge({ startDateInfo }: { startDateInfo: DateInfo }) {
   const relativeTimeString = formatRelativeTime(startDateInfo);
   if (!relativeTimeString) {
     return null;
@@ -568,11 +550,7 @@ function HappeningSoonBadge({
   }
 
   return (
-    <Badge
-      className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1 opacity-80"
-      disabled
-      variant="yellow"
-    >{`${relativeTimeString}`}</Badge>
+    <span className="ml-1 whitespace-nowrap rounded-full bg-yellow-100 px-1 text-yellow-700">{`${relativeTimeString}`}</span>
   );
 }
 
@@ -772,7 +750,7 @@ export function EventListItem(props: EventListItemProps) {
 
   if (!props.variant || props.variant === "minimal") {
     return (
-      <div className="relative border-b border-neutral-100 pb-1 last:border-b-0">
+      <div className="relative border-b border-neutral-100 pb-1">
         {image && (
           <div className="absolute right-0 top-0 h-full w-[75px] overflow-hidden rounded-xl">
             <Link
@@ -1049,19 +1027,10 @@ function DateAndTimeDisplay({
             <span className="ml-1 rounded-full bg-yellow-100 px-1 text-yellow-700">
               Now!
             </span>
+          )}{" "}
+          {startTime && startDateInfo && (
+            <HappeningSoonBadge startDateInfo={startDateInfo} />
           )}
-          {/* {happeningNow && (
-            <span className="ml-1 rounded-full bg-yellow-100 px-1 text-yellow-700">
-              Soon!
-            </span>
-          )} */}
-          {/* {startTime && startDateInfo && (
-            <HappeningSoonBadge
-              startTime={startTime}
-            startDate={startDate}
-            timezone={timeZone || "America/Los_Angeles"}
-            />
-          )} */}
         </div>
       )}
     </div>
