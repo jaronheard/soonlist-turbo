@@ -8,7 +8,6 @@ import {
   View,
 } from "react-native";
 import AutoHeightImage from "react-native-auto-height-image";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -29,7 +28,6 @@ export default function Page() {
   const router = useRouter();
   const utils = api.useUtils();
   const { width } = Dimensions.get("window");
-  const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
 
   const [refreshing, setRefreshing] = useState(false);
