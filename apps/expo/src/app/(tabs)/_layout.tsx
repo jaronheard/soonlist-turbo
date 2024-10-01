@@ -1,7 +1,14 @@
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
+import { useAuth } from "@clerk/clerk-expo";
 import { CalendarHeart, Globe2 } from "lucide-react-native";
 
 export default function TabLayout() {
+  const { isSignedIn } = useAuth();
+
+  if (!isSignedIn) {
+    return <Redirect href="/" />;
+  }
+
   return (
     <Tabs
       screenOptions={{
