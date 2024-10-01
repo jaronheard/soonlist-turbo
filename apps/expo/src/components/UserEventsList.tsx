@@ -137,10 +137,6 @@ export function UserEventListItem(props: {
 
   const isOwner = isCurrentUser;
 
-  const maxImageWidth = 1284; // 3x the largest iPhone width (428 * 3)
-  const imageWidth = Math.min(160 * 3, maxImageWidth);
-  const roundedImageWidth = Math.ceil(imageWidth / 100) * 100;
-
   return (
     <EventMenu
       event={event}
@@ -218,7 +214,7 @@ export function UserEventListItem(props: {
               {e.images?.[3] ? (
                 <Image
                   source={{
-                    uri: `${e.images[3]}?w=${roundedImageWidth}&h=${roundedImageWidth}&fit=cover&f=webp&q=80`,
+                    uri: `${e.images[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
                   }}
                   style={{ width: 80, height: 80, borderRadius: 20 }}
                   contentFit="cover"
