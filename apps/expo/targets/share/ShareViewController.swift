@@ -99,7 +99,7 @@ class ShareViewController: UIViewController {
         return nil
     }
 
-    let maxDimension: CGFloat = 1200
+    let maxDimension: CGFloat = 1284
     let options: [CFString: Any] = [
         kCGImageSourceCreateThumbnailFromImageAlways: true,
         kCGImageSourceCreateThumbnailWithTransform: true,
