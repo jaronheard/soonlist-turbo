@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { userFollows, users } from "@soonlist/db/schema";

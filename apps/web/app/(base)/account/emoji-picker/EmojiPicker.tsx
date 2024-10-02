@@ -39,14 +39,23 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
     emojiStatus && !emojiStatus.takenEmojis.includes(inputEmoji);
   const isButtonDisabled = isUpdating || inputEmoji === "" || !isEmojiAvailable;
 
-  const handleEmojiSubmit = async () => {
-    if (!isEmojiAvailable) {
-      toast.error("This emoji is not available");
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!inputEmoji) {
       return;
     }
     setIsUpdating(true);
-    await updateUserEmoji.mutateAsync({ emoji: inputEmoji });
-    setIsUpdating(false);
+    try {
+      await updateUserEmoji.mutateAsync({ emoji: inputEmoji });
+    } catch (error) {
+      if (error instanceof TRPCClientError && error.data?.code === "CONFLICT") {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to update emoji. Please try again.");
+      }
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -68,7 +77,7 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
           className="h-24 w-24 text-center text-5xl"
         />
         <Button
-          onClick={handleEmojiSubmit}
+          onClick={handleSubmit}
           disabled={isButtonDisabled}
           className="px-8 py-4 text-xl"
         >
