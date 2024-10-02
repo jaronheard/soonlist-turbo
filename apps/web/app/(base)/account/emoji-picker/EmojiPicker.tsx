@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TRPCClientError } from "@trpc/client";
 import { toast } from "sonner";
 
 import { Button } from "@soonlist/ui/button";
@@ -55,6 +54,9 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
     );
   };
 
+  const otherUsersEmojis =
+    emojiStatus?.takenEmojis.filter((emoji) => emoji !== currentEmoji) ?? [];
+
   return (
     <div className="flex flex-col items-center justify-center space-y-8">
       <div className="flex flex-col items-center space-y-4">
@@ -84,11 +86,13 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
           {currentEmoji ? "Update Emoji" : "Choose Emoji"}
         </Button>
       </div>
-      {emojiStatus && emojiStatus.takenEmojis.length > 0 && (
+      {otherUsersEmojis.length > 0 && (
         <div className="mt-4 text-center">
-          <h3 className="mb-2 text-lg font-semibold">Taken Emojis:</h3>
+          <h3 className="mb-2 text-lg font-medium text-neutral-2">
+            Used by others:
+          </h3>
           <div className="flex flex-wrap justify-center gap-2">
-            {emojiStatus.takenEmojis.map((emoji, index) => (
+            {otherUsersEmojis.map((emoji, index) => (
               <span key={index} className="text-2xl">
                 {emoji}
               </span>
