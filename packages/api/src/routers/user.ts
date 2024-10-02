@@ -147,62 +147,45 @@ export const userRouter = createTRPCRouter({
     }),
 
   updateEmoji: protectedProcedure
-    .input(z.object({ emoji: z.string().max(10) }))
+    .input(z.object({ emoji: z.string().max(10).nullable() }))
     .mutation(async ({ ctx, input }) => {
       const { userId } = ctx.auth;
-      if (!userId)
+      if (!userId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "User must be logged in to update emoji",
         });
-
-      const normalizedInputEmoji = normalizeEmoji(input.emoji);
-      const existingUser = await ctx.db.query.users.findFirst({
-        where: and(
-          ne(users.id, userId),
-          sql`${users.emoji} IS NOT NULL`,
-          sql`LOWER(${users.emoji}) = LOWER(${normalizedInputEmoji})`,
-        ),
-      });
-
-      if (existingUser)
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "This emoji is already in use by another user",
-        });
-
-      return ctx.db
-        .update(users)
-        .set({ emoji: input.emoji })
-        .where(eq(users.id, userId));
-    }),
-
-  getEmojiStatus: publicProcedure
-    .input(z.object({ emoji: z.string().max(10) }))
-    .query(async ({ ctx, input }) => {
-      const normalizedInputEmoji = normalizeEmoji(input.emoji);
-      const existingUser = await ctx.db.query.users.findFirst({
-        where: sql`LOWER(${users.emoji}) = LOWER(${normalizedInputEmoji})`,
-        columns: {
-          username: true,
-        },
-      });
-
-      if (!existingUser) {
-        return { isAvailable: true };
       }
 
-      return {
-        isAvailable: false,
-        usedByUsername: existingUser.username,
-      };
+      const normalizedEmoji = normalizeEmoji(input.emoji);
+
+      try {
+        return await ctx.db
+          .update(users)
+          .set({ emoji: normalizedEmoji || null })
+          .where(eq(users.id, userId));
+      } catch (error: unknown) {
+        if (error instanceof Error && error.message.includes("ER_DUP_ENTRY")) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "This emoji is already in use by another user",
+          });
+        }
+        // Re-throw any other errors
+        throw error;
+      }
     }),
 
-  getAllEmojis: publicProcedure.query(async ({ ctx }) => {
-    const result = await ctx.db
+  getAllTakenEmojis: publicProcedure.query(async ({ ctx }) => {
+    const takenEmojis = await ctx.db
       .select({ emoji: users.emoji })
       .from(users)
       .where(sql`${users.emoji} IS NOT NULL`);
-    return result.map((row) => row.emoji);
+
+    return {
+      takenEmojis: takenEmojis
+        .map((user) => user.emoji)
+        .filter((emoji): emoji is string => emoji !== null),
+    };
   }),
 });

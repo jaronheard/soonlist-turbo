@@ -236,7 +236,7 @@ export const users = mysqlTable(
       .notNull(),
     updatedAt: timestamp("updatedAt").onUpdateNow(),
     publicMetadata: json("publicMetadata"),
-    emoji: varchar("emoji", { length: 10 }), // Add this line
+    emoji: varchar("emoji", { length: 10 }).unique(),
   },
   (table) => {
     return {
