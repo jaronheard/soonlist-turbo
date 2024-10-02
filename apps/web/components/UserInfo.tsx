@@ -51,6 +51,7 @@ export async function UserInfo(props: UserInfoProps) {
     }));
 
   const { activePaid } = getPlanStatusFromUser(user);
+  const userEmoji = user.emoji || null;
 
   if (props.variant === "description") {
     return (
@@ -60,12 +61,17 @@ export async function UserInfo(props: UserInfoProps) {
             href={`/${user.username}/events`}
             className="relative flex-shrink-0"
           >
-            {activePaid && (
-              <Star
-                className="absolute bottom-[0.125rem] right-0 z-10 size-[1.5rem] rounded-full bg-interactive-2 p-1 text-interactive-1"
-                fill="currentColor"
-              />
-            )}
+            {activePaid &&
+              (userEmoji ? (
+                <div className="absolute bottom-[0.125rem] right-0 z-10 flex size-[1.5rem] items-center justify-center text-xl text-interactive-1">
+                  {userEmoji}
+                </div>
+              ) : (
+                <Star
+                  className="absolute bottom-[0.125rem] right-0 z-10 size-[1.5rem] rounded-full bg-interactive-2 p-1 text-interactive-1"
+                  fill="currentColor"
+                />
+              ))}
             <Image
               className="content-box size-20 rounded-full border-8 border-accent-yellow"
               src={user.userImage}
@@ -137,12 +143,17 @@ export async function UserInfo(props: UserInfoProps) {
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-3">
         <Link href={`/${user.username}/events`} className="relative">
-          {activePaid && (
-            <Star
-              className="absolute -bottom-[0.125rem] -right-[0.125rem] z-10 size-[0.75rem] rounded-full bg-interactive-2 p-0.5 text-interactive-1"
-              fill="currentColor"
-            />
-          )}
+          {activePaid &&
+            (userEmoji ? (
+              <div className="absolute -bottom-[0.125rem] -right-[0.125rem] z-10 flex size-[0.75rem] items-center justify-center rounded-full bg-interactive-2 text-[0.75rem] text-interactive-1">
+                {userEmoji}
+              </div>
+            ) : (
+              <Star
+                className="absolute -bottom-[0.125rem] -right-[0.125rem] z-10 size-[0.75rem] rounded-full bg-interactive-2 p-0.5 text-interactive-1"
+                fill="currentColor"
+              />
+            ))}
           <Image
             className="inline-block size-9 rounded-full"
             src={user.userImage}

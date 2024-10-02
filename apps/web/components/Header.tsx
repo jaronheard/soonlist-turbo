@@ -15,6 +15,7 @@ import {
   CalendarPlus,
   Globe2Icon,
   Menu,
+  Smile,
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -32,6 +33,7 @@ import { Separator } from "@soonlist/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@soonlist/ui/sheet";
 
 import { cn } from "~/lib/utils";
+import { api } from "~/trpc/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -187,6 +189,8 @@ const UserMenu = () => {
   const { isLoaded, user } = useUser();
   // Grab the signOut and openUserProfile methods
   const { signOut, openUserProfile } = useClerk();
+  const userData = api.user.getById.useQuery({ id: user?.id });
+  const userEmoji = userData.data?.emoji || null;
 
   // if not loaded return a 32x32 grey circle pulsing
   if (!isLoaded || !user?.id) {
@@ -207,12 +211,17 @@ const UserMenu = () => {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger className="relative hidden py-2 lg:block">
-        {activePaid && (
-          <Star
-            className="absolute bottom-0.5 right-0 z-10 size-[1rem] rounded-full bg-interactive-2 p-0.5 text-interactive-1"
-            fill="currentColor"
-          />
-        )}
+        {activePaid &&
+          (userEmoji ? (
+            <div className="absolute bottom-0.5 right-0 z-10 flex size-[1rem] items-center justify-center text-[0.75rem] text-interactive-1">
+              {userEmoji}
+            </div>
+          ) : (
+            <Star
+              className="absolute bottom-0.5 right-0 z-10 size-[1rem] rounded-full bg-interactive-2 p-0.5 text-interactive-1"
+              fill="currentColor"
+            />
+          ))}
         <Image
           alt={"User"}
           src={user.imageUrl}
@@ -230,12 +239,17 @@ const UserMenu = () => {
         >
           {user.imageUrl ? (
             <div className="relative py-2">
-              {activePaid && (
-                <Star
-                  className="absolute bottom-0.5 right-0 z-10 size-[1rem] rounded-full bg-interactive-2 p-0.5 text-interactive-1"
-                  fill="currentColor"
-                />
-              )}
+              {activePaid &&
+                (userEmoji ? (
+                  <div className="absolute bottom-0.5 right-0 z-10 flex size-[1rem] items-center justify-center text-[0.75rem] text-interactive-1">
+                    {userEmoji}
+                  </div>
+                ) : (
+                  <Star
+                    className="absolute bottom-0.5 right-0 z-10 size-[1rem] rounded-full bg-interactive-2 p-0.5 text-interactive-1"
+                    fill="currentColor"
+                  />
+                ))}
               <Image
                 alt={"User"}
                 src={user.imageUrl}
