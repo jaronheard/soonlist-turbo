@@ -41,7 +41,6 @@ import { Label } from "@soonlist/ui/label";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
-import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { feedback } from "~/lib/intercom/intercom";
 import { cn, translateToHtml } from "~/lib/utils";
@@ -784,7 +783,6 @@ export function EventListItem(props: EventListItemProps) {
             <EventDetails
               id={id}
               name={event.name!}
-              image={image}
               startDate={event.startDate!}
               endDate={event.endDate!}
               startTime={event.startTime!}
@@ -937,9 +935,6 @@ export function EventPreview(
   props: EventListItemProps & { event: AddToCalendarCardProps },
 ) {
   const { id, event } = props;
-  const { croppedImagesUrls } = useCroppedImageContext();
-  const { images } = event;
-  const image = croppedImagesUrls.cropped || images?.[3];
 
   return (
     <div
@@ -966,11 +961,11 @@ export function EventPreview(
           endDate={event.endDate!}
           startTime={event.startTime!}
           endTime={event.endTime!}
-          image={image}
           timezone={event.timeZone || "America/Los_Angeles"}
           location={event.location}
           description={event.description}
           metadata={event.eventMetadata}
+          visibility={"public"}
         />
       </div>
     </div>
@@ -1040,7 +1035,6 @@ export function EventPage(props: EventPageProps) {
     image,
     singleEvent,
     children,
-    lists,
     eventMetadata,
     visibility,
   } = props;
