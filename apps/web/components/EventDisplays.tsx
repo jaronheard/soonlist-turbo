@@ -489,6 +489,7 @@ function EventDetails({
         startDateInfo={startDateInfo}
         startTime={startTime}
         happeningNow={happeningNow}
+        variant="compact"
       />
       <div className="">
         <Link
@@ -989,8 +990,8 @@ function DateAndTimeDisplay({
       {isClient && eventTimesAreDefined(startTime, endTime) && (
         <div
           className={cn(
-            " text-xs uppercase text-neutral-2",
-            variant === "compact" && "sm:flex-col",
+            " text-sm uppercase text-neutral-2",
+            variant === "compact" && "text-xs sm:flex-col",
           )}
           suppressHydrationWarning
         >
@@ -1079,9 +1080,9 @@ export function EventPage(props: EventPageProps) {
 
   return (
     <div className="">
-      <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
+      <div className="grid grid-cols-1 gap-1 ">
         <div>
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
             <DateAndTimeDisplay
               endDateInfo={endDateInfo}
               endTime={endTime}
@@ -1089,10 +1090,8 @@ export function EventPage(props: EventPageProps) {
               startDateInfo={startDateInfo}
               startTime={startTime}
             />
-            <h1 className="font-heading text-5xl font-bold leading-[3.5rem]">
-              {event.name}
-            </h1>
-            <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
+            <h1 className="text-xl font-bold ">{event.name}</h1>
+            <div className="flex-start text-m flex gap-2 pr-12 leading-none">
               {location && (
                 <Link
                   href={`https://www.google.com/maps/search/?api=1&query=${location}`}
@@ -1105,21 +1104,6 @@ export function EventPage(props: EventPageProps) {
             </div>
             <PersonalNote text={comment?.content} />
 
-            {!hasLists && user && (
-              <UserAllEventsCard
-                username={user.username}
-                userImage={user.userImage}
-              />
-            )}
-            {hasLists &&
-              lists.map((list) => (
-                <ListCard
-                  key={list.id}
-                  name={list.name}
-                  username={user.username}
-                  id={list.id}
-                />
-              ))}
             {visibility === "private" && (
               <>
                 <Badge className="max-w-fit" variant="destructive">
@@ -1127,7 +1111,17 @@ export function EventPage(props: EventPageProps) {
                 </Badge>
               </>
             )}
+            {image && (
+              <Image
+                src={image}
+                className="mx-auto h-auto max-h-96 w-full object-contain"
+                alt=""
+                width={640}
+                height={480}
+              />
+            )}
           </div>
+
           <div className="flex flex-col gap-8 pt-8">
             <EventDescription
               description={event.description || ""}
@@ -1161,30 +1155,9 @@ export function EventPage(props: EventPageProps) {
             )}
           </div>
         </div>
-        {image && (
-          <Image
-            src={image}
-            className="mx-auto h-auto max-h-96 w-full object-contain"
-            alt=""
-            width={640}
-            height={480}
-          />
-        )}
+
         {children}
       </div>
-      {/* <div className="absolute right-2 top-6">
-        {isOwner && (
-          <SignedIn>
-            <EventActionButton
-              user={user}
-              event={event}
-              id={id}
-              isOwner={!!isOwner}
-              isFollowing={isFollowing}
-            />
-          </SignedIn>
-        )}
-      </div> */}
     </div>
   );
 }
