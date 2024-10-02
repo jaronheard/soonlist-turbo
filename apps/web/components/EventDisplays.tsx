@@ -822,11 +822,6 @@ export function EventListItem(props: EventListItemProps) {
                   showFollowButton={false}
                 />
               )}
-            {/* {visibility === "private" ? (
-              <EyeOff className="size-4 text-neutral-2" />
-            ) : (
-              <Earth className="size-4 text-neutral-2" />
-            )} */}
           </div>
           <div className="absolute -bottom-0.5 -right-2 z-10">
             {/* <EventActionButtons
