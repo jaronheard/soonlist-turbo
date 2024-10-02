@@ -15,7 +15,6 @@ import {
   CalendarPlus,
   Globe2Icon,
   Menu,
-  Smile,
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -189,7 +188,10 @@ const UserMenu = () => {
   const { isLoaded, user } = useUser();
   // Grab the signOut and openUserProfile methods
   const { signOut, openUserProfile } = useClerk();
-  const userData = api.user.getById.useQuery({ id: user?.id });
+  const userData = api.user.getById.useQuery(
+    { id: user?.id ?? "" },
+    { enabled: !!user?.id },
+  );
   const userEmoji = userData.data?.emoji || null;
 
   // if not loaded return a 32x32 grey circle pulsing
