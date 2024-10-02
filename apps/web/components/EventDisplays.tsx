@@ -8,6 +8,7 @@ import {
   Accessibility,
   CalendarIcon,
   Ear,
+  Earth,
   EyeOff,
   GlobeIcon,
   MapPin,
@@ -430,6 +431,7 @@ function EventDetails({
   EventActionButtons,
   metadata,
   happeningNow,
+  visibility, // Add this prop
 }: {
   id: string;
   name: string;
@@ -446,6 +448,7 @@ function EventDetails({
   metadata?: EventMetadataDisplay;
   variant?: "minimal";
   happeningNow?: boolean;
+  visibility: "public" | "private"; // Add this to the props type
 }) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
@@ -482,15 +485,22 @@ function EventDetails({
 
   return (
     <div className="relative">
-      <DateAndTimeDisplay
-        endDateInfo={endDateInfo}
-        endTime={endTime}
-        isClient={isClient}
-        startDateInfo={startDateInfo}
-        startTime={startTime}
-        happeningNow={happeningNow}
-        variant="compact"
-      />
+      <div className="mb-2 flex items-center">
+        {visibility === "private" ? (
+          <EyeOff className="mr-2 size-4 text-neutral-2" />
+        ) : (
+          <Earth className="mr-2 size-4 text-neutral-2" />
+        )}
+        <DateAndTimeDisplay
+          endDateInfo={endDateInfo}
+          endTime={endTime}
+          isClient={isClient}
+          startDateInfo={startDateInfo}
+          startTime={startTime}
+          happeningNow={happeningNow}
+          variant="compact"
+        />
+      </div>
       <div className="">
         <Link
           href={preview ? "" : `/event/${id}`}
@@ -506,7 +516,7 @@ function EventDetails({
               href={`https://www.google.com/maps/search/?api=1&query=${location}`}
               className="line-clamp-1  break-all text-neutral-2"
             >
-              <MapPin className="-mt-0.5 inline size-3" />
+              <MapPin className="mr-0.5 inline size-4" />
               <span className="inline">{location}</span>
             </Link>
           )}
@@ -683,11 +693,13 @@ interface UserInfoMiniProps {
   username: string;
   displayName: string;
   userImage: string;
+  showFollowButton?: boolean;
 }
 
 export function UserInfoMini({
   username,
   userImage,
+  showFollowButton = true,
 }: Omit<UserInfoMiniProps, "displayName">) {
   const { user: activeUser } = useUser();
 
@@ -712,10 +724,10 @@ export function UserInfoMini({
   const following = followingQuery.data;
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-0.5">
       <Link href={`/${username}/events`} className="relative flex items-center">
         <Image
-          className="inline-block size-4 rounded-full"
+          className="inline-block size-3 rounded-full"
           src={userImage}
           alt={`${username}'s profile picture`}
           width={16}
@@ -728,7 +740,7 @@ export function UserInfoMini({
         </p>
       </Link>
       <div className="flex h-5 items-center">
-        {!self && user?.id && (
+        {!self && user?.id && showFollowButton && (
           <div className="origin-left scale-50 transform">
             <FollowUserButton userId={user.id} following={!!following} />
           </div>
@@ -784,6 +796,7 @@ export function EventListItem(props: EventListItemProps) {
               timezone={event.timeZone || "America/Los_Angeles"}
               location={event.location}
               happeningNow={props.happeningNow}
+              visibility={visibility} // Add this line
             />
           </div>
           <div className="p-1">
@@ -806,13 +819,14 @@ export function EventListItem(props: EventListItemProps) {
                 <UserInfoMini
                   username={user.username}
                   userImage={user.userImage}
+                  showFollowButton={false}
                 />
               )}
-            {visibility === "private" && (
-              <Badge variant="destructive">
-                <EyeOff className="mr-2 inline size-4" /> Not Discoverable
-              </Badge>
-            )}
+            {/* {visibility === "private" ? (
+              <EyeOff className="size-4 text-neutral-2" />
+            ) : (
+              <Earth className="size-4 text-neutral-2" />
+            )} */}
           </div>
           <div className="absolute -bottom-0.5 -right-2 z-10">
             {/* <EventActionButtons
@@ -905,7 +919,11 @@ export function EventListItem(props: EventListItemProps) {
             ></ListCard>
           ))}
         {user && (
-          <UserInfoMini username={user.username} userImage={user.userImage} />
+          <UserInfoMini
+            username={user.username}
+            userImage={user.userImage}
+            showFollowButton={false}
+          />
         )}
       </div>
       <div className="absolute bottom-2 right-2 z-20">
@@ -1105,11 +1123,7 @@ export function EventPage(props: EventPageProps) {
             <PersonalNote text={comment?.content} />
 
             {visibility === "private" && (
-              <>
-                <Badge className="max-w-fit" variant="destructive">
-                  <EyeOff className="mr-1 inline" size={16} /> Not Discoverable
-                </Badge>
-              </>
+              <GlobeIcon className="size-4 text-neutral-2" />
             )}
             {image && (
               <Image
