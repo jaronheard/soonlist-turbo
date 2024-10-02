@@ -783,27 +783,9 @@ export function EventListItem(props: EventListItemProps) {
               timezone={event.timeZone || "America/Los_Angeles"}
               location={event.location}
               happeningNow={props.happeningNow}
-              EventActionButtons={
-                !isOwner && (
-                  <FollowEventButton
-                    eventId={id}
-                    following={isFollowing}
-                    type="icon"
-                  />
-                )
-              }
-              // <EventActionButtons
-              //   user={user}
-              //   event={event as AddToCalendarButtonPropsRestricted}
-              //   id={id}
-              //   isOwner={!!isOwner}
-              //   isFollowing={isFollowing}
-              //   visibility={props.visibility}
-              //   variant={props.variant === "minimal" ? "none" : undefined}
-              // />
             />
           </div>
-          <div className=" p-1">
+          <div className="p-1">
             {user &&
               lists &&
               lists.length > 0 &&
@@ -831,22 +813,26 @@ export function EventListItem(props: EventListItemProps) {
               </Badge>
             )}
           </div>
-          {/* TODO: Add back in the action buttons
-          
-          {props.variant === "minimal" && (
-            <div className="">
-              <EventActionButtons
-                user={user}
-                event={event as AddToCalendarButtonPropsRestricted}
-                id={id}
-                isOwner={!!isOwner}
-                isFollowing={isFollowing}
-                visibility={props.visibility}
-                variant="minimal"
-                size="sm"
+          <div className="absolute -bottom-1 -right-1 z-10">
+            {/* <EventActionButtons
+              user={user}
+              event={event as AddToCalendarButtonPropsRestricted}
+              id={id}
+              isOwner={!!isOwner}
+              isFollowing={isFollowing}
+              visibility={props.visibility}
+              variant="minimal"
+              size="sm"
+            /> */}
+
+            {!isOwner && (
+              <FollowEventButton
+                eventId={id}
+                following={isFollowing}
+                type="icon"
               />
-            </div>
-          )} */}
+            )}
+          </div>
         </li>
       </div>
     );
@@ -921,7 +907,7 @@ export function EventListItem(props: EventListItemProps) {
           <UserInfoMini username={user.username} userImage={user.userImage} />
         )}
       </div>
-      <div className="absolute bottom-2 right-2 z-10 p-1">
+      <div className="absolute bottom-2 right-2 z-20">
         <EventActionButtons
           user={user}
           event={event as AddToCalendarButtonPropsRestricted}
