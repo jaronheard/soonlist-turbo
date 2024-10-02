@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo } from "react";
 import * as SecureStore from "expo-secure-store";
 import { useAuth, useUser } from "@clerk/clerk-expo";
+import * as Sentry from "@sentry/react-native";
+import { usePostHog } from "posthog-react-native";
 
 import Config from "~/utils/config";
 
@@ -8,6 +10,7 @@ const saveAuthData = async (authData: {
   username: string | null;
   authToken: string | null;
   expoPushToken: string | null;
+  email: string | null;
 }) => {
   try {
     await SecureStore.setItemAsync("authData", JSON.stringify(authData), {
@@ -46,9 +49,11 @@ export const deleteAuthData = async () => {
 const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
   const { getToken } = useAuth();
   const { user } = useUser();
+  const posthog = usePostHog();
 
   const username = user?.username;
   const userId = user?.id;
+  const email = user?.primaryEmailAddress?.emailAddress;
   const hasUserInfo = username && userId;
 
   const authData = useMemo(() => {
@@ -56,11 +61,12 @@ const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
       return {
         userId: userId,
         username: username,
+        email: email,
         expoPushToken,
       };
     }
     return null;
-  }, [hasUserInfo, userId, username, expoPushToken]);
+  }, [hasUserInfo, userId, username, email, expoPushToken]);
 
   const syncAuthData = useCallback(async () => {
     if (authData?.username && authData.userId) {
@@ -69,9 +75,23 @@ const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
         username: authData.username,
         authToken,
         expoPushToken: authData.expoPushToken,
+        email: authData.email ?? null,
+      });
+
+      // Identify user for Sentry
+      Sentry.setUser({
+        id: authData.userId,
+        username: authData.username,
+        email: authData.email,
+      });
+
+      // Identify user for PostHog
+      posthog.identify(authData.userId, {
+        username: authData.username,
+        email: authData.email,
       });
     }
-  }, [authData, getToken]);
+  }, [authData, getToken, posthog]);
 
   useEffect(() => {
     void syncAuthData();
