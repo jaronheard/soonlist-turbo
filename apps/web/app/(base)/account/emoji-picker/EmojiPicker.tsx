@@ -15,7 +15,7 @@ interface EmojiPickerProps {
 
 export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
   const router = useRouter();
-  const [inputEmoji, setInputEmoji] = useState(currentEmoji || "");
+  const [inputEmoji, setInputEmoji] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
   const { data: emojiStatus, refetch: refetchEmojiStatus } =
