@@ -41,23 +41,18 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
     emojiStatus && !emojiStatus.takenEmojis.includes(inputEmoji);
   const isButtonDisabled = isUpdating || inputEmoji === "" || !isEmojiAvailable;
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (!inputEmoji) {
       return;
     }
     setIsUpdating(true);
-    try {
-      await updateUserEmoji.mutateAsync({ emoji: inputEmoji });
-    } catch (error) {
-      if (error instanceof TRPCClientError && error.data?.code === "CONFLICT") {
-        toast.error(error.message);
-      } else {
-        toast.error("Failed to update emoji. Please try again.");
-      }
-    } finally {
-      setIsUpdating(false);
-    }
+    updateUserEmoji.mutate(
+      { emoji: inputEmoji },
+      {
+        onSettled: () => setIsUpdating(false),
+      },
+    );
   };
 
   return (
@@ -71,6 +66,16 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
           className="h-24 w-24 text-center text-5xl"
           maxLength={2}
         />
+        <div className="text-sm">
+          {inputEmoji &&
+            (emojiStatus === undefined ? (
+              <p className="text-muted-foreground">Checking availability...</p>
+            ) : isEmojiAvailable ? (
+              <p className="text-success">Available</p>
+            ) : (
+              <p className="text-destructive">Already taken</p>
+            ))}
+        </div>
         <Button
           onClick={handleSubmit}
           disabled={isButtonDisabled}
@@ -79,17 +84,6 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
           {currentEmoji ? "Update Emoji" : "Choose Emoji"}
         </Button>
       </div>
-      {inputEmoji && (
-        <div className="text-center text-xl">
-          {emojiStatus === undefined ? (
-            <p className="text-blue-600">Loading emoji status...</p>
-          ) : isEmojiAvailable ? (
-            <p className="text-green-600">This emoji is available!</p>
-          ) : (
-            <p className="text-red-600">This emoji is already taken</p>
-          )}
-        </div>
-      )}
       {emojiStatus && emojiStatus.takenEmojis.length > 0 && (
         <div className="mt-4 text-center">
           <h3 className="mb-2 text-lg font-semibold">Taken Emojis:</h3>
