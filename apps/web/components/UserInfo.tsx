@@ -1,13 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
-import { Instagram, LinkIcon, Mail, MessageSquare, Star } from "lucide-react";
+import { Instagram, LinkIcon, Mail, MessageSquare } from "lucide-react";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
 
-import { getPlanStatusFromUser } from "~/lib/planUtils";
 import { api } from "~/trpc/server";
 import { FollowUserButton } from "./FollowButtons";
+import { UserProfileFlair } from "./UserProfileFlair";
 
 const SAMPLE_BIO = `I haven't written a bio yet... you'll have to find me at one of my events!`;
 
@@ -50,35 +50,20 @@ export async function UserInfo(props: UserInfoProps) {
       followingId: user.id,
     }));
 
-  const { activePaid } = getPlanStatusFromUser(user);
-  const userEmoji = user.emoji || null;
-
   if (props.variant === "description") {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex gap-6">
-          <Link
-            href={`/${user.username}/events`}
-            className="relative flex-shrink-0"
-          >
-            {activePaid &&
-              (userEmoji ? (
-                <div className="absolute bottom-[0.125rem] right-0 z-10 flex size-[1.5rem] items-center justify-center text-xl text-interactive-1">
-                  {userEmoji}
-                </div>
-              ) : (
-                <Star
-                  className="absolute bottom-[0.125rem] right-0 z-10 size-[1.5rem] rounded-full bg-interactive-2 p-1 text-interactive-1"
-                  fill="currentColor"
-                />
-              ))}
-            <Image
-              className="content-box size-20 rounded-full border-8 border-accent-yellow"
-              src={user.userImage}
-              alt=""
-              width={375}
-              height={375}
-            />
+          <Link href={`/${user.username}/events`} className="flex-shrink-0">
+            <UserProfileFlair username={user.username} size="2xl">
+              <Image
+                className="content-box size-20 rounded-full border-8 border-accent-yellow"
+                src={user.userImage}
+                alt=""
+                width={375}
+                height={375}
+              />
+            </UserProfileFlair>
           </Link>
           <div className="flex flex-col overflow-hidden">
             <Link href={`/${user.username}/events`}>
@@ -142,25 +127,16 @@ export async function UserInfo(props: UserInfoProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-3">
-        <Link href={`/${user.username}/events`} className="relative">
-          {activePaid &&
-            (userEmoji ? (
-              <div className="absolute -bottom-[0.125rem] -right-[0.125rem] z-10 flex size-[0.75rem] items-center justify-center rounded-full bg-interactive-2 text-[0.75rem] text-interactive-1">
-                {userEmoji}
-              </div>
-            ) : (
-              <Star
-                className="absolute -bottom-[0.125rem] -right-[0.125rem] z-10 size-[0.75rem] rounded-full bg-interactive-2 p-0.5 text-interactive-1"
-                fill="currentColor"
-              />
-            ))}
-          <Image
-            className="inline-block size-9 rounded-full"
-            src={user.userImage}
-            alt=""
-            width={375}
-            height={375}
-          />
+        <Link href={`/${user.username}/events`}>
+          <UserProfileFlair username={user.username}>
+            <Image
+              className="inline-block size-9 rounded-full"
+              src={user.userImage}
+              alt=""
+              width={375}
+              height={375}
+            />
+          </UserProfileFlair>
         </Link>
         <Link href={`/${user.username}/events`} className="group">
           <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
