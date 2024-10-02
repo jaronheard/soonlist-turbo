@@ -76,10 +76,10 @@ export async function UserInfo(props: UserInfoProps) {
           </Link>
           <div className="flex flex-col overflow-hidden">
             <Link href={`/${user.username}/events`}>
-              <p className="font-heading text-4xl font-bold leading-[2.5rem] tracking-tight text-neutral-1 sm:text-5xl sm:leading-[3.5rem]">
+              <p className=" text-2xl font-bold  text-neutral-1">
                 {user.displayName}
               </p>
-              <p className="truncate break-all text-xl font-bold leading-normal tracking-wide sm:text-2xl">
+              <p className="truncate break-all text-xl text-neutral-1">
                 @{user.username}
               </p>
             </Link>
