@@ -35,7 +35,6 @@ import {
   formatRelativeTime,
   getDateInfoUTC,
   getDateTimeInfo,
-  timeFormatDateInfo,
 } from "@soonlist/cal";
 import { Badge } from "@soonlist/ui/badge";
 import { Label } from "@soonlist/ui/label";
@@ -55,7 +54,6 @@ import { buildDefaultUrl } from "./ImageUpload";
 import { ListCard } from "./ListCard";
 import { PersonalNote } from "./PersonalNote";
 import { ShareButton } from "./ShareButton";
-import { UserAllEventsCard } from "./UserAllEventsCard";
 
 interface EventListItemProps {
   list?: List; // this is the list that this is a part of
@@ -419,7 +417,6 @@ function EventMetadataDisplay({
 function EventDetails({
   id,
   name,
-  image,
   startDate,
   startTime,
   endDate,
@@ -435,7 +432,6 @@ function EventDetails({
 }: {
   id: string;
   name: string;
-  image?: string;
   startTime: string;
   startDate: string;
   endTime: string;
@@ -1057,7 +1053,6 @@ export function EventPage(props: EventPageProps) {
   const comment = props.comments
     .filter((item) => user?.id === item.userId)
     .pop();
-  const hasLists = user && lists && lists.length > 0;
 
   const {
     startDate,
