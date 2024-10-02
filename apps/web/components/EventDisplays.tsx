@@ -481,7 +481,7 @@ function EventDetails({
   }
 
   return (
-    <div className="">
+    <div className="relative">
       <DateAndTimeDisplay
         endDateInfo={endDateInfo}
         endTime={endTime}
@@ -521,8 +521,8 @@ function EventDetails({
             <EventMetadataDisplay metadata={metadata} />
           </div>
         )}
-        <div className="w-full">
-          {EventActionButtons && <>{EventActionButtons}</>}
+        <div className="absolute bottom-2 right-2 z-10">
+          {EventActionButtons}
         </div>
       </div>
     </div>
@@ -770,22 +770,6 @@ export function EventListItem(props: EventListItemProps) {
             </Link>
           </div>
         )}
-        {/* {props.happeningNow && (
-          <Badge
-            className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1"
-            disabled
-            variant="yellow"
-          >
-            Happening Now, dude
-          </Badge>
-        )} */}
-        {/* {event.startTime && event.startDate && (
-          <HappeningSoonBadge
-            startTime={event.startTime}
-            startDate={event.startDate}
-            timezone={event.timeZone || "America/Los_Angeles"}
-          />
-        )} */}
         <li className="relative pr-[85px]">
           <div className="flex w-full items-start">
             <EventDetails
@@ -800,16 +784,23 @@ export function EventListItem(props: EventListItemProps) {
               location={event.location}
               happeningNow={props.happeningNow}
               EventActionButtons={
-                <EventActionButtons
-                  user={user}
-                  event={event as AddToCalendarButtonPropsRestricted}
-                  id={id}
-                  isOwner={!!isOwner}
-                  isFollowing={isFollowing}
-                  visibility={props.visibility}
-                  variant={props.variant === "minimal" ? "none" : undefined}
-                />
+                !isOwner && (
+                  <FollowEventButton
+                    eventId={id}
+                    following={isFollowing}
+                    type="icon"
+                  />
+                )
               }
+              // <EventActionButtons
+              //   user={user}
+              //   event={event as AddToCalendarButtonPropsRestricted}
+              //   id={id}
+              //   isOwner={!!isOwner}
+              //   isFollowing={isFollowing}
+              //   visibility={props.visibility}
+              //   variant={props.variant === "minimal" ? "none" : undefined}
+              // />
             />
           </div>
           <div className=" p-1">

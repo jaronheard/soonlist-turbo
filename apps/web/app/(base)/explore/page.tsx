@@ -16,9 +16,9 @@ export default async function Page() {
   );
   return (
     <>
-      <h1 className="-mt-8 mb-4 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
+      <h1 className="-mt-10 mb-4 font-heading text-2xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
         <div className="flex gap-4">
-          <Globe2 className="size-10" />
+          <Globe2 className="size-6" />
           Discover
         </div>
       </h1>
@@ -26,7 +26,7 @@ export default async function Page() {
         currentEvents={currentEvents}
         futureEvents={futureEvents}
         pastEvents={pastEvents}
-        variant="card"
+        variant="future-minimal"
       />
       <div className="p-6"></div>
     </>
