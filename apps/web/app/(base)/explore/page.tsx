@@ -15,7 +15,7 @@ export default async function Page() {
     (item) => item.startDateTime >= new Date(),
   );
   return (
-    <>
+    <div className="mx-auto max-w-2xl">
       <h1 className="-mt-10 mb-4 font-heading text-2xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
         <div className="flex gap-4">
           <Globe2 className="size-6" />
@@ -29,6 +29,6 @@ export default async function Page() {
         variant="future-minimal"
       />
       <div className="p-6"></div>
-    </>
+    </div>
   );
 }

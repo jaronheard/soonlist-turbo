@@ -813,7 +813,7 @@ export function EventListItem(props: EventListItemProps) {
               </Badge>
             )}
           </div>
-          <div className="absolute -bottom-1 -right-1 z-10">
+          <div className="absolute -bottom-0.5 -right-2 z-10">
             {/* <EventActionButtons
               user={user}
               event={event as AddToCalendarButtonPropsRestricted}
