@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { TRPCClientError } from "@trpc/client";
 import { toast } from "sonner";
 
 import { Button } from "@soonlist/ui/button";
@@ -26,6 +27,7 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
   const updateUserEmoji = api.user.updateEmoji.useMutation({
     onSuccess: () => {
       toast.success("Emoji updated successfully!");
+      setInputEmoji(""); // Clear the input after successful update
       void utils.user.invalidate();
       router.refresh();
     },
@@ -60,28 +62,21 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
 
   return (
     <div className="flex flex-col items-center justify-center space-y-8">
-      <div className="text-center">
-        <h2 className="mb-4 text-3xl font-bold text-gray-800">
-          {currentEmoji ? "Change Your Emoji" : "Choose Your Emoji"}
-        </h2>
-        <p className="text-lg text-gray-600">
-          This emoji will represent you across Soonlist
-        </p>
-      </div>
       <div className="flex flex-col items-center space-y-4">
         <Input
           type="text"
           value={inputEmoji}
           onChange={(e) => setInputEmoji(e.target.value)}
-          placeholder="Enter an emoji"
+          placeholder=""
           className="h-24 w-24 text-center text-5xl"
+          maxLength={2}
         />
         <Button
           onClick={handleSubmit}
           disabled={isButtonDisabled}
           className="px-8 py-4 text-xl"
         >
-          {currentEmoji ? "Update Emoji" : "Set Emoji"}
+          {currentEmoji ? "Update Emoji" : "Choose Emoji"}
         </Button>
       </div>
       {inputEmoji && (

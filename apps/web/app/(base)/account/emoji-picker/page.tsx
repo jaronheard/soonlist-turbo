@@ -8,17 +8,21 @@ export default async function EmojiPickerPage() {
   const user = await api.user.getById({ id: userId });
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex justify-center">
       <div className="rounded-lg bg-white p-12 shadow-lg">
         {user?.emoji ? (
           <div className="mb-8 text-center">
-            <h1 className="mb-6 text-5xl font-bold">Soonmoji</h1>
+            <h1 className="mb-6 font-heading text-5xl font-bold text-neutral-1">
+              Your Emoji
+            </h1>
             <p className="text-9xl">{user.emoji}</p>
           </div>
         ) : (
           <div className="mb-8 text-center">
-            <h1 className="mb-6 text-5xl font-bold">Soonmoji</h1>
-            <p className="text-9xl">👤</p>
+            <h1 className="mb-6 font-heading text-5xl font-bold text-neutral-1">
+              Your Emoji
+            </h1>
+            <p className="animate-spin text-9xl opacity-25">🌀</p>
           </div>
         )}
         <EmojiPicker currentEmoji={user?.emoji ?? undefined} />
