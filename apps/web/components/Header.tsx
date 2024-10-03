@@ -344,7 +344,7 @@ export function MobileNav() {
                 onOpenChange={setOpen}
                 className="w-full justify-start py-0 pl-0 text-neutral-2"
               >
-                {planName ? "Manage Plan" : "Upgrade"}
+                {planName ? "Founding Member" : "Upgrade"}
               </MobileLink>
             </div>
           </SignedIn>
