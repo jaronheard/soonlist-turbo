@@ -12,28 +12,48 @@ export const metadata = {
 };
 
 export default async function Page() {
-  const { sessionClaims } = auth().protect({
-    unauthenticatedUrl: "/sign-up",
-    unauthorizedUrl: "/",
-  });
+  const { userId } = auth();
+  const isLoggedIn = !!userId;
 
-  const checkoutUrlsForPlans = await api.stripe.getSubscriptionCheckoutUrls();
-  const customerPortalUrl = await api.stripe.getCustomerPortalUrl();
-  const checkoutUrls = checkoutUrlsForPlans.reduce(
-    (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
-    {},
-  );
+  let checkoutUrls: Record<string, string> = {};
+  let customerPortalUrl: string | undefined;
+  let currentPlan = "free";
+  let planActive = false;
+  let takenEmojis: string[] = [];
 
-  // Fetch taken emojis
-  const { takenEmojis } = await api.user.getAllTakenEmojis();
+  if (isLoggedIn) {
+    // User is logged in
+    const checkoutUrlsForPlans = await api.stripe.getSubscriptionCheckoutUrls();
+    customerPortalUrl = await api.stripe.getCustomerPortalUrl();
+    checkoutUrls = checkoutUrlsForPlans.reduce(
+      (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+      {},
+    );
 
-  const currentPlanStatus =
-    sessionClaims.publicMetadata?.plan?.status || "no plan";
-  const planActive =
-    currentPlanStatus === "active" || currentPlanStatus === "trialing";
-  const currentPlan = planActive
-    ? sessionClaims.publicMetadata?.plan?.name || "free"
-    : "free";
+    const { takenEmojis: fetchedEmojis } = await api.user.getAllTakenEmojis();
+    takenEmojis = fetchedEmojis;
+
+    const { sessionClaims } = auth();
+    const currentPlanStatus =
+      sessionClaims?.publicMetadata?.plan?.status || "no plan";
+    planActive =
+      currentPlanStatus === "active" || currentPlanStatus === "trialing";
+    currentPlan = planActive
+      ? sessionClaims?.publicMetadata?.plan?.name || "free"
+      : "free";
+  } else {
+    // User is not logged in
+    const publicCheckoutUrls =
+      await api.stripe.getPublicSubscriptionCheckoutUrls();
+    checkoutUrls = publicCheckoutUrls.reduce(
+      (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+      {},
+    );
+
+    // Fetch taken emojis for public view
+    const { takenEmojis: fetchedEmojis } = await api.user.getAllTakenEmojis();
+    takenEmojis = fetchedEmojis;
+  }
 
   return (
     <Pricing
@@ -42,6 +62,7 @@ export default async function Page() {
       planActive={planActive}
       customerPortalUrl={customerPortalUrl}
       takenEmojis={takenEmojis}
+      isLoggedIn={isLoggedIn}
     />
   );
 }

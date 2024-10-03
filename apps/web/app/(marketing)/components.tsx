@@ -53,11 +53,12 @@ export const tiers = [
 ];
 
 interface PricingProps {
-  checkoutUrls?: Record<string, string>;
-  currentPlan?: string;
-  planActive?: boolean;
+  checkoutUrls: Record<string, string>;
+  currentPlan: string;
+  planActive: boolean;
   customerPortalUrl?: string;
   takenEmojis: string[];
+  isLoggedIn: boolean;
 }
 
 export function Pricing({
@@ -66,6 +67,7 @@ export function Pricing({
   planActive,
   customerPortalUrl,
   takenEmojis,
+  isLoggedIn,
 }: PricingProps) {
   const tiersWithStatus = tiers.map((tier) => ({
     ...tier,
@@ -192,7 +194,7 @@ export function Pricing({
                   <Link
                     aria-describedby={tier.id}
                     className={cn("w-full", buttonVariants())}
-                    href={`${checkoutUrls?.[tier.id] || "/new"}`}
+                    href={`${checkoutUrls[tier.id] || "/new"}`}
                     scroll={false}
                   >
                     Join the Founding 100

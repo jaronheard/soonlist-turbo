@@ -1,22 +1,28 @@
 "use client";
 
 import React from "react";
+import { useUser } from "@clerk/nextjs";
 import { HelpCircle } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
 
-// Extend the Window interface to include Intercom
-declare global {
-  interface Window {
-    Intercom: (command: string, ...args: unknown[]) => void;
-  }
+import { newMessage } from "~/lib/intercom/intercom";
+
+interface IntercomHelpButtonProps {
+  message?: string;
 }
 
-export function IntercomHelpButton() {
+export function IntercomHelpButton({ message }: IntercomHelpButtonProps) {
+  const { isSignedIn } = useUser();
+
   const handleClick = () => {
-    if (typeof window !== "undefined" && window.Intercom) {
-      // Open the new message screen
-      window.Intercom("showNewMessage");
+    if (isSignedIn) {
+      newMessage(message || "I need some help with Soonlist...");
+    } else {
+      const subject = encodeURIComponent(
+        message || "I need some help with Soonlist...",
+      );
+      window.location.href = `mailto:support@soonlist.com?subject=${subject}`;
     }
   };
 
