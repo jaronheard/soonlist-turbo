@@ -10,12 +10,12 @@ export const stripeRouter = createTRPCRouter({
     const plans = {
       personal: {
         name: "personal",
-        priceId: process.env.STRIPE_PRICE_ID_PERSONAL_MONTHLY || "",
+        priceId: process.env.STRIPE_PRICE_ID_PERSONAL_ANNUAL || "",
       },
-      pro: {
-        name: "pro",
-        priceId: process.env.STRIPE_PRICE_ID_PRO_MONTHLY || "",
-      },
+      // pro: {
+      //   name: "pro",
+      //   priceId: process.env.STRIPE_PRICE_ID_PRO_MONTHLY || "",
+      // },
     };
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -46,7 +46,6 @@ export const stripeRouter = createTRPCRouter({
               userId: ctx.user.id,
               plan: planKey,
             },
-            trial_period_days: 14,
           },
           allow_promotion_codes: true,
         });
