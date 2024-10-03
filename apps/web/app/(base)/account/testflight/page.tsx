@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 
-import { IntercomHelpButton } from "~/components/IntercomHelpButton";
+import { HelpButton } from "~/components/HelpButton";
 
 export const metadata = {
   title: "Try Soonlist iOS App | TestFlight",
@@ -38,7 +38,7 @@ export default function TestFlightPage() {
           <p className="text-center text-lg">
             You'll install it through TestFlight, which is free and easy.
           </p>
-          <IntercomHelpButton />
+          <HelpButton />
           <a
             href="/account/emoji-picker"
             className="flex items-center text-sm text-muted-foreground hover:text-foreground"

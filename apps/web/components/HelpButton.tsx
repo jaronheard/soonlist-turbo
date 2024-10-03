@@ -8,11 +8,11 @@ import { Button } from "@soonlist/ui/button";
 
 import { newMessage } from "~/lib/intercom/intercom";
 
-interface IntercomHelpButtonProps {
+interface HelpButtonProps {
   message?: string;
 }
 
-export function IntercomHelpButton({ message }: IntercomHelpButtonProps) {
+export function HelpButton({ message }: HelpButtonProps) {
   const { isSignedIn } = useUser();
 
   const handleClick = () => {
