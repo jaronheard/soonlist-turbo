@@ -8,6 +8,7 @@ import {
   Accessibility,
   CalendarIcon,
   Ear,
+  Earth,
   EyeOff,
   GlobeIcon,
   MapPin,
@@ -30,17 +31,16 @@ import type {
 import type { Comment, EventFollow, List, User } from "@soonlist/db/types";
 import {
   eventTimesAreDefined,
+  formatCompactTimeRange,
   formatRelativeTime,
   getDateInfoUTC,
   getDateTimeInfo,
-  timeFormatDateInfo,
 } from "@soonlist/cal";
 import { Badge } from "@soonlist/ui/badge";
 import { Label } from "@soonlist/ui/label";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
-import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { feedback } from "~/lib/intercom/intercom";
 import { cn, translateToHtml } from "~/lib/utils";
@@ -53,7 +53,6 @@ import { buildDefaultUrl } from "./ImageUpload";
 import { ListCard } from "./ListCard";
 import { PersonalNote } from "./PersonalNote";
 import { ShareButton } from "./ShareButton";
-import { UserAllEventsCard } from "./UserAllEventsCard";
 
 interface EventListItemProps {
   list?: List; // this is the list that this is a part of
@@ -417,7 +416,6 @@ function EventMetadataDisplay({
 function EventDetails({
   id,
   name,
-  image,
   startDate,
   startTime,
   endDate,
@@ -428,10 +426,11 @@ function EventDetails({
   preview,
   EventActionButtons,
   metadata,
+  happeningNow,
+  visibility, // Add this prop
 }: {
   id: string;
   name: string;
-  image?: string;
   startTime: string;
   startDate: string;
   endTime: string;
@@ -443,6 +442,8 @@ function EventDetails({
   preview?: boolean;
   metadata?: EventMetadataDisplay;
   variant?: "minimal";
+  happeningNow?: boolean;
+  visibility: "public" | "private"; // Add this to the props type
 }) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
@@ -478,98 +479,63 @@ function EventDetails({
   }
 
   return (
-    <div className="flex w-full flex-col items-start justify-center gap-2">
-      <DateAndTimeDisplay
-        endDateInfo={endDateInfo}
-        endTime={endTime}
-        isClient={isClient}
-        startDateInfo={startDateInfo}
-        startTime={startTime}
-      />
-      <div className="flex w-full flex-col items-start gap-2">
+    <div className="relative">
+      <div className="mb-2 flex items-center">
+        {visibility === "private" ? (
+          <EyeOff className="mr-2 size-4 text-neutral-2" />
+        ) : (
+          <Earth className="mr-2 size-4 text-neutral-2" />
+        )}
+        <DateAndTimeDisplay
+          endDateInfo={endDateInfo}
+          endTime={endTime}
+          isClient={isClient}
+          startDateInfo={startDateInfo}
+          startTime={startTime}
+          happeningNow={happeningNow}
+          variant="compact"
+        />
+      </div>
+      <div className="">
         <Link
           href={preview ? "" : `/event/${id}`}
           className={
-            "line-clamp-3 pr-12 text-2.5xl font-bold leading-9 tracking-[0.56px] text-neutral-1"
+            "line-clamp-2 pb-1 text-lg font-bold leading-tight text-neutral-1"
           }
         >
           {name}
         </Link>
-        <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
+        <div className="text-xs">
           {location && (
             <Link
               href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-              className="line-clamp-1 flex shrink items-center gap-0.5 break-all text-neutral-2"
+              className="line-clamp-1 break-all text-neutral-2"
             >
-              <MapPin className="size-4 flex-shrink-0" />
-              <span className="line-clamp-1">{location}</span>
+              <MapPin className="mr-0.5 inline size-4" />
+              <span className="inline">{location}</span>
             </Link>
           )}
         </div>
-        {/* full width image with a max height, fill container to width */}
-        {image && (
-          <div
-            className={cn("relative h-32 w-full grow sm:h-56", {
-              "lg:hidden": !preview,
-            })}
-          >
-            <Image
-              className="rounded-xl object-cover"
-              src={image}
-              alt=""
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-              priority
-            />
-          </div>
-        )}
+
+        {/* TODO: 
         <div className="pt-2">
           <EventDescription description={description} truncate />
         </div>
-        {/* {!preview && (
-          <Link
-            href={`/event/${id}`}
-            className={cn(
-              buttonVariants({ variant: "link" }),
-              "group h-full p-0",
-            )}
-          >
-            Learn more{" "}
-            <ArrowRight className="ml-1 size-4 text-interactive-2 " />
-          </Link>
-        )} */}
+        */}
         {preview && (
           <div className="w-full">
             <EventMetadataDisplay metadata={metadata} />
           </div>
         )}
-        <div className="w-full">
-          {EventActionButtons && <>{EventActionButtons}</>}
+        <div className="absolute bottom-2 right-2 z-10">
+          {EventActionButtons}
         </div>
       </div>
     </div>
   );
 }
 
-function HappeningSoonBadge({
-  startDate,
-  startTime,
-  timezone,
-}: {
-  startDate: string;
-  startTime?: string;
-  timezone: string;
-}) {
-  const { timezone: userTimezone } = useContext(TimezoneContext);
-
-  const startDateInfo = startTime
-    ? getDateTimeInfo(startDate, startTime, timezone, userTimezone.toString())
-    : getDateInfoUTC(startDate);
-
-  if (!startDateInfo) {
-    return null;
-  }
-
+function HappeningSoonBadge({ startDateInfo }: { startDateInfo: DateInfo }) {
   const relativeTimeString = formatRelativeTime(startDateInfo);
   if (!relativeTimeString) {
     return null;
@@ -590,11 +556,7 @@ function HappeningSoonBadge({
   }
 
   return (
-    <Badge
-      className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1 opacity-80"
-      disabled
-      variant="yellow"
-    >{`${relativeTimeString}`}</Badge>
+    <span className="ml-1 whitespace-nowrap rounded-full bg-accent-yellow px-1 text-interactive-1">{`${relativeTimeString}`}</span>
   );
 }
 
@@ -726,11 +688,13 @@ interface UserInfoMiniProps {
   username: string;
   displayName: string;
   userImage: string;
+  showFollowButton?: boolean;
 }
 
 export function UserInfoMini({
   username,
   userImage,
+  showFollowButton = true,
 }: Omit<UserInfoMiniProps, "displayName">) {
   const { user: activeUser } = useUser();
 
@@ -755,10 +719,10 @@ export function UserInfoMini({
   const following = followingQuery.data;
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-0.5">
       <Link href={`/${username}/events`} className="relative flex items-center">
         <Image
-          className="inline-block size-4 rounded-full"
+          className="inline-block size-3 rounded-full"
           src={userImage}
           alt={`${username}'s profile picture`}
           width={16}
@@ -766,12 +730,12 @@ export function UserInfoMini({
         />
       </Link>
       <Link href={`/${username}/events`} className="group flex items-center">
-        <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
+        <p className="text-xs text-neutral-2 group-hover:text-neutral-1">
           @{username}
         </p>
       </Link>
       <div className="flex h-5 items-center">
-        {!self && user?.id && (
+        {!self && user?.id && showFollowButton && (
           <div className="origin-left scale-50 transform">
             <FollowUserButton userId={user.id} following={!!following} />
           </div>
@@ -791,48 +755,45 @@ export function EventListItem(props: EventListItemProps) {
   const image =
     event.images?.[3] ||
     (filePath ? buildDefaultUrl(props.filePath || "") : undefined);
-  // const comment = props.comments?.filter((item) => item.userId === user?.id).pop();
-  // always show curator if !isSelf
-  // const showOtherCurators = !isSelf && props.showOtherCurators;
-  // const showCurator = showOtherCurators || !props.hideCurator;
 
   if (!props.variant || props.variant === "minimal") {
     return (
-      <div className="relative">
+      <div className="relative border-b border-neutral-3 pb-1">
         {image && (
-          <Link href={`/event/${id}`}>
-            <Image
-              className="absolute left-0 top-7 z-10 hidden size-20 -translate-x-1/2 rounded-xl object-cover lg:block"
-              src={image}
-              alt=""
-              width={375}
-              height={375}
+          <div className="absolute right-0 top-0 h-full w-[75px] overflow-hidden rounded-xl">
+            <Link
+              href={`/event/${id}`}
+              className="relative block h-full w-full"
+            >
+              <div className="relative h-[calc(100%-8px)] w-full overflow-hidden rounded-xl">
+                <Image
+                  className="object-cover"
+                  src={image}
+                  alt=""
+                  fill
+                  sizes="75px"
+                  style={{ objectPosition: "center" }}
+                />
+              </div>
+            </Link>
+          </div>
+        )}
+        <li className="relative pr-20">
+          <div className="flex w-full items-start">
+            <EventDetails
+              id={id}
+              name={event.name!}
+              startDate={event.startDate!}
+              endDate={event.endDate!}
+              startTime={event.startTime!}
+              endTime={event.endTime!}
+              timezone={event.timeZone || "America/Los_Angeles"}
+              location={event.location}
+              happeningNow={props.happeningNow}
+              visibility={visibility} // Add this line
             />
-          </Link>
-        )}
-        {props.happeningNow && (
-          <Badge
-            className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 p-1"
-            disabled
-            variant="yellow"
-          >
-            Happening Now
-          </Badge>
-        )}
-        {event.startTime && event.startDate && (
-          <HappeningSoonBadge
-            startTime={event.startTime}
-            startDate={event.startDate}
-            timezone={event.timeZone || "America/Los_Angeles"}
-          />
-        )}
-        <li
-          className={cn(
-            "relative grid overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
-            { "lg:pl-16": !!image, "bg-accent-yellow/50": props.happeningNow },
-          )}
-        >
-          <div className="absolute bottom-2 left-2 z-10 flex gap-2 p-1">
+          </div>
+          <div className="p-1">
             {user &&
               lists &&
               lists.length > 0 &&
@@ -852,62 +813,29 @@ export function EventListItem(props: EventListItemProps) {
                 <UserInfoMini
                   username={user.username}
                   userImage={user.userImage}
+                  showFollowButton={false}
                 />
               )}
-            {visibility === "private" && (
-              <Badge variant="destructive">
-                <EyeOff className="mr-2 inline size-4" /> Not Discoverable
-              </Badge>
-            )}
           </div>
-          {props.variant === "minimal" && (
-            <div className="absolute bottom-2 right-2 z-10 p-1">
-              <EventActionButtons
-                user={user}
-                event={event as AddToCalendarButtonPropsRestricted}
-                id={id}
-                isOwner={!!isOwner}
-                isFollowing={isFollowing}
-                visibility={props.visibility}
-                variant="minimal"
-                size="sm"
-              />
-            </div>
-          )}
-          <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
-          <div className="absolute right-0 top-0 p-3">
-            <EventDateDisplaySimple
-              startDate={event.startDate}
-              startTime={event.startTime}
-              endDate={event.endDate}
-              endTime={event.endTime}
-              timezone={event.timeZone || "America/Los_Angeles"}
-            />
-          </div>
-          <div className="flex w-full items-start gap-7">
-            <EventDetails
+          <div className="absolute -bottom-0.5 -right-2 z-10">
+            {/* <EventActionButtons
+              user={user}
+              event={event as AddToCalendarButtonPropsRestricted}
               id={id}
-              name={event.name!}
-              image={image}
-              startDate={event.startDate!}
-              endDate={event.endDate!}
-              startTime={event.startTime!}
-              endTime={event.endTime!}
-              timezone={event.timeZone || "America/Los_Angeles"}
-              location={event.location}
-              // description={event.description}
-              EventActionButtons={
-                <EventActionButtons
-                  user={user}
-                  event={event as AddToCalendarButtonPropsRestricted}
-                  id={id}
-                  isOwner={!!isOwner}
-                  isFollowing={isFollowing}
-                  visibility={props.visibility}
-                  variant={props.variant === "minimal" ? "none" : undefined}
-                />
-              }
-            />
+              isOwner={!!isOwner}
+              isFollowing={isFollowing}
+              visibility={props.visibility}
+              variant="minimal"
+              size="sm"
+            /> */}
+
+            {!isOwner && (
+              <FollowEventButton
+                eventId={id}
+                following={isFollowing}
+                type="icon"
+              />
+            )}
           </div>
         </li>
       </div>
@@ -965,7 +893,7 @@ export function EventListItem(props: EventListItemProps) {
         </div>
       </div>
       <div className="p-3"></div>
-      <div className="absolute bottom-2 left-2 z-10 flex gap-2 p-1">
+      <div className="absolute bottom-2 left-2 z-10 flex gap-2">
         {user &&
           lists &&
           lists.length > 0 &&
@@ -980,10 +908,14 @@ export function EventListItem(props: EventListItemProps) {
             ></ListCard>
           ))}
         {user && (
-          <UserInfoMini username={user.username} userImage={user.userImage} />
+          <UserInfoMini
+            username={user.username}
+            userImage={user.userImage}
+            showFollowButton={false}
+          />
         )}
       </div>
-      <div className="absolute bottom-2 right-2 z-10 p-1">
+      <div className="absolute bottom-2 right-2 z-20">
         <EventActionButtons
           user={user}
           event={event as AddToCalendarButtonPropsRestricted}
@@ -1003,9 +935,6 @@ export function EventPreview(
   props: EventListItemProps & { event: AddToCalendarCardProps },
 ) {
   const { id, event } = props;
-  const { croppedImagesUrls } = useCroppedImageContext();
-  const { images } = event;
-  const image = croppedImagesUrls.cropped || images?.[3];
 
   return (
     <div
@@ -1032,11 +961,11 @@ export function EventPreview(
           endDate={event.endDate!}
           startTime={event.startTime!}
           endTime={event.endTime!}
-          image={image}
           timezone={event.timeZone || "America/Los_Angeles"}
           location={event.location}
           description={event.description}
           metadata={event.eventMetadata}
+          visibility={"public"}
         />
       </div>
     </div>
@@ -1044,6 +973,7 @@ export function EventPreview(
 }
 
 function DateAndTimeDisplay({
+  happeningNow,
   endDateInfo,
   endTime,
   isClient,
@@ -1051,6 +981,7 @@ function DateAndTimeDisplay({
   startTime,
   variant = "default",
 }: {
+  happeningNow?: boolean;
   endDateInfo: DateInfo;
   endTime?: string;
   isClient: boolean;
@@ -1059,33 +990,29 @@ function DateAndTimeDisplay({
   variant?: "default" | "compact";
 }) {
   return (
-    <div className="flex flex-col gap-2 pr-12 text-lg font-medium leading-none">
+    <div className="flex flex-col gap-2 font-medium leading-none">
       {isClient && eventTimesAreDefined(startTime, endTime) && (
         <div
           className={cn(
-            "flex flex-col text-neutral-2 sm:flex-row",
-            variant === "compact" && "sm:flex-col",
+            " text-sm uppercase text-neutral-2",
+            variant === "compact" && "text-xs text-neutral-2 sm:flex-col",
           )}
           suppressHydrationWarning
         >
-          <div>
-            {startDateInfo.dayOfWeek.substring(0, 3)}
-            {", "}
-            {startDateInfo.month}/{startDateInfo.day}/
-            {startDateInfo.year.toString().substring(2, 4)}
-          </div>
-          <div
-            className={cn(
-              "mx-1 hidden text-neutral-3 sm:block",
-              variant === "compact" && "sm:hidden",
-            )}
-          >
-            {"//"}
-          </div>
-          <div>
-            {timeFormatDateInfo(startDateInfo)}-
-            {timeFormatDateInfo(endDateInfo)}
-          </div>
+          <span>
+            {startDateInfo.dayOfWeek.substring(0, 3)}{" "}
+            {startDateInfo.monthName.substring(0, 3)} {startDateInfo.day}
+            {" • "}
+            {formatCompactTimeRange(startDateInfo, endDateInfo)}
+          </span>
+          {happeningNow && (
+            <span className="ml-1 rounded-full bg-yellow-100 px-1 text-yellow-700">
+              Now!
+            </span>
+          )}{" "}
+          {startTime && startDateInfo && (
+            <HappeningSoonBadge startDateInfo={startDateInfo} />
+          )}
         </div>
       )}
     </div>
@@ -1108,7 +1035,6 @@ export function EventPage(props: EventPageProps) {
     image,
     singleEvent,
     children,
-    lists,
     eventMetadata,
     visibility,
   } = props;
@@ -1121,7 +1047,6 @@ export function EventPage(props: EventPageProps) {
   const comment = props.comments
     .filter((item) => user?.id === item.userId)
     .pop();
-  const hasLists = user && lists && lists.length > 0;
 
   const {
     startDate,
@@ -1157,9 +1082,9 @@ export function EventPage(props: EventPageProps) {
 
   return (
     <div className="">
-      <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
+      <div className="grid grid-cols-1 gap-1 ">
         <div>
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
             <DateAndTimeDisplay
               endDateInfo={endDateInfo}
               endTime={endTime}
@@ -1167,10 +1092,8 @@ export function EventPage(props: EventPageProps) {
               startDateInfo={startDateInfo}
               startTime={startTime}
             />
-            <h1 className="font-heading text-5xl font-bold leading-[3.5rem]">
-              {event.name}
-            </h1>
-            <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
+            <h1 className="text-xl font-bold text-neutral-1">{event.name}</h1>
+            <div className="flex-start text-md flex gap-2 pr-12 leading-tight">
               {location && (
                 <Link
                   href={`https://www.google.com/maps/search/?api=1&query=${location}`}
@@ -1183,29 +1106,20 @@ export function EventPage(props: EventPageProps) {
             </div>
             <PersonalNote text={comment?.content} />
 
-            {!hasLists && user && (
-              <UserAllEventsCard
-                username={user.username}
-                userImage={user.userImage}
+            {visibility === "private" && (
+              <GlobeIcon className="size-4 text-neutral-2" />
+            )}
+            {image && (
+              <Image
+                src={image}
+                className="mx-auto h-auto max-h-96 w-full object-contain"
+                alt=""
+                width={640}
+                height={480}
               />
             )}
-            {hasLists &&
-              lists.map((list) => (
-                <ListCard
-                  key={list.id}
-                  name={list.name}
-                  username={user.username}
-                  id={list.id}
-                />
-              ))}
-            {visibility === "private" && (
-              <>
-                <Badge className="max-w-fit" variant="destructive">
-                  <EyeOff className="mr-1 inline" size={16} /> Not Discoverable
-                </Badge>
-              </>
-            )}
           </div>
+
           <div className="flex flex-col gap-8 pt-8">
             <EventDescription
               description={event.description || ""}
@@ -1239,30 +1153,9 @@ export function EventPage(props: EventPageProps) {
             )}
           </div>
         </div>
-        {image && (
-          <Image
-            src={image}
-            className="mx-auto h-auto max-h-96 w-full object-contain"
-            alt=""
-            width={640}
-            height={480}
-          />
-        )}
+
         {children}
       </div>
-      {/* <div className="absolute right-2 top-6">
-        {isOwner && (
-          <SignedIn>
-            <EventActionButton
-              user={user}
-              event={event}
-              id={id}
-              isOwner={!!isOwner}
-              isFollowing={isFollowing}
-            />
-          </SignedIn>
-        )}
-      </div> */}
     </div>
   );
 }

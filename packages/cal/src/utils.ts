@@ -339,16 +339,39 @@ export function formatRelativeTime(dateInfo: DateInfo): string {
   }
 
   if (days === 0 && hours === 0) {
-    return `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    return `~${minutes} min${minutes === 1 ? "" : "s"}`;
   }
   if (days === 0 && hours < 1) {
-    return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    return `~${hours} hr${hours === 1 ? "" : "s"} ${minutes} min${minutes === 1 ? "" : "s"}`;
   }
   if (isToday) {
-    return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
+    return `~${hours} hr${hours === 1 ? "" : "s"}`;
   }
   if (isTomorrow) {
     return `Tomorrow`;
   }
   return ``;
+}
+
+export function formatCompactTimeRange(start: DateInfo, end: DateInfo): string {
+  const formatHour = (hour: number): string => {
+    const h = hour % 12 || 12;
+    return h.toString();
+  };
+
+  const formatMinute = (minute: number): string =>
+    minute === 0 ? "" : `:${minute.toString().padStart(2, "0")}`;
+
+  const startHour = formatHour(start.hour);
+  const startMinute = formatMinute(start.minute);
+  const endHour = formatHour(end.hour);
+  const endMinute = formatMinute(end.minute);
+  const startPeriod = start.hour < 12 ? "am" : "pm";
+  const endPeriod = end.hour < 12 ? "am" : "pm";
+
+  if (startPeriod === endPeriod) {
+    return `${startHour}${startMinute}–${endHour}${endMinute}${endPeriod}`;
+  } else {
+    return `${startHour}${startMinute}${startPeriod}–${endHour}${endMinute}${endPeriod}`;
+  }
 }
