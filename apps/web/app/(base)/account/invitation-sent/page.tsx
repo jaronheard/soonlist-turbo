@@ -1,6 +1,6 @@
 import React from "react";
 
-import { IntercomHelpButton } from "~/components/IntercomHelpButton";
+import { HelpButton } from "~/components/HelpButton";
 
 export const metadata = {
   title: "Invitation Sent | Soonlist",
@@ -21,7 +21,7 @@ export default function InvitationSentPage() {
         If you don't see the email in your inbox, please check your spam folder.
       </p>
       <div className="flex justify-center space-x-4">
-        <IntercomHelpButton />
+        <HelpButton />
       </div>
     </div>
   );

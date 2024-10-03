@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { IntercomHelpButton } from "~/components/IntercomHelpButton";
+import { HelpButton } from "~/components/HelpButton";
 import { api } from "~/trpc/react";
 
 export default function SubscriptionSuccessPage() {
@@ -35,7 +35,7 @@ export default function SubscriptionSuccessPage() {
   return (
     <div className="flex flex-col items-center justify-center space-y-8 text-center">
       <Loader2 className="h-12 w-12 animate-spin" />
-      <IntercomHelpButton message="I need help with my subscription" />
+      <HelpButton message="I need help with my subscription" />
     </div>
   );
 }
