@@ -28,7 +28,7 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
       toast.success("Emoji updated successfully!");
       setInputEmoji(""); // Clear the input after successful update
       void utils.user.invalidate();
-      router.refresh();
+      router.push("/account/testflight"); // Redirect to TestFlight page
     },
     onError: (error) => {
       toast.error(`Failed to update emoji: ${error.message}`);
