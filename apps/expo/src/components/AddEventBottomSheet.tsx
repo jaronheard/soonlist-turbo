@@ -322,8 +322,8 @@ const AddEventBottomSheet = React.forwardRef<
     // Dismiss the modal immediately
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
 
-    // Show the toast message
-    showToast("Adding to Soonlist...", "loading");
+    // Notify user and encourage app exit
+    showToast("Got it. Notification soon!", "success");
 
     const createEvent = async () => {
       if (linkPreview) {
