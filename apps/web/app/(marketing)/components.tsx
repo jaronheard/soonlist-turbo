@@ -51,14 +51,13 @@ export const tiers = [
     id: "personal",
     href: "#",
     priceAnnually: "$29.99",
-    description: "Shape the future of Soonlist. Only 100 spots.",
+    description: "All Your Possibilities, Organized",
     features: [
       "Capture unlimited events",
-      "Automatic organization for events",
+      "Early access to iOS app",
       "Shape product development",
-      "Early access to new features",
       "Unique profile emoji",
-      "Lifetime discount: $29.99/year (70% off)",
+      "Price for life (70% off)",
     ],
     mostPopular: true,
     free: false,
@@ -122,7 +121,7 @@ export function Pricing({
               Limited Availability
             </h2>
             <p className="mt-2 text-xl font-bold text-neutral-1">
-              🙀 Only {remainingSpots} Founding Member Spots Remaining 🙀
+              Only 100 Founding Member Spots Available 🎉
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               Pick a signature emoji to pair with your profile picture, for
@@ -149,7 +148,7 @@ export function Pricing({
           </div>
         </div>
       </div>
-      <div className="isolate mx-auto mt-6 grid max-w-md grid-cols-1 gap-y-8 sm:mt-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+      <div className="isolate mx-auto mt-6 grid max-w-md grid-cols-1 gap-y-8 sm:mt-8 lg:mx-0 lg:max-w-none lg:grid-cols-1">
         {tiersWithStatus.map((tier, tierIdx) => (
           <div
             key={tier.id}
@@ -176,7 +175,7 @@ export function Pricing({
                 {tier.current ? (
                   <Badge variant={"default"}>Current plan</Badge>
                 ) : tier.mostPopular ? (
-                  <Badge variant={"secondary"}>Only 100 spots</Badge>
+                  <Badge variant={"secondary"}>{remainingSpots} left</Badge>
                 ) : null}
               </div>
               <p className="mt-4 text-lg leading-6 text-neutral-2">
@@ -193,13 +192,7 @@ export function Pricing({
               {tier.mostPopular && (
                 <>
                   <div className="p-2"></div>
-                  <Suspense
-                    fallback={
-                      <Badge variant={"secondary"}>🌈 NOTAFLOF available</Badge>
-                    }
-                  >
-                    <NotaflofBadge />
-                  </Suspense>
+                  <Badge variant={"outline"}>🌈 NOTAFLOF available</Badge>
                 </>
               )}
               <ul
@@ -232,7 +225,7 @@ export function Pricing({
                     href={`${checkoutUrls?.[tier.id] || "/new"}`}
                     scroll={false}
                   >
-                    Get started
+                    Join Soonlist
                   </Link>
                 )}
               {!tier.soon && tier.active && tier.id !== "free" && (
