@@ -5,20 +5,10 @@ import { HelpCircle } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
 
-// Extend the Window interface to include Intercom
-declare global {
-  interface Window {
-    Intercom: (command: string, ...args: unknown[]) => void;
-  }
-}
+import { newMessage } from "~/lib/intercom/intercom";
 
 export function IntercomHelpButton() {
-  const handleClick = () => {
-    if (typeof window !== "undefined" && window.Intercom) {
-      // Open the new message screen
-      window.Intercom("showNewMessage");
-    }
-  };
+  const handleClick = () => newMessage("I need some help with Soonlist...");
 
   return (
     <Button
