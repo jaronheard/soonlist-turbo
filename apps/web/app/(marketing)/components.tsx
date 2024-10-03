@@ -33,18 +33,6 @@ export const NotaflofBadge = () => {
   );
 };
 export const tiers = [
-  // {
-  //   name: "Free",
-  //   id: "free",
-  //   href: "#",
-  //   priceMonthly: "$0",
-  //   priceAnnually: "$0",
-  //   description: "A few lists for your public events.",
-  //   features: ["Add up to 100 public events", "3 public event lists"],
-  //   mostPopular: false,
-  //   free: true,
-  //   soon: false,
-  // },
   {
     name: "Founding Member",
     id: "personal",
@@ -62,23 +50,6 @@ export const tiers = [
     free: false,
     soon: false,
   },
-  // {
-  //   name: "Pro (coming soon)",
-  //   id: "pro",
-  //   href: "#",
-  //   priceAnnually: "$350",
-  //   description: "Customize, integrate, and brand your events and lists.",
-  //   features: [
-  //     "Unlimited events & lists",
-  //     "Customize prompts & fields",
-  //     "Embeddable lists",
-  //     "Custom colors & branding",
-  //     "Priority support",
-  //   ],
-  //   mostPopular: false,
-  //   free: false,
-  //   soon: true,
-  // },
 ];
 
 interface PricingProps {
@@ -224,7 +195,7 @@ export function Pricing({
                     href={`${checkoutUrls?.[tier.id] || "/new"}`}
                     scroll={false}
                   >
-                    Join Soonlist
+                    Join the Founding 100
                   </Link>
                 )}
               {!tier.soon && tier.active && tier.id !== "free" && (
