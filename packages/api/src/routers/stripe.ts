@@ -172,7 +172,7 @@ export const stripeRouter = createTRPCRouter({
             plan: session.metadata?.plan,
             stripeCustomerId: session.customer as string,
           },
-          redirectUrl: `${protocol}://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/sign-up`,
+          // redirectUrl: `${protocol}://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/sign-up`,
         });
 
         return { success: true, invitationId: invitation.id };
