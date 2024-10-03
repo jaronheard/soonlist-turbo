@@ -75,7 +75,10 @@ export default async function Page({ params }: Props) {
           </div>
         </h1>
       ) : (
-        <UserInfo userName={params.userName} />
+        <>
+          <UserInfo userName={params.userName} />
+          <div className="p-2"></div>
+        </>
       )}
       <EventList
         currentEvents={currentEvents}
