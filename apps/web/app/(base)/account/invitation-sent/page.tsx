@@ -1,7 +1,4 @@
 import React from "react";
-import Link from "next/link";
-
-import { Button } from "@soonlist/ui/button";
 
 import { IntercomHelpButton } from "~/components/IntercomHelpButton";
 
