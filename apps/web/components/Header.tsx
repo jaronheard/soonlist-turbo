@@ -10,13 +10,7 @@ import {
   useClerk,
   useUser,
 } from "@clerk/nextjs";
-import {
-  CalendarHeart,
-  CalendarPlus,
-  Globe2Icon,
-  Menu,
-  Star,
-} from "lucide-react";
+import { CalendarHeart, CalendarPlus, Globe2Icon, Menu } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
@@ -41,6 +35,7 @@ import {
 } from "./DropdownMenu";
 import { Logo } from "./Logo";
 import { TimezoneSelect } from "./TimezoneSelect";
+import { UserProfileFlair } from "./UserProfileFlair";
 import { WaitlistButtonWithDrawer } from "./WaitlistSignup";
 
 export function Header() {
@@ -183,12 +178,9 @@ const ListItem = React.forwardRef<
 ListItem.displayName = "ListItem";
 
 const UserMenu = () => {
-  // Grab the `isLoaded` and `user` from useUser()
   const { isLoaded, user } = useUser();
-  // Grab the signOut and openUserProfile methods
   const { signOut, openUserProfile } = useClerk();
 
-  // if not loaded return a 32x32 grey circle pulsing
   if (!isLoaded || !user?.id) {
     return (
       <div className="size-8 animate-pulse rounded-full bg-gray-100 p-1"></div>
@@ -206,20 +198,16 @@ const UserMenu = () => {
 
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger className="relative hidden py-2 lg:block">
-        {activePaid && (
-          <Star
-            className="absolute bottom-0.5 right-0 z-10 size-[1rem] rounded-full bg-interactive-2 p-0.5 text-interactive-1"
-            fill="currentColor"
+      <DropdownMenuTrigger className="hidden py-2 lg:block">
+        <UserProfileFlair username={user.username ?? ""}>
+          <Image
+            alt={"User"}
+            src={user.imageUrl}
+            width={32}
+            height={32}
+            className="rounded-full border border-gray-200 drop-shadow-sm"
           />
-        )}
-        <Image
-          alt={"User"}
-          src={user.imageUrl}
-          width={32}
-          height={32}
-          className="rounded-full border border-gray-200 drop-shadow-sm"
-        />
+        </UserProfileFlair>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="flex flex-col gap-1">
         <TimezoneSelect />
@@ -228,34 +216,24 @@ const UserMenu = () => {
           className="flex items-center gap-2"
           onClick={() => openUserProfile()}
         >
-          {user.imageUrl ? (
-            <div className="relative py-2">
-              {activePaid && (
-                <Star
-                  className="absolute bottom-0.5 right-0 z-10 size-[1rem] rounded-full bg-interactive-2 p-0.5 text-interactive-1"
-                  fill="currentColor"
-                />
-              )}
-              <Image
-                alt={"User"}
-                src={user.imageUrl}
-                width={32}
-                height={32}
-                className="size-8 rounded-full"
-              />
-            </div>
-          ) : (
-            <div className="size-8 rounded-full bg-gray-100"></div>
-          )}
+          <UserProfileFlair username={user.username ?? ""}>
+            <Image
+              alt={"User"}
+              src={user.imageUrl}
+              width={32}
+              height={32}
+              className="size-8 rounded-full"
+            />
+          </UserProfileFlair>
           <div className="text-lg font-medium text-neutral-2">
             @{user.username}
           </div>
         </DropdownMenuItem>
         <div className="ml-2 flex flex-col space-y-3 text-neutral-2">
-          {planName && (
+          {activePaid && (
             <MobileLink href={"/account/plans"}>Manage Plan</MobileLink>
           )}
-          {!planName && (
+          {!activePaid && (
             <MobileLink href={"/account/plans"}>Upgrade</MobileLink>
           )}
         </div>
@@ -343,13 +321,15 @@ export function MobileNav() {
               onClick={() => openUserProfile()}
             >
               {user?.imageUrl ? (
-                <Image
-                  alt={"User"}
-                  src={user.imageUrl}
-                  width={32}
-                  height={32}
-                  className="size-8 rounded-full"
-                />
+                <UserProfileFlair username={user.username ?? ""}>
+                  <Image
+                    alt={"User"}
+                    src={user.imageUrl}
+                    width={32}
+                    height={32}
+                    className="size-8 rounded-full"
+                  />
+                </UserProfileFlair>
               ) : (
                 <div className="size-8 rounded-full bg-gray-100"></div>
               )}

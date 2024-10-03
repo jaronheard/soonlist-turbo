@@ -53,6 +53,7 @@ import { buildDefaultUrl } from "./ImageUpload";
 import { ListCard } from "./ListCard";
 import { PersonalNote } from "./PersonalNote";
 import { ShareButton } from "./ShareButton";
+import { UserProfileFlair } from "./UserProfileFlair";
 
 interface EventListItemProps {
   list?: List; // this is the list that this is a part of
@@ -721,13 +722,15 @@ export function UserInfoMini({
   return (
     <div className="flex items-center gap-0.5">
       <Link href={`/${username}/events`} className="relative flex items-center">
-        <Image
-          className="inline-block size-3 rounded-full"
-          src={userImage}
-          alt={`${username}'s profile picture`}
-          width={16}
-          height={16}
-        />
+        <UserProfileFlair username={username} size="xs">
+          <Image
+            className="inline-block size-3 rounded-full"
+            src={userImage}
+            alt={`${username}'s profile picture`}
+            width={16}
+            height={16}
+          />
+        </UserProfileFlair>
       </Link>
       <Link href={`/${username}/events`} className="group flex items-center">
         <p className="text-xs text-neutral-2 group-hover:text-neutral-1">
