@@ -83,22 +83,29 @@ export const tiers = [
   // },
 ];
 
+interface PricingProps {
+  checkoutUrls?: Record<string, string>;
+  currentPlan?: string;
+  planActive?: boolean;
+  customerPortalUrl?: string;
+  takenEmojis: string[];
+}
+
 export function Pricing({
   checkoutUrls,
   currentPlan,
   planActive,
   customerPortalUrl,
-}: {
-  checkoutUrls?: Record<string, string>;
-  currentPlan?: string;
-  planActive?: boolean;
-  customerPortalUrl?: string;
-}) {
+  takenEmojis,
+}: PricingProps) {
   const tiersWithStatus = tiers.map((tier) => ({
     ...tier,
     current: tier.id === currentPlan,
     active: tier.id === currentPlan && planActive,
   }));
+
+  const foundingMemberSpots = 100;
+  const remainingSpots = foundingMemberSpots - takenEmojis.length;
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -114,14 +121,31 @@ export function Pricing({
             <h2 className="text-lg font-semibold text-accent-foreground">
               Limited Availability
             </h2>
-            <p className="mt-2 text-xl font-bold text-accent-foreground">
-              🎉 Only 100 Founding Member Spots Available 🎉
+            <p className="mt-2 text-xl font-bold text-neutral-1">
+              🙀 Only {remainingSpots} Founding Member Spots Remaining 🙀
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Be among the first to experience Soonlist and help shape its
-              future. Pick a signature emoji to pair with your profile, for
+              Pick a signature emoji to pair with your profile picture, for
               founding members only.
             </p>
+            {takenEmojis.length > 0 && (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-semibold text-accent-foreground">
+                  Join these other founding members:
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {takenEmojis.map((emoji, index) => (
+                    <span
+                      key={index}
+                      className="text-2xl"
+                      title="Founding Member"
+                    >
+                      {emoji}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

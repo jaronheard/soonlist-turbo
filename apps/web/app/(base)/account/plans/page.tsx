@@ -24,6 +24,9 @@ export default async function Page() {
     {},
   );
 
+  // Fetch taken emojis
+  const { takenEmojis } = await api.user.getAllTakenEmojis();
+
   const currentPlanStatus =
     sessionClaims.publicMetadata?.plan?.status || "no plan";
   const planActive =
@@ -38,6 +41,7 @@ export default async function Page() {
       currentPlan={currentPlan}
       planActive={planActive}
       customerPortalUrl={customerPortalUrl}
+      takenEmojis={takenEmojis}
     />
   );
 }
