@@ -16,7 +16,7 @@ export default async function Page() {
   );
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-4 font-heading text-2xl font-bold leading-[1.08333] tracking-tight text-gray-800">
+      <h1 className="mb-4 font-heading text-2xl font-bold leading-[1.08333] tracking-tight text-neutral-1">
         <div className="flex gap-4">
           <Globe2 className="size-6" />
           Discover

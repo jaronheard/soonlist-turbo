@@ -509,7 +509,7 @@ function EventDetails({
           {location && (
             <Link
               href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-              className="line-clamp-1  break-all text-neutral-2"
+              className="line-clamp-1 break-all text-neutral-2"
             >
               <MapPin className="mr-0.5 inline size-4" />
               <span className="inline">{location}</span>
@@ -556,7 +556,7 @@ function HappeningSoonBadge({ startDateInfo }: { startDateInfo: DateInfo }) {
   }
 
   return (
-    <span className="ml-1 whitespace-nowrap rounded-full bg-yellow-100 px-1 text-yellow-700">{`${relativeTimeString}`}</span>
+    <span className="ml-1 whitespace-nowrap rounded-full bg-accent-yellow px-1 text-interactive-1">{`${relativeTimeString}`}</span>
   );
 }
 
@@ -730,7 +730,7 @@ export function UserInfoMini({
         />
       </Link>
       <Link href={`/${username}/events`} className="group flex items-center">
-        <p className="text-xs text-gray-500 group-hover:text-gray-700">
+        <p className="text-xs text-neutral-2 group-hover:text-neutral-1">
           @{username}
         </p>
       </Link>
@@ -758,7 +758,7 @@ export function EventListItem(props: EventListItemProps) {
 
   if (!props.variant || props.variant === "minimal") {
     return (
-      <div className="relative border-b border-neutral-100 pb-1">
+      <div className="relative border-b border-neutral-3 pb-1">
         {image && (
           <div className="absolute right-0 top-0 h-full w-[75px] overflow-hidden rounded-xl">
             <Link
@@ -778,7 +778,7 @@ export function EventListItem(props: EventListItemProps) {
             </Link>
           </div>
         )}
-        <li className="relative pr-[85px]">
+        <li className="relative pr-20">
           <div className="flex w-full items-start">
             <EventDetails
               id={id}
@@ -990,12 +990,12 @@ function DateAndTimeDisplay({
   variant?: "default" | "compact";
 }) {
   return (
-    <div className="flex flex-col gap-2 leading-none">
+    <div className="flex flex-col gap-2 font-medium leading-none">
       {isClient && eventTimesAreDefined(startTime, endTime) && (
         <div
           className={cn(
             " text-sm uppercase text-neutral-2",
-            variant === "compact" && "text-xs sm:flex-col",
+            variant === "compact" && "text-xs text-neutral-2 sm:flex-col",
           )}
           suppressHydrationWarning
         >
@@ -1092,8 +1092,8 @@ export function EventPage(props: EventPageProps) {
               startDateInfo={startDateInfo}
               startTime={startTime}
             />
-            <h1 className="text-xl font-bold ">{event.name}</h1>
-            <div className="flex-start text-m flex gap-2 pr-12 leading-none">
+            <h1 className="text-xl font-bold text-neutral-1">{event.name}</h1>
+            <div className="flex-start text-md flex gap-2 pr-12 leading-tight">
               {location && (
                 <Link
                   href={`https://www.google.com/maps/search/?api=1&query=${location}`}

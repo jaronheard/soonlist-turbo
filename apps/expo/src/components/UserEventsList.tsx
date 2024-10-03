@@ -176,7 +176,7 @@ export function UserEventListItem(props: {
                 </Text>
               </View>
               <Text
-                className="mb-2 text-3xl font-bold text-neutral-1"
+                className="mb-2 text-xl font-bold text-neutral-1"
                 numberOfLines={2}
                 ellipsizeMode="tail"
               >

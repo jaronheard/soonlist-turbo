@@ -113,7 +113,7 @@ export function FollowEventButton({
           disabled={isLoading}
           variant="ghost"
           size="icon"
-          className="bg-purple-100 text-purple-700 hover:bg-purple-200"
+          className="bg-interactive-2 text-interactive-1 hover:bg-interactive-2"
         >
           {isLoading && <Loader2 className="size-4 animate-spin" />}
           {!isLoading && (
@@ -133,7 +133,7 @@ export function FollowEventButton({
             : follow.mutate({ id: eventId })
         }
         disabled={isLoading}
-        className="bg-purple-100 text-purple-700 hover:bg-purple-200"
+        className="bg-interactive-3 text-interactive-1 hover:bg-interactive-3/90"
       >
         {isLoading && (
           <>

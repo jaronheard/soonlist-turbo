@@ -68,7 +68,7 @@ export default async function Page({ params }: Props) {
   return (
     <div className="mx-auto max-w-2xl">
       {self ? (
-        <h1 className="mb-4 font-heading text-2xl font-bold leading-[1.08333] tracking-tight text-gray-800 ">
+        <h1 className="mb-4 font-heading text-2xl font-bold leading-[1.08333] tracking-tight text-neutral-1 ">
           <div className="flex gap-4">
             <CalendarHeart className="size-6" />
             My Feed
