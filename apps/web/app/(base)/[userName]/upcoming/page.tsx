@@ -66,16 +66,19 @@ export default async function Page({ params }: Props) {
   );
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto max-w-2xl">
       {self ? (
-        <h1 className="-mt-8 mb-4 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
+        <h1 className="mb-4 font-heading text-2xl font-bold leading-[1.08333] tracking-tight text-neutral-1 ">
           <div className="flex gap-4">
-            <CalendarHeart className="size-10" />
+            <CalendarHeart className="size-6" />
             My Feed
           </div>
         </h1>
       ) : (
-        <UserInfo userName={params.userName} />
+        <>
+          <UserInfo userName={params.userName} />
+          <div className="p-2"></div>
+        </>
       )}
       <EventList
         currentEvents={currentEvents}
