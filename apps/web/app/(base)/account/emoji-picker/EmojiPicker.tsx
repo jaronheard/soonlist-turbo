@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@soonlist/ui/button";
@@ -14,8 +13,7 @@ interface EmojiPickerProps {
 }
 
 export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
-  const router = useRouter();
-  const [inputEmoji, setInputEmoji] = useState("");
+  const [inputEmoji, setInputEmoji] = useState(currentEmoji ?? "");
   const [isUpdating, setIsUpdating] = useState(false);
 
   const { data: emojiStatus, refetch: refetchEmojiStatus } =
@@ -26,9 +24,7 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
   const updateUserEmoji = api.user.updateEmoji.useMutation({
     onSuccess: () => {
       toast.success("Emoji updated successfully!");
-      setInputEmoji(""); // Clear the input after successful update
       void utils.user.invalidate();
-      router.push("/account/testflight"); // Redirect to TestFlight page
     },
     onError: (error) => {
       toast.error(`Failed to update emoji: ${error.message}`);
@@ -38,7 +34,11 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
 
   const isEmojiAvailable =
     emojiStatus && !emojiStatus.takenEmojis.includes(inputEmoji);
-  const isButtonDisabled = isUpdating || inputEmoji === "" || !isEmojiAvailable;
+  const isButtonDisabled =
+    isUpdating ||
+    inputEmoji === "" ||
+    !isEmojiAvailable ||
+    inputEmoji === currentEmoji;
 
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -68,10 +68,12 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
           className="h-24 w-24 text-center text-5xl"
           maxLength={2}
         />
-        <div className="text-sm">
+        <div className="text-sm font-medium">
           {inputEmoji &&
             (emojiStatus === undefined ? (
               <p className="text-muted-foreground">Checking availability...</p>
+            ) : inputEmoji === currentEmoji ? (
+              <p className="text-success">Your emoji</p>
             ) : isEmojiAvailable ? (
               <p className="text-success">Available</p>
             ) : (
@@ -83,7 +85,7 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
           disabled={isButtonDisabled}
           className="px-8 py-4 text-xl"
         >
-          {currentEmoji ? "Update Emoji" : "Choose Emoji"}
+          {currentEmoji ? "Change Emoji" : "Choose Emoji"}
         </Button>
       </div>
       {otherUsersEmojis.length > 0 && (

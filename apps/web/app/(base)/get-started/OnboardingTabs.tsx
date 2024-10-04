@@ -1,29 +1,14 @@
 "use client";
 
 import type { z } from "zod";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  CheckCircle2,
-  CircleDashed,
-  Globe,
-  Instagram,
-  Mail,
-  PartyPopper,
-  Pen,
-  Phone,
-} from "lucide-react";
+import { Check, Globe, Instagram, Mail, Pen, Phone } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@soonlist/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@soonlist/ui/card";
 import {
   Form,
   FormControl,
@@ -37,7 +22,6 @@ import { Input } from "@soonlist/ui/input";
 import { Textarea } from "@soonlist/ui/textarea";
 import { userAdditionalInfoSchema } from "@soonlist/validators";
 
-import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 export function OnboardingTabs({
@@ -45,47 +29,34 @@ export function OnboardingTabs({
 }: {
   additionalInfo: z.infer<typeof userAdditionalInfoSchema>;
 }) {
-  const router = useRouter();
-
-  return (
-    <Card className="mx-auto w-full max-w-3xl">
-      <CardHeader className="space-y-1">
-        <CardTitle>Public Profile</CardTitle>
-        <CardDescription>
-          This information will be shown on events you create.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <UserProfileForm
-          defaultValues={additionalInfo}
-          onSubmitSuccess={() => router.push("/account/plans")}
-        />
-      </CardContent>
-    </Card>
-  );
+  return <UserProfileForm defaultValues={additionalInfo} />;
 }
 
-export function UserProfileForm({
+function UserProfileForm({
   defaultValues,
-  onSubmitSuccess,
 }: {
-  onSubmitSuccess: () => void;
   defaultValues: z.infer<typeof userAdditionalInfoSchema>;
 }) {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFormChanged, setIsFormChanged] = useState(false);
   const form = useForm({
     defaultValues: defaultValues,
     resolver: zodResolver(userAdditionalInfoSchema),
   });
 
   const updateAdditionalInfo = api.user.updateAdditionalInfo.useMutation({
-    onError: () => {
-      toast.error("Public profile not saved. Please try again.");
+    onMutate: () => {
+      setIsSubmitting(true);
+    },
+    onError: (error) => {
+      setIsSubmitting(false);
+      toast.error(`Public profile not saved: ${error.message}`);
     },
     onSuccess: () => {
+      setIsSubmitting(false);
       toast.success("Public profile saved.");
-      router.refresh();
-      onSubmitSuccess();
+      router.refresh(); // Refresh the page to reflect the changes
     },
   });
 
@@ -93,133 +64,137 @@ export function UserProfileForm({
     updateAdditionalInfo.mutate(values);
   }
 
+  const renderIcon = (
+    value: string | undefined,
+    defaultValue: string | undefined,
+  ) => {
+    if (value && value === defaultValue) {
+      return <Check className="ml-2 h-4 w-4 text-green-500" />;
+    } else if (value && value !== defaultValue) {
+      return <Pen className="ml-2 h-4 w-4 text-blue-500" />;
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      const isChanged = Object.keys(value).some(
+        (key) =>
+          value[key as keyof typeof value] !==
+          defaultValues[key as keyof typeof defaultValues],
+      );
+      setIsFormChanged(isChanged);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, defaultValues]);
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="space-y-2">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="bio"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center">
+                Bio
+                {renderIcon(field.value, defaultValues.bio)}
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Enter your bio (max 150 characters)"
+                  className="h-[200px] min-h-[200px] resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                Example: I love ambient music, creative community building, and
+                vegan pop-ups.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">How to connect</h3>
+          <p className="text-sm text-muted-foreground">
+            Share any contact info you want visible publicly.
+          </p>
           <FormField
             control={form.control}
-            name="bio"
+            name="publicEmail"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Bio</FormLabel>
+                <FormLabel className="flex items-center gap-1">
+                  <Mail className="size-4" />
+                  Email
+                  {renderIcon(field.value, defaultValues.publicEmail)}
+                </FormLabel>
                 <FormControl>
-                  <Textarea
-                    placeholder="Enter your bio (max 150 characters)"
-                    className="h-[200px] min-h-[200px] resize-none"
-                    {...field}
-                  />
+                  <Input placeholder="email@example.com" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Example: I love ambient music, creative community building,
-                  and vegan pop-ups.
-                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="publicPhone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-1">
+                  <Phone className="size-4" />
+                  Phone
+                  {renderIcon(field.value, defaultValues.publicPhone)}
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="1234567890" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="publicInsta"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-1">
+                  <Instagram className="size-4" />
+                  Instagram
+                  {renderIcon(field.value, defaultValues.publicInsta)}
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="username" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="publicWebsite"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-1">
+                  <Globe className="size-4" />
+                  Website
+                  {renderIcon(field.value, defaultValues.publicWebsite)}
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="www.example.com" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <Card className="my-4">
-          <CardHeader>
-            <CardTitle>How to connect</CardTitle>
-            <CardDescription>
-              Share any contact info you want visible publicly.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4">
-              <FormField
-                control={form.control}
-                name="publicEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <Mail className="size-4" />
-                      Email
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="email@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="publicPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <Phone className="size-4" />
-                      Phone
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="1234567890" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="publicInsta"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <Instagram className="size-4" />
-                      Instagram
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="username" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="publicWebsite"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <Globe className="size-4" />
-                      Website
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="www.example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </CardContent>
-        </Card>
-        <Button type="submit" size="lg">
-          <PartyPopper className="mr-2 size-4"></PartyPopper>
-          Choose your plan
+
+        <Button type="submit" disabled={isSubmitting || !isFormChanged}>
+          {isSubmitting ? "Saving..." : "Save Profile"}
         </Button>
       </form>
     </Form>
   );
-}
-export function ProgressIcon({
-  status,
-  className,
-}: {
-  status: "complete" | "active" | "incomplete";
-  className?: string;
-}) {
-  const commonClasses = "mr-2 size-4";
-
-  if (status === "complete") {
-    return <CheckCircle2 className={cn(commonClasses, className)} />;
-  }
-  if (status === "active") {
-    return <Pen className={cn(commonClasses, className)} />;
-  }
-  if (status === "incomplete") {
-    return <CircleDashed className={cn(commonClasses, className)} />;
-  }
-  return null;
 }
