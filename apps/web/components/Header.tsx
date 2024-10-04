@@ -132,7 +132,7 @@ export function Nav() {
             <Button asChild>
               <Link href={"/join"} scroll={false}>
                 <Ticket className="mr-2 size-4"></Ticket>
-                <span className="inline">&nbsp;Start now</span>
+                <span className="inline">&nbsp;Join now</span>
               </Link>
             </Button>
           </SignedOut>

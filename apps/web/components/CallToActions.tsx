@@ -35,6 +35,7 @@ export function CTAButtonMembership({
   return (
     <Button asChild size="lg">
       <Link href={"/join"} scroll={false}>
+        <Ticket className="mr-2 size-4"></Ticket>
         {children}
       </Link>
     </Button>

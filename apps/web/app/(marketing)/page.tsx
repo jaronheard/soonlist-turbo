@@ -73,8 +73,8 @@ function ConnectWithWhatMatters() {
       <div className="relative mx-auto h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
         <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-update-cropped-update-v4.mp4" />
       </div>
-      <div className="mt-12 grid gap-8 md:grid-cols-3">
-        <div className="flex flex-col items-center">
+      <div className="mt-12 grid divide-y divide-neutral-200 md:grid-cols-3 md:divide-x md:divide-y-0">
+        <div className="flex flex-col items-center px-4 py-8 md:py-0">
           <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
             Capture Effortlessly
           </h2>
@@ -93,7 +93,7 @@ function ConnectWithWhatMatters() {
             />
           </div>
         </div>
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center px-4 py-8 md:py-0">
           <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
             Organize Automatically
           </h2>
@@ -112,7 +112,7 @@ function ConnectWithWhatMatters() {
             />
           </div>
         </div>
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center px-4 py-8 md:py-0">
           <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
             Show Up Confidently
           </h2>
@@ -163,7 +163,7 @@ function FeaturesHighlight() {
   ];
 
   return (
-    <div className="bg-gradient-to-b from-white to-gray-50 py-24 sm:py-32">
+    <div className="bg-gradient-to-b from-white to-gray-50 py-16">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-base font-semibold leading-7 text-indigo-600">
@@ -200,7 +200,7 @@ function FeaturesHighlight() {
 
 function MembershipSection() {
   return (
-    <div className="bg-white py-24 sm:py-32">
+    <div className="bg-white py-16">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -262,7 +262,7 @@ function MembershipSection() {
                 <p className="text-base font-semibold text-gray-600">
                   Founding Member Offer
                 </p>
-                <p className="mt-6 flex items-baseline justify-center gap-x-2">
+                <p className="mb-6 mt-6 flex items-baseline justify-center gap-x-2">
                   <span className="text-5xl font-bold tracking-tight text-gray-900">
                     $29
                   </span>
@@ -270,12 +270,7 @@ function MembershipSection() {
                     USD/year
                   </span>
                 </p>
-                <a
-                  href="#"
-                  className="mt-10 block w-full rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                >
-                  Become a Founding Member
-                </a>
+                <CTAButtonMembership>Become a Member</CTAButtonMembership>
                 <p className="mt-6 text-xs leading-5 text-gray-600">
                   Limited to first 100 subscribers. 30-day money-back guarantee.
                 </p>
@@ -330,7 +325,7 @@ function FAQSection() {
   ];
 
   return (
-    <div className="bg-gradient-to-b from-white to-gray-50 py-24 sm:py-32">
+    <div className="bg-gradient-to-b from-white to-gray-50 py-16">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -374,7 +369,7 @@ export default function Page() {
           priority
           className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg object-contain object-top opacity-[0.05]"
         />
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-16 py-16 pb-48 md:grid-cols-1 md:gap-x-16 md:pt-24">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-16 py-16 pb-24 md:grid-cols-1 md:gap-x-16 md:pt-24">
           <div className="mx-auto">
             <div className="mx-auto text-center">
               <h1 className="font-heading text-6xl font-bold leading-[0.875] tracking-tighterish text-gray-700 md:text-8xl md:leading-[0.875]">
@@ -447,7 +442,7 @@ export default function Page() {
       <ConnectWithWhatMatters />
       <FeaturesHighlight />
 
-      <div className="bg-white py-24 sm:py-32">
+      <div className="bg-white py-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:text-center">
             <h2 className="text-base font-semibold leading-7 text-indigo-600">
@@ -505,7 +500,7 @@ export default function Page() {
       <FAQSection />
 
       <div className="bg-white">
-        <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
+        <div className="px-6 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
               All Your Possibilities, Organized
@@ -514,7 +509,7 @@ export default function Page() {
               See it, save it, show up... it's that easy with Soonlist
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <CTAButtonMembership>Start</CTAButtonMembership>
+              <CTAButtonMembership>Become a member now!</CTAButtonMembership>
             </div>
           </div>
         </div>
