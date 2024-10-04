@@ -23,13 +23,14 @@ const tiers = [
     id: "personal",
     href: "#",
     priceAnnually: "$29.99",
+    percentOff: 70, // Add this line to specify the discount percentage
     description: "All Your Possibilities, Organized",
     features: [
       "Capture unlimited events",
       "Early access to iOS app",
       "Shape product development",
       "Unique profile emoji",
-      "Price for life (70% off)",
+      "Locked-in price",
     ],
     mostPopular: true,
     free: false,
@@ -95,13 +96,11 @@ export function FoundingMemberPricing({
         </div>
       </div>
       <div className="isolate mx-auto mt-6 grid max-w-md grid-cols-1 gap-y-8 sm:mt-8 lg:mx-0 lg:max-w-none lg:grid-cols-1">
-        {tiersWithStatus.map((tier, tierIdx) => (
+        {tiersWithStatus.map((tier) => (
           <div
             key={tier.id}
             className={cn(
-              tier.mostPopular ? "lg:z-10 lg:rounded-b-none" : "lg:mt-8",
-              tierIdx === 0 ? "lg:rounded-r-none" : "",
-              tierIdx === tiers.length - 1 ? "lg:rounded-l-none" : "",
+              tier.mostPopular ? "lg:z-10" : "lg:mt-8",
               tier.soon ? "opacity-75" : "",
               "flex flex-col justify-between rounded-xl border border-neutral-3 bg-white p-8 shadow-sm xl:p-10",
               tier.current ? "border-accent-foreground" : "",
@@ -127,13 +126,18 @@ export function FoundingMemberPricing({
               <p className="mt-4 text-lg leading-6 text-neutral-2">
                 {tier.description}
               </p>
-              <p className="mt-6 flex items-baseline gap-x-1">
+              <p className="mt-6 flex items-center gap-x-3">
                 <span className="font-heading text-4xl font-bold tracking-tight text-gray-900">
                   {tier.priceAnnually}
                 </span>
                 <span className="text-lg font-semibold leading-6 text-neutral-2">
                   /year
                 </span>
+                {tier.percentOff && (
+                  <span className="-mt-2 inline-flex items-center justify-center rounded-full bg-interactive-3 px-4 py-2 text-xl font-bold text-interactive-1">
+                    {tier.percentOff}% OFF
+                  </span>
+                )}
               </p>
               {tier.mostPopular && (
                 <>
