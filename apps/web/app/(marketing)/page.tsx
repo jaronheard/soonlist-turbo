@@ -179,7 +179,7 @@ function HeroSection() {
           fill
           alt=""
           priority
-          className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg object-contain object-top opacity-[0.05]"
+          className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg object-contain object-top opacity-[0.10]"
         />
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-8 md:grid-cols-1 md:gap-x-8">
           <div className="mx-auto text-center">
@@ -194,7 +194,7 @@ function HeroSection() {
                   viewBox="0 0 492 96"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
-                  className="tranform absolute inset-0 z-[-1] h-full w-full scale-110 opacity-100"
+                  className="tranform absolute inset-0 z-[-1] h-full w-full scale-110 scale-y-125 opacity-100"
                 >
                   <path
                     d="M0.977745 90.0631L13.3028 15.2256C13.6677 13.01 15.557 11.3673 17.8018 11.314L487.107 0.163765C490.41 0.0852941 492.749 3.36593 491.598 6.4625792.749 3.36593 491.598 6.46257L456.629 93.9515C455.321 97.4489 450.628 97.8499 448.728 94.6723L0.977745 90.0631Z"
@@ -202,7 +202,7 @@ function HeroSection() {
                   />
                 </svg>
                 Possibilities,
-              </span>
+              </span>{" "}
               Organized
             </h1>
             <p className="mx-auto mt-4 max-w-[36rem] text-xl leading-8 text-gray-400">
@@ -277,7 +277,7 @@ function ConnectWithWhatMatters() {
               Capture Effortlessly
             </h2>
             <div className="py-2"></div>
-            <p className="mt-2 text-lg leading-7 text-gray-500">
+            <p className="mt-2 text-left text-lg leading-7 text-gray-500">
               See an interesting event? Save it instantly, no matter where you
               found it.
             </p>
@@ -296,7 +296,7 @@ function ConnectWithWhatMatters() {
               Organize Automatically
             </h2>
             <div className="py-2"></div>
-            <p className="mt-2 text-lg leading-7 text-gray-500">
+            <p className="mt-2 text-left text-lg leading-7 text-gray-500">
               We sort and categorize your saved events, so you always know
               what's coming up.
             </p>
@@ -315,7 +315,7 @@ function ConnectWithWhatMatters() {
               Show Up Confidently
             </h2>
             <div className="py-2"></div>
-            <p className="mt-2 text-lg leading-7 text-gray-500">
+            <p className="mt-2 text-left text-lg leading-7 text-gray-500">
               Get gentle reminders and easy ways to share with friends, ensuring
               you never miss out.
             </p>
