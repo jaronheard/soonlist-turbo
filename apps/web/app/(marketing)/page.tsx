@@ -257,7 +257,7 @@ function FAQSection() {
     <div className="bg-gradient-to-b from-white to-gray-50 py-16">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <h2 className="font-heading text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Frequently Asked Questions
           </h2>
           <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
@@ -431,13 +431,16 @@ export default function Page() {
       <MembershipSection />
       <FAQSection />
 
-      <div className="bg-white">
+      <div className="bg-interactive-3">
         <div className="px-6 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              All Your Possibilities, Organized
+            <h2 className="text-2xl font-bold text-interactive-1">
+              Organize Your Future
             </h2>
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
+            <p className="pt-5 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
+              All Your Possibilities, Organized
+            </p>
+            <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
               See it, save it, show up... it's that easy with Soonlist
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
