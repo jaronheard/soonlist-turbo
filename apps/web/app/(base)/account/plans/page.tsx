@@ -1,7 +1,7 @@
 import React from "react";
 import { auth } from "@clerk/nextjs/server";
 
-import { Pricing } from "~/app/(marketing)/components";
+import { FoundingMemberPricing } from "~/components/FoundingMemberPricing";
 import { api } from "~/trpc/server";
 
 export const metadata = {
@@ -56,13 +56,12 @@ export default async function Page() {
   }
 
   return (
-    <Pricing
+    <FoundingMemberPricing
       checkoutUrls={checkoutUrls}
       currentPlan={currentPlan}
       planActive={planActive}
       customerPortalUrl={customerPortalUrl}
       takenEmojis={takenEmojis}
-      isLoggedIn={isLoggedIn}
     />
   );
 }
