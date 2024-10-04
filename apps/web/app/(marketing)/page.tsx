@@ -397,25 +397,49 @@ export default function Page() {
                 </span>
                 Organized
               </h1>
-              <p className="mt-6 text-lg leading-8 text-gray-600">
+              <p className="mx-auto mt-6 max-w-[36rem] text-2xl leading-9 text-gray-400">
                 See it, save it, show up... it's that easy with Soonlist
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
-                <CTAButtonMembership>
-                  Start showing up with Soonlist
-                </CTAButtonMembership>
+                <CTAButtonMembership>Start Showing Up</CTAButtonMembership>
               </div>
             </div>
           </div>
           <div className="mx-auto max-w-2xl">
             <p className="mt-6 text-lg leading-8 text-gray-600">
-              Screenshots of warehouse dance party invitations from your
-              Instagram Stories, flyers for your favorite touring bands on the
-              coffeeshop wall, ceramics workshops shared by your friends in a
-              text. Are you missing out on events that matter to you? Soonlist
-              helps you capture, organize, share and remember possibilities. All
-              you have to do is show up.
+              Are you missing out on events that matter to you?
             </p>
+            <div className="mx-auto max-w-2xl">
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <div className="rotate-2 transform">
+                  <div className="inline-block rounded-md bg-accent-yellow px-2 py-1 text-xs text-neutral-1 shadow-sm">
+                    Warehouse dance party from Instagram Stories
+                  </div>
+                </div>
+                <div className="-rotate-3 transform">
+                  <div className="inline-block rounded-md bg-accent-orange px-2 py-1 text-xs text-neutral-1 shadow-sm">
+                    Touring band flyers on the coffee shop wall
+                  </div>
+                </div>
+                <div className="rotate-1 transform">
+                  <div className="inline-block rounded-md bg-accent-green px-2 py-1 text-xs text-neutral-1 shadow-sm">
+                    Ceramics workshops from your friend
+                  </div>
+                </div>
+                <div className="-rotate-2 transform">
+                  <div className="inline-block rounded-md bg-accent-blue px-2 py-1 text-xs text-neutral-1 shadow-sm">
+                    A networking event from your company newsletter
+                  </div>
+                </div>
+              </div>
+              <p className="mt-6 text-lg leading-8 text-gray-600">
+                Soonlist helps you <span className="font-bold">capture</span>,{" "}
+                <span className="font-bold">organize</span>,{" "}
+                <span className="font-bold">share</span> and{" "}
+                <span className="font-bold">remember</span> possibilities. All
+                you have to do is <span className="font-bold">show up</span>.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -490,9 +514,7 @@ export default function Page() {
               See it, save it, show up... it's that easy with Soonlist
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <CTAButtonMembership>
-                Start showing up with Soonlist
-              </CTAButtonMembership>
+              <CTAButtonMembership>Start</CTAButtonMembership>
             </div>
           </div>
         </div>
