@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 
 import { HelpButton } from "~/components/HelpButton";
 import { api } from "~/trpc/server";
-import { EmojiPicker } from "../account/emoji-picker/EmojiPicker";
+import { EmojiPicker } from "./EmojiPicker";
 import { OnboardingTabs } from "./OnboardingTabs";
 
 export const metadata = {
