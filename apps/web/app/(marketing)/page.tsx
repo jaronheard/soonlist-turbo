@@ -170,7 +170,7 @@ function SectionTitle({
 
 function HeroSection() {
   return (
-    <Section className="bg-interactive-3 pt-24">
+    <Section className="pt-24">
       <div className="relative isolate">
         <Image
           src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
@@ -237,7 +237,7 @@ function HeroSection() {
               </div>
               <p className="mt-6 text-lg leading-8 text-gray-600">
                 Soonlist helps you <span className="font-bold">capture</span>,{" "}
-                <span className="font-bold">organize</span>,{" "}
+                <span className="font-bold">organize</span>{" "}
                 <span className="font-bold">share</span> and{" "}
                 <span className="font-bold">remember</span> possibilities. All
                 you have to do is <span className="font-bold">show up</span>.
@@ -253,7 +253,7 @@ function HeroSection() {
 function ConnectWithWhatMatters() {
   return (
     <Section>
-      <div className="rounded-xl border border-neutral-3 px-4 py-16 text-center md:px-16 lg:px-24">
+      <div className="rounded-xl border border-neutral-3 bg-white px-4 py-16 text-center md:px-16 lg:px-24">
         <SectionTitle title="How It Works" />
         <div className="relative mx-auto h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
           <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-update-cropped-update-v4.mp4" />
@@ -465,9 +465,13 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 
 export default function Page() {
   return (
-    <div className="bg-white">
-      <HeroSection />
-      <ConnectWithWhatMatters />
+    <div className="bg-gray-50">
+      <div className="bg-interactive-3 pb-32">
+        <HeroSection />
+      </div>
+      <div className="-mt-32">
+        <ConnectWithWhatMatters />
+      </div>
       <FeaturesHighlight />
       <TestimonialsSection />
       <MembershipSection />
