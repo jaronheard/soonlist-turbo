@@ -10,7 +10,13 @@ import {
   useClerk,
   useUser,
 } from "@clerk/nextjs";
-import { CalendarHeart, CalendarPlus, Globe2Icon, Menu } from "lucide-react";
+import {
+  CalendarHeart,
+  CalendarPlus,
+  Globe2Icon,
+  Menu,
+  Ticket,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
@@ -36,7 +42,6 @@ import {
 import { Logo } from "./Logo";
 import { TimezoneSelect } from "./TimezoneSelect";
 import { UserProfileFlair } from "./UserProfileFlair";
-import { WaitlistButtonWithDrawer } from "./WaitlistSignup";
 
 export function Header() {
   const { user } = useUser();
@@ -124,7 +129,12 @@ export function Nav() {
             </Link>
           </SignedIn>
           <SignedOut>
-            <WaitlistButtonWithDrawer />
+            <Button asChild>
+              <Link href={"/join"} scroll={false}>
+                <Ticket className="mr-2 size-4"></Ticket>
+                <span className="inline">&nbsp;Start now</span>
+              </Link>
+            </Button>
           </SignedOut>
         </NavigationMenuItem>
       </NavigationMenuList>

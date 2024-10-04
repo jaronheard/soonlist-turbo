@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, Ticket } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
 
@@ -34,7 +34,7 @@ export function CTAButtonMembership({
 }: CTAButtonMembershipProps) {
   return (
     <Button asChild size="lg">
-      <Link href={"/new"} scroll={false}>
+      <Link href={"/join"} scroll={false}>
         {children}
       </Link>
     </Button>

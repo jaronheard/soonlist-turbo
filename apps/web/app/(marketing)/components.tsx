@@ -92,7 +92,7 @@ export function Pricing({
               Limited Availability
             </h2>
             <p className="mt-2 text-xl font-bold text-neutral-1">
-              Only 100 Founding Member Spots Available 🎉
+              Only 💯&nbsp;Founding Member Spots&nbsp;🎈
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               Pick a signature emoji to pair with your profile picture, for
@@ -196,7 +196,7 @@ export function Pricing({
                     href={`${checkoutUrls[tier.id] || "/new"}`}
                     scroll={false}
                   >
-                    Join the Founding 100
+                    Join the Founding 💯
                   </Link>
                 )}
               {!tier.soon && tier.active && tier.id !== "free" && (
