@@ -67,7 +67,6 @@ export function Pricing({
   planActive,
   customerPortalUrl,
   takenEmojis,
-  isLoggedIn,
 }: PricingProps) {
   const tiersWithStatus = tiers.map((tier) => ({
     ...tier,
