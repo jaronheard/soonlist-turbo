@@ -149,7 +149,7 @@ function SectionTitle({
 }: {
   subtitle?: string;
   title: string;
-  description?: string;
+  description?: string | React.ReactNode;
 }) {
   return (
     <div className="mx-auto max-w-2xl text-center">
@@ -177,7 +177,7 @@ function HeroSection() {
           fill
           alt=""
           priority
-          className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg object-contain object-top opacity-[0.10]"
+          className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg object-contain object-top opacity-[0.05]"
         />
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-8 md:grid-cols-1 md:gap-x-8">
           <div className="mx-auto text-center">
@@ -439,7 +439,6 @@ function ClosingCTASection() {
     <Section className="bg-interactive-3">
       <div className="text-center">
         <SectionTitle
-          subtitle="Organize Your Future"
           title="All Your Possibilities, Organized"
           description="See it, save it, show up... it's that easy with Soonlist"
         />
