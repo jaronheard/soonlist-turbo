@@ -1,6 +1,7 @@
 import Image from "next/image";
+import { Bell, Calendar, ChevronDownIcon, Share2, Zap } from "lucide-react";
 
-import { CTAButton } from "~/components/CallToActions";
+import { CTAButtonMembership } from "~/components/CallToActions";
 import { AutoPlayVideo } from "./components";
 
 const testimonials = [
@@ -63,24 +64,24 @@ const testimonials = [
 
 function ConnectWithWhatMatters() {
   return (
-    <div className="px-4 py-16 text-center md:rounded-xl md:border md:border-neutral-3 md:px-16 lg:px-24">
+    <div className="m-2 px-4 py-16 text-center md:rounded-xl md:border md:border-neutral-3 md:px-16 lg:px-24">
       <div className="mx-auto max-w-2.5xl">
-        <h1 className="font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
-          Add, organize, and share events that inspire you.
+        <h1 className="pb-4 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
+          How It Works
         </h1>
-        {/* <p className="mx-auto mt-6 max-w-3xl text-2xl leading-9 text-gray-400">
-          Add, organize, and share events that inspire you.
-        </p> */}
+      </div>
+      <div className="relative mx-auto h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
+        <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-update-cropped-update-v4.mp4" />
       </div>
       <div className="mt-12 grid gap-8 md:grid-cols-3">
-        <div>
+        <div className="flex flex-col items-center">
           <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-            Add (it all)
+            Capture Effortlessly
           </h2>
           <div className="py-2"></div>
           <p className="mt-2 text-lg leading-7 text-gray-500">
-            Capture events details from screenshots, websites, flyers, and
-            beyond.
+            See an interesting event? Save it instantly, no matter where you
+            found it.
           </p>
           <div className="flex space-x-2 px-5 pt-14">
             <Image
@@ -92,13 +93,14 @@ function ConnectWithWhatMatters() {
             />
           </div>
         </div>
-        <div>
+        <div className="flex flex-col items-center">
           <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-            Organize (your way)
+            Organize Automatically
           </h2>
           <div className="py-2"></div>
           <p className="mt-2 text-lg leading-7 text-gray-500">
-            Make lists, add to your personal calendar, and stay up to date.
+            We sort and categorize your saved events, so you always know what's
+            coming up.
           </p>
           <div className="flex space-x-2 px-5 pt-14">
             <Image
@@ -112,12 +114,12 @@ function ConnectWithWhatMatters() {
         </div>
         <div className="flex flex-col items-center">
           <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-            Share (with anyone)
+            Show Up Confidently
           </h2>
           <div className="py-2"></div>
           <p className="mt-2 text-lg leading-7 text-gray-500">
-            Send links to friends, family, or your community—no social media
-            needed.
+            Get gentle reminders and easy ways to share with friends, ensuring
+            you never miss out.
           </p>
           <div className="flex space-x-2 px-5 pt-14">
             <Image
@@ -131,6 +133,233 @@ function ConnectWithWhatMatters() {
         </div>
       </div>
     </div>
+  );
+}
+
+function FeaturesHighlight() {
+  const features = [
+    {
+      title: "Smart Capture",
+      description:
+        "Save events from any source – social media, flyers, texts, and more",
+      icon: Zap,
+    },
+    {
+      title: "Personalized Organization",
+      description: "Auto-categorize and prioritize your saved events",
+      icon: Calendar,
+    },
+    {
+      title: "Easy Sharing",
+      description: "Discover and share events with like-minded enthusiasts",
+      icon: Share2,
+    },
+    {
+      title: "Reminder System",
+      description:
+        "Gentle nudges to help you follow through on your intentions",
+      icon: Bell,
+    },
+  ];
+
+  return (
+    <div className="bg-gradient-to-b from-white to-gray-50 py-24 sm:py-32">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-base font-semibold leading-7 text-indigo-600">
+            Features
+          </h2>
+          <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            Everything you need to organize your possibilities
+          </p>
+        </div>
+        <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+          <dl className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map((feature) => (
+              <div key={feature.title} className="relative pl-16">
+                <dt className="text-base font-semibold leading-7 text-gray-900">
+                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
+                    <feature.icon
+                      className="h-6 w-6 text-white"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  {feature.title}
+                </dt>
+                <dd className="mt-2 text-base leading-7 text-gray-600">
+                  {feature.description}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MembershipSection() {
+  return (
+    <div className="bg-white py-24 sm:py-32">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            Be Among the First 100 - Save Big on Unlimited Possibilities
+          </h2>
+          <p className="mt-6 text-lg leading-8 text-gray-600">
+            Founding Members Get 70% Off - Just $29/year Instead of $99/year
+          </p>
+        </div>
+        <div className="mx-auto mt-16 max-w-2xl rounded-3xl ring-1 ring-gray-200 sm:mt-20 lg:mx-0 lg:flex lg:max-w-none">
+          <div className="p-8 sm:p-10 lg:flex-auto">
+            <h3 className="text-2xl font-bold tracking-tight text-gray-900">
+              Founding Member Subscription
+            </h3>
+            <p className="mt-6 text-base leading-7 text-gray-600">
+              Lock in our founding member rate of $29/year (regular price:
+              $99/year) and enjoy full access to all premium features. Don't
+              miss this chance to save $70 annually!
+            </p>
+            <div className="mt-10 flex items-center gap-x-4">
+              <h4 className="flex-none text-sm font-semibold leading-6 text-indigo-600">
+                What's included
+              </h4>
+              <div className="h-px flex-auto bg-gray-100"></div>
+            </div>
+            <ul
+              role="list"
+              className="mt-8 grid grid-cols-1 gap-4 text-sm leading-6 text-gray-600 sm:grid-cols-2 sm:gap-6"
+            >
+              {[
+                "Unlimited event captures across all platforms",
+                "Intelligent, automatic event organization",
+                "Create and manage your personal event lists",
+                "Early access to new features and improvements",
+                "Special Founding Member Emoji on your profile",
+                "Shape and inform new product ideas",
+              ].map((feature) => (
+                <li key={feature} className="flex gap-x-3">
+                  <svg
+                    className="h-6 w-5 flex-none text-indigo-600"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="-mt-2 p-2 lg:mt-0 lg:w-full lg:max-w-md lg:flex-shrink-0">
+            <div className="rounded-2xl bg-gray-50 py-10 text-center ring-1 ring-inset ring-gray-900/5 lg:flex lg:flex-col lg:justify-center lg:py-16">
+              <div className="mx-auto max-w-xs px-8">
+                <p className="text-base font-semibold text-gray-600">
+                  Founding Member Offer
+                </p>
+                <p className="mt-6 flex items-baseline justify-center gap-x-2">
+                  <span className="text-5xl font-bold tracking-tight text-gray-900">
+                    $29
+                  </span>
+                  <span className="text-sm font-semibold leading-6 tracking-wide text-gray-600">
+                    USD/year
+                  </span>
+                </p>
+                <a
+                  href="#"
+                  className="mt-10 block w-full rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                >
+                  Become a Founding Member
+                </a>
+                <p className="mt-6 text-xs leading-5 text-gray-600">
+                  Limited to first 100 subscribers. 30-day money-back guarantee.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FAQSection() {
+  const faqs = [
+    {
+      question: "How does Soonlist help me show up to events?",
+      answer:
+        "Soonlist combines smart event capture, personalized organization, and gentle reminders to ensure you not only save interesting events but actually attend them. We bridge the gap between discovery and attendance.",
+    },
+    {
+      question: "Is Soonlist only for certain types of events?",
+      answer:
+        "Not at all! Soonlist is for anyone who wants to make the most of their opportunities. Whether you're into art, music, sports, professional networking, or personal growth, Soonlist helps you capture and organize all your possibilities.",
+    },
+    {
+      question:
+        "How is the Soonlist community different from social media groups?",
+      answer:
+        "Unlike broad social networks, the Soonlist community is united by a shared desire to turn intentions into actions. Our members are supportive, curious, and always eager to share unique event discoveries.",
+    },
+    {
+      question: "Can I try Soonlist before committing to a year?",
+      answer:
+        "While we don't offer a free trial, we have a 30-day satisfaction guarantee. If you don't feel more connected to your possibilities within the first month, we'll refund your membership fee, no questions asked.",
+    },
+    {
+      question: "Is the $29/year price guaranteed for life?",
+      answer:
+        "The $29/year rate is a special offer for our first 100 subscribers, a 70% discount off our regular $99/year price. As a founding member, you'll lock in this discounted rate for as long as you maintain your subscription.",
+    },
+    {
+      question:
+        "What happens if I subscribe after the first 100 spots are filled?",
+      answer:
+        "Our founding membership is limited to 100 spots. The benefits and perks of this may not be available to members after these spots are filled. The regular subscription price of $99/year will be available to everyone after the first 100. We encourage you to subscribe early to secure the best value and be part of our founding community.",
+    },
+    {
+      question: "What if I can't afford the cost of subscription?",
+      answer:
+        "At Soonlist, we believe everyone should have the opportunity to organize their possibilities, regardless of financial circumstances. If you truly can't afford the membership fee, please email us at support@soonlist.com with the subject \"NOTAFLOF\" (No One Turned Away For Lack Of Funds). We'll work with you to ensure you can access Soonlist's features. For those who can afford it, your subscription helps support this inclusive policy. Remember, we offer a 30-day money-back guarantee, so there's no risk in joining our community and transforming your possibilities into experiences.",
+    },
+  ];
+
+  return (
+    <div className="bg-gradient-to-b from-white to-gray-50 py-24 sm:py-32">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            Frequently Asked Questions
+          </h2>
+          <p className="mt-4 text-lg text-gray-600">
+            Got questions? We've got answers. If you don't see your question
+            here, feel free to reach out to us.
+          </p>
+        </div>
+        <div className="mx-auto mt-16 max-w-2xl divide-y divide-gray-200">
+          {faqs.map((faq, index) => (
+            <FAQItem key={index} question={faq.question} answer={faq.answer} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FAQItem({ question, answer }: { question: string; answer: string }) {
+  return (
+    <details className="group py-6">
+      <summary className="flex w-full cursor-pointer items-center justify-between text-left">
+        <span className="text-lg font-medium text-gray-900">{question}</span>
+        <ChevronDownIcon className="h-6 w-6 text-indigo-500 transition-transform duration-300 group-open:rotate-180" />
+      </summary>
+      <p className="mt-4 text-base text-gray-600">{answer}</p>
+    </details>
   );
 }
 
@@ -149,7 +378,7 @@ export default function Page() {
           <div className="mx-auto">
             <div className="mx-auto text-center">
               <h1 className="font-heading text-6xl font-bold leading-[0.875] tracking-tighterish text-gray-700 md:text-8xl md:leading-[0.875]">
-                Organize{" "}
+                All Your{" "}
                 <span className="relative inline-block text-interactive-1">
                   <svg
                     width="492"
@@ -160,49 +389,62 @@ export default function Page() {
                     className="tranform absolute inset-0 z-[-1] h-full w-full scale-110 opacity-100"
                   >
                     <path
-                      d="M0.977745 90.0631L13.3028 15.2256C13.6677 13.01 15.557 11.3673 17.8018 11.314L487.107 0.163765C490.41 0.0852941 492.749 3.36593 491.598 6.46257L474.712 51.884C474.083 53.5754 472.537 54.7535 470.739 54.9104L5.99405 95.4768C2.9558 95.742 0.482147 93.0724 0.977745 90.0631Z"
+                      d="M0.977745 90.0631L13.3028 15.2256C13.6677 13.01 15.557 11.3673 17.8018 11.314L487.107 0.163765C490.41 0.0852941 492.749 3.36593 491.598 6.4625792.749 3.36593 491.598 6.46257L456.629 93.9515C455.321 97.4489 450.628 97.8499 448.728 94.6723L0.977745 90.0631Z"
                       fill="#FEEA9F"
                     />
                   </svg>
-                  possibilities
+                  Possibilities,
                 </span>
+                Organized
               </h1>
-              <p className="mx-auto mt-6 max-w-[36rem] text-2xl leading-9 text-gray-400">
-                The best way to add, organize, and share events.
+              <p className="mt-6 text-lg leading-8 text-gray-600">
+                See it, save it, show up... it's that easy with Soonlist
               </p>
-            </div>
-            <div className="mt-10 flex w-full items-center justify-center gap-x-6">
-              <CTAButton />
+              <div className="mt-10 flex items-center justify-center gap-x-6">
+                <CTAButtonMembership>
+                  Start showing up with Soonlist
+                </CTAButtonMembership>
+              </div>
             </div>
           </div>
-          <div className="">
-            <p className="text-center font-heading text-2xl font-bold text-gray-700">
-              See it in action 👀
+          <div className="mx-auto max-w-2xl">
+            <p className="mt-6 text-lg leading-8 text-gray-600">
+              Screenshots of warehouse dance party invitations from your
+              Instagram Stories, flyers for your favorite touring bands on the
+              coffeeshop wall, ceramics workshops shared by your friends in a
+              text. Are you missing out on events that matter to you? Soonlist
+              helps you capture, organize, share and remember possibilities. All
+              you have to do is show up.
             </p>
-            <div className="relative mx-auto h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
-              <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-update-cropped-update-v4.mp4" />
-            </div>
           </div>
-          {/* <div className="mx-auto">
-            <SampleEvent eventId={sampleEventId} />
-          </div> */}
         </div>
       </div>
-      <div className="isolate mx-auto -mt-24 max-w-7xl bg-white md:rounded-lg">
-        <ConnectWithWhatMatters />
-      </div>
-      {/* <div className="relative isolate bg-white px-6 py-24 sm:py-32 lg:px-8">
-        <Pricing />
-      </div> */}
-      <div className="relative isolate bg-white pb-32 pt-24 md:pt-32">
-        <div className="mx-auto max-w-7xl px-6 md:px-8">
-          <div className="mx-auto max-w-xl text-center">
-            <p className="font-heading text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
-              People are already excited
+
+      <ConnectWithWhatMatters />
+      <FeaturesHighlight />
+
+      <div className="bg-white py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl lg:text-center">
+            <h2 className="text-base font-semibold leading-7 text-indigo-600">
+              Testimonials
+            </h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Hear from our users
             </p>
           </div>
-          <div className="mx-auto mt-16 flow-root max-w-2xl md:mt-20 lg:mx-0 lg:max-w-none">
-            <div className="-mt-8 md:-mx-4 md:columns-2 md:text-[0] lg:columns-3">
+          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+              {/* {testimonials.map((testimonial) => (
+                <div key={testimonial.author.name} className="flex flex-col">
+                  <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                    {testimonial.author.name}
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                    <p className="flex-auto">{testimonial.body}</p>
+                  </dd>
+                </div>
+              ))} */}
               {testimonials.map((testimonial) => (
                 <div
                   key={testimonial.author.handle}
@@ -230,6 +472,27 @@ export default function Page() {
                   </figure>
                 </div>
               ))}
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <MembershipSection />
+      <FAQSection />
+
+      <div className="bg-white">
+        <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              All Your Possibilities, Organized
+            </h2>
+            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
+              See it, save it, show up... it's that easy with Soonlist
+            </p>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <CTAButtonMembership>
+                Start showing up with Soonlist
+              </CTAButtonMembership>
             </div>
           </div>
         </div>

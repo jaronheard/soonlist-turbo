@@ -7,13 +7,11 @@ import { CalendarPlus } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
 
-import { WaitlistButtonWithDrawer } from "./WaitlistSignup";
-
 export function CTAButton() {
   return (
     <>
       <SignedOut>
-        <WaitlistButtonWithDrawer size="lg" />
+        <CTAButtonMembership />
       </SignedOut>
       <SignedIn>
         <Button asChild size="lg">
@@ -24,5 +22,21 @@ export function CTAButton() {
         </Button>
       </SignedIn>
     </>
+  );
+}
+
+interface CTAButtonMembershipProps {
+  children?: React.ReactNode;
+}
+
+export function CTAButtonMembership({
+  children = "Join Soonlist",
+}: CTAButtonMembershipProps) {
+  return (
+    <Button asChild size="lg">
+      <Link href={"/new"} scroll={false}>
+        {children}
+      </Link>
+    </Button>
   );
 }
