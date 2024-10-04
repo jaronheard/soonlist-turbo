@@ -8,40 +8,40 @@ import { Ticket } from "lucide-react";
 import { Button, buttonVariants } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 
-const excludedRoutes = ["/join"];
+const excludedCTARoutes = ["/join", "/"];
 
 export function Footer() {
   const pathname = usePathname();
 
-  if (excludedRoutes.includes(pathname)) {
-    return null;
-  }
-
   return (
     <div className="">
       <SignedOut>
-        <div className="mx-auto max-w-xl px-6 md:px-8">
-          <Card className="bg-primary text-primary-foreground">
-            <CardHeader>
-              <CardTitle className="-mb-4 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-primary-foreground md:text-5xl">
-                Become a Founding Member
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-lg">
-                Shape the future of Soonlist and enjoy premium benefits. Be one
-                of 💯 and get a signature emoji.
-              </p>
-              <Button asChild size="lg" variant="secondary">
-                <Link href={"/join"} scroll={false}>
-                  <Ticket className="mr-2 size-4"></Ticket>
-                  <span className="inline">&nbsp;Start showing up</span>
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="p-2.5"></div>
+        {!excludedCTARoutes.includes(pathname) && (
+          <>
+            <div className="mx-auto max-w-xl px-6 md:px-8">
+              <Card className="bg-primary text-primary-foreground">
+                <CardHeader>
+                  <CardTitle className="-mb-4 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-primary-foreground md:text-5xl">
+                    Become a Founding Member
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-lg">
+                    Shape the future of Soonlist and enjoy premium benefits. Be
+                    one of 💯 and get a signature emoji.
+                  </p>
+                  <Button asChild size="lg" variant="secondary">
+                    <Link href={"/join"} scroll={false}>
+                      <Ticket className="mr-2 size-4"></Ticket>
+                      <span className="inline">&nbsp;Become A Member Now</span>
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="p-2.5"></div>
+          </>
+        )}
       </SignedOut>
       <footer className="w-full bg-neutral-1 p-8 text-background sm:p-24">
         <nav className="mx-auto flex max-w-7xl flex-col justify-between gap-8 lg:flex-row">
@@ -52,7 +52,7 @@ export function Footer() {
               <Button asChild size="sm">
                 <Link href={"/join"} scroll={false}>
                   <Ticket className="mr-2 size-4"></Ticket>
-                  <span className="inline">&nbsp;Start showing up</span>
+                  <span className="inline">&nbsp;Join Now</span>
                 </Link>
               </Button>
               {/* Social Media Links */}

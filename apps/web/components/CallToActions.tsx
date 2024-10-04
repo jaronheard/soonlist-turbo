@@ -11,12 +11,7 @@ export function CTAButton() {
   return (
     <>
       <SignedOut>
-        <Button asChild size="lg">
-          <Link href={"/join"} scroll={false}>
-            <Ticket className="mr-2 size-4"></Ticket>
-            <span className="inline">&nbsp;Start showing up</span>
-          </Link>
-        </Button>
+        <CTAButtonMembership />
       </SignedOut>
       <SignedIn>
         <Button asChild size="lg">
@@ -27,5 +22,22 @@ export function CTAButton() {
         </Button>
       </SignedIn>
     </>
+  );
+}
+
+interface CTAButtonMembershipProps {
+  children?: React.ReactNode;
+}
+
+export function CTAButtonMembership({
+  children = "Join Soonlist",
+}: CTAButtonMembershipProps) {
+  return (
+    <Button asChild size="lg">
+      <Link href={"/join"} scroll={false}>
+        <Ticket className="mr-2 size-4"></Ticket>
+        {children}
+      </Link>
+    </Button>
   );
 }

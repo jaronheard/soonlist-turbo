@@ -91,7 +91,7 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
       {otherUsersEmojis.length > 0 && (
         <div className="mt-4 text-center">
           <h3 className="mb-2 text-lg font-medium text-neutral-2">
-            Used by others:
+            Claimed by others:
           </h3>
           <div className="flex flex-wrap justify-center gap-2">
             {otherUsersEmojis.map((emoji, index) => (
