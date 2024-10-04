@@ -1,9 +1,9 @@
 import PlansPage from "../account/plans/page";
 
 export const metadata = {
-  title: "Become a Founding Member | Soonlist",
+  title: "Become A Founding Member | Soonlist",
   openGraph: {
-    title: "Become a Founding Member | Soonlist",
+    title: "Become A Founding Member | Soonlist",
   },
 };
 

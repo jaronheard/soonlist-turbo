@@ -33,7 +33,7 @@ export function Footer() {
                   <Button asChild size="lg" variant="secondary">
                     <Link href={"/join"} scroll={false}>
                       <Ticket className="mr-2 size-4"></Ticket>
-                      <span className="inline">&nbsp;Start showing up</span>
+                      <span className="inline">&nbsp;Become A Member Now</span>
                     </Link>
                   </Button>
                 </CardContent>
@@ -52,7 +52,7 @@ export function Footer() {
               <Button asChild size="sm">
                 <Link href={"/join"} scroll={false}>
                   <Ticket className="mr-2 size-4"></Ticket>
-                  <span className="inline">&nbsp;Start showing up</span>
+                  <span className="inline">&nbsp;Become A Member Now</span>
                 </Link>
               </Button>
               {/* Social Media Links */}

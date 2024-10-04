@@ -172,13 +172,18 @@ function HeroSection() {
   return (
     <Section className="pb-8 pt-16">
       <div className="relative isolate">
-        <Image
-          src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
-          fill
-          alt=""
-          priority
-          className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg object-contain object-top opacity-[0.05]"
-        />
+        <div className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg">
+          <div className="relative h-full w-full">
+            <Image
+              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
+              fill
+              alt=""
+              priority
+              className="object-contain object-top opacity-[0.10]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-interactive-3"></div>
+          </div>
+        </div>
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-8 md:grid-cols-1 md:gap-x-8">
           <div className="mx-auto text-center">
             <h1 className="font-heading text-5xl font-bold leading-tight tracking-tighterish text-gray-700 md:text-7xl md:leading-tight">
@@ -190,29 +195,29 @@ function HeroSection() {
                   viewBox="0 0 492 96"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
-                  className="tranform absolute inset-0 z-[-1] h-full w-full scale-110 scale-y-125 opacity-100"
+                  className="tranform absolute inset-0 z-[-1] h-full w-full scale-110 opacity-100"
                 >
                   <path
-                    d="M0.977745 90.0631L13.3028 15.2256C13.6677 13.01 15.557 11.3673 17.8018 11.314L487.107 0.163765C490.41 0.0852941 492.749 3.36593 491.598 6.4625792.749 3.36593 491.598 6.46257L456.629 93.9515C455.321 97.4489 450.628 97.8499 448.728 94.6723L0.977745 90.0631Z"
+                    d="M0.977745 90.0631L13.3028 15.2256C13.6677 13.01 15.557 11.3673 17.8018 11.314L487.107 0.163765C490.41 0.0852941 492.749 3.36593 491.598 6.46257L474.712 51.884C474.083 53.5754 472.537 54.7535 470.739 54.9104L5.99405 95.4768C2.9558 95.742 0.482147 93.0724 0.977745 90.0631Z"
                     fill="#FEEA9F"
                   />
                 </svg>
-                Possibilities,
-              </span>{" "}
-              Organized
+                Possibilities
+              </span>
+              , Organized
             </h1>
-            <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
+            <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
               See it, save it, show up... it's that easy with Soonlist
             </p>
             <div className="mt-8 flex items-center justify-center gap-x-6">
-              <CTAButtonMembership>Start Showing Up</CTAButtonMembership>
+              <CTAButtonMembership>Become A Member Now</CTAButtonMembership>
             </div>
           </div>
           <div className="mx-auto max-w-2xl">
             <p className="mt-4 text-lg leading-7 text-gray-600">
               Are you missing out on events that matter to you?
             </p>
-            <div className="mx-auto max-w-2xl">
+            <div className="mx-auto mt-2 max-w-2xl">
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <div className="rotate-2 transform">
                   <div className="inline-block rounded-md bg-accent-yellow px-2 py-1 text-xs text-neutral-1 shadow-sm">
@@ -235,7 +240,7 @@ function HeroSection() {
                   </div>
                 </div>
               </div>
-              <p className="mt-4 text-lg leading-7 text-gray-600">
+              <p className="mt-6 text-lg leading-7 text-gray-600">
                 Soonlist helps you <span className="font-bold">capture</span>,{" "}
                 <span className="font-bold">organize</span>,{" "}
                 <span className="font-bold">share</span> and{" "}
@@ -440,10 +445,11 @@ function ClosingCTASection() {
       <div className="text-center">
         <SectionTitle
           title="All Your Possibilities, Organized"
+          subtitle="Join Now"
           description="See it, save it, show up... it's that easy with Soonlist"
         />
         <div className="mt-10 flex items-center justify-center gap-x-6">
-          <CTAButtonMembership>Become a member now!</CTAButtonMembership>
+          <CTAButtonMembership>Become A Member Now</CTAButtonMembership>
         </div>
       </div>
     </Section>
