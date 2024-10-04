@@ -170,7 +170,9 @@ function SectionTitle({
 
 function HeroSection() {
   return (
-    <Section className="pt-24">
+    <Section className="pb-8 pt-16">
+      {" "}
+      {/* Added pb-8 for less bottom padding */}
       <div className="relative isolate">
         <Image
           src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
@@ -179,9 +181,11 @@ function HeroSection() {
           priority
           className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg object-contain object-top opacity-[0.05]"
         />
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-16 pb-24 md:grid-cols-1 md:gap-x-16">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-8 md:grid-cols-1 md:gap-x-8">
           <div className="mx-auto text-center">
-            <h1 className="font-heading text-6xl font-bold leading-[0.875] tracking-tighterish text-gray-700 md:text-8xl md:leading-[0.875]">
+            <h1 className="font-heading text-5xl font-bold leading-tight tracking-tighterish text-gray-700 md:text-7xl md:leading-tight">
+              {" "}
+              {/* Adjusted font sizes and line height */}
               All Your{" "}
               <span className="relative inline-block text-interactive-1">
                 <svg
@@ -201,15 +205,21 @@ function HeroSection() {
               </span>
               Organized
             </h1>
-            <p className="mx-auto mt-6 max-w-[36rem] text-2xl leading-9 text-gray-400">
+            <p className="mx-auto mt-4 max-w-[36rem] text-xl leading-8 text-gray-400">
+              {" "}
+              {/* Reduced margin-top and font size */}
               See it, save it, show up... it's that easy with Soonlist
             </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
+            <div className="mt-8 flex items-center justify-center gap-x-6">
+              {" "}
+              {/* Reduced margin-top */}
               <CTAButtonMembership>Start Showing Up</CTAButtonMembership>
             </div>
           </div>
           <div className="mx-auto max-w-2xl">
-            <p className="mt-6 text-lg leading-8 text-gray-600">
+            <p className="mt-4 text-lg leading-7 text-gray-600">
+              {" "}
+              {/* Reduced margin-top */}
               Are you missing out on events that matter to you?
             </p>
             <div className="mx-auto max-w-2xl">
@@ -235,9 +245,12 @@ function HeroSection() {
                   </div>
                 </div>
               </div>
-              <p className="mt-6 text-lg leading-8 text-gray-600">
-                Soonlist helps you <span className="font-bold">capture</span>,{" "}
-                <span className="font-bold">organize</span>{" "}
+              <p className="mt-4 text-lg leading-7 text-gray-600">
+                {" "}
+                {/* Reduced margin-top */}
+                Soonlist helps you <span className="font-bold">
+                  capture
+                </span>, <span className="font-bold">organize</span>,{" "}
                 <span className="font-bold">share</span> and{" "}
                 <span className="font-bold">remember</span> possibilities. All
                 you have to do is <span className="font-bold">show up</span>.
@@ -255,7 +268,7 @@ function ConnectWithWhatMatters() {
     <Section>
       <div className="rounded-xl border border-neutral-3 bg-white px-4 py-16 text-center md:px-16 lg:px-24">
         <SectionTitle title="How It Works" />
-        <div className="relative mx-auto h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
+        <div className="relative mx-auto mt-6 h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
           <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-update-cropped-update-v4.mp4" />
         </div>
         <div className="mt-12 grid divide-y divide-neutral-200 md:grid-cols-3 md:divide-x md:divide-y-0">
@@ -466,10 +479,10 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 export default function Page() {
   return (
     <div className="bg-gray-50">
-      <div className="bg-interactive-3 pb-32">
+      <div className="bg-interactive-3 pb-48">
         <HeroSection />
       </div>
-      <div className="-mt-32">
+      <div className="-mt-48">
         <ConnectWithWhatMatters />
       </div>
       <FeaturesHighlight />
