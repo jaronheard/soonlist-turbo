@@ -171,8 +171,6 @@ function SectionTitle({
 function HeroSection() {
   return (
     <Section className="pb-8 pt-16">
-      {" "}
-      {/* Added pb-8 for less bottom padding */}
       <div className="relative isolate">
         <Image
           src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
@@ -184,8 +182,6 @@ function HeroSection() {
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-8 md:grid-cols-1 md:gap-x-8">
           <div className="mx-auto text-center">
             <h1 className="font-heading text-5xl font-bold leading-tight tracking-tighterish text-gray-700 md:text-7xl md:leading-tight">
-              {" "}
-              {/* Adjusted font sizes and line height */}
               All Your{" "}
               <span className="relative inline-block text-interactive-1">
                 <svg
@@ -205,21 +201,15 @@ function HeroSection() {
               </span>{" "}
               Organized
             </h1>
-            <p className="mx-auto mt-4 max-w-[36rem] text-xl leading-8 text-gray-400">
-              {" "}
-              {/* Reduced margin-top and font size */}
+            <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
               See it, save it, show up... it's that easy with Soonlist
             </p>
             <div className="mt-8 flex items-center justify-center gap-x-6">
-              {" "}
-              {/* Reduced margin-top */}
               <CTAButtonMembership>Start Showing Up</CTAButtonMembership>
             </div>
           </div>
           <div className="mx-auto max-w-2xl">
             <p className="mt-4 text-lg leading-7 text-gray-600">
-              {" "}
-              {/* Reduced margin-top */}
               Are you missing out on events that matter to you?
             </p>
             <div className="mx-auto max-w-2xl">
@@ -246,11 +236,8 @@ function HeroSection() {
                 </div>
               </div>
               <p className="mt-4 text-lg leading-7 text-gray-600">
-                {" "}
-                {/* Reduced margin-top */}
-                Soonlist helps you <span className="font-bold">
-                  capture
-                </span>, <span className="font-bold">organize</span>,{" "}
+                Soonlist helps you <span className="font-bold">capture</span>,{" "}
+                <span className="font-bold">organize</span>,{" "}
                 <span className="font-bold">share</span> and{" "}
                 <span className="font-bold">remember</span> possibilities. All
                 you have to do is <span className="font-bold">show up</span>.
@@ -469,7 +456,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
     <details className="group py-6">
       <summary className="flex w-full cursor-pointer items-center justify-between text-left">
         <span className="text-lg font-medium text-gray-900">{question}</span>
-        <ChevronDownIcon className="h-6 w-6 text-indigo-500 transition-transform duration-300 group-open:rotate-180" />
+        <ChevronDownIcon className="h-6 w-6 text-interactive-2 transition-transform duration-300 group-open:rotate-180" />
       </summary>
       <p className="mt-4 text-base text-gray-600">{answer}</p>
     </details>
