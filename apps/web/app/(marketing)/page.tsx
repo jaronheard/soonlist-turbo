@@ -141,12 +141,12 @@ function FeaturesHighlight() {
     {
       title: "Smart Capture",
       description:
-        "Save events from any source – social media, flyers, texts, and more",
+        "Save events from any source – screenshots, flyers, texts, and more",
       icon: Zap,
     },
     {
-      title: "Personalized Organization",
-      description: "Auto-categorize and prioritize your saved events",
+      title: "Auto Organize",
+      description: "Your saved events, automatically organized in one place",
       icon: Calendar,
     },
     {
@@ -163,36 +163,28 @@ function FeaturesHighlight() {
   ];
 
   return (
-    <div className="bg-gradient-to-b from-white to-gray-50 py-16">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-base font-semibold leading-7 text-indigo-600">
-            Features
-          </h2>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Everything you need to organize your possibilities
-          </p>
-        </div>
-        <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-          <dl className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature) => (
-              <div key={feature.title} className="relative pl-16">
-                <dt className="text-base font-semibold leading-7 text-gray-900">
-                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
-                    <feature.icon
-                      className="h-6 w-6 text-white"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  {feature.title}
-                </dt>
-                <dd className="mt-2 text-base leading-7 text-gray-600">
-                  {feature.description}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+    <div className="m-2 px-4 py-16 text-center md:rounded-xl md:border md:border-neutral-3 md:px-16 lg:px-24">
+      <div className="mx-auto max-w-2.5xl">
+        <h2 className="text-2xl font-bold text-interactive-1">Features</h2>
+        <p className="pb-4 pt-5 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
+          Everything you need to organize your possibilities
+        </p>
+      </div>
+      <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        {features.map((feature) => (
+          <div key={feature.title} className="flex flex-col items-center">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-interactive-1">
+              <feature.icon className="h-6 w-6 text-white" aria-hidden="true" />
+            </div>
+            <h2 className="text-2xl font-bold leading-9 tracking-wide text-gray-900">
+              {feature.title}
+            </h2>
+            <div className="py-2"></div>
+            <p className="mt-2 text-lg leading-7 text-gray-500">
+              {feature.description}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -203,9 +195,14 @@ function MembershipSection() {
     <div className="bg-white py-16">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Be Among the First 100 - Save Big on Unlimited Possibilities
-          </h2>
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-2xl font-bold text-interactive-1">
+              Limited Offer
+            </h2>
+            <p className="mt-5 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
+              Be Among The First 100
+            </p>
+          </div>
           <p className="mt-6 text-lg leading-8 text-gray-600">
             Founding Members Get 70% Off - Just $29/year Instead of $99/year
           </p>
@@ -444,11 +441,11 @@ export default function Page() {
 
       <div className="bg-white py-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl lg:text-center">
-            <h2 className="text-base font-semibold leading-7 text-indigo-600">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-2xl font-bold text-interactive-1">
               Testimonials
             </h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <p className="mt-5 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
               Hear from our users
             </p>
           </div>
