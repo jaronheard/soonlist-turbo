@@ -14,6 +14,7 @@ interface PricingProps {
   planActive: boolean;
   customerPortalUrl?: string;
   takenEmojis: string[];
+  hideEmojiDetails?: boolean; // New prop
 }
 
 const tiers = [
@@ -42,6 +43,7 @@ export function FoundingMemberPricing({
   planActive,
   customerPortalUrl,
   takenEmojis,
+  hideEmojiDetails = false, // Default to false
 }: PricingProps) {
   const tiersWithStatus = tiers.map((tier) => ({
     ...tier,
@@ -58,9 +60,6 @@ export function FoundingMemberPricing({
         <h1 className="font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
           Become a Founding Member
         </h1>
-        <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
-          Shape the future of Soonlist and enjoy premium benefits.
-        </p>
         <div className="mt-8 rounded-xl bg-accent-orange p-6 text-center">
           <h2 className="font-heading text-2xl font-bold text-interactive-1">
             Limited Availability
@@ -68,26 +67,30 @@ export function FoundingMemberPricing({
           <p className="mt-2 text-4xl font-bold text-neutral-1">
             Only 💯&nbsp;Founding Member Spots&nbsp;🎈
           </p>
-          <p className="mt-4 text-lg text-neutral-2">
-            Pick a signature emoji to pair with your profile picture
-          </p>
-          {takenEmojis.length > 0 && (
-            <div className="mt-6">
-              <p className="mb-2 text-lg font-semibold text-neutral-1">
-                Join these other founding members:
+          {!hideEmojiDetails && (
+            <>
+              <p className="mt-4 text-lg text-neutral-2">
+                Pick a signature emoji to pair with your profile picture
               </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {takenEmojis.map((emoji, index) => (
-                  <span
-                    key={index}
-                    className="text-3xl"
-                    title="Founding Member"
-                  >
-                    {emoji}
-                  </span>
-                ))}
-              </div>
-            </div>
+              {takenEmojis.length > 0 && (
+                <div className="mt-6">
+                  <p className="mb-2 text-lg font-semibold text-neutral-1">
+                    Join these other founding members:
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {takenEmojis.map((emoji, index) => (
+                      <span
+                        key={index}
+                        className="text-3xl"
+                        title="Founding Member"
+                      >
+                        {emoji}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -164,11 +167,11 @@ export function FoundingMemberPricing({
                 (!customerPortalUrl || tier.id !== "free") && (
                   <Link
                     aria-describedby={tier.id}
-                    className={cn("w-full", buttonVariants())}
+                    className={cn("w-full", buttonVariants({ size: "lg" }))}
                     href={`${checkoutUrls[tier.id] || "/new"}`}
                     scroll={false}
                   >
-                    Join the Founding 💯
+                    Join Soonlist
                   </Link>
                 )}
               {!tier.soon && tier.active && tier.id !== "free" && (

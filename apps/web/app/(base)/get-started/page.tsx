@@ -52,7 +52,7 @@ export default async function Page() {
         </h1>
         <p>
           Thank you for becoming a founding member! We can't wait for you to try
-          Soonlist, and to learn from you how to make it even better.
+          Soonlist and to make it even better with you.
         </p>
         <p className="-mt-4 ml-4">
           💖 <text className="font-medium italic">Jaron</text> & 🙏{" "}
@@ -64,21 +64,7 @@ export default async function Page() {
       <Card>
         <CardHeader>
           <CardTitle className="text-center font-heading text-3xl font-bold text-neutral-1">
-            1. Choose Your Emoji
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-          <p className="text-center text-lg">
-            Pick your signature emoji to show off with your profile picture.
-          </p>
-          <EmojiPicker currentEmoji={user.emoji} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-center font-heading text-3xl font-bold text-neutral-1">
-            2. Complete Your Profile
+            1. Complete Your Profile
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -97,12 +83,26 @@ export default async function Page() {
       <Card>
         <CardHeader>
           <CardTitle className="text-center font-heading text-3xl font-bold text-neutral-1">
+            2. Choose Your Emoji
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-4">
+          <p className="text-center text-lg">
+            Pick your signature emoji to show off with your profile picture.
+          </p>
+          <EmojiPicker currentEmoji={user.emoji} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-center font-heading text-3xl font-bold text-neutral-1">
             3. Get the Soonlist App
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
           <p className="text-center text-lg">
-            Follow this link to install the Soonlist iOS app.
+            You'll install it through TestFlight, which is free and easy.
           </p>
           <Button asChild className="h-16 w-full max-w-xs text-xl">
             <a
@@ -113,15 +113,11 @@ export default async function Page() {
               Install iOS App
             </a>
           </Button>
-          <p className="text-center text-base">
-            You'll install it through TestFlight, which is free and easy.
-          </p>
+          <div className="flex justify-center">
+            <HelpButton />
+          </div>
         </CardContent>
       </Card>
-
-      <div className="flex justify-center">
-        <HelpButton />
-      </div>
     </div>
   );
 }

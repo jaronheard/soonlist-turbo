@@ -103,7 +103,7 @@ function UserProfileForm({
               <FormControl>
                 <Textarea
                   placeholder="Enter your bio (max 150 characters)"
-                  className="h-[200px] min-h-[200px] resize-none"
+                  className="h-[100px] min-h-[100px] resize-none"
                   {...field}
                 />
               </FormControl>
@@ -119,7 +119,7 @@ function UserProfileForm({
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">How to connect</h3>
           <p className="text-sm text-muted-foreground">
-            Share any contact info you want visible publicly.
+            Share any contact info you want to publicly display.
           </p>
           <FormField
             control={form.control}

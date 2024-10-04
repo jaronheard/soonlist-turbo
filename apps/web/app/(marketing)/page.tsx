@@ -82,7 +82,7 @@ const features = [
     icon: Share2,
   },
   {
-    title: "Reminder System",
+    title: "Reminders",
     description: "Gentle nudges to help you follow through on your intentions",
     icon: Bell,
   },
@@ -207,7 +207,7 @@ function HeroSection() {
               , Organized
             </h1>
             <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
-              See it, save it, show up... it's that easy with Soonlist
+              See it, save it, show up. It's that easy with Soonlist.
             </p>
             <div className="mt-8 flex items-center justify-center gap-x-6">
               <CTAButtonMembership>Become A Member Now</CTAButtonMembership>
@@ -243,9 +243,12 @@ function HeroSection() {
               <p className="mt-6 text-lg leading-7 text-gray-600">
                 Soonlist helps you <span className="font-bold">capture</span>,{" "}
                 <span className="font-bold">organize</span>,{" "}
-                <span className="font-bold">share</span> and{" "}
-                <span className="font-bold">remember</span> possibilities. All
-                you have to do is <span className="font-bold">show up</span>.
+                <span className="font-bold">share</span>, and{" "}
+                <span className="font-bold">remember</span> possibilities.
+              </p>
+              <p className="text-lg leading-7 text-gray-600">
+                All you have to do is <span className="font-bold">show up</span>
+                .
               </p>
             </div>
           </div>
@@ -371,6 +374,7 @@ async function MembershipSection() {
         currentPlan="free"
         planActive={false}
         takenEmojis={takenEmojis}
+        hideEmojiDetails={true}
       />
     </Section>
   );
@@ -446,7 +450,7 @@ function ClosingCTASection() {
         <SectionTitle
           title="All Your Possibilities, Organized"
           subtitle="Join Now"
-          description="See it, save it, show up... it's that easy with Soonlist"
+          description="See it, save it, show up. It's that easy with Soonlist."
         />
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <CTAButtonMembership>Become A Member Now</CTAButtonMembership>
