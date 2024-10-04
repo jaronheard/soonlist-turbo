@@ -61,37 +61,34 @@ export function FoundingMemberPricing({
         <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
           Shape the future of Soonlist and enjoy premium benefits.
         </p>
-        <div className="mt-4 rounded-lg bg-accent-yellow text-center">
-          <div className="rounded-lg bg-accent/10 p-4">
-            <h2 className="text-lg font-semibold text-accent-foreground">
-              Limited Availability
-            </h2>
-            <p className="mt-2 text-xl font-bold text-neutral-1">
-              Only 💯&nbsp;Founding Member Spots&nbsp;🎈
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Pick a signature emoji to pair with your profile picture, for
-              founding members only.
-            </p>
-            {takenEmojis.length > 0 && (
-              <div className="mt-4">
-                <p className="mb-2 text-sm font-semibold text-accent-foreground">
-                  Join these other founding members:
-                </p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {takenEmojis.map((emoji, index) => (
-                    <span
-                      key={index}
-                      className="text-2xl"
-                      title="Founding Member"
-                    >
-                      {emoji}
-                    </span>
-                  ))}
-                </div>
+        <div className="mt-8 rounded-xl bg-accent-orange p-6 text-center">
+          <h2 className="font-heading text-2xl font-bold text-interactive-1">
+            Limited Availability
+          </h2>
+          <p className="mt-2 text-4xl font-bold text-neutral-1">
+            Only 💯&nbsp;Founding Member Spots&nbsp;🎈
+          </p>
+          <p className="mt-4 text-lg text-neutral-2">
+            Pick a signature emoji to pair with your profile picture
+          </p>
+          {takenEmojis.length > 0 && (
+            <div className="mt-6">
+              <p className="mb-2 text-lg font-semibold text-neutral-1">
+                Join these other founding members:
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {takenEmojis.map((emoji, index) => (
+                  <span
+                    key={index}
+                    className="text-3xl"
+                    title="Founding Member"
+                  >
+                    {emoji}
+                  </span>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
       <div className="isolate mx-auto mt-6 grid max-w-md grid-cols-1 gap-y-8 sm:mt-8 lg:mx-0 lg:max-w-none lg:grid-cols-1">
