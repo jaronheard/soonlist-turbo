@@ -1,14 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { SignedOut } from "@clerk/nextjs";
+import { Ticket } from "lucide-react";
 
-import { buttonVariants } from "@soonlist/ui/button";
+import { Button, buttonVariants } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 
-import { WaitlistButtonWithDrawer } from "./WaitlistSignup";
+const excludedRoutes = ["/join"];
 
 export function Footer() {
+  const pathname = usePathname();
+
+  if (excludedRoutes.includes(pathname)) {
+    return null;
+  }
+
   return (
     <div className="">
       <SignedOut>
@@ -16,14 +24,20 @@ export function Footer() {
           <Card className="bg-primary text-primary-foreground">
             <CardHeader>
               <CardTitle className="-mb-4 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-primary-foreground md:text-5xl">
-                Get early access
+                Become a Founding Member
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-lg">
-                Save, organize, and share the events that inspire <em>you</em>.
+                Shape the future of Soonlist and enjoy premium benefits. Be one
+                of 💯 and get a signature emoji.
               </p>
-              <WaitlistButtonWithDrawer size="lg" variant="secondary" />
+              <Button asChild size="lg" variant="secondary">
+                <Link href={"/join"} scroll={false}>
+                  <Ticket className="mr-2 size-4"></Ticket>
+                  <span className="inline">&nbsp;Start showing up</span>
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -35,7 +49,12 @@ export function Footer() {
           <div className="pr-8">
             <h1 className="font-heading text-4xl font-bold">Soonlist</h1>
             <div className="mt-6 flex flex-col gap-4 sm:flex-row">
-              <WaitlistButtonWithDrawer size="sm" />
+              <Button asChild size="sm">
+                <Link href={"/join"} scroll={false}>
+                  <Ticket className="mr-2 size-4"></Ticket>
+                  <span className="inline">&nbsp;Start showing up</span>
+                </Link>
+              </Button>
               {/* Social Media Links */}
               {navigation.social.map((item) => (
                 <Link
