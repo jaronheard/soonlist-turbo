@@ -21,6 +21,7 @@ import type { RouterOutputs } from "~/utils/api";
 import { EventMenu } from "~/components/EventMenu";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import ShareButton from "~/components/ShareButton";
+import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { api } from "~/utils/api";
 import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
 
@@ -236,15 +237,17 @@ export default function Page() {
               </View>
             ) : (
               <View className="flex-row items-center gap-2">
-                {event.user.userImage ? (
-                  <Image
-                    source={{ uri: event.user.userImage }}
-                    style={{ width: 20, height: 20, borderRadius: 10 }}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <User size={20} color="#627496" />
-                )}
+                <UserProfileFlair username={event.user.username} size="xs">
+                  {event.user.userImage ? (
+                    <Image
+                      source={{ uri: event.user.userImage }}
+                      style={{ width: 20, height: 20, borderRadius: 10 }}
+                      contentFit="cover"
+                    />
+                  ) : (
+                    <User size={20} color="#627496" />
+                  )}
+                </UserProfileFlair>
                 <Text className="text-sm text-neutral-2">
                   @{event.user.username}
                 </Text>

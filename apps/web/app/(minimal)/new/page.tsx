@@ -21,7 +21,7 @@ interface Props {
 
 export default async function Page({ searchParams }: Props) {
   const { userId } = auth().protect({
-    unauthenticatedUrl: "/sign-up",
+    unauthenticatedUrl: "/sign-in",
     unauthorizedUrl: "/",
   });
 

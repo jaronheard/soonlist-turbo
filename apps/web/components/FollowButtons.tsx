@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { SignedIn } from "@clerk/nextjs";
-import { Check, Loader2, Plus } from "lucide-react";
+import { Check, Heart, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@soonlist/ui/button";
@@ -56,13 +56,13 @@ export function FollowEventDropdownButton({
         )}
         {!isLoading && following && (
           <>
-            <Check className="mr-2 size-4" />
+            <Heart className="mr-2 size-4 fill-current" />
             Event Saved
           </>
         )}
         {!isLoading && !following && (
           <>
-            <Plus className="mr-2 size-4" />
+            <Heart className="mr-2 size-4" />
             Save Event
           </>
         )}
@@ -87,7 +87,6 @@ export function FollowEventButton({
     },
     onSuccess: () => {
       toast.success("Event saved.");
-
       router.refresh();
     },
   });
@@ -114,10 +113,12 @@ export function FollowEventButton({
           disabled={isLoading}
           variant="ghost"
           size="icon"
+          className="bg-interactive-2 text-interactive-1 hover:bg-interactive-2"
         >
           {isLoading && <Loader2 className="size-4 animate-spin" />}
-          {!isLoading && following && <Check className="size-4" />}
-          {!isLoading && !following && <Plus className="size-4" />}
+          {!isLoading && (
+            <Heart className={`size-4 ${following ? "fill-current" : ""}`} />
+          )}
         </Button>
       </SignedIn>
     );
@@ -132,7 +133,7 @@ export function FollowEventButton({
             : follow.mutate({ id: eventId })
         }
         disabled={isLoading}
-        variant="ghost"
+        className="bg-interactive-3 text-interactive-1 hover:bg-interactive-3/90"
       >
         {isLoading && (
           <>
@@ -140,16 +141,12 @@ export function FollowEventButton({
             Please wait
           </>
         )}
-        {!isLoading && following && (
+        {!isLoading && (
           <>
-            <Check className="mr-2 size-4" />
-            Event Saved
-          </>
-        )}
-        {!isLoading && !following && (
-          <>
-            <Plus className="mr-2 size-4" />
-            Save Event
+            <Heart
+              className={`mr-2 size-4 ${following ? "fill-current" : ""}`}
+            />
+            {following ? "Event Saved" : "Save Event"}
           </>
         )}
       </Button>
@@ -262,7 +259,11 @@ export function FollowListButton({
   return (
     <SignedIn>
       {isLoading && (
-        <Button disabled size="sm">
+        <Button
+          disabled
+          size="sm"
+          className="bg-purple-100 hover:bg-purple-200"
+        >
           <Loader2 className="mr-2 size-4 animate-spin" />
           Please wait
         </Button>
@@ -275,6 +276,7 @@ export function FollowListButton({
               : follow.mutate({ listId: listId })
           }
           size="sm"
+          className="bg-purple-100 text-purple-700 hover:bg-purple-200"
         >
           {following && (
             <>

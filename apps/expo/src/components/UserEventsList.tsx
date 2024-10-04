@@ -33,6 +33,7 @@ import {
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
+import { UserProfileFlair } from "./UserProfileFlair";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
 
@@ -182,7 +183,7 @@ export function UserEventListItem(props: {
                 </Text>
               </View>
               <Text
-                className="mb-2 text-3xl font-bold text-neutral-1"
+                className="mb-2 text-xl font-bold text-neutral-1"
                 numberOfLines={2}
                 ellipsizeMode="tail"
               >
@@ -201,19 +202,21 @@ export function UserEventListItem(props: {
               ) : null}
               {shouldShowCreator ? (
                 <View className="flex-row items-center gap-2">
-                  {eventUser.userImage ? (
-                    <Image
-                      source={{ uri: eventUser.userImage }}
-                      style={{
-                        width: iconSize,
-                        height: iconSize,
-                        borderRadius: 9999,
-                      }}
-                      contentFit="cover"
-                    />
-                  ) : (
-                    <User size={iconSize} color="#627496" />
-                  )}
+                  <UserProfileFlair username={eventUser.username} size="xs">
+                    {eventUser.userImage ? (
+                      <Image
+                        source={{ uri: eventUser.userImage }}
+                        style={{
+                          width: iconSize,
+                          height: iconSize,
+                          borderRadius: 9999,
+                        }}
+                        contentFit="cover"
+                      />
+                    ) : (
+                      <User size={iconSize} color="#627496" />
+                    )}
+                  </UserProfileFlair>
                   <Text className="text-sm text-neutral-2">
                     @{eventUser.username}
                   </Text>

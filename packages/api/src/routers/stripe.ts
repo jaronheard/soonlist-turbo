@@ -1,7 +1,9 @@
+import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
+import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
 
@@ -10,12 +12,12 @@ export const stripeRouter = createTRPCRouter({
     const plans = {
       personal: {
         name: "personal",
-        priceId: process.env.STRIPE_PRICE_ID_PERSONAL_MONTHLY || "",
+        priceId: process.env.STRIPE_PRICE_ID_PERSONAL_ANNUAL || "",
       },
-      pro: {
-        name: "pro",
-        priceId: process.env.STRIPE_PRICE_ID_PRO_MONTHLY || "",
-      },
+      // pro: {
+      //   name: "pro",
+      //   priceId: process.env.STRIPE_PRICE_ID_PRO_MONTHLY || "",
+      // },
     };
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -36,7 +38,7 @@ export const stripeRouter = createTRPCRouter({
               quantity: 1,
             },
           ],
-          success_url: `${protocol}://${url}/new`,
+          success_url: `${protocol}://${url}/account/emoji-picker`,
           cancel_url: `${protocol}://${url}/account/plans`,
           metadata: {
             userId: ctx.user.id,
@@ -46,7 +48,6 @@ export const stripeRouter = createTRPCRouter({
               userId: ctx.user.id,
               plan: planKey,
             },
-            trial_period_days: 14,
           },
           allow_promotion_codes: true,
         });
@@ -89,4 +90,113 @@ export const stripeRouter = createTRPCRouter({
 
     return portalSession.url;
   }),
+  getPublicSubscriptionCheckoutUrls: publicProcedure.query(async () => {
+    const plans = {
+      personal: {
+        name: "personal",
+        priceId: process.env.STRIPE_PRICE_ID_PERSONAL_ANNUAL || "",
+      },
+    };
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+      apiVersion: "2024-04-10",
+    });
+
+    const url = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL;
+
+    const checkoutUrls = await Promise.all(
+      Object.keys(plans).map(async (planKey) => {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        const plan = plans[planKey as keyof typeof plans];
+        const checkoutSession = await stripe.checkout.sessions.create({
+          mode: "subscription",
+          line_items: [
+            {
+              price: plan.priceId,
+              quantity: 1,
+            },
+          ],
+          success_url: `${protocol}://${url}/account/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${protocol}://${url}/account/plans`,
+          metadata: {
+            plan: planKey,
+          },
+          subscription_data: {
+            metadata: {
+              plan: planKey,
+            },
+          },
+          allow_promotion_codes: true,
+          customer_email: undefined, // This allows Stripe to collect the email
+        });
+
+        if (!checkoutSession.url) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Could not create checkout session for ${plan.name} plan`,
+          });
+        }
+
+        return { plan: plan.name, redirectURL: checkoutSession.url };
+      }),
+    );
+
+    return checkoutUrls;
+  }),
+  handleSuccessfulCheckout: publicProcedure
+    .input(z.object({ sessionId: z.string() }))
+    .mutation(async ({ input }) => {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+        apiVersion: "2024-04-10",
+      });
+
+      // Retrieve the checkout session
+      const session = await stripe.checkout.sessions.retrieve(input.sessionId, {
+        expand: ["subscription"],
+      });
+
+      if (session.status !== "complete") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Checkout session is not complete",
+        });
+      }
+
+      const email = session.customer_details?.email;
+      const plan = session.metadata?.plan;
+
+      if (!email || !plan) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Missing email or plan information",
+        });
+      }
+
+      // Create an invitation using Clerk
+      try {
+        const subscription = session.subscription as Stripe.Subscription;
+        const invitation = await clerkClient.invitations.createInvitation({
+          emailAddress: email,
+          publicMetadata: {
+            stripe: {
+              customerId: session.customer as string,
+            },
+            plan: {
+              name: plan,
+              productId: subscription.items.data[0]?.plan.product as string,
+              status: subscription.status,
+              id: subscription.items.data[0]?.plan.id,
+            },
+          },
+        });
+
+        return { success: true, invitationId: invitation.id };
+      } catch (error) {
+        console.error("Error creating invitation:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create invitation",
+        });
+      }
+    }),
 });

@@ -15,6 +15,7 @@ import { HelpCircle, LogOut, MessageCircle, User } from "lucide-react-native";
 import { deleteAuthData } from "~/hooks/useAuthSync";
 import { useAppStore } from "~/store";
 import { cn } from "~/utils/cn";
+import { UserProfileFlair } from "./UserProfileFlair";
 
 const screenWidth = Dimensions.get("window").width;
 const menuMinWidth = screenWidth * 0.6; // 60% of screen width
@@ -65,7 +66,7 @@ export function ProfileMenu() {
           },
         }}
       >
-        <View className="rounded-full p-1">
+        <UserProfileFlair username={user?.username ?? ""} size="sm">
           {user?.imageUrl ? (
             <ExpoImage
               source={{ uri: user.imageUrl }}
@@ -79,9 +80,11 @@ export function ProfileMenu() {
               contentFit="cover"
             />
           ) : (
-            <User size={20} color="#5A32FB" />
+            <View className="h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+              <User size={20} color="#5A32FB" />
+            </View>
           )}
-        </View>
+        </UserProfileFlair>
       </MenuTrigger>
       <MenuOptions
         customStyles={{

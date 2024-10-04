@@ -1,11 +1,19 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { userFollows, users } from "@soonlist/db/schema";
 import { userAdditionalInfoSchema } from "@soonlist/validators";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+
+function normalizeEmoji(emoji: string | null): string {
+  if (!emoji) return "";
+  return emoji
+    .toString()
+    .replace(/[\uFE00-\uFE0F]/g, "")
+    .normalize("NFC");
+}
 
 export const userRouter = createTRPCRouter({
   getById: publicProcedure
@@ -138,47 +146,46 @@ export const userRouter = createTRPCRouter({
         .where(eq(users.id, userId));
     }),
 
-  // getTopUsersByUpcomingEvents: publicProcedure
-  //   .input(z.object({ limit: z.number() }))
-  //   .query(async ({ ctx, input }) => {
-  //     const excludeUsers = ["user_2X3xAXHdaKKG8RLZqm72wb119Yj"];
-  //     const currentDate = new Date();
+  updateEmoji: protectedProcedure
+    .input(z.object({ emoji: z.string().max(10).nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx.auth;
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User must be logged in to update emoji",
+        });
+      }
 
-  //     const leaderboardUsers = await ctx.db.user.findMany({
-  //       where: {
-  //         id: {
-  //           notIn: excludeUsers,
-  //         },
-  //       },
-  //       select: {
-  //         id: true,
-  //         username: true,
-  //         displayName: true,
-  //         imageUrl: true,
-  //         _count: {
-  //           select: {
-  //             events: {
-  //               where: {
-  //                 startDateTime: {
-  //                   gt: currentDate,
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       orderBy: {
-  //         events: {
-  //           _count: "desc",
-  //         },
-  //       },
-  //     });
+      const normalizedEmoji = normalizeEmoji(input.emoji);
 
-  //     const sortedLeaderboardUsers = leaderboardUsers
-  //       .sort((a, b) => b._count.events - a._count.events)
-  //       .slice(0, input.limit)
-  //       .filter((user) => user._count.events > 0);
+      try {
+        return await ctx.db
+          .update(users)
+          .set({ emoji: normalizedEmoji || null })
+          .where(eq(users.id, userId));
+      } catch (error: unknown) {
+        if (error instanceof Error && error.message.includes("ER_DUP_ENTRY")) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "This emoji is already in use by another user",
+          });
+        }
+        // Re-throw any other errors
+        throw error;
+      }
+    }),
 
-  //     return sortedLeaderboardUsers;
-  //   }),
+  getAllTakenEmojis: publicProcedure.query(async ({ ctx }) => {
+    const takenEmojis = await ctx.db
+      .select({ emoji: users.emoji })
+      .from(users)
+      .where(sql`${users.emoji} IS NOT NULL`);
+
+    return {
+      takenEmojis: takenEmojis
+        .map((user) => user.emoji)
+        .filter((emoji): emoji is string => emoji !== null),
+    };
+  }),
 });
