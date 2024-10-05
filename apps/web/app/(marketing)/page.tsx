@@ -8,12 +8,12 @@ import { AutoPlayVideo } from "./components";
 
 const testimonials = [
   {
-    body: "The commitment to community and collective growth is evident, and I'm here for it.",
+    body: "Soonlist has brought SO much more ease into the process of organizing and prioritizing the events that are important to me!",
     author: {
-      name: "Jennifer Batchelor",
-      handle: "jennybatch",
+      name: "Della Mueller",
+      handle: "delladella",
       imageUrl:
-        "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvdXBsb2FkZWQvaW1nXzJjQUNWUDZhWVVpUUV6Q1NFaXlucHRDb2txOSJ9",
+        "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yaEtlMGdrZVhSWm5KNEVheVBLZlpGdUxkSDIifQ",
     },
   },
   {
@@ -262,9 +262,9 @@ function ConnectWithWhatMatters() {
     <Section>
       <div className="rounded-xl border border-neutral-3 bg-white px-4 py-16 text-center md:px-16 lg:px-24">
         <SectionTitle title="How It Works" />
-        <div className="relative mx-auto mt-6 h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
+        {/* <div className="relative mx-auto mt-6 h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
           <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-update-cropped-update-v4.mp4" />
-        </div>
+        </div> */}
         <div className="mt-12 grid divide-y divide-neutral-200 md:grid-cols-3 md:divide-x md:divide-y-0">
           <div className="flex flex-col items-center px-4 py-8 md:py-0">
             <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
