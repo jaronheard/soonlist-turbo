@@ -4,7 +4,8 @@ import { Bell, Calendar, ChevronDownIcon, Share2, Zap } from "lucide-react";
 import { CTAButtonMembership } from "~/components/CallToActions";
 import { FoundingMemberPricing } from "~/components/FoundingMemberPricing";
 import { api } from "~/trpc/server";
-import { AutoPlayVideo } from "./components";
+
+// import { AutoPlayVideo } from "./components";
 
 const testimonials = [
   {
