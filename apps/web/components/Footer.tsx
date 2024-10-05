@@ -133,10 +133,10 @@ const navigation = {
   ],
   support: [
     { name: "Contact Us", href: "/contact" },
-    {
-      name: "Changelog",
-      href: "https://jaronheard.notion.site/Soonlist-Changelog-3f6510dac9e642429d793fae5d96af8f",
-    },
+    // {
+    //   name: "Changelog",
+    //   href: "https://jaronheard.notion.site/Soonlist-Changelog-3f6510dac9e642429d793fae5d96af8f",
+    // },
   ],
   project: [{ name: "About", href: "/about" }],
   legal: [
