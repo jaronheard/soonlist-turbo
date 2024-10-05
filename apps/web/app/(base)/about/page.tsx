@@ -46,7 +46,8 @@ export default function Page() {
           <h2 className="font-heading">Our story</h2>
           <p className="">
             Soonlist was founded by{" "}
-            <a href="https://www.jaronheard.com">Jaron Heard</a> in October 2023
+            <a href="https://www.jaronheard.com">Jaron Heard</a> and{" "}
+            <a href="https://www.joshcarr.com">Josh Carr</a>
             inspired by a coalescing of community needs, ideas, and technology
             developments. Community organizations like{" "}
             <a href="https://www.makingearthcool.com">Making Earth Cool</a> were
@@ -57,10 +58,11 @@ export default function Page() {
             from text, images, and websites more effectively than ever before.
           </p>
           <p>
-            Since then, Jaron and friends have been exploring we can use this
-            new technology to. Soonlist is both already a useful product … and
-            it’s still super early in its development! We’re in the process of
-            looking for a co-founder/builder.{" "}
+            Since then, Jaron, Josh and friends have been exploring we can use
+            this new technology to help organize and expand possibilities.
+            Soonlist is both already a useful product … and it’s still super
+            early in its development! We're about to start raising a friends and
+            family round of investment to support further development.
             <a href="mailto:jaron@soonlist.com">Email us</a> if you have a
             connection!
           </p>
