@@ -92,18 +92,17 @@ const faqs = [
   {
     question: "How does Soonlist help me show up to events?",
     answer:
-      "Soonlist combines smart event capture, personalized organization, and gentle reminders to ensure you not only save interesting events but actually attend them. We bridge the gap between discovery and attendance.",
+      "The app works in three simple steps: Capture an event from any source: social media, flyers, or text messages. Soonlist organizes these into listings automatically, creating a personalized feed of possibilities. Receive notifications on saved events and discover other people's events, so you can jump into real experiences.",
   },
   {
     question: "Is Soonlist only for certain types of events?",
     answer:
-      "Not at all! Soonlist is for anyone who wants to make the most of their opportunities. Whether you're into art, music, sports, professional networking, or personal growth, Soonlist helps you capture and organize all your possibilities.",
+      "Right now, Soonlist works great for all kinds of one-off single events. Whatever the event topic or type, we want to help you capture and organize everything that you see. We're planning to add support fpr capture and organize recurring and multi-day, multi-event experiences soon!",
   },
   {
-    question:
-      "How is the Soonlist community different from social media groups?",
+    question: "How is the Soonlist different from social media?",
     answer:
-      "Unlike broad social networks, the Soonlist community is united by a shared desire to turn intentions into actions. Our members are supportive, curious, and always eager to share unique event discoveries.",
+      "Soonlist isn't supported by advertising, it's supported by paid subscriptions. Our business model is to help you show up more to what you care about in a way that you'll pay for. The business model of social media is to capture your attention, and then monetize it through advertising. You can also use Soonlist without posting anything publicly.",
   },
   {
     question: "Can I try Soonlist before committing to a year?",
@@ -111,7 +110,7 @@ const faqs = [
       "While we don't offer a free trial, we have a 30-day satisfaction guarantee. If you don't feel more connected to your possibilities within the first month, we'll refund your membership fee, no questions asked.",
   },
   {
-    question: "Is the $29/year price guaranteed for life?",
+    question: "Is the $29/year Founding Member price guaranteed for life?",
     answer:
       "The $29/year rate is a special offer for our first 100 subscribers, a 70% discount off our regular $99/year price. As a founding member, you'll lock in this discounted rate for as long as you maintain your subscription.",
   },
@@ -119,12 +118,12 @@ const faqs = [
     question:
       "What happens if I subscribe after the first 100 spots are filled?",
     answer:
-      "Our founding membership is limited to 100 spots. The benefits and perks of this may not be available to members after these spots are filled. The regular subscription price of $99/year will be available to everyone after the first 100. We encourage you to subscribe early to secure the best value and be part of our founding community.",
+      "Our founding membership is limited to 100 spots. The regular subscription price of $99/year will be available to everyone after the first 100. We encourage you to subscribe early to secure the best value and be part of our founding community.",
   },
   {
     question: "What if I can't afford the cost of subscription?",
     answer:
-      "At Soonlist, we believe everyone should have the opportunity to organize their possibilities, regardless of financial circumstances. If you truly can't afford the membership fee, please email us at support@soonlist.com with the subject \"NOTAFLOF\" (No One Turned Away For Lack Of Funds). We'll work with you to ensure you can access Soonlist's features. For those who can afford it, your subscription helps support this inclusive policy. Remember, we offer a 30-day money-back guarantee, so there's no risk in joining our community and transforming your possibilities into experiences.",
+      "At Soonlist, we believe in making our service accessible to all. If the membership fee is a barrier, email us at support@soonlist.com with the subject \"NOTAFLOF\" (No One Turned Away For Lack Of Funds). We'll work with you to ensure you can access Soonlist's features. Paid subscriptions, by community members who can afford it, help support this inclusive policy.",
   },
 ];
 
