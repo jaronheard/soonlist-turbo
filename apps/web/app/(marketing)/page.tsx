@@ -3,7 +3,6 @@ import { Bell, Calendar, ChevronDownIcon, Share2, Zap } from "lucide-react";
 
 import { CTAButtonMembership } from "~/components/CallToActions";
 import { FoundingMemberPricing } from "~/components/FoundingMemberPricing";
-import { api } from "~/trpc/server";
 
 // import { AutoPlayVideo } from "./components";
 
@@ -449,7 +448,7 @@ function ClosingCTASection() {
 
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   return (
-    <details className="group py-6">
+    <details className="group py-6 [&_summary::-webkit-details-marker]:hidden">
       <summary className="flex w-full cursor-pointer items-center justify-between text-left">
         <span className="text-lg font-medium text-gray-900">{question}</span>
         <ChevronDownIcon className="h-6 w-6 text-interactive-2 transition-transform duration-300 group-open:rotate-180" />

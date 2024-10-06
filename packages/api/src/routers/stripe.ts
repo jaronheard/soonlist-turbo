@@ -39,7 +39,7 @@ export const stripeRouter = createTRPCRouter({
               quantity: 1,
             },
           ],
-          success_url: `${protocol}://${url}/get-started`,
+          success_url: `${protocol}://${url}/account/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${protocol}://${url}/account/plans`,
           metadata: {
             userId: ctx.user.id,
@@ -198,6 +198,61 @@ export const stripeRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create invitation",
+        });
+      }
+    }),
+  handleLoggedInSuccessfulCheckout: protectedProcedure
+    .input(z.object({ sessionId: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+        apiVersion: "2024-04-10",
+      });
+
+      // Retrieve the checkout session
+      const session = await stripe.checkout.sessions.retrieve(input.sessionId, {
+        expand: ["subscription"],
+      });
+
+      if (session.status !== "complete") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Checkout session is not complete",
+        });
+      }
+
+      const plan = session.metadata?.plan;
+
+      if (!plan) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Missing plan information",
+        });
+      }
+
+      // Update the user's metadata
+      try {
+        const subscription = session.subscription as Stripe.Subscription;
+        await clerkClient.users.updateUser(ctx.user.id, {
+          publicMetadata: {
+            ...ctx.user.publicMetadata,
+            stripe: {
+              customerId: session.customer as string,
+            },
+            plan: {
+              name: plan,
+              productId: subscription.items.data[0]?.plan.product as string,
+              status: subscription.status,
+              id: subscription.items.data[0]?.plan.id,
+            },
+          },
+        });
+
+        return { success: true };
+      } catch (error) {
+        console.error("Error updating user metadata:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update user metadata",
         });
       }
     }),

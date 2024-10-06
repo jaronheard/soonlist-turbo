@@ -195,11 +195,7 @@ export function FoundingMemberPricing({
                 <span className="text-lg font-semibold leading-6 text-neutral-2">
                   /year
                 </span>
-                {tier.percentOff && (
-                  <span className="-mt-2 inline-flex items-center justify-center rounded-full bg-interactive-3 px-4 py-2 text-xl font-bold text-interactive-1">
-                    {tier.percentOff}% OFF
-                  </span>
-                )}
+                {tier.percentOff && <Badge>{tier.percentOff}%&nbsp;OFF</Badge>}
               </p>
               {tier.mostPopular && (
                 <>
