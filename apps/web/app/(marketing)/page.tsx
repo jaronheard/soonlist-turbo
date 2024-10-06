@@ -210,7 +210,9 @@ function HeroSection() {
               See it, save it, show up. It's that easy with Soonlist.
             </p>
             <div className="mt-8 flex items-center justify-center gap-x-6">
-              <CTAButtonMembership>Become A Member Now</CTAButtonMembership>
+              <CTAButtonMembership>
+                Become a Founding Member
+              </CTAButtonMembership>
             </div>
           </div>
           <div className="mx-auto max-w-2xl">
@@ -453,7 +455,7 @@ function ClosingCTASection() {
           description="See it, save it, show up. It's that easy with Soonlist."
         />
         <div className="mt-10 flex items-center justify-center gap-x-6">
-          <CTAButtonMembership>Become A Member Now</CTAButtonMembership>
+          <CTAButtonMembership>Become a Founding Member</CTAButtonMembership>
         </div>
       </div>
     </Section>

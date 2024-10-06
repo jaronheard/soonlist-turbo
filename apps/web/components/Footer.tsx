@@ -8,6 +8,8 @@ import { Ticket } from "lucide-react";
 import { Button, buttonVariants } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 
+import { CTAButtonMembership } from "./CallToActions";
+
 const excludedCTARoutes = ["/join", "/"];
 
 export function Footer() {
@@ -30,12 +32,9 @@ export function Footer() {
                     Shape the future of Soonlist and enjoy premium benefits. Be
                     one of 💯 and get a signature emoji.
                   </p>
-                  <Button asChild size="lg" variant="secondary">
-                    <Link href={"/join"} scroll={false}>
-                      <Ticket className="mr-2 size-4"></Ticket>
-                      <span className="inline">&nbsp;Become A Member Now</span>
-                    </Link>
-                  </Button>
+                  <CTAButtonMembership>
+                    Become A Founding Member
+                  </CTAButtonMembership>
                 </CardContent>
               </Card>
             </div>
