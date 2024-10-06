@@ -359,25 +359,10 @@ function FeaturesHighlight() {
   );
 }
 
-async function MembershipSection() {
-  const publicCheckoutUrls =
-    await api.stripe.getPublicSubscriptionCheckoutUrls();
-  const checkoutUrls = publicCheckoutUrls.reduce(
-    (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
-    {},
-  );
-
-  const { takenEmojis } = await api.user.getAllTakenEmojis();
-
+function MembershipSection() {
   return (
     <Section>
-      <FoundingMemberPricing
-        checkoutUrls={checkoutUrls}
-        currentPlan="free"
-        planActive={false}
-        takenEmojis={takenEmojis}
-        hideEmojiDetails={true}
-      />
+      <FoundingMemberPricing />
     </Section>
   );
 }
