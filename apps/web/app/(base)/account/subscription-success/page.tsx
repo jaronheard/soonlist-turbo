@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -12,29 +13,66 @@ export default function SubscriptionSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const { isLoaded, isSignedIn } = useAuth();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { mutate: handleSuccessfulCheckout } =
     api.stripe.handleSuccessfulCheckout.useMutation({
       onSuccess: () => {
+        setIsProcessing(false);
         router.push("/account/invitation-sent");
       },
-      onError: (error) => {
-        console.error("Error handling successful checkout:", error);
-        toast.error(
-          "There was an error processing your subscription. Please try again or contact support.",
-        );
-      },
+      onError: handleError,
     });
 
+  const { mutate: handleLoggedInSuccessfulCheckout } =
+    api.stripe.handleLoggedInSuccessfulCheckout.useMutation({
+      onSuccess: () => {
+        setIsProcessing(false);
+        router.push("/get-started");
+      },
+      onError: handleError,
+    });
+
+  function handleError(error: unknown): void {
+    console.error("Error handling successful checkout:", error);
+    setIsProcessing(false);
+    toast.error(
+      "There was an error processing your subscription. Please try again or contact support.",
+    );
+  }
+
   useEffect(() => {
-    if (sessionId) {
+    if (!isLoaded || !sessionId || isProcessing) return;
+
+    setIsProcessing(true);
+    if (isSignedIn) {
+      handleLoggedInSuccessfulCheckout({ sessionId });
+    } else {
       handleSuccessfulCheckout({ sessionId });
     }
-  }, [sessionId, handleSuccessfulCheckout]);
+  }, [
+    isLoaded,
+    isSignedIn,
+    sessionId,
+    isProcessing,
+    handleLoggedInSuccessfulCheckout,
+    handleSuccessfulCheckout,
+  ]);
+
+  if (!isLoaded || !sessionId) {
+    toast.error("Invalid session. Please try again or contact support.");
+    return null;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center space-y-8 text-center">
-      <Loader2 className="h-12 w-12 animate-spin" />
+      {isProcessing && (
+        <>
+          <Loader2 className="h-12 w-12 animate-spin" />
+          <p>Processing your subscription. Please wait...</p>
+        </>
+      )}
       <HelpButton message="I need help with my subscription" />
     </div>
   );
