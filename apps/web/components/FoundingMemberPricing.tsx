@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { CheckIcon } from "lucide-react";
 
 import { cn } from "@soonlist/ui";
@@ -21,7 +21,7 @@ const tiers = [
     id: "personal",
     href: "#",
     priceAnnually: "$29.99",
-    percentOff: 70, // Add this line to specify the discount percentage
+    percentOff: 70,
     description: "All Your Possibilities, Organized",
     features: [
       "Capture unlimited events",
@@ -40,21 +40,15 @@ export function FoundingMemberPricing({
   hideEmojiDetails = false,
 }: PricingProps) {
   const { isLoaded, isSignedIn } = useAuth();
-  const [checkoutUrls, setCheckoutUrls] = useState<Record<string, string>>({});
-  const [customerPortalUrl, setCustomerPortalUrl] = useState<
-    string | undefined
-  >();
-  const [currentPlan, setCurrentPlan] = useState("free");
-  const [planActive, setPlanActive] = useState(false);
-  const [takenEmojis, setTakenEmojis] = useState<string[]>([]);
+  const { user } = useUser();
 
+  const { data: checkoutUrls } =
+    api.stripe.getSubscriptionCheckoutUrls.useQuery(undefined, {
+      enabled: isSignedIn,
+    });
   const { data: publicCheckoutUrls } =
     api.stripe.getPublicSubscriptionCheckoutUrls.useQuery(undefined, {
       enabled: !isSignedIn,
-    });
-  const { data: authenticatedCheckoutUrls } =
-    api.stripe.getSubscriptionCheckoutUrls.useQuery(undefined, {
-      enabled: isSignedIn,
     });
   const { data: portalUrl } = api.stripe.getCustomerPortalUrl.useQuery(
     undefined,
@@ -62,47 +56,27 @@ export function FoundingMemberPricing({
   );
   const { data: emojisData } = api.user.getAllTakenEmojis.useQuery();
 
-  useEffect(() => {
-    if (isLoaded) {
-      if (isSignedIn) {
-        if (authenticatedCheckoutUrls) {
-          setCheckoutUrls(
-            authenticatedCheckoutUrls.reduce(
-              (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
-              {},
-            ),
-          );
-        }
-        if (portalUrl) {
-          setCustomerPortalUrl(portalUrl);
-        }
-        // You'll need to implement a way to get the current plan and status
-        // This could be through Clerk's user metadata or a separate API call
-        // For now, we'll leave it as "free" and inactive
-      } else {
-        if (publicCheckoutUrls) {
-          setCheckoutUrls(
-            publicCheckoutUrls.reduce(
-              (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
-              {},
-            ),
-          );
-        }
-      }
-    }
-  }, [
-    isLoaded,
-    isSignedIn,
-    authenticatedCheckoutUrls,
-    publicCheckoutUrls,
-    portalUrl,
-  ]);
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
 
-  useEffect(() => {
-    if (emojisData) {
-      setTakenEmojis(emojisData.takenEmojis);
-    }
-  }, [emojisData]);
+  // @ts-expect-error - types are wrong
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const currentPlan = user?.publicMetadata.plan?.name || "free";
+  // @ts-expect-error - types are wrong
+  const planActive = user?.publicMetadata.plan?.status === "active";
+
+  const checkoutUrlsMap: Record<string, string> = isSignedIn
+    ? checkoutUrls?.reduce(
+        (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+        {} as Record<string, string>,
+      ) || {}
+    : publicCheckoutUrls?.reduce(
+        (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+        {} as Record<string, string>,
+      ) || {};
+
+  const takenEmojis = emojisData?.takenEmojis || [];
 
   const tiersWithStatus = tiers.map((tier) => ({
     ...tier,
@@ -112,10 +86,6 @@ export function FoundingMemberPricing({
 
   const foundingMemberSpots = 100;
   const remainingSpots = foundingMemberSpots - takenEmojis.length;
-
-  if (!isLoaded) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -180,7 +150,7 @@ export function FoundingMemberPricing({
                   {tier.name}
                 </h3>
                 {tier.current ? (
-                  <Badge variant={"default"}>Current plan</Badge>
+                  <Badge variant={"default"}>Current&nbsp;plan</Badge>
                 ) : tier.mostPopular ? (
                   <Badge variant={"secondary"}>{remainingSpots} left</Badge>
                 ) : null}
@@ -226,11 +196,11 @@ export function FoundingMemberPricing({
               )}
               {!tier.soon &&
                 !tier.active &&
-                (!customerPortalUrl || tier.id !== "free") && (
+                (!portalUrl || tier.id !== "free") && (
                   <Link
                     aria-describedby={tier.id}
                     className={cn("w-full", buttonVariants({ size: "lg" }))}
-                    href={`${checkoutUrls[tier.id] || "/new"}`}
+                    href={`${checkoutUrlsMap[tier.id] || "/new"}`}
                     scroll={false}
                   >
                     Join Soonlist
@@ -240,7 +210,7 @@ export function FoundingMemberPricing({
                 <Link
                   aria-describedby={tier.id}
                   className={cn("w-full", buttonVariants({ variant: "link" }))}
-                  href={customerPortalUrl || "/account/plans"}
+                  href={portalUrl || "/account/plans"}
                 >
                   Manage Plan
                 </Link>

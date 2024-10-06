@@ -39,10 +39,11 @@ export const stripeRouter = createTRPCRouter({
               quantity: 1,
             },
           ],
-          success_url: `${protocol}://${url}/account/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+          success_url: `${protocol}://${url}/api/stripe/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${protocol}://${url}/account/plans`,
           metadata: {
             userId: ctx.user.id,
+            plan: planKey,
           },
           subscription_data: {
             metadata: {
@@ -118,7 +119,7 @@ export const stripeRouter = createTRPCRouter({
               quantity: 1,
             },
           ],
-          success_url: `${protocol}://${url}/account/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+          success_url: `${protocol}://${url}/api/stripe/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${protocol}://${url}/account/plans`,
           metadata: {
             plan: planKey,
@@ -166,6 +167,7 @@ export const stripeRouter = createTRPCRouter({
 
       const email = session.customer_details?.email;
       const plan = session.metadata?.plan;
+      const url = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL;
 
       if (!email || !plan) {
         throw new TRPCError({
@@ -190,6 +192,8 @@ export const stripeRouter = createTRPCRouter({
               id: subscription.items.data[0]?.plan.id,
             },
           },
+          ignoreExisting: true,
+          redirectUrl: `${protocol}://${url}/sign-up`,
         });
 
         return { success: true, invitationId: invitation.id };
@@ -201,7 +205,7 @@ export const stripeRouter = createTRPCRouter({
         });
       }
     }),
-  handleLoggedInSuccessfulCheckout: protectedProcedure
+  handleSuccessfulCheckoutSignedIn: protectedProcedure
     .input(z.object({ sessionId: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -212,6 +216,8 @@ export const stripeRouter = createTRPCRouter({
       const session = await stripe.checkout.sessions.retrieve(input.sessionId, {
         expand: ["subscription"],
       });
+
+      console.log("session", session);
 
       if (session.status !== "complete") {
         throw new TRPCError({
