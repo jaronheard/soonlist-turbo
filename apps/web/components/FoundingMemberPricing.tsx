@@ -1,20 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 import { CheckIcon } from "lucide-react";
 
 import { cn } from "@soonlist/ui";
 import { Badge } from "@soonlist/ui/badge";
 import { Button, buttonVariants } from "@soonlist/ui/button";
 
+import { api } from "~/trpc/react";
+
 interface PricingProps {
-  checkoutUrls: Record<string, string>;
-  currentPlan: string;
-  planActive: boolean;
-  customerPortalUrl?: string;
-  takenEmojis: string[];
-  hideEmojiDetails?: boolean; // New prop
+  hideEmojiDetails?: boolean;
 }
 
 const tiers = [
@@ -39,13 +37,73 @@ const tiers = [
 ];
 
 export function FoundingMemberPricing({
-  checkoutUrls,
-  currentPlan,
-  planActive,
-  customerPortalUrl,
-  takenEmojis,
-  hideEmojiDetails = false, // Default to false
+  hideEmojiDetails = false,
 }: PricingProps) {
+  const { isLoaded, isSignedIn } = useAuth();
+  const [checkoutUrls, setCheckoutUrls] = useState<Record<string, string>>({});
+  const [customerPortalUrl, setCustomerPortalUrl] = useState<
+    string | undefined
+  >();
+  const [currentPlan, setCurrentPlan] = useState("free");
+  const [planActive, setPlanActive] = useState(false);
+  const [takenEmojis, setTakenEmojis] = useState<string[]>([]);
+
+  const { data: publicCheckoutUrls } =
+    api.stripe.getPublicSubscriptionCheckoutUrls.useQuery(undefined, {
+      enabled: !isSignedIn,
+    });
+  const { data: authenticatedCheckoutUrls } =
+    api.stripe.getSubscriptionCheckoutUrls.useQuery(undefined, {
+      enabled: isSignedIn,
+    });
+  const { data: portalUrl } = api.stripe.getCustomerPortalUrl.useQuery(
+    undefined,
+    { enabled: isSignedIn },
+  );
+  const { data: emojisData } = api.user.getAllTakenEmojis.useQuery();
+
+  useEffect(() => {
+    if (isLoaded) {
+      if (isSignedIn) {
+        if (authenticatedCheckoutUrls) {
+          setCheckoutUrls(
+            authenticatedCheckoutUrls.reduce(
+              (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+              {},
+            ),
+          );
+        }
+        if (portalUrl) {
+          setCustomerPortalUrl(portalUrl);
+        }
+        // You'll need to implement a way to get the current plan and status
+        // This could be through Clerk's user metadata or a separate API call
+        // For now, we'll leave it as "free" and inactive
+      } else {
+        if (publicCheckoutUrls) {
+          setCheckoutUrls(
+            publicCheckoutUrls.reduce(
+              (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+              {},
+            ),
+          );
+        }
+      }
+    }
+  }, [
+    isLoaded,
+    isSignedIn,
+    authenticatedCheckoutUrls,
+    publicCheckoutUrls,
+    portalUrl,
+  ]);
+
+  useEffect(() => {
+    if (emojisData) {
+      setTakenEmojis(emojisData.takenEmojis);
+    }
+  }, [emojisData]);
+
   const tiersWithStatus = tiers.map((tier) => ({
     ...tier,
     current: tier.id === currentPlan,
@@ -54,6 +112,10 @@ export function FoundingMemberPricing({
 
   const foundingMemberSpots = 100;
   const remainingSpots = foundingMemberSpots - takenEmojis.length;
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="mx-auto max-w-2xl">

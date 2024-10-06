@@ -25,6 +25,7 @@ export const stripeRouter = createTRPCRouter({
     });
 
     const url = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL;
+    const userEmail = ctx.user.emailAddresses[0]?.emailAddress;
 
     const checkoutUrls = await Promise.all(
       Object.keys(plans).map(async (planKey) => {
@@ -38,7 +39,7 @@ export const stripeRouter = createTRPCRouter({
               quantity: 1,
             },
           ],
-          success_url: `${protocol}://${url}/account/emoji-picker`,
+          success_url: `${protocol}://${url}/get-started`,
           cancel_url: `${protocol}://${url}/account/plans`,
           metadata: {
             userId: ctx.user.id,
@@ -50,6 +51,7 @@ export const stripeRouter = createTRPCRouter({
             },
           },
           allow_promotion_codes: true,
+          customer_email: userEmail, // Prefill the user's email
         });
 
         if (!checkoutSession.url) {
