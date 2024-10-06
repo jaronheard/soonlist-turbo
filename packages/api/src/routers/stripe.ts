@@ -38,7 +38,7 @@ export const stripeRouter = createTRPCRouter({
               quantity: 1,
             },
           ],
-          success_url: `${protocol}://${url}/account/emoji-picker`,
+          success_url: `${protocol}://${url}/get-started`,
           cancel_url: `${protocol}://${url}/account/plans`,
           metadata: {
             userId: ctx.user.id,
