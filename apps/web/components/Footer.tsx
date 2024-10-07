@@ -6,7 +6,6 @@ import { SignedOut } from "@clerk/nextjs";
 import { Ticket } from "lucide-react";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 
 import { CTAButtonMembership } from "./CallToActions";
 
