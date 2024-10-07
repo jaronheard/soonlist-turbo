@@ -39,7 +39,7 @@ export function EmojiPicker({ currentEmoji: initialEmoji }: EmojiPickerProps) {
       // Optimistically update the taken emojis
       setTakenEmojis((prev) => [
         ...prev.filter((emoji) => emoji !== currentEmoji),
-        newEmoji.emoji,
+        ...(newEmoji.emoji ? [newEmoji.emoji] : []),
       ]);
 
       setCurrentEmoji(newEmoji.emoji);
