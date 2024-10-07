@@ -23,7 +23,7 @@ export function useCalendar() {
     setSelectedEvent,
     setShowAllCalendars,
     setCalendarUsage,
-    clearCalendarData, // Add this line
+    clearCalendarData,
   } = useAppStore();
 
   const handleAddToCal = async (
@@ -49,8 +49,8 @@ export function useCalendar() {
       }
 
       calendars.sort((a, b) => {
-        const usageA = calendarUsage[a.id] || 0;
-        const usageB = calendarUsage[b.id] || 0;
+        const usageA = calendarUsage[a.id] ?? 0;
+        const usageB = calendarUsage[b.id] ?? 0;
 
         if (usageA === 0 && usageB === 0) {
           if (a.id === defaultCalendarId) return -1;
@@ -87,12 +87,52 @@ export function useCalendar() {
       setDefaultCalendarId(selectedCalendarId);
 
       const e = selectedEvent.event as AddToCalendarButtonPropsRestricted;
-      const startDate = new Date(`${e.startDate}T${e.startTime || "00:00"}:00`);
-      const endDate = e.endTime
-        ? new Date(`${e.startDate}T${e.endTime}:00`)
-        : new Date(startDate.getTime() + 60 * 60 * 1000);
+
+      const parseDate = (dateString: string, timeString: string): Date => {
+        const [year, month, day] = dateString.split("-").map(Number);
+        const [hours, minutes] = timeString.split(":").map(Number);
+
+        if (
+          year === undefined ||
+          month === undefined ||
+          day === undefined ||
+          hours === undefined ||
+          minutes === undefined
+        ) {
+          throw new Error("Invalid date or time format");
+        }
+
+        return new Date(year, month - 1, day, hours, minutes);
+      };
+
+      let startDate: Date;
+      let endDate: Date;
+
+      if (e.startDate && e.startTime) {
+        startDate = parseDate(e.startDate, e.startTime);
+      } else if (e.startDate) {
+        startDate = parseDate(e.startDate, "00:00");
+      } else {
+        throw new Error("Start date is required");
+      }
+
+      if (e.endDate && e.endTime) {
+        endDate = parseDate(e.endDate, e.endTime);
+      } else if (e.endDate) {
+        endDate = parseDate(e.endDate, "23:59");
+      } else {
+        endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+      }
+
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        throw new Error("Invalid date parsed");
+      }
 
       const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+      if (!baseUrl) {
+        throw new Error("EXPO_PUBLIC_API_BASE_URL is not defined");
+      }
+
       const additionalText =
         selectedEvent.userName && selectedEvent.id
           ? `Collected by @${selectedEvent.userName} on Soonlist. \nFull details: ${baseUrl}/event/${selectedEvent.id}`
@@ -100,21 +140,26 @@ export function useCalendar() {
 
       const fullDescription = `${e.description}\n\n${additionalText}`;
 
-      const eventId = await Calendar.createEventAsync(selectedCalendarId, {
+      const eventDetails = {
         title: e.name,
         startDate,
         endDate,
         location: e.location,
         notes: fullDescription,
         timeZone: e.timeZone,
-      });
+      };
+
+      const eventId = await Calendar.createEventAsync(
+        selectedCalendarId,
+        eventDetails,
+      );
 
       if (eventId) {
         showToast("Event successfully added to calendar", "success");
       }
 
       const newUsage = { ...calendarUsage };
-      newUsage[selectedCalendarId] = (newUsage[selectedCalendarId] || 0) + 1;
+      newUsage[selectedCalendarId] = (newUsage[selectedCalendarId] ?? 0) + 1;
       setCalendarUsage(newUsage);
     } catch (error) {
       console.error("Error adding event to calendar:", error);
@@ -133,6 +178,6 @@ export function useCalendar() {
     showAllCalendars,
     setShowAllCalendars,
     INITIAL_CALENDAR_LIMIT,
-    clearCalendarData, // Add this line
+    clearCalendarData,
   };
 }
