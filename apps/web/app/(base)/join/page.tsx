@@ -1,7 +1,6 @@
 import { SignedOut } from "@clerk/nextjs";
 
 import { cn } from "@soonlist/ui";
-import { Badge } from "@soonlist/ui/badge";
 
 import { WaitlistSignup } from "~/components/WaitlistSignup";
 import PlansPage from "../account/plans/page";
