@@ -125,6 +125,11 @@ const faqs = [
     answer:
       "At Soonlist, we believe in making our service accessible to all. If the membership fee is a barrier, email us at support@soonlist.com with the subject \"NOTAFLOF\" (No One Turned Away For Lack Of Funds). We'll work with you to ensure you can access Soonlist's features. Paid subscriptions, by community members who can afford it, help support this inclusive policy.",
   },
+  {
+    question: "What if I live outside the Portland, Oregon metro region?",
+    answer:
+      "Currently, Soonlist is available exclusively for users in the Portland, Oregon metro area. We're excited about expanding to other regions in the future. If you're interested in using Soonlist in your area, please join our waitlist at <a href='https://soonlist.com/waitlist' class='text-interactive-1 underline'>soonlist.com/waitlist</a>. We'll notify you as soon as we launch in your location!",
+  },
 ];
 
 function Section({
@@ -453,7 +458,10 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         <span className="text-lg font-medium text-gray-900">{question}</span>
         <ChevronDownIcon className="h-6 w-6 text-interactive-2 transition-transform duration-300 group-open:rotate-180" />
       </summary>
-      <p className="mt-4 text-base text-gray-600">{answer}</p>
+      <p
+        className="mt-4 text-base text-gray-600"
+        dangerouslySetInnerHTML={{ __html: answer }}
+      />
     </details>
   );
 }
