@@ -439,23 +439,6 @@ function FAQSection() {
   );
 }
 
-function ClosingCTASection() {
-  return (
-    <Section className="bg-interactive-3">
-      <div className="text-center">
-        <SectionTitle
-          title="All Your Possibilities, Organized"
-          subtitle="Join Now"
-          description="See it, save it, show up. It's that easy with Soonlist."
-        />
-        <div className="mt-10 flex items-center justify-center gap-x-6">
-          <CTAButtonMembership>Become a Founding Member</CTAButtonMembership>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   return (
     <details className="group py-6 [&_summary::-webkit-details-marker]:hidden">
@@ -484,7 +467,6 @@ export default function Page() {
       <TestimonialsSection />
       <MembershipSection />
       <FAQSection />
-      <ClosingCTASection />
     </div>
   );
 }
