@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@soonlist/ui/button";
@@ -12,28 +12,59 @@ interface EmojiPickerProps {
   currentEmoji?: string | null;
 }
 
-export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
-  const [inputEmoji, setInputEmoji] = useState(currentEmoji ?? "");
+export function EmojiPicker({ currentEmoji: initialEmoji }: EmojiPickerProps) {
+  const [inputEmoji, setInputEmoji] = useState(initialEmoji ?? "");
   const [isUpdating, setIsUpdating] = useState(false);
-
-  const { data: emojiStatus, refetch: refetchEmojiStatus } =
-    api.user.getAllTakenEmojis.useQuery();
+  const [currentEmoji, setCurrentEmoji] = useState<string | null | undefined>(
+    initialEmoji,
+  );
+  const [takenEmojis, setTakenEmojis] = useState<string[]>([]);
 
   const utils = api.useUtils();
 
+  const { data: emojiStatus } = api.user.getAllTakenEmojis.useQuery();
+
+  useEffect(() => {
+    if (emojiStatus) {
+      setTakenEmojis(emojiStatus.takenEmojis);
+    }
+  }, [emojiStatus]);
+
   const updateUserEmoji = api.user.updateEmoji.useMutation({
+    onMutate: async (newEmoji) => {
+      setIsUpdating(true);
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await utils.user.getAllTakenEmojis.cancel();
+
+      // Optimistically update the taken emojis
+      setTakenEmojis((prev) => [
+        ...prev.filter((emoji) => emoji !== currentEmoji),
+        ...(newEmoji.emoji ? [newEmoji.emoji] : []),
+      ]);
+
+      setCurrentEmoji(newEmoji.emoji);
+    },
     onSuccess: () => {
       toast.success("Emoji updated successfully!");
-      void utils.user.invalidate();
     },
     onError: (error) => {
       toast.error(`Failed to update emoji: ${error.message}`);
-      void refetchEmojiStatus();
+      // Revert the optimistic update
+      if (emojiStatus) {
+        setTakenEmojis(emojiStatus.takenEmojis);
+      }
+      setCurrentEmoji(initialEmoji);
+    },
+    onSettled: () => {
+      setIsUpdating(false);
+      void utils.user.getAllTakenEmojis.invalidate();
     },
   });
 
-  const isEmojiAvailable =
-    emojiStatus && !emojiStatus.takenEmojis.includes(inputEmoji);
+  const isEmojiAvailable = !takenEmojis
+    .filter((emoji) => emoji !== currentEmoji)
+    .includes(inputEmoji);
+
   const isButtonDisabled =
     isUpdating ||
     inputEmoji === "" ||
@@ -42,20 +73,22 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
 
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    if (!inputEmoji) {
-      return;
-    }
-    setIsUpdating(true);
-    updateUserEmoji.mutate(
-      { emoji: inputEmoji },
-      {
-        onSettled: () => setIsUpdating(false),
-      },
-    );
+    if (!inputEmoji) return;
+    updateUserEmoji.mutate({ emoji: inputEmoji });
   };
 
-  const otherUsersEmojis =
-    emojiStatus?.takenEmojis.filter((emoji) => emoji !== currentEmoji) ?? [];
+  const otherUsersEmojis = takenEmojis.filter(
+    (emoji) => emoji !== currentEmoji && emoji !== inputEmoji,
+  );
+
+  const getEmojiStatus = () => {
+    if (!inputEmoji) return null;
+    if (emojiStatus === undefined) return "Checking availability...";
+    if (inputEmoji === currentEmoji) return "Your current emoji";
+    if (isUpdating) return "Updating...";
+    if (isEmojiAvailable) return "Available";
+    return "Already taken";
+  };
 
   return (
     <div className="flex flex-col items-center justify-center space-y-8">
@@ -67,25 +100,33 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
           placeholder=""
           className="h-24 w-24 text-center text-5xl"
           maxLength={2}
+          disabled={isUpdating}
         />
         <div className="text-sm font-medium">
-          {inputEmoji &&
-            (emojiStatus === undefined ? (
-              <p className="text-muted-foreground">Checking availability...</p>
-            ) : inputEmoji === currentEmoji ? (
-              <p className="text-success">Your emoji</p>
-            ) : isEmojiAvailable ? (
-              <p className="text-success">Available</p>
-            ) : (
-              <p className="text-destructive">Already taken</p>
-            ))}
+          {getEmojiStatus() && (
+            <p
+              className={
+                getEmojiStatus() === "Already taken"
+                  ? "text-destructive"
+                  : getEmojiStatus() === "Available"
+                    ? "text-success"
+                    : "text-muted-foreground"
+              }
+            >
+              {getEmojiStatus()}
+            </p>
+          )}
         </div>
         <Button
           onClick={handleSubmit}
           disabled={isButtonDisabled}
           className="px-8 py-4 text-xl"
         >
-          {currentEmoji ? "Change Emoji" : "Choose Emoji"}
+          {isUpdating
+            ? "Updating..."
+            : currentEmoji
+              ? "Change Emoji"
+              : "Choose Emoji"}
         </Button>
       </div>
       {otherUsersEmojis.length > 0 && (

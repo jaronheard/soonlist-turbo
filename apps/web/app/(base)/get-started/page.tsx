@@ -1,32 +1,27 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+"use client";
+
+import { useAuth, useUser } from "@clerk/nextjs";
 
 import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 
+import { FullPageLoadingSpinner } from "~/components/FullPageLoadingSpinner";
 import { HelpButton } from "~/components/HelpButton";
-import { api } from "~/trpc/server";
+import { api } from "~/trpc/react";
 import { EmojiPicker } from "./EmojiPicker";
 import { OnboardingTabs } from "./OnboardingTabs";
 
-export const metadata = {
-  title: "Get Started | Soonlist",
-  openGraph: {
-    title: "Get Started | Soonlist",
-  },
-};
+export default function Page() {
+  const { isLoaded } = useAuth();
+  const { user: activeUser } = useUser();
 
-export default async function Page() {
-  const { userId } = auth().protect();
-  const activeUser = await currentUser();
-  if (!activeUser || !userId) {
-    return <p className="text-lg text-gray-500">You do not have access.</p>;
-  }
-  const user = await api.user.getByUsername({
-    userName: activeUser.username || "",
-  });
+  const { data: user, isLoading } = api.user.getByUsername.useQuery(
+    { userName: activeUser?.username || "" },
+    { enabled: !!activeUser?.username },
+  );
 
-  if (!user) {
-    return <p className="text-lg text-gray-500">User not found.</p>;
+  if (!isLoaded || isLoading) {
+    return <FullPageLoadingSpinner />;
   }
 
   return (
@@ -55,8 +50,8 @@ export default async function Page() {
           Soonlist and to make it even better with you.
         </p>
         <p className="-mt-4 ml-4">
-          💖 <text className="font-medium italic">Jaron</text> & 🙏{" "}
-          <text className="font-medium italic">Josh, founders of Soonlist</text>
+          💖 <span className="font-medium italic">Jaron</span> & 🙏{" "}
+          <span className="font-medium italic">Josh, founders of Soonlist</span>
         </p>
         <p>Let's get started!</p>
       </div>
@@ -70,11 +65,11 @@ export default async function Page() {
         <CardContent>
           <OnboardingTabs
             additionalInfo={{
-              bio: user.bio || undefined,
-              publicEmail: user.publicEmail || undefined,
-              publicPhone: user.publicPhone || undefined,
-              publicInsta: user.publicInsta || undefined,
-              publicWebsite: user.publicWebsite || undefined,
+              bio: user?.bio || undefined,
+              publicEmail: user?.publicEmail || undefined,
+              publicPhone: user?.publicPhone || undefined,
+              publicInsta: user?.publicInsta || undefined,
+              publicWebsite: user?.publicWebsite || undefined,
             }}
           />
         </CardContent>
@@ -90,7 +85,7 @@ export default async function Page() {
           <p className="text-center text-lg">
             Pick your signature emoji to show off with your profile picture.
           </p>
-          <EmojiPicker currentEmoji={user.emoji} />
+          <EmojiPicker currentEmoji={user?.emoji || undefined} />
         </CardContent>
       </Card>
 

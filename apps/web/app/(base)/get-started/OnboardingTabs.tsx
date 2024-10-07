@@ -2,7 +2,6 @@
 
 import type { z } from "zod";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, Globe, Instagram, Mail, Pen, Phone } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -37,7 +36,7 @@ function UserProfileForm({
 }: {
   defaultValues: z.infer<typeof userAdditionalInfoSchema>;
 }) {
-  const router = useRouter();
+  const utils = api.useUtils();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFormChanged, setIsFormChanged] = useState(false);
   const form = useForm({
@@ -56,7 +55,7 @@ function UserProfileForm({
     onSuccess: () => {
       setIsSubmitting(false);
       toast.success("Public profile saved.");
-      router.refresh(); // Refresh the page to reflect the changes
+      void utils.user.invalidate();
     },
   });
 
