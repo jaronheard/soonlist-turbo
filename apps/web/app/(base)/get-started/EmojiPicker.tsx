@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@soonlist/ui/button";
@@ -12,9 +12,12 @@ interface EmojiPickerProps {
   currentEmoji?: string | null;
 }
 
-export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
-  const [inputEmoji, setInputEmoji] = useState(currentEmoji ?? "");
+export function EmojiPicker({ currentEmoji: initialEmoji }: EmojiPickerProps) {
+  const [inputEmoji, setInputEmoji] = useState(initialEmoji ?? "");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [currentEmoji, setCurrentEmoji] = useState<string | null | undefined>(
+    initialEmoji,
+  );
 
   const { data: emojiStatus, refetch: refetchEmojiStatus } =
     api.user.getAllTakenEmojis.useQuery();
@@ -24,6 +27,7 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
   const updateUserEmoji = api.user.updateEmoji.useMutation({
     onSuccess: () => {
       toast.success("Emoji updated successfully!");
+      setCurrentEmoji(inputEmoji);
       void utils.user.invalidate();
     },
     onError: (error) => {
@@ -31,6 +35,12 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
       void refetchEmojiStatus();
     },
   });
+
+  useEffect(() => {
+    if (updateUserEmoji.isSuccess) {
+      setCurrentEmoji(inputEmoji);
+    }
+  }, [updateUserEmoji.isSuccess, inputEmoji]);
 
   const isEmojiAvailable =
     emojiStatus && !emojiStatus.takenEmojis.includes(inputEmoji);
@@ -57,6 +67,14 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
   const otherUsersEmojis =
     emojiStatus?.takenEmojis.filter((emoji) => emoji !== currentEmoji) ?? [];
 
+  const getEmojiStatus = () => {
+    if (!inputEmoji) return null;
+    if (emojiStatus === undefined) return "Checking availability...";
+    if (inputEmoji === currentEmoji) return "Your emoji";
+    if (isEmojiAvailable) return "Available";
+    return "Already taken";
+  };
+
   return (
     <div className="flex flex-col items-center justify-center space-y-8">
       <div className="flex flex-col items-center space-y-4">
@@ -69,16 +87,19 @@ export function EmojiPicker({ currentEmoji }: EmojiPickerProps) {
           maxLength={2}
         />
         <div className="text-sm font-medium">
-          {inputEmoji &&
-            (emojiStatus === undefined ? (
-              <p className="text-muted-foreground">Checking availability...</p>
-            ) : inputEmoji === currentEmoji ? (
-              <p className="text-success">Your emoji</p>
-            ) : isEmojiAvailable ? (
-              <p className="text-success">Available</p>
-            ) : (
-              <p className="text-destructive">Already taken</p>
-            ))}
+          {getEmojiStatus() && (
+            <p
+              className={
+                getEmojiStatus() === "Already taken"
+                  ? "text-destructive"
+                  : getEmojiStatus() === "Available"
+                    ? "text-success"
+                    : "text-muted-foreground"
+              }
+            >
+              {getEmojiStatus()}
+            </p>
+          )}
         </div>
         <Button
           onClick={handleSubmit}
