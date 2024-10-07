@@ -8,8 +8,8 @@ import { Langfuse } from "langfuse";
 import { z } from "zod";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
-import { db, ne } from "@soonlist/db";
-import { events, pushTokens, users } from "@soonlist/db/schema";
+import { db, inArray, ne, or } from "@soonlist/db";
+import { eventFollows, events, pushTokens, users } from "@soonlist/db/schema";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
@@ -95,7 +95,16 @@ export const notificationRouter = createTRPCRouter({
         .from(events)
         .where(
           and(
-            eq(events.userId, user.userId),
+            or(
+              eq(events.userId, user.userId),
+              inArray(
+                events.id,
+                db
+                  .select({ eventId: eventFollows.eventId })
+                  .from(eventFollows)
+                  .where(eq(eventFollows.userId, user.userId)),
+              ),
+            ),
             gt(events.startDateTime, now),
             lt(events.endDateTime, oneWeekFromNow),
           ),
