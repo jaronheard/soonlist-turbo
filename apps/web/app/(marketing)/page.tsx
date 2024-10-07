@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { Bell, Calendar, ChevronDownIcon, Share2, Zap } from "lucide-react";
 
+import { Badge } from "@soonlist/ui/badge";
+
 import { CTAButtonMembership } from "~/components/CallToActions";
 import { FoundingMemberPricing } from "~/components/FoundingMemberPricing";
 
@@ -219,9 +221,7 @@ function HeroSection() {
               </CTAButtonMembership>
             </div>
             <div className="mt-4 flex justify-center">
-              <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-300">
-                Portland Metro Region Only
-              </span>
+              <Badge variant="gray">Portland Metro Region Only</Badge>
             </div>
           </div>
           <div className="mx-auto max-w-2xl">

@@ -64,7 +64,7 @@ const formSchema = z.object({
   }),
 });
 
-export function WaitlistSignup({ afterSubmit }: { afterSubmit: () => void }) {
+export function WaitlistSignup({ afterSubmit }: { afterSubmit?: () => void }) {
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -86,7 +86,7 @@ export function WaitlistSignup({ afterSubmit }: { afterSubmit: () => void }) {
   });
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
-    afterSubmit();
+    afterSubmit?.();
     waitlistSignup.mutate(values);
   }
 
@@ -121,7 +121,7 @@ export function WaitlistSignup({ afterSubmit }: { afterSubmit: () => void }) {
             </FormItem>
           )}
         />
-        <Button className="w-full" type="submit">
+        <Button className="w-full" type="submit" variant="secondary">
           <ClipboardList className="mr-2 size-4"></ClipboardList>
           Get on the list
         </Button>

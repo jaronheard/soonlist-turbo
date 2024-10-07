@@ -17,6 +17,7 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-destructive-foreground",
         outline: "text-foreground",
         yellow: "border-transparent bg-accent-yellow text-foreground",
+        gray: "border-transparent bg-gray-100 text-gray-600",
       },
       disabled: {
         true: "cursor-auto",
@@ -43,6 +44,11 @@ const badgeVariants = cva(
         variant: "yellow",
         disabled: false,
         class: "hover:bg-accent-yellow/80",
+      },
+      {
+        variant: "gray",
+        disabled: false,
+        class: "hover:bg-gray-100/80",
       },
     ],
     defaultVariants: {
