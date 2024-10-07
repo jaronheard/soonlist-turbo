@@ -6,11 +6,50 @@ import { SignedOut } from "@clerk/nextjs";
 import { Ticket } from "lucide-react";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 
 import { CTAButtonMembership } from "./CallToActions";
 
-const excludedCTARoutes = ["/join", "/"];
+const excludedCTARoutes = ["/join"];
+
+function Section({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`py-16 ${className}`}>
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">{children}</div>
+    </section>
+  );
+}
+
+function SectionTitle({
+  subtitle,
+  title,
+  description,
+}: {
+  subtitle?: string;
+  title: string;
+  description?: string | React.ReactNode;
+}) {
+  return (
+    <div className="mx-auto max-w-2xl text-center">
+      {subtitle && (
+        <h2 className="text-2xl font-bold text-interactive-1">{subtitle}</h2>
+      )}
+      <p className="mt-5 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
+        {title}
+      </p>
+      {description && (
+        <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
+          {description}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export function Footer() {
   const pathname = usePathname();
@@ -20,25 +59,21 @@ export function Footer() {
       <SignedOut>
         {!excludedCTARoutes.includes(pathname) && (
           <>
-            <div className="mx-auto max-w-xl px-6 md:px-8">
-              <Card className="bg-primary text-primary-foreground">
-                <CardHeader>
-                  <CardTitle className="-mb-4 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-primary-foreground md:text-5xl">
-                    Become a Founding Member
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-lg">
-                    Shape the future of Soonlist and enjoy premium benefits. Be
-                    one of 💯 and get a signature emoji.
-                  </p>
+            <Section className="bg-interactive-3">
+              <div className="text-center">
+                <SectionTitle
+                  title="All Your Possibilities, Organized"
+                  subtitle="Join Now"
+                  description="Shape the future of Soonlist and enjoy premium benefits. Be
+                    one of 💯 and get a signature emoji."
+                />
+                <div className="mt-10 flex items-center justify-center gap-x-6">
                   <CTAButtonMembership>
-                    Become A Founding Member
+                    Become a Founding Member
                   </CTAButtonMembership>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="p-2.5"></div>
+                </div>
+              </div>
+            </Section>
           </>
         )}
       </SignedOut>
