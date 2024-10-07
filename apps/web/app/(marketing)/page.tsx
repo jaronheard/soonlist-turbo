@@ -128,7 +128,7 @@ const faqs = [
   {
     question: "What if I live outside the Portland, Oregon metro region?",
     answer:
-      "Currently, Soonlist is available exclusively for users in the Portland, Oregon metro area. We're excited about expanding to other regions in the future. If you're interested in using Soonlist in your area, please join our waitlist at <a href='https://soonlist.com/waitlist' class='text-interactive-1 underline'>soonlist.com/waitlist</a>. We'll notify you as soon as we launch in your location!",
+      "Currently, Soonlist is available exclusively for users in the Portland, Oregon metro area. We're excited about expanding to other regions in the future. If you're interested in using Soonlist in your area, please <a href='https://soonlist.com/join' class='text-interactive-1 underline'>join our waitlist</a>. We'll notify you as soon as we launch in your location!",
   },
 ];
 
@@ -217,6 +217,11 @@ function HeroSection() {
               <CTAButtonMembership>
                 Become a Founding Member
               </CTAButtonMembership>
+            </div>
+            <div className="mt-4 flex justify-center">
+              <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-300">
+                Portland Metro Region Only
+              </span>
             </div>
           </div>
           <div className="mx-auto max-w-2xl">
