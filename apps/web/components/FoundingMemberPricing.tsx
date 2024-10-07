@@ -171,6 +171,9 @@ export function FoundingMemberPricing({
                 <>
                   <div className="p-2"></div>
                   <Badge variant={"outline"}>🌈 NOTAFLOF available</Badge>
+                  <Badge variant="gray" className="ml-2">
+                    Portland Metro Region Only
+                  </Badge>
                 </>
               )}
               <ul
