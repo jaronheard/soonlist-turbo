@@ -5,8 +5,7 @@ import { Badge } from "@soonlist/ui/badge";
 
 import { CTAButtonMembership } from "~/components/CallToActions";
 import { FoundingMemberPricing } from "~/components/FoundingMemberPricing";
-
-// import { AutoPlayVideo } from "./components";
+import { AutoPlayVideo } from "./components";
 
 const testimonials = [
   {
@@ -274,9 +273,9 @@ function ConnectWithWhatMatters() {
     <Section>
       <div className="rounded-xl border border-neutral-3 bg-white px-4 py-16 text-center md:px-16 lg:px-24">
         <SectionTitle title="How It Works" />
-        {/* <div className="relative mx-auto mt-6 h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
-          <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-update-cropped-update-v4.mp4" />
-        </div> */}
+        <div className="relative mx-auto mt-6 h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
+          <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/demo-october-7-v2.mp4" />
+        </div>
         <div className="mt-12 grid divide-y divide-neutral-200 md:grid-cols-3 md:divide-x md:divide-y-0">
           <div className="flex flex-col items-center px-4 py-8 md:py-0">
             <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
