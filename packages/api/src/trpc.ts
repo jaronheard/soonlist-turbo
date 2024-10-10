@@ -12,6 +12,7 @@ import type {
 } from "@clerk/backend/internal";
 import type { User } from "@clerk/nextjs/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/node";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
@@ -91,6 +92,12 @@ export const createCallerFactory = t.createCallerFactory;
  */
 export const createTRPCRouter = t.router;
 
+const sentryMiddleware = t.middleware(
+  Sentry.trpcMiddleware({
+    attachRpcInput: true,
+  }),
+);
+
 /**
  * Public (unauthed) procedure
  *
@@ -98,7 +105,7 @@ export const createTRPCRouter = t.router;
  * tRPC API. It does not guarantee that a user querying is authorized, but you
  * can still access user session data if they are logged in
  */
-export const publicProcedure = t.procedure;
+export const publicProcedure = t.procedure.use(sentryMiddleware);
 
 /**
  * Protected (authenticated) procedure
@@ -108,15 +115,17 @@ export const publicProcedure = t.procedure;
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure.use(async ({ next }) => {
-  const user = await currentUser();
-  if (!user) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
-  }
+export const protectedProcedure = t.procedure.use(
+  sentryMiddleware.unstable_pipe(async ({ next }) => {
+    const user = await currentUser();
+    if (!user) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
 
-  return next({
-    ctx: {
-      user,
-    },
-  });
-});
+    return next({
+      ctx: {
+        user,
+      },
+    });
+  }),
+);

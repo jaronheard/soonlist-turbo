@@ -23,6 +23,8 @@
     "@ai-sdk/anthropic": "^0.0.50",
     "@ai-sdk/openai": "^0.0.18",
     "@clerk/nextjs": "^5.0.8",
+    "@sentry/nextjs": "^8.34.0",
+    "@sentry/node": "^8.34.0",
     "@soonlist/cal": "workspace:*",
     "@soonlist/db": "workspace:*",
     "@soonlist/validators": "workspace:*",
