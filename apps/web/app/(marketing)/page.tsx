@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Bell, Calendar, ChevronDownIcon, Share2, Zap } from "lucide-react";
+import { ChevronDownIcon } from "lucide-react";
 
 import { Badge } from "@soonlist/ui/badge";
 
@@ -17,16 +17,16 @@ const testimonials = [
         "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yaEtlMGdrZVhSWm5KNEVheVBLZlpGdUxkSDIifQ",
     },
   },
-  {
-    body: "Screenshotting a story and turning it into a calendar event in seconds feels like getting away with something!",
-    author: {
-      name: "Jaron Heard",
-      handle: "jaronheard",
-      imageUrl:
-        "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvdXBsb2FkZWQvaW1nXzJaRmFCY2VkQ2RrZ1VUM3BUWFJmU2tLM3B2eCJ9",
-    },
-  },
-  // More testimonials...
+  // {
+  //   body: "Screenshotting a story and turning it into a calendar event in seconds feels like getting away with something!",
+  //   author: {
+  //     name: "Jaron Heard",
+  //     handle: "jaronheard",
+  //     imageUrl:
+  //       "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvdXBsb2FkZWQvaW1nXzJaRmFCY2VkQ2RrZ1VUM3BUWFJmU2tLM3B2eCJ9",
+  //   },
+  // },
+  // // More testimonials...
   {
     body: "As an organizer of dance parties and environmental justice activist, I've been dreaming of making event lists this easy for years!",
     author: {
@@ -36,24 +36,24 @@ const testimonials = [
         "https://upcdn.io/12a1yek/raw/uploads/Soonlist/sarah_profile.webp",
     },
   },
-  {
-    body: "I’m stoked that Soonlist helps me save and share music events, especially those in non-conventional venues.",
-    author: {
-      name: "Josh Carr",
-      handle: "joshcarr",
-      imageUrl:
-        "https://upcdn.io/12a1yek/raw/uploads/Soonlist/josh_google_profile.webp",
-    },
-  },
-  {
-    body: "I am so appreciative of a platform that allows me to connect with others and share events that is not based in social media.",
-    author: {
-      name: "Gina Roberti",
-      handle: "ginabobina",
-      imageUrl:
-        "https://upcdn.io/12a1yek/raw/uploads/Soonlist/gina_google_profile.webp",
-    },
-  },
+  // {
+  //   body: "I’m stoked that Soonlist helps me save and share music events, especially those in non-conventional venues.",
+  //   author: {
+  //     name: "Josh Carr",
+  //     handle: "joshcarr",
+  //     imageUrl:
+  //       "https://upcdn.io/12a1yek/raw/uploads/Soonlist/josh_google_profile.webp",
+  //   },
+  // },
+  // {
+  //   body: "I am so appreciative of a platform that allows me to connect with others and share events that is not based in social media.",
+  //   author: {
+  //     name: "Gina Roberti",
+  //     handle: "ginabobina",
+  //     imageUrl:
+  //       "https://upcdn.io/12a1yek/raw/uploads/Soonlist/gina_google_profile.webp",
+  //   },
+  // },
   {
     body: "I'm a freak for my calendar, and Soonlist is the perfect way to keep it fresh and full of events that inspire me.",
     author: {
@@ -65,29 +65,29 @@ const testimonials = [
   },
 ];
 
-const features = [
-  {
-    title: "Smart Capture",
-    description:
-      "Save events from any source – screenshots, flyers, texts, and more",
-    icon: Zap,
-  },
-  {
-    title: "Auto Organize",
-    description: "Your saved events, automatically organized in one place",
-    icon: Calendar,
-  },
-  {
-    title: "Easy Sharing",
-    description: "Discover and share events with like-minded enthusiasts",
-    icon: Share2,
-  },
-  {
-    title: "Reminders",
-    description: "Gentle nudges to help you follow through on your intentions",
-    icon: Bell,
-  },
-];
+// const features = [
+//   {
+//     title: "Smart Capture",
+//     description:
+//       "Save events from any source – screenshots, flyers, texts, and more",
+//     icon: Zap,
+//   },
+//   {
+//     title: "Auto Organize",
+//     description: "Your saved events, automatically organized in one place",
+//     icon: Calendar,
+//   },
+//   {
+//     title: "Easy Sharing",
+//     description: "Discover and share events with like-minded enthusiasts",
+//     icon: Share2,
+//   },
+//   {
+//     title: "Reminders",
+//     description: "Gentle nudges to help you follow through on your intentions",
+//     icon: Bell,
+//   },
+// ];
 
 const faqs = [
   {
@@ -340,32 +340,32 @@ function ConnectWithWhatMatters() {
   );
 }
 
-function FeaturesHighlight() {
-  return (
-    <Section>
-      <SectionTitle
-        subtitle="Features"
-        title="Everything you need to organize your possibilities"
-      />
-      <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-        {features.map((feature) => (
-          <div key={feature.title} className="flex flex-col items-center">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-interactive-1">
-              <feature.icon className="h-6 w-6 text-white" aria-hidden="true" />
-            </div>
-            <h2 className="text-2xl font-bold leading-9 tracking-wide text-gray-900">
-              {feature.title}
-            </h2>
-            <div className="py-2"></div>
-            <p className="mt-2 text-lg leading-7 text-gray-500">
-              {feature.description}
-            </p>
-          </div>
-        ))}
-      </div>
-    </Section>
-  );
-}
+// function FeaturesHighlight() {
+//   return (
+//     <Section>
+//       <SectionTitle
+//         subtitle="Features"
+//         title="Everything you need to organize your possibilities"
+//       />
+//       <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+//         {features.map((feature) => (
+//           <div key={feature.title} className="flex flex-col items-center">
+//             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-interactive-1">
+//               <feature.icon className="h-6 w-6 text-white" aria-hidden="true" />
+//             </div>
+//             <h2 className="text-2xl font-bold leading-9 tracking-wide text-gray-900">
+//               {feature.title}
+//             </h2>
+//             <div className="py-2"></div>
+//             <p className="mt-2 text-lg leading-7 text-gray-500">
+//               {feature.description}
+//             </p>
+//           </div>
+//         ))}
+//       </div>
+//     </Section>
+//   );
+// }
 
 function MembershipSection() {
   return (
@@ -462,7 +462,7 @@ export default function Page() {
       <div className="-mt-48">
         <ConnectWithWhatMatters />
       </div>
-      <FeaturesHighlight />
+      {/* <FeaturesHighlight /> */}
       <TestimonialsSection />
       <MembershipSection />
       <FAQSection />
