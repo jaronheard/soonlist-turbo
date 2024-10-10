@@ -10,6 +10,8 @@ import {
   Ear,
   Earth,
   EyeOff,
+  EyeOffIcon,
+  Globe2Icon,
   GlobeIcon,
   MapPin,
   MessageSquareIcon,
@@ -1111,9 +1113,19 @@ export function EventPage(props: EventPageProps) {
             </div>
             <PersonalNote text={comment?.content} />
 
-            {visibility === "private" && (
-              <GlobeIcon className="size-4 text-neutral-2" />
-            )}
+            <div className="flex items-center gap-1 text-neutral-2">
+              {visibility === "public" ? (
+                <>
+                  <Globe2Icon className="size-4" />
+                  <span className="text-sm">Discoverable</span>
+                </>
+              ) : (
+                <>
+                  <EyeOffIcon className="size-4" />
+                  <span className="text-sm">Not discoverable</span>
+                </>
+              )}
+            </div>
             {image && (
               <Image
                 src={image}
