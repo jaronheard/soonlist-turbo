@@ -17,7 +17,11 @@ Sentry.init({
   // Set the sample rate to 1.0 to capture replays only when an error occurs
   replaysOnErrorSampleRate: 1.0,
   integrations: [
-    new posthog.SentryIntegration(posthog, "soonlist", 4506458761396224),
+    posthog.sentryIntegration({
+      organization: "soonlist",
+      projectId: 4506458761396224,
+      severityAllowList: ["error", "info"], // optional: here is set to handle captureMessage (info) and captureException (error)
+    }),
 
     Sentry.replayIntegration({
       // Additional SDK configuration goes in here, for example:
