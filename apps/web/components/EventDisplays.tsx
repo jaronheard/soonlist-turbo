@@ -651,7 +651,7 @@ function EventActionButtons({
         )}
         {visibility === "private" && (
           <div className="text-lg font-medium leading-none text-neutral-1">
-            <EyeOff className="mr-2 inline size-4" /> Not Discoverable
+            <EyeOff className="mr-2 inline size-4" /> Not discoverable
           </div>
         )}
         <Link

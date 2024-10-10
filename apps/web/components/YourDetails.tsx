@@ -114,13 +114,13 @@ export function YourDetails({
                     <MultiSelect
                       selected={field.value}
                       options={listOptions || []}
-                      placeholder="All Events"
+                      placeholder="All events"
                       AdditionalPopoverAction={() => (
                         <Dialog>
                           <DialogTrigger className="w-full p-1">
                             <Button size="sm" className="w-full rounded-sm">
                               <Plus className="-ml-2 mr-2 size-4" />
-                              New List
+                              New list
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
@@ -187,7 +187,7 @@ export function YourDetails({
                         </SelectItem>
                         <SelectItem value="private">
                           <EyeOff className="mr-2 inline size-4" />
-                          Not Discoverable
+                          Not discoverable
                         </SelectItem>
                       </SelectContent>
                     </Select>

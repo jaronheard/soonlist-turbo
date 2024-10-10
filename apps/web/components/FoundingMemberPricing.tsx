@@ -22,7 +22,7 @@ const tiers = [
     href: "#",
     priceAnnually: "$29.99",
     percentOff: 70,
-    description: "All Your Possibilities, Organized",
+    description: "All your possibilities, organized",
     features: [
       "Capture unlimited events",
       "Early access to iOS app",
@@ -95,10 +95,10 @@ export function FoundingMemberPricing({
         </h1>
         <div className="mt-8 rounded-xl bg-accent-orange p-6 text-center">
           <h2 className="font-heading text-2xl font-bold text-interactive-1">
-            Limited Availability
+            Limited availability
           </h2>
           <p className="mt-2 text-4xl font-bold text-neutral-1">
-            Only 💯&nbsp;Founding Member Spots&nbsp;🎈
+            Only 💯&nbsp;Founding Member spots&nbsp;🎈
           </p>
           {!hideEmojiDetails && (
             <>
@@ -108,7 +108,7 @@ export function FoundingMemberPricing({
               {takenEmojis.length > 0 && (
                 <div className="mt-6">
                   <p className="mb-2 text-lg font-semibold text-neutral-1">
-                    Join these other founding members:
+                    Join these other Founding Members:
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
                     {takenEmojis.map((emoji, index) => (
@@ -165,14 +165,14 @@ export function FoundingMemberPricing({
                 <span className="text-lg font-semibold leading-6 text-neutral-2">
                   /year
                 </span>
-                {tier.percentOff && <Badge>{tier.percentOff}%&nbsp;OFF</Badge>}
+                {tier.percentOff && <Badge>{tier.percentOff}%&nbsp;off</Badge>}
               </p>
               {tier.mostPopular && (
                 <>
                   <div className="p-2"></div>
                   <Badge variant={"outline"}>🌈 NOTAFLOF available</Badge>
                   <Badge variant="gray" className="ml-2">
-                    Portland Metro Region Only
+                    Portland Metro Region only
                   </Badge>
                 </>
               )}
@@ -215,7 +215,7 @@ export function FoundingMemberPricing({
                   className={cn("w-full", buttonVariants({ variant: "link" }))}
                   href={portalUrl || "/account/plans"}
                 >
-                  Manage Plan
+                  Manage plan
                 </Link>
               )}
             </div>

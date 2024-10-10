@@ -192,7 +192,7 @@ function HeroSection() {
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-8 md:grid-cols-1 md:gap-x-8">
           <div className="mx-auto text-center">
             <h1 className="font-heading text-5xl font-bold leading-tight tracking-tighterish text-gray-700 md:text-7xl md:leading-tight">
-              All Your{" "}
+              All your{" "}
               <span className="relative inline-block text-interactive-1">
                 <svg
                   width="492"
@@ -207,9 +207,9 @@ function HeroSection() {
                     fill="#FEEA9F"
                   />
                 </svg>
-                Possibilities
+                possibilities
               </span>
-              , Organized
+              , organized
             </h1>
             <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
               See it, save it, show up. It's that easy with Soonlist.
@@ -220,7 +220,7 @@ function HeroSection() {
               </CTAButtonMembership>
             </div>
             <div className="mt-4 flex justify-center">
-              <Badge variant="gray">Portland Metro Region Only</Badge>
+              <Badge variant="gray">Portland Metro Region only</Badge>
             </div>
           </div>
           <div className="mx-auto max-w-2xl">
@@ -272,14 +272,14 @@ function ConnectWithWhatMatters() {
   return (
     <Section>
       <div className="rounded-xl border border-neutral-3 bg-white px-4 py-16 text-center md:px-16 lg:px-24">
-        <SectionTitle title="How It Works" />
+        <SectionTitle title="How it works" />
         <div className="relative mx-auto mt-6 h-[32rem] w-[18rem] overflow-hidden rounded-xl shadow-lg md:px-6 lg:px-0">
           <AutoPlayVideo src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/demo-october-7-v2.mp4" />
         </div>
         <div className="mt-12 grid divide-y divide-neutral-200 md:grid-cols-3 md:divide-x md:divide-y-0">
           <div className="flex flex-col items-center px-4 py-8 md:py-0">
             <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-              Capture Effortlessly
+              Capture effortlessly
             </h2>
             <div className="py-2"></div>
             <p className="mt-2 text-left text-lg leading-7 text-gray-500">
@@ -298,7 +298,7 @@ function ConnectWithWhatMatters() {
           </div>
           <div className="flex flex-col items-center px-4 py-8 md:py-0">
             <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-              Organize Automatically
+              Organize automatically
             </h2>
             <div className="py-2"></div>
             <p className="mt-2 text-left text-lg leading-7 text-gray-500">
@@ -317,7 +317,7 @@ function ConnectWithWhatMatters() {
           </div>
           <div className="flex flex-col items-center px-4 py-8 md:py-0">
             <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-              Show Up Confidently
+              Show up confidently
             </h2>
             <div className="py-2"></div>
             <p className="mt-2 text-left text-lg leading-7 text-gray-500">
@@ -418,7 +418,7 @@ function FAQSection() {
   return (
     <Section className="bg-gradient-to-b from-white to-gray-50">
       <SectionTitle
-        title="Frequently Asked Questions"
+        title="Frequently asked questions"
         description={
           <>
             Got questions? We've got answers. Or{" "}

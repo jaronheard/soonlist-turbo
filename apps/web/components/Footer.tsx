@@ -62,8 +62,8 @@ export function Footer() {
             <Section className="bg-interactive-3">
               <div className="text-center">
                 <SectionTitle
-                  title="All Your Possibilities, Organized"
-                  subtitle="Join Now"
+                  title="All your possibilities, organized"
+                  subtitle="Join now"
                   description="Shape the future of Soonlist and enjoy premium benefits. Be
                     one of 💯 and get a signature emoji."
                 />
@@ -86,7 +86,7 @@ export function Footer() {
               <Button asChild size="sm">
                 <Link href={"/join"} scroll={false}>
                   <Ticket className="mr-2 size-4"></Ticket>
-                  <span className="inline">&nbsp;Join Now</span>
+                  <span className="inline">&nbsp;Join now</span>
                 </Link>
               </Button>
               {/* Social Media Links */}
@@ -166,7 +166,7 @@ const navigation = {
     { name: "Discover", href: "/explore" },
   ],
   support: [
-    { name: "Contact Us", href: "/contact" },
+    { name: "Contact us", href: "/contact" },
     // {
     //   name: "Changelog",
     //   href: "https://jaronheard.notion.site/Soonlist-Changelog-3f6510dac9e642429d793fae5d96af8f",

@@ -146,7 +146,7 @@ export function FollowEventButton({
             <Heart
               className={`mr-2 size-4 ${following ? "fill-current" : ""}`}
             />
-            {following ? "Event Saved" : "Save Event"}
+            {following ? "Event saved" : "Save event"}
           </>
         )}
       </Button>

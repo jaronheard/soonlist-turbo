@@ -416,7 +416,7 @@ function Organize({
                     <DialogTrigger className="w-full p-1">
                       <Button size="sm" className="w-full rounded-sm">
                         <Plus className="-ml-2 mr-2 size-4" />
-                        New List
+                        New list
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
@@ -436,7 +436,7 @@ function Organize({
                 )}
                 selected={field.value}
                 options={listOptions || []}
-                placeholder="All Events"
+                placeholder="All events"
                 {...field}
               />
               <FormMessage />
@@ -466,7 +466,7 @@ function Organize({
                   </SelectItem>
                   <SelectItem value="private">
                     <EyeOff className="mr-2 inline size-4" />
-                    Not Discoverable
+                    Not discoverable
                   </SelectItem>
                 </SelectContent>
               </Select>

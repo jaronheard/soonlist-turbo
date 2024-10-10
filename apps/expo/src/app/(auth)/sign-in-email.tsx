@@ -90,7 +90,7 @@ export default function SignInScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerTitle: "Sign In",
+          headerTitle: "Sign in",
           headerBackTitle: "Back",
           headerBackTitleVisible: true,
         }}
@@ -139,7 +139,7 @@ export default function SignInScreen() {
             className="w-full rounded-full bg-interactive-1 px-6 py-3"
           >
             <Text className="text-center text-lg font-bold text-white">
-              Sign In
+              Sign in
             </Text>
           </Pressable>
           <Pressable onPress={navigateToSignUp} className="mt-4">

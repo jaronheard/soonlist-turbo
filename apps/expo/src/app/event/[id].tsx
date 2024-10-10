@@ -232,7 +232,7 @@ export default function Page() {
                 <Text className="text-sm text-neutral-2">
                   {event.visibility === "public"
                     ? "Discoverable"
-                    : "Not Discoverable"}
+                    : "Not discoverable"}
                 </Text>
               </View>
             ) : (

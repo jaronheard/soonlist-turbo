@@ -133,7 +133,7 @@ export function EventMenu({
       },
       { title: "Directions", lucideIcon: Map, systemIcon: "map" },
       {
-        title: "Add to Calendar",
+        title: "Add to calendar",
         lucideIcon: CalendarPlus,
         systemIcon: "calendar.badge.plus",
       },
@@ -145,8 +145,8 @@ export function EventMenu({
         {
           title:
             event.visibility === "public"
-              ? "Make Not Discoverable"
-              : "Make Discoverable",
+              ? "Make not discoverable"
+              : "Make discoverable",
           lucideIcon: event.visibility === "public" ? EyeOff : Globe2,
           systemIcon: event.visibility === "public" ? "eye.slash" : "globe",
         },
@@ -274,11 +274,11 @@ export function EventMenu({
       case "Directions":
         handleDirections();
         break;
-      case "Add to Calendar":
+      case "Add to calendar":
         void handleAddToCal();
         break;
-      case "Make Not Discoverable":
-      case "Make Discoverable": {
+      case "Make not discoverable":
+      case "Make discoverable": {
         const newVisibility =
           event.visibility === "public" ? "private" : "public";
         void handleToggleVisibility(newVisibility);

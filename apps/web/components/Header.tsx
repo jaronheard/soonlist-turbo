@@ -57,13 +57,13 @@ export function Header() {
                 className="relative flex items-center"
               >
                 <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo className="hidden sm:block" />
+                <Logo variant="hidePreview" className="hidden sm:block" />
               </Link>
             </SignedIn>
             <SignedOut>
               <Link href="/" className="relative flex items-center">
                 <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo className="hidden sm:block" />
+                <Logo variant="hidePreview" className="hidden sm:block" />
               </Link>
             </SignedOut>
           </NavigationMenu>
@@ -112,7 +112,7 @@ export function Nav() {
           <NavigationMenuItem className="hidden lg:block">
             <Link href="/sign-in" legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                Log In
+                Log in
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
@@ -124,7 +124,7 @@ export function Nav() {
                 className={buttonVariants({ variant: "default" })}
               >
                 <CalendarPlus className="mr-2 size-4"></CalendarPlus>
-                Add<span className="inline">&nbsp;Event</span>
+                Add<span className="inline">&nbsp;event</span>
               </NavigationMenuLink>
             </Link>
           </SignedIn>
@@ -132,7 +132,7 @@ export function Nav() {
             <Button asChild>
               <Link href={"/join"} scroll={false}>
                 <Ticket className="mr-2 size-4"></Ticket>
-                <span className="inline">&nbsp;Join Now</span>
+                <span className="inline">&nbsp;Join now</span>
               </Link>
             </Button>
           </SignedOut>
@@ -268,7 +268,7 @@ const UserMenu = () => {
         ))}
         <div className="p-1"></div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>Sign Out</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => signOut()}>Sign out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -439,7 +439,7 @@ export function MobileNav() {
                 });
               }}
             >
-              Log Out
+              Log out
             </Button>
           </SignedIn>
           <div className="pb-16"></div>
