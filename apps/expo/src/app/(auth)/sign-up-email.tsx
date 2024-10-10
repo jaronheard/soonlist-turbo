@@ -244,7 +244,7 @@ export default function SignUpScreen() {
           <Pressable onPress={navigateToSignIn} className="mt-4">
             <Text className="text-center text-gray-600">
               Already have an account?{" "}
-              <Text className="font-bold text-interactive-1">Sign In</Text>
+              <Text className="font-bold text-interactive-1">Sign in</Text>
             </Text>
           </Pressable>
           <Text className="mt-6 text-center text-sm text-gray-500">

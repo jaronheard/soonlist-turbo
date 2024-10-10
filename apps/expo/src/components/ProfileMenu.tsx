@@ -49,7 +49,7 @@ export function ProfileMenu() {
     { title: "About", icon: HelpCircle, onSelect: showOnboarding },
     { title: "Support", icon: MessageCircle, onSelect: presentIntercom },
     {
-      title: "Sign Out",
+      title: "Sign out",
       icon: LogOut,
       onSelect: handleSignOut,
       destructive: true,

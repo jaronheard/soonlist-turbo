@@ -121,7 +121,7 @@ export async function UserInfo(props: UserInfoProps) {
         <div className="text-2xl text-neutral-2">{user.bio || SAMPLE_BIO}</div>
         {self && (
           <Button size={"sm"} asChild>
-            <Link href={`/get-started`}>Edit Profile</Link>
+            <Link href={`/get-started`}>Edit profile</Link>
           </Button>
         )}
       </div>

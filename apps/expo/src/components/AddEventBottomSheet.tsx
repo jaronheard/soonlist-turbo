@@ -434,7 +434,7 @@ const AddEventBottomSheet = React.forwardRef<
               <>
                 <Sparkles size={16} color="white" />
                 <Text className="ml-2 text-xl font-bold text-white">
-                  Create Event
+                  Create event
                 </Text>
               </>
             )}
@@ -471,10 +471,10 @@ const AddEventBottomSheet = React.forwardRef<
       onDismiss={handleDismiss}
     >
       <View className="flex-1 p-4">
-        <Text className="mb-4 text-2xl font-semibold">Add Event</Text>
+        <Text className="mb-4 text-2xl font-semibold">Add event</Text>
         <View className="mb-4">
           <View className="mb-2 flex flex-row items-center justify-between">
-            <Text className="text-base font-medium">Event Details</Text>
+            <Text className="text-base font-medium">Event details</Text>
             <View className="flex-row">
               <TouchableOpacity
                 onPress={handleCameraCapture}
@@ -559,7 +559,7 @@ const AddEventBottomSheet = React.forwardRef<
         >
           <View className="flex-row items-center gap-2">
             <Globe2 size={20} color="black" />
-            <Text className="text-base font-medium">Make Discoverable</Text>
+            <Text className="text-base font-medium">Make discoverable</Text>
           </View>
           <Switch value={isPublic} onValueChange={setIsPublic} />
         </View>

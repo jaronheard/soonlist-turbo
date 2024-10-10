@@ -94,7 +94,7 @@ export default async function Page({ params }: Props) {
       {list.visibility === "private" && (
         <>
           <Badge className="max-w-fit" variant="destructive">
-            <EyeOff className="mr-2 inline size-4" /> Not Discoverable
+            <EyeOff className="mr-2 inline size-4" /> Not discoverable
           </Badge>
           <div className="p-1"></div>
         </>

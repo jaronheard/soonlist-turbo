@@ -21,7 +21,7 @@ export function UserAllEventsCard(props: {
       />
       <div className="flex flex-col gap-1 overflow-hidden p-5">
         <div className="text-xl font-bold leading-6 tracking-wide text-interactive-1">
-          All Events
+          All events
         </div>
         <div className="truncate text-lg font-medium leading-none text-neutral-2">
           by{" "}

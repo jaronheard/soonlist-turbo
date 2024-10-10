@@ -106,7 +106,7 @@ export function AddListCard({ ...initialProps }: AddListCardProps) {
             </SelectItem>
             <SelectItem value="private">
               <EyeOff className="mr-2 inline size-4" />
-              Not Discoverable
+              Not discoverable
             </SelectItem>
           </SelectContent>
         </Select>

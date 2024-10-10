@@ -70,7 +70,7 @@ export default async function Page({ params }: Props) {
         </Suspense>
       </div>
       <div className="p-4"></div>
-      <h2 className="text-sm font-medium text-gray-500">All Events</h2>
+      <h2 className="text-sm font-medium text-gray-500">All events</h2>
       <EventList
         currentEvents={currentEvents}
         pastEvents={pastEvents}
