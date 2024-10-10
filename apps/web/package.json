@@ -21,7 +21,7 @@
     "@bytescale/sdk": "^3.34.0",
     "@bytescale/upload-widget-react": "^4.16.0",
     "@clerk/nextjs": "^5.0.8",
-    "@sentry/nextjs": "^7.114.0",
+    "@sentry/nextjs": "^8.34.0",
     "@soonlist/api": "workspace:*",
     "@soonlist/cal": "workspace:*",
     "@soonlist/db": "workspace:*",
