@@ -97,7 +97,8 @@ export default function Page() {
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
           <p className="text-center text-lg">
-            Install through TestFlight. Return here and retry if any issues.
+            We're using Apple's TestFlight to provide access to Soonlist for
+            Founding Members.
           </p>
           <Button asChild className="h-16 w-full max-w-xs text-xl">
             <a
@@ -108,6 +109,10 @@ export default function Page() {
               Install iOS App
             </a>
           </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            This link will guide you through installing TestFlight, then you'll
+            return to that page to install Soonlist.
+          </p>
           <div className="flex justify-center">
             <HelpButton />
           </div>
