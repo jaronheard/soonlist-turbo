@@ -97,7 +97,7 @@ export default function Page() {
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
           <p className="text-center text-lg">
-            You'll install it through TestFlight, which is free and easy.
+            Install through TestFlight. Return here and retry if any issues.
           </p>
           <Button asChild className="h-16 w-full max-w-xs text-xl">
             <a
