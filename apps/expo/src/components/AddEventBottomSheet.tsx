@@ -1,10 +1,12 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
+import type { MotiTransition, MotiWithStyleProps } from "moti";
 import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import {
   ActivityIndicator,
@@ -33,6 +35,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react-native";
+import { MotiView } from "moti";
 
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useNotification } from "~/providers/NotificationProvider";
@@ -281,11 +284,13 @@ const AddEventBottomSheet = React.forwardRef<
     }
   }, [handleImageUploadFromUri, setInput]);
 
-  const clearPreview = () => {
+  const clearPreview = useCallback(() => {
     setImagePreview(null);
     setLinkPreview(null);
     setInput("");
-  };
+    setIsOptionSelected(false);
+    setActiveInput(null);
+  }, [setImagePreview, setLinkPreview, setInput]);
 
   const handleSuccess = useCallback(() => {
     setIsCreating(false);
@@ -451,13 +456,55 @@ const AddEventBottomSheet = React.forwardRef<
     fontScale,
   ]);
 
-  const inputRef = useRef<React.ElementRef<typeof BottomSheetTextInput>>(null);
-
   useEffect(() => {
     if (onMount) {
       onMount();
     }
   }, [onMount]);
+
+  const [isOptionSelected, setIsOptionSelected] = useState(false);
+  const [activeInput, setActiveInput] = useState<
+    "camera" | "upload" | "url" | "describe" | null
+  >(null);
+
+  const transition = {
+    type: "spring",
+    damping: 20,
+    stiffness: 300,
+  } as const;
+
+  const handleOptionSelect = useCallback(
+    (option: "camera" | "upload" | "url" | "describe") => {
+      if (isOptionSelected && activeInput === option) {
+        clearPreview();
+        setIsOptionSelected(false);
+        setActiveInput(null);
+      } else {
+        setIsOptionSelected(true);
+        setActiveInput(option);
+
+        switch (option) {
+          case "camera":
+            void handleCameraCapture();
+            break;
+          case "upload":
+            void handleImageUpload();
+            break;
+          case "url":
+          case "describe":
+            // These options will show their respective input fields
+            break;
+        }
+      }
+    },
+    [
+      handleCameraCapture,
+      handleImageUpload,
+      isOptionSelected,
+      activeInput,
+      clearPreview,
+    ],
+  );
 
   return (
     <BottomSheetModal
@@ -471,91 +518,154 @@ const AddEventBottomSheet = React.forwardRef<
       onDismiss={handleDismiss}
     >
       <View className="flex-1 p-4">
-        <Text className="mb-4 text-2xl font-semibold">Add event</Text>
-        <View className="mb-4">
-          <View className="mb-2 flex flex-row items-center justify-between">
-            <Text className="text-base font-medium">Event details</Text>
-            <View className="flex-row">
-              <TouchableOpacity
-                onPress={handleCameraCapture}
-                className="mr-2 rounded-md bg-neutral-200 px-3 py-2"
-              >
-                <View className="flex-row items-center">
-                  <CameraIcon size={16} color="black" />
-                  <Text className="ml-2 font-medium">Camera</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleImageUpload}
-                className="rounded-md bg-neutral-200 px-3 py-2"
-              >
-                <View className="flex-row items-center">
-                  <ImageIcon size={16} color="black" />
-                  <Text className="ml-2 font-medium">
-                    {imagePreview || linkPreview ? "Change" : "Upload"}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-          {imagePreview ? (
-            <View className="relative">
-              <Image
-                source={{ uri: imagePreview }}
-                style={{ width: "100%", height: 124 }}
-                contentFit="cover"
-              />
-              <TouchableOpacity
-                onPress={clearPreview}
-                className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
-              >
-                <X size={16} color="black" />
-              </TouchableOpacity>
-              {isImageLoading && (
-                <View className="absolute bottom-2 right-2">
-                  <ActivityIndicator size="small" color="#DCE0E8" />
-                </View>
-              )}
-            </View>
-          ) : linkPreview ? (
-            <View className="relative">
-              <View className="h-[124px] w-full items-center justify-center rounded-md bg-neutral-200">
-                <LinkIcon size={32} color="black" />
-                <Text
-                  className="mt-2 text-sm font-medium"
-                  numberOfLines={2}
-                  ellipsizeMode="middle"
-                >
-                  {linkPreview}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={clearPreview}
-                className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
-              >
-                <X size={16} color="black" />
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View className="mb-4 h-32 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
-              <BottomSheetTextInput
-                ref={inputRef}
-                // className prop doesn't work properly here, so we use style
-                style={{
-                  height: "100%",
-                  width: "100%",
-                  textAlignVertical: "top",
+        <Text className="mb-4 text-2xl font-semibold">Add event info</Text>
+
+        <MotiView
+          animate={{
+            height: isOptionSelected ? 50 : 200,
+          }}
+          transition={transition}
+          className="mb-4"
+        >
+          <View className="flex-1 flex-row flex-wrap">
+            {["camera", "upload", "url", "describe"].map((option, index) => (
+              <MotiView
+                key={option}
+                animate={{
+                  width: isOptionSelected ? "23.5%" : "48%",
+                  height: isOptionSelected ? "100%" : "48%",
+                  left: isOptionSelected
+                    ? `${index * 25}%`
+                    : index % 2 === 0
+                      ? "0%"
+                      : "52%",
+                  top: isOptionSelected ? "0%" : index < 2 ? "0%" : "52%",
                 }}
-                placeholder="Enter event details or paste a URL"
-                defaultValue={input}
+                transition={transition}
+                style={{ position: "absolute" }}
+              >
+                <TouchableOpacity
+                  onPress={() =>
+                    handleOptionSelect(
+                      option as "camera" | "upload" | "url" | "describe",
+                    )
+                  }
+                  className="flex-1 items-center justify-center rounded-md bg-neutral-200"
+                >
+                  {option === "camera" && (
+                    <CameraIcon
+                      size={isOptionSelected ? 16 : 24}
+                      color="black"
+                    />
+                  )}
+                  {option === "upload" && (
+                    <ImageIcon
+                      size={isOptionSelected ? 16 : 24}
+                      color="black"
+                    />
+                  )}
+                  {option === "url" && (
+                    <LinkIcon size={isOptionSelected ? 16 : 24} color="black" />
+                  )}
+                  {option === "describe" && (
+                    <Sparkles size={isOptionSelected ? 16 : 24} color="black" />
+                  )}
+                  {!isOptionSelected && (
+                    <Text className="mt-2 text-center font-medium">
+                      {option.charAt(0).toUpperCase() + option.slice(1)}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </MotiView>
+            ))}
+          </View>
+        </MotiView>
+
+        <MotiView
+          animate={{
+            height: activeInput ? "auto" : 0,
+            opacity: activeInput ? 1 : 0,
+          }}
+          transition={{
+            height: transition,
+            opacity: {
+              type: "timing",
+              duration: 300,
+            },
+          }}
+          className="mb-4 overflow-hidden"
+        >
+          {activeInput === "url" && (
+            <View className="rounded-md border border-neutral-300 px-3 py-2">
+              <BottomSheetTextInput
+                placeholder="Enter URL"
+                value={input}
                 onChangeText={handleTextChange}
-                multiline
+                autoFocus={true}
               />
             </View>
           )}
-        </View>
+          {activeInput === "describe" && (
+            <View className="h-32 rounded-md border border-neutral-300 px-3 py-2">
+              <BottomSheetTextInput
+                placeholder="Describe your event"
+                value={input}
+                onChangeText={handleTextChange}
+                multiline
+                textAlignVertical="top"
+                autoFocus={true}
+                style={{ height: "100%" }}
+              />
+            </View>
+          )}
+        </MotiView>
+
+        {imagePreview && (
+          <View className="relative mb-4">
+            <Image
+              source={{ uri: imagePreview }}
+              style={{ width: "100%", height: 124 }}
+              contentFit="cover"
+            />
+            <TouchableOpacity
+              onPress={clearPreview}
+              className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+            >
+              <X size={16} color="black" />
+            </TouchableOpacity>
+            {isImageLoading && (
+              <View className="absolute bottom-2 right-2">
+                <ActivityIndicator size="small" color="#DCE0E8" />
+              </View>
+            )}
+          </View>
+        )}
+
+        {linkPreview && (
+          <View className="relative mb-4">
+            <View className="h-[124px] w-full items-center justify-center rounded-md bg-neutral-200">
+              <LinkIcon size={32} color="black" />
+              <Text
+                className="mt-2 text-sm font-medium"
+                numberOfLines={2}
+                ellipsizeMode="middle"
+              >
+                {linkPreview}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={clearPreview}
+              className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+            >
+              <X size={16} color="black" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View
-          className={`mb-4 flex-row items-center justify-between ${fontScale > 1.3 ? "pb-4" : ""}`}
+          className={`mb-4 flex-row items-center justify-between ${
+            fontScale > 1.3 ? "pb-4" : ""
+          }`}
         >
           <View className="flex-row items-center gap-2">
             <Globe2 size={20} color="black" />
