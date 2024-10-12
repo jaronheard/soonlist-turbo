@@ -29,6 +29,7 @@ import {
 } from "@discord/bottom-sheet";
 import {
   Camera as CameraIcon,
+  EditIcon,
   Globe2,
   Image as ImageIcon,
   Link as LinkIcon,
@@ -452,19 +453,19 @@ const AddEventBottomSheet = React.forwardRef<
       <BottomSheetFooter {...props} bottomInset={24}>
         <View className={`px-4 pb-4 ${fontScale > 1.3 ? "pt-4" : ""}`}>
           <TouchableOpacity
-            className={`w-full flex-row items-center justify-center rounded-full px-3 py-2 ${
-              isCreateButtonDisabled ? "bg-neutral-300" : "bg-interactive-1"
+            className={`w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2 ${
+              isCreateButtonDisabled ? "opacity-50" : ""
             }`}
             onPress={handleCreateEvent}
             disabled={isCreateButtonDisabled}
           >
             {isCreating ? (
-              <Text className="text-xl font-bold text-white">Creating...</Text>
+              <Text className="text-xl font-bold text-white">Capture...</Text>
             ) : (
               <>
                 <Sparkles size={16} color="white" />
                 <Text className="ml-2 text-xl font-bold text-white">
-                  Create event
+                  Capture event
                 </Text>
               </>
             )}
@@ -561,35 +562,39 @@ const AddEventBottomSheet = React.forwardRef<
                       option as "camera" | "upload" | "url" | "describe",
                     )
                   }
-                  className="rounded-md bg-neutral-200 px-2 py-2"
+                  className={`rounded-md px-2 py-2 ${
+                    isOptionSelected && activeInput !== option
+                      ? "bg-interactive-2"
+                      : "bg-interactive-3"
+                  }`}
                 >
                   <View className="items-center">
                     {option === "camera" && (
                       <CameraIcon
                         size={isOptionSelected ? 16 : 24}
-                        color="black"
+                        color="#5A32FB" // interactive-1 color
                       />
                     )}
                     {option === "upload" && (
                       <ImageIcon
                         size={isOptionSelected ? 16 : 24}
-                        color="black"
+                        color="#5A32FB" // interactive-1 color
                       />
                     )}
                     {option === "url" && (
                       <LinkIcon
                         size={isOptionSelected ? 16 : 24}
-                        color="black"
+                        color="#5A32FB" // interactive-1 color
                       />
                     )}
                     {option === "describe" && (
-                      <Sparkles
+                      <EditIcon
                         size={isOptionSelected ? 16 : 24}
-                        color="black"
+                        color="#5A32FB" // interactive-1 color
                       />
                     )}
                     {!isOptionSelected && (
-                      <Text className="mt-2 font-medium">
+                      <Text className="mt-2 font-medium text-interactive-1">
                         {option.charAt(0).toUpperCase() + option.slice(1)}
                       </Text>
                     )}
