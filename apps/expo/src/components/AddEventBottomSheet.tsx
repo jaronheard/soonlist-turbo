@@ -484,10 +484,9 @@ const AddEventBottomSheet = React.forwardRef<
   }, [onMount]);
 
   const transition: MotiTransition = {
-    type: "spring",
-    damping: 15,
-    stiffness: 120,
-  } as const;
+    type: "timing",
+    duration: 200,
+  };
 
   const handleOptionSelect = useCallback(
     (option: "camera" | "upload" | "url" | "describe") => {
@@ -541,7 +540,7 @@ const AddEventBottomSheet = React.forwardRef<
         <MotiView
           animate={{
             height: isOptionSelected ? 50 : "auto",
-            marginBottom: isOptionSelected ? 8 : 16,
+            marginBottom: 16,
           }}
           transition={transition}
         >
@@ -614,7 +613,7 @@ const AddEventBottomSheet = React.forwardRef<
               height: transition,
               opacity: {
                 type: "timing",
-                duration: 300,
+                duration: 200,
               },
             }}
             className="mb-4 overflow-hidden"
@@ -646,7 +645,7 @@ const AddEventBottomSheet = React.forwardRef<
         )}
 
         {imagePreview && (
-          <View className="relative mb-4">
+          <View className="mb-4">
             <Image
               source={{ uri: imagePreview }}
               style={{ width: "100%", height: 124 }}
@@ -667,7 +666,7 @@ const AddEventBottomSheet = React.forwardRef<
         )}
 
         {linkPreview && (
-          <View className="relative mb-4">
+          <View className="mb-4">
             <View className="h-[124px] w-full items-center justify-center rounded-md bg-neutral-200">
               <LinkIcon size={32} color="black" />
               <Text
@@ -687,11 +686,7 @@ const AddEventBottomSheet = React.forwardRef<
           </View>
         )}
 
-        <View
-          className={`mb-4 flex-row items-center justify-between ${
-            fontScale > 1.3 ? "pb-4" : ""
-          }`}
-        >
+        <View className="mb-4 mt-4 flex-row items-center justify-between">
           <View className="flex-row items-center gap-2">
             <Globe2 size={20} color="black" />
             <Text className="text-base font-medium">Make discoverable</Text>
