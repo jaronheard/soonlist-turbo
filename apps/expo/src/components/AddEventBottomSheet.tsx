@@ -441,6 +441,10 @@ const AddEventBottomSheet = React.forwardRef<
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
   }, [ref]);
 
+  const isCreateButtonDisabled = useMemo(() => {
+    return isCreating || (!input.trim() && !imagePreview && !linkPreview);
+  }, [isCreating, input, imagePreview, linkPreview]);
+
   const renderFooter = useMemo(() => {
     return (
       props: React.JSX.IntrinsicAttributes & BottomSheetDefaultFooterProps,
@@ -448,11 +452,11 @@ const AddEventBottomSheet = React.forwardRef<
       <BottomSheetFooter {...props} bottomInset={24}>
         <View className={`px-4 pb-4 ${fontScale > 1.3 ? "pt-4" : ""}`}>
           <TouchableOpacity
-            className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2"
+            className={`w-full flex-row items-center justify-center rounded-full px-3 py-2 ${
+              isCreateButtonDisabled ? "bg-neutral-300" : "bg-interactive-1"
+            }`}
             onPress={handleCreateEvent}
-            disabled={
-              isCreating || (!input.trim() && !imagePreview && !linkPreview)
-            }
+            disabled={isCreateButtonDisabled}
           >
             {isCreating ? (
               <Text className="text-xl font-bold text-white">Creating...</Text>
@@ -468,14 +472,7 @@ const AddEventBottomSheet = React.forwardRef<
         </View>
       </BottomSheetFooter>
     );
-  }, [
-    handleCreateEvent,
-    isCreating,
-    input,
-    imagePreview,
-    linkPreview,
-    fontScale,
-  ]);
+  }, [handleCreateEvent, isCreateButtonDisabled, isCreating, fontScale]);
 
   useEffect(() => {
     if (onMount) {
