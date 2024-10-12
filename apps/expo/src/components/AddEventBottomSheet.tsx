@@ -441,9 +441,12 @@ const AddEventBottomSheet = React.forwardRef<
   ]);
 
   const handleDismiss = useCallback(() => {
-    // Allow the modal to be dismissed, but don't cancel the upload
+    // Reset the AddEventBottomSheet context
+    resetAddEventState();
+
+    // Allow the modal to be dismissed
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-  }, [ref]);
+  }, [ref, resetAddEventState]);
 
   const isCreateButtonDisabled = useMemo(() => {
     return isCreating || (!input.trim() && !imagePreview && !linkPreview);
