@@ -646,7 +646,10 @@ const AddEventBottomSheet = React.forwardRef<
                 placeholder="Enter URL"
                 defaultValue={input}
                 onChangeText={handleTextChange}
+                multiline
+                textAlignVertical="top"
                 autoFocus={true}
+                style={{ height: "100%" }}
               />
             </View>
           ) : activeInput === "describe" ? (
