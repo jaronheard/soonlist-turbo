@@ -55,6 +55,16 @@ interface AppState {
 
   // Add this new action
   clearCalendarData: () => void;
+
+  // New state for AddEventBottomSheet
+  isOptionSelected: boolean;
+  activeInput: "camera" | "upload" | "url" | "describe" | null;
+
+  // New actions for AddEventBottomSheet
+  setIsOptionSelected: (isSelected: boolean) => void;
+  setActiveInput: (
+    input: "camera" | "upload" | "url" | "describe" | null,
+  ) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -139,6 +149,15 @@ export const useAppStore = create<AppState>()(
           defaultCalendarId: null,
           calendarUsage: {},
         }),
+
+      // New state for AddEventBottomSheet
+      isOptionSelected: false,
+      activeInput: null,
+
+      // New actions for AddEventBottomSheet
+      setIsOptionSelected: (isSelected) =>
+        set({ isOptionSelected: isSelected }),
+      setActiveInput: (input) => set({ activeInput: input }),
     }),
     {
       name: "app-storage",

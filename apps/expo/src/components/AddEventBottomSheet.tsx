@@ -1,5 +1,5 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
-import type { MotiTransition, MotiWithStyleProps } from "moti";
+import type { MotiTransition } from "moti";
 import React, {
   useCallback,
   useEffect,
@@ -97,6 +97,10 @@ const AddEventBottomSheet = React.forwardRef<
     resetAddEventState,
     intentParams,
     resetIntentParams,
+    isOptionSelected,
+    activeInput,
+    setIsOptionSelected,
+    setActiveInput,
   } = useAppStore();
 
   // Use the intent handler
@@ -176,8 +180,11 @@ const AddEventBottomSheet = React.forwardRef<
     [setLinkPreview, setInput],
   );
 
+  const [localInput, setLocalInput] = useState("");
+
   const handleTextChange = useCallback(
     (text: string) => {
+      setLocalInput(text);
       setInput(text);
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       const urls = text.match(urlRegex);
@@ -284,13 +291,11 @@ const AddEventBottomSheet = React.forwardRef<
     }
   }, [handleImageUploadFromUri, setInput]);
 
-  const clearPreview = useCallback(() => {
+  const clearPreview = () => {
     setImagePreview(null);
     setLinkPreview(null);
     setInput("");
-    setIsOptionSelected(false);
-    setActiveInput(null);
-  }, [setImagePreview, setLinkPreview, setInput]);
+  };
 
   const handleSuccess = useCallback(() => {
     setIsCreating(false);
@@ -462,47 +467,35 @@ const AddEventBottomSheet = React.forwardRef<
     }
   }, [onMount]);
 
-  const [isOptionSelected, setIsOptionSelected] = useState(false);
-  const [activeInput, setActiveInput] = useState<
-    "camera" | "upload" | "url" | "describe" | null
-  >(null);
-
-  const transition = {
+  const transition: MotiTransition = {
     type: "spring",
-    damping: 20,
-    stiffness: 300,
+    damping: 15,
+    stiffness: 120,
   } as const;
 
   const handleOptionSelect = useCallback(
     (option: "camera" | "upload" | "url" | "describe") => {
-      if (isOptionSelected && activeInput === option) {
-        clearPreview();
-        setIsOptionSelected(false);
-        setActiveInput(null);
-      } else {
-        setIsOptionSelected(true);
-        setActiveInput(option);
+      setIsOptionSelected(true);
+      setActiveInput(option);
 
-        switch (option) {
-          case "camera":
-            void handleCameraCapture();
-            break;
-          case "upload":
-            void handleImageUpload();
-            break;
-          case "url":
-          case "describe":
-            // These options will show their respective input fields
-            break;
-        }
+      switch (option) {
+        case "camera":
+          void handleCameraCapture();
+          break;
+        case "upload":
+          void handleImageUpload();
+          break;
+        case "url":
+        case "describe":
+          // These options will show their respective input fields
+          break;
       }
     },
     [
+      setIsOptionSelected,
+      setActiveInput,
       handleCameraCapture,
       handleImageUpload,
-      isOptionSelected,
-      activeInput,
-      clearPreview,
     ],
   );
 
@@ -522,27 +515,24 @@ const AddEventBottomSheet = React.forwardRef<
 
         <MotiView
           animate={{
-            height: isOptionSelected ? 50 : 200,
+            height: isOptionSelected ? 50 : "auto",
+            marginBottom: isOptionSelected ? 8 : 16,
           }}
           transition={transition}
-          className="mb-4"
         >
-          <View className="flex-1 flex-row flex-wrap">
-            {["camera", "upload", "url", "describe"].map((option, index) => (
+          <View
+            className={`flex-row ${
+              isOptionSelected ? "justify-between" : "flex-wrap"
+            }`}
+          >
+            {["camera", "upload", "url", "describe"].map((option) => (
               <MotiView
                 key={option}
                 animate={{
-                  width: isOptionSelected ? "23.5%" : "48%",
-                  height: isOptionSelected ? "100%" : "48%",
-                  left: isOptionSelected
-                    ? `${index * 25}%`
-                    : index % 2 === 0
-                      ? "0%"
-                      : "52%",
-                  top: isOptionSelected ? "0%" : index < 2 ? "0%" : "52%",
+                  width: isOptionSelected ? "22%" : "48%",
+                  margin: isOptionSelected ? 0 : "1%",
                 }}
                 transition={transition}
-                style={{ position: "absolute" }}
               >
                 <TouchableOpacity
                   onPress={() =>
@@ -550,31 +540,39 @@ const AddEventBottomSheet = React.forwardRef<
                       option as "camera" | "upload" | "url" | "describe",
                     )
                   }
-                  className="flex-1 items-center justify-center rounded-md bg-neutral-200"
+                  className="rounded-md bg-neutral-200 px-2 py-2"
                 >
-                  {option === "camera" && (
-                    <CameraIcon
-                      size={isOptionSelected ? 16 : 24}
-                      color="black"
-                    />
-                  )}
-                  {option === "upload" && (
-                    <ImageIcon
-                      size={isOptionSelected ? 16 : 24}
-                      color="black"
-                    />
-                  )}
-                  {option === "url" && (
-                    <LinkIcon size={isOptionSelected ? 16 : 24} color="black" />
-                  )}
-                  {option === "describe" && (
-                    <Sparkles size={isOptionSelected ? 16 : 24} color="black" />
-                  )}
-                  {!isOptionSelected && (
-                    <Text className="mt-2 text-center font-medium">
-                      {option.charAt(0).toUpperCase() + option.slice(1)}
-                    </Text>
-                  )}
+                  <View className="items-center">
+                    {option === "camera" && (
+                      <CameraIcon
+                        size={isOptionSelected ? 16 : 24}
+                        color="black"
+                      />
+                    )}
+                    {option === "upload" && (
+                      <ImageIcon
+                        size={isOptionSelected ? 16 : 24}
+                        color="black"
+                      />
+                    )}
+                    {option === "url" && (
+                      <LinkIcon
+                        size={isOptionSelected ? 16 : 24}
+                        color="black"
+                      />
+                    )}
+                    {option === "describe" && (
+                      <Sparkles
+                        size={isOptionSelected ? 16 : 24}
+                        color="black"
+                      />
+                    )}
+                    {!isOptionSelected && (
+                      <Text className="mt-2 font-medium">
+                        {option.charAt(0).toUpperCase() + option.slice(1)}
+                      </Text>
+                    )}
+                  </View>
                 </TouchableOpacity>
               </MotiView>
             ))}
@@ -599,7 +597,7 @@ const AddEventBottomSheet = React.forwardRef<
             <View className="rounded-md border border-neutral-300 px-3 py-2">
               <BottomSheetTextInput
                 placeholder="Enter URL"
-                value={input}
+                defaultValue={input}
                 onChangeText={handleTextChange}
                 autoFocus={true}
               />
@@ -609,7 +607,7 @@ const AddEventBottomSheet = React.forwardRef<
             <View className="h-32 rounded-md border border-neutral-300 px-3 py-2">
               <BottomSheetTextInput
                 placeholder="Describe your event"
-                value={input}
+                defaultValue={input}
                 onChangeText={handleTextChange}
                 multiline
                 textAlignVertical="top"
