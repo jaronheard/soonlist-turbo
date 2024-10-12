@@ -106,6 +106,8 @@ export const useAppStore = create<AppState>()(
           isImageLoading: false,
           isImageUploading: false,
           uploadedImageUrl: null,
+          isOptionSelected: false,
+          activeInput: null,
         }),
 
       // Calendar-related state

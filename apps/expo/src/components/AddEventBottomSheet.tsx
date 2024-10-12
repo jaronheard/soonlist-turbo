@@ -212,17 +212,21 @@ const AddEventBottomSheet = React.forwardRef<
 
       if (intentParams.text) {
         handleTextChange(intentParams.text);
+        setActiveInput("describe");
       } else if (intentParams.imageUri) {
         const [uri, width, height] = intentParams.imageUri.split("|");
         if (uri) {
           if (uri.startsWith("http")) {
             void handleLinkPreview(uri);
+            setActiveInput("url");
           } else {
             void handleImageUploadFromUri(uri);
+            setActiveInput("upload");
           }
         }
         setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
       }
+      setIsOptionSelected(true);
       resetIntentParams();
 
       // Present the bottom sheet
@@ -238,6 +242,8 @@ const AddEventBottomSheet = React.forwardRef<
     setImagePreview,
     setLinkPreview,
     setUploadedImageUrl,
+    setActiveInput,
+    setIsOptionSelected,
   ]);
 
   useEffect(() => {
@@ -291,11 +297,21 @@ const AddEventBottomSheet = React.forwardRef<
     }
   }, [handleImageUploadFromUri, setInput]);
 
-  const clearPreview = () => {
+  const clearPreview = useCallback(() => {
     setImagePreview(null);
     setLinkPreview(null);
     setInput("");
-  };
+    setIsOptionSelected(false);
+    setActiveInput(null);
+    resetAddEventState();
+  }, [
+    setImagePreview,
+    setLinkPreview,
+    setInput,
+    setIsOptionSelected,
+    setActiveInput,
+    resetAddEventState,
+  ]);
 
   const handleSuccess = useCallback(() => {
     setIsCreating(false);
@@ -475,25 +491,34 @@ const AddEventBottomSheet = React.forwardRef<
 
   const handleOptionSelect = useCallback(
     (option: "camera" | "upload" | "url" | "describe") => {
-      setIsOptionSelected(true);
-      setActiveInput(option);
+      if (activeInput === option) {
+        // Reset to the 2x2 grid if the same option is tapped again
+        setIsOptionSelected(false);
+        setActiveInput(null);
+        resetAddEventState();
+      } else {
+        setIsOptionSelected(true);
+        setActiveInput(option);
 
-      switch (option) {
-        case "camera":
-          void handleCameraCapture();
-          break;
-        case "upload":
-          void handleImageUpload();
-          break;
-        case "url":
-        case "describe":
-          // These options will show their respective input fields
-          break;
+        switch (option) {
+          case "camera":
+            void handleCameraCapture();
+            break;
+          case "upload":
+            void handleImageUpload();
+            break;
+          case "url":
+          case "describe":
+            // These options will show their respective input fields
+            break;
+        }
       }
     },
     [
+      activeInput,
       setIsOptionSelected,
       setActiveInput,
+      resetAddEventState,
       handleCameraCapture,
       handleImageUpload,
     ],
@@ -579,44 +604,46 @@ const AddEventBottomSheet = React.forwardRef<
           </View>
         </MotiView>
 
-        <MotiView
-          animate={{
-            height: activeInput ? "auto" : 0,
-            opacity: activeInput ? 1 : 0,
-          }}
-          transition={{
-            height: transition,
-            opacity: {
-              type: "timing",
-              duration: 300,
-            },
-          }}
-          className="mb-4 overflow-hidden"
-        >
-          {activeInput === "url" && (
-            <View className="rounded-md border border-neutral-300 px-3 py-2">
-              <BottomSheetTextInput
-                placeholder="Enter URL"
-                defaultValue={input}
-                onChangeText={handleTextChange}
-                autoFocus={true}
-              />
-            </View>
-          )}
-          {activeInput === "describe" && (
-            <View className="h-32 rounded-md border border-neutral-300 px-3 py-2">
-              <BottomSheetTextInput
-                placeholder="Describe your event"
-                defaultValue={input}
-                onChangeText={handleTextChange}
-                multiline
-                textAlignVertical="top"
-                autoFocus={true}
-                style={{ height: "100%" }}
-              />
-            </View>
-          )}
-        </MotiView>
+        {!imagePreview && !linkPreview && (
+          <MotiView
+            animate={{
+              height: activeInput ? "auto" : 0,
+              opacity: activeInput ? 1 : 0,
+            }}
+            transition={{
+              height: transition,
+              opacity: {
+                type: "timing",
+                duration: 300,
+              },
+            }}
+            className="mb-4 overflow-hidden"
+          >
+            {activeInput === "url" && (
+              <View className="rounded-md border border-neutral-300 px-3 py-2">
+                <BottomSheetTextInput
+                  placeholder="Enter URL"
+                  defaultValue={input}
+                  onChangeText={handleTextChange}
+                  autoFocus={true}
+                />
+              </View>
+            )}
+            {activeInput === "describe" && (
+              <View className="h-32 rounded-md border border-neutral-300 px-3 py-2">
+                <BottomSheetTextInput
+                  placeholder="Describe your event"
+                  defaultValue={input}
+                  onChangeText={handleTextChange}
+                  multiline
+                  textAlignVertical="top"
+                  autoFocus={true}
+                  style={{ height: "100%" }}
+                />
+              </View>
+            )}
+          </MotiView>
+        )}
 
         {imagePreview && (
           <View className="relative mb-4">
