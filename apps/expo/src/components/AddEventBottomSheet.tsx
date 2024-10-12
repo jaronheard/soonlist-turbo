@@ -603,71 +603,28 @@ const AddEventBottomSheet = React.forwardRef<
           </View>
         </MotiView>
 
-        {!imagePreview && !linkPreview && (
-          <MotiView
-            animate={{
-              height: activeInput ? "auto" : 0,
-              opacity: activeInput ? 1 : 0,
-            }}
-            transition={{
-              height: transition,
-              opacity: {
-                type: "timing",
-                duration: 200,
-              },
-            }}
-            className="mb-4 overflow-hidden"
-          >
-            {activeInput === "url" && (
-              <View className="rounded-md border border-neutral-300 px-3 py-2">
-                <BottomSheetTextInput
-                  placeholder="Enter URL"
-                  defaultValue={input}
-                  onChangeText={handleTextChange}
-                  autoFocus={true}
-                />
-              </View>
-            )}
-            {activeInput === "describe" && (
-              <View className="h-32 rounded-md border border-neutral-300 px-3 py-2">
-                <BottomSheetTextInput
-                  placeholder="Describe your event"
-                  defaultValue={input}
-                  onChangeText={handleTextChange}
-                  multiline
-                  textAlignVertical="top"
-                  autoFocus={true}
-                  style={{ height: "100%" }}
-                />
-              </View>
-            )}
-          </MotiView>
-        )}
-
-        {imagePreview && (
-          <View className="mb-4">
-            <Image
-              source={{ uri: imagePreview }}
-              style={{ width: "100%", height: 124 }}
-              contentFit="cover"
-            />
-            <TouchableOpacity
-              onPress={clearPreview}
-              className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
-            >
-              <X size={16} color="black" />
-            </TouchableOpacity>
-            {isImageLoading && (
-              <View className="absolute bottom-2 right-2">
-                <ActivityIndicator size="small" color="#DCE0E8" />
-              </View>
-            )}
-          </View>
-        )}
-
-        {linkPreview && (
-          <View className="mb-4">
-            <View className="h-[124px] w-full items-center justify-center rounded-md bg-neutral-200">
+        <View className="mb-4 h-32">
+          {imagePreview ? (
+            <View className="relative h-full w-full">
+              <Image
+                source={{ uri: imagePreview }}
+                style={{ width: "100%", height: "100%" }}
+                contentFit="cover"
+              />
+              <TouchableOpacity
+                onPress={clearPreview}
+                className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+              >
+                <X size={16} color="black" />
+              </TouchableOpacity>
+              {isImageLoading && (
+                <View className="absolute bottom-2 right-2">
+                  <ActivityIndicator size="small" color="#DCE0E8" />
+                </View>
+              )}
+            </View>
+          ) : linkPreview ? (
+            <View className="relative h-full w-full items-center justify-center rounded-md bg-neutral-200">
               <LinkIcon size={32} color="black" />
               <Text
                 className="mt-2 text-sm font-medium"
@@ -676,23 +633,48 @@ const AddEventBottomSheet = React.forwardRef<
               >
                 {linkPreview}
               </Text>
+              <TouchableOpacity
+                onPress={clearPreview}
+                className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+              >
+                <X size={16} color="black" />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              onPress={clearPreview}
-              className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
-            >
-              <X size={16} color="black" />
-            </TouchableOpacity>
+          ) : activeInput === "url" ? (
+            <View className="h-full rounded-md border border-neutral-300 px-3 py-2">
+              <BottomSheetTextInput
+                placeholder="Enter URL"
+                defaultValue={input}
+                onChangeText={handleTextChange}
+                autoFocus={true}
+              />
+            </View>
+          ) : activeInput === "describe" ? (
+            <View className="h-full rounded-md border border-neutral-300 px-3 py-2">
+              <BottomSheetTextInput
+                placeholder="Describe your event"
+                defaultValue={input}
+                onChangeText={handleTextChange}
+                multiline
+                textAlignVertical="top"
+                autoFocus={true}
+                style={{ height: "100%" }}
+              />
+            </View>
+          ) : null}
+        </View>
+
+        {isOptionSelected && (
+          <View className="mt-2">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-2">
+                <Globe2 size={20} color="black" />
+                <Text className="text-base font-medium">Make discoverable</Text>
+              </View>
+              <Switch value={isPublic} onValueChange={setIsPublic} />
+            </View>
           </View>
         )}
-
-        <View className="mb-4 mt-4 flex-row items-center justify-between">
-          <View className="flex-row items-center gap-2">
-            <Globe2 size={20} color="black" />
-            <Text className="text-base font-medium">Make discoverable</Text>
-          </View>
-          <Switch value={isPublic} onValueChange={setIsPublic} />
-        </View>
       </View>
     </BottomSheetModal>
   );
