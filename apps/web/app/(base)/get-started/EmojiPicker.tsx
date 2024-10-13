@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { cn } from "@soonlist/ui";
 import { Button } from "@soonlist/ui/button";
 import { Input } from "@soonlist/ui/input";
 
@@ -77,76 +78,58 @@ export function EmojiPicker({ currentEmoji: initialEmoji }: EmojiPickerProps) {
     (emoji) => emoji !== currentEmoji && emoji !== inputEmoji,
   );
 
-  const getEmojiStatus = () => {
-    if (!inputEmoji) return "Enter an emoji";
-    if (emojiStatus === undefined) return "Checking availability...";
-    if (inputEmoji === currentEmoji) return "Your current emoji";
+  const getButtonText = () => {
     if (isUpdating) return "Updating...";
-    if (isEmojiAvailable) return "Available";
-    return "Already taken";
+    if (!inputEmoji) return "Enter an emoji";
+    if (emojiStatus === undefined) return "Checking...";
+    if (inputEmoji === currentEmoji) return "Current emoji";
+    if (!isEmojiAvailable) return "Already taken";
+    return currentEmoji ? "Change Emoji" : "Choose Emoji";
   };
 
   const hasClaimedEmoji = !!currentEmoji;
 
   return (
-    <div className="rounded-xl p-6">
-      <h2 className="mb-4 text-center font-heading text-2xl font-bold text-interactive-1">
+    <div className="flex flex-col items-center space-y-4 rounded-xl p-6">
+      <h2 className="font-heading text-2xl font-bold text-interactive-1">
         Choose Your Signature Emoji
       </h2>
-      <div className="flex flex-col space-y-4">
-        <div className="flex items-start justify-center space-x-4">
-          <Input
-            type="text"
-            value={inputEmoji}
-            onChange={(e) => setInputEmoji(e.target.value)}
-            className="h-16 w-16 bg-white text-center text-3xl"
-            maxLength={2}
-            disabled={isUpdating}
-          />
-          <div className="flex flex-col items-center">
-            <Button
-              onClick={handleSubmit}
-              disabled={isButtonDisabled}
-              className="w-36"
-              size="sm"
-              variant={hasClaimedEmoji ? "outline" : "default"}
-            >
-              {isUpdating
-                ? "Updating..."
-                : currentEmoji
-                  ? "Change Emoji"
-                  : "Choose Emoji"}
-            </Button>
-            <div className="mt-2 h-5 text-center text-sm font-medium">
-              <p
-                className={
-                  getEmojiStatus() === "Already taken"
-                    ? "text-destructive"
-                    : getEmojiStatus() === "Available"
-                      ? "text-success"
-                      : "text-neutral-2"
-                }
-              >
-                {getEmojiStatus()}
-              </p>
-            </div>
+      <div className="flex items-center space-x-4">
+        <Input
+          type="text"
+          value={inputEmoji}
+          onChange={(e) => setInputEmoji(e.target.value)}
+          className={cn({
+            "h-16 w-16 bg-white text-center text-3xl": true,
+            "ring-2 ring-interactive-1": inputEmoji === "",
+          })}
+          maxLength={2}
+          disabled={isUpdating}
+        />
+        <Button
+          onClick={handleSubmit}
+          disabled={isButtonDisabled}
+          className="w-36"
+          size="sm"
+          variant={hasClaimedEmoji ? "outline" : "default"}
+        >
+          {getButtonText()}
+        </Button>
+      </div>
+      {otherUsersEmojis.length > 0 && (
+        <div className="text-center">
+          <p className="mb-2 text-sm font-semibold text-neutral-2">
+            Claimed by other Founding Members:
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 text-sm">
+            {otherUsersEmojis.map((emoji, index) => (
+              <span key={index} className="text-base" title="Founding Member">
+                {emoji}
+              </span>
+            ))}
           </div>
         </div>
-        {otherUsersEmojis.length > 0 && (
-          <div className="mt-4">
-            <p className="mb-2 text-center text-sm font-semibold text-neutral-2">
-              Claimed by other Founding Members:
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 text-sm">
-              {otherUsersEmojis.map((emoji, index) => (
-                <span key={index} className="text-base" title="Founding Member">
-                  {emoji}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
