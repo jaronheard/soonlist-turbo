@@ -316,23 +316,28 @@ const AddEventBottomSheet = React.forwardRef<
   ]);
 
   const handleSuccess = useCallback(() => {
-    setInput("");
-    setImagePreview(null);
-    setLinkPreview(null);
-    (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-  }, [ref, setInput, setImagePreview, setLinkPreview]);
+    if (!expoPushToken) {
+      showToast("Event created successfully!", "success");
+      return;
+    }
+  }, [expoPushToken]);
 
   const handleError = useCallback(
     (error: unknown) => {
-      console.error("Failed to create event:", error);
-
       if (
         error instanceof Error &&
         error.message.includes(
           "Must use physical device for push notifications",
         )
       ) {
+        console.log(
+          "Event created successfully, but push notification couldn't be sent on simulator",
+        );
+        showToast("Event created successfully!", "success");
         (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
+      } else {
+        console.error("Failed to create event:", error);
+        showToast("Failed to create event. Please try again.", "error");
       }
     },
     [ref],
