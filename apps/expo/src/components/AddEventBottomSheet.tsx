@@ -85,7 +85,6 @@ const AddEventBottomSheet = React.forwardRef<
     input,
     imagePreview,
     linkPreview,
-    isCreating,
     isPublic,
     isImageLoading,
     isImageUploading,
@@ -93,7 +92,6 @@ const AddEventBottomSheet = React.forwardRef<
     setInput,
     setImagePreview,
     setLinkPreview,
-    setIsCreating,
     setIsPublic,
     setIsImageLoading,
     setIsImageUploading,
@@ -318,17 +316,15 @@ const AddEventBottomSheet = React.forwardRef<
   ]);
 
   const handleSuccess = useCallback(() => {
-    setIsCreating(false);
     setInput("");
     setImagePreview(null);
     setLinkPreview(null);
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-  }, [ref, setIsCreating, setInput, setImagePreview, setLinkPreview]);
+  }, [ref, setInput, setImagePreview, setLinkPreview]);
 
   const handleError = useCallback(
     (error: unknown) => {
       console.error("Failed to create event:", error);
-      setIsCreating(false);
 
       if (
         error instanceof Error &&
@@ -339,12 +335,11 @@ const AddEventBottomSheet = React.forwardRef<
         (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
       }
     },
-    [ref, setIsCreating],
+    [ref],
   );
 
   const handleCreateEvent = useCallback(() => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
-    setIsCreating(true);
 
     // Clear the modal state
     resetAddEventState();
@@ -379,7 +374,6 @@ const AddEventBottomSheet = React.forwardRef<
             finalImageUrl = await uploadPromiseRef.current;
           } catch (error) {
             console.error("Error waiting for image upload:", error);
-            setIsCreating(false);
             return;
           }
         }
@@ -437,7 +431,6 @@ const AddEventBottomSheet = React.forwardRef<
     uploadedImageUrl,
     ref,
     resetAddEventState,
-    setIsCreating,
   ]);
 
   const handleDismiss = useCallback(() => {
@@ -449,8 +442,8 @@ const AddEventBottomSheet = React.forwardRef<
   }, [ref, resetAddEventState]);
 
   const isCreateButtonDisabled = useMemo(() => {
-    return isCreating || (!input.trim() && !imagePreview && !linkPreview);
-  }, [isCreating, input, imagePreview, linkPreview]);
+    return !input.trim() && !imagePreview && !linkPreview;
+  }, [input, imagePreview, linkPreview]);
 
   const renderFooter = useMemo(() => {
     return (
@@ -465,21 +458,15 @@ const AddEventBottomSheet = React.forwardRef<
             onPress={handleCreateEvent}
             disabled={isCreateButtonDisabled}
           >
-            {isCreating ? (
-              <Text className="text-xl font-bold text-white">Capture...</Text>
-            ) : (
-              <>
-                <Sparkles size={16} color="white" />
-                <Text className="ml-2 text-xl font-bold text-white">
-                  Capture event
-                </Text>
-              </>
-            )}
+            <Sparkles size={16} color="white" />
+            <Text className="ml-2 text-xl font-bold text-white">
+              Capture event
+            </Text>
           </TouchableOpacity>
         </View>
       </BottomSheetFooter>
     );
-  }, [handleCreateEvent, isCreateButtonDisabled, isCreating, fontScale]);
+  }, [handleCreateEvent, isCreateButtonDisabled, fontScale]);
 
   useEffect(() => {
     if (onMount) {

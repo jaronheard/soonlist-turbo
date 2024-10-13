@@ -20,7 +20,6 @@ interface AppState {
   input: string;
   imagePreview: string | null;
   linkPreview: string | null;
-  isCreating: boolean;
   isPublic: boolean;
   isImageLoading: boolean;
   isImageUploading: boolean;
@@ -28,7 +27,6 @@ interface AppState {
   setInput: (input: string) => void;
   setImagePreview: (preview: string | null) => void;
   setLinkPreview: (preview: string | null) => void;
-  setIsCreating: (isCreating: boolean) => void;
   setIsPublic: (isPublic: boolean) => void;
   setIsImageLoading: (isLoading: boolean) => void;
   setIsImageUploading: (isUploading: boolean) => void;
@@ -83,7 +81,6 @@ export const useAppStore = create<AppState>()(
       input: "",
       imagePreview: null,
       linkPreview: null,
-      isCreating: false,
       isPublic: false,
       isImageLoading: false,
       isImageUploading: false,
@@ -91,7 +88,6 @@ export const useAppStore = create<AppState>()(
       setInput: (input) => set({ input }),
       setImagePreview: (preview) => set({ imagePreview: preview }),
       setLinkPreview: (preview) => set({ linkPreview: preview }),
-      setIsCreating: (isCreating) => set({ isCreating }),
       setIsPublic: (isPublic) => set({ isPublic }),
       setIsImageLoading: (isLoading) => set({ isImageLoading: isLoading }),
       setIsImageUploading: (isUploading) =>
@@ -102,7 +98,6 @@ export const useAppStore = create<AppState>()(
           input: "",
           imagePreview: null,
           linkPreview: null,
-          isCreating: false,
           isImageLoading: false,
           isImageUploading: false,
           uploadedImageUrl: null,
@@ -135,7 +130,6 @@ export const useAppStore = create<AppState>()(
           input: "",
           imagePreview: null,
           linkPreview: null,
-          isCreating: false,
           isPublic: false,
           isImageLoading: false,
           isImageUploading: false,
