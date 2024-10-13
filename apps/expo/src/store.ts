@@ -20,7 +20,6 @@ interface AppState {
   input: string;
   imagePreview: string | null;
   linkPreview: string | null;
-  isCreating: boolean;
   isPublic: boolean;
   isImageLoading: boolean;
   isImageUploading: boolean;
@@ -28,7 +27,6 @@ interface AppState {
   setInput: (input: string) => void;
   setImagePreview: (preview: string | null) => void;
   setLinkPreview: (preview: string | null) => void;
-  setIsCreating: (isCreating: boolean) => void;
   setIsPublic: (isPublic: boolean) => void;
   setIsImageLoading: (isLoading: boolean) => void;
   setIsImageUploading: (isUploading: boolean) => void;
@@ -55,6 +53,16 @@ interface AppState {
 
   // Add this new action
   clearCalendarData: () => void;
+
+  // New state for AddEventBottomSheet
+  isOptionSelected: boolean;
+  activeInput: "camera" | "upload" | "url" | "describe" | null;
+
+  // New actions for AddEventBottomSheet
+  setIsOptionSelected: (isSelected: boolean) => void;
+  setActiveInput: (
+    input: "camera" | "upload" | "url" | "describe" | null,
+  ) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -73,7 +81,6 @@ export const useAppStore = create<AppState>()(
       input: "",
       imagePreview: null,
       linkPreview: null,
-      isCreating: false,
       isPublic: false,
       isImageLoading: false,
       isImageUploading: false,
@@ -81,7 +88,6 @@ export const useAppStore = create<AppState>()(
       setInput: (input) => set({ input }),
       setImagePreview: (preview) => set({ imagePreview: preview }),
       setLinkPreview: (preview) => set({ linkPreview: preview }),
-      setIsCreating: (isCreating) => set({ isCreating }),
       setIsPublic: (isPublic) => set({ isPublic }),
       setIsImageLoading: (isLoading) => set({ isImageLoading: isLoading }),
       setIsImageUploading: (isUploading) =>
@@ -92,10 +98,11 @@ export const useAppStore = create<AppState>()(
           input: "",
           imagePreview: null,
           linkPreview: null,
-          isCreating: false,
           isImageLoading: false,
           isImageUploading: false,
           uploadedImageUrl: null,
+          isOptionSelected: false,
+          activeInput: null,
         }),
 
       // Calendar-related state
@@ -123,7 +130,6 @@ export const useAppStore = create<AppState>()(
           input: "",
           imagePreview: null,
           linkPreview: null,
-          isCreating: false,
           isPublic: false,
           isImageLoading: false,
           isImageUploading: false,
@@ -139,6 +145,15 @@ export const useAppStore = create<AppState>()(
           defaultCalendarId: null,
           calendarUsage: {},
         }),
+
+      // New state for AddEventBottomSheet
+      isOptionSelected: false,
+      activeInput: null,
+
+      // New actions for AddEventBottomSheet
+      setIsOptionSelected: (isSelected) =>
+        set({ isOptionSelected: isSelected }),
+      setActiveInput: (input) => set({ activeInput: input }),
     }),
     {
       name: "app-storage",

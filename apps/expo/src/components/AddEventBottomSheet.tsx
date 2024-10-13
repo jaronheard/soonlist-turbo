@@ -1,4 +1,5 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
+import type { MotiTransition } from "moti";
 import React, {
   useCallback,
   useEffect,
@@ -27,12 +28,14 @@ import {
 } from "@discord/bottom-sheet";
 import {
   Camera as CameraIcon,
+  EditIcon,
   Globe2,
   Image as ImageIcon,
   Link as LinkIcon,
   Sparkles,
   X,
 } from "lucide-react-native";
+import { MotiView } from "moti";
 
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useNotification } from "~/providers/NotificationProvider";
@@ -49,14 +52,17 @@ const AddEventBottomSheet = React.forwardRef<
   BottomSheetModal,
   AddEventBottomSheetProps
 >(({ onMount }, ref) => {
-  const { fontScale } = useWindowDimensions();
+  const { height: windowHeight, fontScale } = useWindowDimensions();
 
   const snapPoints = useMemo(() => {
     const baseHeight = 388;
-    const additionalHeight = Math.round(baseHeight * (fontScale - 1) * 0.25);
-    const scaledHeight = baseHeight + additionalHeight;
+    const maxHeight = windowHeight * 0.9; // 90% of screen height
+    const scaledHeight = Math.min(
+      Math.round(baseHeight * fontScale),
+      maxHeight,
+    );
     return [scaledHeight];
-  }, [fontScale]);
+  }, [windowHeight, fontScale]);
 
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
@@ -78,7 +84,6 @@ const AddEventBottomSheet = React.forwardRef<
     input,
     imagePreview,
     linkPreview,
-    isCreating,
     isPublic,
     isImageLoading,
     isImageUploading,
@@ -86,7 +91,6 @@ const AddEventBottomSheet = React.forwardRef<
     setInput,
     setImagePreview,
     setLinkPreview,
-    setIsCreating,
     setIsPublic,
     setIsImageLoading,
     setIsImageUploading,
@@ -94,6 +98,10 @@ const AddEventBottomSheet = React.forwardRef<
     resetAddEventState,
     intentParams,
     resetIntentParams,
+    isOptionSelected,
+    activeInput,
+    setIsOptionSelected,
+    setActiveInput,
   } = useAppStore();
 
   // Use the intent handler
@@ -202,17 +210,21 @@ const AddEventBottomSheet = React.forwardRef<
 
       if (intentParams.text) {
         handleTextChange(intentParams.text);
+        setActiveInput("describe");
       } else if (intentParams.imageUri) {
         const [uri, width, height] = intentParams.imageUri.split("|");
         if (uri) {
           if (uri.startsWith("http")) {
             void handleLinkPreview(uri);
+            setActiveInput("url");
           } else {
             void handleImageUploadFromUri(uri);
+            setActiveInput("upload");
           }
         }
         setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
       }
+      setIsOptionSelected(true);
       resetIntentParams();
 
       // Present the bottom sheet
@@ -228,6 +240,8 @@ const AddEventBottomSheet = React.forwardRef<
     setImagePreview,
     setLinkPreview,
     setUploadedImageUrl,
+    setActiveInput,
+    setIsOptionSelected,
   ]);
 
   useEffect(() => {
@@ -281,40 +295,46 @@ const AddEventBottomSheet = React.forwardRef<
     }
   }, [handleImageUploadFromUri, setInput]);
 
-  const clearPreview = () => {
+  const clearPreview = useCallback(() => {
     setImagePreview(null);
     setLinkPreview(null);
     setInput("");
-  };
+    setIsOptionSelected(false);
+    setActiveInput(null);
+    resetAddEventState();
+  }, [
+    setImagePreview,
+    setLinkPreview,
+    setInput,
+    setIsOptionSelected,
+    setActiveInput,
+    resetAddEventState,
+  ]);
 
   const handleSuccess = useCallback(() => {
-    setIsCreating(false);
-    setInput("");
-    setImagePreview(null);
-    setLinkPreview(null);
-    (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-  }, [ref, setIsCreating, setInput, setImagePreview, setLinkPreview]);
+    if (!expoPushToken) {
+      showToast("Event created successfully!", "success");
+      return;
+    }
+  }, [expoPushToken]);
 
-  const handleError = useCallback(
-    (error: unknown) => {
+  const handleError = useCallback((error: unknown) => {
+    if (
+      error instanceof Error &&
+      error.message.includes("Must use physical device for push notifications")
+    ) {
+      console.log(
+        "Event created successfully, but push notification couldn't be sent on simulator",
+      );
+      showToast("Event created successfully!", "success");
+    } else {
       console.error("Failed to create event:", error);
-      setIsCreating(false);
-
-      if (
-        error instanceof Error &&
-        error.message.includes(
-          "Must use physical device for push notifications",
-        )
-      ) {
-        (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-      }
-    },
-    [ref, setIsCreating],
-  );
+      showToast("Failed to create event. Please try again.", "error");
+    }
+  }, []);
 
   const handleCreateEvent = useCallback(() => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
-    setIsCreating(true);
 
     // Clear the modal state
     resetAddEventState();
@@ -349,7 +369,6 @@ const AddEventBottomSheet = React.forwardRef<
             finalImageUrl = await uploadPromiseRef.current;
           } catch (error) {
             console.error("Error waiting for image upload:", error);
-            setIsCreating(false);
             return;
           }
         }
@@ -407,13 +426,19 @@ const AddEventBottomSheet = React.forwardRef<
     uploadedImageUrl,
     ref,
     resetAddEventState,
-    setIsCreating,
   ]);
 
   const handleDismiss = useCallback(() => {
-    // Allow the modal to be dismissed, but don't cancel the upload
+    // Reset the AddEventBottomSheet context
+    resetAddEventState();
+
+    // Allow the modal to be dismissed
     (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-  }, [ref]);
+  }, [ref, resetAddEventState]);
+
+  const isCreateButtonDisabled = useMemo(() => {
+    return !input.trim() && !imagePreview && !linkPreview;
+  }, [input, imagePreview, linkPreview]);
 
   const renderFooter = useMemo(() => {
     return (
@@ -422,42 +447,68 @@ const AddEventBottomSheet = React.forwardRef<
       <BottomSheetFooter {...props} bottomInset={24}>
         <View className={`px-4 pb-4 ${fontScale > 1.3 ? "pt-4" : ""}`}>
           <TouchableOpacity
-            className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2"
+            className={`w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2 ${
+              isCreateButtonDisabled ? "opacity-50" : ""
+            }`}
             onPress={handleCreateEvent}
-            disabled={
-              isCreating || (!input.trim() && !imagePreview && !linkPreview)
-            }
+            disabled={isCreateButtonDisabled}
           >
-            {isCreating ? (
-              <Text className="text-xl font-bold text-white">Creating...</Text>
-            ) : (
-              <>
-                <Sparkles size={16} color="white" />
-                <Text className="ml-2 text-xl font-bold text-white">
-                  Create event
-                </Text>
-              </>
-            )}
+            <Sparkles size={16} color="white" />
+            <Text className="ml-2 text-xl font-bold text-white">
+              Capture event
+            </Text>
           </TouchableOpacity>
         </View>
       </BottomSheetFooter>
     );
-  }, [
-    handleCreateEvent,
-    isCreating,
-    input,
-    imagePreview,
-    linkPreview,
-    fontScale,
-  ]);
-
-  const inputRef = useRef<React.ElementRef<typeof BottomSheetTextInput>>(null);
+  }, [handleCreateEvent, isCreateButtonDisabled, fontScale]);
 
   useEffect(() => {
     if (onMount) {
       onMount();
     }
   }, [onMount]);
+
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  const transition = {
+    type: "timing",
+    duration: 200,
+  } as MotiTransition;
+
+  const handleOptionSelect = useCallback(
+    (option: "camera" | "upload" | "url" | "describe") => {
+      if (activeInput === option) {
+        // Reset to the 2x2 grid if the same option is tapped again
+        setIsOptionSelected(false);
+        setActiveInput(null);
+        resetAddEventState();
+      } else {
+        setIsOptionSelected(true);
+        setActiveInput(option);
+
+        switch (option) {
+          case "camera":
+            void handleCameraCapture();
+            break;
+          case "upload":
+            void handleImageUpload();
+            break;
+          case "url":
+          case "describe":
+            // These options will show their respective input fields
+            break;
+        }
+      }
+    },
+    [
+      activeInput,
+      setIsOptionSelected,
+      setActiveInput,
+      resetAddEventState,
+      handleCameraCapture,
+      handleImageUpload,
+    ],
+  );
 
   return (
     <BottomSheetModal
@@ -471,38 +522,84 @@ const AddEventBottomSheet = React.forwardRef<
       onDismiss={handleDismiss}
     >
       <View className="flex-1 p-4">
-        <Text className="mb-4 text-2xl font-semibold">Add event</Text>
-        <View className="mb-4">
-          <View className="mb-2 flex flex-row items-center justify-between">
-            <Text className="text-base font-medium">Event details</Text>
-            <View className="flex-row">
-              <TouchableOpacity
-                onPress={handleCameraCapture}
-                className="mr-2 rounded-md bg-neutral-200 px-3 py-2"
+        <Text className="mb-4 text-2xl font-semibold">Add event info</Text>
+
+        <MotiView
+          animate={{
+            height: isOptionSelected ? 50 : "auto",
+            marginBottom: 16,
+          }}
+          transition={transition}
+        >
+          <View
+            className={`flex-row ${
+              isOptionSelected ? "justify-between" : "flex-wrap"
+            }`}
+          >
+            {["camera", "upload", "url", "describe"].map((option) => (
+              <MotiView
+                key={option}
+                animate={{
+                  width: isOptionSelected ? "22%" : "48%",
+                  margin: isOptionSelected ? 0 : "1%",
+                }}
+                transition={transition}
               >
-                <View className="flex-row items-center">
-                  <CameraIcon size={16} color="black" />
-                  <Text className="ml-2 font-medium">Camera</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleImageUpload}
-                className="rounded-md bg-neutral-200 px-3 py-2"
-              >
-                <View className="flex-row items-center">
-                  <ImageIcon size={16} color="black" />
-                  <Text className="ml-2 font-medium">
-                    {imagePreview || linkPreview ? "Change" : "Upload"}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity
+                  onPress={() =>
+                    handleOptionSelect(
+                      option as "camera" | "upload" | "url" | "describe",
+                    )
+                  }
+                  className={`rounded-md px-2 py-2 ${
+                    isOptionSelected && activeInput !== option
+                      ? "bg-interactive-2"
+                      : "bg-interactive-3"
+                  }`}
+                >
+                  <View className="items-center">
+                    {option === "camera" && (
+                      <CameraIcon
+                        size={isOptionSelected ? 16 : 24}
+                        color="#5A32FB" // interactive-1 color
+                      />
+                    )}
+                    {option === "upload" && (
+                      <ImageIcon
+                        size={isOptionSelected ? 16 : 24}
+                        color="#5A32FB" // interactive-1 color
+                      />
+                    )}
+                    {option === "url" && (
+                      <LinkIcon
+                        size={isOptionSelected ? 16 : 24}
+                        color="#5A32FB" // interactive-1 color
+                      />
+                    )}
+                    {option === "describe" && (
+                      <EditIcon
+                        size={isOptionSelected ? 16 : 24}
+                        color="#5A32FB" // interactive-1 color
+                      />
+                    )}
+                    {!isOptionSelected && (
+                      <Text className="mt-2 font-medium text-interactive-1">
+                        {option.charAt(0).toUpperCase() + option.slice(1)}
+                      </Text>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </MotiView>
+            ))}
           </View>
+        </MotiView>
+
+        <View className="mb-4 h-32">
           {imagePreview ? (
-            <View className="relative">
+            <View className="relative h-full w-full rounded-md">
               <Image
                 source={{ uri: imagePreview }}
-                style={{ width: "100%", height: 124 }}
+                style={{ width: "100%", height: "100%", borderRadius: 5 }}
                 contentFit="cover"
               />
               <TouchableOpacity
@@ -518,11 +615,11 @@ const AddEventBottomSheet = React.forwardRef<
               )}
             </View>
           ) : linkPreview ? (
-            <View className="relative">
-              <View className="h-[124px] w-full items-center justify-center rounded-md bg-neutral-200">
-                <LinkIcon size={32} color="black" />
+            <View className="relative h-full w-full rounded-md bg-neutral-200">
+              <View className="h-full w-full items-center justify-center">
+                <LinkIcon size={24} color="black" />
                 <Text
-                  className="mt-2 text-sm font-medium"
+                  className="mt-2 px-4 text-center text-sm font-medium"
                   numberOfLines={2}
                   ellipsizeMode="middle"
                 >
@@ -531,38 +628,49 @@ const AddEventBottomSheet = React.forwardRef<
               </View>
               <TouchableOpacity
                 onPress={clearPreview}
-                className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+                className="absolute right-2 top-2 rounded-full bg-white p-1"
               >
                 <X size={16} color="black" />
               </TouchableOpacity>
             </View>
-          ) : (
-            <View className="mb-4 h-32 w-full overflow-hidden rounded-md border border-neutral-300 px-3 py-2">
+          ) : activeInput === "url" ? (
+            <View className="h-full rounded-md border border-neutral-300 px-3 py-2">
               <BottomSheetTextInput
-                ref={inputRef}
-                // className prop doesn't work properly here, so we use style
-                style={{
-                  height: "100%",
-                  width: "100%",
-                  textAlignVertical: "top",
-                }}
-                placeholder="Enter event details or paste a URL"
+                placeholder="Paste URL"
                 defaultValue={input}
                 onChangeText={handleTextChange}
                 multiline
+                textAlignVertical="top"
+                autoFocus={true}
+                style={{ height: "100%" }}
               />
             </View>
-          )}
+          ) : activeInput === "describe" ? (
+            <View className="h-full rounded-md border border-neutral-300 px-3 py-2">
+              <BottomSheetTextInput
+                placeholder="Describe your event"
+                defaultValue={input}
+                onChangeText={handleTextChange}
+                multiline
+                textAlignVertical="top"
+                autoFocus={true}
+                style={{ height: "100%" }}
+              />
+            </View>
+          ) : null}
         </View>
-        <View
-          className={`mb-4 flex-row items-center justify-between ${fontScale > 1.3 ? "pb-4" : ""}`}
-        >
-          <View className="flex-row items-center gap-2">
-            <Globe2 size={20} color="black" />
-            <Text className="text-base font-medium">Make discoverable</Text>
+
+        {isOptionSelected && (
+          <View className="mt-2">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-2">
+                <Globe2 size={20} color="black" />
+                <Text className="text-base font-medium">Make discoverable</Text>
+              </View>
+              <Switch value={isPublic} onValueChange={setIsPublic} />
+            </View>
           </View>
-          <Switch value={isPublic} onValueChange={setIsPublic} />
-        </View>
+        )}
       </View>
     </BottomSheetModal>
   );
