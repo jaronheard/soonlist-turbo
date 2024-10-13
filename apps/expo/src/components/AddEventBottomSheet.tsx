@@ -596,10 +596,10 @@ const AddEventBottomSheet = React.forwardRef<
 
         <View className="mb-4 h-32">
           {imagePreview ? (
-            <View className="relative h-full w-full">
+            <View className="relative h-full w-full rounded-md">
               <Image
                 source={{ uri: imagePreview }}
-                style={{ width: "100%", height: "100%" }}
+                style={{ width: "100%", height: "100%", borderRadius: 5 }}
                 contentFit="cover"
               />
               <TouchableOpacity
@@ -615,18 +615,20 @@ const AddEventBottomSheet = React.forwardRef<
               )}
             </View>
           ) : linkPreview ? (
-            <View className="relative h-full w-full items-center justify-center rounded-md bg-neutral-200">
-              <LinkIcon size={32} color="black" />
-              <Text
-                className="mt-2 text-sm font-medium"
-                numberOfLines={2}
-                ellipsizeMode="middle"
-              >
-                {linkPreview}
-              </Text>
+            <View className="relative h-full w-full rounded-md bg-neutral-200">
+              <View className="h-full w-full items-center justify-center">
+                <LinkIcon size={24} color="black" />
+                <Text
+                  className="mt-2 px-4 text-center text-sm font-medium"
+                  numberOfLines={2}
+                  ellipsizeMode="middle"
+                >
+                  {linkPreview}
+                </Text>
+              </View>
               <TouchableOpacity
                 onPress={clearPreview}
-                className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+                className="absolute right-2 top-2 rounded-full bg-white p-1"
               >
                 <X size={16} color="black" />
               </TouchableOpacity>
