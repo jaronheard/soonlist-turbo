@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth, useUser } from "@clerk/nextjs";
+import Image from "next/image";
+import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import QRCode from "react-qr-code";
 
 import { Button } from "@soonlist/ui/button";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 
 import { FullPageLoadingSpinner } from "~/components/FullPageLoadingSpinner";
 import { HelpButton } from "~/components/HelpButton";
+import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { api } from "~/trpc/react";
 import { EmojiPicker } from "./EmojiPicker";
 import { OnboardingTabs } from "./OnboardingTabs";
@@ -23,6 +25,7 @@ const APP_URL = `${protocol}://${HOST}`;
 export default function Page() {
   const { isLoaded } = useAuth();
   const { user: activeUser } = useUser();
+  const { openUserProfile } = useClerk();
 
   const { data: user, isLoading } = api.user.getByUsername.useQuery(
     { userName: activeUser?.username || "" },
@@ -94,14 +97,36 @@ export default function Page() {
       <Card>
         <CardHeader>
           <CardTitle className="text-center font-heading text-3xl font-bold text-neutral-1">
-            2. Choose Your Emoji
+            2. Personalize Your Profile
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-          <p className="text-center text-lg">
-            Pick your signature emoji to show off with your profile picture.
-          </p>
-          <EmojiPicker currentEmoji={user?.emoji || undefined} />
+        <CardContent className="flex flex-col items-center gap-6">
+          <div className="flex items-center gap-4">
+            <UserProfileFlair username={activeUser?.username ?? ""} size="2xl">
+              <Image
+                alt="User"
+                src={activeUser?.imageUrl ?? ""}
+                width={64}
+                height={64}
+                className="size-16 rounded-full border border-gray-200 drop-shadow-sm"
+              />
+            </UserProfileFlair>
+            <div className="flex items-center gap-4">
+              <span className="text-2xl font-medium text-neutral-2">
+                @{activeUser?.username}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openUserProfile()}
+              >
+                Edit
+              </Button>
+            </div>
+          </div>
+          <div className="flex w-full justify-center">
+            <EmojiPicker currentEmoji={user?.emoji || undefined} />
+          </div>
         </CardContent>
       </Card>
 
