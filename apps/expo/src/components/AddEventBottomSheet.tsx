@@ -182,11 +182,8 @@ const AddEventBottomSheet = React.forwardRef<
     [setLinkPreview, setInput],
   );
 
-  const [localInput, setLocalInput] = useState("");
-
   const handleTextChange = useCallback(
     (text: string) => {
-      setLocalInput(text);
       setInput(text);
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       const urls = text.match(urlRegex);
@@ -322,26 +319,20 @@ const AddEventBottomSheet = React.forwardRef<
     }
   }, [expoPushToken]);
 
-  const handleError = useCallback(
-    (error: unknown) => {
-      if (
-        error instanceof Error &&
-        error.message.includes(
-          "Must use physical device for push notifications",
-        )
-      ) {
-        console.log(
-          "Event created successfully, but push notification couldn't be sent on simulator",
-        );
-        showToast("Event created successfully!", "success");
-        (ref as React.RefObject<BottomSheetModal>).current?.dismiss();
-      } else {
-        console.error("Failed to create event:", error);
-        showToast("Failed to create event. Please try again.", "error");
-      }
-    },
-    [ref],
-  );
+  const handleError = useCallback((error: unknown) => {
+    if (
+      error instanceof Error &&
+      error.message.includes("Must use physical device for push notifications")
+    ) {
+      console.log(
+        "Event created successfully, but push notification couldn't be sent on simulator",
+      );
+      showToast("Event created successfully!", "success");
+    } else {
+      console.error("Failed to create event:", error);
+      showToast("Failed to create event. Please try again.", "error");
+    }
+  }, []);
 
   const handleCreateEvent = useCallback(() => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
