@@ -214,7 +214,11 @@ function UserProfileForm({
           />
         </div>
 
-        <Button type="submit" disabled={isSubmitting || !isFormChanged}>
+        <Button
+          type="submit"
+          disabled={isSubmitting || !isFormChanged}
+          className="w-full"
+        >
           {isSubmitting ? "Saving..." : "Save Profile"}
         </Button>
       </form>

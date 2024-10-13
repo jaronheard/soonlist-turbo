@@ -134,12 +134,12 @@ export function EmojiPicker({ currentEmoji: initialEmoji }: EmojiPickerProps) {
         </div>
         {otherUsersEmojis.length > 0 && (
           <div className="mt-4">
-            <p className="mb-2 text-center text-lg font-semibold text-neutral-1">
+            <p className="mb-2 text-center text-sm font-semibold text-neutral-2">
               Claimed by other Founding Members:
             </p>
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="flex flex-wrap justify-center gap-2 text-sm">
               {otherUsersEmojis.map((emoji, index) => (
-                <span key={index} className="text-3xl" title="Founding Member">
+                <span key={index} className="text-base" title="Founding Member">
                   {emoji}
                 </span>
               ))}

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import QRCode from "react-qr-code";
 
+import { Badge } from "@soonlist/ui/badge";
 import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 
@@ -75,29 +76,13 @@ export function GetStartedClient() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-col items-center">
           <CardTitle className="text-center font-heading text-3xl font-bold text-neutral-1">
-            1. Complete Your Profile
+            1. Your appearance
           </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <OnboardingTabs
-            additionalInfo={{
-              bio: user?.bio || undefined,
-              publicEmail: user?.publicEmail || undefined,
-              publicPhone: user?.publicPhone || undefined,
-              publicInsta: user?.publicInsta || undefined,
-              publicWebsite: user?.publicWebsite || undefined,
-            }}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-center font-heading text-3xl font-bold text-neutral-1">
-            2. Personalize Your Profile
-          </CardTitle>
+          <Badge variant="secondary" className="mt-2">
+            Shown on events you share
+          </Badge>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-6">
           <div className="flex items-center gap-4">
@@ -130,9 +115,31 @@ export function GetStartedClient() {
       </Card>
 
       <Card>
+        <CardHeader className="flex flex-col items-center">
+          <CardTitle className="text-center font-heading text-3xl font-bold text-neutral-1">
+            2. Your public info
+          </CardTitle>
+          <Badge variant="secondary" className="mt-2">
+            Shown on events you share
+          </Badge>
+        </CardHeader>
+        <CardContent>
+          <OnboardingTabs
+            additionalInfo={{
+              bio: user?.bio || undefined,
+              publicEmail: user?.publicEmail || undefined,
+              publicPhone: user?.publicPhone || undefined,
+              publicInsta: user?.publicInsta || undefined,
+              publicWebsite: user?.publicWebsite || undefined,
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader>
           <CardTitle className="text-center font-heading text-3xl font-bold text-neutral-1">
-            3. Get the Soonlist App
+            3. Install the Soonlist App
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
