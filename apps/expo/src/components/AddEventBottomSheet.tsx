@@ -6,7 +6,6 @@ import React, {
   useImperativeHandle,
   useMemo,
   useRef,
-  useState,
 } from "react";
 import {
   ActivityIndicator,
@@ -470,10 +469,11 @@ const AddEventBottomSheet = React.forwardRef<
     }
   }, [onMount]);
 
-  const transition: MotiTransition = {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  const transition = {
     type: "timing",
     duration: 200,
-  };
+  } as MotiTransition;
 
   const handleOptionSelect = useCallback(
     (option: "camera" | "upload" | "url" | "describe") => {
