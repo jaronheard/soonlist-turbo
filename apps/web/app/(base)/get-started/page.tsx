@@ -127,9 +127,12 @@ export default function Page() {
                   Install iOS App
                 </a>
               </Button>
-              <p className="text-center text-sm text-muted-foreground">
-                This link will guide you through installing TestFlight, then
-                you'll return to that page to install Soonlist.
+              <p className="text-center text-sm font-medium text-muted-foreground">
+                <span className="font-medium text-destructive">
+                  Important: tap both buttons on linked page!
+                </span>
+                <br />
+                Step 1 installs TestFlight, Step 2 installs Soonlist.
               </p>
             </>
           ) : (
