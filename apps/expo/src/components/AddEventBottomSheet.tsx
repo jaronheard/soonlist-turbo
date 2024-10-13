@@ -636,7 +636,7 @@ const AddEventBottomSheet = React.forwardRef<
           ) : activeInput === "url" ? (
             <View className="h-full rounded-md border border-neutral-300 px-3 py-2">
               <BottomSheetTextInput
-                placeholder="Enter URL"
+                placeholder="Paste URL"
                 defaultValue={input}
                 onChangeText={handleTextChange}
                 multiline
