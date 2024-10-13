@@ -13,6 +13,13 @@ import { api } from "~/trpc/react";
 import { EmojiPicker } from "./EmojiPicker";
 import { OnboardingTabs } from "./OnboardingTabs";
 
+// Add this line to get the NEXT_PUBLIC_APP_URL
+const HOST =
+  process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL || "www.soonlist.com";
+const protocol =
+  process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "https" : "http";
+const APP_URL = `${protocol}://${HOST}`;
+
 export default function Page() {
   const { isLoaded } = useAuth();
   const { user: activeUser } = useUser();
@@ -135,13 +142,13 @@ export default function Page() {
                   Once you're on your iPhone, visit:
                 </p>
                 <code className="rounded bg-gray-100 px-2 py-1 text-sm">
-                  soonlist.com/get-started
+                  {`${APP_URL}/get-app`}
                 </code>
                 <p className="text-center text-sm text-muted-foreground">
                   Or scan this QR code:
                 </p>
                 <QRCode
-                  value="https://testflight.apple.com/join/AjmerTKm"
+                  value={`${APP_URL}/get-app`}
                   size={128}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                   viewBox={`0 0 256 256`}
