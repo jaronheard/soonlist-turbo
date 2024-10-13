@@ -131,7 +131,13 @@ function UserProfileForm({
                   {renderIcon(field.value, defaultValues.publicEmail)}
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="email@example.com" {...field} />
+                  <Input
+                    placeholder="email@example.com"
+                    type="email"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -148,7 +154,14 @@ function UserProfileForm({
                   {renderIcon(field.value, defaultValues.publicPhone)}
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="1234567890" {...field} />
+                  <Input
+                    placeholder="1234567890"
+                    type="tel"
+                    inputMode="tel"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -165,7 +178,12 @@ function UserProfileForm({
                   {renderIcon(field.value, defaultValues.publicInsta)}
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="username" {...field} />
+                  <Input
+                    placeholder="username"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -182,7 +200,13 @@ function UserProfileForm({
                   {renderIcon(field.value, defaultValues.publicWebsite)}
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="www.example.com" {...field} />
+                  <Input
+                    placeholder="www.example.com"
+                    type="url"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

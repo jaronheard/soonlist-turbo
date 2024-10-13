@@ -71,6 +71,11 @@ const nextConfig = {
         destination: "/",
         permanent: true,
       },
+      {
+        source: "/get-app",
+        destination: "https://testflight.apple.com/join/AjmerTKm",
+        permanent: false,
+      },
     ];
   },
   // This is required to support PostHog trailing slash API requests
