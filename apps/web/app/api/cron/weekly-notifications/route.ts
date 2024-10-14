@@ -25,7 +25,10 @@ export async function GET(request: Request) {
   const caller = appRouter.createCaller(ctx);
 
   try {
-    await caller.notification.sendWeeklyNotifications();
+    // Pass the CRON_SECRET to the sendWeeklyNotifications procedure
+    await caller.notification.sendWeeklyNotifications({
+      cronSecret: process.env.CRON_SECRET || "",
+    });
 
     return NextResponse.json({ success: true });
   } catch (cause) {
