@@ -30,6 +30,210 @@ const sendNotificationInputSchema = z.object({
   data: z.record(z.unknown()).optional(),
 });
 
+/**
+ * Generates a prompt for creating a weekly notification with events.
+ *
+ * @param eventDescriptions - A string containing event descriptions, separated by "NEXT EVENT"
+ * @returns A string containing the generated prompt
+ */
+const getPromptForWeeklyNotificationWithEvents = (
+  eventDescriptions: string,
+) => `You are tasked with creating an exciting and rich notification for a user's upcoming week based on their saved events. Your goal is to generate a concise, engaging message that fits into a single notification and captures the essence of the week's possibilities.
+
+Here is the list of events for the upcoming week separated by "NEXT EVENT":
+<events>
+${eventDescriptions}
+</events>
+
+Follow these steps to create the notification:
+
+1. For each event, identify the most specific and evocative single-word adjective-noun pairs that uniquely apply to that event. Be creative and don't hesitate to use esoteric or simple adjectives.
+
+2. From the list of adjective-noun pairs you've generated, select the top three that would provide the most complete abstract picture of the week's possibilities. These should be diverse and capture different aspects of the events.
+
+3. For each specific event, create a highlight using a verb + specific noun form. Be super succinct and focus on the most exciting and unique action elements. Include all events in this list.
+
+4. Format your output as follows:
+   - Start with the three selected adjective-noun pairs, each preceded by a relevant emoji
+   - Add the 🔜 emoji as a separator (no new lines)
+   - List the event highlights without emojis
+
+5. Use Spotify's Daylists as inspiration for the tone and style. Incorporate uncommon emojis where appropriate.
+
+6. Ensure the entire message fits into a single notification. Do not include "THIS WEEK" or any other preface. Begin directly with the adjective-noun pairs.
+
+Example output:
+🧠 Cerebral discussions, 🌀 Mesmerizing animations, 🎭 Avant-garde showcases 🔜 Meditate at William Basinski, converse at UX book, dance gracefully at StepsPDX
+
+Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
+
+/**
+ * Generates a prompt for creating a weekly notification with discover events.
+ *
+ * @param eventDescriptions - A string containing event descriptions, separated by "NEXT EVENT"
+ * @returns A string containing the generated prompt
+ */
+const getPromptForWeeklyNotificationWithDiscover = (
+  eventDescriptions: string,
+) => `You are tasked with creating an exciting and rich notification of events other users have posted to Soonlist
+
+Here is the list of events for the upcoming week separated by "NEXT EVENT":
+<events>
+${eventDescriptions}
+</events>
+
+Follow these steps to create the notification:
+
+1. For each event, identify the most specific and evocative single-word adjective-noun pairs that uniquely apply to that event. Be creative and don't hesitate to use esoteric or simple adjectives.
+
+2. Use Spotify's Daylists as inspiration for the tone and style. Incorporate uncommon emojis where appropriate.
+
+3. Do not preface or include anything other than the adjective-noun pairs.
+
+4. Add the abbreviated day of the week in parenthesis (e.g. Mon, Tue) after each adjective-noun pair.
+
+Example output:
+🧠 Cerebral discussions (Mon), 🌀 Mesmerizing animations (Tue), 🎭 Avant-garde showcases (Tue), 🤹‍♂️ Quirky performances (Wed), 🛹 Skateboarding prowess (Wed), 🖼️ Handmade marvels (Thu), ♻️ Upcycled elegance (Thu), 💃 Pulsating dancefloors (Fri), 📚 Intellectual discourses (Fri), 🕰️ Retro-inspired revelry (Sat), 🦉 Ornithological wonders (Sun)
+
+Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
+
+async function processUserNotification(user: {
+  userId: string;
+  expoPushToken: string;
+}) {
+  const now = new Date();
+  const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  try {
+    // Fetch upcoming events for the user
+    const upcomingEvents = await db
+      .select()
+      .from(events)
+      .where(
+        and(
+          or(
+            eq(events.userId, user.userId),
+            inArray(
+              events.id,
+              db
+                .select({ eventId: eventFollows.eventId })
+                .from(eventFollows)
+                .where(eq(eventFollows.userId, user.userId)),
+            ),
+          ),
+          gt(events.startDateTime, now),
+          lt(events.endDateTime, oneWeekFromNow),
+        ),
+      );
+
+    let eventDescriptions = upcomingEvents
+      .map((event) => {
+        const eventData = event.event as AddToCalendarButtonProps;
+        return `${eventData.name} ${eventData.description}`;
+      })
+      .join(" NEXT EVENT ");
+
+    let prompt = getPromptForWeeklyNotificationWithEvents(eventDescriptions);
+    let title = "✨ Your week of possibilities";
+    let link = "/feed";
+
+    if (upcomingEvents.length < 3) {
+      // Fetch public events if user has less than 3 upcoming events
+      const publicEvents = await db
+        .select()
+        .from(events)
+        .where(
+          and(
+            ne(events.userId, user.userId),
+            gt(events.startDateTime, now),
+            lt(events.endDateTime, oneWeekFromNow),
+            eq(events.visibility, "public"),
+          ),
+        )
+        .limit(20);
+
+      eventDescriptions = publicEvents
+        .map((event) => {
+          const eventData = event.event as AddToCalendarButtonProps;
+          const startDate = eventData.startDate;
+          const dayOfWeek = startDate
+            ? new Date(startDate).toLocaleDateString("en-US", {
+                weekday: "short",
+              })
+            : "?";
+          return `${dayOfWeek}: ${eventData.name} ${eventData.description}`;
+        })
+        .join(" NEXT EVENT ");
+
+      prompt = getPromptForWeeklyNotificationWithDiscover(eventDescriptions);
+      title = "✨ Discover this week";
+      link = "/discover";
+    }
+
+    const trace = langfuse.trace({
+      name: "sendWeeklyNotifications",
+      userId: user.userId,
+      input: eventDescriptions,
+    });
+
+    const generation = trace.generation({
+      name: "generateWeeklyNotification",
+      input: eventDescriptions,
+      model: "claude-3-5-sonnet-20240620",
+    });
+
+    generation.update({
+      completionStartTime: new Date(),
+    });
+
+    const { text: summary } = await generateText({
+      // @ts-expect-error need to update ai sdk
+      model: anthropic("claude-3-5-sonnet-20240620"),
+      prompt,
+      temperature: 0,
+      maxTokens: 1000,
+    });
+
+    generation.end({
+      output: summary,
+    });
+
+    generation.score({
+      name: "notificationGeneration",
+      value: summary ? 1 : 0,
+    });
+
+    trace.update({
+      output: summary,
+      metadata: {
+        eventDescriptions,
+      },
+    });
+
+    const prefix = "From other Soonlist users:";
+    const message = `${prefix} ${summary}`;
+
+    if (Expo.isExpoPushToken(user.expoPushToken)) {
+      const [ticket] = await expo.sendPushNotificationsAsync([
+        {
+          to: user.expoPushToken,
+          sound: "default",
+          title,
+          body: message,
+          data: { url: link },
+        },
+      ]);
+      return { success: true, ticket };
+    }
+  } catch (error) {
+    console.error(`Error processing user ${user.userId}:`, error);
+    return { success: false, error: (error as Error).message };
+  } finally {
+    // Use waitUntil for non-blocking Langfuse flush
+    waitUntil(langfuse.flushAsync());
+  }
+}
+
 export const notificationRouter = createTRPCRouter({
   sendSingleNotification: publicProcedure
     .input(sendNotificationInputSchema)
@@ -68,9 +272,6 @@ export const notificationRouter = createTRPCRouter({
     }),
 
   sendWeeklyNotifications: publicProcedure.mutation(async () => {
-    const now = new Date();
-    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
     // Fetch all users with valid push tokens
     const usersWithTokens = await db
       .select({
@@ -86,224 +287,41 @@ export const notificationRouter = createTRPCRouter({
         sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
       );
 
-    const messages: ExpoPushMessage[] = [];
-    const errors: { userId: string; error: string }[] = [];
-
-    for (const user of usersWithTokens) {
-      try {
-        // Fetch upcoming events for the user
-        const upcomingEvents = await db
-          .select()
-          .from(events)
-          .where(
-            and(
-              or(
-                eq(events.userId, user.userId),
-                inArray(
-                  events.id,
-                  db
-                    .select({ eventId: eventFollows.eventId })
-                    .from(eventFollows)
-                    .where(eq(eventFollows.userId, user.userId)),
-                ),
-              ),
-              gt(events.startDateTime, now),
-              lt(events.endDateTime, oneWeekFromNow),
-            ),
-          );
-
-        let eventDescriptions = upcomingEvents
-          .map((event) => {
-            const eventData = event.event as AddToCalendarButtonProps;
-            return `${eventData.name} ${eventData.description}`;
-          })
-          .join(" NEXT EVENT ");
-
-        let prompt = `You are tasked with creating an exciting and rich notification for a user's upcoming week based on their saved events. Your goal is to generate a concise, engaging message that fits into a single notification and captures the essence of the week's possibilities.
-
-Here is the list of events for the upcoming week separated by "NEXT EVENT":
-<events>
-${eventDescriptions}
-</events>
-
-Follow these steps to create the notification:
-
-1. For each event, identify the most specific and evocative single-word adjective-noun pairs that uniquely apply to that event. Be creative and don't hesitate to use esoteric or simple adjectives.
-
-2. From the list of adjective-noun pairs you've generated, select the top three that would provide the most complete abstract picture of the week's possibilities. These should be diverse and capture different aspects of the events.
-
-3. For each specific event, create a highlight using a verb + specific noun form. Be super succinct and focus on the most exciting and unique action elements. Include all events in this list.
-
-4. Format your output as follows:
-   - Start with the three selected adjective-noun pairs, each preceded by a relevant emoji
-   - Add the 🔜 emoji as a separator (no new lines)
-   - List the event highlights without emojis
-
-5. Use Spotify's Daylists as inspiration for the tone and style. Incorporate uncommon emojis where appropriate.
-
-6. Ensure the entire message fits into a single notification. Do not include "THIS WEEK" or any other preface. Begin directly with the adjective-noun pairs.
-
-Example output:
-🧠 Cerebral discussions, 🌀 Mesmerizing animations, 🎭 Avant-garde showcases 🔜 Meditate at William Basinski, converse at UX book, dance gracefully at StepsPDX
-
-Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
-
-        let title = "✨ Your week of possibilities";
-        let link = "/feed";
-
-        if (upcomingEvents.length < 3) {
-          // Fetch public events if user has less than 3 upcoming events
-          const publicEvents = await db
-            .select()
-            .from(events)
-            .where(
-              and(
-                ne(events.userId, user.userId),
-                gt(events.startDateTime, now),
-                lt(events.endDateTime, oneWeekFromNow),
-                eq(events.visibility, "public"),
-              ),
-            )
-            .limit(20);
-
-          eventDescriptions = publicEvents
-            .map((event) => {
-              const eventData = event.event as AddToCalendarButtonProps;
-              const startDate = eventData.startDate; // YYYY-MM-DD format
-              const dayOfWeek = startDate
-                ? new Date(startDate).toLocaleDateString("en-US", {
-                    weekday: "short",
-                  })
-                : "?";
-              return `${dayOfWeek}: ${eventData.name} ${eventData.description}`;
-            })
-            .join(" NEXT EVENT ");
-
-          prompt = `You are tasked with creating an exciting and rich notification of events other users have posted to Soonlist
-
-Here is the list of events for the upcoming week separated by "NEXT EVENT":
-<events>
-${eventDescriptions}
-</events>
-
-Follow these steps to create the notification:
-
-1. For each event, identify the most specific and evocative single-word adjective-noun pairs that uniquely apply to that event. Be creative and don't hesitate to use esoteric or simple adjectives.
-
-2. Use Spotify's Daylists as inspiration for the tone and style. Incorporate uncommon emojis where appropriate.
-
-3. Do not preface or include anything other than the adjective-noun pairs.
-
-4. Add the abbreviated day of the week in parenthesis (e.g. Mon, Tue) after each adjective-noun pair.
-
-Example output:
-🧠 Cerebral discussions (Mon), 🌀 Mesmerizing animations (Tue), 🎭 Avant-garde showcases (Tue), 🤹‍♂️ Quirky performances (Wed), 🛹 Skateboarding prowess (Wed), 🖼️ Handmade marvels (Thu), ♻️ Upcycled elegance (Thu), 💃 Pulsating dancefloors (Fri), 📚 Intellectual discourses (Fri), 🕰️ Retro-inspired revelry (Sat), 🦉 Ornithological wonders (Sun)
-
-Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
-
-          title = "✨ Discover this week";
-          link = "/discover";
-        }
-
-        const trace = langfuse.trace({
-          name: "sendWeeklyNotifications",
-          userId: user.userId,
-          input: eventDescriptions,
-        });
-
-        const generation = trace.generation({
-          name: "generateWeeklyNotification",
-          input: eventDescriptions,
-          model: "claude-3-5-sonnet-20240620",
-        });
-
-        generation.update({
-          completionStartTime: new Date(),
-        });
-
+    // Process notifications concurrently
+    const results = await Promise.all(
+      usersWithTokens.map(async (user) => {
         try {
-          const { text: summary } = await generateText({
-            // @ts-expect-error need to update ai sdk
-            model: anthropic("claude-3-5-sonnet-20240620"),
-            prompt,
-            temperature: 0,
-            maxTokens: 1000,
-          });
-
-          generation.end({
-            output: summary,
-          });
-
-          generation.score({
-            name: "notificationGeneration",
-            value: summary ? 1 : 0,
-          });
-
-          trace.update({
-            output: summary,
-            metadata: {
-              eventDescriptions,
-            },
-          });
-
-          // prefix with From other Soonlist users:
-          const prefix = "From other Soonlist users:";
-          const message = `${prefix} ${summary}`;
-
-          // Prepare the notification message for this user
-          if (Expo.isExpoPushToken(user.expoPushToken)) {
-            messages.push({
-              to: user.expoPushToken,
-              sound: "default",
-              title,
-              body: message,
-              data: { url: link },
-            });
+          const result = await processUserNotification(user);
+          // handle undefined result
+          if (!result) {
+            return { userId: user.userId, success: false, error: "No result" };
           }
+          return { userId: user.userId, ...result };
         } catch (error) {
-          console.error(
-            `Error generating notification for user ${user.userId}:`,
-            error,
-          );
-
-          generation.score({
-            name: "notificationGeneration",
-            value: 0,
-          });
-
-          trace.update({
-            output: null,
-            metadata: {
-              error: (error as Error).message,
-            },
-          });
-
-          errors.push({ userId: user.userId, error: (error as Error).message });
-        } finally {
-          // Use waitUntil for non-blocking Langfuse flush
-          waitUntil(langfuse.flushAsync());
+          return {
+            userId: user.userId,
+            success: false,
+            error: (error as Error).message,
+          };
         }
-      } catch (error) {
-        console.error(`Error processing user ${user.userId}:`, error);
-        errors.push({ userId: user.userId, error: (error as Error).message });
-      }
-    }
+      }),
+    );
 
-    // Send all notifications in a single batch
-    try {
-      const chunks = expo.chunkPushNotifications(messages);
-      for (const chunk of chunks) {
-        await expo.sendPushNotificationsAsync(chunk);
-      }
-    } catch (error) {
-      console.error("Error sending notifications:", error);
-      errors.push({ userId: "batch", error: (error as Error).message });
-    }
+    // Analyze results
+    const successfulNotifications = results.filter(
+      (result) => result.success,
+    ).length;
+    const errors = results
+      .filter(
+        (result): result is { userId: string; success: false; error: string } =>
+          !result.success,
+      )
+      .map(({ userId, error }) => ({ userId, error }));
 
     return {
       success: true,
       totalProcessed: usersWithTokens.length,
-      successfulNotifications: messages.length,
+      successfulNotifications,
       errors: errors.length > 0 ? errors : undefined,
     };
   }),
