@@ -87,37 +87,39 @@ export const notificationRouter = createTRPCRouter({
       );
 
     const messages: ExpoPushMessage[] = [];
+    const errors: { userId: string; error: string }[] = [];
 
     for (const user of usersWithTokens) {
-      // Fetch upcoming events for the user
-      const upcomingEvents = await db
-        .select()
-        .from(events)
-        .where(
-          and(
-            or(
-              eq(events.userId, user.userId),
-              inArray(
-                events.id,
-                db
-                  .select({ eventId: eventFollows.eventId })
-                  .from(eventFollows)
-                  .where(eq(eventFollows.userId, user.userId)),
+      try {
+        // Fetch upcoming events for the user
+        const upcomingEvents = await db
+          .select()
+          .from(events)
+          .where(
+            and(
+              or(
+                eq(events.userId, user.userId),
+                inArray(
+                  events.id,
+                  db
+                    .select({ eventId: eventFollows.eventId })
+                    .from(eventFollows)
+                    .where(eq(eventFollows.userId, user.userId)),
+                ),
               ),
+              gt(events.startDateTime, now),
+              lt(events.endDateTime, oneWeekFromNow),
             ),
-            gt(events.startDateTime, now),
-            lt(events.endDateTime, oneWeekFromNow),
-          ),
-        );
+          );
 
-      let eventDescriptions = upcomingEvents
-        .map((event) => {
-          const eventData = event.event as AddToCalendarButtonProps;
-          return `${eventData.name} ${eventData.description}`;
-        })
-        .join(" NEXT EVENT ");
+        let eventDescriptions = upcomingEvents
+          .map((event) => {
+            const eventData = event.event as AddToCalendarButtonProps;
+            return `${eventData.name} ${eventData.description}`;
+          })
+          .join(" NEXT EVENT ");
 
-      let prompt = `You are tasked with creating an exciting and rich notification for a user's upcoming week based on their saved events. Your goal is to generate a concise, engaging message that fits into a single notification and captures the essence of the week's possibilities.
+        let prompt = `You are tasked with creating an exciting and rich notification for a user's upcoming week based on their saved events. Your goal is to generate a concise, engaging message that fits into a single notification and captures the essence of the week's possibilities.
 
 Here is the list of events for the upcoming week separated by "NEXT EVENT":
 <events>
@@ -146,38 +148,38 @@ Example output:
 
 Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
 
-      let title = "✨ Your week of possibilities";
-      let link = "/feed";
+        let title = "✨ Your week of possibilities";
+        let link = "/feed";
 
-      if (upcomingEvents.length < 3) {
-        // Fetch public events if user has less than 3 upcoming events
-        const publicEvents = await db
-          .select()
-          .from(events)
-          .where(
-            and(
-              ne(events.userId, user.userId),
-              gt(events.startDateTime, now),
-              lt(events.endDateTime, oneWeekFromNow),
-              eq(events.visibility, "public"),
-            ),
-          )
-          .limit(20);
+        if (upcomingEvents.length < 3) {
+          // Fetch public events if user has less than 3 upcoming events
+          const publicEvents = await db
+            .select()
+            .from(events)
+            .where(
+              and(
+                ne(events.userId, user.userId),
+                gt(events.startDateTime, now),
+                lt(events.endDateTime, oneWeekFromNow),
+                eq(events.visibility, "public"),
+              ),
+            )
+            .limit(20);
 
-        eventDescriptions = publicEvents
-          .map((event) => {
-            const eventData = event.event as AddToCalendarButtonProps;
-            const startDate = eventData.startDate; // YYYY-MM-DD format
-            const dayOfWeek = startDate
-              ? new Date(startDate).toLocaleDateString("en-US", {
-                  weekday: "short",
-                })
-              : "?";
-            return `${dayOfWeek}: ${eventData.name} ${eventData.description}`;
-          })
-          .join(" NEXT EVENT ");
+          eventDescriptions = publicEvents
+            .map((event) => {
+              const eventData = event.event as AddToCalendarButtonProps;
+              const startDate = eventData.startDate; // YYYY-MM-DD format
+              const dayOfWeek = startDate
+                ? new Date(startDate).toLocaleDateString("en-US", {
+                    weekday: "short",
+                  })
+                : "?";
+              return `${dayOfWeek}: ${eventData.name} ${eventData.description}`;
+            })
+            .join(" NEXT EVENT ");
 
-        prompt = `You are tasked with creating an exciting and rich notification of events other users have posted to Soonlist
+          prompt = `You are tasked with creating an exciting and rich notification of events other users have posted to Soonlist
 
 Here is the list of events for the upcoming week separated by "NEXT EVENT":
 <events>
@@ -199,86 +201,91 @@ Example output:
 
 Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
 
-        title = "✨ Discover this week";
-        link = "/discover";
-      }
+          title = "✨ Discover this week";
+          link = "/discover";
+        }
 
-      const trace = langfuse.trace({
-        name: "sendWeeklyNotifications",
-        userId: user.userId,
-        input: eventDescriptions,
-      });
-
-      const generation = trace.generation({
-        name: "generateWeeklyNotification",
-        input: eventDescriptions,
-        model: "claude-3-5-sonnet-20240620",
-      });
-
-      generation.update({
-        completionStartTime: new Date(),
-      });
-
-      try {
-        const { text: summary } = await generateText({
-          // @ts-expect-error need to update ai sdk
-          model: anthropic("claude-3-5-sonnet-20240620"),
-          prompt,
-          temperature: 0,
-          maxTokens: 1000,
+        const trace = langfuse.trace({
+          name: "sendWeeklyNotifications",
+          userId: user.userId,
+          input: eventDescriptions,
         });
 
-        generation.end({
-          output: summary,
+        const generation = trace.generation({
+          name: "generateWeeklyNotification",
+          input: eventDescriptions,
+          model: "claude-3-5-sonnet-20240620",
         });
 
-        generation.score({
-          name: "notificationGeneration",
-          value: summary ? 1 : 0,
+        generation.update({
+          completionStartTime: new Date(),
         });
 
-        trace.update({
-          output: summary,
-          metadata: {
-            eventDescriptions,
-          },
-        });
-
-        // prefix with From other Soonlist users:
-        const prefix = "From other Soonlist users:";
-        const message = `${prefix} ${summary}`;
-
-        // Prepare the notification message for this user
-        if (Expo.isExpoPushToken(user.expoPushToken)) {
-          messages.push({
-            to: user.expoPushToken,
-            sound: "default",
-            title,
-            body: message,
-            data: { url: link },
+        try {
+          const { text: summary } = await generateText({
+            // @ts-expect-error need to update ai sdk
+            model: anthropic("claude-3-5-sonnet-20240620"),
+            prompt,
+            temperature: 0,
+            maxTokens: 1000,
           });
+
+          generation.end({
+            output: summary,
+          });
+
+          generation.score({
+            name: "notificationGeneration",
+            value: summary ? 1 : 0,
+          });
+
+          trace.update({
+            output: summary,
+            metadata: {
+              eventDescriptions,
+            },
+          });
+
+          // prefix with From other Soonlist users:
+          const prefix = "From other Soonlist users:";
+          const message = `${prefix} ${summary}`;
+
+          // Prepare the notification message for this user
+          if (Expo.isExpoPushToken(user.expoPushToken)) {
+            messages.push({
+              to: user.expoPushToken,
+              sound: "default",
+              title,
+              body: message,
+              data: { url: link },
+            });
+          }
+        } catch (error) {
+          console.error(
+            `Error generating notification for user ${user.userId}:`,
+            error,
+          );
+
+          generation.score({
+            name: "notificationGeneration",
+            value: 0,
+          });
+
+          trace.update({
+            output: null,
+            metadata: {
+              error: (error as Error).message,
+            },
+          });
+
+          errors.push({ userId: user.userId, error: (error as Error).message });
+        } finally {
+          // Use waitUntil for non-blocking Langfuse flush
+          waitUntil(langfuse.flushAsync());
         }
       } catch (error) {
-        console.error(
-          "An error occurred while generating the notification:",
-          error,
-        );
-
-        generation.score({
-          name: "notificationGeneration",
-          value: 0,
-        });
-
-        trace.update({
-          output: null,
-          metadata: {
-            error: (error as Error).message,
-          },
-        });
-
-        throw error;
-      } finally {
-        waitUntil(langfuse.flushAsync());
+        console.error(`Error processing user ${user.userId}:`, error);
+        errors.push({ userId: user.userId, error: (error as Error).message });
       }
     }
 
@@ -290,8 +297,14 @@ Remember to vary your output for different weeks, maintaining the exciting and u
       }
     } catch (error) {
       console.error("Error sending notifications:", error);
+      errors.push({ userId: "batch", error: (error as Error).message });
     }
 
-    return { success: true };
+    return {
+      success: true,
+      totalProcessed: usersWithTokens.length,
+      successfulNotifications: messages.length,
+      errors: errors.length > 0 ? errors : undefined,
+    };
   }),
 });
