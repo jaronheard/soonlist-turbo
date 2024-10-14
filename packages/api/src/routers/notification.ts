@@ -1,6 +1,7 @@
 import type { ExpoPushMessage } from "expo-server-sdk";
 import { Expo } from "expo-server-sdk";
 import { anthropic } from "@ai-sdk/anthropic";
+import { TRPCError } from "@trpc/server";
 import { waitUntil } from "@vercel/functions";
 import { generateText } from "ai";
 import { and, eq, gt, lt, sql } from "drizzle-orm";
@@ -271,58 +272,74 @@ export const notificationRouter = createTRPCRouter({
       }
     }),
 
-  sendWeeklyNotifications: publicProcedure.mutation(async () => {
-    // Fetch all users with valid push tokens
-    const usersWithTokens = await db
-      .select({
-        userId: pushTokens.userId,
-        expoPushToken: pushTokens.expoPushToken,
-      })
-      .from(pushTokens)
-      .innerJoin(
-        users,
-        sql`${users.id} COLLATE utf8mb4_unicode_ci = ${pushTokens.userId} COLLATE utf8mb4_unicode_ci`,
-      )
-      .where(
-        sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
+  sendWeeklyNotifications: publicProcedure
+    .input(z.object({ cronSecret: z.string() }))
+    .mutation(async ({ input }) => {
+      // Check if the provided cronSecret matches the environment variable
+      if (input.cronSecret !== process.env.CRON_SECRET) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid CRON_SECRET",
+        });
+      }
+
+      // Fetch all users with valid push tokens
+      const usersWithTokens = await db
+        .select({
+          userId: pushTokens.userId,
+          expoPushToken: pushTokens.expoPushToken,
+        })
+        .from(pushTokens)
+        .innerJoin(
+          users,
+          sql`${users.id} COLLATE utf8mb4_unicode_ci = ${pushTokens.userId} COLLATE utf8mb4_unicode_ci`,
+        )
+        .where(
+          sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
+        );
+
+      // Process notifications concurrently
+      const results = await Promise.all(
+        usersWithTokens.map(async (user) => {
+          try {
+            const result = await processUserNotification(user);
+            // handle undefined result
+            if (!result) {
+              return {
+                userId: user.userId,
+                success: false,
+                error: "No result",
+              };
+            }
+            return { userId: user.userId, ...result };
+          } catch (error) {
+            return {
+              userId: user.userId,
+              success: false,
+              error: (error as Error).message,
+            };
+          }
+        }),
       );
 
-    // Process notifications concurrently
-    const results = await Promise.all(
-      usersWithTokens.map(async (user) => {
-        try {
-          const result = await processUserNotification(user);
-          // handle undefined result
-          if (!result) {
-            return { userId: user.userId, success: false, error: "No result" };
-          }
-          return { userId: user.userId, ...result };
-        } catch (error) {
-          return {
-            userId: user.userId,
-            success: false,
-            error: (error as Error).message,
-          };
-        }
-      }),
-    );
+      // Analyze results
+      const successfulNotifications = results.filter(
+        (result) => result.success,
+      ).length;
+      const errors = results
+        .filter(
+          (
+            result,
+          ): result is { userId: string; success: false; error: string } =>
+            !result.success,
+        )
+        .map(({ userId, error }) => ({ userId, error }));
 
-    // Analyze results
-    const successfulNotifications = results.filter(
-      (result) => result.success,
-    ).length;
-    const errors = results
-      .filter(
-        (result): result is { userId: string; success: false; error: string } =>
-          !result.success,
-      )
-      .map(({ userId, error }) => ({ userId, error }));
-
-    return {
-      success: true,
-      totalProcessed: usersWithTokens.length,
-      successfulNotifications,
-      errors: errors.length > 0 ? errors : undefined,
-    };
-  }),
+      return {
+        success: true,
+        totalProcessed: usersWithTokens.length,
+        successfulNotifications,
+        errors: errors.length > 0 ? errors : undefined,
+      };
+    }),
 });
