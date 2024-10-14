@@ -167,7 +167,13 @@ Remember to vary your output for different weeks, maintaining the exciting and u
         eventDescriptions = publicEvents
           .map((event) => {
             const eventData = event.event as AddToCalendarButtonProps;
-            return `${eventData.name} ${eventData.description}`;
+            const startDate = eventData.startDate; // YYYY-MM-DD format
+            const dayOfWeek = startDate
+              ? new Date(startDate).toLocaleDateString("en-US", {
+                  weekday: "short",
+                })
+              : "?";
+            return `${dayOfWeek}: ${eventData.name} ${eventData.description}`;
           })
           .join(" NEXT EVENT ");
 
@@ -184,14 +190,16 @@ Follow these steps to create the notification:
 
 2. Use Spotify's Daylists as inspiration for the tone and style. Incorporate uncommon emojis where appropriate.
 
-3. Do not preface or add anything other than the adjective-noun pairs.
+3. Do not preface or include anything other than the adjective-noun pairs.
+
+4. Add the abbreviated day of the week in parenthesis (e.g. Mon, Tue) after each adjective-noun pair.
 
 Example output:
-🧠 Cerebral discussions, 🌀 Mesmerizing animations, 🎭 Avant-garde showcases, 🤹‍♂️ Quirky performances, 🛹 Skateboarding prowess, 🖼️ Handmade marvels, ♻️ Upcycled elegance, 💃 Pulsating dancefloors, 📚 Intellectual discourses, 🕰️ Retro-inspired revelry, 🦉 Ornithological wonders
+🧠 Cerebral discussions (Mon), 🌀 Mesmerizing animations (Tue), 🎭 Avant-garde showcases (Tue), 🤹‍♂️ Quirky performances (Wed), 🛹 Skateboarding prowess (Wed), 🖼️ Handmade marvels (Thu), ♻️ Upcycled elegance (Thu), 💃 Pulsating dancefloors (Fri), 📚 Intellectual discourses (Fri), 🕰️ Retro-inspired revelry (Sat), 🦉 Ornithological wonders (Sun)
 
 Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
 
-        title = "✨ Discover possibilities this week";
+        title = "✨ Discover this week";
         link = "/discover";
       }
 
@@ -236,13 +244,17 @@ Remember to vary your output for different weeks, maintaining the exciting and u
           },
         });
 
+        // prefix with From other Soonlist users:
+        const prefix = "From other Soonlist users:";
+        const message = `${prefix} ${summary}`;
+
         // Prepare the notification message for this user
         if (Expo.isExpoPushToken(user.expoPushToken)) {
           messages.push({
             to: user.expoPushToken,
             sound: "default",
             title,
-            body: summary,
+            body: message,
             data: { url: link },
           });
         }
