@@ -244,13 +244,17 @@ Remember to vary your output for different weeks, maintaining the exciting and u
           },
         });
 
+        // prefix with From other Soonlist users:
+        const prefix = "From other Soonlist users:";
+        const message = `${prefix} ${summary}`;
+
         // Prepare the notification message for this user
         if (Expo.isExpoPushToken(user.expoPushToken)) {
           messages.push({
             to: user.expoPushToken,
             sound: "default",
             title,
-            body: summary,
+            body: message,
             data: { url: link },
           });
         }
