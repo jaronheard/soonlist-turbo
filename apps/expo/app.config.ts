@@ -4,6 +4,7 @@ const IS_DEV = process.env.APP_VARIANT === "development";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
+  owner: "soonlist",
   name: IS_DEV ? "Soonlist (Dev)" : "Soonlist",
   slug: "timetimecc",
   scheme: IS_DEV ? "soonlist.dev" : "soonlist",
