@@ -21,7 +21,7 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
         />
 
         <Text className="mb-6 text-center text-xl">
-          All your possibilities, organized. Here's what Soonlist does:
+          Organize your possiblities. Here's what Soonlist does:
         </Text>
 
         <View className="mb-4">
