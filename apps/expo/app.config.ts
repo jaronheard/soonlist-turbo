@@ -10,7 +10,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   scheme: IS_DEV ? "soonlist.dev" : "soonlist",
   version: "1.0.1",
   orientation: "portrait",
-  icon: "./assets/icon.png",
+  icon: IS_DEV ? "./assets/icon-dev.png" : "./assets/icon.png",
   userInterfaceStyle: "light",
   splash: {
     image: "./assets/splash.png",
