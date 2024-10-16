@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { cn } from "@soonlist/ui";
 import { Button } from "@soonlist/ui/button";
 import { Input } from "@soonlist/ui/input";
 
@@ -33,15 +34,11 @@ export function EmojiPicker({ currentEmoji: initialEmoji }: EmojiPickerProps) {
   const updateUserEmoji = api.user.updateEmoji.useMutation({
     onMutate: async (newEmoji) => {
       setIsUpdating(true);
-      // Cancel any outgoing refetches so they don't overwrite our optimistic update
       await utils.user.getAllTakenEmojis.cancel();
-
-      // Optimistically update the taken emojis
       setTakenEmojis((prev) => [
         ...prev.filter((emoji) => emoji !== currentEmoji),
         ...(newEmoji.emoji ? [newEmoji.emoji] : []),
       ]);
-
       setCurrentEmoji(newEmoji.emoji);
     },
     onSuccess: () => {
@@ -49,7 +46,6 @@ export function EmojiPicker({ currentEmoji: initialEmoji }: EmojiPickerProps) {
     },
     onError: (error) => {
       toast.error(`Failed to update emoji: ${error.message}`);
-      // Revert the optimistic update
       if (emojiStatus) {
         setTakenEmojis(emojiStatus.takenEmojis);
       }
@@ -58,6 +54,7 @@ export function EmojiPicker({ currentEmoji: initialEmoji }: EmojiPickerProps) {
     onSettled: () => {
       setIsUpdating(false);
       void utils.user.getAllTakenEmojis.invalidate();
+      void utils.user.getByUsername.invalidate();
     },
   });
 
@@ -81,62 +78,52 @@ export function EmojiPicker({ currentEmoji: initialEmoji }: EmojiPickerProps) {
     (emoji) => emoji !== currentEmoji && emoji !== inputEmoji,
   );
 
-  const getEmojiStatus = () => {
-    if (!inputEmoji) return null;
-    if (emojiStatus === undefined) return "Checking availability...";
-    if (inputEmoji === currentEmoji) return "Your current emoji";
+  const getButtonText = () => {
     if (isUpdating) return "Updating...";
-    if (isEmojiAvailable) return "Available";
-    return "Already taken";
+    if (!inputEmoji) return "Enter an emoji";
+    if (emojiStatus === undefined) return "Checking...";
+    if (inputEmoji === currentEmoji) return "Current emoji";
+    if (!isEmojiAvailable) return "Already taken";
+    return currentEmoji ? "Change Emoji" : "Choose Emoji";
   };
 
+  const hasClaimedEmoji = !!currentEmoji;
+
   return (
-    <div className="flex flex-col items-center justify-center space-y-8">
-      <div className="flex flex-col items-center space-y-4">
+    <div className="flex flex-col items-center space-y-4 rounded-xl p-6">
+      <h2 className="font-heading text-2xl font-bold text-interactive-1">
+        Choose Your Signature Emoji
+      </h2>
+      <div className="flex items-center space-x-4">
         <Input
           type="text"
           value={inputEmoji}
           onChange={(e) => setInputEmoji(e.target.value)}
-          placeholder=""
-          className="h-24 w-24 text-center text-5xl"
+          className={cn({
+            "h-16 w-16 bg-white text-center text-3xl": true,
+            "ring-2 ring-interactive-1": inputEmoji === "",
+          })}
           maxLength={2}
           disabled={isUpdating}
         />
-        <div className="text-sm font-medium">
-          {getEmojiStatus() && (
-            <p
-              className={
-                getEmojiStatus() === "Already taken"
-                  ? "text-destructive"
-                  : getEmojiStatus() === "Available"
-                    ? "text-success"
-                    : "text-muted-foreground"
-              }
-            >
-              {getEmojiStatus()}
-            </p>
-          )}
-        </div>
         <Button
           onClick={handleSubmit}
           disabled={isButtonDisabled}
-          className="px-8 py-4 text-xl"
+          className="w-36"
+          size="sm"
+          variant={hasClaimedEmoji ? "outline" : "default"}
         >
-          {isUpdating
-            ? "Updating..."
-            : currentEmoji
-              ? "Change Emoji"
-              : "Choose Emoji"}
+          {getButtonText()}
         </Button>
       </div>
       {otherUsersEmojis.length > 0 && (
-        <div className="mt-4 text-center">
-          <h3 className="mb-2 text-lg font-medium text-neutral-2">
-            Claimed by others:
-          </h3>
-          <div className="flex flex-wrap justify-center gap-2">
+        <div className="text-center">
+          <p className="mb-2 text-sm font-semibold text-neutral-2">
+            Claimed by other Founding Members:
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 text-sm">
             {otherUsersEmojis.map((emoji, index) => (
-              <span key={index} className="text-2xl">
+              <span key={index} className="text-base" title="Founding Member">
                 {emoji}
               </span>
             ))}
