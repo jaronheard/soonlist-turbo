@@ -9,7 +9,7 @@ import { Button, buttonVariants } from "@soonlist/ui/button";
 
 import { CTAButtonMembership } from "./CallToActions";
 
-const excludedCTARoutes = ["/join"];
+const excludedCTARoutes = ["/join", "/sign-in", "/sign-up"];
 
 function Section({
   children,
