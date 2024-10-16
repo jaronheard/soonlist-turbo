@@ -117,7 +117,9 @@ function RootLayout() {
                       apiKey={Config.posthogApiKey}
                       options={{
                         host: "https://us.i.posthog.com",
-                        enableSessionReplay: true,
+                        disabled: process.env.APP_VARIANT === "development",
+                        enableSessionReplay:
+                          process.env.APP_VARIANT !== "development",
                         sessionReplayConfig: {
                           // Whether text inputs are masked. Default is true.
                           // Password inputs are always masked regardless
