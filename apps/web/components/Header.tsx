@@ -3,6 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   SignedIn,
   SignedOut,
@@ -84,6 +85,8 @@ export function Header() {
 
 export function Nav() {
   const { user } = useUser();
+  const pathname = usePathname();
+  const isJoinPage = pathname === "/join";
 
   return (
     <NavigationMenu>
@@ -129,12 +132,14 @@ export function Nav() {
             </Link>
           </SignedIn>
           <SignedOut>
-            <Button asChild>
-              <Link href={"/join"} scroll={false}>
-                <Ticket className="mr-2 size-4"></Ticket>
-                <span className="inline">&nbsp;Join now</span>
-              </Link>
-            </Button>
+            {!isJoinPage && (
+              <Button asChild>
+                <Link href={"/join"} scroll={false}>
+                  <Ticket className="mr-2 size-4"></Ticket>
+                  <span className="inline">&nbsp;Join now</span>
+                </Link>
+              </Button>
+            )}
           </SignedOut>
         </NavigationMenuItem>
       </NavigationMenuList>
