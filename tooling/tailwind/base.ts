@@ -6,6 +6,7 @@ export default {
   theme: {
     colors: {
       white: "#fff",
+      transparent: "transparent",
       gray: {
         100: "rgb(var(--neutral-3) / <alpha-value>)",
         200: "rgb(var(--neutral-3) / <alpha-value>)",
