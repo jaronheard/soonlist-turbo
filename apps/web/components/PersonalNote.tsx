@@ -3,8 +3,7 @@ import React from "react";
 import { cn } from "~/lib/utils";
 
 const colors = [
-  // "bg-accent-blue",
-  "bg-accent-red/40",
+  "bg-accent-blue/40",
   "bg-accent-orange/40",
   "bg-accent-green/40",
 ];

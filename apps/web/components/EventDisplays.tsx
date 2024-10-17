@@ -853,7 +853,7 @@ export function EventListItem(props: EventListItemProps) {
   return (
     <li
       className={cn(
-        "relative h-full overflow-hidden rounded-xl bg-white shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
+        "bg-white relative h-full overflow-hidden rounded-xl shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
       )}
     >
       {image && (
@@ -946,7 +946,7 @@ export function EventPreview(
   return (
     <div
       className={cn(
-        "relative grid max-w-xl overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
+        "bg-white relative grid max-w-xl overflow-hidden rounded-xl p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
       )}
     >
       <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
@@ -1013,7 +1013,7 @@ function DateAndTimeDisplay({
             {formatCompactTimeRange(startDateInfo, endDateInfo)}
           </span>
           {happeningNow && (
-            <span className="ml-1 rounded-full bg-yellow-100 px-1 text-yellow-700">
+            <span className="ml-1 rounded-full bg-accent-yellow px-1 text-interactive-1">
               Now!
             </span>
           )}{" "}

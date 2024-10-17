@@ -39,15 +39,15 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View className="flex-1 bg-red-500 px-4 py-6">
+    <View className="flex-1 bg-destructive px-4 py-6">
       <View style={{ paddingTop: insets.top }} />
-      <Text className="mb-4 text-lg font-semibold text-white">
+      <Text className="text-white mb-4 text-lg font-semibold">
         {error.message}
       </Text>
-      <Text className="text-base text-white underline" onPress={retry}>
+      <Text className="text-white text-base underline" onPress={retry}>
         Try Again
       </Text>
-      <Text className="mt-4 text-sm text-white">
+      <Text className="text-white mt-4 text-sm">
         Shake your device to open JS debugger for more details.
       </Text>
       <View style={{ paddingBottom: insets.bottom }} />

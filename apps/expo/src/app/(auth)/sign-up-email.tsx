@@ -137,7 +137,7 @@ export default function SignUpScreen() {
             Sign up for your Soonlist account
           </Text>
           {generalError ? (
-            <Text className="mb-4 text-center text-red-500">
+            <Text className="mb-4 text-center text-destructive">
               {generalError}
             </Text>
           ) : null}
@@ -149,13 +149,13 @@ export default function SignUpScreen() {
               <TextInput
                 value={firstName}
                 onChangeText={setFirstName}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                className="bg-white w-full rounded-lg border border-gray-300 px-4 py-3"
                 returnKeyType="next"
                 onSubmitEditing={() => focusNextField(lastNameRef)}
                 blurOnSubmit={false}
               />
               {firstNameError ? (
-                <Text className="mt-1 text-red-500">{firstNameError}</Text>
+                <Text className="mt-1 text-destructive">{firstNameError}</Text>
               ) : null}
             </View>
             <View className="flex-1">
@@ -166,13 +166,13 @@ export default function SignUpScreen() {
                 ref={lastNameRef}
                 value={lastName}
                 onChangeText={setLastName}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                className="bg-white w-full rounded-lg border border-gray-300 px-4 py-3"
                 returnKeyType="next"
                 onSubmitEditing={() => focusNextField(usernameRef)}
                 blurOnSubmit={false}
               />
               {lastNameError ? (
-                <Text className="mt-1 text-red-500">{lastNameError}</Text>
+                <Text className="mt-1 text-destructive">{lastNameError}</Text>
               ) : null}
             </View>
           </View>
@@ -185,13 +185,13 @@ export default function SignUpScreen() {
               autoCapitalize="none"
               value={username}
               onChangeText={setUsername}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+              className="bg-white w-full rounded-lg border border-gray-300 px-4 py-3"
               returnKeyType="next"
               onSubmitEditing={() => focusNextField(emailRef)}
               blurOnSubmit={false}
             />
             {usernameError ? (
-              <Text className="mt-1 text-red-500">{usernameError}</Text>
+              <Text className="mt-1 text-destructive">{usernameError}</Text>
             ) : null}
             <Text className="mt-1 text-sm text-gray-500">
               On Instagram? Consider using the same username
@@ -206,14 +206,14 @@ export default function SignUpScreen() {
               autoCapitalize="none"
               value={emailAddress}
               onChangeText={setEmailAddress}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+              className="bg-white w-full rounded-lg border border-gray-300 px-4 py-3"
               returnKeyType="next"
               onSubmitEditing={() => focusNextField(passwordRef)}
               blurOnSubmit={false}
               keyboardType="email-address"
             />
             {emailError ? (
-              <Text className="mt-1 text-red-500">{emailError}</Text>
+              <Text className="mt-1 text-destructive">{emailError}</Text>
             ) : null}
           </View>
           <View className="mb-6 w-full">
@@ -225,19 +225,19 @@ export default function SignUpScreen() {
               value={password}
               secureTextEntry={true}
               onChangeText={setPassword}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+              className="bg-white w-full rounded-lg border border-gray-300 px-4 py-3"
               returnKeyType="done"
               onSubmitEditing={onSignUpPress}
             />
             {passwordError ? (
-              <Text className="mt-1 text-red-500">{passwordError}</Text>
+              <Text className="mt-1 text-destructive">{passwordError}</Text>
             ) : null}
           </View>
           <Pressable
             onPress={onSignUpPress}
             className="w-full rounded-full bg-interactive-1 px-6 py-3"
           >
-            <Text className="text-center text-lg font-bold text-white">
+            <Text className="text-white text-center text-lg font-bold">
               Sign Up
             </Text>
           </Pressable>

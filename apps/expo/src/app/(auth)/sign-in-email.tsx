@@ -112,14 +112,14 @@ export default function SignInScreen() {
             value={emailAddress}
             placeholder="Email"
             onChangeText={setEmailAddress}
-            className="mb-4 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+            className="bg-white mb-4 w-full rounded-lg border border-gray-300 px-4 py-3"
             returnKeyType="next"
             onSubmitEditing={() => focusNextField(passwordRef)}
             blurOnSubmit={false}
             keyboardType="email-address"
           />
           {emailError ? (
-            <Text className="mt-1 text-red-500">{emailError}</Text>
+            <Text className="mt-1 text-destructive">{emailError}</Text>
           ) : null}
           <TextInput
             ref={passwordRef}
@@ -127,18 +127,18 @@ export default function SignInScreen() {
             placeholder="Password"
             secureTextEntry={true}
             onChangeText={setPassword}
-            className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+            className="bg-white mb-6 w-full rounded-lg border border-gray-300 px-4 py-3"
             returnKeyType="done"
             onSubmitEditing={onSignInPress}
           />
           {passwordError ? (
-            <Text className="mt-1 text-red-500">{passwordError}</Text>
+            <Text className="mt-1 text-destructive">{passwordError}</Text>
           ) : null}
           <Pressable
             onPress={onSignInPress}
             className="w-full rounded-full bg-interactive-1 px-6 py-3"
           >
-            <Text className="text-center text-lg font-bold text-white">
+            <Text className="text-white text-center text-lg font-bold">
               Sign in
             </Text>
           </Pressable>
@@ -149,7 +149,7 @@ export default function SignInScreen() {
             </Text>
           </Pressable>
           {generalError ? (
-            <Text className="mb-4 text-center text-red-500">
+            <Text className="mb-4 text-center text-destructive">
               {generalError}
             </Text>
           ) : null}

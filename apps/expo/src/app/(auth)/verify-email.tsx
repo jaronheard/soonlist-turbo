@@ -92,7 +92,7 @@ const VerifyEmail = () => {
             Please enter the verification code sent to your email.
           </Text>
           {generalError ? (
-            <Text className="mb-4 text-center text-red-500">
+            <Text className="mb-4 text-center text-destructive">
               {generalError}
             </Text>
           ) : null}
@@ -102,10 +102,10 @@ const VerifyEmail = () => {
               onChangeText={setCode}
               placeholder="Verification Code"
               keyboardType="number-pad"
-              className="mb-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+              className="bg-white mb-2 w-full rounded-lg border border-gray-300 px-4 py-3"
             />
             {codeError ? (
-              <Text className="mb-4 text-red-500">{codeError}</Text>
+              <Text className="mb-4 text-destructive">{codeError}</Text>
             ) : null}
           </View>
           <Pressable
@@ -113,7 +113,7 @@ const VerifyEmail = () => {
             disabled={isVerifying}
             className="w-full rounded-full bg-interactive-1 px-6 py-3"
           >
-            <Text className="text-center text-lg font-bold text-white">
+            <Text className="text-white text-center text-lg font-bold">
               {isVerifying ? "Verifying..." : "Verify Email"}
             </Text>
           </Pressable>

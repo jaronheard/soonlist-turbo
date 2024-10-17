@@ -6,12 +6,7 @@ import { Badge } from "@soonlist/ui/badge";
 
 import { cn } from "~/lib/utils";
 
-const colors = [
-  // "bg-accent-blue",
-  "bg-accent-red",
-  "bg-accent-orange",
-  "bg-accent-green",
-];
+const colors = ["bg-accent-blue", "bg-accent-orange", "bg-accent-green"];
 
 const getInitialsFromString = (str: string) => {
   // limit to 2 initials
@@ -52,7 +47,7 @@ export function ListCard(props: {
           href={props.id ? `/list/${props.id}` : `/${props.username}/events`}
           className={clsx(
             getRainbowColorFromString(props.name),
-            "flex h-10 w-10 items-center justify-center rounded-l-md text-lg font-bold text-white",
+            "text-white flex h-10 w-10 items-center justify-center rounded-l-md text-lg font-bold",
           )}
         >
           {getInitialsFromString(props.name)}
@@ -80,7 +75,7 @@ export function ListCard(props: {
         href={props.id ? `/list/${props.id}` : `/${props.username}/events`}
         className={clsx(
           getRainbowColorFromString(props.name),
-          "flex size-[5.375rem] flex-shrink-0 items-center justify-center rounded-l-md pt-1 font-heading text-4xl font-bold leading-none text-white",
+          "text-white flex size-[5.375rem] flex-shrink-0 items-center justify-center rounded-l-md pt-1 font-heading text-4xl font-bold leading-none",
         )}
       >
         {getInitialsFromString(props.name)}

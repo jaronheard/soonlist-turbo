@@ -43,7 +43,7 @@ export function AddListCard({ ...initialProps }: AddListCardProps) {
   );
 
   return (
-    <div className="mt-10 grid max-w-xl grid-cols-1 gap-x-6 gap-y-8 rounded-xl border bg-white p-4 shadow-md sm:grid-cols-6">
+    <div className="bg-white mt-10 grid max-w-xl grid-cols-1 gap-x-6 gap-y-8 rounded-xl border p-4 shadow-md sm:grid-cols-6">
       <div className="col-span-full">
         <label
           htmlFor="name"
@@ -52,7 +52,7 @@ export function AddListCard({ ...initialProps }: AddListCardProps) {
           Name your list
         </label>
         <div className="mt-2">
-          <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+          <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-interactive-1 sm:max-w-md">
             <Input
               type="text"
               name="name"
