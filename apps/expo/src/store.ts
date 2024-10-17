@@ -32,6 +32,7 @@ interface AppState {
   setIsImageUploading: (isUploading: boolean) => void;
   setUploadedImageUrl: (url: string | null) => void;
   resetAddEventState: () => void;
+  resetEventStateOnNewSelection: () => void;
 
   // Calendar-related state
   defaultCalendarId: string | null;
@@ -49,7 +50,7 @@ interface AppState {
 
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (status: boolean) => void;
-  resetStore: () => void; // Add this line
+  resetStore: () => void;
 
   // Add this new action
   clearCalendarData: () => void;
@@ -98,11 +99,23 @@ export const useAppStore = create<AppState>()(
           input: "",
           imagePreview: null,
           linkPreview: null,
+          isPublic: false,
           isImageLoading: false,
           isImageUploading: false,
           uploadedImageUrl: null,
           isOptionSelected: false,
           activeInput: null,
+        }),
+      resetEventStateOnNewSelection: () =>
+        set({
+          input: "",
+          imagePreview: null,
+          linkPreview: null,
+          isPublic: false,
+          isImageLoading: false,
+          isImageUploading: false,
+          uploadedImageUrl: null,
+          // Keep isOptionSelected and activeInput unchanged
         }),
 
       // Calendar-related state
@@ -122,7 +135,7 @@ export const useAppStore = create<AppState>()(
       setHasCompletedOnboarding: (status) =>
         set({ hasCompletedOnboarding: status }),
       resetStore: () =>
-        set(() => ({
+        set({
           filter: "upcoming",
           intentParams: null,
           isCalendarModalVisible: false,
@@ -139,7 +152,9 @@ export const useAppStore = create<AppState>()(
           selectedEvent: null,
           calendarUsage: {},
           hasCompletedOnboarding: false,
-        })),
+          isOptionSelected: false,
+          activeInput: null,
+        }),
       clearCalendarData: () =>
         set({
           defaultCalendarId: null,

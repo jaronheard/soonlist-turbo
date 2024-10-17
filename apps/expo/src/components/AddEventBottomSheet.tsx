@@ -102,6 +102,7 @@ const AddEventBottomSheet = React.forwardRef<
     activeInput,
     setIsOptionSelected,
     setActiveInput,
+    resetEventStateOnNewSelection,
   } = useAppStore();
 
   // Use the intent handler
@@ -483,6 +484,8 @@ const AddEventBottomSheet = React.forwardRef<
         setActiveInput(null);
         resetAddEventState();
       } else {
+        // Reset the event state before selecting the new option
+        resetEventStateOnNewSelection();
         setIsOptionSelected(true);
         setActiveInput(option);
 
@@ -505,6 +508,7 @@ const AddEventBottomSheet = React.forwardRef<
       setIsOptionSelected,
       setActiveInput,
       resetAddEventState,
+      resetEventStateOnNewSelection,
       handleCameraCapture,
       handleImageUpload,
     ],
