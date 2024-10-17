@@ -92,7 +92,7 @@ const VerifyEmail = () => {
             Please enter the verification code sent to your email.
           </Text>
           {generalError ? (
-            <Text className="mb-4 text-center text-red-500">
+            <Text className="mb-4 text-center text-destructive">
               {generalError}
             </Text>
           ) : null}
@@ -105,7 +105,7 @@ const VerifyEmail = () => {
               className="mb-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
             />
             {codeError ? (
-              <Text className="mb-4 text-red-500">{codeError}</Text>
+              <Text className="mb-4 text-destructive">{codeError}</Text>
             ) : null}
           </View>
           <Pressable

@@ -56,7 +56,7 @@ export function FollowEventDropdownButton({
         )}
         {!isLoading && following && (
           <>
-            <Heart className="mr-2 size-4 fill-current" />
+            <Heart className="fill-current mr-2 size-4" />
             Event Saved
           </>
         )}
@@ -259,11 +259,7 @@ export function FollowListButton({
   return (
     <SignedIn>
       {isLoading && (
-        <Button
-          disabled
-          size="sm"
-          className="bg-purple-100 hover:bg-purple-200"
-        >
+        <Button disabled size="sm">
           <Loader2 className="mr-2 size-4 animate-spin" />
           Please wait
         </Button>
@@ -276,7 +272,6 @@ export function FollowListButton({
               : follow.mutate({ listId: listId })
           }
           size="sm"
-          className="bg-purple-100 text-purple-700 hover:bg-purple-200"
         >
           {following && (
             <>

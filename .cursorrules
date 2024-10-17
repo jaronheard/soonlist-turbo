@@ -41,6 +41,23 @@ UI and Styling:
 - Use Shadcn UI, Radix, and Tailwind for components and styling in the Next.js app
 - Use NativeWind for styling in the Expo app
 - Implement responsive design with Tailwind CSS; use a mobile-first approach
+- Adhere to the following color palette limitations:
+
+  1. Use custom color scales (dark (1) -> light (4))and special colors:
+
+     - Neutral: neutral-1 to neutral-4
+     - Accent: accent-yellow, accent-orange, accent-blue, accent-green
+     - Interactive: interactive-1 to interactive-3
+     - White: white
+     - Black: black
+
+  2. Use Shadcn UI semantic color variables (e.g., background, foreground, primary, secondary, etc.)
+
+  3. Avoid using hardcoded color values; always use Tailwind color classes (preferred)
+
+  4. When using opacity, use Tailwind's opacity modifiers (e.g., bg-primary/50 for 50% opacity)
+
+  5. If Tailwind isn't supported, use CSS variables of the format: rgb(var(--color-name)/<alpha-value>)
 
 Key Conventions:
 

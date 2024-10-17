@@ -39,7 +39,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View className="flex-1 bg-red-500 px-4 py-6">
+    <View className="flex-1 bg-destructive px-4 py-6">
       <View style={{ paddingTop: insets.top }} />
       <Text className="mb-4 text-lg font-semibold text-white">
         {error.message}
