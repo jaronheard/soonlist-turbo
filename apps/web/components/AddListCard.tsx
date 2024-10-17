@@ -43,7 +43,7 @@ export function AddListCard({ ...initialProps }: AddListCardProps) {
   );
 
   return (
-    <div className="bg-white mt-10 grid max-w-xl grid-cols-1 gap-x-6 gap-y-8 rounded-xl border p-4 shadow-md sm:grid-cols-6">
+    <div className="mt-10 grid max-w-xl grid-cols-1 gap-x-6 gap-y-8 rounded-xl border bg-white p-4 shadow-md sm:grid-cols-6">
       <div className="col-span-full">
         <label
           htmlFor="name"

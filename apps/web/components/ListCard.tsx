@@ -47,7 +47,7 @@ export function ListCard(props: {
           href={props.id ? `/list/${props.id}` : `/${props.username}/events`}
           className={clsx(
             getRainbowColorFromString(props.name),
-            "text-white flex h-10 w-10 items-center justify-center rounded-l-md text-lg font-bold",
+            "flex h-10 w-10 items-center justify-center rounded-l-md text-lg font-bold text-white",
           )}
         >
           {getInitialsFromString(props.name)}
@@ -75,7 +75,7 @@ export function ListCard(props: {
         href={props.id ? `/list/${props.id}` : `/${props.username}/events`}
         className={clsx(
           getRainbowColorFromString(props.name),
-          "text-white flex size-[5.375rem] flex-shrink-0 items-center justify-center rounded-l-md pt-1 font-heading text-4xl font-bold leading-none",
+          "flex size-[5.375rem] flex-shrink-0 items-center justify-center rounded-l-md pt-1 font-heading text-4xl font-bold leading-none text-white",
         )}
       >
         {getInitialsFromString(props.name)}

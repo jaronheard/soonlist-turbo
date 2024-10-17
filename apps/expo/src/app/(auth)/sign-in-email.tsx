@@ -112,7 +112,7 @@ export default function SignInScreen() {
             value={emailAddress}
             placeholder="Email"
             onChangeText={setEmailAddress}
-            className="bg-white mb-4 w-full rounded-lg border border-gray-300 px-4 py-3"
+            className="mb-4 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
             returnKeyType="next"
             onSubmitEditing={() => focusNextField(passwordRef)}
             blurOnSubmit={false}
@@ -127,7 +127,7 @@ export default function SignInScreen() {
             placeholder="Password"
             secureTextEntry={true}
             onChangeText={setPassword}
-            className="bg-white mb-6 w-full rounded-lg border border-gray-300 px-4 py-3"
+            className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
             returnKeyType="done"
             onSubmitEditing={onSignInPress}
           />
@@ -138,7 +138,7 @@ export default function SignInScreen() {
             onPress={onSignInPress}
             className="w-full rounded-full bg-interactive-1 px-6 py-3"
           >
-            <Text className="text-white text-center text-lg font-bold">
+            <Text className="text-center text-lg font-bold text-white">
               Sign in
             </Text>
           </Pressable>

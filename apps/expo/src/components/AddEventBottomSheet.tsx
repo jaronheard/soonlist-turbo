@@ -455,7 +455,7 @@ const AddEventBottomSheet = React.forwardRef<
             disabled={isCreateButtonDisabled}
           >
             <Sparkles size={16} color="white" />
-            <Text className="text-white ml-2 text-xl font-bold">
+            <Text className="ml-2 text-xl font-bold text-white">
               Capture event
             </Text>
           </TouchableOpacity>
@@ -632,7 +632,7 @@ const AddEventBottomSheet = React.forwardRef<
               </View>
               <TouchableOpacity
                 onPress={clearPreview}
-                className="bg-white absolute right-2 top-2 rounded-full p-1"
+                className="absolute right-2 top-2 rounded-full bg-white p-1"
               >
                 <X size={16} color="black" />
               </TouchableOpacity>

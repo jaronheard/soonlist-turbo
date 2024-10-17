@@ -102,7 +102,7 @@ const VerifyEmail = () => {
               onChangeText={setCode}
               placeholder="Verification Code"
               keyboardType="number-pad"
-              className="bg-white mb-2 w-full rounded-lg border border-gray-300 px-4 py-3"
+              className="mb-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
             />
             {codeError ? (
               <Text className="mb-4 text-destructive">{codeError}</Text>
@@ -113,7 +113,7 @@ const VerifyEmail = () => {
             disabled={isVerifying}
             className="w-full rounded-full bg-interactive-1 px-6 py-3"
           >
-            <Text className="text-white text-center text-lg font-bold">
+            <Text className="text-center text-lg font-bold text-white">
               {isVerifying ? "Verifying..." : "Verify Email"}
             </Text>
           </Pressable>

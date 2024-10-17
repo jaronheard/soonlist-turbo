@@ -41,13 +41,13 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
     <View className="flex-1 bg-destructive px-4 py-6">
       <View style={{ paddingTop: insets.top }} />
-      <Text className="text-white mb-4 text-lg font-semibold">
+      <Text className="mb-4 text-lg font-semibold text-white">
         {error.message}
       </Text>
-      <Text className="text-white text-base underline" onPress={retry}>
+      <Text className="text-base text-white underline" onPress={retry}>
         Try Again
       </Text>
-      <Text className="text-white mt-4 text-sm">
+      <Text className="mt-4 text-sm text-white">
         Shake your device to open JS debugger for more details.
       </Text>
       <View style={{ paddingBottom: insets.bottom }} />

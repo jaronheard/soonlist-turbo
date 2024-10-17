@@ -853,7 +853,7 @@ export function EventListItem(props: EventListItemProps) {
   return (
     <li
       className={cn(
-        "bg-white relative h-full overflow-hidden rounded-xl shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
+        "relative h-full overflow-hidden rounded-xl bg-white shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
       )}
     >
       {image && (
@@ -946,7 +946,7 @@ export function EventPreview(
   return (
     <div
       className={cn(
-        "bg-white relative grid max-w-xl overflow-hidden rounded-xl p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
+        "relative grid max-w-xl overflow-hidden rounded-xl bg-white p-7 shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
       )}
     >
       <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>

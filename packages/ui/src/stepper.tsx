@@ -42,13 +42,13 @@ function Stepper({ steps }: StepperProps) {
                 {step.onClick ? (
                   <button
                     onClick={step.onClick}
-                    className="bg-white relative block p-0.5"
+                    className="relative block bg-white p-0.5"
                     disabled={step.disabled}
                   >
                     <div className="flex h-4 w-4 items-center justify-center rounded-full bg-success hover:bg-interactive-1">
                       <CheckIcon
                         aria-hidden="true"
-                        className="text-white mt-[0.05rem] h-3 w-3"
+                        className="mt-[0.05rem] h-3 w-3 text-white"
                       />
                       <span className="absolute -bottom-8 font-medium text-neutral-2">
                         {step.name}
@@ -56,11 +56,11 @@ function Stepper({ steps }: StepperProps) {
                     </div>
                   </button>
                 ) : (
-                  <a className="bg-white relative block p-0.5" href={step.href}>
+                  <a className="relative block bg-white p-0.5" href={step.href}>
                     <div className="flex h-4 w-4 items-center justify-center rounded-full bg-success hover:bg-interactive-1">
                       <CheckIcon
                         aria-hidden="true"
-                        className="text-white mt-[0.05rem] h-3 w-3"
+                        className="mt-[0.05rem] h-3 w-3 text-white"
                       />
                       <span className="absolute -bottom-8 font-medium text-neutral-2">
                         {step.name}
@@ -81,7 +81,7 @@ function Stepper({ steps }: StepperProps) {
                   <button
                     onClick={step.onClick}
                     aria-current="step"
-                    className="bg-white relative block p-0.5"
+                    className="relative block bg-white p-0.5"
                     disabled={step.disabled}
                   >
                     <div className="flex h-4 w-4 items-center justify-center rounded-full border-4 border-interactive-1 bg-neutral-3">
@@ -94,7 +94,7 @@ function Stepper({ steps }: StepperProps) {
                   <a
                     href={step.href}
                     aria-current="step"
-                    className="bg-white relative block p-0.5"
+                    className="relative block bg-white p-0.5"
                   >
                     <div className="flex h-4 w-4 items-center justify-center rounded-full border-4 border-interactive-1 bg-neutral-3">
                       <span className="absolute -bottom-8 font-bold text-interactive-1">
