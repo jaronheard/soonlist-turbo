@@ -137,8 +137,12 @@ async function processUserNotification(user: {
     let prompt = getPromptForWeeklyNotificationWithEvents(eventDescriptions);
     let title = "✨ Your week of possibilities";
     let link = "/feed";
+    let prefix = "";
 
     if (upcomingEvents.length < 3) {
+      title = "✨ Discover this week";
+      link = "/discover";
+      prefix = "From other Soonlist users: ";
       // Fetch public events if user has less than 3 upcoming events
       const publicEvents = await db
         .select()
@@ -167,8 +171,6 @@ async function processUserNotification(user: {
         .join(" NEXT EVENT ");
 
       prompt = getPromptForWeeklyNotificationWithDiscover(eventDescriptions);
-      title = "✨ Discover this week";
-      link = "/discover";
     }
 
     const trace = langfuse.trace({
@@ -211,8 +213,7 @@ async function processUserNotification(user: {
       },
     });
 
-    const prefix = "From other Soonlist users:";
-    const message = `${prefix} ${summary}`;
+    const message = `${prefix}${summary}`;
 
     if (Expo.isExpoPushToken(user.expoPushToken)) {
       const [ticket] = await expo.sendPushNotificationsAsync([
