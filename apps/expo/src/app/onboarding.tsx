@@ -1,8 +1,8 @@
 import React from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 
-import { Onboarding } from "~/components/Onboarding";
+import { StoryOnboarding } from "~/components/StoryOnboarding";
 import { useAppStore } from "~/store";
 
 export default function OnboardingScreen() {
@@ -19,11 +19,9 @@ export default function OnboardingScreen() {
   return (
     <View style={{ flex: 1 }}>
       <Stack.Screen
-        options={{ title: "About Soonlist", headerBackVisible: false }}
+        options={{ title: "Welcome to Soonlist", headerBackVisible: false }}
       />
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <Onboarding onComplete={handleOnboardingComplete} />
-      </ScrollView>
+      <StoryOnboarding />
     </View>
   );
 }
