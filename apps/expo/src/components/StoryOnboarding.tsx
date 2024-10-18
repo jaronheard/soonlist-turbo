@@ -21,26 +21,26 @@ const storySlides: StorySlide[] = [
       require("../assets/Miroodles - Color Comp.png") as ImageSourcePropType,
   },
   {
-    title: "See them all in one place",
-    description: "All your possibilities, automatically organized.",
+    title: "See events all in one place",
+    description: "All your possibilities, automatically organized",
     imageUrl:
       require("../assets/Miroodles - Color Comp (1).png") as ImageSourcePropType,
   },
   {
-    title: "For you, to share if you want",
-    description: "Private by default, share or make discoverable.",
+    title: "Share events, if you want",
+    description: "Private by default, share or make discoverable",
     imageUrl:
       require("../assets/Miroodles - Color Comp (2).png") as ImageSourcePropType,
   },
+  // {
+  //   title: "We're here to help",
+  //   description: "Soonlist is new, and we're working to make it better.",
+  //   imageUrl:
+  //     require("../assets/Miroodles - Color Comp (3).png") as ImageSourcePropType,
+  // },
   {
-    title: "We're here to help",
-    description: "Soonlist is new, and we're working to make it better.",
-    imageUrl:
-      require("../assets/Miroodles - Color Comp (3).png") as ImageSourcePropType,
-  },
-  {
-    title: "Have an event to capture?",
-    description: "Bring it to mind, and we'll wait for you!",
+    title: "Capture your first event",
+    description: "Get ready with a screenshot, flyer, or link",
     imageUrl:
       require("../assets/Miroodles - Color Comp (4).png") as ImageSourcePropType,
   },
