@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+import type { ImageSourcePropType } from "react-native";
 import React, { useRef, useState } from "react";
 import { Dimensions, FlatList, Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
@@ -8,35 +10,39 @@ import { useAppStore } from "~/store";
 interface StorySlide {
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl: ImageSourcePropType;
 }
 
 const storySlides: StorySlide[] = [
   {
-    title: "Capture everything you see.",
-    description:
-      "Whether it's a concert, a hangout, or a special event, capture it all.",
-    imageUrl: "placeholder_image_1.png",
+    title: "Capture all the events you see",
+    description: "Save screenshots, flyers, or links in seconds",
+    imageUrl:
+      require("../assets/Miroodles - Color Comp.png") as ImageSourcePropType,
   },
   {
-    title: "See it all in one place",
-    description: "Automatically organized, always accessible.",
-    imageUrl: "placeholder_image_2.png",
+    title: "See them all in one place",
+    description: "All your possibilities, automatically organized.",
+    imageUrl:
+      require("../assets/Miroodles - Color Comp (1).png") as ImageSourcePropType,
   },
   {
     title: "For you, to share if you want",
-    description: "Keep private, share with a friend, or make discoverable.",
-    imageUrl: "placeholder_image_3.png",
+    description: "Private by default, share or make discoverable.",
+    imageUrl:
+      require("../assets/Miroodles - Color Comp (2).png") as ImageSourcePropType,
   },
   {
     title: "We're here to help",
     description: "Soonlist is new, and we're working to make it better.",
-    imageUrl: "placeholder_image_4.png",
+    imageUrl:
+      require("../assets/Miroodles - Color Comp (3).png") as ImageSourcePropType,
   },
   {
-    title: "Do you have an event to capture?",
-    description: "Bring to mind the last interesting event you saw.",
-    imageUrl: "placeholder_image_5.png",
+    title: "Have an event to capture?",
+    description: "Bring it to mind, and we'll wait for you!",
+    imageUrl:
+      require("../assets/Miroodles - Color Comp (4).png") as ImageSourcePropType,
   },
 ];
 
@@ -58,7 +64,7 @@ export function StoryOnboarding() {
       });
     } else {
       setHasCompletedOnboarding(true);
-      router.replace("/add-event");
+      router.replace("/feed");
     }
   };
 
@@ -74,7 +80,7 @@ export function StoryOnboarding() {
           source={item.imageUrl}
           style={{ width: SCREEN_WIDTH - 40, height: SCREEN_WIDTH - 40 }}
           contentFit="contain"
-          className="mb-4"
+          className="mb-8 mt-32"
         />
         <Text className="text-center text-3xl font-bold text-neutral-1">
           {item.title}
@@ -119,7 +125,7 @@ export function StoryOnboarding() {
             className="rounded-full bg-interactive-1 px-6 py-3"
           >
             <Text className="text-center text-lg font-bold text-white">
-              {currentSlide < storySlides.length - 1 ? "Next" : "Get Started"}
+              {currentSlide < storySlides.length - 1 ? "Next" : "I'm Ready!"}
             </Text>
           </Pressable>
           {currentSlide < storySlides.length - 1 && (
