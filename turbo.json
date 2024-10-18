@@ -32,6 +32,7 @@
       "cache": false
     },
     "format": {
+      "dependsOn": ["^topo", "^build"],
       "outputs": [".cache/.prettiercache"],
       "outputLogs": "new-only"
     },
