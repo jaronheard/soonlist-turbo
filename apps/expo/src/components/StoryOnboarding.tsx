@@ -75,12 +75,11 @@ export function StoryOnboarding() {
 
   const renderSlide = ({ item }: { item: StorySlide }) => (
     <View style={{ width: SCREEN_WIDTH, padding: 20 }}>
-      <View className="items-center space-y-8">
+      <View className="mt-20 items-center space-y-8">
         <Image
           source={item.imageUrl}
           style={{ width: SCREEN_WIDTH - 40, height: SCREEN_WIDTH - 40 }}
           contentFit="contain"
-          className="mb-8 mt-32"
         />
         <Text className="text-center text-3xl font-bold text-neutral-1">
           {item.title}
