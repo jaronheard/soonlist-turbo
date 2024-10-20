@@ -68,9 +68,9 @@ function UserProfileForm({
     defaultValue: string | undefined,
   ) => {
     if (value && value === defaultValue) {
-      return <Check className="ml-2 h-4 w-4 text-accent-green" />;
+      return <Check className="ml-2 h-4 w-4 text-green-500" />;
     } else if (value && value !== defaultValue) {
-      return <Pen className="ml-2 h-4 w-4 text-accent-blue" />;
+      return <Pen className="ml-2 h-4 w-4 text-blue-500" />;
     }
     return null;
   };

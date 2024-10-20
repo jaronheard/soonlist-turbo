@@ -45,7 +45,7 @@ function Stepper({ steps }: StepperProps) {
                     className="relative block bg-white p-0.5"
                     disabled={step.disabled}
                   >
-                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-success hover:bg-interactive-1">
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-success hover:bg-indigo-900">
                       <CheckIcon
                         aria-hidden="true"
                         className="mt-[0.05rem] h-3 w-3 text-white"
@@ -57,7 +57,7 @@ function Stepper({ steps }: StepperProps) {
                   </button>
                 ) : (
                   <a className="relative block bg-white p-0.5" href={step.href}>
-                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-success hover:bg-interactive-1">
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-success hover:bg-indigo-900">
                       <CheckIcon
                         aria-hidden="true"
                         className="mt-[0.05rem] h-3 w-3 text-white"

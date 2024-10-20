@@ -119,7 +119,7 @@ export default function SignInScreen() {
             keyboardType="email-address"
           />
           {emailError ? (
-            <Text className="mt-1 text-destructive">{emailError}</Text>
+            <Text className="mt-1 text-red-500">{emailError}</Text>
           ) : null}
           <TextInput
             ref={passwordRef}
@@ -132,7 +132,7 @@ export default function SignInScreen() {
             onSubmitEditing={onSignInPress}
           />
           {passwordError ? (
-            <Text className="mt-1 text-destructive">{passwordError}</Text>
+            <Text className="mt-1 text-red-500">{passwordError}</Text>
           ) : null}
           <Pressable
             onPress={onSignInPress}
@@ -149,7 +149,7 @@ export default function SignInScreen() {
             </Text>
           </Pressable>
           {generalError ? (
-            <Text className="mb-4 text-center text-destructive">
+            <Text className="mb-4 text-center text-red-500">
               {generalError}
             </Text>
           ) : null}

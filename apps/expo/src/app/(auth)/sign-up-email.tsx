@@ -137,7 +137,7 @@ export default function SignUpScreen() {
             Sign up for your Soonlist account
           </Text>
           {generalError ? (
-            <Text className="mb-4 text-center text-destructive">
+            <Text className="mb-4 text-center text-red-500">
               {generalError}
             </Text>
           ) : null}
@@ -155,7 +155,7 @@ export default function SignUpScreen() {
                 blurOnSubmit={false}
               />
               {firstNameError ? (
-                <Text className="mt-1 text-destructive">{firstNameError}</Text>
+                <Text className="mt-1 text-red-500">{firstNameError}</Text>
               ) : null}
             </View>
             <View className="flex-1">
@@ -172,7 +172,7 @@ export default function SignUpScreen() {
                 blurOnSubmit={false}
               />
               {lastNameError ? (
-                <Text className="mt-1 text-destructive">{lastNameError}</Text>
+                <Text className="mt-1 text-red-500">{lastNameError}</Text>
               ) : null}
             </View>
           </View>
@@ -191,7 +191,7 @@ export default function SignUpScreen() {
               blurOnSubmit={false}
             />
             {usernameError ? (
-              <Text className="mt-1 text-destructive">{usernameError}</Text>
+              <Text className="mt-1 text-red-500">{usernameError}</Text>
             ) : null}
             <Text className="mt-1 text-sm text-gray-500">
               On Instagram? Consider using the same username
@@ -213,7 +213,7 @@ export default function SignUpScreen() {
               keyboardType="email-address"
             />
             {emailError ? (
-              <Text className="mt-1 text-destructive">{emailError}</Text>
+              <Text className="mt-1 text-red-500">{emailError}</Text>
             ) : null}
           </View>
           <View className="mb-6 w-full">
@@ -230,7 +230,7 @@ export default function SignUpScreen() {
               onSubmitEditing={onSignUpPress}
             />
             {passwordError ? (
-              <Text className="mt-1 text-destructive">{passwordError}</Text>
+              <Text className="mt-1 text-red-500">{passwordError}</Text>
             ) : null}
           </View>
           <Pressable

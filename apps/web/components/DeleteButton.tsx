@@ -60,7 +60,7 @@ export function DeleteButton(props: DeleteButtonProps) {
           deleteEvent.mutate({ id: props.id });
         }}
         disabled={deleteEvent.isPending}
-        className="text-destructive"
+        className="text-red-600"
       >
         <Trash className="mr-2 size-4" />
         Delete

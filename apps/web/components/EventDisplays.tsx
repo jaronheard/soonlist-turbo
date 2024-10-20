@@ -1013,7 +1013,7 @@ function DateAndTimeDisplay({
             {formatCompactTimeRange(startDateInfo, endDateInfo)}
           </span>
           {happeningNow && (
-            <span className="ml-1 rounded-full bg-accent-yellow px-1 text-interactive-1">
+            <span className="ml-1 rounded-full bg-yellow-100 px-1 text-yellow-700">
               Now!
             </span>
           )}{" "}

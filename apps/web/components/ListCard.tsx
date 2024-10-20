@@ -6,7 +6,12 @@ import { Badge } from "@soonlist/ui/badge";
 
 import { cn } from "~/lib/utils";
 
-const colors = ["bg-accent-blue", "bg-accent-orange", "bg-accent-green"];
+const colors = [
+  // "bg-accent-blue",
+  "bg-accent-red",
+  "bg-accent-orange",
+  "bg-accent-green",
+];
 
 const getInitialsFromString = (str: string) => {
   // limit to 2 initials

@@ -608,7 +608,7 @@ const AddEventBottomSheet = React.forwardRef<
               />
               <TouchableOpacity
                 onPress={clearPreview}
-                className="absolute right-2 top-2 rounded-full bg-neutral-1 p-1"
+                className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
               >
                 <X size={16} color="black" />
               </TouchableOpacity>
@@ -619,7 +619,7 @@ const AddEventBottomSheet = React.forwardRef<
               )}
             </View>
           ) : linkPreview ? (
-            <View className="relative h-full w-full rounded-md bg-neutral-1">
+            <View className="relative h-full w-full rounded-md bg-neutral-200">
               <View className="h-full w-full items-center justify-center">
                 <LinkIcon size={24} color="black" />
                 <Text
@@ -638,7 +638,7 @@ const AddEventBottomSheet = React.forwardRef<
               </TouchableOpacity>
             </View>
           ) : activeInput === "url" ? (
-            <View className="h-full rounded-md border border-neutral-2 px-3 py-2">
+            <View className="h-full rounded-md border border-neutral-300 px-3 py-2">
               <BottomSheetTextInput
                 placeholder="Paste URL"
                 defaultValue={input}
@@ -650,7 +650,7 @@ const AddEventBottomSheet = React.forwardRef<
               />
             </View>
           ) : activeInput === "describe" ? (
-            <View className="h-full rounded-md border border-neutral-2 px-3 py-2">
+            <View className="h-full rounded-md border border-neutral-300 px-3 py-2">
               <BottomSheetTextInput
                 placeholder="Describe your event"
                 defaultValue={input}
