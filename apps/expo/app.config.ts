@@ -65,6 +65,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     ["expo-apple-authentication"],
     ["expo-localization"],
+    ["expo-av"],
   ],
   ios: {
     supportsTablet: true,
