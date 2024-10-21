@@ -3,8 +3,9 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "editor.tabSize": 2,
-  "editor.detectIndentation": false,
+  "[typescript,typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "eslint.workingDirectories": [
     { "pattern": "apps/*/" },
     { "pattern": "packages/*/" },
@@ -14,7 +15,10 @@
     ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
     ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
   ],
-  "tailwindCSS.experimental.configFile": "./tooling/tailwind/web.ts",
+  "tailwindCSS.experimental.configFile": {
+    "tooling/tailwind/web.ts": ["apps/web/**", "packages/ui/**"],
+    "tooling/tailwind/native.ts": ["apps/expo/**"]
+  },
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.preferences.autoImportFileExcludePatterns": [
     "next/router.d.ts",
