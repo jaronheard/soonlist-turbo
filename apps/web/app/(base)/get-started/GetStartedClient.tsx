@@ -22,6 +22,81 @@ const protocol =
   process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "https" : "http";
 const APP_URL = `${protocol}://${HOST}`;
 
+interface TestFlightInstallProps {
+  title: string;
+}
+
+export function TestFlightInstall({ title }: TestFlightInstallProps) {
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    setIsIOS(/iphone|ipad|ipod/.test(userAgent));
+  }, []);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-center font-heading text-3xl font-bold text-neutral-1">
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center gap-4">
+        <p className="text-center text-lg">
+          We're using Apple's TestFlight to provide access to Soonlist for
+          Founding Members.
+        </p>
+        {isIOS ? (
+          <>
+            <Button asChild className="h-16 w-full max-w-xs text-xl">
+              <a
+                href="https://testflight.apple.com/join/AjmerTKm"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Install iOS App
+              </a>
+            </Button>
+            <p className="text-center text-sm font-medium text-muted-foreground">
+              <span className="font-medium text-destructive">
+                Important: tap both buttons on linked page!
+              </span>
+              <br />
+              Step 1 installs TestFlight, Step 2 installs Soonlist.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-center text-lg font-medium text-destructive">
+              Please switch to your iPhone to install the Soonlist app.
+            </p>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-center text-sm text-muted-foreground">
+                Once you're on your iPhone, visit:
+              </p>
+              <code className="rounded bg-gray-100 px-2 py-1 text-sm">
+                {`${APP_URL}/get-app`}
+              </code>
+              <p className="text-center text-sm text-muted-foreground">
+                Or scan this QR code:
+              </p>
+              <QRCode
+                value={`${APP_URL}/get-app`}
+                size={128}
+                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                viewBox={`0 0 256 256`}
+              />
+            </div>
+          </>
+        )}
+        <div className="flex justify-center">
+          <HelpButton />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function GetStartedClient() {
   const { isLoaded } = useAuth();
   const { user: activeUser } = useUser();
@@ -31,13 +106,6 @@ export function GetStartedClient() {
     { userName: activeUser?.username || "" },
     { enabled: !!activeUser?.username },
   );
-
-  const [isIOS, setIsIOS] = useState(false);
-
-  useEffect(() => {
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    setIsIOS(/iphone|ipad|ipod/.test(userAgent));
-  }, []);
 
   if (!isLoaded || isLoading) {
     return <FullPageLoadingSpinner />;
@@ -136,65 +204,7 @@ export function GetStartedClient() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-center font-heading text-3xl font-bold text-neutral-1">
-            3. Install the Soonlist App
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-          <p className="text-center text-lg">
-            We're using Apple's TestFlight to provide access to Soonlist for
-            Founding Members.
-          </p>
-          {isIOS ? (
-            <>
-              <Button asChild className="h-16 w-full max-w-xs text-xl">
-                <a
-                  href="https://testflight.apple.com/join/AjmerTKm"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Install iOS App
-                </a>
-              </Button>
-              <p className="text-center text-sm font-medium text-muted-foreground">
-                <span className="font-medium text-destructive">
-                  Important: tap both buttons on linked page!
-                </span>
-                <br />
-                Step 1 installs TestFlight, Step 2 installs Soonlist.
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-center text-lg font-medium text-destructive">
-                Please switch to your iPhone to install the Soonlist app.
-              </p>
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-center text-sm text-muted-foreground">
-                  Once you're on your iPhone, visit:
-                </p>
-                <code className="rounded bg-gray-100 px-2 py-1 text-sm">
-                  {`${APP_URL}/get-app`}
-                </code>
-                <p className="text-center text-sm text-muted-foreground">
-                  Or scan this QR code:
-                </p>
-                <QRCode
-                  value={`${APP_URL}/get-app`}
-                  size={128}
-                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  viewBox={`0 0 256 256`}
-                />
-              </div>
-            </>
-          )}
-          <div className="flex justify-center">
-            <HelpButton />
-          </div>
-        </CardContent>
-      </Card>
+      <TestFlightInstall title="3. Install the Soonlist App" />
     </div>
   );
 }
