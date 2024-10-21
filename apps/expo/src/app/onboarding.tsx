@@ -1,29 +1,18 @@
 import React from "react";
-import { ScrollView, View } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { View } from "react-native";
+import { Stack } from "expo-router";
 
-import { Onboarding } from "~/components/Onboarding";
-import { useAppStore } from "~/store";
+import { StoryOnboarding } from "~/components/StoryOnboarding";
 
 export default function OnboardingScreen() {
-  const router = useRouter();
-  const setHasCompletedOnboarding = useAppStore(
-    (state) => state.setHasCompletedOnboarding,
-  );
-
-  const handleOnboardingComplete = () => {
-    setHasCompletedOnboarding(true);
-    router.replace("/feed");
-  };
-
   return (
-    <View style={{ flex: 1 }}>
+    <>
       <Stack.Screen
-        options={{ title: "About Soonlist", headerBackVisible: false }}
+        options={{ title: "Welcome to Soonlist", headerBackVisible: false }}
       />
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <Onboarding onComplete={handleOnboardingComplete} />
-      </ScrollView>
-    </View>
+      <View className="flex-1">
+        <StoryOnboarding />
+      </View>
+    </>
   );
 }
