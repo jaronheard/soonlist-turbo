@@ -9,7 +9,7 @@ import { Langfuse } from "langfuse";
 import { z } from "zod";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
-import { db, inArray, ne, or } from "@soonlist/db";
+import { db, inArray, or } from "@soonlist/db";
 import { eventFollows, events, pushTokens, users } from "@soonlist/db/schema";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -31,6 +31,8 @@ const sendNotificationInputSchema = z.object({
   data: z.record(z.unknown()).optional(),
 });
 
+const WEEKLY_DISCOVER_SUMMARY =
+  "🗳️ Civic engagement on Monday, 🕺 Performance party on Tuesday, 🖨️ Counterculture chronicles on Thursday, 🎃 Risqué revelry on Friday, 🎥 Experimental screenings (Sat)";
 /**
  * Generates a prompt for creating a weekly notification with events.
  *
@@ -68,36 +70,6 @@ Example output:
 
 Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
 
-/**
- * Generates a prompt for creating a weekly notification with discover events.
- *
- * @param eventDescriptions - A string containing event descriptions, separated by "NEXT EVENT"
- * @returns A string containing the generated prompt
- */
-const getPromptForWeeklyNotificationWithDiscover = (
-  eventDescriptions: string,
-) => `You are tasked with creating an exciting and rich notification of events other users have posted to Soonlist
-
-Here is the list of events for the upcoming week separated by "NEXT EVENT":
-<events>
-${eventDescriptions}
-</events>
-
-Follow these steps to create the notification:
-
-1. For each event, identify the most specific and evocative single-word adjective-noun pairs that uniquely apply to that event. Be creative and don't hesitate to use esoteric or simple adjectives.
-
-2. Use Spotify's Daylists as inspiration for the tone and style. Incorporate uncommon emojis where appropriate.
-
-3. Do not preface or include anything other than the adjective-noun pairs.
-
-4. Add the abbreviated day of the week in parenthesis (e.g. Mon, Tue) after each adjective-noun pair.
-
-Example output:
-🧠 Cerebral discussions (Mon), 🌀 Mesmerizing animations (Tue), 🎭 Avant-garde showcases (Tue), 🤹‍♂️ Quirky performances (Wed), 🛹 Skateboarding prowess (Wed), 🖼️ Handmade marvels (Thu), ♻️ Upcycled elegance (Thu), 💃 Pulsating dancefloors (Fri), 📚 Intellectual discourses (Fri), 🕰️ Retro-inspired revelry (Sat), 🦉 Ornithological wonders (Sun)
-
-Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
-
 async function processUserNotification(user: {
   userId: string;
   expoPushToken: string;
@@ -127,91 +99,69 @@ async function processUserNotification(user: {
         ),
       );
 
-    let eventDescriptions = upcomingEvents
-      .map((event) => {
-        const eventData = event.event as AddToCalendarButtonProps;
-        return `${eventData.name} ${eventData.description}`;
-      })
-      .join(" NEXT EVENT ");
-
-    let prompt = getPromptForWeeklyNotificationWithEvents(eventDescriptions);
     let title = "✨ Your week of possibilities";
     let link = "/feed";
     let prefix = "";
+    let summary = "";
 
     if (upcomingEvents.length < 3) {
       title = "✨ Discover this week";
       link = "/discover";
       prefix = "From other Soonlist users: ";
-      // Fetch public events if user has less than 3 upcoming events
-      const publicEvents = await db
-        .select()
-        .from(events)
-        .where(
-          and(
-            ne(events.userId, user.userId),
-            gt(events.startDateTime, now),
-            lt(events.endDateTime, oneWeekFromNow),
-            eq(events.visibility, "public"),
-          ),
-        )
-        .limit(20);
-
-      eventDescriptions = publicEvents
+      summary = WEEKLY_DISCOVER_SUMMARY;
+    } else {
+      const eventDescriptions = upcomingEvents
         .map((event) => {
           const eventData = event.event as AddToCalendarButtonProps;
-          const startDate = eventData.startDate;
-          const dayOfWeek = startDate
-            ? new Date(startDate).toLocaleDateString("en-US", {
-                weekday: "short",
-              })
-            : "?";
-          return `${dayOfWeek}: ${eventData.name} ${eventData.description}`;
+          return `${eventData.name} ${eventData.description}`;
         })
         .join(" NEXT EVENT ");
 
-      prompt = getPromptForWeeklyNotificationWithDiscover(eventDescriptions);
+      const prompt =
+        getPromptForWeeklyNotificationWithEvents(eventDescriptions);
+
+      const trace = langfuse.trace({
+        name: "sendWeeklyNotifications",
+        userId: user.userId,
+        input: eventDescriptions,
+      });
+
+      const generation = trace.generation({
+        name: "generateWeeklyNotification",
+        input: eventDescriptions,
+        model: "claude-3-5-sonnet-20240620",
+      });
+
+      generation.update({
+        completionStartTime: new Date(),
+      });
+
+      const { text } = await generateText({
+        // @ts-expect-error need to update ai sdk
+        model: anthropic("claude-3-5-sonnet-20240620"),
+        prompt,
+        temperature: 0,
+        maxTokens: 1000,
+      });
+
+      summary = text;
+
+      generation.end({
+        output: summary,
+      });
+
+      generation.score({
+        name: "notificationGeneration",
+        value: summary ? 1 : 0,
+      });
+
+      trace.update({
+        output: summary,
+        metadata: {
+          eventDescriptions,
+        },
+      });
     }
-
-    const trace = langfuse.trace({
-      name: "sendWeeklyNotifications",
-      userId: user.userId,
-      input: eventDescriptions,
-    });
-
-    const generation = trace.generation({
-      name: "generateWeeklyNotification",
-      input: eventDescriptions,
-      model: "claude-3-5-sonnet-20240620",
-    });
-
-    generation.update({
-      completionStartTime: new Date(),
-    });
-
-    const { text: summary } = await generateText({
-      // @ts-expect-error need to update ai sdk
-      model: anthropic("claude-3-5-sonnet-20240620"),
-      prompt,
-      temperature: 0,
-      maxTokens: 1000,
-    });
-
-    generation.end({
-      output: summary,
-    });
-
-    generation.score({
-      name: "notificationGeneration",
-      value: summary ? 1 : 0,
-    });
-
-    trace.update({
-      output: summary,
-      metadata: {
-        eventDescriptions,
-      },
-    });
 
     const message = `${prefix}${summary}`;
 
