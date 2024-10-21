@@ -30,9 +30,9 @@ const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
 });
 
 const title = "Soonlist";
-const tagline = "Organize possibilities";
+const tagline = "All your possibilities, organized";
 const description =
-  "Save events from anywhere. Make lists for your communities, friends, or yourself. Experience, connect, and grow.";
+  "Soonlist helps you capture, organize, share, and remember possibilities. All you have to do is show up.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.soonlist.com/"),
@@ -40,13 +40,13 @@ export const metadata: Metadata = {
   description: tagline,
   openGraph: {
     siteName: "Soonlist",
-    title: "Organize possibilities",
+    title: "All your possibilities, organized",
     description,
     locale: "en_US",
     type: "website",
     images: [
       {
-        url: "/api/og",
+        url: "https://upcdn.io/12a1yek/raw/uploads/Soonlist/soonlist-meta.webp",
         width: 1200,
         height: 630,
       },
