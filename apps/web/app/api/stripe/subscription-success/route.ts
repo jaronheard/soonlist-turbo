@@ -24,14 +24,16 @@ export async function GET(req: Request) {
 
   try {
     if (ctx.currentUser) {
-      // User is signed in
+      // User is signed in - current users
       await caller.stripe.handleSuccessfulCheckoutSignedIn({ sessionId });
       return NextResponse.redirect(`${protocol}//${baseUrl}/get-started`);
     } else {
-      // User is not signed in
-      await caller.stripe.handleSuccessfulCheckout({ sessionId });
+      // User is not signed in - new users
+      // Skipping handling successful checkout, which invites user to create an account
+      // await caller.stripe.handleSuccessfulCheckout({ sessionId });
+      // Instead just redirect to install page
       return NextResponse.redirect(
-        `${protocol}//${baseUrl}/account/invitation-sent`,
+        `${protocol}//${baseUrl}/install?session_id=${sessionId}`,
       );
     }
   } catch (error) {
