@@ -92,7 +92,7 @@ export function StoryOnboarding() {
   );
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="relative flex-1 bg-background">
       <FlatList
         ref={flatListRef}
         data={storySlides}
@@ -107,34 +107,23 @@ export function StoryOnboarding() {
           setCurrentSlide(slideIndex);
         }}
       />
-      <View className="absolute bottom-20 left-0 right-0">
-        <View className="mb-8 flex-row justify-center space-x-2">
-          {storySlides.map((_, index) => (
-            <View
-              key={index}
-              className={`h-2 w-2 rounded-full ${
-                index === currentSlide ? "bg-interactive-1" : "bg-neutral-3"
-              }`}
-            />
-          ))}
-        </View>
-        <View className="px-20">
-          <Pressable
-            onPress={handleNext}
-            className="rounded-full bg-interactive-1 px-6 py-3"
-          >
-            <Text className="text-center text-lg font-bold text-white">
-              {currentSlide < storySlides.length - 1 ? "Next" : "I'm Ready!"}
-            </Text>
-          </Pressable>
-          {currentSlide < storySlides.length - 1 && (
-            <Pressable onPress={handleSkip} className="mt-4">
-              <Text className="text-center text-lg text-interactive-2">
-                Skip
-              </Text>
-            </Pressable>
-          )}
-        </View>
+      <View className="px-20">
+        <Pressable
+          onPress={handleNext}
+          className="rounded-full bg-interactive-1 px-6 py-3"
+        >
+          <Text className="text-center text-lg font-bold text-white">
+            {currentSlide < storySlides.length - 1 ? "Next" : "I'm Ready!"}
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={handleSkip}
+          className="mb-8 mt-2 rounded-full px-6 py-3"
+        >
+          <Text className="text-center text-lg font-bold text-neutral-1">
+            Skip
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
