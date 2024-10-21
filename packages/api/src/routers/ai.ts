@@ -729,7 +729,7 @@ export const aiRouter = createTRPCRouter({
 
         const title = "Soonlist";
         const body = "There was an error creating your event.";
-        const data = { url: "/new/preview" };
+        const data = { url: "/feed" };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new Error(
@@ -1035,7 +1035,7 @@ export const aiRouter = createTRPCRouter({
 
         const title = "Soonlist";
         const body = "There was an error creating your event.";
-        const data = { url: "/new/preview" };
+        const data = { url: "/feed" };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new Error(
@@ -1359,7 +1359,7 @@ export const aiRouter = createTRPCRouter({
 
         const title = "Soonlist";
         const body = "There was an error creating your event.";
-        const data = { url: "/new/preview" };
+        const data = { url: "/feed" };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new Error(
