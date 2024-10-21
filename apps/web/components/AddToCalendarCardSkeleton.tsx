@@ -9,7 +9,7 @@ export function AddToCalendarCardSkeleton() {
   return (
     <>
       {/* fixed position loading spinner in bottom right of screen */}
-      <div className="bg-gray-50 fixed bottom-2 right-2 z-50 flex rounded p-2 shadow-sm">
+      <div className="fixed bottom-2 right-2 z-50 flex rounded bg-gray-50 p-2 shadow-sm">
         <Text className="mr-2 size-6 animate-pulse" />
         <Loader2 className="size-6 animate-spin" />
       </div>
