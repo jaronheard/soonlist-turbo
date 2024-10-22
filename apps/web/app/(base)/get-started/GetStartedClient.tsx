@@ -27,7 +27,7 @@ interface TestFlightInstallProps {
 }
 
 export function TestFlightInstall({ title }: TestFlightInstallProps) {
-  const [isIOS, setIsIOS] = useState(false);
+  const [isIOS, setIsIOS] = useState<boolean | null>(null);
 
   useEffect(() => {
     const userAgent = window.navigator.userAgent.toLowerCase();
@@ -46,7 +46,9 @@ export function TestFlightInstall({ title }: TestFlightInstallProps) {
           We're using Apple's TestFlight to provide access to Soonlist for
           Founding Members.
         </p>
-        {isIOS ? (
+        {isIOS === null ? (
+          <div className="h-48 w-full animate-pulse bg-gray-200" />
+        ) : isIOS ? (
           <>
             <Button asChild className="h-16 w-full max-w-xs text-xl">
               <a
