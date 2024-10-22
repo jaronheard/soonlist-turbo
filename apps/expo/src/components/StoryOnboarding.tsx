@@ -29,12 +29,6 @@ const storySlides: StorySlide[] = [
     description: "Private by default, share or make discoverable",
     videoUrl: require("../assets/share.mp4") as AVPlaybackSource,
   },
-  // {
-  //   title: "We're here to help",
-  //   description: "Soonlist is new, and we're working to make it better.",
-  //   imageUrl:
-  //     require("../assets/ (3) .png"),
-  // },
   {
     title: "Capture your first event",
     description: "Get ready with a screenshot, flyer, or link",
