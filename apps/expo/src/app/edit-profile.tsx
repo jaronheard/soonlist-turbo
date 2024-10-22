@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -27,7 +27,6 @@ const profileSchema = z.object({
     .string()
     .min(3, "Username must be at least 3 characters")
     .max(30, "Username must be 30 characters or less"),
-  emoji: z.string().max(2, "Emoji must be 2 characters or less").optional(),
   bio: z.string().max(150, "Bio must be 150 characters or less").optional(),
   publicEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   publicPhone: z.string().optional(),
@@ -50,18 +49,14 @@ export default function EditProfileScreen() {
     { enabled: !!user?.username },
   );
 
-  const { data: emojiStatus } = api.user.getAllTakenEmojis.useQuery();
-
   const {
     control,
     handleSubmit,
     formState: { errors, isDirty },
-    watch,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       username: user?.username ?? "",
-      emoji: userData?.emoji ?? "",
       bio: userData?.bio ?? undefined,
       publicEmail: userData?.publicEmail ?? undefined,
       publicPhone: userData?.publicPhone ?? undefined,
@@ -70,8 +65,6 @@ export default function EditProfileScreen() {
     },
     mode: "onBlur",
   });
-
-  const watchedEmoji = watch("emoji");
 
   const updateProfile = api.user.updateAdditionalInfo.useMutation({
     onMutate: () => setIsSubmitting(true),
@@ -117,6 +110,19 @@ export default function EditProfileScreen() {
     }
   };
 
+  // Create refs for each input field
+  const usernameRef = useRef<TextInput>(null);
+  const bioRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+  const instaRef = useRef<TextInput>(null);
+  const websiteRef = useRef<TextInput>(null);
+
+  // Function to focus the next input
+  const focusNextInput = (nextRef: React.RefObject<TextInput>) => {
+    nextRef.current?.focus();
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -150,58 +156,30 @@ export default function EditProfileScreen() {
           </UserProfileFlair>
 
           <View>
-            <Text className="mb-2 text-base font-semibold">
-              Username and Emoji
-            </Text>
-            <View className="flex-row items-center space-x-2">
-              <Controller
-                control={control}
-                name="emoji"
-                render={({
-                  field: { onChange: onEmojiChange, value: emojiValue },
-                }) => (
-                  <View className="w-14">
-                    <TextInput
-                      value={emojiValue}
-                      onChangeText={onEmojiChange}
-                      placeholder=""
-                      className="h-10 w-14 rounded-md border border-neutral-300 px-2 text-center text-2xl"
-                      maxLength={2}
-                    />
-                    {errors.emoji && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.emoji.message}
-                      </Text>
-                    )}
-                    {emojiStatus &&
-                      watchedEmoji &&
-                      emojiStatus.takenEmojis.includes(watchedEmoji) && (
-                        <Text className="mt-1 text-xs text-red-500">Taken</Text>
-                      )}
-                  </View>
-                )}
-              />
-              <Controller
-                control={control}
-                name="username"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View className="flex-1">
-                    <TextInput
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="Enter your username"
-                      className="h-10 rounded-md border border-neutral-300 px-3 py-2"
-                    />
-                    {errors.username && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.username.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
-            </View>
+            <Text className="mb-2 text-base font-semibold">Username</Text>
+            <Controller
+              control={control}
+              name="username"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View className="flex-1">
+                  <TextInput
+                    ref={usernameRef}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholder="Enter your username"
+                    className="h-10 rounded-md border border-neutral-300 px-3 py-2"
+                    onSubmitEditing={() => focusNextInput(bioRef)}
+                    returnKeyType="next"
+                  />
+                  {errors.username && (
+                    <Text className="mt-1 text-xs text-red-500">
+                      {errors.username.message}
+                    </Text>
+                  )}
+                </View>
+              )}
+            />
           </View>
 
           <Controller
@@ -211,6 +189,7 @@ export default function EditProfileScreen() {
               <View>
                 <Text className="mb-2 text-base font-semibold">Bio</Text>
                 <TextInput
+                  ref={bioRef}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -249,12 +228,15 @@ export default function EditProfileScreen() {
                     <Text className="ml-2 font-medium">Email</Text>
                   </View>
                   <TextInput
+                    ref={emailRef}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="email@example.com"
                     keyboardType="email-address"
                     className="rounded-md border border-neutral-300 px-3 py-2"
+                    onSubmitEditing={() => focusNextInput(phoneRef)}
+                    returnKeyType="next"
                   />
                   {errors.publicEmail && (
                     <Text className="mt-1 text-xs text-red-500">
@@ -275,6 +257,7 @@ export default function EditProfileScreen() {
                     <Text className="ml-2 font-medium">Phone</Text>
                   </View>
                   <TextInput
+                    ref={phoneRef}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -301,11 +284,14 @@ export default function EditProfileScreen() {
                     <Text className="ml-2 font-medium">Instagram</Text>
                   </View>
                   <TextInput
+                    ref={instaRef}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="username"
                     className="rounded-md border border-neutral-300 px-3 py-2"
+                    onSubmitEditing={() => focusNextInput(websiteRef)}
+                    returnKeyType="next"
                   />
                   {errors.publicInsta && (
                     <Text className="mt-1 text-xs text-red-500">
@@ -326,12 +312,14 @@ export default function EditProfileScreen() {
                     <Text className="ml-2 font-medium">Website</Text>
                   </View>
                   <TextInput
+                    ref={websiteRef}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="www.example.com"
                     keyboardType="url"
                     className="rounded-md border border-neutral-300 px-3 py-2"
+                    returnKeyType="done"
                   />
                   {errors.publicWebsite && (
                     <Text className="mt-1 text-xs text-red-500">
