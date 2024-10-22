@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { Image, ScrollView, Text, TextInput, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { Stack, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,9 +11,14 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "~/components/Button";
+import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { api } from "~/utils/api";
 
 const profileSchema = z.object({
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username must be 30 characters or less"),
   bio: z.string().max(150, "Bio must be 150 characters or less").optional(),
   publicEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   publicPhone: z.string().optional(),
@@ -26,6 +32,9 @@ export default function EditProfileScreen() {
   const { user } = useUser();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(
+    user?.imageUrl ?? null,
+  );
 
   const { data: userData } = api.user.getByUsername.useQuery(
     { userName: user?.username ?? "" },
@@ -39,6 +48,7 @@ export default function EditProfileScreen() {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
+      username: user?.username ?? "",
       bio: userData?.bio ?? undefined,
       publicEmail: userData?.publicEmail ?? undefined,
       publicPhone: userData?.publicPhone ?? undefined,
@@ -54,8 +64,42 @@ export default function EditProfileScreen() {
     onSuccess: () => router.back(),
   });
 
-  const onSubmit = (data: ProfileFormData) => {
-    updateProfile.mutate(data);
+  const onSubmit = async (data: ProfileFormData) => {
+    setIsSubmitting(true);
+    try {
+      if (data.username !== user?.username) {
+        await user?.update({ username: data.username });
+      }
+      await updateProfile.mutateAsync(data);
+      router.back();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      // Handle error (e.g., show error message to user)
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setProfileImage(asset.uri);
+      try {
+        await user?.setProfileImage({
+          file: asset as unknown as File,
+        });
+      } catch (error) {
+        console.error("Error updating profile image:", error);
+        // Handle error (e.g., show error message to user)
+      }
+    }
   };
 
   return (
@@ -69,6 +113,40 @@ export default function EditProfileScreen() {
       />
 
       <View className="flex-col gap-4 space-y-6">
+        <UserProfileFlair
+          className="h-24 items-center"
+          username={user?.username ?? ""}
+        >
+          <Button onPress={pickImage} className="relative">
+            <Image
+              source={{ uri: profileImage ?? user?.imageUrl }}
+              className="h-24 w-24 rounded-full"
+            />
+          </Button>
+        </UserProfileFlair>
+
+        <Controller
+          control={control}
+          name="username"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <View>
+              <Text className="mb-2 text-base font-semibold">Username</Text>
+              <TextInput
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder="Enter your username"
+                className="rounded-md border border-neutral-300 px-3 py-2"
+              />
+              {errors.username && (
+                <Text className="mt-1 text-xs text-red-500">
+                  {errors.username.message}
+                </Text>
+              )}
+            </View>
+          )}
+        />
+
         <Controller
           control={control}
           name="bio"
