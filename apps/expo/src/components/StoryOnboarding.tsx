@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 import type { ImageSourcePropType } from "react-native";
 import React, { useRef, useState } from "react";
 import { Dimensions, FlatList, Pressable, Text, View } from "react-native";
-import { Image } from "expo-image";
+import { ResizeMode, Video } from "expo-av";
 import { useRouter } from "expo-router";
 
 import { useAppStore } from "~/store";
@@ -10,39 +9,35 @@ import { useAppStore } from "~/store";
 interface StorySlide {
   title: string;
   description: string;
-  imageUrl: ImageSourcePropType;
+  videoUrl: ImageSourcePropType;
 }
 
 const storySlides: StorySlide[] = [
   {
     title: "Capture all the events you see",
     description: "Save screenshots, flyers, or links in seconds",
-    imageUrl:
-      require("../assets/Miroodles - Color Comp.png") as ImageSourcePropType,
+    videoUrl: require("../assets/capture.mp4"),
   },
   {
     title: "See events all in one place",
     description: "All your possibilities, automatically organized",
-    imageUrl:
-      require("../assets/Miroodles - Color Comp (1).png") as ImageSourcePropType,
+    videoUrl: require("../assets/list.mp4"),
   },
   {
     title: "Share events, if you want",
     description: "Private by default, share or make discoverable",
-    imageUrl:
-      require("../assets/Miroodles - Color Comp (2).png") as ImageSourcePropType,
+    videoUrl: require("../assets/share.mp4"),
   },
   // {
   //   title: "We're here to help",
   //   description: "Soonlist is new, and we're working to make it better.",
   //   imageUrl:
-  //     require("../assets/Miroodles - Color Comp (3).png") as ImageSourcePropType,
+  //     require("../assets/ (3) .png"),
   // },
   {
     title: "Capture your first event",
     description: "Get ready with a screenshot, flyer, or link",
-    imageUrl:
-      require("../assets/Miroodles - Color Comp (4).png") as ImageSourcePropType,
+    imageUrl: require("../assets/add.mp4"),
   },
 ];
 
