@@ -46,7 +46,8 @@ const storySlides: StorySlide[] = [
   },
 ];
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const VIDEO_HEIGHT = SCREEN_HEIGHT * 0.5; // Increase video height to 50% of screen height
 
 export function StoryOnboarding() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -74,19 +75,26 @@ export function StoryOnboarding() {
   };
 
   const renderSlide = ({ item }: { item: StorySlide }) => (
-    <View style={{ width: SCREEN_WIDTH, padding: 20 }}>
-      <View className="mt-20 items-center space-y-8">
-        <Image
-          source={item.imageUrl}
-          style={{ width: SCREEN_WIDTH - 40, height: SCREEN_WIDTH - 40 }}
-          contentFit="contain"
-        />
-        <Text className="text-center text-3xl font-bold text-neutral-1">
-          {item.title}
-        </Text>
-        <Text className="text-center text-xl text-neutral-2">
-          {item.description}
-        </Text>
+    <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}>
+      <View className="flex-1 justify-between py-10">
+        <View className="items-center">
+          <Video
+            source={item.videoUrl}
+            style={{ width: SCREEN_WIDTH, height: VIDEO_HEIGHT }}
+            resizeMode={ResizeMode.CONTAIN}
+            shouldPlay
+            isLooping
+            isMuted
+          />
+        </View>
+        <View className="items-center space-y-4 px-4">
+          <Text className="text-center text-3xl font-bold text-neutral-1">
+            {item.title}
+          </Text>
+          <Text className="text-center text-xl text-neutral-2">
+            {item.description}
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -107,7 +115,7 @@ export function StoryOnboarding() {
           setCurrentSlide(slideIndex);
         }}
       />
-      <View className="px-20">
+      <View className="absolute bottom-8 left-0 right-0 px-20">
         <Pressable
           onPress={handleNext}
           className="rounded-full bg-interactive-1 px-6 py-3"
@@ -116,10 +124,7 @@ export function StoryOnboarding() {
             {currentSlide < storySlides.length - 1 ? "Next" : "I'm Ready!"}
           </Text>
         </Pressable>
-        <Pressable
-          onPress={handleSkip}
-          className="mb-8 mt-2 rounded-full px-6 py-3"
-        >
+        <Pressable onPress={handleSkip} className="mt-2 rounded-full px-6 py-3">
           <Text className="text-center text-lg font-bold text-neutral-1">
             Skip
           </Text>
