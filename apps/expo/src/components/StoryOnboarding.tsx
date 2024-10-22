@@ -1,4 +1,4 @@
-import type { ImageSourcePropType } from "react-native";
+import type { AVPlaybackSource } from "expo-av";
 import React, { useRef, useState } from "react";
 import { Dimensions, FlatList, Pressable, Text, View } from "react-native";
 import { ResizeMode, Video } from "expo-av";
@@ -9,24 +9,24 @@ import { useAppStore } from "~/store";
 interface StorySlide {
   title: string;
   description: string;
-  videoUrl: ImageSourcePropType;
+  videoUrl: AVPlaybackSource;
 }
 
 const storySlides: StorySlide[] = [
   {
     title: "Capture all the events you see",
     description: "Save screenshots, flyers, or links in seconds",
-    videoUrl: require("../assets/capture.mp4"),
+    videoUrl: require("../assets/capture.mp4") as AVPlaybackSource,
   },
   {
     title: "See events all in one place",
     description: "All your possibilities, automatically organized",
-    videoUrl: require("../assets/list.mp4"),
+    videoUrl: require("../assets/list.mp4") as AVPlaybackSource,
   },
   {
     title: "Share events, if you want",
     description: "Private by default, share or make discoverable",
-    videoUrl: require("../assets/share.mp4"),
+    videoUrl: require("../assets/share.mp4") as AVPlaybackSource,
   },
   // {
   //   title: "We're here to help",
@@ -37,7 +37,7 @@ const storySlides: StorySlide[] = [
   {
     title: "Capture your first event",
     description: "Get ready with a screenshot, flyer, or link",
-    imageUrl: require("../assets/add.mp4"),
+    videoUrl: require("../assets/add.mp4") as AVPlaybackSource,
   },
 ];
 
