@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -21,6 +22,7 @@ import { z } from "zod";
 import { Button } from "~/components/Button";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { api } from "~/utils/api";
+import { showToast } from "~/utils/toast";
 
 const profileSchema = z.object({
   username: z
@@ -52,7 +54,7 @@ export default function EditProfileScreen() {
   const {
     control,
     handleSubmit,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, isValid },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -72,43 +74,74 @@ export default function EditProfileScreen() {
     onSuccess: () => router.back(),
   });
 
-  const onSubmit = async (data: ProfileFormData) => {
-    setIsSubmitting(true);
-    try {
-      if (data.username !== user?.username) {
-        await user?.update({ username: data.username });
-      }
-      await updateProfile.mutateAsync(data);
-      router.back();
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      // Handle error (e.g., show error message to user)
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const asset = result.assets[0];
-      setProfileImage(asset?.uri ?? null);
+  const onSubmit = useCallback(
+    async (data: ProfileFormData) => {
+      setIsSubmitting(true);
       try {
-        await user?.setProfileImage({
-          file: asset as unknown as File,
-        });
+        if (data.username !== user?.username) {
+          await user?.update({ username: data.username });
+        }
+        await updateProfile.mutateAsync(data);
+        router.back();
       } catch (error) {
-        console.error("Error updating profile image:", error);
+        console.error("Error updating profile:", error);
         // Handle error (e.g., show error message to user)
+      } finally {
+        setIsSubmitting(false);
       }
+    },
+    [user, updateProfile, router],
+  );
+
+  const pickImage = useCallback(async () => {
+    try {
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        showToast(
+          "You need to grant permission to access your photos.",
+          "error",
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0] ?? null;
+        if (!asset) return;
+
+        setProfileImage(asset.uri);
+
+        try {
+          await user?.setProfileImage({
+            file: asset as unknown as File,
+          });
+          showToast("Profile image updated successfully", "success");
+        } catch (error) {
+          console.error("Error updating profile image:", error);
+          showToast(
+            "Failed to update profile image. Please try again.",
+            "error",
+          );
+          // Revert to the previous image if the update fails
+          setProfileImage(user?.imageUrl ?? null);
+        }
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      showToast(
+        "An error occurred while selecting the image. Please try again.",
+        "error",
+      );
     }
-  };
+  }, [user]);
 
   // Create refs for each input field
   const usernameRef = useRef<TextInput>(null);
@@ -122,6 +155,14 @@ export default function EditProfileScreen() {
   const focusNextInput = (nextRef: React.RefObject<TextInput>) => {
     nextRef.current?.focus();
   };
+
+  const handleSaveOrBack = useCallback(() => {
+    if (isDirty && isValid) {
+      handleSubmit(onSubmit)();
+    } else {
+      router.back();
+    }
+  }, [isDirty, isValid, handleSubmit, onSubmit, router]);
 
   return (
     <KeyboardAvoidingView
@@ -147,12 +188,21 @@ export default function EditProfileScreen() {
             className="h-24 items-center"
             username={user?.username ?? ""}
           >
-            <Button onPress={pickImage} className="relative">
+            <TouchableOpacity
+              onPress={pickImage}
+              className="relative"
+              activeOpacity={0.7}
+              style={{
+                width: 96, // Adjust this value to match the image size
+                height: 96, // Adjust this value to match the image size
+              }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
               <Image
                 source={{ uri: profileImage ?? user?.imageUrl }}
                 className="h-24 w-24 rounded-full"
               />
-            </Button>
+            </TouchableOpacity>
           </UserProfileFlair>
 
           <View>
@@ -332,11 +382,15 @@ export default function EditProfileScreen() {
           </View>
 
           <Button
-            onPress={handleSubmit(onSubmit)}
-            disabled={isSubmitting || !isDirty}
+            onPress={handleSaveOrBack}
+            disabled={isSubmitting}
             className="mt-4"
           >
-            {isSubmitting ? "Saving..." : "Save Profile"}
+            {isDirty && isValid
+              ? isSubmitting
+                ? "Saving..."
+                : "Save Profile"
+              : "Done"}
           </Button>
         </View>
       </ScrollView>
