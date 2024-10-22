@@ -90,7 +90,7 @@ export default function EditProfileScreen() {
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const asset = result.assets[0];
-      setProfileImage(asset.uri);
+      setProfileImage(asset?.uri ?? null);
       try {
         await user?.setProfileImage({
           file: asset as unknown as File,
