@@ -8,7 +8,7 @@ export default function OnboardingScreen() {
   return (
     <>
       <Stack.Screen
-        options={{ title: "Welcome to Soonlist", headerBackVisible: false }}
+        options={{ headerShown: false, navigationBarHidden: false }}
       />
       <View className="flex-1">
         <StoryOnboarding />
