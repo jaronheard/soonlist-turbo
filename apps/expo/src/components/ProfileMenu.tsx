@@ -56,9 +56,9 @@ export function ProfileMenu() {
   };
 
   const menuItems = [
-    { title: "About", icon: HelpCircle, onSelect: showOnboarding },
+    { title: "Profile", icon: User, onSelect: handleEditProfile },
+    { title: "How to use", icon: HelpCircle, onSelect: showOnboarding },
     { title: "Support", icon: MessageCircle, onSelect: presentIntercom },
-    { title: "Profile", icon: Pencil, onSelect: handleEditProfile },
     {
       title: "Sign out",
       icon: LogOut,
