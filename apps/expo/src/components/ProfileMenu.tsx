@@ -10,7 +10,13 @@ import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
-import { HelpCircle, LogOut, MessageCircle, User } from "lucide-react-native";
+import {
+  HelpCircle,
+  LogOut,
+  MessageCircle,
+  Pencil,
+  User,
+} from "lucide-react-native";
 
 import { deleteAuthData } from "~/hooks/useAuthSync";
 import { useAppStore } from "~/store";
@@ -28,6 +34,10 @@ export function ProfileMenu() {
 
   const showOnboarding = () => {
     router.push("/onboarding");
+  };
+
+  const handleEditProfile = () => {
+    router.push("/edit-profile");
   };
 
   const handleSignOut = async () => {
@@ -48,6 +58,7 @@ export function ProfileMenu() {
   const menuItems = [
     { title: "About", icon: HelpCircle, onSelect: showOnboarding },
     { title: "Support", icon: MessageCircle, onSelect: presentIntercom },
+    { title: "Profile", icon: Pencil, onSelect: handleEditProfile },
     {
       title: "Sign out",
       icon: LogOut,
