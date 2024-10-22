@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import type { AVPlaybackSource } from "expo-av";
 import React, { useRef, useState } from "react";
 import { Dimensions, FlatList, Pressable, Text, View } from "react-native";
