@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { Image, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -110,230 +118,240 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-white px-4 py-6">
-      <Stack.Screen
-        options={{
-          title: "Edit Profile",
-          headerBackTitle: "Back",
-          headerBackButtonMenuEnabled: true,
-        }}
-      />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+    >
+      <ScrollView
+        className="flex-1 bg-white"
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Stack.Screen
+          options={{
+            title: "Edit Profile",
+            headerBackTitle: "Back",
+            headerBackButtonMenuEnabled: true,
+          }}
+        />
 
-      <View className="flex-col gap-4 space-y-6">
-        <UserProfileFlair
-          className="h-24 items-center"
-          username={user?.username ?? ""}
-        >
-          <Button onPress={pickImage} className="relative">
-            <Image
-              source={{ uri: profileImage ?? user?.imageUrl }}
-              className="h-24 w-24 rounded-full"
-            />
-          </Button>
-        </UserProfileFlair>
+        <View className="flex-col gap-4 space-y-6">
+          <UserProfileFlair
+            className="h-24 items-center"
+            username={user?.username ?? ""}
+          >
+            <Button onPress={pickImage} className="relative">
+              <Image
+                source={{ uri: profileImage ?? user?.imageUrl }}
+                className="h-24 w-24 rounded-full"
+              />
+            </Button>
+          </UserProfileFlair>
 
-        <View>
-          <Text className="mb-2 text-base font-semibold">
-            Username and Emoji
-          </Text>
-          <View className="flex-row items-center space-x-2">
-            <Controller
-              control={control}
-              name="emoji"
-              render={({
-                field: { onChange: onEmojiChange, value: emojiValue },
-              }) => (
-                <View className="w-14">
-                  <TextInput
-                    value={emojiValue}
-                    onChangeText={onEmojiChange}
-                    placeholder=""
-                    className="h-10 w-14 rounded-md border border-neutral-300 px-2 text-center text-2xl"
-                    maxLength={2}
-                  />
-                  {errors.emoji && (
-                    <Text className="mt-1 text-xs text-red-500">
-                      {errors.emoji.message}
-                    </Text>
-                  )}
-                  {emojiStatus &&
-                    watchedEmoji &&
-                    emojiStatus.takenEmojis.includes(watchedEmoji) && (
-                      <Text className="mt-1 text-xs text-red-500">Taken</Text>
+          <View>
+            <Text className="mb-2 text-base font-semibold">
+              Username and Emoji
+            </Text>
+            <View className="flex-row items-center space-x-2">
+              <Controller
+                control={control}
+                name="emoji"
+                render={({
+                  field: { onChange: onEmojiChange, value: emojiValue },
+                }) => (
+                  <View className="w-14">
+                    <TextInput
+                      value={emojiValue}
+                      onChangeText={onEmojiChange}
+                      placeholder=""
+                      className="h-10 w-14 rounded-md border border-neutral-300 px-2 text-center text-2xl"
+                      maxLength={2}
+                    />
+                    {errors.emoji && (
+                      <Text className="mt-1 text-xs text-red-500">
+                        {errors.emoji.message}
+                      </Text>
                     )}
-                </View>
-              )}
-            />
+                    {emojiStatus &&
+                      watchedEmoji &&
+                      emojiStatus.takenEmojis.includes(watchedEmoji) && (
+                        <Text className="mt-1 text-xs text-red-500">Taken</Text>
+                      )}
+                  </View>
+                )}
+              />
+              <Controller
+                control={control}
+                name="username"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View className="flex-1">
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="Enter your username"
+                      className="h-10 rounded-md border border-neutral-300 px-3 py-2"
+                    />
+                    {errors.username && (
+                      <Text className="mt-1 text-xs text-red-500">
+                        {errors.username.message}
+                      </Text>
+                    )}
+                  </View>
+                )}
+              />
+            </View>
+          </View>
+
+          <Controller
+            control={control}
+            name="bio"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View>
+                <Text className="mb-2 text-base font-semibold">Bio</Text>
+                <TextInput
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="Enter your bio (max 150 characters)"
+                  multiline
+                  className="h-24 rounded-md border border-neutral-300 px-3 py-2"
+                />
+                <Text className="mt-1 text-xs text-neutral-500">
+                  Example: I love ambient music, creative community building,
+                  and vegan pop-ups.
+                </Text>
+                {errors.bio && (
+                  <Text className="mt-1 text-xs text-red-500">
+                    {errors.bio.message}
+                  </Text>
+                )}
+              </View>
+            )}
+          />
+
+          <View className="flex-col gap-4 space-y-4">
+            <View>
+              <Text className="text-lg font-semibold">How to connect</Text>
+              <Text className="text-sm text-neutral-500">
+                Share any contact info you want to publicly display.
+              </Text>
+            </View>
+
             <Controller
               control={control}
-              name="username"
+              name="publicEmail"
               render={({ field: { onChange, onBlur, value } }) => (
-                <View className="flex-1">
+                <View>
+                  <View className="mb-2 flex-row items-center">
+                    <Mail size={16} color="#000" />
+                    <Text className="ml-2 font-medium">Email</Text>
+                  </View>
                   <TextInput
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    placeholder="Enter your username"
-                    className="h-10 rounded-md border border-neutral-300 px-3 py-2"
+                    placeholder="email@example.com"
+                    keyboardType="email-address"
+                    className="rounded-md border border-neutral-300 px-3 py-2"
                   />
-                  {errors.username && (
+                  {errors.publicEmail && (
                     <Text className="mt-1 text-xs text-red-500">
-                      {errors.username.message}
+                      {errors.publicEmail.message}
+                    </Text>
+                  )}
+                </View>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="publicPhone"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View>
+                  <View className="mb-2 flex-row items-center">
+                    <Phone size={16} color="#000" />
+                    <Text className="ml-2 font-medium">Phone</Text>
+                  </View>
+                  <TextInput
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholder="1234567890"
+                    keyboardType="phone-pad"
+                    className="rounded-md border border-neutral-300 px-3 py-2"
+                  />
+                  {errors.publicPhone && (
+                    <Text className="mt-1 text-xs text-red-500">
+                      {errors.publicPhone.message}
+                    </Text>
+                  )}
+                </View>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="publicInsta"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View>
+                  <View className="mb-2 flex-row items-center">
+                    <Instagram size={16} color="#000" />
+                    <Text className="ml-2 font-medium">Instagram</Text>
+                  </View>
+                  <TextInput
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholder="username"
+                    className="rounded-md border border-neutral-300 px-3 py-2"
+                  />
+                  {errors.publicInsta && (
+                    <Text className="mt-1 text-xs text-red-500">
+                      {errors.publicInsta.message}
+                    </Text>
+                  )}
+                </View>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="publicWebsite"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View>
+                  <View className="mb-2 flex-row items-center">
+                    <Globe size={16} color="#000" />
+                    <Text className="ml-2 font-medium">Website</Text>
+                  </View>
+                  <TextInput
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholder="www.example.com"
+                    keyboardType="url"
+                    className="rounded-md border border-neutral-300 px-3 py-2"
+                  />
+                  {errors.publicWebsite && (
+                    <Text className="mt-1 text-xs text-red-500">
+                      {errors.publicWebsite.message}
                     </Text>
                   )}
                 </View>
               )}
             />
           </View>
+
+          <Button
+            onPress={handleSubmit(onSubmit)}
+            disabled={isSubmitting || !isDirty}
+            className="mt-4"
+          >
+            {isSubmitting ? "Saving..." : "Save Profile"}
+          </Button>
         </View>
-
-        <Controller
-          control={control}
-          name="bio"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <View>
-              <Text className="mb-2 text-base font-semibold">Bio</Text>
-              <TextInput
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                placeholder="Enter your bio (max 150 characters)"
-                multiline
-                className="h-24 rounded-md border border-neutral-300 px-3 py-2"
-              />
-              <Text className="mt-1 text-xs text-neutral-500">
-                Example: I love ambient music, creative community building, and
-                vegan pop-ups.
-              </Text>
-              {errors.bio && (
-                <Text className="mt-1 text-xs text-red-500">
-                  {errors.bio.message}
-                </Text>
-              )}
-            </View>
-          )}
-        />
-
-        <View className="flex-col gap-4 space-y-4">
-          <View>
-            <Text className="text-lg font-semibold">How to connect</Text>
-            <Text className="text-sm text-neutral-500">
-              Share any contact info you want to publicly display.
-            </Text>
-          </View>
-
-          <Controller
-            control={control}
-            name="publicEmail"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View>
-                <View className="mb-2 flex-row items-center">
-                  <Mail size={16} color="#000" />
-                  <Text className="ml-2 font-medium">Email</Text>
-                </View>
-                <TextInput
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholder="email@example.com"
-                  keyboardType="email-address"
-                  className="rounded-md border border-neutral-300 px-3 py-2"
-                />
-                {errors.publicEmail && (
-                  <Text className="mt-1 text-xs text-red-500">
-                    {errors.publicEmail.message}
-                  </Text>
-                )}
-              </View>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="publicPhone"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View>
-                <View className="mb-2 flex-row items-center">
-                  <Phone size={16} color="#000" />
-                  <Text className="ml-2 font-medium">Phone</Text>
-                </View>
-                <TextInput
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholder="1234567890"
-                  keyboardType="phone-pad"
-                  className="rounded-md border border-neutral-300 px-3 py-2"
-                />
-                {errors.publicPhone && (
-                  <Text className="mt-1 text-xs text-red-500">
-                    {errors.publicPhone.message}
-                  </Text>
-                )}
-              </View>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="publicInsta"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View>
-                <View className="mb-2 flex-row items-center">
-                  <Instagram size={16} color="#000" />
-                  <Text className="ml-2 font-medium">Instagram</Text>
-                </View>
-                <TextInput
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholder="username"
-                  className="rounded-md border border-neutral-300 px-3 py-2"
-                />
-                {errors.publicInsta && (
-                  <Text className="mt-1 text-xs text-red-500">
-                    {errors.publicInsta.message}
-                  </Text>
-                )}
-              </View>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="publicWebsite"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View>
-                <View className="mb-2 flex-row items-center">
-                  <Globe size={16} color="#000" />
-                  <Text className="ml-2 font-medium">Website</Text>
-                </View>
-                <TextInput
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholder="www.example.com"
-                  keyboardType="url"
-                  className="rounded-md border border-neutral-300 px-3 py-2"
-                />
-                {errors.publicWebsite && (
-                  <Text className="mt-1 text-xs text-red-500">
-                    {errors.publicWebsite.message}
-                  </Text>
-                )}
-              </View>
-            )}
-          />
-        </View>
-
-        <Button
-          onPress={handleSubmit(onSubmit)}
-          disabled={isSubmitting || !isDirty}
-          className="mt-4"
-        >
-          {isSubmitting ? "Saving..." : "Save Profile"}
-        </Button>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
