@@ -99,11 +99,7 @@ export default function EditProfileScreen() {
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
-        showToast(
-          "You need to grant permission to access your photos.",
-          "error",
-        );
-        return;
+        throw new Error("Permission to access photos was denied");
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -114,37 +110,37 @@ export default function EditProfileScreen() {
         base64: true,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0] ?? null;
-        if (!asset) return;
-
-        setProfileImage(asset.uri);
-        const base64 = asset.base64;
-        const mimeType = asset.mimeType;
-        if (!base64 || !mimeType) return;
-        const image = `data:${mimeType};base64,${base64}`;
-
-        try {
-          await user?.setProfileImage({
-            file: image,
-          });
-          showToast("Profile image updated successfully", "success");
-        } catch (error) {
-          console.error("Error updating profile image:", error);
-          showToast(
-            "Failed to update profile image. Please try again.",
-            "error",
-          );
-          // Revert to the previous image if the update fails
-          setProfileImage(user?.imageUrl ?? null);
-        }
+      if (result.canceled) {
+        return;
       }
+
+      const asset = result.assets[0];
+      if (!asset) {
+        throw new Error("No image asset selected");
+      }
+
+      setProfileImage(asset.uri);
+      const base64 = asset.base64;
+      const mimeType = asset.mimeType;
+      if (!base64 || !mimeType) {
+        throw new Error("Image data is incomplete");
+      }
+
+      const image = `data:${mimeType};base64,${base64}`;
+
+      await user?.setProfileImage({
+        file: image,
+      });
+      showToast("Profile image updated successfully", "success");
     } catch (error) {
-      console.error("Error picking image:", error);
-      showToast(
-        "An error occurred while selecting the image. Please try again.",
-        "error",
-      );
+      console.error("Error in pickImage:", error);
+      if (error instanceof Error) {
+        showToast(error.message, "error");
+      } else {
+        showToast("An unexpected error occurred", "error");
+      }
+      // Revert to the previous image if the update fails
+      setProfileImage(user?.imageUrl ?? null);
     }
   }, [user]);
 
