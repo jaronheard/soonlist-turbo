@@ -37,7 +37,7 @@ const storySlides: StorySlide[] = [
   },
 ];
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export function StoryOnboarding() {
   const [currentSlide, setCurrentSlide] = useState(0);
