@@ -21,6 +21,7 @@ const tiers = [
     id: "personal",
     href: "#",
     priceAnnually: "$29.99",
+    priceMonthly: "$2.50",
     percentOff: 70,
     description: "All your possibilities, organized",
     features: [
@@ -159,13 +160,18 @@ export function FoundingMemberPricing({
                 {tier.description}
               </p>
               <p className="mt-6 flex items-center gap-x-3">
-                <span className="font-heading text-4xl font-bold tracking-tight text-gray-900">
+                <span className="font-mono text-4xl font-bold tracking-tight text-gray-900">
                   {tier.priceAnnually}
                 </span>
-                <span className="text-lg font-semibold leading-6 text-neutral-2">
+                <span className="font-mono text-lg font-semibold leading-6 text-neutral-2">
                   /year
                 </span>
                 {tier.percentOff && <Badge>{tier.percentOff}%&nbsp;off</Badge>}
+              </p>
+              <p className="mt-0 flex items-center gap-x-3">
+                <span className="font-mono text-lg font-semibold leading-6 text-neutral-2">
+                  (Just {tier.priceMonthly} /month)
+                </span>
               </p>
               {tier.mostPopular && (
                 <>
