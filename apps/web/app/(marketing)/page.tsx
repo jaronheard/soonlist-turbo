@@ -111,9 +111,9 @@ const faqs = [
       "While we don't offer a free trial, we have a 30-day satisfaction guarantee. If you don't feel more connected to your possibilities within the first month, we'll refund your membership fee, no questions asked.",
   },
   {
-    question: "Is the $29/year Founding Member price guaranteed for life?",
+    question: "Is the $29.99/year Founding Member price guaranteed for life?",
     answer:
-      "The $29/year rate is a special offer for our first 100 subscribers, a 70% discount off our regular $99/year price. As a founding member, you'll lock in this discounted rate for as long as you maintain your subscription.",
+      "The $29.99/year rate is a special offer for our first 100 subscribers, a 70% discount off our regular $99.99/year price. As a founding member, you'll lock in this discounted rate for as long as you maintain your subscription.",
   },
   {
     question:
