@@ -109,8 +109,9 @@ export default function EditProfileScreen() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
+        aspect: [4, 4],
+        quality: 0.1,
+        base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -118,10 +119,14 @@ export default function EditProfileScreen() {
         if (!asset) return;
 
         setProfileImage(asset.uri);
+        const base64 = asset.base64;
+        const mimeType = asset.mimeType;
+        if (!base64 || !mimeType) return;
+        const image = `data:${mimeType};base64,${base64}`;
 
         try {
           await user?.setProfileImage({
-            file: asset as unknown as File,
+            file: image,
           });
           showToast("Profile image updated successfully", "success");
         } catch (error) {
