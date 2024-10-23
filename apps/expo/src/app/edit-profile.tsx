@@ -185,8 +185,9 @@ export default function EditProfileScreen() {
 
         <View className="flex-col gap-4 space-y-6">
           <UserProfileFlair
-            className="h-24 items-center"
+            className="mx-auto h-24 w-24 items-center"
             username={user?.username ?? ""}
+            size="2xl"
           >
             <TouchableOpacity
               onPress={pickImage}
