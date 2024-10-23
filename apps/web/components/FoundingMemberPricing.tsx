@@ -176,7 +176,9 @@ export function FoundingMemberPricing({
               {tier.mostPopular && (
                 <>
                   <div className="p-2"></div>
-                  <Badge variant={"outline"}>🌈 NOTAFLOF available</Badge>
+                  <Link href="mailto:support@soonlist.com?subject=🌈%20NOTAFLOF%20request">
+                    <Badge variant={"outline"}>🌈 NOTAFLOF available</Badge>
+                  </Link>
                   <Badge variant="gray" className="ml-2">
                     Portland Metro Region only
                   </Badge>
