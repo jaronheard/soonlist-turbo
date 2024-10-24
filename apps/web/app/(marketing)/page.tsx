@@ -273,7 +273,7 @@ function ConnectWithWhatMatters() {
     <Section>
       <div className="rounded-xl border border-neutral-3 bg-white px-4 py-16 text-center md:px-16 lg:px-24">
         <SectionTitle title="How it works" />
-        <div className="relative mx-auto mt-6 h-auto w-[18rem] rounded-lg shadow-lg md:px-6 lg:px-0">
+        <div className="relative mx-auto mt-6 h-auto w-[18rem] rounded-lg md:px-6 lg:px-0">
           <CarouselDemo />
         </div>
         <div className="mt-12 grid divide-y divide-neutral-200 md:grid-cols-3 md:divide-x md:divide-y-0">
