@@ -10,13 +10,7 @@ import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
-import {
-  HelpCircle,
-  LogOut,
-  MessageCircle,
-  Pencil,
-  User,
-} from "lucide-react-native";
+import { HelpCircle, LogOut, MessageCircle, User } from "lucide-react-native";
 
 import { deleteAuthData } from "~/hooks/useAuthSync";
 import { useAppStore } from "~/store";

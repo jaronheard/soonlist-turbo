@@ -159,7 +159,7 @@ export default function EditProfileScreen() {
 
   const handleSaveOrBack = useCallback(() => {
     if (isDirty && isValid) {
-      handleSubmit(onSubmit)();
+      void handleSubmit(onSubmit)();
     } else {
       router.back();
     }
