@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -55,6 +55,7 @@ export default function EditProfileScreen() {
     control,
     handleSubmit,
     formState: { errors, isDirty, isValid },
+    reset,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -67,6 +68,20 @@ export default function EditProfileScreen() {
     },
     mode: "onBlur",
   });
+
+  // Add this useEffect hook
+  useEffect(() => {
+    if (userData) {
+      reset({
+        username: user?.username ?? "",
+        bio: userData.bio ?? undefined,
+        publicEmail: userData.publicEmail ?? undefined,
+        publicPhone: userData.publicPhone ?? undefined,
+        publicInsta: userData.publicInsta ?? undefined,
+        publicWebsite: userData.publicWebsite ?? undefined,
+      });
+    }
+  }, [userData, user, reset]);
 
   const updateProfile = api.user.updateAdditionalInfo.useMutation({
     onMutate: () => setIsSubmitting(true),
@@ -82,15 +97,16 @@ export default function EditProfileScreen() {
           await user?.update({ username: data.username });
         }
         await updateProfile.mutateAsync(data);
-        router.back();
+        showToast("Profile updated successfully", "success");
       } catch (error) {
         console.error("Error updating profile:", error);
+        showToast("An unexpected error occurred", "error");
         // Handle error (e.g., show error message to user)
       } finally {
         setIsSubmitting(false);
       }
     },
-    [user, updateProfile, router],
+    [user, updateProfile],
   );
 
   const pickImage = useCallback(async () => {
@@ -388,11 +404,7 @@ export default function EditProfileScreen() {
             disabled={isSubmitting}
             className="mt-4"
           >
-            {isDirty && isValid
-              ? isSubmitting
-                ? "Saving..."
-                : "Save Profile"
-              : "Done"}
+            {isDirty ? (isSubmitting ? "Saving..." : "Save Profile") : "Done"}
           </Button>
         </View>
       </ScrollView>
