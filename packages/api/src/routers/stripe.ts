@@ -262,4 +262,46 @@ export const stripeRouter = createTRPCRouter({
         });
       }
     }),
+  verifyCheckoutSession: publicProcedure
+    .input(z.object({ sessionId: z.string() }))
+    .query(async ({ input }) => {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+        apiVersion: "2024-04-10",
+      });
+
+      try {
+        const session = await stripe.checkout.sessions.retrieve(
+          input.sessionId,
+          {
+            expand: ["subscription"],
+          },
+        );
+
+        if (session.status !== "complete") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Checkout session is not complete",
+          });
+        }
+
+        return {
+          success: true,
+          session: {
+            id: session.id,
+            customerId: session.customer as string,
+            customerEmail: session.customer_details?.email,
+            plan: session.metadata?.plan,
+            subscriptionId: (session.subscription as Stripe.Subscription).id,
+            subscriptionStatus: (session.subscription as Stripe.Subscription)
+              .status,
+          },
+        };
+      } catch (error) {
+        console.error("Error verifying checkout session:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to verify checkout session",
+        });
+      }
+    }),
 });
