@@ -8,7 +8,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: IS_DEV ? "Soonlist (Dev)" : "Soonlist",
   slug: "timetimecc",
   scheme: IS_DEV ? "soonlist.dev" : "soonlist",
-  version: "1.0.2",
+  version: "1.0.3",
   orientation: "portrait",
   icon: IS_DEV ? "./assets/icon-dev.png" : "./assets/icon.png",
   userInterfaceStyle: "light",
