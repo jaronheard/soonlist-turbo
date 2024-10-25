@@ -330,15 +330,10 @@ export default function UserEventsList(props: {
   const renderEmptyState = () => (
     <View className="flex-1 items-center justify-center px-6 py-10">
       <Text className="mb-2 text-center text-2xl font-bold text-neutral-1">
-        Add your possibilities
+        Capture an event
       </Text>
       <Text className="mb-6 text-center text-base text-neutral-2">
-        Or{" "}
-        <Link href="/(tabs)/discover" asChild>
-          <Text className="font-medium text-interactive-1">
-            discover others
-          </Text>
-        </Link>
+        Events you capture will show up in My Feed
       </Text>
       <Animated.View
         style={[
