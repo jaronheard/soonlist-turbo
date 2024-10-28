@@ -45,17 +45,22 @@ export function FoundingMemberPricing({
 
   const { data: checkoutUrls } =
     api.stripe.getSubscriptionCheckoutUrls.useQuery(undefined, {
-      enabled: isSignedIn,
+      enabled: isLoaded && isSignedIn,
     });
+
   const { data: publicCheckoutUrls } =
     api.stripe.getPublicSubscriptionCheckoutUrls.useQuery(undefined, {
-      enabled: !isSignedIn,
+      enabled: isLoaded && !isSignedIn,
     });
+
   const { data: portalUrl } = api.stripe.getCustomerPortalUrl.useQuery(
     undefined,
-    { enabled: isSignedIn },
+    { enabled: isLoaded && isSignedIn },
   );
-  const { data: emojisData } = api.user.getAllTakenEmojis.useQuery();
+
+  const { data: emojisData } = api.user.getAllTakenEmojis.useQuery(undefined, {
+    enabled: isLoaded,
+  });
 
   if (!isLoaded) {
     return <div>Loading...</div>;
