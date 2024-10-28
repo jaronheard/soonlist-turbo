@@ -26,7 +26,7 @@
         "dist/**",
         ".cache/tsbuildinfo.json"
       ],
-      "env": ["SENTRY_AUTH_TOKEN"]
+      "env": ["SENTRY_AUTH_TOKEN", "LANGFUSE_SECRET_KEY"]
     },
     "dev": {
       "persistent": true,
