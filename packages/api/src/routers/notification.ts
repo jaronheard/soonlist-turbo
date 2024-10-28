@@ -32,7 +32,7 @@ const sendNotificationInputSchema = z.object({
 });
 
 const WEEKLY_DISCOVER_SUMMARY =
-  "🗳️ Civic engagement on Monday, 🕺 Performance party on Tuesday, 🖨️ Counterculture chronicles on Thursday, 🎃 Risqué revelry on Friday, 🎥 Experimental screenings (Sat)";
+  "🎤 Library karaoke on Monday, ☕ Latte art throwdown on Tuesday, 🤼 Noche de la Lucha pop-up on Thursday, 🎃 Detroit techno on Friday, 🎥 Masks & movies on Saturday";
 /**
  * Generates a prompt for creating a weekly notification with events.
  *
@@ -104,8 +104,13 @@ async function processUserNotification(user: {
     let prefix = "";
     let summary = "";
 
+    // only send corrected notification if there are < 3 events
+    if (upcomingEvents.length >= 3) {
+      return { success: true, ticket: null };
+    }
+
     if (upcomingEvents.length < 3) {
-      title = "✨ Discover this week";
+      title = "✨ (Corrected) Discover this week";
       link = "/discover";
       prefix = "From other Soonlist users: ";
       summary = WEEKLY_DISCOVER_SUMMARY;
