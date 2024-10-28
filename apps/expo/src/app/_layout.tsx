@@ -79,11 +79,12 @@ const routingInstrumentation = Sentry.reactNavigationIntegration({
 
 Sentry.init({
   dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.us.sentry.io/4506458761396224",
-  integrations: [routingInstrumentation],
+  integrations: [routingInstrumentation, Sentry.httpClientIntegration()],
   attachStacktrace: true,
   debug: process.env.NODE_ENV !== "production",
   tracesSampleRate: 1.0,
   profilesSampleRate: 1.0,
+  sendDefaultPii: true,
   _experiments: {
     replaysSessionSampleRate: 1.0,
     replaysOnErrorSampleRate: 1.0,
