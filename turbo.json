@@ -25,7 +25,8 @@
         ".vercel/output/**",
         "dist/**",
         ".cache/tsbuildinfo.json"
-      ]
+      ],
+      "env": ["SENTRY_AUTH_TOKEN"]
     },
     "dev": {
       "persistent": true,
