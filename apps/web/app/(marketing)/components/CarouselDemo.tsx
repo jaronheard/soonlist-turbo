@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Image from "next/image";
-import Autoplay from "embla-carousel-autoplay";
 
 import {
   Carousel,
@@ -27,16 +26,9 @@ export function CarouselDemo() {
   return (
     <Carousel
       className="h-full w-full"
-      plugins={[
-        Autoplay({
-          delay: 3500,
-          jump: true,
-          stopOnMouseEnter: true,
-        }),
-      ]}
       opts={{
         align: "start",
-        loop: true,
+        loop: false,
       }}
     >
       <CarouselContent>
