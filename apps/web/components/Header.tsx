@@ -44,8 +44,29 @@ import { Logo } from "./Logo";
 import { TimezoneSelect } from "./TimezoneSelect";
 import { UserProfileFlair } from "./UserProfileFlair";
 
+const excludedMenuRoutes = ["/install"];
+
 export function Header() {
   const { user } = useUser();
+  const pathname = usePathname();
+  const hideMenu = excludedMenuRoutes.includes(pathname);
+
+  if (hideMenu) {
+    return (
+      <div className="sticky top-0 z-50 bg-interactive-3">
+        <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
+          <div className="flex items-center sm:grow sm:gap-0">
+            <NavigationMenu>
+              <Link href="/" className="relative flex items-center">
+                <Logo variant="hidePreview" className="block sm:hidden" />
+                <Logo variant="hidePreview" className="hidden sm:block" />
+              </Link>
+            </NavigationMenu>
+          </div>
+        </header>
+      </div>
+    );
+  }
 
   return (
     <div className="sticky top-0 z-50 bg-interactive-3">
