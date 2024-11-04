@@ -31,9 +31,6 @@ const sendNotificationInputSchema = z.object({
   data: z.record(z.unknown()).optional(),
 });
 
-// Sent October 28, 2024. Update for November 4, 2024.
-const WEEKLY_DISCOVER_SUMMARY =
-  "🎤 Library karaoke on Monday, ☕ Latte art throwdown on Tuesday, 🤼 Noche de la Lucha pop-up on Thursday, 🎃 Detroit techno on Friday, 🎥 Masks & movies on Saturday";
 /**
  * Generates a prompt for creating a weekly notification with events.
  *
@@ -106,10 +103,11 @@ async function processUserNotification(user: {
     let summary = "";
 
     if (upcomingEvents.length < 3) {
-      title = "✨ Discover this week";
-      link = "/discover";
-      prefix = "From other Soonlist users: ";
-      summary = WEEKLY_DISCOVER_SUMMARY;
+      title = "This week: capture every possibility";
+      link = "/feed";
+      prefix = "";
+      summary =
+        "Screenshot interesting events and add them to your Soonlist in seconds ✨";
     } else {
       const eventDescriptions = upcomingEvents
         .map((event) => {
