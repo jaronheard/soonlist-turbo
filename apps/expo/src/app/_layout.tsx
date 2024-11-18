@@ -195,6 +195,13 @@ const InitialLayout = () => {
           headerBackVisible: true,
         }}
       />
+      <Stack.Screen
+        name="event/[id]/qr"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 };
