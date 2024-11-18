@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { X } from "lucide-react-native";
@@ -25,9 +25,28 @@ export default function QRModal() {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const eventData = event.event as AddToCalendarButtonProps;
   const qrValue = `${Config.apiBaseUrl}/event/${id}`;
+  const eventImage = eventData.images?.[0];
 
   return (
     <View className="flex-1 bg-interactive-3">
+      {/* Background Image Container */}
+      {eventImage && (
+        <View className="absolute inset-0 h-full w-full overflow-hidden">
+          <Image
+            source={{ uri: eventImage }}
+            style={{
+              width: "100%",
+              height: "100%",
+              position: "absolute",
+              opacity: 0.9,
+            }}
+            resizeMode="cover"
+            blurRadius={10}
+          />
+          <View className="absolute inset-0 bg-interactive-3/90" />
+        </View>
+      )}
+
       <View className="flex-1 items-center justify-center p-4">
         <TouchableOpacity
           className="absolute right-4 top-12 z-10 rounded-full bg-interactive-1 p-2"
@@ -36,10 +55,11 @@ export default function QRModal() {
           <X size={24} color="white" />
         </TouchableOpacity>
 
-        <View>
-          <Logo className="h-8 w-40" variant="hidePreview" />
-        </View>
-        <View className="mt-8 items-center rounded-3xl bg-white p-8">
+        <View className="items-center rounded-3xl bg-white/95 p-8 shadow-sm">
+          <View>
+            <Logo className="h-8 w-40" variant="hidePreview" />
+          </View>
+          <View className="p-4"></View>
           <QRCode
             value={qrValue}
             size={250}
@@ -55,10 +75,6 @@ export default function QRModal() {
             Captured by @{event.userName}
           </Text>
         </View>
-
-        <Text className="mt-6 text-center text-sm text-zinc-400">
-          Scan to view event details
-        </Text>
       </View>
     </View>
   );

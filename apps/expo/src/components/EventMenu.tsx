@@ -135,7 +135,7 @@ export function EventMenu({
         systemIcon: "square.and.arrow.up",
       },
       {
-        title: "Show QR Code",
+        title: "Show QR",
         lucideIcon: QrCode,
         systemIcon: "qrcode",
       },
@@ -308,7 +308,7 @@ export function EventMenu({
       case "Remove from My Feed":
         void handleUnfollow();
         break;
-      case "Show QR Code":
+      case "Show QR":
         handleShowQR();
         break;
     }
