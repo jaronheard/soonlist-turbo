@@ -71,7 +71,7 @@ export const CalendarSelectionModal: React.FC<CalendarSelectionModalProps> = ({
       animationType="slide"
       onRequestClose={onDismiss}
     >
-      <View className="flex-1 items-center justify-center bg-neutral-1 bg-opacity-50">
+      <View className="flex-1 items-center justify-center bg-neutral-1">
         <View className="max-h-[80%] w-4/5 rounded-lg bg-white p-5">
           <Text className="mb-3 text-lg font-bold">
             Select Calendar for Event

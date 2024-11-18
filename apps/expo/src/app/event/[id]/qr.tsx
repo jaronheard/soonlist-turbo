@@ -28,7 +28,7 @@ export default function QRModal() {
     <View className="flex-1 bg-black">
       <View className="flex-1 items-center justify-center p-4">
         <TouchableOpacity
-          className="absolute right-4 top-12 z-10 rounded-full bg-zinc-800/80 p-2"
+          className="absolute right-4 top-12 z-10 rounded-full bg-interactive-1 p-2"
           onPress={() => router.back()}
         >
           <X size={24} color="white" />
@@ -47,7 +47,7 @@ export default function QRModal() {
           </Text>
 
           <Text className="mt-2 text-sm text-zinc-600">
-            by {event.userName}
+            Captured by @{event.userName}
           </Text>
         </View>
 
