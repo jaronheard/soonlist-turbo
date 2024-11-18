@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react-native";
-import React, { useState } from "react";
+import React from "react";
 import {
   Dimensions,
   Linking,

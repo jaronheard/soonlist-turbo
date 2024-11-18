@@ -150,13 +150,7 @@ export function UserEventListItem(props: {
       isSaved={isSaved}
       menuType="context"
     >
-      <Link
-        href={{
-          pathname: "/event/[id]",
-          params: { id },
-        }}
-        asChild
-      >
+      <Link href={`/event/${id}`} asChild>
         <Pressable>
           <View
             className={cn(
