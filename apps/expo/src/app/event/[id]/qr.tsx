@@ -5,6 +5,7 @@ import { X } from "lucide-react-native";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 
+import { Logo } from "~/components/Logo";
 import { api } from "~/utils/api";
 import Config from "~/utils/config";
 
@@ -21,11 +22,12 @@ export default function QRModal() {
 
   if (!event) return null;
 
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const eventData = event.event as AddToCalendarButtonProps;
   const qrValue = `${Config.apiBaseUrl}/event/${id}`;
 
   return (
-    <View className="flex-1 bg-black">
+    <View className="flex-1 bg-interactive-3">
       <View className="flex-1 items-center justify-center p-4">
         <TouchableOpacity
           className="absolute right-4 top-12 z-10 rounded-full bg-interactive-1 p-2"
@@ -34,7 +36,10 @@ export default function QRModal() {
           <X size={24} color="white" />
         </TouchableOpacity>
 
-        <View className="items-center rounded-3xl bg-white p-8">
+        <View>
+          <Logo className="h-8 w-40" variant="hidePreview" />
+        </View>
+        <View className="mt-8 items-center rounded-3xl bg-white p-8">
           <QRCode
             value={qrValue}
             size={250}
