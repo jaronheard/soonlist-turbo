@@ -16,6 +16,7 @@ import {
   MenuTrigger,
 } from "react-native-popup-menu";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import {
   CalendarPlus,
   EyeOff,
@@ -25,6 +26,7 @@ import {
   MoreVertical,
   PenSquare,
   PlusCircle,
+  QrCode,
   ShareIcon,
   Trash2,
 } from "lucide-react-native";
@@ -67,6 +69,7 @@ export function EventMenu({
 }: EventMenuProps) {
   const utils = api.useUtils();
   const { handleAddToCal: addToCalendar } = useCalendar();
+  const router = useRouter();
 
   const deleteEventMutation = api.event.delete.useMutation({
     onMutate: () => {
@@ -130,6 +133,11 @@ export function EventMenu({
         title: "Share",
         lucideIcon: ShareIcon,
         systemIcon: "square.and.arrow.up",
+      },
+      {
+        title: "Show QR",
+        lucideIcon: QrCode,
+        systemIcon: "qrcode",
       },
       { title: "Directions", lucideIcon: Map, systemIcon: "map" },
       {
@@ -265,6 +273,10 @@ export function EventMenu({
     }
   };
 
+  const handleShowQR = () => {
+    router.push(`/event/${event.id}/qr`);
+  };
+
   const handleMenuSelect = (title: string) => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     switch (title) {
@@ -295,6 +307,9 @@ export function EventMenu({
         break;
       case "Remove from My Feed":
         void handleUnfollow();
+        break;
+      case "Show QR":
+        handleShowQR();
         break;
     }
   };

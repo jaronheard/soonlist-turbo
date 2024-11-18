@@ -187,12 +187,19 @@ const InitialLayout = () => {
         }}
       />
       <Stack.Screen
-        name="event/[id]"
+        name="event/[id]/index"
         options={{
           title: "Event Details",
           headerShown: true,
           headerBackTitle: "Back",
           headerBackVisible: true,
+        }}
+      />
+      <Stack.Screen
+        name="event/[id]/qr"
+        options={{
+          presentation: "modal",
+          headerShown: false,
         }}
       />
     </Stack>
