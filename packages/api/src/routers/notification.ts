@@ -103,11 +103,10 @@ async function processUserNotification(user: {
     let summary = "";
 
     if (upcomingEvents.length < 3) {
-      title = "This week: capture 3 possibilities";
+      title = "This week: capture 3 screenshots";
       link = "/feed";
       prefix = "";
-      summary =
-        "See something interesting? Screenshot and add to your Soonlist in seconds ✨";
+      summary = "Save it all now, deccide later ✨";
     } else {
       const eventDescriptions = upcomingEvents
         .map((event) => {
