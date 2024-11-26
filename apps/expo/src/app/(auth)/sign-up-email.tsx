@@ -101,6 +101,9 @@ export default function SignUpScreen() {
                 name="firstName"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
+                    autoComplete="given-name"
+                    autoCorrect={false}
+                    autoCapitalize="words"
                     defaultValue={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -124,6 +127,9 @@ export default function SignUpScreen() {
                 name="lastName"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
+                    autoComplete="family-name"
+                    autoCorrect={false}
+                    autoCapitalize="words"
                     defaultValue={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
