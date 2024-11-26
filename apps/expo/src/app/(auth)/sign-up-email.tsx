@@ -3,106 +3,55 @@ import { Linking, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Stack, useRouter } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Logo } from "../../components/Logo";
+
+const signUpSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  username: z.string().min(4, "Username must be at least 4 characters long"),
+  emailAddress: z.string().email("Invalid email format"),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
+});
+
+type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpScreen() {
   const { isLoaded, signUp } = useSignUp();
   const router = useRouter();
-
-  const [firstName, setFirstName] = React.useState("");
-  const [lastName, setLastName] = React.useState("");
-  const [emailAddress, setEmailAddress] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [username, setUsername] = React.useState("");
-
-  const [firstNameError, setFirstNameError] = React.useState("");
-  const [lastNameError, setLastNameError] = React.useState("");
-  const [emailError, setEmailError] = React.useState("");
-  const [passwordError, setPasswordError] = React.useState("");
-  const [usernameError, setUsernameError] = React.useState("");
   const [generalError, setGeneralError] = React.useState("");
 
-  const lastNameRef = React.useRef<TextInput>(null);
-  const usernameRef = React.useRef<TextInput>(null);
-  const emailRef = React.useRef<TextInput>(null);
-  const passwordRef = React.useRef<TextInput>(null);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      username: "",
+      emailAddress: "",
+      password: "",
+    },
+  });
 
-  const focusNextField = (nextField: React.RefObject<TextInput>) => {
-    nextField.current?.focus();
-  };
-
-  const validateForm = () => {
-    let isValid = true;
-    setFirstNameError("");
-    setLastNameError("");
-    setEmailError("");
-    setPasswordError("");
-    setUsernameError("");
-    setGeneralError("");
-
-    if (!firstName) {
-      setFirstNameError("First name is required");
-      isValid = false;
-    }
-
-    if (!lastName) {
-      setLastNameError("Last name is required");
-      isValid = false;
-    }
-
-    if (!username) {
-      setUsernameError("Username is required");
-      isValid = false;
-    }
-
-    if (!emailAddress) {
-      setEmailError("Email is required");
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(emailAddress)) {
-      setEmailError("Invalid email format");
-      isValid = false;
-    }
-
-    if (!password) {
-      setPasswordError("Password is required");
-      isValid = false;
-    } else if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters long");
-      isValid = false;
-    }
-
-    return isValid;
-  };
-
-  const onSignUpPress = async () => {
+  const onSignUpPress = async (data: SignUpFormData) => {
     if (!isLoaded) return;
 
-    if (!validateForm()) return;
-
     try {
-      await signUp.create({
-        firstName,
-        lastName,
-        emailAddress,
-        password,
-        username,
-      });
-
+      await signUp.create(data);
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       router.push("/verify-email");
     } catch (err: unknown) {
       console.error("Error during sign up:", err);
-      if (err instanceof Error) {
-        setGeneralError(err.message);
-      } else {
-        setGeneralError("An error occurred during sign up");
-      }
+      setGeneralError(
+        err instanceof Error ? err.message : "An error occurred during sign up",
+      );
     }
-  };
-
-  const navigateToSignIn = () => {
-    router.push("/sign-in-email");
   };
 
   if (!isLoaded) {
@@ -141,112 +90,161 @@ export default function SignUpScreen() {
               {generalError}
             </Text>
           ) : null}
+
           <View className="mb-4 w-full flex-row gap-4">
             <View className="flex-1">
               <Text className="mb-1 text-sm font-medium text-gray-700">
                 First Name
               </Text>
-              <TextInput
-                value={firstName}
-                onChangeText={setFirstName}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-                returnKeyType="next"
-                onSubmitEditing={() => focusNextField(lastNameRef)}
-                blurOnSubmit={false}
+              <Controller
+                control={control}
+                name="firstName"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    defaultValue={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                    returnKeyType="next"
+                  />
+                )}
               />
-              {firstNameError ? (
-                <Text className="mt-1 text-red-500">{firstNameError}</Text>
-              ) : null}
+              {errors.firstName && (
+                <Text className="mt-1 text-red-500">
+                  {errors.firstName.message}
+                </Text>
+              )}
             </View>
             <View className="flex-1">
               <Text className="mb-1 text-sm font-medium text-gray-700">
                 Last Name
               </Text>
-              <TextInput
-                ref={lastNameRef}
-                value={lastName}
-                onChangeText={setLastName}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-                returnKeyType="next"
-                onSubmitEditing={() => focusNextField(usernameRef)}
-                blurOnSubmit={false}
+              <Controller
+                control={control}
+                name="lastName"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    defaultValue={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                    returnKeyType="next"
+                  />
+                )}
               />
-              {lastNameError ? (
-                <Text className="mt-1 text-red-500">{lastNameError}</Text>
-              ) : null}
+              {errors.lastName && (
+                <Text className="mt-1 text-red-500">
+                  {errors.lastName.message}
+                </Text>
+              )}
             </View>
           </View>
+
           <View className="mb-4 w-full">
             <Text className="mb-1 text-sm font-medium text-gray-700">
               Username
             </Text>
-            <TextInput
-              ref={usernameRef}
-              autoCapitalize="none"
-              value={username}
-              onChangeText={setUsername}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-              returnKeyType="next"
-              onSubmitEditing={() => focusNextField(emailRef)}
-              blurOnSubmit={false}
+            <Controller
+              control={control}
+              name="username"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  autoCapitalize="none"
+                  autoComplete="username-new"
+                  autoCorrect={false}
+                  defaultValue={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                  returnKeyType="next"
+                />
+              )}
             />
-            {usernameError ? (
-              <Text className="mt-1 text-red-500">{usernameError}</Text>
-            ) : null}
+            {errors.username && (
+              <Text className="mt-1 text-red-500">
+                {errors.username.message}
+              </Text>
+            )}
             <Text className="mt-1 text-sm text-gray-500">
               On Instagram? Consider using the same username
             </Text>
           </View>
+
           <View className="mb-4 w-full">
             <Text className="mb-1 text-sm font-medium text-gray-700">
               Email
             </Text>
-            <TextInput
-              ref={emailRef}
-              autoCapitalize="none"
-              value={emailAddress}
-              onChangeText={setEmailAddress}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-              returnKeyType="next"
-              onSubmitEditing={() => focusNextField(passwordRef)}
-              blurOnSubmit={false}
-              keyboardType="email-address"
+            <Controller
+              control={control}
+              name="emailAddress"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  autoCorrect={false}
+                  defaultValue={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                  returnKeyType="next"
+                  keyboardType="email-address"
+                />
+              )}
             />
-            {emailError ? (
-              <Text className="mt-1 text-red-500">{emailError}</Text>
-            ) : null}
+            {errors.emailAddress && (
+              <Text className="mt-1 text-red-500">
+                {errors.emailAddress.message}
+              </Text>
+            )}
           </View>
+
           <View className="mb-6 w-full">
             <Text className="mb-1 text-sm font-medium text-gray-700">
               Password
             </Text>
-            <TextInput
-              ref={passwordRef}
-              value={password}
-              secureTextEntry={true}
-              onChangeText={setPassword}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-              returnKeyType="done"
-              onSubmitEditing={onSignUpPress}
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  defaultValue={value}
+                  autoCapitalize="none"
+                  autoComplete="password-new"
+                  autoCorrect={false}
+                  secureTextEntry={true}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                  returnKeyType="done"
+                />
+              )}
             />
-            {passwordError ? (
-              <Text className="mt-1 text-red-500">{passwordError}</Text>
-            ) : null}
+            {errors.password && (
+              <Text className="mt-1 text-red-500">
+                {errors.password.message}
+              </Text>
+            )}
           </View>
+
           <Pressable
-            onPress={onSignUpPress}
+            onPress={handleSubmit(onSignUpPress)}
             className="w-full rounded-full bg-interactive-1 px-6 py-3"
           >
             <Text className="text-center text-lg font-bold text-white">
               Sign Up
             </Text>
           </Pressable>
-          <Pressable onPress={navigateToSignIn} className="mt-4">
+
+          <Pressable
+            onPress={() => router.push("/sign-in-email")}
+            className="mt-4"
+          >
             <Text className="text-center text-gray-600">
               Already have an account?{" "}
               <Text className="font-bold text-interactive-1">Sign in</Text>
             </Text>
           </Pressable>
+
           <Text className="mt-6 text-center text-sm text-gray-500">
             Having trouble signing up?{" "}
             <Text
