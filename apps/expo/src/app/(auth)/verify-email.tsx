@@ -1,45 +1,48 @@
-import React, { useState } from "react";
+import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Stack } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { usePostHog } from "posthog-react-native";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Logo } from "../../components/Logo";
 
+const verifyEmailSchema = z.object({
+  code: z
+    .string()
+    .min(1, "Verification code is required")
+    .regex(/^\d{6}$/, "Invalid code format. Please enter 6 digits."),
+});
+
+type VerifyEmailFormData = z.infer<typeof verifyEmailSchema>;
+
 const VerifyEmail = () => {
-  const [code, setCode] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [codeError, setCodeError] = useState("");
-  const [generalError, setGeneralError] = useState("");
+  const [isVerifying, setIsVerifying] = React.useState(false);
+  const [generalError, setGeneralError] = React.useState("");
   const { signUp, setActive } = useSignUp();
   const posthog = usePostHog();
 
-  const validateCode = () => {
-    setCodeError("");
-    setGeneralError("");
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<VerifyEmailFormData>({
+    resolver: zodResolver(verifyEmailSchema),
+    defaultValues: {
+      code: "",
+    },
+  });
 
-    if (!code) {
-      setCodeError("Verification code is required");
-      return false;
-    }
-
-    if (!/^\d{6}$/.test(code)) {
-      setCodeError("Invalid code format. Please enter 6 digits.");
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleVerification = async () => {
+  const handleVerification = async (data: VerifyEmailFormData) => {
     if (!signUp) return;
-    if (!validateCode()) return;
 
     try {
       setIsVerifying(true);
       const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code,
+        code: data.code,
       });
 
       if (completeSignUp.status === "complete") {
@@ -54,11 +57,11 @@ const VerifyEmail = () => {
       }
     } catch (err: unknown) {
       console.error("Error during verification:", err);
-      if (err instanceof Error) {
-        setGeneralError(err.message);
-      } else {
-        setGeneralError("An error occurred during verification");
-      }
+      setGeneralError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred during verification",
+      );
     } finally {
       setIsVerifying(false);
     }
@@ -91,25 +94,38 @@ const VerifyEmail = () => {
           <Text className="mb-8 text-center text-lg text-gray-500">
             Please enter the verification code sent to your email.
           </Text>
+
           {generalError ? (
             <Text className="mb-4 text-center text-red-500">
               {generalError}
             </Text>
           ) : null}
+
           <View className="w-full">
-            <TextInput
-              value={code}
-              onChangeText={setCode}
-              placeholder="Verification Code"
-              keyboardType="number-pad"
-              className="mb-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+            <Controller
+              control={control}
+              name="code"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  defaultValue={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="Verification Code"
+                  keyboardType="number-pad"
+                  className="mb-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                  maxLength={6}
+                  returnKeyType="done"
+                  onSubmitEditing={handleSubmit(handleVerification)}
+                />
+              )}
             />
-            {codeError ? (
-              <Text className="mb-4 text-red-500">{codeError}</Text>
-            ) : null}
+            {errors.code && (
+              <Text className="mb-4 text-red-500">{errors.code.message}</Text>
+            )}
           </View>
+
           <Pressable
-            onPress={handleVerification}
+            onPress={handleSubmit(handleVerification)}
             disabled={isVerifying}
             className="w-full rounded-full bg-interactive-1 px-6 py-3"
           >

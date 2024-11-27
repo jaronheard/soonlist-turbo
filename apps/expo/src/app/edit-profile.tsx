@@ -231,8 +231,11 @@ export default function EditProfileScreen() {
               render={({ field: { onChange, onBlur, value } }) => (
                 <View className="flex-1">
                   <TextInput
+                    autoComplete="username"
+                    autoCorrect={false}
+                    autoCapitalize="none"
                     ref={usernameRef}
-                    value={value}
+                    defaultValue={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="Enter your username"
@@ -257,8 +260,11 @@ export default function EditProfileScreen() {
               <View>
                 <Text className="mb-2 text-base font-semibold">Bio</Text>
                 <TextInput
+                  autoComplete="off"
+                  autoCorrect={false}
+                  autoCapitalize="none"
                   ref={bioRef}
-                  value={value}
+                  defaultValue={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   placeholder="Enter your bio (max 150 characters)"
@@ -296,8 +302,11 @@ export default function EditProfileScreen() {
                     <Text className="ml-2 font-medium">Email</Text>
                   </View>
                   <TextInput
+                    autoComplete="email"
+                    autoCorrect={false}
+                    autoCapitalize="none"
                     ref={emailRef}
-                    value={value}
+                    defaultValue={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="email@example.com"
@@ -325,8 +334,11 @@ export default function EditProfileScreen() {
                     <Text className="ml-2 font-medium">Phone</Text>
                   </View>
                   <TextInput
+                    autoComplete="tel"
+                    autoCorrect={false}
+                    autoCapitalize="none"
                     ref={phoneRef}
-                    value={value}
+                    defaultValue={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="1234567890"
@@ -352,8 +364,11 @@ export default function EditProfileScreen() {
                     <Text className="ml-2 font-medium">Instagram</Text>
                   </View>
                   <TextInput
+                    autoComplete="off"
+                    autoCorrect={false}
+                    autoCapitalize="none"
                     ref={instaRef}
-                    value={value}
+                    defaultValue={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="username"
@@ -380,8 +395,11 @@ export default function EditProfileScreen() {
                     <Text className="ml-2 font-medium">Website</Text>
                   </View>
                   <TextInput
+                    autoComplete="url"
+                    autoCorrect={false}
+                    autoCapitalize="none"
                     ref={websiteRef}
-                    value={value}
+                    defaultValue={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="www.example.com"
