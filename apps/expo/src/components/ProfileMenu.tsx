@@ -83,6 +83,7 @@ export function ProfileMenu() {
                 borderColor: "#FEEA9F",
               }}
               contentFit="cover"
+              contentPosition="center"
             />
           ) : (
             <View className="h-10 w-10 items-center justify-center rounded-full bg-gray-200">

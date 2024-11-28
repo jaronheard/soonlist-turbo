@@ -60,11 +60,11 @@ export async function UserInfo(props: UserInfoProps) {
           >
             <UserProfileFlair username={user.username} size="2xl">
               <Image
-                className="content-box size-20 rounded-full border-8 border-accent-yellow"
+                className="content-box size-20 rounded-full border-8 border-accent-yellow object-cover object-center"
                 src={user.userImage}
-                alt=""
-                width={375}
-                height={375}
+                alt={`${user.displayName}'s profile picture`}
+                width={80}
+                height={80}
               />
             </UserProfileFlair>
           </Link>
@@ -133,11 +133,11 @@ export async function UserInfo(props: UserInfoProps) {
         <Link href={`/${user.username}/events`}>
           <UserProfileFlair username={user.username}>
             <Image
-              className="inline-block size-9 rounded-full"
+              className="inline-block size-9 rounded-full object-cover object-center"
               src={user.userImage}
-              alt=""
-              width={375}
-              height={375}
+              alt={`${user.displayName}'s profile picture`}
+              width={36}
+              height={36}
             />
           </UserProfileFlair>
         </Link>

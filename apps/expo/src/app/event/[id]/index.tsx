@@ -243,6 +243,7 @@ export default function Page() {
                       source={{ uri: event.user.userImage }}
                       style={{ width: 20, height: 20, borderRadius: 10 }}
                       contentFit="cover"
+                      contentPosition="center"
                     />
                   ) : (
                     <User size={20} color="#627496" />

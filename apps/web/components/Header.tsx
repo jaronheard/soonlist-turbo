@@ -239,9 +239,9 @@ const UserMenu = () => {
           <Image
             alt={"User"}
             src={user.imageUrl}
-            width={32}
-            height={32}
-            className="rounded-full border border-gray-200 drop-shadow-sm"
+            width={36}
+            height={36}
+            className="size-9 rounded-full border border-gray-200 object-cover object-center drop-shadow-sm"
           />
         </UserProfileFlair>
       </DropdownMenuTrigger>
@@ -258,7 +258,7 @@ const UserMenu = () => {
               src={user.imageUrl}
               width={32}
               height={32}
-              className="size-8 rounded-full"
+              className="size-8 rounded-full object-cover object-center"
             />
           </UserProfileFlair>
           <div className="text-lg font-medium text-neutral-2">
@@ -363,7 +363,7 @@ export function MobileNav() {
                     src={user.imageUrl}
                     width={32}
                     height={32}
-                    className="size-8 rounded-full"
+                    className="size-8 rounded-full object-cover object-center"
                   />
                 </UserProfileFlair>
               ) : (
