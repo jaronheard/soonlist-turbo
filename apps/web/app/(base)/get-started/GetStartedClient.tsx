@@ -162,7 +162,7 @@ export function GetStartedClient() {
                 src={activeUser?.imageUrl ?? ""}
                 width={64}
                 height={64}
-                className="size-16 rounded-full border border-gray-200 drop-shadow-sm"
+                className="size-16 rounded-full border border-gray-200 object-cover object-center drop-shadow-sm"
               />
             </UserProfileFlair>
             <div className="flex items-center gap-4">

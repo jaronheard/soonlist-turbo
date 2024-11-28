@@ -218,7 +218,7 @@ export default function EditProfileScreen() {
             >
               <Image
                 source={{ uri: profileImage ?? user?.imageUrl }}
-                className="h-24 w-24 rounded-full"
+                className="h-24 w-24 rounded-full object-cover object-center"
               />
             </TouchableOpacity>
           </UserProfileFlair>

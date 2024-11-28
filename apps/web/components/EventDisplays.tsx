@@ -726,7 +726,7 @@ export function UserInfoMini({
       <Link href={`/${username}/events`} className="relative flex items-center">
         <UserProfileFlair username={username} size="xs">
           <Image
-            className="inline-block size-3 rounded-full"
+            className="inline-block size-3 rounded-full object-cover object-center"
             src={userImage}
             alt={`${username}'s profile picture`}
             width={16}

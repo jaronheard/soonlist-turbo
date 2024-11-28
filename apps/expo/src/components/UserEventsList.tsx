@@ -206,6 +206,7 @@ export function UserEventListItem(props: {
                           borderRadius: 9999,
                         }}
                         contentFit="cover"
+                        contentPosition="center"
                       />
                     ) : (
                       <User size={iconSize} color="#627496" />
