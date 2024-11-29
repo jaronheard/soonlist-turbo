@@ -18,7 +18,7 @@ import {
   getSystemMessage,
   getSystemMessageMetadata,
 } from "@soonlist/cal";
-import { eq } from "@soonlist/db";
+import { and, eq, gte, lte } from "@soonlist/db";
 import {
   comments,
   events as eventsSchema,
@@ -71,6 +71,45 @@ const prototypeEventCreateFromUrlSchema = z.object({
 
 // Create a single Expo SDK client to be reused
 const expo = new Expo();
+
+function getDayBounds(timezone: string) {
+  const now = Temporal.Now.zonedDateTimeISO(timezone);
+  const startOfDay = now.startOfDay();
+  const endOfDay = now.add({ days: 1 }).startOfDay();
+
+  return {
+    start: new Date(startOfDay.epochMilliseconds),
+    end: new Date(endOfDay.epochMilliseconds),
+  };
+}
+
+function getNotificationContent(eventName: string, count: number) {
+  if (count === 1) {
+    return {
+      title: "Event captured ✨",
+      body: "First capture today! 🤔 What's next?",
+      subtitle: eventName,
+    };
+  } else if (count === 2) {
+    return {
+      title: "Event captured ✨",
+      body: "2 captures today! ✌️ Keep 'em coming!",
+      subtitle: eventName,
+    };
+  } else if (count === 3) {
+    return {
+      title: "Event captured ✨",
+      body: "3 captures today! 🔥 You're on fire!",
+      subtitle: eventName,
+    };
+  } else {
+    return {
+      title: "Event captured ✨",
+      body: `${count} captures today! 🌌 The sky's the limit!`,
+      subtitle: eventName,
+    };
+  }
+}
 
 export const aiRouter = createTRPCRouter({
   eventFromRawText: protectedProcedure
@@ -691,22 +730,33 @@ export const aiRouter = createTRPCRouter({
         console.log("createEvent", createEvent);
         const { expoPushToken } = input;
 
-        const title = "New event ✨";
-        const body = firstEvent.name;
-        const data = { url: `/event/${createEvent.id}` };
-
-        if (!Expo.isExpoPushToken(expoPushToken)) {
-          throw new Error(
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            `Push token ${expoPushToken} is not a valid Expo push token`,
+        // Get daily event count (non-blocking)
+        const dailyEventsPromise = ctx.db
+          .select()
+          .from(eventsSchema)
+          .where(
+            and(
+              eq(eventsSchema.userId, input.userId),
+              gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
+              lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
+            ),
           );
-        }
+
+        const dailyEvents = await dailyEventsPromise;
+        const eventCount = dailyEvents.length + 1;
+
+        const { title, subtitle, body } = getNotificationContent(
+          firstEvent.name,
+          eventCount,
+        );
+        const data = { url: `/event/${createEvent.id}` };
 
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
           body,
+          subtitle,
           data,
         };
 
@@ -833,6 +883,18 @@ export const aiRouter = createTRPCRouter({
       };
 
       try {
+        // Get daily event count (non-blocking)
+        const dailyEventsPromise = ctx.db
+          .select()
+          .from(eventsSchema)
+          .where(
+            and(
+              eq(eventsSchema.userId, input.userId),
+              gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
+              lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
+            ),
+          );
+
         const jinaReader = await fetch(`https://r.jina.ai/${input.url}`, {
           method: "GET",
         });
@@ -997,21 +1059,21 @@ export const aiRouter = createTRPCRouter({
         console.log("createEvent", createEvent);
         const { expoPushToken } = input;
 
-        const title = "New event ✨";
-        const body = firstEvent.name;
-        const data = { url: `/event/${createEvent.id}` };
+        // Get daily event count (non-blocking)
+        const dailyEvents = await dailyEventsPromise;
+        const eventCount = dailyEvents.length + 1;
 
-        if (!Expo.isExpoPushToken(expoPushToken)) {
-          throw new Error(
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            `Push token ${expoPushToken} is not a valid Expo push token`,
-          );
-        }
+        const { title, subtitle, body } = getNotificationContent(
+          firstEvent.name,
+          eventCount,
+        );
+        const data = { url: `/event/${createEvent.id}` };
 
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
+          subtitle,
           body,
           data,
         };
@@ -1141,6 +1203,18 @@ export const aiRouter = createTRPCRouter({
       };
 
       try {
+        // Get daily event count (non-blocking)
+        const dailyEventsPromise = ctx.db
+          .select()
+          .from(eventsSchema)
+          .where(
+            and(
+              eq(eventsSchema.userId, input.userId),
+              gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
+              lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
+            ),
+          );
+
         const [event, metadata] = await Promise.all([
           generateObjectWithLogging(
             {
@@ -1321,21 +1395,21 @@ export const aiRouter = createTRPCRouter({
         console.log("createEvent", createEvent);
         const { expoPushToken } = input;
 
-        const title = "✨ Added to Soonlist";
-        const body = firstEvent.name;
-        const data = { url: `/event/${createEvent.id}` };
+        // Get daily event count (non-blocking)
+        const dailyEvents = await dailyEventsPromise;
+        const eventCount = dailyEvents.length + 1;
 
-        if (!Expo.isExpoPushToken(expoPushToken)) {
-          throw new Error(
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            `Push token ${expoPushToken} is not a valid Expo push token`,
-          );
-        }
+        const { title, subtitle, body } = getNotificationContent(
+          firstEvent.name,
+          eventCount,
+        );
+        const data = { url: `/event/${createEvent.id}` };
 
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
+          subtitle,
           body,
           data,
         };

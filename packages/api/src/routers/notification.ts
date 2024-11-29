@@ -95,7 +95,7 @@ async function processUserNotification(user: {
 
     let title = `🤩 ${upcomingEvents.length} possibilities this week`;
     let link = "/feed";
-    let prefix = "See everything you captured: ";
+    let prefix = "See all events you captured: ";
     let summary = "";
 
     if (upcomingEvents.length === 0) {
