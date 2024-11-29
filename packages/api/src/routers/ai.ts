@@ -86,25 +86,25 @@ function getDayBounds(timezone: string) {
 function getNotificationContent(eventName: string, count: number) {
   if (count === 1) {
     return {
-      title: "Possibility captured ✨",
+      title: "Event captured ✨",
       body: "First capture today! 🤔 What's next?",
       subtitle: eventName,
     };
   } else if (count === 2) {
     return {
-      title: "Possibility captured ✨",
+      title: "Event captured ✨",
       body: "2 captures today! ✌️ Keep 'em coming!",
       subtitle: eventName,
     };
   } else if (count === 3) {
     return {
-      title: "Possibility captured ✨",
+      title: "Event captured ✨",
       body: "3 captures today! 🔥 You're on fire!",
       subtitle: eventName,
     };
   } else {
     return {
-      title: "Possibility captured ✨",
+      title: "Event captured ✨",
       body: `${count} captures today! 🌌 The sky's the limit!`,
       subtitle: eventName,
     };
@@ -745,7 +745,7 @@ export const aiRouter = createTRPCRouter({
         const dailyEvents = await dailyEventsPromise;
         const eventCount = dailyEvents.length + 1;
 
-        const { title, body } = getNotificationContent(
+        const { title, subtitle, body } = getNotificationContent(
           firstEvent.name,
           eventCount,
         );
@@ -756,6 +756,7 @@ export const aiRouter = createTRPCRouter({
           sound: "default",
           title,
           body,
+          subtitle,
           data,
         };
 
@@ -1062,7 +1063,7 @@ export const aiRouter = createTRPCRouter({
         const dailyEvents = await dailyEventsPromise;
         const eventCount = dailyEvents.length + 1;
 
-        const { title, body } = getNotificationContent(
+        const { title, subtitle, body } = getNotificationContent(
           firstEvent.name,
           eventCount,
         );
@@ -1072,6 +1073,7 @@ export const aiRouter = createTRPCRouter({
           to: expoPushToken,
           sound: "default",
           title,
+          subtitle,
           body,
           data,
         };
@@ -1397,7 +1399,7 @@ export const aiRouter = createTRPCRouter({
         const dailyEvents = await dailyEventsPromise;
         const eventCount = dailyEvents.length + 1;
 
-        const { title, body } = getNotificationContent(
+        const { title, subtitle, body } = getNotificationContent(
           firstEvent.name,
           eventCount,
         );
@@ -1407,6 +1409,7 @@ export const aiRouter = createTRPCRouter({
           to: expoPushToken,
           sound: "default",
           title,
+          subtitle,
           body,
           data,
         };
