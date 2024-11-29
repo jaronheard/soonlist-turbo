@@ -52,19 +52,15 @@ Follow these steps to create the notification:
 
 2. From the list of adjective-noun pairs you've generated, select the top three that would provide the most complete abstract picture of the week's possibilities. These should be diverse and capture different aspects of the events.
 
-3. For each specific event, create a highlight using a verb + specific noun form. Be super succinct and focus on the most exciting and unique action elements. Include all events in this list.
-
-4. Format your output as follows:
+3. Format your output as follows:
    - Start with the three selected adjective-noun pairs, each preceded by a relevant emoji
-   - Add the 🔜 emoji as a separator (no new lines)
-   - List the event highlights without emojis
 
-5. Use Spotify's Daylists as inspiration for the tone and style. Incorporate uncommon emojis where appropriate.
+4. Use Spotify's Daylists as inspiration for the tone and style. Incorporate uncommon emojis where appropriate.
 
-6. Ensure the entire message fits into a single notification. Do not include "THIS WEEK" or any other preface. Begin directly with the adjective-noun pairs.
+5. Ensure the entire message fits into a single notification. Do not include "THIS WEEK" or any other preface. Begin directly with the adjective-noun pairs.
 
 Example output:
-🧠 Cerebral discussions, 🌀 Mesmerizing animations, 🎭 Avant-garde showcases 🔜 Meditate at William Basinski, converse at UX book, dance gracefully at StepsPDX
+🧠 Cerebral discussions, 🌀 Mesmerizing animations, 🎭 Avant-garde showcases
 
 Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
 
@@ -97,16 +93,23 @@ async function processUserNotification(user: {
         ),
       );
 
-    let title = "✨ Your week of possibilities";
+    let title = `🤩 ${upcomingEvents.length} possibilities this week`;
     let link = "/feed";
-    let prefix = "";
+    let prefix = "See everything you captured: ";
     let summary = "";
 
-    if (upcomingEvents.length < 3) {
-      title = "This week: capture 3 screenshots";
+    if (upcomingEvents.length === 0) {
+      title = "😳 No possibilities this week";
       link = "/feed";
       prefix = "";
-      summary = "Save it all now, deccide later ✨";
+      summary =
+        "Screenshots of events still hiding in your photos? Capture them now to remember!";
+    } else if (upcomingEvents.length < 3) {
+      title = `😌 ${upcomingEvents.length} possibilities this week`;
+      link = "/feed";
+      prefix = "";
+      summary =
+        "Keep capturing events you see. Missing any? Check your screenshots now!";
     } else {
       const eventDescriptions = upcomingEvents
         .map((event) => {
