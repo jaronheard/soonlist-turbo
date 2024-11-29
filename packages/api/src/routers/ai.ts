@@ -743,7 +743,7 @@ export const aiRouter = createTRPCRouter({
           );
 
         const dailyEvents = await dailyEventsPromise;
-        const eventCount = dailyEvents.length + 1;
+        const eventCount = dailyEvents.length;
 
         const { title, subtitle, body } = getNotificationContent(
           firstEvent.name,
@@ -1061,7 +1061,7 @@ export const aiRouter = createTRPCRouter({
 
         // Get daily event count (non-blocking)
         const dailyEvents = await dailyEventsPromise;
-        const eventCount = dailyEvents.length + 1;
+        const eventCount = dailyEvents.length;
 
         const { title, subtitle, body } = getNotificationContent(
           firstEvent.name,
@@ -1397,7 +1397,7 @@ export const aiRouter = createTRPCRouter({
 
         // Get daily event count (non-blocking)
         const dailyEvents = await dailyEventsPromise;
-        const eventCount = dailyEvents.length + 1;
+        const eventCount = dailyEvents.length;
 
         const { title, subtitle, body } = getNotificationContent(
           firstEvent.name,
