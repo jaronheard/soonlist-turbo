@@ -27,6 +27,9 @@ import {
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { generatePublicId } from "../utils";
+import { getTicketId } from "../utils/expo";
+import { generateNotificationId } from "../utils/notification";
+import { posthog } from "../utils/posthog";
 
 const langfuse = new Langfuse({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
@@ -110,6 +113,9 @@ function getNotificationContent(eventName: string, count: number) {
     };
   }
 }
+
+// Add this near the top of the file with other constants
+const JINA_API_URL = "https://r.jina.ai";
 
 export const aiRouter = createTRPCRouter({
   eventFromRawText: protectedProcedure
@@ -749,19 +755,37 @@ export const aiRouter = createTRPCRouter({
           firstEvent.name,
           eventCount,
         );
-        const data = { url: `/event/${createEvent.id}` };
-
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
-          body,
           subtitle,
-          data,
+          body,
+          data: {
+            url: `/event/${createEvent.id}`,
+            notificationId,
+          },
         };
 
         try {
           const [ticket] = await expo.sendPushNotificationsAsync([message]);
+
+          posthog.capture({
+            distinctId: input.userId,
+            event: "notification_sent",
+            properties: {
+              success: true,
+              notificationId,
+              type: "event_creation",
+              eventId: createEvent.id,
+              title: title,
+              source: "ai_router",
+              method: "rawText",
+              ticketId: getTicketId(ticket),
+            },
+          });
+
           return {
             success: true,
             ticket,
@@ -770,7 +794,6 @@ export const aiRouter = createTRPCRouter({
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
@@ -779,7 +802,6 @@ export const aiRouter = createTRPCRouter({
 
         const title = "Soonlist";
         const body = "There was an error creating your event.";
-        const data = { url: "/feed" };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new Error(
@@ -788,12 +810,16 @@ export const aiRouter = createTRPCRouter({
           );
         }
 
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
           body,
-          data,
+          data: {
+            url: "/feed",
+            notificationId,
+          },
         };
 
         try {
@@ -806,7 +832,6 @@ export const aiRouter = createTRPCRouter({
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
@@ -895,12 +920,20 @@ export const aiRouter = createTRPCRouter({
             ),
           );
 
-        const jinaReader = await fetch(`https://r.jina.ai/${input.url}`, {
-          method: "GET",
-        });
-        const rawText = await jinaReader.text();
+        // Extract content from URL before AI processing
+        const jinaResponse = await fetch(`${JINA_API_URL}/${input.url}`);
+        if (!jinaResponse.ok) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch content from URL",
+          });
+        }
+        const rawText = await jinaResponse.text();
         if (!rawText) {
-          throw new Error("Failed to fetch the text from the URL.");
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "No content found at URL",
+          });
         }
 
         const [event, metadata] = await Promise.all([
@@ -1067,19 +1100,37 @@ export const aiRouter = createTRPCRouter({
           firstEvent.name,
           eventCount,
         );
-        const data = { url: `/event/${createEvent.id}` };
-
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
           subtitle,
           body,
-          data,
+          data: {
+            url: `/event/${createEvent.id}`,
+            notificationId,
+          },
         };
 
         try {
           const [ticket] = await expo.sendPushNotificationsAsync([message]);
+
+          posthog.capture({
+            distinctId: input.userId,
+            event: "notification_sent",
+            properties: {
+              success: true,
+              notificationId,
+              type: "event_creation",
+              eventId: createEvent.id,
+              title: title,
+              source: "ai_router",
+              method: "url",
+              ticketId: getTicketId(ticket),
+            },
+          });
+
           return {
             success: true,
             ticket,
@@ -1088,7 +1139,6 @@ export const aiRouter = createTRPCRouter({
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
@@ -1097,7 +1147,6 @@ export const aiRouter = createTRPCRouter({
 
         const title = "Soonlist";
         const body = "There was an error creating your event.";
-        const data = { url: "/feed" };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new Error(
@@ -1106,12 +1155,16 @@ export const aiRouter = createTRPCRouter({
           );
         }
 
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
           body,
-          data,
+          data: {
+            url: "/feed",
+            notificationId,
+          },
         };
 
         try {
@@ -1124,7 +1177,6 @@ export const aiRouter = createTRPCRouter({
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
@@ -1403,19 +1455,37 @@ export const aiRouter = createTRPCRouter({
           firstEvent.name,
           eventCount,
         );
-        const data = { url: `/event/${createEvent.id}` };
-
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
           subtitle,
           body,
-          data,
+          data: {
+            url: `/event/${createEvent.id}`,
+            notificationId,
+          },
         };
 
         try {
           const [ticket] = await expo.sendPushNotificationsAsync([message]);
+
+          posthog.capture({
+            distinctId: input.userId,
+            event: "notification_sent",
+            properties: {
+              success: true,
+              notificationId,
+              type: "event_creation",
+              eventId: createEvent.id,
+              title: title,
+              source: "ai_router",
+              method: "image",
+              ticketId: getTicketId(ticket),
+            },
+          });
+
           return {
             success: true,
             ticket,
@@ -1424,7 +1494,6 @@ export const aiRouter = createTRPCRouter({
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
@@ -1433,7 +1502,6 @@ export const aiRouter = createTRPCRouter({
 
         const title = "Soonlist";
         const body = "There was an error creating your event.";
-        const data = { url: "/feed" };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new Error(
@@ -1442,12 +1510,16 @@ export const aiRouter = createTRPCRouter({
           );
         }
 
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
           body,
-          data,
+          data: {
+            url: "/feed",
+            notificationId,
+          },
         };
 
         try {
@@ -1460,7 +1532,6 @@ export const aiRouter = createTRPCRouter({
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
