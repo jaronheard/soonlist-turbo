@@ -31,6 +31,15 @@ export const useNotification = () => {
   return context;
 };
 
+function isNotificationData(data: unknown): data is NotificationData {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "notificationId" in data &&
+    typeof (data as NotificationData).notificationId === "string"
+  );
+}
+
 function handleRegistrationError(errorMessage: string) {
   console.error(errorMessage);
   throw new Error(errorMessage);
@@ -125,14 +134,21 @@ export function NotificationProvider({
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        const data = response.notification.request.content
-          .data as NotificationData;
-        posthog.capture("notification_opened", {
-          title: response.notification.request.content.title,
-          body: response.notification.request.content.body,
-          notificationId: data.notificationId,
-          data: response.notification.request.content.data,
-        });
+        const data = response.notification.request.content.data;
+        if (!isNotificationData(data)) {
+          console.error("Invalid notification data format");
+          return;
+        }
+        try {
+          posthog.capture("notification_received", {
+            title: response.notification.request.content.title,
+            body: response.notification.request.content.body,
+            notificationId: data.notificationId,
+            data: response.notification.request.content.data,
+          });
+        } catch (error) {
+          console.error("Failed to capture notification event:", error);
+        }
       });
 
     return () => {
@@ -149,15 +165,22 @@ export function NotificationProvider({
     let isMounted = true;
 
     function redirect(notification: Notifications.Notification) {
-      const data = notification.request.content.data as NotificationData;
+      const data = notification.request.content.data;
       if (typeof data.url === "string") {
-        posthog.capture("notification_deep_link", {
-          url: data.url,
-          notificationId: data.notificationId,
-          title: notification.request.content.title,
-          body: notification.request.content.body,
-          data: notification.request.content.data,
-        });
+        if (!isNotificationData(data)) {
+          console.error("Invalid notification data format");
+          return;
+        }
+        try {
+          posthog.capture("notification_received", {
+            title: notification.request.content.title,
+            body: notification.request.content.body,
+            notificationId: data.notificationId,
+            data: notification.request.content.data,
+          });
+        } catch (error) {
+          console.error("Failed to capture notification event:", error);
+        }
         router.push(data.url as Href<string>);
       }
     }
