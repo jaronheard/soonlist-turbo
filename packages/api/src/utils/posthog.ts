@@ -1,10 +1,21 @@
 import { PostHog } from "posthog-node";
 
+const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com";
+const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
+
+if (!POSTHOG_KEY) {
+  throw new Error("PostHog API key is required");
+}
+
 // Initialize the client
-export const posthog = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY || "", {
-  host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com",
-  flushAt: 1, // Immediately send events in development
-  flushInterval: 0, // Disable batching in development
+export const posthog = new PostHog(POSTHOG_KEY, {
+  host: POSTHOG_HOST,
+  // Only disable batching in development
+  ...(IS_DEVELOPMENT && {
+    flushAt: 1,
+    flushInterval: 0,
+  }),
 });
 
 const handleShutdown = async () => {
