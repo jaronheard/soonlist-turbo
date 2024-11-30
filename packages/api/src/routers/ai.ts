@@ -114,6 +114,9 @@ function getNotificationContent(eventName: string, count: number) {
   }
 }
 
+// Add this near the top of the file with other constants
+const JINA_API_URL = "https://r.jina.ai";
+
 export const aiRouter = createTRPCRouter({
   eventFromRawText: protectedProcedure
     .input(
@@ -917,6 +920,22 @@ export const aiRouter = createTRPCRouter({
             ),
           );
 
+        // Extract content from URL before AI processing
+        const jinaResponse = await fetch(`${JINA_API_URL}/${input.url}`);
+        if (!jinaResponse.ok) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch content from URL",
+          });
+        }
+        const rawText = await jinaResponse.text();
+        if (!rawText) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "No content found at URL",
+          });
+        }
+
         const [event, metadata] = await Promise.all([
           generateObjectWithLogging(
             {
@@ -929,7 +948,7 @@ export const aiRouter = createTRPCRouter({
                 {
                   role: "user",
                   content: `${prompt.text} Input: """
-              ${input.url}
+              ${rawText}
               """`,
                 },
               ],
@@ -948,7 +967,7 @@ export const aiRouter = createTRPCRouter({
                 {
                   role: "user",
                   content: `${prompt.textMetadata} Input: """
-              ${input.url}
+              ${rawText}
               """`,
                 },
               ],
