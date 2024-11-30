@@ -174,11 +174,11 @@ export function NotificationProvider({
 
     function redirect(notification: Notifications.Notification) {
       const data = notification.request.content.data;
+      if (!isNotificationData(data)) {
+        console.error("Invalid notification data format");
+        return;
+      }
       if (typeof data.url === "string") {
-        if (!isNotificationData(data)) {
-          console.error("Invalid notification data format");
-          return;
-        }
         try {
           posthog.capture("notification_deep_link", {
             title: notification.request.content.title,
@@ -189,6 +189,7 @@ export function NotificationProvider({
         } catch (error) {
           console.error("Failed to capture notification event:", error);
         }
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         router.push(data.url as Href<string>);
       }
     }
