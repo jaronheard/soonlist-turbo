@@ -207,7 +207,7 @@ async function processUserNotification(user: {
     console.error(`Error processing user ${user.userId}:`, error);
     return {
       success: false,
-      error: (error as Error).message,
+      error: "An unexpected error occurred while processing the notification.",
       notificationId: generateNotificationId(),
       userId: user.userId,
     };
