@@ -1,7 +1,8 @@
 import { PostHog } from "posthog-node";
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com";
+const POSTHOG_HOST =
+  process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com";
 const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 
 if (!POSTHOG_KEY) {
@@ -18,28 +19,18 @@ export const posthog = new PostHog(POSTHOG_KEY, {
   }),
 });
 
-const handleShutdown = async () => {
+function handleShutdown() {
   try {
-    console.log('Flushing PostHog events...');
-    await posthog.shutdown();
-    console.log('PostHog events flushed successfully');
-  } catch (error) {
-    console.error('Error flushing PostHog events:', error);
-  } finally {
+    console.log("Shutting down PostHog...");
+    posthog.shutdown();
     process.exit(0);
+  } catch (error) {
+    console.error("PostHog shutdown failed:", error);
+    process.exit(1);
   }
-};
+}
 
-// Make sure to flush events before the process exits
-process.on("SIGTERM", () => {
-  handleShutdown().catch(error => {
-    console.error('Failed to shutdown gracefully:', error);
-    process.exit(1);
-  });
-});
-process.on("SIGINT", () => {
-  handleShutdown().catch(error => {
-    console.error('Failed to shutdown gracefully:', error);
-    process.exit(1);
-  });
+// Gracefully handle shutdown signals
+["SIGTERM", "SIGINT"].forEach((signal) => {
+  process.on(signal, () => handleShutdown());
 });
