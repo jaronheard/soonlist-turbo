@@ -1,4 +1,8 @@
-import type { ExpoPushMessage, ExpoPushToken } from "expo-server-sdk";
+import type {
+  ExpoPushMessage,
+  ExpoPushTicket,
+  ExpoPushToken,
+} from "expo-server-sdk";
 import { Expo } from "expo-server-sdk";
 import { anthropic } from "@ai-sdk/anthropic";
 import { TRPCError } from "@trpc/server";
@@ -80,6 +84,7 @@ async function processUserNotification(user: {
   ticket?: ExpoPushTicket;
   error?: string;
   notificationId: string;
+  userId: string;
 }> {
   const now = new Date();
   const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -190,12 +195,13 @@ async function processUserNotification(user: {
           data: { url: link, notificationId },
         },
       ]);
-      return { success: true, ticket, notificationId };
+      return { success: true, ticket, notificationId, userId: user.userId };
     }
     return {
       success: false,
       error: "Invalid push token",
       notificationId: generateNotificationId(),
+      userId: user.userId,
     };
   } catch (error) {
     console.error(`Error processing user ${user.userId}:`, error);
@@ -203,6 +209,7 @@ async function processUserNotification(user: {
       success: false,
       error: (error as Error).message,
       notificationId: generateNotificationId(),
+      userId: user.userId,
     };
   } finally {
     // Use waitUntil for non-blocking Langfuse flush
@@ -331,6 +338,7 @@ export const notificationRouter = createTRPCRouter({
               success: false,
               error: (error as Error).message,
               notificationId: generateNotificationId(),
+              userId: user.userId,
             };
 
             posthog.capture({
@@ -365,9 +373,9 @@ export const notificationRouter = createTRPCRouter({
         successfulNotifications: results.filter((r) => r.success).length,
         errors: results
           .filter((r) => !r.success)
-          .map(({ userId, error }) => ({
-            userId,
-            error,
+          .map((result) => ({
+            userId: result.userId,
+            error: result.error ?? "Unknown error",
           })),
       };
     }),

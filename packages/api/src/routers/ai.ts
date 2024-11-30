@@ -752,8 +752,6 @@ export const aiRouter = createTRPCRouter({
           firstEvent.name,
           eventCount,
         );
-        const data = { url: `/event/${createEvent.id}` };
-
         const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
@@ -801,7 +799,6 @@ export const aiRouter = createTRPCRouter({
 
         const title = "Soonlist";
         const body = "There was an error creating your event.";
-        const data = { url: "/feed" };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new Error(
@@ -920,14 +917,6 @@ export const aiRouter = createTRPCRouter({
             ),
           );
 
-        const jinaReader = await fetch(`https://r.jina.ai/${input.url}`, {
-          method: "GET",
-        });
-        const rawText = await jinaReader.text();
-        if (!rawText) {
-          throw new Error("Failed to fetch the text from the URL.");
-        }
-
         const [event, metadata] = await Promise.all([
           generateObjectWithLogging(
             {
@@ -940,7 +929,7 @@ export const aiRouter = createTRPCRouter({
                 {
                   role: "user",
                   content: `${prompt.text} Input: """
-              ${rawText}
+              ${input.url}
               """`,
                 },
               ],
@@ -959,7 +948,7 @@ export const aiRouter = createTRPCRouter({
                 {
                   role: "user",
                   content: `${prompt.textMetadata} Input: """
-              ${rawText}
+              ${input.url}
               """`,
                 },
               ],
@@ -1092,8 +1081,6 @@ export const aiRouter = createTRPCRouter({
           firstEvent.name,
           eventCount,
         );
-        const data = { url: `/event/${createEvent.id}` };
-
         const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
@@ -1141,7 +1128,6 @@ export const aiRouter = createTRPCRouter({
 
         const title = "Soonlist";
         const body = "There was an error creating your event.";
-        const data = { url: "/feed" };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new Error(
@@ -1450,8 +1436,6 @@ export const aiRouter = createTRPCRouter({
           firstEvent.name,
           eventCount,
         );
-        const data = { url: `/event/${createEvent.id}` };
-
         const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
@@ -1499,7 +1483,6 @@ export const aiRouter = createTRPCRouter({
 
         const title = "Soonlist";
         const body = "There was an error creating your event.";
-        const data = { url: "/feed" };
 
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new Error(
