@@ -123,13 +123,21 @@ export function NotificationProvider({
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         setNotification(notification);
-        const data = notification.request.content.data as NotificationData;
-        posthog.capture("notification_received", {
-          title: notification.request.content.title,
-          body: notification.request.content.body,
-          notificationId: data.notificationId,
-          data: notification.request.content.data,
-        });
+        const data = notification.request.content.data;
+        if (!isNotificationData(data)) {
+          console.error("Invalid notification data format");
+          return;
+        }
+        try {
+          posthog.capture("notification_received", {
+            title: notification.request.content.title,
+            body: notification.request.content.body,
+            notificationId: data.notificationId,
+            data: notification.request.content.data,
+          });
+        } catch (error) {
+          console.error("Failed to capture notification event:", error);
+        }
       });
 
     responseListener.current =
@@ -140,7 +148,7 @@ export function NotificationProvider({
           return;
         }
         try {
-          posthog.capture("notification_received", {
+          posthog.capture("notification_opened", {
             title: response.notification.request.content.title,
             body: response.notification.request.content.body,
             notificationId: data.notificationId,
@@ -172,7 +180,7 @@ export function NotificationProvider({
           return;
         }
         try {
-          posthog.capture("notification_received", {
+          posthog.capture("notification_deep_link", {
             title: notification.request.content.title,
             body: notification.request.content.body,
             notificationId: data.notificationId,
@@ -212,6 +220,7 @@ export function NotificationProvider({
 }
 
 Notifications.setNotificationHandler({
+  // eslint-disable-next-line @typescript-eslint/require-await
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: false,
