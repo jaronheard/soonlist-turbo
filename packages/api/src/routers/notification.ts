@@ -14,6 +14,7 @@ import { eventFollows, events, pushTokens, users } from "@soonlist/db/schema";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { getTicketId } from "../utils/expo";
+import { generateNotificationId } from "../utils/notification";
 import { posthog } from "../utils/posthog";
 
 // Create a single Expo SDK client to be reused
@@ -74,7 +75,12 @@ Remember to vary your output for different weeks, maintaining the exciting and u
 async function processUserNotification(user: {
   userId: string;
   expoPushToken: string;
-}) {
+}): Promise<{
+  success: boolean;
+  ticket?: ExpoPushTicket;
+  error?: string;
+  notificationId: string;
+}> {
   const now = new Date();
   const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -174,20 +180,30 @@ async function processUserNotification(user: {
     const message = `${prefix}${summary}`;
 
     if (Expo.isExpoPushToken(user.expoPushToken)) {
+      const notificationId = generateNotificationId();
       const [ticket] = await expo.sendPushNotificationsAsync([
         {
           to: user.expoPushToken,
           sound: "default",
           title,
           body: message,
-          data: { url: link },
+          data: { url: link, notificationId },
         },
       ]);
-      return { success: true, ticket };
+      return { success: true, ticket, notificationId };
     }
+    return {
+      success: false,
+      error: "Invalid push token",
+      notificationId: generateNotificationId(),
+    };
   } catch (error) {
     console.error(`Error processing user ${user.userId}:`, error);
-    return { success: false, error: (error as Error).message };
+    return {
+      success: false,
+      error: (error as Error).message,
+      notificationId: generateNotificationId(),
+    };
   } finally {
     // Use waitUntil for non-blocking Langfuse flush
     waitUntil(langfuse.flushAsync());
@@ -207,24 +223,29 @@ export const notificationRouter = createTRPCRouter({
         });
       }
 
+      const notificationId = generateNotificationId();
       const message: ExpoPushMessage = {
         to: expoPushToken,
         sound: "default",
         title,
         body,
-        data,
+        data: {
+          ...data,
+          notificationId,
+        },
       };
 
       try {
         const [ticket] = await expo.sendPushNotificationsAsync([message]);
 
-        // Track successful notification
         posthog.capture({
           distinctId: ctx.auth.userId || "anonymous",
           event: "notification_sent",
           properties: {
             success: true,
+            notificationId,
             type: "single",
+            source: "notification_router",
             title,
             hasData: !!data,
             ticketId: getTicketId(ticket),
@@ -236,12 +257,12 @@ export const notificationRouter = createTRPCRouter({
           ticket,
         };
       } catch (error) {
-        // Track failed notification
         posthog.capture({
           distinctId: ctx.auth.userId || "anonymous",
           event: "notification_sent",
           properties: {
             success: false,
+            notificationId,
             type: "single",
             error: (error as Error).message,
             title,
@@ -289,45 +310,40 @@ export const notificationRouter = createTRPCRouter({
           try {
             const result = await processUserNotification(user);
 
-            // Track notification result for each user
             posthog.capture({
               distinctId: user.userId,
               event: "notification_sent",
               properties: {
-                success: result?.success ?? false,
+                success: result.success,
+                notificationId: result.notificationId,
                 type: "weekly",
-                ticketId: result?.ticket
+                source: "notification_router",
+                ticketId: result.ticket
                   ? getTicketId(result.ticket)
                   : undefined,
-                error: result?.error,
+                error: result.error,
               },
             });
 
-            if (!result) {
-              return {
-                userId: user.userId,
-                success: false,
-                error: "No result",
-              };
-            }
-            return { userId: user.userId, ...result };
+            return result;
           } catch (error) {
-            // Track error
+            const errorResult = {
+              success: false,
+              error: (error as Error).message,
+              notificationId: generateNotificationId(),
+            };
+
             posthog.capture({
               distinctId: user.userId,
               event: "notification_sent",
               properties: {
-                success: false,
+                ...errorResult,
                 type: "weekly",
-                error: (error as Error).message,
+                source: "notification_router",
               },
             });
 
-            return {
-              userId: user.userId,
-              success: false,
-              error: (error as Error).message,
-            };
+            return errorResult;
           }
         }),
       );

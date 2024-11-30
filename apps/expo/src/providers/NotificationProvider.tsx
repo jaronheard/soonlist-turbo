@@ -89,7 +89,7 @@ async function registerForPushNotificationsAsync() {
 
 interface NotificationData {
   url?: string;
-  notificationId?: string;
+  notificationId: string;
   [key: string]: unknown;
 }
 

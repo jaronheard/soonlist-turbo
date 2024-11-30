@@ -28,6 +28,7 @@ import {
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { generatePublicId } from "../utils";
 import { getTicketId } from "../utils/expo";
+import { generateNotificationId } from "../utils/notification";
 import { posthog } from "../utils/posthog";
 
 const langfuse = new Langfuse({
@@ -753,24 +754,28 @@ export const aiRouter = createTRPCRouter({
         );
         const data = { url: `/event/${createEvent.id}` };
 
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
-          body,
           subtitle,
-          data,
+          body,
+          data: {
+            url: `/event/${createEvent.id}`,
+            notificationId,
+          },
         };
 
         try {
           const [ticket] = await expo.sendPushNotificationsAsync([message]);
 
-          // Track successful notification
           posthog.capture({
             distinctId: input.userId,
             event: "notification_sent",
             properties: {
               success: true,
+              notificationId,
               type: "event_creation",
               eventId: createEvent.id,
               title: title,
@@ -785,20 +790,6 @@ export const aiRouter = createTRPCRouter({
             ticket,
           };
         } catch (error) {
-          // Track failed notification
-          posthog.capture({
-            distinctId: input.userId,
-            event: "notification_sent",
-            properties: {
-              success: false,
-              type: "event_creation",
-              error: (error as Error).message,
-              title: title,
-              source: "ai_router",
-              method: "rawText",
-            },
-          });
-
           console.error("Error sending notification:", error);
           return {
             success: false,
@@ -819,12 +810,16 @@ export const aiRouter = createTRPCRouter({
           );
         }
 
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
           body,
-          data,
+          data: {
+            url: "/feed",
+            notificationId,
+          },
         };
 
         try {
@@ -1099,24 +1094,28 @@ export const aiRouter = createTRPCRouter({
         );
         const data = { url: `/event/${createEvent.id}` };
 
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
           subtitle,
           body,
-          data,
+          data: {
+            url: `/event/${createEvent.id}`,
+            notificationId,
+          },
         };
 
         try {
           const [ticket] = await expo.sendPushNotificationsAsync([message]);
 
-          // Track successful notification
           posthog.capture({
             distinctId: input.userId,
             event: "notification_sent",
             properties: {
               success: true,
+              notificationId,
               type: "event_creation",
               eventId: createEvent.id,
               title: title,
@@ -1131,20 +1130,6 @@ export const aiRouter = createTRPCRouter({
             ticket,
           };
         } catch (error) {
-          // Track failed notification
-          posthog.capture({
-            distinctId: input.userId,
-            event: "notification_sent",
-            properties: {
-              success: false,
-              type: "event_creation",
-              error: (error as Error).message,
-              title: title,
-              source: "ai_router",
-              method: "url",
-            },
-          });
-
           console.error("Error sending notification:", error);
           return {
             success: false,
@@ -1165,12 +1150,16 @@ export const aiRouter = createTRPCRouter({
           );
         }
 
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
           body,
-          data,
+          data: {
+            url: "/feed",
+            notificationId,
+          },
         };
 
         try {
@@ -1463,24 +1452,28 @@ export const aiRouter = createTRPCRouter({
         );
         const data = { url: `/event/${createEvent.id}` };
 
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
           subtitle,
           body,
-          data,
+          data: {
+            url: `/event/${createEvent.id}`,
+            notificationId,
+          },
         };
 
         try {
           const [ticket] = await expo.sendPushNotificationsAsync([message]);
 
-          // Track successful notification
           posthog.capture({
             distinctId: input.userId,
             event: "notification_sent",
             properties: {
               success: true,
+              notificationId,
               type: "event_creation",
               eventId: createEvent.id,
               title: title,
@@ -1495,20 +1488,6 @@ export const aiRouter = createTRPCRouter({
             ticket,
           };
         } catch (error) {
-          // Track failed notification
-          posthog.capture({
-            distinctId: input.userId,
-            event: "notification_sent",
-            properties: {
-              success: false,
-              type: "event_creation",
-              error: (error as Error).message,
-              title: title,
-              source: "ai_router",
-              method: "image",
-            },
-          });
-
           console.error("Error sending notification:", error);
           return {
             success: false,
@@ -1529,12 +1508,16 @@ export const aiRouter = createTRPCRouter({
           );
         }
 
+        const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
           title,
           body,
-          data,
+          data: {
+            url: "/feed",
+            notificationId,
+          },
         };
 
         try {
