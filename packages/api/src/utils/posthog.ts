@@ -31,5 +31,15 @@ const handleShutdown = async () => {
 };
 
 // Make sure to flush events before the process exits
-process.on("SIGTERM", handleShutdown);
-process.on("SIGINT", handleShutdown);
+process.on("SIGTERM", () => {
+  handleShutdown().catch(error => {
+    console.error('Failed to shutdown gracefully:', error);
+    process.exit(1);
+  });
+});
+process.on("SIGINT", () => {
+  handleShutdown().catch(error => {
+    console.error('Failed to shutdown gracefully:', error);
+    process.exit(1);
+  });
+});
