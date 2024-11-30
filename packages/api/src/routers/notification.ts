@@ -1,4 +1,4 @@
-import type { ExpoPushMessage } from "expo-server-sdk";
+import type { ExpoPushMessage, ExpoPushToken } from "expo-server-sdk";
 import { Expo } from "expo-server-sdk";
 import { anthropic } from "@ai-sdk/anthropic";
 import { TRPCError } from "@trpc/server";
@@ -13,6 +13,8 @@ import { db, inArray, or } from "@soonlist/db";
 import { eventFollows, events, pushTokens, users } from "@soonlist/db/schema";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
+import { getTicketId } from "../utils/expo";
+import { posthog } from "../utils/posthog";
 
 // Create a single Expo SDK client to be reused
 const expo = new Expo();
@@ -25,7 +27,12 @@ const langfuse = new Langfuse({
 
 // Define the input schema for the sendNotification procedure
 const sendNotificationInputSchema = z.object({
-  expoPushToken: z.string(),
+  expoPushToken: z
+    .string()
+    .refine(
+      (token): token is ExpoPushToken => Expo.isExpoPushToken(token),
+      "Invalid Expo push token",
+    ),
   title: z.string(),
   body: z.string(),
   data: z.record(z.unknown()).optional(),
@@ -190,14 +197,14 @@ async function processUserNotification(user: {
 export const notificationRouter = createTRPCRouter({
   sendSingleNotification: publicProcedure
     .input(sendNotificationInputSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { expoPushToken, title, body, data } = input;
 
       if (!Expo.isExpoPushToken(expoPushToken)) {
-        throw new Error(
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          `Push token ${expoPushToken} is not a valid Expo push token`,
-        );
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid Expo push token",
+        });
       }
 
       const message: ExpoPushMessage = {
@@ -210,15 +217,41 @@ export const notificationRouter = createTRPCRouter({
 
       try {
         const [ticket] = await expo.sendPushNotificationsAsync([message]);
+
+        // Track successful notification
+        posthog.capture({
+          distinctId: ctx.auth.userId || "anonymous",
+          event: "notification_sent",
+          properties: {
+            success: true,
+            type: "single",
+            title,
+            hasData: !!data,
+            ticketId: getTicketId(ticket),
+          },
+        });
+
         return {
           success: true,
           ticket,
         };
       } catch (error) {
+        // Track failed notification
+        posthog.capture({
+          distinctId: ctx.auth.userId || "anonymous",
+          event: "notification_sent",
+          properties: {
+            success: false,
+            type: "single",
+            error: (error as Error).message,
+            title,
+            hasData: !!data,
+          },
+        });
+
         console.error("Error sending notification:", error);
         return {
           success: false,
-          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
           error: (error as Error).message,
         };
       }
@@ -255,7 +288,21 @@ export const notificationRouter = createTRPCRouter({
         usersWithTokens.map(async (user) => {
           try {
             const result = await processUserNotification(user);
-            // handle undefined result
+
+            // Track notification result for each user
+            posthog.capture({
+              distinctId: user.userId,
+              event: "notification_sent",
+              properties: {
+                success: result?.success ?? false,
+                type: "weekly",
+                ticketId: result?.ticket
+                  ? getTicketId(result.ticket)
+                  : undefined,
+                error: result?.error,
+              },
+            });
+
             if (!result) {
               return {
                 userId: user.userId,
@@ -265,6 +312,17 @@ export const notificationRouter = createTRPCRouter({
             }
             return { userId: user.userId, ...result };
           } catch (error) {
+            // Track error
+            posthog.capture({
+              distinctId: user.userId,
+              event: "notification_sent",
+              properties: {
+                success: false,
+                type: "weekly",
+                error: (error as Error).message,
+              },
+            });
+
             return {
               userId: user.userId,
               success: false,
@@ -274,24 +332,27 @@ export const notificationRouter = createTRPCRouter({
         }),
       );
 
-      // Analyze results
-      const successfulNotifications = results.filter(
-        (result) => result.success,
-      ).length;
-      const errors = results
-        .filter(
-          (
-            result,
-          ): result is { userId: string; success: false; error: string } =>
-            !result.success,
-        )
-        .map(({ userId, error }) => ({ userId, error }));
+      // Track batch results
+      posthog.capture({
+        distinctId: "system",
+        event: "weekly_notifications_batch",
+        properties: {
+          totalProcessed: usersWithTokens.length,
+          successfulNotifications: results.filter((r) => r.success).length,
+          failedNotifications: results.filter((r) => !r.success).length,
+        },
+      });
 
       return {
         success: true,
         totalProcessed: usersWithTokens.length,
-        successfulNotifications,
-        errors: errors.length > 0 ? errors : undefined,
+        successfulNotifications: results.filter((r) => r.success).length,
+        errors: results
+          .filter((r) => !r.success)
+          .map(({ userId, error }) => ({
+            userId,
+            error,
+          })),
       };
     }),
 });

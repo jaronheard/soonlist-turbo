@@ -27,6 +27,8 @@ import {
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { generatePublicId } from "../utils";
+import { getTicketId } from "../utils/expo";
+import { posthog } from "../utils/posthog";
 
 const langfuse = new Langfuse({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
@@ -762,15 +764,44 @@ export const aiRouter = createTRPCRouter({
 
         try {
           const [ticket] = await expo.sendPushNotificationsAsync([message]);
+
+          // Track successful notification
+          posthog.capture({
+            distinctId: input.userId,
+            event: "notification_sent",
+            properties: {
+              success: true,
+              type: "event_creation",
+              eventId: createEvent.id,
+              title: title,
+              source: "ai_router",
+              method: "rawText",
+              ticketId: getTicketId(ticket),
+            },
+          });
+
           return {
             success: true,
             ticket,
           };
         } catch (error) {
+          // Track failed notification
+          posthog.capture({
+            distinctId: input.userId,
+            event: "notification_sent",
+            properties: {
+              success: false,
+              type: "event_creation",
+              error: (error as Error).message,
+              title: title,
+              source: "ai_router",
+              method: "rawText",
+            },
+          });
+
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
@@ -806,7 +837,6 @@ export const aiRouter = createTRPCRouter({
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
@@ -1080,15 +1110,44 @@ export const aiRouter = createTRPCRouter({
 
         try {
           const [ticket] = await expo.sendPushNotificationsAsync([message]);
+
+          // Track successful notification
+          posthog.capture({
+            distinctId: input.userId,
+            event: "notification_sent",
+            properties: {
+              success: true,
+              type: "event_creation",
+              eventId: createEvent.id,
+              title: title,
+              source: "ai_router",
+              method: "url",
+              ticketId: getTicketId(ticket),
+            },
+          });
+
           return {
             success: true,
             ticket,
           };
         } catch (error) {
+          // Track failed notification
+          posthog.capture({
+            distinctId: input.userId,
+            event: "notification_sent",
+            properties: {
+              success: false,
+              type: "event_creation",
+              error: (error as Error).message,
+              title: title,
+              source: "ai_router",
+              method: "url",
+            },
+          });
+
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
@@ -1124,7 +1183,6 @@ export const aiRouter = createTRPCRouter({
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
@@ -1416,15 +1474,44 @@ export const aiRouter = createTRPCRouter({
 
         try {
           const [ticket] = await expo.sendPushNotificationsAsync([message]);
+
+          // Track successful notification
+          posthog.capture({
+            distinctId: input.userId,
+            event: "notification_sent",
+            properties: {
+              success: true,
+              type: "event_creation",
+              eventId: createEvent.id,
+              title: title,
+              source: "ai_router",
+              method: "image",
+              ticketId: getTicketId(ticket),
+            },
+          });
+
           return {
             success: true,
             ticket,
           };
         } catch (error) {
+          // Track failed notification
+          posthog.capture({
+            distinctId: input.userId,
+            event: "notification_sent",
+            properties: {
+              success: false,
+              type: "event_creation",
+              error: (error as Error).message,
+              title: title,
+              source: "ai_router",
+              method: "image",
+            },
+          });
+
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
@@ -1460,7 +1547,6 @@ export const aiRouter = createTRPCRouter({
           console.error("Error sending notification:", error);
           return {
             success: false,
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             error: (error as Error).message,
           };
         }
