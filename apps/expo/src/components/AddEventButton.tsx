@@ -11,14 +11,37 @@ interface AddEventButtonProps {
 const AddEventButton: React.FC<AddEventButtonProps> = ({ onPress }) => {
   return (
     <View className="absolute bottom-0 left-0 right-0">
-      {/* Blur background with gradient mask */}
-      <View className="absolute bottom-0 h-32 w-full overflow-hidden">
-        <LinearGradient
-          colors={["transparent", "white"]}
-          locations={[0, 0.5]}
-          className="absolute h-full w-full"
+      {/* Bottom blur (stronger) */}
+      <View className="absolute bottom-0 h-24 w-full">
+        <BlurView
+          intensity={10}
+          className="h-full w-full opacity-20"
+          tint="light"
         />
-        <BlurView intensity={30} className="h-full w-full" tint="light" />
+      </View>
+
+      {/* Top blur (lighter) with fade out */}
+      <View className="absolute bottom-0 h-40 w-full">
+        <LinearGradient
+          colors={["transparent", "#5A32FB"]}
+          locations={[0, 1]}
+          style={{
+            position: "absolute",
+            height: "100%",
+            width: "100%",
+            opacity: 0.3,
+          }}
+        />
+        <LinearGradient
+          colors={["transparent", "#E0D9FF"]}
+          locations={[0, 1]}
+          style={{
+            position: "absolute",
+            height: "100%",
+            width: "100%",
+            opacity: 0.1,
+          }}
+        />
       </View>
 
       {/* Button */}
