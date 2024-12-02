@@ -8,11 +8,11 @@ import type { RouterOutputs } from "~/utils/api";
 import AddEventBottomSheet from "~/components/AddEventBottomSheet";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { ProfileMenu } from "~/components/ProfileMenu";
+import SaveButton from "~/components/SaveButton";
+import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
-import { ProfileMenu } from "../../components/ProfileMenu";
-import SaveButton from "../../components/SaveButton";
-import ShareButton from "../../components/ShareButton";
 
 export default function Page() {
   const { user } = useUser();
