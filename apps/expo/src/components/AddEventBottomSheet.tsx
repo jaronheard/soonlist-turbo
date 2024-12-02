@@ -55,14 +55,9 @@ const AddEventBottomSheet = React.forwardRef<
   const { height: windowHeight, fontScale } = useWindowDimensions();
 
   const snapPoints = useMemo(() => {
-    const baseHeight = 388;
     const maxHeight = windowHeight * 0.9; // 90% of screen height
-    const scaledHeight = Math.min(
-      Math.round(baseHeight * fontScale),
-      maxHeight,
-    );
-    return [scaledHeight];
-  }, [windowHeight, fontScale]);
+    return [maxHeight];
+  }, [windowHeight]);
 
   const { expoPushToken } = useNotification();
   const utils = api.useUtils();
