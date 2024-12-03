@@ -74,6 +74,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         isAccessMediaLocationEnabled: true,
       },
     ],
+    [
+      "expo-background-fetch",
+      {
+        startOnBoot: true,
+      },
+    ],
   ],
   ios: {
     supportsTablet: true,
@@ -87,6 +93,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ],
     },
     usesAppleSignIn: true,
+    infoPlist: {
+      UIBackgroundModes: ["fetch"],
+    },
   },
   android: {
     package: IS_DEV ? "com.soonlist.app.dev" : "com.soonlist.app",
