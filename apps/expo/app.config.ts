@@ -66,6 +66,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ["expo-apple-authentication"],
     ["expo-localization"],
     ["expo-av"],
+    [
+      "expo-media-library",
+      {
+        photosPermission: "Allow $(PRODUCT_NAME) to access your photos.",
+        savePhotosPermission: "Allow $(PRODUCT_NAME) to save photos.",
+        isAccessMediaLocationEnabled: true,
+      },
+    ],
   ],
   ios: {
     supportsTablet: true,

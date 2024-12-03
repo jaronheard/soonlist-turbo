@@ -109,6 +109,9 @@ importers:
       expo-av:
         specifier: ~13.10.6
         version: 13.10.6(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
+      expo-background-fetch:
+        specifier: ~11.8.1
+        version: 11.8.1(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
       expo-blur:
         specifier: ~12.9.2
         version: 12.9.2(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
@@ -151,6 +154,9 @@ importers:
       expo-localization:
         specifier: ~14.8.4
         version: 14.8.4(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
+      expo-media-library:
+        specifier: ~15.9.2
+        version: 15.9.2(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
       expo-notifications:
         specifier: ~0.27.8
         version: 0.27.8(encoding@0.1.13)(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
@@ -166,6 +172,9 @@ importers:
       expo-status-bar:
         specifier: ~1.11.1
         version: 1.11.1
+      expo-task-manager:
+        specifier: ~11.7.3
+        version: 11.7.3(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
       expo-updates:
         specifier: ~0.24.13
         version: 0.24.13(encoding@0.1.13)(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
@@ -5495,6 +5504,11 @@ packages:
     peerDependencies:
       expo: '*'
 
+  expo-background-fetch@11.8.1:
+    resolution: {integrity: sha512-WkWgj1RZsBjIt/J2HvYhfNi+8WEM6vEptuUj6r/vW9w+kXzDo5z/+pkr7YnPgQIhc4P7Z/j7TlM43azUpIEFZA==}
+    peerDependencies:
+      expo: '*'
+
   expo-blur@12.9.2:
     resolution: {integrity: sha512-q+EIOkXw7OCE3VBTLRANsUIdMxtFWDTFpaMulJEXMwtxNQaCcAvzHZvwWP9dlI96FM4A6UdX2/slBNfNJzJcCQ==}
     peerDependencies:
@@ -5609,6 +5623,11 @@ packages:
     peerDependencies:
       expo: '*'
 
+  expo-media-library@15.9.2:
+    resolution: {integrity: sha512-ExRcCxNO768aWPQr9axuBDQLcFnRTSiqvWZ1XvnopCfZEic04wJ/CPAE1hLqTp7AyYrd6jHpqxa/aNKBAAFVeA==}
+    peerDependencies:
+      expo: '*'
+
   expo-modules-autolinking@1.10.3:
     resolution: {integrity: sha512-pn4n2Dl4iRh/zUeiChjRIe1C7EqOw1qhccr85viQV7W6l5vgRpY0osE51ij5LKg/kJmGRcJfs12+PwbdTplbKw==}
     hasBin: true
@@ -5659,6 +5678,11 @@ packages:
 
   expo-structured-headers@3.7.2:
     resolution: {integrity: sha512-/nGOyeWUXSUy4aIYKJTwQOznRNs0yKqKPAyEE6jtwvOl9qvfDWx9xskNtShioggBhFAssFkV6RBbPn+xZMQtvw==}
+
+  expo-task-manager@11.7.3:
+    resolution: {integrity: sha512-ueIOi638o+gRYeCIb9GHVEbdIIvAKqAmm4AllcjDJIrmqB240uA+5a5YwfHm7WUrSthIqHlIzLMFcnMTFxf/9w==}
+    peerDependencies:
+      expo: '*'
 
   expo-updates-interface@0.15.3:
     resolution: {integrity: sha512-uLvsbaCmUsXgJqeen8rYH/jPr874ZUCXEvWpKHxrCv5/XATPlYEaDuecbNSGQ+cu78i6MdtB4BHOwZmoH2d47A==}
@@ -9054,6 +9078,9 @@ packages:
   unicode-property-aliases-ecmascript@2.1.0:
     resolution: {integrity: sha512-6t3foTQI9qne+OZoVQB/8x8rk2k1eVy1gRXhV3oFQ5T6R1dqQ1xtin3XqSlx3+ATBkliTaR/hHyJBm+LVPNM8w==}
     engines: {node: '>=4'}
+
+  unimodules-app-loader@4.5.1:
+    resolution: {integrity: sha512-yQAsoL0jsCjld1C/iWS4tB5a6LZTb8+enZ9mpt9t9zHYw7YZgeInmW7yz5QZAgVE93ZMPN3SudZHWiXGuD4Wfg==}
 
   unique-filename@1.1.1:
     resolution: {integrity: sha512-Vmp0jIp2ln35UTXuryvjzkjGdRyf9b2lTXuSYUiPmzRcl3FDtYqAwOnTJkAngD9SWhnoJzDbTKwaOrZ+STtxNQ==}
@@ -15309,6 +15336,11 @@ snapshots:
     dependencies:
       expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
 
+  expo-background-fetch@11.8.1(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
+    dependencies:
+      expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
+      expo-task-manager: 11.7.3(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13))
+
   expo-blur@12.9.2(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
     dependencies:
       expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
@@ -15437,6 +15469,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  expo-media-library@15.9.2(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
+    dependencies:
+      expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
+
   expo-modules-autolinking@1.10.3:
     dependencies:
       '@expo/config': 8.5.6
@@ -15518,6 +15554,11 @@ snapshots:
   expo-status-bar@1.11.1: {}
 
   expo-structured-headers@3.7.2: {}
+
+  expo-task-manager@11.7.3(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
+    dependencies:
+      expo: 50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)
+      unimodules-app-loader: 4.5.1
 
   expo-updates-interface@0.15.3(expo@50.0.17(@babel/core@7.24.4)(@react-native/babel-preset@0.74.87(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4)))(encoding@0.1.13)):
     dependencies:
@@ -19166,6 +19207,8 @@ snapshots:
   unicode-match-property-value-ecmascript@2.1.0: {}
 
   unicode-property-aliases-ecmascript@2.1.0: {}
+
+  unimodules-app-loader@4.5.1: {}
 
   unique-filename@1.1.1:
     dependencies:
