@@ -5,6 +5,11 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { RouterOutputs } from "~/utils/api";
 
+interface RecentPhoto {
+  id: string;
+  uri: string;
+}
+
 interface AppState {
   filter: "upcoming" | "past";
   intentParams: { text?: string; imageUri?: string } | null;
@@ -64,6 +69,14 @@ interface AppState {
   setActiveInput: (
     input: "camera" | "upload" | "url" | "describe" | null,
   ) => void;
+
+  // Add new media-related state
+  recentPhotos: RecentPhoto[];
+  hasMediaPermission: boolean;
+
+  // Add new actions
+  setRecentPhotos: (photos: RecentPhoto[]) => void;
+  setHasMediaPermission: (hasPermission: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -154,6 +167,8 @@ export const useAppStore = create<AppState>()(
           hasCompletedOnboarding: false,
           isOptionSelected: false,
           activeInput: null,
+          recentPhotos: [],
+          hasMediaPermission: false,
         }),
       clearCalendarData: () =>
         set({
@@ -169,6 +184,15 @@ export const useAppStore = create<AppState>()(
       setIsOptionSelected: (isSelected) =>
         set({ isOptionSelected: isSelected }),
       setActiveInput: (input) => set({ activeInput: input }),
+
+      // Add new media-related state
+      recentPhotos: [],
+      hasMediaPermission: false,
+
+      // Add new actions
+      setRecentPhotos: (photos) => set({ recentPhotos: photos }),
+      setHasMediaPermission: (hasPermission) =>
+        set({ hasMediaPermission: hasPermission }),
     }),
     {
       name: "app-storage",

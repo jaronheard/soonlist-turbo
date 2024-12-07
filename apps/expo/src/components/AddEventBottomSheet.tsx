@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   Switch,
   Text,
   TouchableOpacity,
@@ -26,11 +27,10 @@ import {
   BottomSheetModal,
   BottomSheetTextInput,
 } from "@discord/bottom-sheet";
+import { FlashList } from "@shopify/flash-list";
 import {
   Camera as CameraIcon,
-  EditIcon,
   Globe2,
-  Image as ImageIcon,
   Link as LinkIcon,
   Sparkles,
   X,
@@ -46,6 +46,11 @@ import { showToast } from "~/utils/toast";
 interface AddEventBottomSheetProps {
   children?: React.ReactNode;
   onMount?: () => void;
+}
+
+interface RecentPhoto {
+  id: string;
+  uri: string;
 }
 
 const AddEventBottomSheet = React.forwardRef<
@@ -97,7 +102,8 @@ const AddEventBottomSheet = React.forwardRef<
     activeInput,
     setIsOptionSelected,
     setActiveInput,
-    resetEventStateOnNewSelection,
+    recentPhotos,
+    hasMediaPermission,
   } = useAppStore();
 
   // Use the intent handler
@@ -197,8 +203,8 @@ const AddEventBottomSheet = React.forwardRef<
   useImperativeHandle(ref, () => bottomSheetRef.current!);
 
   const handleInitialParams = useCallback(() => {
-    if (intentParams) {
-      // Clear existing content
+    if (intentParams !== null) {
+      // Handle intent params as before
       setInput("");
       setImagePreview(null);
       setLinkPreview(null);
@@ -222,10 +228,14 @@ const AddEventBottomSheet = React.forwardRef<
       }
       setIsOptionSelected(true);
       resetIntentParams();
-
-      // Present the bottom sheet
-      bottomSheetRef.current?.present();
+    } else if (recentPhotos.length > 0) {
+      // Use already loaded photos if available
+      setActiveInput("upload");
+      setIsOptionSelected(true);
     }
+
+    // Present the bottom sheet
+    bottomSheetRef.current?.present();
   }, [
     handleImageUploadFromUri,
     handleLinkPreview,
@@ -238,6 +248,7 @@ const AddEventBottomSheet = React.forwardRef<
     setUploadedImageUrl,
     setActiveInput,
     setIsOptionSelected,
+    recentPhotos.length,
   ]);
 
   useEffect(() => {
@@ -258,19 +269,6 @@ const AddEventBottomSheet = React.forwardRef<
     ),
     [],
   );
-
-  const handleImageUpload = useCallback(async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      const imageUri = result.assets[0].uri;
-      setInput(imageUri.split("/").pop() || "");
-      await handleImageUploadFromUri(imageUri);
-    }
-  }, [handleImageUploadFromUri, setInput]);
 
   const handleCameraCapture = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -471,43 +469,61 @@ const AddEventBottomSheet = React.forwardRef<
     duration: 200,
   } as MotiTransition;
 
-  const handleOptionSelect = useCallback(
-    (option: "camera" | "upload" | "url" | "describe") => {
-      if (activeInput === option) {
-        // Reset to the 2x2 grid if the same option is tapped again
-        setIsOptionSelected(false);
-        setActiveInput(null);
-        resetAddEventState();
-      } else {
-        // Reset the event state before selecting the new option
-        resetEventStateOnNewSelection();
-        setIsOptionSelected(true);
-        setActiveInput(option);
+  const PhotoGrid = () => {
+    if (!hasMediaPermission || recentPhotos.length === 0) return null;
 
-        switch (option) {
-          case "camera":
-            void handleCameraCapture();
-            break;
-          case "upload":
-            void handleImageUpload();
-            break;
-          case "url":
-          case "describe":
-            // These options will show their respective input fields
-            break;
-        }
-      }
-    },
-    [
-      activeInput,
-      setIsOptionSelected,
-      setActiveInput,
-      resetAddEventState,
-      resetEventStateOnNewSelection,
-      handleCameraCapture,
-      handleImageUpload,
-    ],
-  );
+    const windowWidth = Dimensions.get("window").width;
+    const padding = 32; // 2 * 16 for container padding
+    const spacing = 2; // Space between images
+    const columns = 3;
+    const availableWidth = windowWidth - padding;
+    const imageSize = (availableWidth - (columns - 1) * spacing) / columns;
+
+    const renderPhoto = ({ item }: { item: RecentPhoto }) => (
+      <TouchableOpacity
+        onPress={() => void handleImageUploadFromUri(item.uri)}
+        style={{
+          width: imageSize,
+          height: imageSize,
+          padding: spacing / 2,
+        }}
+      >
+        <Image
+          source={{ uri: item.uri }}
+          style={{
+            width: "100%",
+            height: "100%",
+          }}
+          contentFit="cover"
+          contentPosition="center"
+          transition={100}
+          cachePolicy="memory"
+        />
+      </TouchableOpacity>
+    );
+
+    return (
+      <View className="mt-4" style={{ height: imageSize * 3 + spacing * 2 }}>
+        <Text className="mb-2 text-sm font-medium text-gray-700">
+          Recent Photos
+        </Text>
+        <View className="flex-1 bg-transparent">
+          <FlashList
+            data={recentPhotos}
+            renderItem={renderPhoto}
+            numColumns={3}
+            estimatedItemSize={imageSize}
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={{ padding: spacing / 2 }}
+            estimatedListSize={{
+              height: imageSize * 3 + spacing * 2,
+              width: windowWidth - padding,
+            }}
+          />
+        </View>
+      </View>
+    );
+  };
 
   return (
     <BottomSheetModal
@@ -525,71 +541,20 @@ const AddEventBottomSheet = React.forwardRef<
 
         <MotiView
           animate={{
-            height: isOptionSelected ? 50 : "auto",
+            height: 50,
             marginBottom: 16,
           }}
           transition={transition}
         >
-          <View
-            className={`flex-row ${
-              isOptionSelected ? "justify-between" : "flex-wrap"
-            }`}
-          >
-            {["camera", "upload", "url", "describe"].map((option) => (
-              <MotiView
-                key={option}
-                animate={{
-                  width: isOptionSelected ? "22%" : "48%",
-                  margin: isOptionSelected ? 0 : "1%",
-                }}
-                transition={transition}
-              >
-                <TouchableOpacity
-                  onPress={() =>
-                    handleOptionSelect(
-                      option as "camera" | "upload" | "url" | "describe",
-                    )
-                  }
-                  className={`rounded-md px-2 py-2 ${
-                    isOptionSelected && activeInput !== option
-                      ? "bg-interactive-2"
-                      : "bg-interactive-3"
-                  }`}
-                >
-                  <View className="items-center">
-                    {option === "camera" && (
-                      <CameraIcon
-                        size={isOptionSelected ? 16 : 24}
-                        color="#5A32FB" // interactive-1 color
-                      />
-                    )}
-                    {option === "upload" && (
-                      <ImageIcon
-                        size={isOptionSelected ? 16 : 24}
-                        color="#5A32FB" // interactive-1 color
-                      />
-                    )}
-                    {option === "url" && (
-                      <LinkIcon
-                        size={isOptionSelected ? 16 : 24}
-                        color="#5A32FB" // interactive-1 color
-                      />
-                    )}
-                    {option === "describe" && (
-                      <EditIcon
-                        size={isOptionSelected ? 16 : 24}
-                        color="#5A32FB" // interactive-1 color
-                      />
-                    )}
-                    {!isOptionSelected && (
-                      <Text className="mt-2 font-medium text-interactive-1">
-                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                      </Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              </MotiView>
-            ))}
+          <View className="flex-row justify-end">
+            <TouchableOpacity
+              onPress={() => void handleCameraCapture()}
+              className="rounded-md bg-interactive-3 px-2 py-2"
+            >
+              <View className="items-center">
+                <CameraIcon size={16} color="#5A32FB" />
+              </View>
+            </TouchableOpacity>
           </View>
         </MotiView>
 
@@ -670,6 +635,8 @@ const AddEventBottomSheet = React.forwardRef<
             </View>
           </View>
         )}
+
+        {recentPhotos.length > 0 && <PhotoGrid />}
       </View>
     </BottomSheetModal>
   );

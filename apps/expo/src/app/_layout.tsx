@@ -30,6 +30,7 @@ import { BottomSheetModalProvider } from "@discord/bottom-sheet";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
 import { useCalendar } from "~/hooks/useCalendar";
+import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
@@ -219,6 +220,7 @@ function RootLayoutContent() {
   const { handleCalendarSelect, INITIAL_CALENDAR_LIMIT } = useCalendar();
   const { setIsCalendarModalVisible } = useAppStore();
   useAppStateRefresh();
+  useMediaPermissions();
   const ref = useNavigationContainerRef();
 
   useEffect(() => {
