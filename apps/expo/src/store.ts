@@ -190,7 +190,14 @@ export const useAppStore = create<AppState>()(
       hasMediaPermission: false,
 
       // Add new actions
-      setRecentPhotos: (photos) => set({ recentPhotos: photos }),
+      setRecentPhotos: (photos) =>
+        set((state) => {
+          // Only update if the photos are different
+          if (JSON.stringify(state.recentPhotos) === JSON.stringify(photos)) {
+            return state;
+          }
+          return { recentPhotos: photos };
+        }),
       setHasMediaPermission: (hasPermission) =>
         set({ hasMediaPermission: hasPermission }),
     }),
@@ -200,3 +207,8 @@ export const useAppStore = create<AppState>()(
     },
   ),
 );
+
+// Add a new selector to optimize recentPhotos access
+export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
+export const useHasMediaPermission = () =>
+  useAppStore((state) => state.hasMediaPermission);

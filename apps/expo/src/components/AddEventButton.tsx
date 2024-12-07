@@ -12,11 +12,11 @@ interface AddEventButtonProps {
 }
 
 const AddEventButton: React.FC<AddEventButtonProps> = ({ onPress }) => {
-  const { hasMediaPermission, setRecentPhotos } = useAppStore();
+  const { hasMediaPermission, setRecentPhotos, recentPhotos } = useAppStore();
 
   const handlePress = useCallback(async () => {
-    // Start loading photos before opening the sheet
-    if (hasMediaPermission) {
+    // Only load photos if we don't already have them
+    if (hasMediaPermission && recentPhotos.length === 0) {
       try {
         console.log("📸 Loading recent photos...");
         const { assets } = await MediaLibrary.getAssetsAsync({
@@ -35,13 +35,11 @@ const AddEventButton: React.FC<AddEventButtonProps> = ({ onPress }) => {
       } catch (error) {
         console.error("📸 Error loading recent photos:", error);
       }
-    } else {
-      console.log("📸 No media permissions, skipping photo load");
     }
 
     // Call the original onPress handler
     onPress();
-  }, [hasMediaPermission, setRecentPhotos, onPress]);
+  }, [hasMediaPermission, onPress, recentPhotos.length, setRecentPhotos]);
 
   return (
     <View className="absolute bottom-0 left-0 right-0">

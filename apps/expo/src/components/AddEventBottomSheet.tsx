@@ -1,5 +1,4 @@
 import type { BottomSheetDefaultFooterProps } from "@discord/bottom-sheet/src/components/bottomSheetFooter/types";
-import type { MotiTransition } from "moti";
 import React, {
   useCallback,
   useEffect,
@@ -10,7 +9,7 @@ import React, {
 import {
   ActivityIndicator,
   Dimensions,
-  Switch,
+  StyleSheet,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -30,12 +29,10 @@ import {
 import { FlashList } from "@shopify/flash-list";
 import {
   Camera as CameraIcon,
-  Globe2,
   Link as LinkIcon,
   Sparkles,
   X,
 } from "lucide-react-native";
-import { MotiView } from "moti";
 
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useNotification } from "~/providers/NotificationProvider";
@@ -53,6 +50,83 @@ interface RecentPhoto {
   uri: string;
 }
 
+const styles = StyleSheet.create({
+  previewContainer: {
+    width: Dimensions.get("window").width - 32,
+    height: Dimensions.get("window").width - 32,
+  },
+});
+
+const PhotoGrid = React.memo(
+  ({
+    hasMediaPermission,
+    recentPhotos,
+    onPhotoSelect,
+  }: {
+    hasMediaPermission: boolean;
+    recentPhotos: RecentPhoto[];
+    onPhotoSelect: (uri: string) => void;
+  }) => {
+    if (!hasMediaPermission || recentPhotos.length === 0) return null;
+
+    const windowWidth = Dimensions.get("window").width;
+    const padding = 32;
+    const spacing = 2;
+    const columns = 3;
+    const availableWidth = windowWidth - padding;
+    const imageSize = (availableWidth - (columns - 1) * spacing) / columns;
+
+    const renderPhoto = useCallback(
+      ({ item }: { item: RecentPhoto }) => (
+        <TouchableOpacity
+          onPress={() => onPhotoSelect(item.uri)}
+          style={{
+            width: imageSize,
+            height: imageSize,
+            padding: spacing / 2,
+          }}
+        >
+          <Image
+            source={{ uri: item.uri }}
+            style={{
+              width: "100%",
+              height: "100%",
+            }}
+            contentFit="cover"
+            contentPosition="center"
+            transition={100}
+            cachePolicy="memory"
+          />
+        </TouchableOpacity>
+      ),
+      [imageSize, onPhotoSelect],
+    );
+
+    return (
+      <View className="mt-4" style={{ height: imageSize * 3 + spacing * 2 }}>
+        <Text className="mb-2 text-sm font-medium text-gray-700">
+          Recent Photos
+        </Text>
+        <View className="flex-1 bg-transparent">
+          <FlashList
+            data={recentPhotos}
+            renderItem={renderPhoto}
+            numColumns={3}
+            estimatedItemSize={imageSize}
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={{ padding: spacing / 2 }}
+            estimatedListSize={{
+              height: imageSize * 3 + spacing * 2,
+              width: windowWidth - padding,
+            }}
+            keyExtractor={(item) => item.id}
+          />
+        </View>
+      </View>
+    );
+  },
+);
+
 const AddEventBottomSheet = React.forwardRef<
   BottomSheetModal,
   AddEventBottomSheetProps
@@ -60,8 +134,7 @@ const AddEventBottomSheet = React.forwardRef<
   const { height: windowHeight, fontScale } = useWindowDimensions();
 
   const snapPoints = useMemo(() => {
-    const maxHeight = windowHeight * 0.9; // 90% of screen height
-    return [maxHeight];
+    return [windowHeight - 55];
   }, [windowHeight]);
 
   const { expoPushToken } = useNotification();
@@ -84,21 +157,18 @@ const AddEventBottomSheet = React.forwardRef<
     input,
     imagePreview,
     linkPreview,
-    isPublic,
     isImageLoading,
     isImageUploading,
     uploadedImageUrl,
     setInput,
     setImagePreview,
     setLinkPreview,
-    setIsPublic,
     setIsImageLoading,
     setIsImageUploading,
     setUploadedImageUrl,
     resetAddEventState,
     intentParams,
     resetIntentParams,
-    isOptionSelected,
     activeInput,
     setIsOptionSelected,
     setActiveInput,
@@ -349,7 +419,7 @@ const AddEventBottomSheet = React.forwardRef<
             lists: [],
             userId: user?.id || "",
             username: user?.username || "",
-            visibility: isPublic ? "public" : "private",
+            visibility: "private",
           },
           {
             onSuccess: handleSuccess,
@@ -376,7 +446,7 @@ const AddEventBottomSheet = React.forwardRef<
               lists: [],
               userId: user?.id || "",
               username: user?.username || "",
-              visibility: isPublic ? "public" : "private",
+              visibility: "private",
             },
             {
               onSuccess: handleSuccess,
@@ -392,7 +462,7 @@ const AddEventBottomSheet = React.forwardRef<
               lists: [],
               userId: user?.id || "",
               username: user?.username || "",
-              visibility: isPublic ? "public" : "private",
+              visibility: "private",
             },
             {
               onSuccess: handleSuccess,
@@ -408,7 +478,6 @@ const AddEventBottomSheet = React.forwardRef<
     input,
     imagePreview,
     linkPreview,
-    isPublic,
     expoPushToken,
     user,
     eventFromUrlThenCreateThenNotification,
@@ -463,67 +532,12 @@ const AddEventBottomSheet = React.forwardRef<
     }
   }, [onMount]);
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const transition = {
-    type: "timing",
-    duration: 200,
-  } as MotiTransition;
-
-  const PhotoGrid = () => {
-    if (!hasMediaPermission || recentPhotos.length === 0) return null;
-
-    const windowWidth = Dimensions.get("window").width;
-    const padding = 32; // 2 * 16 for container padding
-    const spacing = 2; // Space between images
-    const columns = 3;
-    const availableWidth = windowWidth - padding;
-    const imageSize = (availableWidth - (columns - 1) * spacing) / columns;
-
-    const renderPhoto = ({ item }: { item: RecentPhoto }) => (
-      <TouchableOpacity
-        onPress={() => void handleImageUploadFromUri(item.uri)}
-        style={{
-          width: imageSize,
-          height: imageSize,
-          padding: spacing / 2,
-        }}
-      >
-        <Image
-          source={{ uri: item.uri }}
-          style={{
-            width: "100%",
-            height: "100%",
-          }}
-          contentFit="cover"
-          contentPosition="center"
-          transition={100}
-          cachePolicy="memory"
-        />
-      </TouchableOpacity>
-    );
-
-    return (
-      <View className="mt-4" style={{ height: imageSize * 3 + spacing * 2 }}>
-        <Text className="mb-2 text-sm font-medium text-gray-700">
-          Recent Photos
-        </Text>
-        <View className="flex-1 bg-transparent">
-          <FlashList
-            data={recentPhotos}
-            renderItem={renderPhoto}
-            numColumns={3}
-            estimatedItemSize={imageSize}
-            showsVerticalScrollIndicator={true}
-            contentContainerStyle={{ padding: spacing / 2 }}
-            estimatedListSize={{
-              height: imageSize * 3 + spacing * 2,
-              width: windowWidth - padding,
-            }}
-          />
-        </View>
-      </View>
-    );
-  };
+  const handlePhotoSelect = useCallback(
+    (uri: string) => {
+      void handleImageUploadFromUri(uri);
+    },
+    [handleImageUploadFromUri],
+  );
 
   return (
     <BottomSheetModal
@@ -537,33 +551,27 @@ const AddEventBottomSheet = React.forwardRef<
       onDismiss={handleDismiss}
     >
       <View className="flex-1 p-4">
-        <Text className="mb-4 text-2xl font-semibold">Add event info</Text>
+        <View className="mb-4 flex-row items-center justify-between">
+          <Text className="text-2xl font-semibold">Add event info</Text>
+          <TouchableOpacity
+            onPress={() => void handleCameraCapture()}
+            className="rounded-md bg-interactive-3 px-2 py-2"
+          >
+            <View className="items-center">
+              <CameraIcon size={16} color="#5A32FB" />
+            </View>
+          </TouchableOpacity>
+        </View>
 
-        <MotiView
-          animate={{
-            height: 50,
-            marginBottom: 16,
-          }}
-          transition={transition}
+        <View
+          className="mb-4 overflow-hidden rounded-md"
+          style={styles.previewContainer}
         >
-          <View className="flex-row justify-end">
-            <TouchableOpacity
-              onPress={() => void handleCameraCapture()}
-              className="rounded-md bg-interactive-3 px-2 py-2"
-            >
-              <View className="items-center">
-                <CameraIcon size={16} color="#5A32FB" />
-              </View>
-            </TouchableOpacity>
-          </View>
-        </MotiView>
-
-        <View className="mb-4 h-32">
           {imagePreview ? (
-            <View className="relative h-full w-full rounded-md">
+            <View className="relative h-full w-full">
               <Image
                 source={{ uri: imagePreview }}
-                style={{ width: "100%", height: "100%", borderRadius: 5 }}
+                style={{ width: "100%", height: "100%" }}
                 contentFit="cover"
               />
               <TouchableOpacity
@@ -579,7 +587,7 @@ const AddEventBottomSheet = React.forwardRef<
               )}
             </View>
           ) : linkPreview ? (
-            <View className="relative h-full w-full rounded-md bg-neutral-200">
+            <View className="relative h-full w-full bg-neutral-200">
               <View className="h-full w-full items-center justify-center">
                 <LinkIcon size={24} color="black" />
                 <Text
@@ -598,7 +606,7 @@ const AddEventBottomSheet = React.forwardRef<
               </TouchableOpacity>
             </View>
           ) : activeInput === "url" ? (
-            <View className="h-full rounded-md border border-neutral-300 px-3 py-2">
+            <View className="h-full border border-neutral-300 px-3 py-2">
               <BottomSheetTextInput
                 placeholder="Paste URL"
                 defaultValue={input}
@@ -610,7 +618,7 @@ const AddEventBottomSheet = React.forwardRef<
               />
             </View>
           ) : activeInput === "describe" ? (
-            <View className="h-full rounded-md border border-neutral-300 px-3 py-2">
+            <View className="h-full border border-neutral-300 px-3 py-2">
               <BottomSheetTextInput
                 placeholder="Describe your event"
                 defaultValue={input}
@@ -624,19 +632,13 @@ const AddEventBottomSheet = React.forwardRef<
           ) : null}
         </View>
 
-        {isOptionSelected && (
-          <View className="mt-2">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-2">
-                <Globe2 size={20} color="black" />
-                <Text className="text-base font-medium">Make discoverable</Text>
-              </View>
-              <Switch value={isPublic} onValueChange={setIsPublic} />
-            </View>
-          </View>
+        {recentPhotos.length > 0 && (
+          <PhotoGrid
+            hasMediaPermission={hasMediaPermission}
+            recentPhotos={recentPhotos}
+            onPhotoSelect={handlePhotoSelect}
+          />
         )}
-
-        {recentPhotos.length > 0 && <PhotoGrid />}
       </View>
     </BottomSheetModal>
   );
