@@ -164,7 +164,7 @@ function MyFeed() {
           ),
         }}
       />
-      <View className="flex-1">
+      <View className="flex-1 bg-white">
         {eventsQuery.isPending ? (
           <LoadingSpinner />
         ) : (
