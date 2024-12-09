@@ -67,8 +67,6 @@ const PhotoGrid = React.memo(
     recentPhotos: RecentPhoto[];
     onPhotoSelect: (uri: string) => void;
   }) => {
-    if (!hasMediaPermission || recentPhotos.length === 0) return null;
-
     const windowWidth = Dimensions.get("window").width;
     const padding = 32;
     const spacing = 2;
@@ -102,11 +100,11 @@ const PhotoGrid = React.memo(
       [imageSize, onPhotoSelect],
     );
 
+    if (!hasMediaPermission || recentPhotos.length === 0) return null;
+
     return (
       <View className="mt-4" style={{ height: imageSize * 3 + spacing * 2 }}>
-        <Text className="mb-2 text-sm font-medium text-gray-700">
-          Recent Photos
-        </Text>
+        <Text className="mb-2 text-sm font-medium text-gray-700">Recents</Text>
         <View className="flex-1 bg-transparent">
           <FlashList
             data={recentPhotos}
@@ -298,10 +296,18 @@ const AddEventBottomSheet = React.forwardRef<
       }
       setIsOptionSelected(true);
       resetIntentParams();
-    } else if (recentPhotos.length > 0) {
-      // Use already loaded photos if available
-      setActiveInput("upload");
-      setIsOptionSelected(true);
+    } else {
+      // Always try to use the most recent photo by default
+      const mostRecentPhoto = recentPhotos[0];
+      if (mostRecentPhoto?.uri) {
+        setActiveInput("upload");
+        setIsOptionSelected(true);
+        void handleImageUploadFromUri(mostRecentPhoto.uri);
+      } else {
+        // If no recent photo, set default state
+        setActiveInput("describe");
+        setIsOptionSelected(false);
+      }
     }
 
     // Present the bottom sheet
@@ -318,7 +324,7 @@ const AddEventBottomSheet = React.forwardRef<
     setUploadedImageUrl,
     setActiveInput,
     setIsOptionSelected,
-    recentPhotos.length,
+    recentPhotos,
   ]);
 
   useEffect(() => {
@@ -510,8 +516,8 @@ const AddEventBottomSheet = React.forwardRef<
       <BottomSheetFooter {...props} bottomInset={24}>
         <View className={`px-4 pb-4 ${fontScale > 1.3 ? "pt-4" : ""}`}>
           <TouchableOpacity
-            className={`w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-2 ${
-              isCreateButtonDisabled ? "opacity-50" : ""
+            className={`w-full flex-row items-center justify-center rounded-full px-3 py-2 ${
+              isCreateButtonDisabled ? "bg-interactive-2" : "bg-interactive-1"
             }`}
             onPress={handleCreateEvent}
             disabled={isCreateButtonDisabled}
@@ -629,7 +635,11 @@ const AddEventBottomSheet = React.forwardRef<
                 style={{ height: "100%" }}
               />
             </View>
-          ) : null}
+          ) : (
+            <View className="h-full w-full items-center justify-center border border-neutral-300 bg-neutral-50">
+              <Text className="text-base text-neutral-500">Select a photo</Text>
+            </View>
+          )}
         </View>
 
         {recentPhotos.length > 0 && (
