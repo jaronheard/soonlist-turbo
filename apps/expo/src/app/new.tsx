@@ -360,7 +360,7 @@ export default function NewEventModal() {
       <Stack.Screen
         options={{
           title: "Add Event",
-          presentation: "modal",
+          presentation: "fullScreenModal",
           headerLeft: () => (
             <Pressable onPress={() => router.back()}>
               <X size={24} />

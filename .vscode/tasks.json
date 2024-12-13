@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run oco",
+      "type": "shell",
+      "command": "git add . && oco --yes",
+      "presentation": {
+        "reveal": "always"
+      }
+    }
+  ]
+}
