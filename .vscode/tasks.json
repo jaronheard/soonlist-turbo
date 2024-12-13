@@ -6,7 +6,8 @@
       "type": "shell",
       "command": "git add . && oco --yes",
       "presentation": {
-        "reveal": "always"
+        "reveal": "always",
+        "close": true
       }
     }
   ]
