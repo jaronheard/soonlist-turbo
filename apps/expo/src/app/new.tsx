@@ -18,7 +18,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
-import { Camera, Link as LinkIcon, X } from "lucide-react-native";
+import { Camera, Link as LinkIcon, Sparkles, X } from "lucide-react-native";
 
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
@@ -359,130 +359,146 @@ export default function NewEventModal() {
     >
       <Stack.Screen
         options={{
-          title: "Add Event",
-          presentation: "fullScreenModal",
+          headerShown: true,
+          headerTitle: "Add Event",
+          headerTitleStyle: {
+            fontSize: 17,
+            color: "#000",
+          },
+          headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: "white",
+          },
           headerLeft: () => (
-            <Pressable onPress={() => router.back()}>
-              <X size={24} />
+            <Pressable onPress={() => router.back()} className="px-4 py-2">
+              <Text className="text-interactive-1">Cancel</Text>
             </Pressable>
           ),
-          headerRight: () => (
-            <Pressable
-              onPress={handleCreateEvent}
-              disabled={!input.trim() && !imagePreview && !linkPreview}
-            >
-              <Text
-                className={
-                  !input.trim() && !imagePreview && !linkPreview
-                    ? "text-gray-400"
-                    : "text-interactive-1"
-                }
-              >
-                {isSubmitting ? "Creating..." : "Create"}
-              </Text>
-            </Pressable>
-          ),
+          headerRight: undefined,
         }}
       />
-      <ScrollView className="flex-1 bg-white p-4">
-        <View className="mb-4 flex-row items-center justify-between">
-          <Text className="text-2xl font-semibold">Add event info</Text>
-          <Pressable
-            onPress={() => void handleCameraCapture()}
-            className="rounded-md bg-interactive-3 px-2 py-2"
-          >
-            <Camera size={16} color="#5A32FB" />
-          </Pressable>
-        </View>
-
-        <View
-          className="mb-4 overflow-hidden rounded-md"
-          style={styles.previewContainer}
-        >
-          {/* Preview content - same as before */}
-          {imagePreview ? (
-            <View className="relative h-full w-full">
-              <Image
-                source={{ uri: imagePreview }}
-                style={{ width: "100%", height: "100%" }}
-                contentFit="cover"
-              />
+      <View className="flex-1 bg-white">
+        <ScrollView className="flex-1 px-4">
+          {recentPhotos.length > 0 && (
+            <View className="mb-2 flex-row items-center justify-between">
+              <Text className="text-sm font-medium text-gray-700">Recents</Text>
               <Pressable
-                onPress={clearPreview}
-                className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+                onPress={() => void handleCameraCapture()}
+                className="rounded-md bg-interactive-3 px-2 py-2"
               >
-                <X size={16} color="black" />
+                <Camera size={16} color="#5A32FB" />
               </Pressable>
-              {isImageLoading && (
-                <View className="absolute bottom-2 right-2">
-                  <ActivityIndicator size="small" color="#DCE0E8" />
-                </View>
-              )}
-            </View>
-          ) : linkPreview ? (
-            <View className="relative h-full w-full bg-neutral-200">
-              <View className="h-full w-full items-center justify-center">
-                <LinkIcon size={24} color="black" />
-                <Text
-                  className="mt-2 px-4 text-center text-sm font-medium"
-                  numberOfLines={2}
-                  ellipsizeMode="middle"
-                >
-                  {linkPreview}
-                </Text>
-              </View>
-              <Pressable
-                onPress={clearPreview}
-                className="absolute right-2 top-2 rounded-full bg-white p-1"
-              >
-                <X size={16} color="black" />
-              </Pressable>
-            </View>
-          ) : activeInput === "url" ? (
-            <View className="h-full border border-neutral-300 px-3 py-2">
-              <TextInput
-                placeholder="Paste URL"
-                value={input}
-                onChangeText={handleTextChange}
-                multiline
-                style={[
-                  { height: "100%" },
-                  Platform.select({
-                    android: { textAlignVertical: "top" },
-                  }),
-                ]}
-                autoFocus={true}
-              />
-            </View>
-          ) : activeInput === "describe" ? (
-            <View className="h-full border border-neutral-300 px-3 py-2">
-              <TextInput
-                placeholder="Describe your event"
-                value={input}
-                onChangeText={handleTextChange}
-                multiline
-                style={[
-                  { height: "100%" },
-                  Platform.select({
-                    android: { textAlignVertical: "top" },
-                  }),
-                ]}
-                autoFocus={true}
-              />
-            </View>
-          ) : (
-            <View className="h-full w-full items-center justify-center border border-neutral-300 bg-neutral-50">
-              <Text className="text-base text-neutral-500">Select a photo</Text>
             </View>
           )}
-        </View>
 
-        <PhotoGrid
-          hasMediaPermission={hasMediaPermission}
-          recentPhotos={recentPhotos}
-          onPhotoSelect={(uri) => void handleImageUploadFromUri(uri)}
-        />
-      </ScrollView>
+          <View
+            className="mb-4 overflow-hidden rounded-md"
+            style={styles.previewContainer}
+          >
+            {/* Preview content - same as before */}
+            {imagePreview ? (
+              <View className="relative h-full w-full">
+                <Image
+                  source={{ uri: imagePreview }}
+                  style={{ width: "100%", height: "100%" }}
+                  contentFit="cover"
+                />
+                <Pressable
+                  onPress={clearPreview}
+                  className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+                >
+                  <X size={16} color="black" />
+                </Pressable>
+                {isImageLoading && (
+                  <View className="absolute bottom-2 right-2">
+                    <ActivityIndicator size="small" color="#DCE0E8" />
+                  </View>
+                )}
+              </View>
+            ) : linkPreview ? (
+              <View className="relative h-full w-full bg-neutral-200">
+                <View className="h-full w-full items-center justify-center">
+                  <LinkIcon size={24} color="black" />
+                  <Text
+                    className="mt-2 px-4 text-center text-sm font-medium"
+                    numberOfLines={2}
+                    ellipsizeMode="middle"
+                  >
+                    {linkPreview}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={clearPreview}
+                  className="absolute right-2 top-2 rounded-full bg-white p-1"
+                >
+                  <X size={16} color="black" />
+                </Pressable>
+              </View>
+            ) : activeInput === "url" ? (
+              <View className="h-full border border-neutral-300 px-3 py-2">
+                <TextInput
+                  placeholder="Paste URL"
+                  value={input}
+                  onChangeText={handleTextChange}
+                  multiline
+                  style={[
+                    { height: "100%" },
+                    Platform.select({
+                      android: { textAlignVertical: "top" },
+                    }),
+                  ]}
+                  autoFocus={true}
+                />
+              </View>
+            ) : activeInput === "describe" ? (
+              <View className="h-full border border-neutral-300 px-3 py-2">
+                <TextInput
+                  placeholder="Describe your event"
+                  value={input}
+                  onChangeText={handleTextChange}
+                  multiline
+                  style={[
+                    { height: "100%" },
+                    Platform.select({
+                      android: { textAlignVertical: "top" },
+                    }),
+                  ]}
+                  autoFocus={true}
+                />
+              </View>
+            ) : (
+              <View className="h-full w-full items-center justify-center border border-neutral-300 bg-neutral-50">
+                <Text className="text-base text-neutral-500">
+                  Select a photo
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <PhotoGrid
+            hasMediaPermission={hasMediaPermission}
+            recentPhotos={recentPhotos}
+            onPhotoSelect={(uri) => void handleImageUploadFromUri(uri)}
+          />
+        </ScrollView>
+
+        <View className="shadow-top bg-white px-4 pb-8 pt-4">
+          <Pressable
+            onPress={handleCreateEvent}
+            disabled={!input.trim() && !imagePreview && !linkPreview}
+            className={`w-full flex-row items-center justify-center rounded-full px-3 py-3 ${
+              !input.trim() && !imagePreview && !linkPreview
+                ? "bg-interactive-2"
+                : "bg-interactive-1"
+            }`}
+          >
+            <Sparkles size={16} color="white" />
+            <Text className="ml-2 text-xl font-bold text-white">
+              {isSubmitting ? "Creating..." : "Capture event"}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
     </KeyboardAvoidingView>
   );
 }

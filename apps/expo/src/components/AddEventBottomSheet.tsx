@@ -557,17 +557,19 @@ const AddEventBottomSheet = React.forwardRef<
       onDismiss={handleDismiss}
     >
       <View className="flex-1 p-4">
-        <View className="mb-4 flex-row items-center justify-between">
-          <Text className="text-2xl font-semibold">Add event info</Text>
-          <TouchableOpacity
-            onPress={() => void handleCameraCapture()}
-            className="rounded-md bg-interactive-3 px-2 py-2"
-          >
-            <View className="items-center">
-              <CameraIcon size={16} color="#5A32FB" />
-            </View>
-          </TouchableOpacity>
-        </View>
+        {recentPhotos.length > 0 && (
+          <View className="mb-2 flex-row items-center justify-between">
+            <Text className="text-sm font-medium text-gray-700">Recents</Text>
+            <TouchableOpacity
+              onPress={() => void handleCameraCapture()}
+              className="rounded-md bg-interactive-3 px-2 py-2"
+            >
+              <View className="items-center">
+                <CameraIcon size={16} color="#5A32FB" />
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View
           className="mb-4 overflow-hidden rounded-md"
