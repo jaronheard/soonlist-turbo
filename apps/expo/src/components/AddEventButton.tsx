@@ -3,22 +3,18 @@ import { TouchableOpacity, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
+import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
 
 import { useAppStore } from "~/store";
 
-interface AddEventButtonProps {
-  onPress: () => void;
-}
-
-const AddEventButton: React.FC<AddEventButtonProps> = ({ onPress }) => {
+export default function AddEventButton() {
+  const router = useRouter();
   const { hasMediaPermission, setRecentPhotos, recentPhotos } = useAppStore();
 
   const handlePress = useCallback(async () => {
-    // Only load photos if we don't already have them
     if (hasMediaPermission && recentPhotos.length === 0) {
       try {
-        console.log("📸 Loading recent photos...");
         const { assets } = await MediaLibrary.getAssetsAsync({
           first: 100,
           mediaType: MediaLibrary.MediaType.photo,
@@ -30,20 +26,17 @@ const AddEventButton: React.FC<AddEventButtonProps> = ({ onPress }) => {
           uri: asset.uri,
         }));
 
-        console.log(`📸 Loaded ${photos.length} recent photos`);
         setRecentPhotos(photos);
       } catch (error) {
-        console.error("📸 Error loading recent photos:", error);
+        console.error("Error loading recent photos:", error);
       }
     }
 
-    // Call the original onPress handler
-    onPress();
-  }, [hasMediaPermission, onPress, recentPhotos.length, setRecentPhotos]);
+    router.push("/new");
+  }, [hasMediaPermission, recentPhotos.length, setRecentPhotos, router]);
 
   return (
     <View className="absolute bottom-0 left-0 right-0">
-      {/* Bottom blur (stronger) */}
       <View className="absolute bottom-0 h-24 w-full">
         <BlurView
           intensity={10}
@@ -52,7 +45,6 @@ const AddEventButton: React.FC<AddEventButtonProps> = ({ onPress }) => {
         />
       </View>
 
-      {/* Top blur (lighter) with fade out */}
       <View className="absolute bottom-0 h-40 w-full">
         <LinearGradient
           colors={["transparent", "#5A32FB"]}
@@ -76,7 +68,6 @@ const AddEventButton: React.FC<AddEventButtonProps> = ({ onPress }) => {
         />
       </View>
 
-      {/* Button */}
       <TouchableOpacity
         onPress={handlePress}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex-row items-center justify-center gap-2 rounded-full bg-interactive-2 p-6 shadow-lg"
@@ -85,6 +76,4 @@ const AddEventButton: React.FC<AddEventButtonProps> = ({ onPress }) => {
       </TouchableOpacity>
     </View>
   );
-};
-
-export default AddEventButton;
+}

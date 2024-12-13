@@ -211,6 +211,13 @@ const InitialLayout = () => {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="new"
+        options={{
+          presentation: "modal",
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 };
