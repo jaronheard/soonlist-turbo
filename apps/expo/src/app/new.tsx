@@ -15,7 +15,7 @@ import * as FileSystem from "expo-file-system";
 import { Image } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 import { Camera, Link as LinkIcon, X } from "lucide-react-native";
@@ -117,8 +117,6 @@ export default function NewEventModal() {
     setIsImageLoading,
     setUploadedImageUrl,
     resetAddEventState,
-    intentParams,
-    resetIntentParams,
     activeInput,
     setIsOptionSelected,
     setActiveInput,
@@ -300,31 +298,34 @@ export default function NewEventModal() {
     resetAddEventState,
   ]);
 
-  useEffect(() => {
-    if (intentParams !== null) {
-      setInput("");
-      setImagePreview(null);
-      setLinkPreview(null);
-      setUploadedImageUrl(null);
+  const { text, imageUri } = useLocalSearchParams<{
+    text?: string;
+    imageUri?: string;
+  }>();
 
-      if (intentParams.text) {
-        handleTextChange(intentParams.text);
-        setActiveInput("describe");
-      } else if (intentParams.imageUri) {
-        const [uri, width, height] = intentParams.imageUri.split("|");
-        if (uri) {
-          if (uri.startsWith("http")) {
-            handleLinkPreview(uri);
-            setActiveInput("url");
-          } else {
-            void handleImageUploadFromUri(uri);
-            setActiveInput("upload");
-          }
-        }
-        setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
-      }
+  useEffect(() => {
+    setInput("");
+    setImagePreview(null);
+    setLinkPreview(null);
+    setUploadedImageUrl(null);
+
+    if (text) {
+      handleTextChange(text);
+      setActiveInput("describe");
       setIsOptionSelected(true);
-      resetIntentParams();
+    } else if (imageUri) {
+      const [uri, width, height] = imageUri.split("|");
+      if (uri) {
+        if (uri.startsWith("http")) {
+          handleLinkPreview(uri);
+          setActiveInput("url");
+        } else {
+          void handleImageUploadFromUri(uri);
+          setActiveInput("upload");
+        }
+      }
+      setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
+      setIsOptionSelected(true);
     } else {
       const mostRecentPhoto = recentPhotos[0];
       if (mostRecentPhoto?.uri) {
@@ -336,7 +337,20 @@ export default function NewEventModal() {
         setIsOptionSelected(false);
       }
     }
-  }, []);
+  }, [
+    text,
+    imageUri,
+    handleImageUploadFromUri,
+    handleLinkPreview,
+    handleTextChange,
+    recentPhotos,
+    setActiveInput,
+    setImagePreview,
+    setInput,
+    setIsOptionSelected,
+    setLinkPreview,
+    setUploadedImageUrl,
+  ]);
 
   return (
     <KeyboardAvoidingView
