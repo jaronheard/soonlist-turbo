@@ -51,6 +51,7 @@
     "react-image-crop": "^11.0.5",
     "react-qr-code": "^2.0.15",
     "react-timezone-select": "^3.2.0",
+    "recharts": "^2.15.0",
     "server-only": "^0.0.1",
     "superjson": "2.2.1",
     "svix": "^1.15.0",
