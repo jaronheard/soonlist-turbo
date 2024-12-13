@@ -9,7 +9,23 @@ import {
   Users,
 } from "lucide-react";
 
-const YearInReviewCard = () => {
+import dataForUsersFor2024 from "./dataForUsersFor2024";
+
+const YearInReviewCard = ({
+  user_id,
+  username,
+  percentile,
+  active_days,
+  total_events_captured,
+  unique_event_types,
+  most_active_month,
+  favorite_type,
+  favorite_category,
+  events_followed,
+}) => {
+  // Convert string values to numbers and calculate top percentile
+  const topPercentile = Math.round(100 - parseFloat(percentile));
+
   return (
     <div className="mx-auto max-w-2xl rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 p-8 text-white shadow-xl">
       <div className="space-y-6">
@@ -20,19 +36,21 @@ const YearInReviewCard = () => {
             <h1 className="text-3xl font-bold">2024 Year in Review</h1>
             <Sparkles className="h-6 w-6" />
           </div>
-          <p className="text-xl font-medium">@joshcarr</p>
+          <p className="text-xl font-medium">@{username}</p>
         </div>
 
         {/* Capturer Status */}
         <div className="rounded-lg bg-white/10 p-6 backdrop-blur-sm">
           <div className="mb-4 flex items-center gap-2">
             <Crown className="h-6 w-6 text-yellow-300" />
-            <h2 className="text-2xl font-bold">Top 3% Capturer!</h2>
+            <h2 className="text-2xl font-bold">
+              Top {topPercentile}% Capturer!
+            </h2>
           </div>
           <p className="text-lg">
             You're in the top{" "}
-            <span className="font-bold text-yellow-300">3%</span> of all
-            capturers this year
+            <span className="font-bold text-yellow-300">{topPercentile}%</span>{" "}
+            of all capturers this year
           </p>
         </div>
 
@@ -43,7 +61,9 @@ const YearInReviewCard = () => {
               <Calendar className="h-5 w-5" />
               <h3 className="font-semibold">Events Captured</h3>
             </div>
-            <p className="text-3xl font-bold">126</p>
+            <p className="text-3xl font-bold">
+              {parseInt(total_events_captured).toLocaleString()}
+            </p>
           </div>
 
           <div className="rounded-lg bg-white/10 p-4 backdrop-blur-sm">
@@ -51,7 +71,9 @@ const YearInReviewCard = () => {
               <Users className="h-5 w-5" />
               <h3 className="font-semibold">Active Days</h3>
             </div>
-            <p className="text-3xl font-bold">94</p>
+            <p className="text-3xl font-bold">
+              {parseInt(active_days).toLocaleString()}
+            </p>
           </div>
         </div>
 
@@ -62,7 +84,7 @@ const YearInReviewCard = () => {
               <Star className="h-5 w-5 text-yellow-300" />
               <h3 className="font-semibold">Your Go-To Event Type</h3>
             </div>
-            <p className="text-2xl font-bold capitalize">Concert</p>
+            <p className="text-2xl font-bold capitalize">{favorite_type}</p>
           </div>
 
           <div>
@@ -70,7 +92,7 @@ const YearInReviewCard = () => {
               <Heart className="h-5 w-5 text-pink-300" />
               <h3 className="font-semibold">Favorite Category</h3>
             </div>
-            <p className="text-2xl font-bold capitalize">Music</p>
+            <p className="text-2xl font-bold capitalize">{favorite_category}</p>
           </div>
         </div>
 
@@ -80,7 +102,7 @@ const YearInReviewCard = () => {
             <Trophy className="h-5 w-5 text-yellow-300" />
             <h3 className="font-semibold">Peak Month</h3>
           </div>
-          <p className="text-2xl font-bold">October</p>
+          <p className="text-2xl font-bold">{most_active_month}</p>
           <p className="mt-1 text-sm">This was your most active month!</p>
         </div>
 
@@ -94,4 +116,34 @@ const YearInReviewCard = () => {
   );
 };
 
-export default YearInReviewCard;
+interface Props {
+  params: { userName: string };
+}
+
+// Example usage:
+const Page = ({ params }: Props) => {
+  const userName = params.userName;
+
+  if (!userName || !dataForUsersFor2024[userName]) {
+    return <div>No data for this user</div>;
+  }
+
+  const userData = dataForUsersFor2024[userName];
+
+  //   const userData = {
+  //     user_id: "user_2ZFNoiajf80Q4ZiTQj8hAgatRCt",
+  //     username: "jaronheard",
+  //     percentile: "100.0",
+  //     active_days: "153",
+  //     total_events_captured: "252",
+  //     unique_event_types: "22",
+  //     most_active_month: "June",
+  //     favorite_type: "concert",
+  //     favorite_category: "music",
+  //     events_followed: "28"
+  //   };
+
+  return <YearInReviewCard {...userData} />;
+};
+
+export default Page;

@@ -1,4 +1,4 @@
-const dataForUsersFor2024 = [
+const dataForUsersFor2024Array = [
   {
     user_id: "user_2ZFNoiajf80Q4ZiTQj8hAgatRCt",
     username: "jaronheard",
@@ -384,5 +384,10 @@ const dataForUsersFor2024 = [
     events_followed: "0",
   },
 ];
+
+const dataForUsersFor2024 = dataForUsersFor2024Array.reduce((acc, user) => {
+  acc[user.username] = user;
+  return acc;
+}, {});
 
 export default dataForUsersFor2024;
