@@ -4,10 +4,9 @@
     {
       "label": "Run oco",
       "type": "shell",
-      "command": "git add . && oco --yes",
+      "command": "git add . && output=$(oco --yes) && osascript -e \"display notification \\\"$output\\\" with title \\\"✨ Commit\\\"\"",
       "presentation": {
-        "reveal": "always",
-        "close": true
+        "reveal": "always"
       }
     }
   ]
