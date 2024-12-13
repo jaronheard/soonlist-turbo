@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Run oco",
+      "label": "Stage, Commit, and Notify",
       "type": "shell",
-      "command": "git add . && oco --yes && output=$(git log -1 --pretty=%B) && files=$(git diff-tree --no-commit-id --name-status -r HEAD) && osascript -e 'display notification \"'$output'\" with title \"✨ committed\" subtitle \"'$files'\"'",
+      "command": "git add . && oco --yes && output=$(git log -1 --pretty=%B) && files=$(git diff-tree --no-commit-id --name-status -r HEAD) && osascript -e \"display notification \\\"${output}\\\" with title \\\"✨ committed\\\" subtitle \\\"${files}\\\"\"",
       "presentation": {
         "reveal": "never"
       }
