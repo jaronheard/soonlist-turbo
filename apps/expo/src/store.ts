@@ -58,7 +58,7 @@ interface AppState {
   setHasCompletedOnboarding: (status: boolean) => void;
   resetStore: () => void;
 
-  // New event state
+  // New event state & actions
   isOptionSelected: boolean;
   activeInput: "camera" | "upload" | "url" | "describe" | null;
   setIsOptionSelected: (isSelected: boolean) => void;
@@ -66,7 +66,7 @@ interface AppState {
     input: "camera" | "upload" | "url" | "describe" | null,
   ) => void;
 
-  // Media-related state
+  // Media-related state & actions
   recentPhotos: RecentPhoto[];
   hasMediaPermission: boolean;
   setRecentPhotos: (photos: RecentPhoto[]) => void;
@@ -170,20 +170,16 @@ export const useAppStore = create<AppState>()(
           calendarUsage: {},
         }),
 
-      // New state for AddEventBottomSheet
+      // New event state & actions
       isOptionSelected: false,
       activeInput: null,
-
-      // New actions for AddEventBottomSheet
       setIsOptionSelected: (isSelected) =>
         set({ isOptionSelected: isSelected }),
       setActiveInput: (input) => set({ activeInput: input }),
 
-      // Add new media-related state
+      // Media-related state & actions
       recentPhotos: [],
       hasMediaPermission: false,
-
-      // Add new actions
       setRecentPhotos: (photos) =>
         set((state) => {
           // Only update if the photos are different

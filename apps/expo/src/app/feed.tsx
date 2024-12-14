@@ -1,5 +1,4 @@
-import type { BottomSheetModal } from "@discord/bottom-sheet";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
@@ -8,7 +7,6 @@ import { Map } from "lucide-react-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
-import AddEventBottomSheet from "~/components/AddEventBottomSheet";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { ProfileMenu } from "~/components/ProfileMenu";
@@ -72,11 +70,8 @@ function FilterButton({
 
 function MyFeed() {
   const { user } = useUser();
-  const bottomSheetRef = useRef<BottomSheetModal>(null);
   const { handleIntent } = useIntentHandler();
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
-  const [isBottomSheetMounted, setIsBottomSheetMounted] = useState(false);
-  const pendingPresentRef = useRef(false);
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -101,17 +96,6 @@ function MyFeed() {
 
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
-  const handlePresentModalPress = useCallback(() => {
-    console.log("Attempting to present modal");
-    if (isBottomSheetMounted && bottomSheetRef.current) {
-      console.log("Presenting modal immediately");
-      bottomSheetRef.current.present();
-    } else {
-      console.log("Queueing modal presentation");
-      pendingPresentRef.current = true;
-    }
-  }, [isBottomSheetMounted]);
-
   useEffect(() => {
     console.log("Setting up URL handling effect");
 
@@ -135,18 +119,6 @@ function MyFeed() {
       subscription.remove();
     };
   }, [handleIntent]);
-
-  useEffect(() => {
-    if (
-      isBottomSheetMounted &&
-      bottomSheetRef.current &&
-      pendingPresentRef.current
-    ) {
-      console.log("Presenting queued modal");
-      bottomSheetRef.current.present();
-      pendingPresentRef.current = false;
-    }
-  }, [isBottomSheetMounted]);
 
   return (
     <>
@@ -190,11 +162,7 @@ function MyFeed() {
               ActionButton={GoButton}
               showCreator="otherUsers"
             />
-            <AddEventButton onPress={handlePresentModalPress} />
-            <AddEventBottomSheet
-              ref={bottomSheetRef}
-              onMount={() => setIsBottomSheetMounted(true)}
-            />
+            <AddEventButton />
           </View>
         )}
       </View>
