@@ -5,7 +5,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -52,7 +51,7 @@ const PhotoGrid = React.memo(
     const windowWidth = Dimensions.get("window").width;
     const padding = 32;
     const spacing = 2;
-    const columns = 3;
+    const columns = 4;
     const availableWidth = windowWidth - padding;
     const imageSize = (availableWidth - (columns - 1) * spacing) / columns;
 
@@ -94,7 +93,7 @@ const PhotoGrid = React.memo(
                 />
               </Pressable>
             )}
-            numColumns={3}
+            numColumns={4}
             estimatedItemSize={imageSize}
             showsVerticalScrollIndicator={true}
             contentContainerStyle={{ padding: spacing / 2 }}
@@ -382,7 +381,7 @@ export default function NewEventModal() {
         }}
       />
       <View className="flex-1 bg-white">
-        <ScrollView className="flex-1 px-4">
+        <View className="px-4">
           <View
             className="mb-4 overflow-hidden rounded-md"
             style={styles.previewContainer}
@@ -466,14 +465,16 @@ export default function NewEventModal() {
               </View>
             )}
           </View>
+        </View>
 
+        <View className="flex-1 px-4">
           <PhotoGrid
             hasMediaPermission={hasMediaPermission}
             recentPhotos={recentPhotos}
             onPhotoSelect={(uri) => void handleImageUploadFromUri(uri)}
             onCameraPress={() => void handleCameraCapture()}
           />
-        </ScrollView>
+        </View>
 
         <View className="shadow-top bg-white px-4 pb-8 pt-4">
           <Pressable
