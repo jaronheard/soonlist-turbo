@@ -17,7 +17,13 @@ import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
-import { Camera, Link as LinkIcon, Sparkles, X } from "lucide-react-native";
+import {
+  Camera,
+  Link as LinkIcon,
+  Sparkles,
+  Type,
+  X,
+} from "lucide-react-native";
 
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
@@ -44,11 +50,13 @@ const PhotoGrid = React.memo(
     recentPhotos,
     onPhotoSelect,
     onCameraPress,
+    onDescribePress,
   }: {
     hasMediaPermission: boolean;
     recentPhotos: RecentPhoto[];
     onPhotoSelect: (uri: string) => void;
     onCameraPress: () => void;
+    onDescribePress: () => void;
   }) => {
     const windowWidth = Dimensions.get("window").width;
     const padding = 32;
@@ -63,12 +71,20 @@ const PhotoGrid = React.memo(
       <View className="" style={{ height: imageSize * 3 + spacing * 2 }}>
         <View className="mb-2 flex-row items-center justify-between">
           <Text className="text-sm font-medium text-gray-700">Recents</Text>
-          <Pressable
-            onPress={onCameraPress}
-            className="rounded-md bg-interactive-3 px-2 py-2"
-          >
-            <Camera size={16} color="#5A32FB" />
-          </Pressable>
+          <View className="flex-row gap-2">
+            <Pressable
+              onPress={onDescribePress}
+              className={`rounded-md bg-interactive-3 px-2 py-2`}
+            >
+              <Type size={16} color="#5A32FB" />
+            </Pressable>
+            <Pressable
+              onPress={onCameraPress}
+              className="rounded-md bg-interactive-3 px-2 py-2"
+            >
+              <Camera size={16} color="#5A32FB" />
+            </Pressable>
+          </View>
         </View>
         <View className="flex-1 bg-transparent">
           <FlashList
@@ -320,6 +336,18 @@ export default function NewEventModal() {
     resetAddEventState,
   ]);
 
+  const handleDescribePress = useCallback(() => {
+    if (activeInput === "describe") {
+      clearPreview();
+      setActiveInput("upload");
+      setIsOptionSelected(true);
+    } else {
+      clearPreview();
+      setActiveInput("describe");
+      setIsOptionSelected(true);
+    }
+  }, [clearPreview, setActiveInput, setIsOptionSelected, activeInput]);
+
   const { text, imageUri } = useLocalSearchParams<{
     text?: string;
     imageUri?: string;
@@ -461,7 +489,7 @@ export default function NewEventModal() {
                 />
               </View>
             ) : activeInput === "describe" ? (
-              <View className="h-full border border-neutral-300 px-3 py-2">
+              <View className="relative h-full border border-neutral-300 px-3 py-2">
                 <TextInput
                   placeholder="Describe your event"
                   value={input}
@@ -475,6 +503,12 @@ export default function NewEventModal() {
                   ]}
                   autoFocus={true}
                 />
+                <Pressable
+                  onPress={clearPreview}
+                  className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+                >
+                  <X size={16} color="black" />
+                </Pressable>
               </View>
             ) : (
               <View className="h-full w-full items-center justify-center border border-neutral-300 bg-neutral-50">
@@ -492,6 +526,7 @@ export default function NewEventModal() {
             recentPhotos={recentPhotos}
             onPhotoSelect={(uri) => void handleImageUploadFromUri(uri)}
             onCameraPress={() => void handleCameraCapture()}
+            onDescribePress={handleDescribePress}
           />
         </View>
 
