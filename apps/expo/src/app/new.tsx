@@ -369,8 +369,8 @@ export default function NewEventModal() {
     >
       <Stack.Screen
         options={{
+          title: "Add Event",
           headerShown: true,
-          headerTitle: "Add Event",
           headerTitleStyle: {
             fontSize: 17,
             color: "#000",
@@ -379,12 +379,6 @@ export default function NewEventModal() {
           headerStyle: {
             backgroundColor: "white",
           },
-          headerLeft: () => (
-            <Pressable onPress={() => router.back()} className="px-4 py-2">
-              <Text className="text-interactive-1">Cancel</Text>
-            </Pressable>
-          ),
-          headerRight: undefined,
         }}
       />
       <View className="flex-1 bg-white">
