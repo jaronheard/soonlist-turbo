@@ -58,7 +58,7 @@ const PhotoGrid = React.memo(
     if (!hasMediaPermission || recentPhotos.length === 0) return null;
 
     return (
-      <View className="mt-2" style={{ height: imageSize * 3 + spacing * 2 }}>
+      <View className="" style={{ height: imageSize * 3 + spacing * 2 }}>
         <View className="mb-2 flex-row items-center justify-between">
           <Text className="text-sm font-medium text-gray-700">Recents</Text>
           <Pressable
@@ -368,7 +368,7 @@ export default function NewEventModal() {
     >
       <Stack.Screen
         options={{
-          title: "Add Event",
+          title: "Add event info",
           headerShown: true,
           headerTitleStyle: {
             fontSize: 17,
@@ -376,7 +376,7 @@ export default function NewEventModal() {
           },
           headerShadowVisible: false,
           headerStyle: {
-            backgroundColor: "white",
+            backgroundColor: "#fff",
           },
         }}
       />
