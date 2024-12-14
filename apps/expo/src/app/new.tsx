@@ -155,8 +155,6 @@ export default function NewEventModal() {
     setRecentPhotos,
   } = useAppStore();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const eventFromRawTextAndNotification =
     api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
       onSettled: () => void utils.event.getEventsForUser.invalidate(),
