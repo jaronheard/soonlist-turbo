@@ -74,6 +74,14 @@ interface AppState {
 
   shouldRefreshMediaLibrary: boolean;
   setShouldRefreshMediaLibrary: (value: boolean) => void;
+
+  // Add these new state properties
+  isLoadingPhotos: boolean;
+  photoLoadingError: string | null;
+
+  // Add these new actions
+  setIsLoadingPhotos: (isLoading: boolean) => void;
+  setPhotoLoadingError: (error: string | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -83,6 +91,9 @@ export const useAppStore = create<AppState>()(
       intentParams: null,
       isCalendarModalVisible: false,
       showAllCalendars: false,
+      isLoadingPhotos: false,
+      photoLoadingError: null,
+
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
       setIsCalendarModalVisible: (isVisible) =>
@@ -167,6 +178,8 @@ export const useAppStore = create<AppState>()(
           recentPhotos: [],
           hasMediaPermission: false,
           shouldRefreshMediaLibrary: false,
+          isLoadingPhotos: false,
+          photoLoadingError: null,
         }),
       clearCalendarData: () =>
         set({
@@ -198,6 +211,10 @@ export const useAppStore = create<AppState>()(
       shouldRefreshMediaLibrary: false,
       setShouldRefreshMediaLibrary: (value) =>
         set({ shouldRefreshMediaLibrary: value }),
+
+      // Add these new actions
+      setIsLoadingPhotos: (isLoading) => set({ isLoadingPhotos: isLoading }),
+      setPhotoLoadingError: (error) => set({ photoLoadingError: error }),
     }),
     {
       name: "app-storage",

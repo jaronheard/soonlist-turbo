@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
@@ -7,14 +7,31 @@ import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
 
 import { useAppStore } from "~/store";
+import { showToast } from "~/utils/toast";
 
 export default function AddEventButton() {
   const router = useRouter();
-  const { hasMediaPermission, setRecentPhotos, recentPhotos } = useAppStore();
+  const {
+    hasMediaPermission,
+    setRecentPhotos,
+    recentPhotos,
+    isLoadingPhotos,
+    setIsLoadingPhotos,
+    setPhotoLoadingError,
+  } = useAppStore();
 
   const handlePress = useCallback(async () => {
-    if (hasMediaPermission && recentPhotos.length === 0) {
+    if (!hasMediaPermission) {
+      showToast("Photo access is needed to add photos to events", "error");
+      router.push("/new");
+      return;
+    }
+
+    if (recentPhotos.length === 0) {
       try {
+        setIsLoadingPhotos(true);
+        setPhotoLoadingError(null);
+
         const { assets } = await MediaLibrary.getAssetsAsync({
           first: 100,
           mediaType: MediaLibrary.MediaType.photo,
@@ -29,11 +46,22 @@ export default function AddEventButton() {
         setRecentPhotos(photos);
       } catch (error) {
         console.error("Error loading recent photos:", error);
+        setPhotoLoadingError("Failed to load photos");
+        showToast("Unable to load recent photos", "error");
+      } finally {
+        setIsLoadingPhotos(false);
       }
     }
 
     router.push("/new");
-  }, [hasMediaPermission, recentPhotos.length, setRecentPhotos, router]);
+  }, [
+    hasMediaPermission,
+    recentPhotos.length,
+    setRecentPhotos,
+    router,
+    setIsLoadingPhotos,
+    setPhotoLoadingError,
+  ]);
 
   return (
     <View className="absolute bottom-0 left-0 right-0">
@@ -70,9 +98,14 @@ export default function AddEventButton() {
 
       <TouchableOpacity
         onPress={handlePress}
+        disabled={isLoadingPhotos}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex-row items-center justify-center gap-2 rounded-full bg-interactive-2 p-6 shadow-lg"
       >
-        <Plus size={28} color="#5A32FB" />
+        {isLoadingPhotos ? (
+          <ActivityIndicator size="small" color="#5A32FB" />
+        ) : (
+          <Plus size={28} color="#5A32FB" />
+        )}
       </TouchableOpacity>
     </View>
   );

@@ -74,12 +74,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         isAccessMediaLocationEnabled: true,
       },
     ],
-    [
-      "expo-background-fetch",
-      {
-        startOnBoot: true,
-      },
-    ],
+    // [
+    //   "expo-background-fetch",
+    //   {
+    //     startOnBoot: true,
+    //   },
+    // ],
   ],
   ios: {
     supportsTablet: true,
