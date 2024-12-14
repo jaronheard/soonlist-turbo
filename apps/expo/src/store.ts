@@ -52,29 +52,23 @@ interface AppState {
     event: RouterOutputs["event"]["getUpcomingForUser"][number] | null,
   ) => void;
   setCalendarUsage: (usage: Record<string, number>) => void;
+  clearCalendarData: () => void;
 
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (status: boolean) => void;
   resetStore: () => void;
 
-  // Add this new action
-  clearCalendarData: () => void;
-
-  // New state for AddEventBottomSheet
+  // New event state
   isOptionSelected: boolean;
   activeInput: "camera" | "upload" | "url" | "describe" | null;
-
-  // New actions for AddEventBottomSheet
   setIsOptionSelected: (isSelected: boolean) => void;
   setActiveInput: (
     input: "camera" | "upload" | "url" | "describe" | null,
   ) => void;
 
-  // Add new media-related state
+  // Media-related state
   recentPhotos: RecentPhoto[];
   hasMediaPermission: boolean;
-
-  // Add new actions
   setRecentPhotos: (photos: RecentPhoto[]) => void;
   setHasMediaPermission: (hasPermission: boolean) => void;
 }
