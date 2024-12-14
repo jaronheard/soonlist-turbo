@@ -5,6 +5,11 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { RouterOutputs } from "~/utils/api";
 
+interface RecentPhoto {
+  id: string;
+  uri: string;
+}
+
 interface AppState {
   filter: "upcoming" | "past";
   intentParams: { text?: string; imageUri?: string } | null;
@@ -47,23 +52,36 @@ interface AppState {
     event: RouterOutputs["event"]["getUpcomingForUser"][number] | null,
   ) => void;
   setCalendarUsage: (usage: Record<string, number>) => void;
+  clearCalendarData: () => void;
 
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (status: boolean) => void;
   resetStore: () => void;
 
-  // Add this new action
-  clearCalendarData: () => void;
-
-  // New state for AddEventBottomSheet
+  // New event state & actions
   isOptionSelected: boolean;
   activeInput: "camera" | "upload" | "url" | "describe" | null;
-
-  // New actions for AddEventBottomSheet
   setIsOptionSelected: (isSelected: boolean) => void;
   setActiveInput: (
     input: "camera" | "upload" | "url" | "describe" | null,
   ) => void;
+
+  // Media-related state & actions
+  recentPhotos: RecentPhoto[];
+  hasMediaPermission: boolean;
+  setRecentPhotos: (photos: RecentPhoto[]) => void;
+  setHasMediaPermission: (hasPermission: boolean) => void;
+
+  shouldRefreshMediaLibrary: boolean;
+  setShouldRefreshMediaLibrary: (value: boolean) => void;
+
+  // Add these new state properties
+  isLoadingPhotos: boolean;
+  photoLoadingError: string | null;
+
+  // Add these new actions
+  setIsLoadingPhotos: (isLoading: boolean) => void;
+  setPhotoLoadingError: (error: string | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -73,6 +91,9 @@ export const useAppStore = create<AppState>()(
       intentParams: null,
       isCalendarModalVisible: false,
       showAllCalendars: false,
+      isLoadingPhotos: false,
+      photoLoadingError: null,
+
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
       setIsCalendarModalVisible: (isVisible) =>
@@ -154,6 +175,11 @@ export const useAppStore = create<AppState>()(
           hasCompletedOnboarding: false,
           isOptionSelected: false,
           activeInput: null,
+          recentPhotos: [],
+          hasMediaPermission: false,
+          shouldRefreshMediaLibrary: false,
+          isLoadingPhotos: false,
+          photoLoadingError: null,
         }),
       clearCalendarData: () =>
         set({
@@ -161,14 +187,34 @@ export const useAppStore = create<AppState>()(
           calendarUsage: {},
         }),
 
-      // New state for AddEventBottomSheet
+      // New event state & actions
       isOptionSelected: false,
       activeInput: null,
-
-      // New actions for AddEventBottomSheet
       setIsOptionSelected: (isSelected) =>
         set({ isOptionSelected: isSelected }),
       setActiveInput: (input) => set({ activeInput: input }),
+
+      // Media-related state & actions
+      recentPhotos: [],
+      hasMediaPermission: false,
+      setRecentPhotos: (photos) =>
+        set((state) => {
+          // Only update if the photos are different
+          if (JSON.stringify(state.recentPhotos) === JSON.stringify(photos)) {
+            return state;
+          }
+          return { recentPhotos: photos };
+        }),
+      setHasMediaPermission: (hasPermission) =>
+        set({ hasMediaPermission: hasPermission }),
+
+      shouldRefreshMediaLibrary: false,
+      setShouldRefreshMediaLibrary: (value) =>
+        set({ shouldRefreshMediaLibrary: value }),
+
+      // Add these new actions
+      setIsLoadingPhotos: (isLoading) => set({ isLoadingPhotos: isLoading }),
+      setPhotoLoadingError: (error) => set({ photoLoadingError: error }),
     }),
     {
       name: "app-storage",
@@ -176,3 +222,8 @@ export const useAppStore = create<AppState>()(
     },
   ),
 );
+
+// Add a new selector to optimize recentPhotos access
+export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
+export const useHasMediaPermission = () =>
+  useAppStore((state) => state.hasMediaPermission);

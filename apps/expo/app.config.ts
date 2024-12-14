@@ -66,6 +66,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ["expo-apple-authentication"],
     ["expo-localization"],
     ["expo-av"],
+    [
+      "expo-media-library",
+      {
+        photosPermission: "Allow $(PRODUCT_NAME) to access your photos.",
+        savePhotosPermission: "Allow $(PRODUCT_NAME) to save photos.",
+        isAccessMediaLocationEnabled: true,
+      },
+    ],
+    // [
+    //   "expo-background-fetch",
+    //   {
+    //     startOnBoot: true,
+    //   },
+    // ],
   ],
   ios: {
     supportsTablet: true,
@@ -79,6 +93,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ],
     },
     usesAppleSignIn: true,
+    infoPlist: {
+      UIBackgroundModes: ["fetch"],
+    },
   },
   android: {
     package: IS_DEV ? "com.soonlist.app.dev" : "com.soonlist.app",

@@ -102,4 +102,4 @@ And there may be a few more steps here if you want to run this on a device
 
 Please note that this README is a work in progress, and there's still a lot of information missing. Future updates will include more detailed instructions on various aspects of the project. 😊
 
-🚀
+🚀✨

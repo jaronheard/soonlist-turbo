@@ -35,8 +35,7 @@
   "pnpm": {
     "patchedDependencies": {
       "xcode@3.0.1": "patches/xcode@3.0.1.patch",
-      "expo-secure-store@12.8.1": "patches/expo-secure-store@12.8.1.patch",
-      "@discord/bottom-sheet@4.6.1": "patches/@discord__bottom-sheet@4.6.1.patch"
+      "expo-secure-store@12.8.1": "patches/expo-secure-store@12.8.1.patch"
     },
     "overrides": {
       "promise": "^8.3.0"
