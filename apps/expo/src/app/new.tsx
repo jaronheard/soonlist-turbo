@@ -151,34 +151,45 @@ export default function NewEventModal() {
   const handleImageUploadFromUri = useCallback(
     async (uri: string) => {
       setIsImageLoading(true);
+      setImagePreview(uri);
+
+      const uploadImage = async (imageUri: string): Promise<string> => {
+        try {
+          const manipulatedImage = await ImageManipulator.manipulateAsync(
+            imageUri,
+            [{ resize: { width: 1284 } }],
+            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+          );
+
+          const response = await FileSystem.uploadAsync(
+            "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
+            manipulatedImage.uri,
+            {
+              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+              httpMethod: "POST",
+              headers: {
+                "Content-Type": "image/jpeg",
+                Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
+              },
+            },
+          );
+
+          if (response.status !== 200) {
+            throw new Error(`Upload failed with status ${response.status}`);
+          }
+
+          const data = JSON.parse(response.body) as { fileUrl: string };
+          return data.fileUrl;
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          throw error;
+        }
+      };
 
       try {
-        const manipulatedImage = await ImageManipulator.manipulateAsync(
-          uri,
-          [{ resize: { width: 1284 } }],
-          { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
-        );
-
-        const response = await FileSystem.uploadAsync(
-          "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
-          manipulatedImage.uri,
-          {
-            uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-            httpMethod: "POST",
-            headers: {
-              "Content-Type": "image/jpeg",
-              Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
-            },
-          },
-        );
-
-        if (response.status !== 200) {
-          throw new Error(`Upload failed with status ${response.status}`);
-        }
-
-        const data = JSON.parse(response.body) as { fileUrl: string };
-        setImagePreview(data.fileUrl);
-        setUploadedImageUrl(data.fileUrl);
+        const uploadedUrl = await uploadImage(uri);
+        setImagePreview(uploadedUrl);
+        setUploadedImageUrl(uploadedUrl);
       } catch (error) {
         console.error("Error processing image:", error);
         setImagePreview(null);
