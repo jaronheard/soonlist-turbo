@@ -201,8 +201,16 @@ export default function NewEventModal() {
           const data = JSON.parse(response.body) as { fileUrl: string };
           return data.fileUrl;
         } catch (error) {
-          console.error("Error uploading image:", error);
-          throw error;
+          console.error("Error uploading image:", {
+            error,
+            uri: imageUri,
+            status: response?.status,
+          });
+          throw new Error(
+            error instanceof Error
+              ? error.message
+              : "Failed to upload image. Please try again.",
+          );
         }
       };
 
