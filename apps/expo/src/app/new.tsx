@@ -283,7 +283,7 @@ export default function NewEventModal() {
   const handleCreateEvent = useCallback(async () => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
 
-    router.back();
+    router.canGoBack() ? router.back() : router.navigate("feed");
     showToast("Got it. Notification soon!", "success");
 
     try {

@@ -126,6 +126,7 @@ function MyFeed() {
         options={{
           title: "My Feed",
           headerTitle: "My Feed",
+          headerBackVisible: false,
           headerRight: () => (
             <View className="mr-2 flex-row items-center gap-2">
               <SignedIn>
