@@ -24,6 +24,8 @@ import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { showToast } from "~/utils/toast";
 
+const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
+
 const styles = StyleSheet.create({
   previewContainer: {
     width: Dimensions.get("window").width - 32,
@@ -334,18 +336,24 @@ export default function NewEventModal() {
       setActiveInput("describe");
       setIsOptionSelected(true);
     } else if (imageUri) {
-      const [uri, width, height] = imageUri.split("|");
-      if (uri) {
-        if (uri.startsWith("http")) {
-          handleLinkPreview(uri);
-          setActiveInput("url");
-        } else {
-          void handleImageUploadFromUri(uri);
-          setActiveInput("upload");
+      if (VALID_IMAGE_REGEX.test(imageUri)) {
+        const [uri, width, height] = imageUri.split("|");
+        if (uri) {
+          if (uri.startsWith("http")) {
+            handleLinkPreview(uri);
+            setActiveInput("url");
+          } else {
+            void handleImageUploadFromUri(uri);
+            setActiveInput("upload");
+          }
         }
+        setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
+        setIsOptionSelected(true);
+      } else {
+        console.warn("Invalid image URI format:", imageUri);
+        setActiveInput("describe");
+        setIsOptionSelected(false);
       }
-      setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
-      setIsOptionSelected(true);
     } else {
       const mostRecentPhoto = recentPhotos[0];
       if (mostRecentPhoto?.uri) {
