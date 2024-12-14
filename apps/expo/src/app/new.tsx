@@ -283,7 +283,9 @@ export default function NewEventModal() {
   const handleCreateEvent = useCallback(async () => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
 
-    setIsSubmitting(true);
+    router.back();
+    showToast("Got it. Notification soon!", "success");
+
     try {
       if (linkPreview) {
         await eventFromUrlThenCreateThenNotification.mutateAsync({
@@ -316,14 +318,10 @@ export default function NewEventModal() {
           visibility: "private",
         });
       }
-
-      showToast("Got it. Notification soon!", "success");
-      router.back();
     } catch (error) {
       console.error("Error creating event:", error);
       showToast("Failed to create event. Please try again.", "error");
     } finally {
-      setIsSubmitting(false);
       resetAddEventState();
     }
   }, [
@@ -582,7 +580,7 @@ export default function NewEventModal() {
           >
             <Sparkles size={16} color="white" />
             <Text className="ml-2 text-xl font-bold text-white">
-              {isSubmitting ? "Creating..." : "Capture event"}
+              Capture event
             </Text>
           </Pressable>
         </View>
