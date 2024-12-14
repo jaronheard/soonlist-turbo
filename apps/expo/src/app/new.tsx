@@ -42,10 +42,12 @@ const PhotoGrid = React.memo(
     hasMediaPermission,
     recentPhotos,
     onPhotoSelect,
+    onCameraPress,
   }: {
     hasMediaPermission: boolean;
     recentPhotos: RecentPhoto[];
     onPhotoSelect: (uri: string) => void;
+    onCameraPress: () => void;
   }) => {
     const windowWidth = Dimensions.get("window").width;
     const padding = 32;
@@ -57,8 +59,16 @@ const PhotoGrid = React.memo(
     if (!hasMediaPermission || recentPhotos.length === 0) return null;
 
     return (
-      <View className="mt-4" style={{ height: imageSize * 3 + spacing * 2 }}>
-        <Text className="mb-2 text-sm font-medium text-gray-700">Recents</Text>
+      <View className="mt-2" style={{ height: imageSize * 3 + spacing * 2 }}>
+        <View className="mb-2 flex-row items-center justify-between">
+          <Text className="text-sm font-medium text-gray-700">Recents</Text>
+          <Pressable
+            onPress={onCameraPress}
+            className="rounded-md bg-interactive-3 px-2 py-2"
+          >
+            <Camera size={16} color="#5A32FB" />
+          </Pressable>
+        </View>
         <View className="flex-1 bg-transparent">
           <FlashList
             data={recentPhotos}
@@ -379,18 +389,6 @@ export default function NewEventModal() {
       />
       <View className="flex-1 bg-white">
         <ScrollView className="flex-1 px-4">
-          {recentPhotos.length > 0 && (
-            <View className="mb-2 flex-row items-center justify-between">
-              <Text className="text-sm font-medium text-gray-700">Recents</Text>
-              <Pressable
-                onPress={() => void handleCameraCapture()}
-                className="rounded-md bg-interactive-3 px-2 py-2"
-              >
-                <Camera size={16} color="#5A32FB" />
-              </Pressable>
-            </View>
-          )}
-
           <View
             className="mb-4 overflow-hidden rounded-md"
             style={styles.previewContainer}
@@ -479,6 +477,7 @@ export default function NewEventModal() {
             hasMediaPermission={hasMediaPermission}
             recentPhotos={recentPhotos}
             onPhotoSelect={(uri) => void handleImageUploadFromUri(uri)}
+            onCameraPress={() => void handleCameraCapture()}
           />
         </ScrollView>
 
