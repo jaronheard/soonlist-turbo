@@ -14,6 +14,7 @@ import * as FileSystem from "expo-file-system";
 import { Image } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
@@ -149,6 +150,9 @@ export default function NewEventModal() {
     setActiveInput,
     recentPhotos,
     hasMediaPermission,
+    shouldRefreshMediaLibrary,
+    setShouldRefreshMediaLibrary,
+    setRecentPhotos,
   } = useAppStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -352,6 +356,42 @@ export default function NewEventModal() {
     text?: string;
     imageUri?: string;
   }>();
+
+  const loadRecentPhotos = useCallback(async () => {
+    try {
+      const { assets } = await MediaLibrary.getAssetsAsync({
+        first: 20,
+        sortBy: MediaLibrary.SortBy.creationTime,
+        mediaType: [MediaLibrary.MediaType.photo],
+      });
+
+      const photos: RecentPhoto[] = assets.map((asset) => ({
+        id: asset.id,
+        uri: asset.uri,
+      }));
+
+      setRecentPhotos(photos);
+    } catch (error) {
+      console.error("Error loading recent photos:", error);
+    }
+  }, [setRecentPhotos]);
+
+  useEffect(() => {
+    if (hasMediaPermission) {
+      void loadRecentPhotos();
+    }
+  }, [hasMediaPermission, loadRecentPhotos]);
+
+  useEffect(() => {
+    if (shouldRefreshMediaLibrary) {
+      void loadRecentPhotos();
+      setShouldRefreshMediaLibrary(false);
+    }
+  }, [
+    shouldRefreshMediaLibrary,
+    loadRecentPhotos,
+    setShouldRefreshMediaLibrary,
+  ]);
 
   useEffect(() => {
     setInput("");

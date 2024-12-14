@@ -71,6 +71,9 @@ interface AppState {
   hasMediaPermission: boolean;
   setRecentPhotos: (photos: RecentPhoto[]) => void;
   setHasMediaPermission: (hasPermission: boolean) => void;
+
+  shouldRefreshMediaLibrary: boolean;
+  setShouldRefreshMediaLibrary: (value: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -163,6 +166,7 @@ export const useAppStore = create<AppState>()(
           activeInput: null,
           recentPhotos: [],
           hasMediaPermission: false,
+          shouldRefreshMediaLibrary: false,
         }),
       clearCalendarData: () =>
         set({
@@ -190,6 +194,10 @@ export const useAppStore = create<AppState>()(
         }),
       setHasMediaPermission: (hasPermission) =>
         set({ hasMediaPermission: hasPermission }),
+
+      shouldRefreshMediaLibrary: false,
+      setShouldRefreshMediaLibrary: (value) =>
+        set({ shouldRefreshMediaLibrary: value }),
     }),
     {
       name: "app-storage",
