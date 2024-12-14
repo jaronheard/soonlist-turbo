@@ -202,10 +202,10 @@ export default function NewEventModal() {
           return data.fileUrl;
         } catch (error) {
           console.error("Error uploading image:", {
-            error,
+            error: error instanceof Error ? error.message : "Unknown error",
             uri: imageUri,
-            status: response?.status,
           });
+
           throw new Error(
             error instanceof Error
               ? error.message
