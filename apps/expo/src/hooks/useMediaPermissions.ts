@@ -33,9 +33,12 @@ export function useMediaPermissions() {
         // Define smart albums we want to show at the top
         const smartAlbumTitles = ["Recents", "Screenshots", "Favorites"];
 
-        // Create smart albums list
+        // Create smart albums list - filter out empty albums
         const smartAlbums: SmartAlbum[] = albums
-          .filter((album) => smartAlbumTitles.includes(album.title))
+          .filter(
+            (album) =>
+              smartAlbumTitles.includes(album.title) && album.assetCount > 0,
+          )
           .map((album) => ({
             id: album.id,
             title: album.title,
@@ -43,9 +46,12 @@ export function useMediaPermissions() {
             assetCount: album.assetCount,
           }));
 
-        // Create regular albums list (excluding smart albums)
+        // Create regular albums list - filter out empty albums and smart albums
         const regularAlbums: RegularAlbum[] = albums
-          .filter((album) => !smartAlbumTitles.includes(album.title))
+          .filter(
+            (album) =>
+              !smartAlbumTitles.includes(album.title) && album.assetCount > 0,
+          )
           .map((album) => ({
             id: album.id,
             title: album.title,
@@ -53,19 +59,24 @@ export function useMediaPermissions() {
             assetCount: album.assetCount,
           }));
 
-        // Add "All Albums" as a special smart album
-        const allAlbumsEntry: SmartAlbum = {
-          id: "all-albums",
-          title: "All Albums",
-          type: "smart",
-          assetCount: regularAlbums.reduce(
-            (sum, album) => sum + album.assetCount,
-            0,
-          ),
-        };
+        // Add "All Albums" as a special smart album only if there are regular albums
+        const allAlbumsEntry: SmartAlbum | null =
+          regularAlbums.length > 0
+            ? {
+                id: "all-albums",
+                title: "All Albums",
+                type: "smart",
+                assetCount: regularAlbums.reduce(
+                  (sum, album) => sum + album.assetCount,
+                  0,
+                ),
+              }
+            : null;
 
-        // Combine smart albums with "All Albums" entry
-        const formattedAlbums = [...smartAlbums, allAlbumsEntry];
+        // Combine smart albums with "All Albums" entry if it exists
+        const formattedAlbums = allAlbumsEntry
+          ? [...smartAlbums, allAlbumsEntry]
+          : smartAlbums;
 
         setAvailableAlbums({
           smartAlbums: formattedAlbums,
