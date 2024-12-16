@@ -4,17 +4,57 @@ import * as MediaLibrary from "expo-media-library";
 import { useAppStore } from "~/store";
 
 export function useMediaPermissions() {
-  const { setHasMediaPermission } = useAppStore();
+  const { setHasMediaPermission, setAvailableAlbums, setSelectedAlbum } =
+    useAppStore();
 
   useEffect(() => {
     let subscription: MediaLibrary.Subscription | undefined;
 
+    async function loadAlbums() {
+      try {
+        const albums = await MediaLibrary.getAlbumsAsync({
+          includeSmartAlbums: true,
+        });
+        // Filter to only include specific smart albums
+        const allowedSmartAlbums = [
+          "All Photos",
+          "Recents",
+          "Screenshots",
+          "Camera Roll",
+        ];
+        const filteredAlbums = albums.filter((album) =>
+          allowedSmartAlbums.includes(album.title),
+        );
+        const formattedAlbums = filteredAlbums.map((album) => ({
+          id: album.id,
+          title: album.title,
+          assetCount: album.assetCount,
+        }));
+
+        setAvailableAlbums(formattedAlbums);
+
+        // Set "All Photos" as default album
+        const allPhotosAlbum = formattedAlbums.find(
+          (album) =>
+            album.title === "All Photos" || album.title === "Camera Roll",
+        );
+        if (allPhotosAlbum) {
+          setSelectedAlbum(allPhotosAlbum);
+        }
+      } catch (error) {
+        console.error("Error loading albums:", error);
+      }
+    }
+
     async function initializeMediaPermissions() {
       try {
         const { status } = await MediaLibrary.requestPermissionsAsync();
-        setHasMediaPermission(status === MediaLibrary.PermissionStatus.GRANTED);
+        const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+        setHasMediaPermission(isGranted);
 
-        if (status === MediaLibrary.PermissionStatus.GRANTED) {
+        if (isGranted) {
+          await loadAlbums();
+
           subscription = MediaLibrary.addListener(
             ({ hasIncrementalChanges, insertedAssets }) => {
               if (
@@ -23,6 +63,8 @@ export function useMediaPermissions() {
                 insertedAssets.length > 0
               ) {
                 useAppStore.setState({ shouldRefreshMediaLibrary: true });
+                // Reload albums when media library changes
+                void loadAlbums();
               }
             },
           );
@@ -35,11 +77,10 @@ export function useMediaPermissions() {
 
     void initializeMediaPermissions();
 
-    // Always return a cleanup function
     return () => {
       if (subscription) {
         subscription.remove();
       }
     };
-  }, [setHasMediaPermission]);
+  }, [setHasMediaPermission, setAvailableAlbums, setSelectedAlbum]);
 }

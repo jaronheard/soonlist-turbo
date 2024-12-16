@@ -1,10 +1,12 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -20,6 +22,7 @@ import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 import {
   Camera,
+  ChevronDown,
   Link as LinkIcon,
   Sparkles,
   Type,
@@ -59,6 +62,13 @@ const PhotoGrid = React.memo(
     onCameraPress: () => void;
     onDescribePress: () => void;
   }) => {
+    const selectedAlbum = useAppStore((state) => state.selectedAlbum);
+    const availableAlbums = useAppStore((state) => state.availableAlbums);
+    const setSelectedAlbum = useAppStore((state) => state.setSelectedAlbum);
+    const [isAlbumPickerVisible, setIsAlbumPickerVisible] = useState(false);
+
+    if (!hasMediaPermission || recentPhotos.length === 0) return null;
+
     const windowWidth = Dimensions.get("window").width;
     const padding = 32;
     const spacing = 2;
@@ -66,12 +76,18 @@ const PhotoGrid = React.memo(
     const availableWidth = windowWidth - padding;
     const imageSize = (availableWidth - (columns - 1) * spacing) / columns;
 
-    if (!hasMediaPermission || recentPhotos.length === 0) return null;
-
     return (
       <View className="" style={{ height: imageSize * 3 + spacing * 2 }}>
         <View className="mb-2 flex-row items-center justify-between">
-          <Text className="text-sm font-medium text-gray-700">Recents</Text>
+          <Pressable
+            onPress={() => setIsAlbumPickerVisible(true)}
+            className="flex-row items-center gap-1"
+          >
+            <Text className="text-sm font-medium text-gray-700">
+              {selectedAlbum?.title ?? "Recents"}
+            </Text>
+            <ChevronDown size={16} color="#374151" />
+          </Pressable>
           <View className="flex-row gap-2">
             <Pressable
               onPress={onDescribePress}
@@ -87,6 +103,45 @@ const PhotoGrid = React.memo(
             </Pressable>
           </View>
         </View>
+
+        <Modal
+          visible={isAlbumPickerVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setIsAlbumPickerVisible(false)}
+        >
+          <Pressable
+            className="flex-1 bg-black/50"
+            onPress={() => setIsAlbumPickerVisible(false)}
+          >
+            <View className="mt-auto bg-white p-4">
+              <Text className="mb-4 text-lg font-bold">Select Album</Text>
+              <ScrollView className="max-h-96">
+                {availableAlbums.map((album) => (
+                  <Pressable
+                    key={album.id}
+                    onPress={() => {
+                      setSelectedAlbum(album);
+                      setIsAlbumPickerVisible(false);
+                    }}
+                    className="py-3"
+                  >
+                    <Text
+                      className={`text-base ${
+                        selectedAlbum?.id === album.id
+                          ? "font-bold text-blue-600"
+                          : "text-gray-800"
+                      }`}
+                    >
+                      {album.title} ({album.assetCount})
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          </Pressable>
+        </Modal>
+
         <View className="flex-1 bg-transparent">
           <FlashList
             data={recentPhotos}
@@ -153,6 +208,7 @@ export default function NewEventModal() {
     shouldRefreshMediaLibrary,
     setShouldRefreshMediaLibrary,
     setRecentPhotos,
+    selectedAlbum,
   } = useAppStore();
 
   const eventFromRawTextAndNotification =
@@ -367,6 +423,7 @@ export default function NewEventModal() {
         first: 20,
         sortBy: MediaLibrary.SortBy.creationTime,
         mediaType: [MediaLibrary.MediaType.photo],
+        album: selectedAlbum?.id,
       });
 
       const photos: RecentPhoto[] = assets.map((asset) => ({
@@ -378,7 +435,7 @@ export default function NewEventModal() {
     } catch (error) {
       console.error("Error loading recent photos:", error);
     }
-  }, [setRecentPhotos]);
+  }, [setRecentPhotos, selectedAlbum]);
 
   useEffect(() => {
     if (hasMediaPermission) {

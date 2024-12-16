@@ -10,6 +10,12 @@ interface RecentPhoto {
   uri: string;
 }
 
+interface Album {
+  id: string;
+  title: string;
+  assetCount: number;
+}
+
 interface AppState {
   filter: "upcoming" | "past";
   intentParams: { text?: string; imageUri?: string } | null;
@@ -82,6 +88,14 @@ interface AppState {
   // Add these new actions
   setIsLoadingPhotos: (isLoading: boolean) => void;
   setPhotoLoadingError: (error: string | null) => void;
+
+  // Add these new properties
+  selectedAlbum: Album | null;
+  availableAlbums: Album[];
+
+  // Add these new actions
+  setSelectedAlbum: (album: Album | null) => void;
+  setAvailableAlbums: (albums: Album[]) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -93,6 +107,8 @@ export const useAppStore = create<AppState>()(
       showAllCalendars: false,
       isLoadingPhotos: false,
       photoLoadingError: null,
+      selectedAlbum: null,
+      availableAlbums: [],
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
@@ -180,6 +196,8 @@ export const useAppStore = create<AppState>()(
           shouldRefreshMediaLibrary: false,
           isLoadingPhotos: false,
           photoLoadingError: null,
+          selectedAlbum: null,
+          availableAlbums: [],
         }),
       clearCalendarData: () =>
         set({
@@ -215,6 +233,10 @@ export const useAppStore = create<AppState>()(
       // Add these new actions
       setIsLoadingPhotos: (isLoading) => set({ isLoadingPhotos: isLoading }),
       setPhotoLoadingError: (error) => set({ photoLoadingError: error }),
+
+      // Add these new actions
+      setSelectedAlbum: (album) => set({ selectedAlbum: album }),
+      setAvailableAlbums: (albums) => set({ availableAlbums: albums }),
     }),
     {
       name: "app-storage",
@@ -227,3 +249,9 @@ export const useAppStore = create<AppState>()(
 export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
 export const useHasMediaPermission = () =>
   useAppStore((state) => state.hasMediaPermission);
+
+// Add new selectors
+export const useSelectedAlbum = () =>
+  useAppStore((state) => state.selectedAlbum);
+export const useAvailableAlbums = () =>
+  useAppStore((state) => state.availableAlbums);
