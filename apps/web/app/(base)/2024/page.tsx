@@ -263,6 +263,65 @@ export default function Page() {
             ))}
           </div>
         </Section>
+        <Section>
+          <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+            The most followed events were:
+          </p>
+          {stats.topFollowedEvents.map((event) => (
+            <div key={event.id} className="mb-4 flex items-start space-x-4">
+              <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border-2 border-yellow-300">
+                <Image
+                  src={event.images[0]}
+                  alt={event.event_name}
+                  layout="fill"
+                  className="absolute inset-0 object-cover"
+                />
+              </div>
+              <div className="flex flex-grow flex-col text-left">
+                <p className="font-heading text-2xl">{event.event_name}</p>
+                <p className="text-sm ">
+                  captured by{" "}
+                  <span className="font-bold">{event.creator_username}</span>
+                </p>
+              </div>
+            </div>
+          ))}
+        </Section>
+        <Section>
+          <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+            The most popular venues were:
+          </p>
+
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {stats.topVenues.map((venue, index) => (
+              <div
+                key={venue.venue}
+                className={`${
+                  index % 2 === 0
+                    ? `-rotate-${(index % 3) + 1}`
+                    : `rotate-${(index % 3) + 2}`
+                } transform`}
+              >
+                <div
+                  className={`${
+                    index % 4 === 0
+                      ? `bg-accent-orange`
+                      : index % 4 === 1
+                        ? `bg-accent-green`
+                        : index % 4 === 2
+                          ? `bg-accent-blue`
+                          : `bg-accent-yellow`
+                  } inline-block rounded-md px-2 py-1 text-3xl text-neutral-1 shadow-sm`}
+                >
+                  <span className="capitalize">{venue.venue}</span>{" "}
+                  <span className="font-bold">
+                    {venue.count.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
       </div>
       <div className="mx-auto max-w-6xl rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 p-8 text-white shadow-xl">
         <div className="space-y-8">
