@@ -26,6 +26,33 @@ import {
 
 import dataFor2024 from "./dataFor2024";
 
+interface CalendarDayCardProps {
+  date: Date; // Accept Date object
+}
+
+const CalendarDayCard: React.FC<CalendarDayCardProps> = ({ date }) => {
+  const dayType = date
+    .toLocaleDateString("en-US", { weekday: "short" })
+    .toUpperCase();
+  const dayNumber = date.getDate().toString();
+  const month = date
+    .toLocaleDateString("en-US", { month: "short" })
+    .toUpperCase();
+
+  return (
+    <div className="flex w-32 flex-col items-center justify-center rounded-lg border bg-white/10 p-4 shadow-md backdrop-blur-sm">
+      {" "}
+      {/* Fixed width */}
+      <div className="text-center">
+        <p className="text-sm font-bold text-gray-500">{dayType}</p>
+        <p className="font-heading text-5xl font-bold">{dayNumber}</p>{" "}
+        {/* Use font-heading class */}
+      </div>
+      <p className="text-xl font-bold ">{month}</p> {/* Month at the bottom */}
+    </div>
+  );
+};
+
 // Section component that has a good amount of vertical padding and a 4 px wide bottom border that is puurple
 const Section = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -320,6 +347,22 @@ export default function Page() {
                 </div>
               </div>
             ))}
+          </div>
+        </Section>
+        <Section>
+          Our busiest days of the year! We had 7 days that each had 7 events
+          listed!
+          <div className="grid grid-cols-3 gap-4">
+            {stats.top5DaysWithMostEvents.map((day) => {
+              const eventDate = new Date(day.eventDate + ` GMT-0700`); // Create Date object
+
+              return (
+                <CalendarDayCard
+                  key={day.eventDate}
+                  date={eventDate} // Pass the Date object
+                />
+              );
+            })}
           </div>
         </Section>
       </div>

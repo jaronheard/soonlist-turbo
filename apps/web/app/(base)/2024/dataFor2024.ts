@@ -290,40 +290,22 @@ const dataFor2024 = {
 
   top5DaysWithMostEvents: [
     {
-      eventDate: "2024-06-01",
-      dayOfWeek: "Saturday",
-      eventCount: "7",
-      eventTypes: "concert, exhibition, festival, party, unknown, workshop",
-    },
-    {
-      eventDate: "2024-09-08",
-      dayOfWeek: "Sunday",
-      eventCount: "7",
-      eventTypes: "party, performance, reading",
-    },
-    {
-      eventDate: "2024-10-04",
-      dayOfWeek: "Friday",
-      eventCount: "7",
-      eventTypes: "concert, exhibition, meeting, seminar, show",
-    },
-    {
       eventDate: "2024-03-09",
       dayOfWeek: "Saturday",
       eventCount: "7",
       eventTypes: "performance",
     },
     {
-      eventDate: "2024-12-08",
-      dayOfWeek: "Sunday",
-      eventCount: "7",
-      eventTypes: "concert, exhibition, party, performance, social",
-    },
-    {
-      eventDate: "2024-10-19",
+      eventDate: "2024-06-01",
       dayOfWeek: "Saturday",
       eventCount: "7",
-      eventTypes: "concert, lecture, panel, party, performance, show, workshop",
+      eventTypes: "concert, exhibition, festival, party, workshop",
+    },
+    {
+      eventDate: "2024-09-08",
+      dayOfWeek: "Sunday",
+      eventCount: "7",
+      eventTypes: "party, performance, reading",
     },
     {
       eventDate: "2024-09-28",
@@ -333,22 +315,22 @@ const dataFor2024 = {
         "exhibition, gathering, marketplace, meeting, party, performance, workshop",
     },
     {
-      eventDate: "2024-03-10",
-      dayOfWeek: "Sunday",
-      eventCount: "6",
-      eventTypes: null,
+      eventDate: "2024-10-04",
+      dayOfWeek: "Friday",
+      eventCount: "7",
+      eventTypes: "concert, exhibition, meeting, seminar, show",
     },
     {
-      eventDate: "2024-10-27",
-      dayOfWeek: "Sunday",
-      eventCount: "6",
-      eventTypes: "book reading, party, show, unknown, workshop",
-    },
-    {
-      eventDate: "2024-12-07",
+      eventDate: "2024-10-19",
       dayOfWeek: "Saturday",
-      eventCount: "6",
-      eventTypes: "festival, market, opening, show, unknown",
+      eventCount: "7",
+      eventTypes: "concert, lecture, panel, party, performance, show, workshop",
+    },
+    {
+      eventDate: "2024-12-08",
+      dayOfWeek: "Sunday",
+      eventCount: "7",
+      eventTypes: "concert, exhibition, party, performance, social",
     },
   ],
 
