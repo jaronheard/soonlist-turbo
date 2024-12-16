@@ -5,15 +5,28 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { RouterOutputs } from "~/utils/api";
 
-interface RecentPhoto {
-  id: string;
-  uri: string;
-}
-
-interface Album {
+export interface SmartAlbum {
   id: string;
   title: string;
+  type: "smart";
   assetCount: number;
+}
+
+export interface RegularAlbum {
+  id: string;
+  title: string;
+  type: "regular";
+  assetCount: number;
+}
+
+export interface AlbumsState {
+  smartAlbums: SmartAlbum[];
+  regularAlbums: RegularAlbum[];
+}
+
+export interface RecentPhoto {
+  id: string;
+  uri: string;
 }
 
 interface AppState {
@@ -90,12 +103,14 @@ interface AppState {
   setPhotoLoadingError: (error: string | null) => void;
 
   // Add these new properties
-  selectedAlbum: Album | null;
-  availableAlbums: Album[];
+  selectedAlbum: (SmartAlbum | RegularAlbum) | null;
+  availableAlbums: AlbumsState;
+  isAllAlbumsModalVisible: boolean;
 
   // Add these new actions
-  setSelectedAlbum: (album: Album | null) => void;
-  setAvailableAlbums: (albums: Album[]) => void;
+  setSelectedAlbum: (album: (SmartAlbum | RegularAlbum) | null) => void;
+  setAvailableAlbums: (albums: AlbumsState) => void;
+  setIsAllAlbumsModalVisible: (isVisible: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -108,7 +123,8 @@ export const useAppStore = create<AppState>()(
       isLoadingPhotos: false,
       photoLoadingError: null,
       selectedAlbum: null,
-      availableAlbums: [],
+      availableAlbums: { smartAlbums: [], regularAlbums: [] },
+      isAllAlbumsModalVisible: false,
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
@@ -197,7 +213,8 @@ export const useAppStore = create<AppState>()(
           isLoadingPhotos: false,
           photoLoadingError: null,
           selectedAlbum: null,
-          availableAlbums: [],
+          availableAlbums: { smartAlbums: [], regularAlbums: [] },
+          isAllAlbumsModalVisible: false,
         }),
       clearCalendarData: () =>
         set({
@@ -237,6 +254,8 @@ export const useAppStore = create<AppState>()(
       // Add these new actions
       setSelectedAlbum: (album) => set({ selectedAlbum: album }),
       setAvailableAlbums: (albums) => set({ availableAlbums: albums }),
+      setIsAllAlbumsModalVisible: (isVisible) =>
+        set({ isAllAlbumsModalVisible: isVisible }),
     }),
     {
       name: "app-storage",

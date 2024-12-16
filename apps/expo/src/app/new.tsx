@@ -29,6 +29,7 @@ import {
   X,
 } from "lucide-react-native";
 
+import type { RecentPhoto, RegularAlbum, SmartAlbum } from "~/store";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
@@ -42,11 +43,6 @@ const styles = StyleSheet.create({
     height: Dimensions.get("window").width - 32,
   },
 });
-
-interface RecentPhoto {
-  id: string;
-  uri: string;
-}
 
 const PhotoGrid = React.memo(
   ({
@@ -65,7 +61,22 @@ const PhotoGrid = React.memo(
     const selectedAlbum = useAppStore((state) => state.selectedAlbum);
     const availableAlbums = useAppStore((state) => state.availableAlbums);
     const setSelectedAlbum = useAppStore((state) => state.setSelectedAlbum);
+    const isAllAlbumsModalVisible = useAppStore(
+      (state) => state.isAllAlbumsModalVisible,
+    );
+    const setIsAllAlbumsModalVisible = useAppStore(
+      (state) => state.setIsAllAlbumsModalVisible,
+    );
     const [isAlbumPickerVisible, setIsAlbumPickerVisible] = useState(false);
+
+    const handleAlbumSelect = (album: SmartAlbum | RegularAlbum) => {
+      if (album.id === "all-albums") {
+        setIsAllAlbumsModalVisible(true);
+      } else {
+        setSelectedAlbum(album);
+        setIsAlbumPickerVisible(false);
+      }
+    };
 
     if (!hasMediaPermission || recentPhotos.length === 0) return null;
 
@@ -117,13 +128,10 @@ const PhotoGrid = React.memo(
             <View className="mt-auto bg-white p-4">
               <Text className="mb-4 text-lg font-bold">Select Album</Text>
               <ScrollView className="max-h-96">
-                {availableAlbums.map((album) => (
+                {availableAlbums.smartAlbums.map((album) => (
                   <Pressable
                     key={album.id}
-                    onPress={() => {
-                      setSelectedAlbum(album);
-                      setIsAlbumPickerVisible(false);
-                    }}
+                    onPress={() => handleAlbumSelect(album)}
                     className="py-3"
                   >
                     <Text
@@ -140,6 +148,40 @@ const PhotoGrid = React.memo(
               </ScrollView>
             </View>
           </Pressable>
+        </Modal>
+
+        <Modal
+          visible={isAllAlbumsModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setIsAllAlbumsModalVisible(false)}
+        >
+          <View className="flex-1 bg-white">
+            <View className="flex-row items-center justify-between border-b border-gray-200 p-4">
+              <Pressable onPress={() => setIsAllAlbumsModalVisible(false)}>
+                <Text className="text-blue-600">Back</Text>
+              </Pressable>
+              <Text className="text-lg font-bold">All Albums</Text>
+              <View style={{ width: 50 }} />
+            </View>
+            <ScrollView className="flex-1">
+              {availableAlbums.regularAlbums.map((album) => (
+                <Pressable
+                  key={album.id}
+                  onPress={() => {
+                    setSelectedAlbum(album);
+                    setIsAllAlbumsModalVisible(false);
+                    setIsAlbumPickerVisible(false);
+                  }}
+                  className="border-b border-gray-100 p-4"
+                >
+                  <Text className="text-base text-gray-800">
+                    {album.title} ({album.assetCount})
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
         </Modal>
 
         <View className="flex-1 bg-transparent">
@@ -484,7 +526,7 @@ export default function NewEventModal() {
         setIsOptionSelected(false);
       }
     } else {
-      const mostRecentPhoto = recentPhotos[0];
+      const mostRecentPhoto = recentPhotos[0] as RecentPhoto | undefined;
       if (mostRecentPhoto?.uri) {
         setActiveInput("upload");
         setIsOptionSelected(true);

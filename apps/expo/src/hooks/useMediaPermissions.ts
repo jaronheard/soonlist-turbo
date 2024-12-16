@@ -3,6 +3,20 @@ import * as MediaLibrary from "expo-media-library";
 
 import { useAppStore } from "~/store";
 
+interface SmartAlbum {
+  id: string;
+  title: string;
+  type: "smart";
+  assetCount: number;
+}
+
+interface RegularAlbum {
+  id: string;
+  title: string;
+  type: "regular";
+  assetCount: number;
+}
+
 export function useMediaPermissions() {
   const { setHasMediaPermission, setAvailableAlbums, setSelectedAlbum } =
     useAppStore();
@@ -15,31 +29,55 @@ export function useMediaPermissions() {
         const albums = await MediaLibrary.getAlbumsAsync({
           includeSmartAlbums: true,
         });
-        // Filter to only include specific smart albums
-        const allowedSmartAlbums = [
-          "All Photos",
-          "Recents",
-          "Screenshots",
-          "Camera Roll",
-        ];
-        const filteredAlbums = albums.filter((album) =>
-          allowedSmartAlbums.includes(album.title),
-        );
-        const formattedAlbums = filteredAlbums.map((album) => ({
-          id: album.id,
-          title: album.title,
-          assetCount: album.assetCount,
-        }));
 
-        setAvailableAlbums(formattedAlbums);
+        // Define smart albums we want to show at the top
+        const smartAlbumTitles = ["Recents", "Screenshots", "Favorites"];
 
-        // Set "All Photos" as default album
-        const allPhotosAlbum = formattedAlbums.find(
-          (album) =>
-            album.title === "All Photos" || album.title === "Camera Roll",
+        // Create smart albums list
+        const smartAlbums: SmartAlbum[] = albums
+          .filter((album) => smartAlbumTitles.includes(album.title))
+          .map((album) => ({
+            id: album.id,
+            title: album.title,
+            type: "smart",
+            assetCount: album.assetCount,
+          }));
+
+        // Create regular albums list (excluding smart albums)
+        const regularAlbums: RegularAlbum[] = albums
+          .filter((album) => !smartAlbumTitles.includes(album.title))
+          .map((album) => ({
+            id: album.id,
+            title: album.title,
+            type: "regular",
+            assetCount: album.assetCount,
+          }));
+
+        // Add "All Albums" as a special smart album
+        const allAlbumsEntry: SmartAlbum = {
+          id: "all-albums",
+          title: "All Albums",
+          type: "smart",
+          assetCount: regularAlbums.reduce(
+            (sum, album) => sum + album.assetCount,
+            0,
+          ),
+        };
+
+        // Combine smart albums with "All Albums" entry
+        const formattedAlbums = [...smartAlbums, allAlbumsEntry];
+
+        setAvailableAlbums({
+          smartAlbums: formattedAlbums,
+          regularAlbums,
+        });
+
+        // Set "Recents" as default album
+        const recentsAlbum = smartAlbums.find(
+          (album) => album.title === "Recents",
         );
-        if (allPhotosAlbum) {
-          setSelectedAlbum(allPhotosAlbum);
+        if (recentsAlbum) {
+          setSelectedAlbum(recentsAlbum);
         }
       } catch (error) {
         console.error("Error loading albums:", error);
@@ -63,7 +101,6 @@ export function useMediaPermissions() {
                 insertedAssets.length > 0
               ) {
                 useAppStore.setState({ shouldRefreshMediaLibrary: true });
-                // Reload albums when media library changes
                 void loadAlbums();
               }
             },
