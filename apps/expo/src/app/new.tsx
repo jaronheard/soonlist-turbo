@@ -129,10 +129,10 @@ const PhotoGrid = React.memo(
             onPress={handleAlbumSelectPress}
             className="flex-row items-center gap-1"
           >
-            <Text className="text-sm font-medium text-gray-700">
+            <Text className="text-sm font-medium text-white">
               {selectedAlbum?.title ?? "Recents"}
             </Text>
-            <ChevronDown size={16} color="#374151" />
+            <ChevronDown size={16} color="#FFFFFF" />
           </Pressable>
           <View className="flex-row gap-2">
             <Pressable
@@ -195,15 +195,17 @@ const PhotoGrid = React.memo(
           presentationStyle="pageSheet"
           onRequestClose={() => setIsAllAlbumsModalVisible(false)}
         >
-          <View className="flex-1 bg-white">
-            <View className="flex-row items-center justify-between border-b border-gray-200 p-4">
+          <View className="flex-1 bg-interactive-1">
+            <View className="flex-row items-center justify-between border-b border-interactive-2 p-4">
               <Pressable
                 onPress={() => setIsAllAlbumsModalVisible(false)}
                 className="rounded-md px-2 py-1"
               >
-                <Text className="text-blue-600">Done</Text>
+                <Text className="text-white">Done</Text>
               </Pressable>
-              <Text className="text-lg font-semibold">All Albums</Text>
+              <Text className="text-lg font-semibold text-white">
+                All Albums
+              </Text>
               <View style={{ width: 50 }} />
             </View>
             <ScrollView className="flex-1">
@@ -211,7 +213,7 @@ const PhotoGrid = React.memo(
                 <Pressable
                   key={album.id}
                   onPress={() => handleAlbumSelect(album)}
-                  className="flex-row items-center border-b border-gray-100 px-4 py-3"
+                  className="flex-row items-center border-b border-interactive-2 px-4 py-3"
                 >
                   {album.thumbnail ? (
                     <Image
@@ -223,14 +225,12 @@ const PhotoGrid = React.memo(
                   ) : (
                     <View
                       style={{ width: 40, height: 40 }}
-                      className="mr-3 rounded-md bg-gray-200"
+                      className="mr-3 rounded-md bg-interactive-2"
                     />
                   )}
                   <View>
-                    <Text className="text-base text-gray-800">
-                      {album.title}
-                    </Text>
-                    <Text className="text-sm text-gray-500">
+                    <Text className="text-base text-white">{album.title}</Text>
+                    <Text className="text-sm text-interactive-3">
                       {album.assetCount} items
                     </Text>
                   </View>
@@ -610,7 +610,7 @@ export default function NewEventModal() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1"
+      className="flex-1 bg-interactive-1"
     >
       <Stack.Screen
         options={{
@@ -618,18 +618,19 @@ export default function NewEventModal() {
           headerShown: true,
           headerTitleStyle: {
             fontSize: 17,
-            color: "#000",
+            color: "#fff",
           },
           headerShadowVisible: false,
           headerStyle: {
-            backgroundColor: "#fff",
+            backgroundColor: "#5A32FB",
           },
+          headerTintColor: "#fff",
         }}
       />
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-interactive-1">
         <View className="px-4">
           <View
-            className="mb-4 overflow-hidden rounded-md"
+            className="mb-4 overflow-hidden rounded-md bg-interactive-2"
             style={styles.previewContainer}
           >
             {/* Preview content - same as before */}
@@ -729,18 +730,18 @@ export default function NewEventModal() {
           />
         </View>
 
-        <View className="shadow-top bg-white px-4 pb-8 pt-4">
+        <View className="shadow-top bg-interactive-1 px-4 pb-8 pt-4">
           <Pressable
             onPress={handleCreateEvent}
             disabled={!input.trim() && !imagePreview && !linkPreview}
             className={`w-full flex-row items-center justify-center rounded-full px-3 py-3 ${
               !input.trim() && !imagePreview && !linkPreview
-                ? "bg-interactive-2"
-                : "bg-interactive-1"
+                ? "bg-neutral-200"
+                : "bg-white"
             }`}
           >
-            <Sparkles size={16} color="white" />
-            <Text className="ml-2 text-xl font-bold text-white">
+            <Sparkles size={16} color="#5A32FB" />
+            <Text className="ml-2 text-xl font-bold text-[#5A32FB]">
               Capture event
             </Text>
           </Pressable>
