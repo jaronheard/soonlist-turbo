@@ -17,6 +17,7 @@ export interface RegularAlbum {
   title: string;
   type: "regular";
   assetCount: number;
+  thumbnail?: string;
 }
 
 export interface AlbumsState {

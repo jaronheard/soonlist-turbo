@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActionSheetIOS,
   ActivityIndicator,
   Dimensions,
   KeyboardAvoidingView,
@@ -70,13 +71,47 @@ const PhotoGrid = React.memo(
     const [isAlbumPickerVisible, setIsAlbumPickerVisible] = useState(false);
 
     const handleAlbumSelect = (album: SmartAlbum | RegularAlbum) => {
-      if (album.id === "all-albums") {
-        setIsAllAlbumsModalVisible(true);
-      } else {
-        setSelectedAlbum(album);
-        setIsAlbumPickerVisible(false);
-      }
+      setSelectedAlbum(album);
+      setIsAlbumPickerVisible(false);
+      setIsAllAlbumsModalVisible(false);
     };
+
+    const handleAlbumSelectPress = useCallback(() => {
+      if (Platform.OS === "ios") {
+        const options = [
+          "Cancel",
+          ...availableAlbums.smartAlbums.map(
+            (album) => `${album.title} (${album.assetCount})`,
+          ),
+        ];
+
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options,
+            cancelButtonIndex: 0,
+            title: "Select Album",
+          },
+          (buttonIndex) => {
+            if (buttonIndex === 0) return; // Cancel
+            const selectedSmartAlbum =
+              availableAlbums.smartAlbums[buttonIndex - 1];
+            if (selectedSmartAlbum) {
+              if (selectedSmartAlbum.id === "all-albums") {
+                setIsAllAlbumsModalVisible(true);
+              } else {
+                setSelectedAlbum(selectedSmartAlbum);
+              }
+            }
+          },
+        );
+      } else {
+        setIsAlbumPickerVisible(true);
+      }
+    }, [
+      availableAlbums.smartAlbums,
+      setSelectedAlbum,
+      setIsAllAlbumsModalVisible,
+    ]);
 
     if (!hasMediaPermission || recentPhotos.length === 0) return null;
 
@@ -91,7 +126,7 @@ const PhotoGrid = React.memo(
       <View className="" style={{ height: imageSize * 3 + spacing * 2 }}>
         <View className="mb-2 flex-row items-center justify-between">
           <Pressable
-            onPress={() => setIsAlbumPickerVisible(true)}
+            onPress={handleAlbumSelectPress}
             className="flex-row items-center gap-1"
           >
             <Text className="text-sm font-medium text-gray-700">
@@ -115,69 +150,90 @@ const PhotoGrid = React.memo(
           </View>
         </View>
 
-        <Modal
-          visible={isAlbumPickerVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setIsAlbumPickerVisible(false)}
-        >
-          <Pressable
-            className="flex-1 bg-black/50"
-            onPress={() => setIsAlbumPickerVisible(false)}
+        {Platform.OS === "android" && (
+          <Modal
+            visible={isAlbumPickerVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setIsAlbumPickerVisible(false)}
           >
-            <View className="mt-auto bg-white p-4">
-              <Text className="mb-4 text-lg font-bold">Select Album</Text>
-              <ScrollView className="max-h-96">
-                {availableAlbums.smartAlbums.map((album) => (
-                  <Pressable
-                    key={album.id}
-                    onPress={() => handleAlbumSelect(album)}
-                    className="py-3"
-                  >
-                    <Text
-                      className={`text-base ${
-                        selectedAlbum?.id === album.id
-                          ? "font-bold text-blue-600"
-                          : "text-gray-800"
-                      }`}
-                    >
-                      {album.title} ({album.assetCount})
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            </View>
-          </Pressable>
-        </Modal>
+            <Pressable
+              className="flex-1 bg-black/50"
+              onPress={() => setIsAlbumPickerVisible(false)}
+            >
+              <View className="mt-auto rounded-t-xl bg-white">
+                <View className="p-4">
+                  <Text className="mb-4 text-lg font-bold">Select Album</Text>
+                  <ScrollView className="max-h-96">
+                    {availableAlbums.smartAlbums.map((album) => (
+                      <Pressable
+                        key={album.id}
+                        onPress={() => handleAlbumSelect(album)}
+                        className="py-3"
+                      >
+                        <Text
+                          className={`text-base ${
+                            selectedAlbum?.id === album.id
+                              ? "font-bold text-blue-600"
+                              : "text-gray-800"
+                          }`}
+                        >
+                          {album.title} ({album.assetCount})
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
+            </Pressable>
+          </Modal>
+        )}
 
         <Modal
           visible={isAllAlbumsModalVisible}
-          transparent
           animationType="slide"
+          presentationStyle="pageSheet"
           onRequestClose={() => setIsAllAlbumsModalVisible(false)}
         >
           <View className="flex-1 bg-white">
             <View className="flex-row items-center justify-between border-b border-gray-200 p-4">
-              <Pressable onPress={() => setIsAllAlbumsModalVisible(false)}>
-                <Text className="text-blue-600">Back</Text>
+              <Pressable
+                onPress={() => setIsAllAlbumsModalVisible(false)}
+                className="rounded-md px-2 py-1"
+              >
+                <Text className="text-blue-600">Done</Text>
               </Pressable>
-              <Text className="text-lg font-bold">All Albums</Text>
+              <Text className="text-lg font-semibold">All Albums</Text>
               <View style={{ width: 50 }} />
             </View>
             <ScrollView className="flex-1">
               {availableAlbums.regularAlbums.map((album) => (
                 <Pressable
                   key={album.id}
-                  onPress={() => {
-                    setSelectedAlbum(album);
-                    setIsAllAlbumsModalVisible(false);
-                    setIsAlbumPickerVisible(false);
-                  }}
-                  className="border-b border-gray-100 p-4"
+                  onPress={() => handleAlbumSelect(album)}
+                  className="flex-row items-center border-b border-gray-100 px-4 py-3"
                 >
-                  <Text className="text-base text-gray-800">
-                    {album.title} ({album.assetCount})
-                  </Text>
+                  {album.thumbnail ? (
+                    <Image
+                      source={{ uri: album.thumbnail }}
+                      style={{ width: 40, height: 40 }}
+                      className="mr-3 rounded-md"
+                      contentFit="cover"
+                    />
+                  ) : (
+                    <View
+                      style={{ width: 40, height: 40 }}
+                      className="mr-3 rounded-md bg-gray-200"
+                    />
+                  )}
+                  <View>
+                    <Text className="text-base text-gray-800">
+                      {album.title}
+                    </Text>
+                    <Text className="text-sm text-gray-500">
+                      {album.assetCount} items
+                    </Text>
+                  </View>
                 </Pressable>
               ))}
             </ScrollView>

@@ -3,18 +3,19 @@ import * as MediaLibrary from "expo-media-library";
 
 import { useAppStore } from "~/store";
 
-interface SmartAlbum {
+export interface SmartAlbum {
   id: string;
   title: string;
   type: "smart";
   assetCount: number;
 }
 
-interface RegularAlbum {
+export interface RegularAlbum {
   id: string;
   title: string;
   type: "regular";
   assetCount: number;
+  thumbnail?: string;
 }
 
 export function useMediaPermissions() {
@@ -46,22 +47,35 @@ export function useMediaPermissions() {
             assetCount: album.assetCount,
           }));
 
-        // Create regular albums list - filter out empty albums and smart albums
-        const regularAlbums: RegularAlbum[] = albums
+        // Create regular albums list with thumbnails
+        const regularAlbumsPromises = albums
           .filter(
             (album) =>
               !smartAlbumTitles.includes(album.title) && album.assetCount > 0,
           )
-          .map((album) => ({
-            id: album.id,
-            title: album.title,
-            type: "regular",
-            assetCount: album.assetCount,
-          }));
+          .map(async (album) => {
+            // Get the first asset from each album to use as thumbnail
+            const assets = await MediaLibrary.getAssetsAsync({
+              first: 1,
+              album: album,
+              sortBy: MediaLibrary.SortBy.creationTime,
+            });
 
-        // Add "All Albums" as a special smart album only if there are regular albums
+            return {
+              id: album.id,
+              title: album.title,
+              type: "regular" as const,
+              assetCount: album.assetCount,
+              thumbnail: assets.assets[0]?.uri,
+            };
+          });
+
+        const regularAlbums = await Promise.all(regularAlbumsPromises);
+
+        // Add "All Albums" as a special smart album only if there are regular albums with content
         const allAlbumsEntry: SmartAlbum | null =
-          regularAlbums.length > 0
+          regularAlbums.length > 0 &&
+          regularAlbums.some((album) => album.assetCount > 0)
             ? {
                 id: "all-albums",
                 title: "All Albums",
@@ -80,7 +94,9 @@ export function useMediaPermissions() {
 
         setAvailableAlbums({
           smartAlbums: formattedAlbums,
-          regularAlbums,
+          regularAlbums: regularAlbums.sort(
+            (a, b) => b.assetCount - a.assetCount,
+          ),
         });
 
         // Set "Recents" as default album
