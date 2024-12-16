@@ -222,7 +222,7 @@ export default function Page() {
           </div>
         </Section>
         <Section>
-          <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
             The most popular types of events were:
           </p>
 
@@ -257,7 +257,7 @@ export default function Page() {
           </div>
         </Section>
         <Section>
-          <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
             The most popular categories were:
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -291,7 +291,7 @@ export default function Page() {
           </div>
         </Section>
         <Section>
-          <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
             The most followed events were:
           </p>
           {stats.topFollowedEvents.map((event) => (
@@ -315,7 +315,7 @@ export default function Page() {
           ))}
         </Section>
         <Section>
-          <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
             The most popular venues were:
           </p>
 
@@ -350,8 +350,9 @@ export default function Page() {
           </div>
         </Section>
         <Section>
-          Our busiest days of the year! We had 7 days that each had 7 events
-          listed!
+          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+            Our busiest days of the year each had 7 events that day!
+          </p>
           <div className="grid grid-cols-3 gap-4">
             {stats.top5DaysWithMostEvents.map((day) => {
               const eventDate = new Date(day.eventDate + ` GMT-0700`); // Create Date object
@@ -364,6 +365,28 @@ export default function Page() {
               );
             })}
           </div>
+        </Section>
+        <Section>
+          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+            Our longest active streak was{" "}
+            <span className="mt-4 block font-heading text-6xl font-bold text-interactive-1">
+              {stats.longestStreak.streak_length}
+            </span>{" "}
+            days! We had events on every day between{" "}
+            {new Date(
+              stats.longestStreak.streak_start + " GMT-0700",
+            ).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+            })}{" "}
+            and{" "}
+            {new Date(
+              stats.longestStreak.streak_end + " GMT-0700",
+            ).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
         </Section>
       </div>
       <div className="mx-auto max-w-6xl rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 p-8 text-white shadow-xl">
