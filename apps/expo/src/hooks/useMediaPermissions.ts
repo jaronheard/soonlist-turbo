@@ -47,30 +47,29 @@ export function useMediaPermissions() {
             assetCount: album.assetCount,
           }));
 
-        // Create regular albums list with thumbnails
-        const regularAlbumsPromises = albums
-          .filter(
-            (album) =>
-              !smartAlbumTitles.includes(album.title) && album.assetCount > 0,
-          )
-          .map(async (album) => {
-            // Get the first asset from each album to use as thumbnail
-            const assets = await MediaLibrary.getAssetsAsync({
-              first: 1,
-              album: album,
-              sortBy: MediaLibrary.SortBy.creationTime,
-            });
+        // Optimize regular albums loading with parallel processing
+        const regularAlbums = await Promise.all(
+          albums
+            .filter(
+              (album) =>
+                !smartAlbumTitles.includes(album.title) && album.assetCount > 0,
+            )
+            .map(async (album) => {
+              const assets = await MediaLibrary.getAssetsAsync({
+                first: 1,
+                album: album,
+                sortBy: MediaLibrary.SortBy.creationTime,
+              });
 
-            return {
-              id: album.id,
-              title: album.title,
-              type: "regular" as const,
-              assetCount: album.assetCount,
-              thumbnail: assets.assets[0]?.uri,
-            };
-          });
-
-        const regularAlbums = await Promise.all(regularAlbumsPromises);
+              return {
+                id: album.id,
+                title: album.title,
+                type: "regular" as const,
+                assetCount: album.assetCount,
+                thumbnail: assets.assets[0]?.uri,
+              };
+            }),
+        );
 
         // Add "All Albums" as a special smart album only if there are regular albums with content
         const allAlbumsEntry: SmartAlbum | null =
