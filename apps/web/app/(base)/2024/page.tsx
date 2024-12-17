@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link"; // Import Link from Next.js
 import { currentUser } from "@clerk/nextjs/server";
@@ -13,18 +14,16 @@ import { Button } from "@soonlist/ui/button";
 //   YAxis,
 // } from "recharts";
 
-// import { Button } from "@soonlist/ui/button";
-
 import CalendarDayCard from "./_components/calendarDayCard";
 import EmojiGrid from "./_components/emojiGrid";
+import Section from "./_components/section";
 import dataFor2024 from "./dataFor2024";
 
-// Section component that has a good amount of vertical padding and a 4 px wide bottom border that is puurple
-const Section = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <div className="mb-12 border-b-8 border-purple-100 pb-12">{children}</div>
-  );
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: `Captured 2024! | Soonlist`,
+  };
+}
 
 export default async function Page() {
   const user = await currentUser();
