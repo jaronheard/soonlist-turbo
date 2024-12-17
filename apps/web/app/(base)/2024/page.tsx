@@ -1,60 +1,23 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link"; // Import Link from Next.js
-import {
-  Activity,
-  Award,
-  Calendar,
-  Flame,
-  Heart,
-  MapPin,
-  Sparkles,
-  Star,
-  TrendingUp,
-  Trophy,
-  Users,
-} from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { currentUser } from "@clerk/nextjs/server";
 
 import { Button } from "@soonlist/ui/button";
 
+// import {
+//   Bar,
+//   BarChart,
+//   ResponsiveContainer,
+//   Tooltip,
+//   XAxis,
+//   YAxis,
+// } from "recharts";
+
+// import { Button } from "@soonlist/ui/button";
+
+import CalendarDayCard from "./_components/calendarDayCard";
+import EmojiGrid from "./_components/emojiGrid";
 import dataFor2024 from "./dataFor2024";
-
-interface CalendarDayCardProps {
-  date: Date; // Accept Date object
-}
-
-const CalendarDayCard: React.FC<CalendarDayCardProps> = ({ date }) => {
-  const dayType = date
-    .toLocaleDateString("en-US", { weekday: "short" })
-    .toUpperCase();
-  const dayNumber = date.getDate().toString();
-  const month = date
-    .toLocaleDateString("en-US", { month: "short" })
-    .toUpperCase();
-
-  return (
-    <div className="flex w-32 flex-col items-center justify-center rounded-lg border bg-white/10 p-4 shadow-md backdrop-blur-sm">
-      {" "}
-      {/* Fixed width */}
-      <div className="text-center">
-        <p className="text-sm font-bold text-gray-500">{dayType}</p>
-        <p className="font-heading text-5xl font-bold">{dayNumber}</p>{" "}
-        {/* Use font-heading class */}
-      </div>
-      <p className="text-xl font-bold ">{month}</p> {/* Month at the bottom */}
-    </div>
-  );
-};
 
 // Section component that has a good amount of vertical padding and a 4 px wide bottom border that is puurple
 const Section = ({ children }: { children: React.ReactNode }) => {
@@ -63,76 +26,12 @@ const Section = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Add this CSS in your global styles or a CSS module
-const styles = `
-@keyframes grow {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(2);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.animate-grow {
-  animation: grow 1.0s ease-in-out infinite;
-}
-`;
-
-export default function Page() {
+export default async function Page() {
+  const user = await currentUser();
   const stats = dataFor2024;
-  const emojis = [
-    "🤙",
-    "🤸",
-    "🚣🏽",
-    "🌀",
-    "🪰",
-    "🪐",
-    "🍿",
-    "👻",
-    "🍪",
-    "👹",
-    "✨",
-    "🥜",
-    "🤌",
-    "🧦",
-    "🐢",
-    "🥑",
-    "🐯",
-    "🧜",
-    "🐞",
-    "💐",
-    "🦋",
-    "🌋",
-    "🌚",
-    "🎈",
-    "🧩",
-    "💖",
-    "😎",
-    "🙏",
-    "⏳",
-    "🔜",
-  ];
-  const [growingEmojiIndex, setGrowingEmojiIndex] = useState<number | null>(
-    null,
-  );
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Randomly select one emoji to grow
-      const randomIndex = Math.floor(Math.random() * emojis.length);
-      setGrowingEmojiIndex(randomIndex);
-    }, 300); // Change every 300 milliseconds for faster effect
-
-    return () => clearInterval(interval);
-  }, [emojis.length]);
 
   return (
     <div>
-      <style>{styles}</style>
       <div className="mx-auto text-center">
         <h1 className="font-heading text-5xl font-bold leading-none tracking-tighterish text-gray-700 md:text-7xl md:leading-none">
           2024 <br />
@@ -165,17 +64,8 @@ export default function Page() {
             </span>{" "}
             active capturers!
           </p>
-          <div className="mx-auto grid grid-cols-5 justify-center gap-2">
-            {emojis.map((emoji, index) => (
-              <span
-                key={index}
-                className={`text-3xl ${growingEmojiIndex === index ? "animate-grow" : ""}`}
-                title="Founding Member"
-              >
-                {emoji}
-              </span>
-            ))}
-          </div>
+
+          <EmojiGrid emojis={stats.emojis} />
         </Section>
         <Section>
           <div className="flex flex-col md:flex-row">
@@ -399,7 +289,7 @@ export default function Page() {
             </span>{" "}
             but Sundays were not far behind!
           </p>
-          <div className="h-64">
+          {/* <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.weekdayDistribution}>
                 <XAxis dataKey="day_of_week" />
@@ -418,7 +308,7 @@ export default function Page() {
                 />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </div> */}
         </Section>
         <Section>
           <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
@@ -466,7 +356,7 @@ export default function Page() {
           <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
             Want to your individual stats for Soonlist 2024 Captured?
           </p>
-          <Link href="/2024/joshcarr">
+          <Link href={`/2024/${user?.username}`}>
             <Button>See your stats!</Button>
           </Link>
         </Section>
