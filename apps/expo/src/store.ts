@@ -5,7 +5,27 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { RouterOutputs } from "~/utils/api";
 
-interface RecentPhoto {
+export interface SmartAlbum {
+  id: string;
+  title: string;
+  type: "smart";
+  assetCount: number;
+}
+
+export interface RegularAlbum {
+  id: string;
+  title: string;
+  type: "regular";
+  assetCount: number;
+  thumbnail?: string;
+}
+
+export interface AlbumsState {
+  smartAlbums: SmartAlbum[];
+  regularAlbums: RegularAlbum[];
+}
+
+export interface RecentPhoto {
   id: string;
   uri: string;
 }
@@ -82,6 +102,16 @@ interface AppState {
   // Add these new actions
   setIsLoadingPhotos: (isLoading: boolean) => void;
   setPhotoLoadingError: (error: string | null) => void;
+
+  // Add these new properties
+  selectedAlbum: (SmartAlbum | RegularAlbum) | null;
+  availableAlbums: AlbumsState;
+  isAllAlbumsModalVisible: boolean;
+
+  // Add these new actions
+  setSelectedAlbum: (album: (SmartAlbum | RegularAlbum) | null) => void;
+  setAvailableAlbums: (albums: AlbumsState) => void;
+  setIsAllAlbumsModalVisible: (isVisible: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -93,6 +123,9 @@ export const useAppStore = create<AppState>()(
       showAllCalendars: false,
       isLoadingPhotos: false,
       photoLoadingError: null,
+      selectedAlbum: null,
+      availableAlbums: { smartAlbums: [], regularAlbums: [] },
+      isAllAlbumsModalVisible: false,
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
@@ -180,6 +213,9 @@ export const useAppStore = create<AppState>()(
           shouldRefreshMediaLibrary: false,
           isLoadingPhotos: false,
           photoLoadingError: null,
+          selectedAlbum: null,
+          availableAlbums: { smartAlbums: [], regularAlbums: [] },
+          isAllAlbumsModalVisible: false,
         }),
       clearCalendarData: () =>
         set({
@@ -215,6 +251,12 @@ export const useAppStore = create<AppState>()(
       // Add these new actions
       setIsLoadingPhotos: (isLoading) => set({ isLoadingPhotos: isLoading }),
       setPhotoLoadingError: (error) => set({ photoLoadingError: error }),
+
+      // Add these new actions
+      setSelectedAlbum: (album) => set({ selectedAlbum: album }),
+      setAvailableAlbums: (albums) => set({ availableAlbums: albums }),
+      setIsAllAlbumsModalVisible: (isVisible) =>
+        set({ isAllAlbumsModalVisible: isVisible }),
     }),
     {
       name: "app-storage",
@@ -227,3 +269,9 @@ export const useAppStore = create<AppState>()(
 export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
 export const useHasMediaPermission = () =>
   useAppStore((state) => state.hasMediaPermission);
+
+// Add new selectors
+export const useSelectedAlbum = () =>
+  useAppStore((state) => state.selectedAlbum);
+export const useAvailableAlbums = () =>
+  useAppStore((state) => state.availableAlbums);
