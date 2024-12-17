@@ -228,7 +228,7 @@ const PhotoGrid = React.memo(
                       className="mr-3 rounded-md bg-interactive-2"
                     />
                   )}
-                  <View>
+                  <View className="ml-3">
                     <Text className="text-base text-white">{album.title}</Text>
                     <Text className="text-sm text-interactive-3">
                       {album.assetCount} items
