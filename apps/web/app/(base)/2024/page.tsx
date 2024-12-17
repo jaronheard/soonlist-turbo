@@ -388,6 +388,74 @@ export default function Page() {
             })}
           </p>
         </Section>
+        <Section>
+          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+            Unsurprisingly, we had the most events on{" "}
+            <span className="mt-4 block font-heading text-6xl font-bold text-interactive-1">
+              Saturdays
+            </span>{" "}
+            but Sundays were not far behind!
+          </p>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.weekdayDistribution}>
+                <XAxis dataKey="day_of_week" />
+                <YAxis domain={[0, 150]} ticks={[0, 50, 100, 150]} />
+                <Tooltip
+                  contentStyle={{
+                    // backgroundColor: "#1a1a1a",
+                    border: "none",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Bar
+                  dataKey="event_count"
+                  fill="#60A5FA"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Section>
+        <Section>
+          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+            Our super capturers were:
+          </p>
+          <div className="flex flex-wrap">
+            {stats.topCreators.map((creator) => (
+              <div
+                key={creator.username}
+                className="mb-8 flex w-1/2 items-start space-x-4"
+              >
+                <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border-4 border-yellow-300">
+                  <Image
+                    src={creator.userImage}
+                    alt={creator.username}
+                    layout="fill"
+                    className="absolute inset-0 object-cover"
+                  />
+                </div>
+                <div className="flex flex-col text-left">
+                  <p className="font-heading text-2xl text-interactive-1">
+                    <strong>@{creator.username}</strong> {creator.emoji}
+                  </p>
+                  <p className="text-sm">
+                    Total events captured:{" "}
+                    <span className=" text-lg font-bold ">
+                      {creator.total_events}
+                    </span>
+                  </p>
+                  <p className="text-sm">
+                    Favorite event type:{" "}
+                    <span className=" text-lg font-bold ">
+                      {creator.most_common_type}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
       </div>
       <div className="mx-auto max-w-6xl rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 p-8 text-white shadow-xl">
         <div className="space-y-8">

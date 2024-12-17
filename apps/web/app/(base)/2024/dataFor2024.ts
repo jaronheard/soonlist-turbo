@@ -202,30 +202,45 @@ const dataFor2024 = {
   topCreators: [
     {
       username: "jaronheard",
+      emoji: "💖",
+      userImage:
+        "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvdXBsb2FkZWQvaW1nXzJaRmFCY2VkQ2RrZ1VUM3BUWFJmU2tLM3B2eCJ9",
       total_events: "252",
       most_common_type: "party",
       type_count: "34",
     },
     {
       username: "joshcarr",
+      emoji: "🙏",
+      userImage:
+        "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvdXBsb2FkZWQvaW1nXzJlSzFiTDhITEhJZmFzQnRsVlBaMUk5UmdjbSJ9",
       total_events: "126",
       most_common_type: "concert",
       type_count: "45",
     },
     {
       username: "delladella",
+      emoji: "🌀",
+      userImage:
+        "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yaEtlMGdrZVhSWm5KNEVheVBLZlpGdUxkSDIifQ",
       total_events: "38",
       most_common_type: "party",
       type_count: "9",
     },
     {
       username: "jennybatch",
+      emoji: "🎈",
+      userImage:
+        "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvdXBsb2FkZWQvaW1nXzJjQUNWUDZhWVVpUUV6Q1NFaXlucHRDb2txOSJ9",
       total_events: "17",
       most_common_type: "party",
       type_count: "3",
     },
     {
       username: "thepianofarm",
+      emoji: "🚣🏽",
+      userImage:
+        "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yaDJHMG1lMmpnaFNzSnVudklRaE5Xblc2RzMifQ",
       total_events: "10",
       most_common_type: "festival",
       type_count: "2",
