@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import * as MediaLibrary from "expo-media-library";
 
 import { useAppStore } from "~/store";
+import { showToast } from "~/utils/toast";
 
 export interface SmartAlbum {
   id: string;
@@ -15,7 +16,7 @@ export interface RegularAlbum {
   title: string;
   type: "regular";
   assetCount: number;
-  thumbnail?: string;
+  thumbnail: string | undefined;
 }
 
 export function useMediaPermissions() {
@@ -30,6 +31,11 @@ export function useMediaPermissions() {
         const albums = await MediaLibrary.getAlbumsAsync({
           includeSmartAlbums: true,
         });
+
+        if (!albums.length) {
+          showToast("No photo albums found", "info");
+          return;
+        }
 
         // Define smart albums we want to show at the top
         const smartAlbumTitles = ["Recents", "Screenshots", "Favorites"];
@@ -47,39 +53,62 @@ export function useMediaPermissions() {
             assetCount: album.assetCount,
           }));
 
+        // Add error handling for empty smart albums
+        if (!smartAlbums.length) {
+          showToast("No smart albums available", "info");
+        }
+
         // Optimize regular albums loading with parallel processing
-        const regularAlbums = await Promise.all(
+        const regularAlbums = await Promise.allSettled<RegularAlbum | null>(
           albums
             .filter(
               (album) =>
                 !smartAlbumTitles.includes(album.title) && album.assetCount > 0,
             )
             .map(async (album) => {
-              const assets = await MediaLibrary.getAssetsAsync({
-                first: 1,
-                album: album,
-                sortBy: MediaLibrary.SortBy.creationTime,
-              });
+              try {
+                const assets = await MediaLibrary.getAssetsAsync({
+                  first: 1,
+                  album: album,
+                  sortBy: MediaLibrary.SortBy.creationTime,
+                });
 
-              return {
-                id: album.id,
-                title: album.title,
-                type: "regular" as const,
-                assetCount: album.assetCount,
-                thumbnail: assets.assets[0]?.uri,
-              };
+                if (!assets.assets.length) {
+                  throw new Error(`No assets found in album: ${album.title}`);
+                }
+
+                return {
+                  id: album.id,
+                  title: album.title,
+                  type: "regular" as const,
+                  assetCount: album.assetCount,
+                  thumbnail: assets.assets[0]?.uri,
+                };
+              } catch (error) {
+                console.error(`Error loading album ${album.title}:`, error);
+                return null;
+              }
             }),
         );
 
+        // Filter out failed album loads with proper type handling
+        const successfulAlbums = regularAlbums
+          .filter(
+            (result): result is PromiseFulfilledResult<RegularAlbum | null> =>
+              result.status === "fulfilled",
+          )
+          .map((result) => result.value)
+          .filter((album): album is RegularAlbum => album !== null);
+
         // Add "All Albums" as a special smart album only if there are regular albums with content
         const allAlbumsEntry: SmartAlbum | null =
-          regularAlbums.length > 0 &&
-          regularAlbums.some((album) => album.assetCount > 0)
+          successfulAlbums.length > 0 &&
+          successfulAlbums.some((album) => album.assetCount > 0)
             ? {
                 id: "all-albums",
                 title: "All Albums",
                 type: "smart",
-                assetCount: regularAlbums.reduce(
+                assetCount: successfulAlbums.reduce(
                   (sum, album) => sum + album.assetCount,
                   0,
                 ),
@@ -93,26 +122,30 @@ export function useMediaPermissions() {
 
         setAvailableAlbums({
           smartAlbums: formattedAlbums,
-          regularAlbums: regularAlbums.sort(
+          regularAlbums: successfulAlbums.sort(
             (a, b) => b.assetCount - a.assetCount,
           ),
         });
 
-        // Set "Recents" as default album
+        // Set "Recents" as default album with error handling
         const recentsAlbum = smartAlbums.find(
           (album) => album.title === "Recents",
         );
         if (recentsAlbum) {
           setSelectedAlbum(recentsAlbum);
+        } else {
+          showToast("Recents album not available", "error");
         }
       } catch (error) {
         console.error("Error loading albums:", error);
+        showToast("Failed to load photo albums", "error");
       }
     }
 
     async function initializeMediaPermissions() {
       try {
-        const { status } = await MediaLibrary.requestPermissionsAsync();
+        const { status, canAskAgain } =
+          await MediaLibrary.requestPermissionsAsync();
         const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
         setHasMediaPermission(isGranted);
 
@@ -131,9 +164,15 @@ export function useMediaPermissions() {
               }
             },
           );
+        } else {
+          const message = canAskAgain
+            ? "Photo access denied. Please grant permission in settings."
+            : "Photo access permanently denied. Update permissions in system settings.";
+          showToast(message, "error");
         }
       } catch (error) {
         console.error("Error requesting media permissions:", error);
+        showToast("Failed to request photo permissions", "error");
         setHasMediaPermission(false);
       }
     }
