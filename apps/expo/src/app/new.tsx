@@ -41,7 +41,7 @@ const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 const styles = StyleSheet.create({
   previewContainer: {
     width: Dimensions.get("window").width - 32,
-    height: Dimensions.get("window").width - 32,
+    aspectRatio: 1,
   },
 });
 
@@ -614,7 +614,7 @@ export default function NewEventModal() {
     >
       <Stack.Screen
         options={{
-          title: "Add event info",
+          title: "Select image",
           headerShown: true,
           headerTitleStyle: {
             fontSize: 17,
@@ -633,13 +633,13 @@ export default function NewEventModal() {
             className="mb-4 overflow-hidden rounded-md bg-interactive-2"
             style={styles.previewContainer}
           >
-            {/* Preview content - same as before */}
             {imagePreview ? (
               <View className="relative h-full w-full">
                 <Image
                   source={{ uri: imagePreview }}
                   style={{ width: "100%", height: "100%" }}
-                  contentFit="cover"
+                  contentFit="contain"
+                  contentPosition="center"
                 />
                 <Pressable
                   onPress={clearPreview}
