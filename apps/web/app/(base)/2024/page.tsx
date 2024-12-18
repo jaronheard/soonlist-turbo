@@ -5,18 +5,9 @@ import { currentUser } from "@clerk/nextjs/server";
 
 import { Button } from "@soonlist/ui/button";
 
-// import {
-//   Bar,
-//   BarChart,
-//   ResponsiveContainer,
-//   Tooltip,
-//   XAxis,
-//   YAxis,
-// } from "recharts";
-
-import CalendarDayCard from "./_components/calendarDayCard";
 import EmojiGrid from "./_components/emojiGrid";
 import Section from "./_components/section";
+import WeeklyDistribution from "./_components/weeklyDistribution";
 import dataFor2024 from "./dataFor2024";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -243,71 +234,13 @@ export default async function Page() {
         </Section>
         <Section>
           <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
-            Our busiest days of the year each had 7 events that day!
-          </p>
-          <div className="grid grid-cols-3 gap-4">
-            {stats.top5DaysWithMostEvents.map((day) => {
-              const eventDate = new Date(day.eventDate + ` GMT-0700`); // Create Date object
-
-              return (
-                <CalendarDayCard
-                  key={day.eventDate}
-                  date={eventDate} // Pass the Date object
-                />
-              );
-            })}
-          </div>
-        </Section>
-        <Section>
-          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
-            Our longest active streak was{" "}
-            <span className="mt-4 block font-heading text-6xl font-bold text-interactive-1">
-              {stats.longestStreak.streak_length}
-            </span>{" "}
-            days! We had events on every day between{" "}
-            {new Date(
-              stats.longestStreak.streak_start + " GMT-0700",
-            ).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-            })}{" "}
-            and{" "}
-            {new Date(
-              stats.longestStreak.streak_end + " GMT-0700",
-            ).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-        </Section>
-        <Section>
-          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
             Unsurprisingly, we had the most events on{" "}
             <span className="mt-4 block font-heading text-6xl font-bold text-interactive-1">
               Saturdays
             </span>{" "}
             but Sundays were not far behind!
           </p>
-          {/* <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.weekdayDistribution}>
-                <XAxis dataKey="day_of_week" />
-                <YAxis domain={[0, 150]} ticks={[0, 50, 100, 150]} />
-                <Tooltip
-                  contentStyle={{
-                    // backgroundColor: "#1a1a1a",
-                    border: "none",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Bar
-                  dataKey="event_count"
-                  fill="#60A5FA"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div> */}
+          <WeeklyDistribution weekdayDistribution={stats.weekdayDistribution} />
         </Section>
         <Section>
           <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
