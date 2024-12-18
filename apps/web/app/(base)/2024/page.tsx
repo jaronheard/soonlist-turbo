@@ -63,22 +63,15 @@ export default async function Page() {
         </Section>
         <Section>
           <div className="flex flex-col md:flex-row">
-            <div className="grid grid-cols-2 justify-items-center gap-4 md:w-1/2">
-              {/* Updated to use randomEightEvents from the dataset */}
-              {stats.randomEightEvents.slice(0, 4).map((item, index) => (
-                <div
-                  key={index}
-                  className={`aspect-w-1 aspect-h-1 relative h-24 w-24 transform overflow-hidden rounded-md border-2 border-yellow-300`}
-                >
-                  <Image
-                    src={item.event.images[0]}
-                    alt={`Event ${index + 1}`}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw" // Add sizes prop here
-                    className="object-cover"
-                  />
-                </div>
-              ))}
+            <div className="flex justify-center">
+              <div className="">
+                <Image
+                  src="/2024-captured-events-1.png"
+                  alt="2024 captured events"
+                  width={500}
+                  height={500}
+                />
+              </div>
             </div>
             <div className="md:w-1/2">
               <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
@@ -89,22 +82,15 @@ export default async function Page() {
                 total events!
               </p>
             </div>
-            <div className="grid grid-cols-2 justify-items-center gap-4 md:w-1/2">
-              {/* Updated to use randomEightEvents from the dataset */}
-              {stats.randomEightEvents.slice(4, 8).map((item, index) => (
-                <div
-                  key={index}
-                  className={`aspect-w-1 aspect-h-1 relative h-24 w-24 transform overflow-hidden rounded-md border-2 border-yellow-300`}
-                >
-                  <Image
-                    src={item.event.images[0]}
-                    alt={`Event ${index + 1}`}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw" // Add sizes prop here
-                    className="object-cover"
-                  />
-                </div>
-              ))}
+            <div className="flex justify-center">
+              <div className="">
+                <Image
+                  src="/2024-captured-events-2.png"
+                  alt="2024 captured events"
+                  width={500}
+                  height={500}
+                />
+              </div>
             </div>
           </div>
         </Section>
