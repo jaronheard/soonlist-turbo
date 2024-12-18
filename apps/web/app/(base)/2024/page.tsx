@@ -43,12 +43,16 @@ export default async function Page() {
           </span>
         </h1>
         <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
-          Thank you for being part of our community! 2024 was a big year for
-          Soonlist. Let's take a look back at the year together.
+          From screenshots of Instagram stories to photos of coffee shop flyers,
+          you and our amazing community turned fleeting moments into getting out
+          into the world and experiencing new things.
+        </p>
+        <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+          <em>Let's take a look back at the year together!</em>
         </p>
         <Section>
           <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
-            Our community grew to{" "}
+            We grew to{" "}
             <span className="mt-4 block font-heading text-6xl font-bold text-interactive-1">
               {stats.totalUsers.toLocaleString()}
             </span>{" "}
@@ -250,7 +254,7 @@ export default async function Page() {
             {stats.topCreators.map((creator) => (
               <div
                 key={creator.username}
-                className="mb-8 flex w-1/2 items-start space-x-4"
+                className="mb-8 flex w-full items-start space-x-4 sm:w-1/2"
               >
                 <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border-4 border-yellow-300">
                   <Image
@@ -283,14 +287,15 @@ export default async function Page() {
         </Section>
         <Section>
           <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
-            Now its your turn! See how many events you can capture in 2025!
-          </p>
-          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
-            Want to your individual stats for Soonlist 2024 Captured?
+            Discover your 2024 highlights - from saved possibilities to shared
+            adventures!
           </p>
           <Link href={`/2024/${user?.username}`}>
             <Button>See your stats!</Button>
           </Link>
+          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+            Let's make 2025 your biggest year of capturing yet!
+          </p>
         </Section>
       </div>
     </div>
