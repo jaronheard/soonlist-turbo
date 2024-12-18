@@ -43,6 +43,10 @@ const styles = StyleSheet.create({
     width: Dimensions.get("window").width - 32,
     aspectRatio: 1,
   },
+  previewContainerFull: {
+    width: Dimensions.get("window").width - 32,
+    flex: 1,
+  },
 });
 
 const PhotoGrid = React.memo(
@@ -580,6 +584,8 @@ export default function NewEventModal() {
     setLinkPreview,
   ]);
 
+  const isFromIntent = Boolean(text || imageUri);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -587,7 +593,7 @@ export default function NewEventModal() {
     >
       <Stack.Screen
         options={{
-          title: "Select image",
+          title: isFromIntent ? "Selected image" : "Select image",
           headerShown: true,
           headerTitleStyle: {
             fontSize: 17,
@@ -601,10 +607,16 @@ export default function NewEventModal() {
         }}
       />
       <View className="flex-1 bg-interactive-1">
-        <View className="px-4">
+        <View className="flex-1 px-4">
           <View
-            className="mb-4 overflow-hidden rounded-md bg-interactive-2"
-            style={styles.previewContainer}
+            className={`${
+              isFromIntent ? "flex-1" : "mb-4"
+            } overflow-hidden rounded-md bg-interactive-2`}
+            style={
+              isFromIntent
+                ? styles.previewContainerFull
+                : styles.previewContainer
+            }
           >
             {imagePreview ? (
               <View className="relative h-full w-full">
@@ -693,14 +705,16 @@ export default function NewEventModal() {
           </View>
         </View>
 
-        <View className="flex-1 px-4">
-          <PhotoGrid
-            hasMediaPermission={hasMediaPermission}
-            recentPhotos={recentPhotos}
-            onPhotoSelect={(uri) => handleImagePreview(uri)}
-            onCameraPress={() => void handleCameraCapture()}
-            onDescribePress={handleDescribePress}
-          />
+        <View className={`${isFromIntent ? "" : "flex-1"} px-4`}>
+          {!isFromIntent && (
+            <PhotoGrid
+              hasMediaPermission={hasMediaPermission}
+              recentPhotos={recentPhotos}
+              onPhotoSelect={(uri) => handleImagePreview(uri)}
+              onCameraPress={() => void handleCameraCapture()}
+              onDescribePress={handleDescribePress}
+            />
+          )}
         </View>
 
         <View className="shadow-top bg-interactive-1 px-4 pb-8 pt-4">
