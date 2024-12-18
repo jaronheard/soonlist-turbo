@@ -291,12 +291,10 @@ export default function NewEventModal() {
     imagePreview,
     linkPreview,
     isImageLoading,
-    uploadedImageUrl,
     setInput,
     setImagePreview,
     setLinkPreview,
     setIsImageLoading,
-    setUploadedImageUrl,
     resetAddEventState,
     activeInput,
     setIsOptionSelected,
@@ -322,65 +320,12 @@ export default function NewEventModal() {
       onSettled: () => void utils.event.getEventsForUser.invalidate(),
     });
 
-  const handleImageUploadFromUri = useCallback(
-    async (uri: string) => {
-      setIsImageLoading(true);
+  const handleImagePreview = useCallback(
+    (uri: string) => {
       setImagePreview(uri);
-
-      const uploadImage = async (imageUri: string): Promise<string> => {
-        try {
-          const manipulatedImage = await ImageManipulator.manipulateAsync(
-            imageUri,
-            [{ resize: { width: 1284 } }],
-            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
-          );
-
-          const response = await FileSystem.uploadAsync(
-            "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
-            manipulatedImage.uri,
-            {
-              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-              httpMethod: "POST",
-              headers: {
-                "Content-Type": "image/jpeg",
-                Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
-              },
-            },
-          );
-
-          if (response.status !== 200) {
-            throw new Error(`Upload failed with status ${response.status}`);
-          }
-
-          const data = JSON.parse(response.body) as { fileUrl: string };
-          return data.fileUrl;
-        } catch (error) {
-          console.error("Error uploading image:", {
-            error: error instanceof Error ? error.message : "Unknown error",
-            uri: imageUri,
-          });
-
-          throw new Error(
-            error instanceof Error
-              ? error.message
-              : "Failed to upload image. Please try again.",
-          );
-        }
-      };
-
-      try {
-        const uploadedUrl = await uploadImage(uri);
-        setImagePreview(uploadedUrl);
-        setUploadedImageUrl(uploadedUrl);
-      } catch (error) {
-        console.error("Error processing image:", error);
-        setImagePreview(null);
-        setUploadedImageUrl(null);
-      } finally {
-        setIsImageLoading(false);
-      }
+      setInput(uri.split("/").pop() || "");
     },
-    [setImagePreview, setIsImageLoading, setUploadedImageUrl],
+    [setImagePreview, setInput],
   );
 
   const handleLinkPreview = useCallback(
@@ -420,9 +365,9 @@ export default function NewEventModal() {
     if (!result.canceled && result.assets[0]) {
       const imageUri = result.assets[0].uri;
       setInput(imageUri.split("/").pop() || "");
-      await handleImageUploadFromUri(imageUri);
+      handleImagePreview(imageUri);
     }
-  }, [handleImageUploadFromUri, setInput]);
+  }, [handleImagePreview, setInput]);
 
   const clearPreview = useCallback(() => {
     setImagePreview(null);
@@ -457,16 +402,46 @@ export default function NewEventModal() {
           username: user?.username || "",
           visibility: "private",
         });
-      } else if (uploadedImageUrl) {
-        await eventFromImageThenCreateThenNotification.mutateAsync({
-          imageUrl: uploadedImageUrl,
-          timezone: "America/Los_Angeles",
-          expoPushToken,
-          lists: [],
-          userId: user?.id || "",
-          username: user?.username || "",
-          visibility: "private",
-        });
+      } else if (imagePreview) {
+        setIsImageLoading(true);
+        try {
+          const manipulatedImage = await ImageManipulator.manipulateAsync(
+            imagePreview,
+            [{ resize: { width: 1284 } }],
+            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+          );
+
+          const response = await FileSystem.uploadAsync(
+            "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
+            manipulatedImage.uri,
+            {
+              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+              httpMethod: "POST",
+              headers: {
+                "Content-Type": "image/jpeg",
+                Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
+              },
+            },
+          );
+
+          if (response.status !== 200) {
+            throw new Error(`Upload failed with status ${response.status}`);
+          }
+
+          const { fileUrl } = JSON.parse(response.body) as { fileUrl: string };
+
+          await eventFromImageThenCreateThenNotification.mutateAsync({
+            imageUrl: fileUrl,
+            timezone: "America/Los_Angeles",
+            expoPushToken,
+            lists: [],
+            userId: user?.id || "",
+            username: user?.username || "",
+            visibility: "private",
+          });
+        } finally {
+          setIsImageLoading(false);
+        }
       } else {
         await eventFromRawTextAndNotification.mutateAsync({
           rawText: input,
@@ -488,10 +463,10 @@ export default function NewEventModal() {
     input,
     imagePreview,
     linkPreview,
-    uploadedImageUrl,
     expoPushToken,
     user,
     router,
+    setIsImageLoading,
     eventFromUrlThenCreateThenNotification,
     eventFromImageThenCreateThenNotification,
     eventFromRawTextAndNotification,
@@ -556,7 +531,6 @@ export default function NewEventModal() {
     setInput("");
     setImagePreview(null);
     setLinkPreview(null);
-    setUploadedImageUrl(null);
 
     if (text) {
       handleTextChange(text);
@@ -570,7 +544,7 @@ export default function NewEventModal() {
             handleLinkPreview(uri);
             setActiveInput("url");
           } else {
-            void handleImageUploadFromUri(uri);
+            void handleImagePreview(uri);
             setActiveInput("upload");
           }
         }
@@ -586,7 +560,7 @@ export default function NewEventModal() {
       if (mostRecentPhoto?.uri) {
         setActiveInput("upload");
         setIsOptionSelected(true);
-        void handleImageUploadFromUri(mostRecentPhoto.uri);
+        void handleImagePreview(mostRecentPhoto.uri);
       } else {
         setActiveInput("describe");
         setIsOptionSelected(false);
@@ -595,7 +569,7 @@ export default function NewEventModal() {
   }, [
     text,
     imageUri,
-    handleImageUploadFromUri,
+    handleImagePreview,
     handleLinkPreview,
     handleTextChange,
     recentPhotos,
@@ -604,7 +578,6 @@ export default function NewEventModal() {
     setInput,
     setIsOptionSelected,
     setLinkPreview,
-    setUploadedImageUrl,
   ]);
 
   return (
@@ -724,7 +697,7 @@ export default function NewEventModal() {
           <PhotoGrid
             hasMediaPermission={hasMediaPermission}
             recentPhotos={recentPhotos}
-            onPhotoSelect={(uri) => void handleImageUploadFromUri(uri)}
+            onPhotoSelect={(uri) => handleImagePreview(uri)}
             onCameraPress={() => void handleCameraCapture()}
             onDescribePress={handleDescribePress}
           />
