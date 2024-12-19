@@ -96,7 +96,7 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
   created_at,
 }) => {
   return (
-    <div className=" relative -z-20 h-[500px] w-[500px] rounded-lg bg-purple-100 p-4">
+    <div className="relative -z-20 mx-auto h-[500px] w-[500px] -translate-x-20 scale-[70%] transform rounded-lg bg-purple-100 p-4 sm:-translate-x-0 sm:scale-100">
       <Logo
         variant="hidePreview"
         className="absolute -left-1 top-4 block h-8"
