@@ -48,6 +48,15 @@ const Stat = ({
   left: string;
   color: string;
 }) => {
+  if (!value || value === "NULL" || value === "unknown" || value === "0") {
+    return (
+      <div
+        className={`absolute`}
+        style={{ top: `${top}px`, left: `${left}px` }}
+      />
+    );
+  }
+
   return (
     <div
       className={`absolute`}
@@ -59,13 +68,14 @@ const Stat = ({
       <p className="text-[10px] font-bold uppercase leading-none">{label}</p>
       {/* if value is a url, render an image     */}
       {value.includes("http") ? (
-        <Image
-          src={value}
-          alt={label}
-          className="mt-2 h-36 w-36 rounded-[8px] border-4 border-yellow-300"
-          width={56}
-          height={56}
-        />
+        <div className="relative mt-2 h-36 w-36 flex-shrink-0 overflow-hidden rounded-md border-4 border-yellow-300">
+          <Image
+            src={value}
+            alt={label}
+            layout="fill"
+            className="absolute inset-0 object-cover"
+          />
+        </div>
       ) : (
         <p className="text-3xl font-bold leading-none">{value}</p>
       )}
@@ -82,10 +92,7 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
   total_events_captured,
   favorite_type,
   favorite_category,
-  first_event_id,
-  first_event_name,
   first_event_image,
-  first_event_date,
   created_at,
 }) => {
   return (
@@ -150,18 +157,6 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
           color="blue"
         />
       </div>
-
-      {/* <Stat
-        label="First Event Date"
-        value={first_event_date}
-        top="350"
-        left="400"
-      />
-       */}
-
-      {/* <p>{first_event_image}</p>
-      <p>{first_event_date}</p>
-      <p>{created_at}</p> */}
     </div>
   );
 };
