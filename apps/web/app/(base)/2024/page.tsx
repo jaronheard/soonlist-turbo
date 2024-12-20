@@ -344,7 +344,7 @@ export default async function Page() {
             </Link>
           ) : (
             <div className="flex flex-col items-center gap-4">
-              <Link href="/sign-up">
+              <Link href="/join">
                 <Button
                   size="lg"
                   className="animate-bounce bg-interactive-1 text-lg font-bold hover:bg-interactive-1/90"
@@ -357,9 +357,11 @@ export default async function Page() {
               </p>
             </div>
           )}
-          <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
-            Let's make 2025 your biggest year of capturing yet!
-          </p>
+          {user && (
+            <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+              Let's make 2025 your biggest year of capturing yet!
+            </p>
+          )}
         </Section>
       </div>
     </div>
