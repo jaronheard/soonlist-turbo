@@ -1,20 +1,17 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
-  ActionSheetIOS,
   ActivityIndicator,
   Dimensions,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
-import { Image } from "expo-image";
+import { Image as ExpoImage } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
@@ -23,14 +20,14 @@ import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 import {
   Camera,
-  ChevronDown,
+  ChevronRight,
   Link as LinkIcon,
   Sparkles,
   Type,
   X,
 } from "lucide-react-native";
 
-import type { RecentPhoto, RegularAlbum, SmartAlbum } from "~/store";
+import type { RecentPhoto } from "~/store";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
@@ -47,6 +44,9 @@ const styles = StyleSheet.create({
     width: Dimensions.get("window").width - 32,
     flex: 1,
   },
+  photoGridContainer: {
+    height: ((Dimensions.get("window").width - 32) / 4) * 3 + 4,
+  },
 });
 
 const PhotoGrid = React.memo(
@@ -56,67 +56,15 @@ const PhotoGrid = React.memo(
     onPhotoSelect,
     onCameraPress,
     onDescribePress,
+    onMorePhotos,
   }: {
     hasMediaPermission: boolean;
     recentPhotos: RecentPhoto[];
     onPhotoSelect: (uri: string) => void;
     onCameraPress: () => void;
     onDescribePress: () => void;
+    onMorePhotos: () => void;
   }) => {
-    const selectedAlbum = useAppStore((state) => state.selectedAlbum);
-    const availableAlbums = useAppStore((state) => state.availableAlbums);
-    const setSelectedAlbum = useAppStore((state) => state.setSelectedAlbum);
-    const isAllAlbumsModalVisible = useAppStore(
-      (state) => state.isAllAlbumsModalVisible,
-    );
-    const setIsAllAlbumsModalVisible = useAppStore(
-      (state) => state.setIsAllAlbumsModalVisible,
-    );
-    const [isAlbumPickerVisible, setIsAlbumPickerVisible] = useState(false);
-
-    const handleAlbumSelect = (album: SmartAlbum | RegularAlbum) => {
-      setSelectedAlbum(album);
-      setIsAlbumPickerVisible(false);
-      setIsAllAlbumsModalVisible(false);
-    };
-
-    const handleAlbumSelectPress = useCallback(() => {
-      if (Platform.OS === "ios") {
-        const options = [
-          "Cancel",
-          ...availableAlbums.smartAlbums.map(
-            (album) => `${album.title} (${album.assetCount})`,
-          ),
-        ];
-
-        ActionSheetIOS.showActionSheetWithOptions(
-          {
-            options,
-            cancelButtonIndex: 0,
-            title: "Select Album",
-          },
-          (buttonIndex) => {
-            if (buttonIndex === 0) return; // Cancel
-            const selectedSmartAlbum =
-              availableAlbums.smartAlbums[buttonIndex - 1];
-            if (selectedSmartAlbum) {
-              if (selectedSmartAlbum.id === "all-albums") {
-                setIsAllAlbumsModalVisible(true);
-              } else {
-                setSelectedAlbum(selectedSmartAlbum);
-              }
-            }
-          },
-        );
-      } else {
-        setIsAlbumPickerVisible(true);
-      }
-    }, [
-      availableAlbums.smartAlbums,
-      setSelectedAlbum,
-      setIsAllAlbumsModalVisible,
-    ]);
-
     if (!hasMediaPermission || recentPhotos.length === 0) return null;
 
     const windowWidth = Dimensions.get("window").width;
@@ -130,18 +78,16 @@ const PhotoGrid = React.memo(
       <View className="" style={{ height: imageSize * 3 + spacing * 2 }}>
         <View className="mb-2 flex-row items-center justify-between">
           <Pressable
-            onPress={handleAlbumSelectPress}
+            onPress={onMorePhotos}
             className="flex-row items-center gap-1"
           >
-            <Text className="text-sm font-medium text-white">
-              {selectedAlbum?.title ?? "Recents"}
-            </Text>
-            <ChevronDown size={16} color="#FFFFFF" />
+            <Text className="text-sm font-medium text-white">Recents</Text>
+            <ChevronRight size={16} color="#fff" />
           </Pressable>
           <View className="flex-row gap-2">
             <Pressable
               onPress={onDescribePress}
-              className={`rounded-md bg-interactive-3 px-2 py-2`}
+              className="rounded-md bg-interactive-3 px-2 py-2"
             >
               <Type size={16} color="#5A32FB" />
             </Pressable>
@@ -154,96 +100,6 @@ const PhotoGrid = React.memo(
           </View>
         </View>
 
-        {Platform.OS === "android" && (
-          <Modal
-            visible={isAlbumPickerVisible}
-            transparent
-            animationType="fade"
-            onRequestClose={() => setIsAlbumPickerVisible(false)}
-          >
-            <Pressable
-              className="flex-1 bg-black/50"
-              onPress={() => setIsAlbumPickerVisible(false)}
-            >
-              <View className="mt-auto rounded-t-xl bg-white">
-                <View className="p-4">
-                  <Text className="mb-4 text-lg font-bold">Select Album</Text>
-                  <ScrollView className="max-h-96">
-                    {availableAlbums.smartAlbums.map((album) => (
-                      <Pressable
-                        key={album.id}
-                        onPress={() => handleAlbumSelect(album)}
-                        className="py-3"
-                      >
-                        <Text
-                          className={`text-base ${
-                            selectedAlbum?.id === album.id
-                              ? "font-bold text-blue-600"
-                              : "text-gray-800"
-                          }`}
-                        >
-                          {album.title} ({album.assetCount})
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </ScrollView>
-                </View>
-              </View>
-            </Pressable>
-          </Modal>
-        )}
-
-        <Modal
-          visible={isAllAlbumsModalVisible}
-          animationType="slide"
-          presentationStyle="pageSheet"
-          onRequestClose={() => setIsAllAlbumsModalVisible(false)}
-        >
-          <View className="flex-1 bg-interactive-1">
-            <View className="flex-row items-center justify-between border-b border-interactive-2 p-4">
-              <Pressable
-                onPress={() => setIsAllAlbumsModalVisible(false)}
-                className="rounded-md px-2 py-1"
-              >
-                <Text className="text-white">Done</Text>
-              </Pressable>
-              <Text className="text-lg font-semibold text-white">
-                All Albums
-              </Text>
-              <View style={{ width: 50 }} />
-            </View>
-            <ScrollView className="flex-1">
-              {availableAlbums.regularAlbums.map((album) => (
-                <Pressable
-                  key={album.id}
-                  onPress={() => handleAlbumSelect(album)}
-                  className="flex-row items-center border-b border-interactive-2 px-4 py-3"
-                >
-                  {album.thumbnail ? (
-                    <Image
-                      source={{ uri: album.thumbnail }}
-                      style={{ width: 40, height: 40 }}
-                      className="mr-3 rounded-md"
-                      contentFit="cover"
-                    />
-                  ) : (
-                    <View
-                      style={{ width: 40, height: 40 }}
-                      className="mr-3 rounded-md bg-interactive-2"
-                    />
-                  )}
-                  <View className="ml-3">
-                    <Text className="text-base text-white">{album.title}</Text>
-                    <Text className="text-sm text-interactive-3">
-                      {album.assetCount} items
-                    </Text>
-                  </View>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-        </Modal>
-
         <View className="flex-1 bg-transparent">
           <FlashList
             data={recentPhotos}
@@ -253,14 +109,15 @@ const PhotoGrid = React.memo(
                 style={{
                   width: imageSize,
                   height: imageSize,
-                  padding: spacing / 2,
+                  margin: spacing / 2,
                 }}
               >
-                <Image
+                <ExpoImage
                   source={{ uri: item.uri }}
                   style={{
                     width: "100%",
                     height: "100%",
+                    borderRadius: 4,
                   }}
                   contentFit="cover"
                   contentPosition="center"
@@ -271,13 +128,20 @@ const PhotoGrid = React.memo(
             )}
             numColumns={4}
             estimatedItemSize={imageSize}
-            showsVerticalScrollIndicator={true}
-            contentContainerStyle={{ padding: spacing / 2 }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              padding: spacing / 2,
+            }}
             estimatedListSize={{
               height: imageSize * 3 + spacing * 2,
               width: windowWidth - padding,
             }}
             keyExtractor={(item) => item.id}
+            horizontal={false}
+            overrideItemLayout={(layout, _item) => {
+              layout.size = imageSize;
+              layout.span = 1;
+            }}
           />
         </View>
       </View>
@@ -308,7 +172,6 @@ export default function NewEventModal() {
     shouldRefreshMediaLibrary,
     setShouldRefreshMediaLibrary,
     setRecentPhotos,
-    selectedAlbum,
   } = useAppStore();
 
   const eventFromRawTextAndNotification =
@@ -353,6 +216,22 @@ export default function NewEventModal() {
     },
     [handleLinkPreview, setInput, setLinkPreview],
   );
+
+  const handleMorePhotos = useCallback(async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        handleImagePreview(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      showToast("Failed to pick image", "error");
+    }
+  }, [handleImagePreview]);
 
   const handleCameraCapture = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -497,28 +376,25 @@ export default function NewEventModal() {
   const loadRecentPhotos = useCallback(async () => {
     try {
       const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 20,
+        first: 24,
         sortBy: MediaLibrary.SortBy.creationTime,
         mediaType: [MediaLibrary.MediaType.photo],
-        album: selectedAlbum?.id,
       });
-
       const photos: RecentPhoto[] = assets.map((asset) => ({
         id: asset.id,
         uri: asset.uri,
       }));
-
       setRecentPhotos(photos);
     } catch (error) {
       console.error("Error loading recent photos:", error);
     }
-  }, [setRecentPhotos, selectedAlbum]);
+  }, [setRecentPhotos]);
 
   useEffect(() => {
-    if (hasMediaPermission) {
+    if (hasMediaPermission && recentPhotos.length === 0) {
       void loadRecentPhotos();
     }
-  }, [hasMediaPermission, loadRecentPhotos]);
+  }, [hasMediaPermission, recentPhotos.length, loadRecentPhotos]);
 
   useEffect(() => {
     if (shouldRefreshMediaLibrary) {
@@ -620,7 +496,7 @@ export default function NewEventModal() {
           >
             {imagePreview ? (
               <View className="relative h-full w-full">
-                <Image
+                <ExpoImage
                   source={{ uri: imagePreview }}
                   style={{ width: "100%", height: "100%" }}
                   contentFit="contain"
@@ -696,24 +572,26 @@ export default function NewEventModal() {
                 </Pressable>
               </View>
             ) : (
-              <View className="h-full w-full items-center justify-center border border-neutral-300 bg-neutral-50">
-                <Text className="text-base text-neutral-500">
-                  Select a photo
-                </Text>
-              </View>
+              <Pressable
+                onPress={() => void handleMorePhotos()}
+                className="h-full w-full items-center justify-center border border-neutral-300 bg-neutral-50"
+              >
+                <Text className="text-base text-neutral-500">Select...</Text>
+              </Pressable>
             )}
           </View>
-        </View>
 
-        <View className={`${isFromIntent ? "" : "flex-1"} px-4`}>
           {!isFromIntent && (
-            <PhotoGrid
-              hasMediaPermission={hasMediaPermission}
-              recentPhotos={recentPhotos}
-              onPhotoSelect={(uri) => handleImagePreview(uri)}
-              onCameraPress={() => void handleCameraCapture()}
-              onDescribePress={handleDescribePress}
-            />
+            <View style={styles.photoGridContainer}>
+              <PhotoGrid
+                hasMediaPermission={hasMediaPermission}
+                recentPhotos={recentPhotos}
+                onPhotoSelect={(uri) => handleImagePreview(uri)}
+                onCameraPress={() => void handleCameraCapture()}
+                onDescribePress={handleDescribePress}
+                onMorePhotos={() => void handleMorePhotos()}
+              />
+            </View>
           )}
         </View>
 
