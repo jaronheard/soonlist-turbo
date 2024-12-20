@@ -26,7 +26,7 @@ export const showToast = (
 
   Toast.show(message, {
     duration: options?.duration ?? Toast.durations.SHORT,
-    position: options?.position ?? 40,
+    position: options?.position ?? Toast.positions.CENTER - 200,
     animation: true,
     hideOnPress: true,
     delay: 0,
@@ -37,6 +37,13 @@ export const showToast = (
       borderRadius: 16,
       paddingHorizontal: 16,
       paddingVertical: 10,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 1,
     },
     textStyle: {
       color: style.textColor,
