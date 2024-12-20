@@ -4,17 +4,21 @@ import Image from "next/image";
 
 import { Logo } from "~/components/Logo";
 
-interface UserStatsCardProps {
+export interface UserStatsCardProps {
+  user_id: string;
   username: string;
   emoji: string | null;
+  created_at: string;
   total_events_captured: string;
+  unique_event_types: string;
   favorite_type: string | null;
   favorite_category: string | null;
+  events_followed: string;
   first_event_id: string | null;
   first_event_name: string | null;
   first_event_image: string | null;
   first_event_date: string | null;
-  created_at: string;
+  user_index?: number;
 }
 
 // example data
