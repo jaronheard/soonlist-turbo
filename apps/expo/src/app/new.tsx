@@ -20,7 +20,7 @@ import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 import {
   Camera,
-  FolderOpen,
+  ChevronRight,
   Link as LinkIcon,
   Sparkles,
   Type,
@@ -91,14 +91,14 @@ const PhotoGrid = React.memo(
     return (
       <View className="" style={{ height: imageSize * 3 + spacing * 2 }}>
         <View className="mb-2 flex-row items-center justify-between">
-          <Text className="text-sm font-medium text-white">Recent Photos</Text>
+          <Pressable
+            onPress={handleMorePhotos}
+            className="flex-row items-center gap-1"
+          >
+            <Text className="text-sm font-medium text-white">Recents</Text>
+            <ChevronRight size={16} color="#fff" />
+          </Pressable>
           <View className="flex-row gap-2">
-            <Pressable
-              onPress={handleMorePhotos}
-              className="rounded-md bg-interactive-3 px-2 py-2"
-            >
-              <FolderOpen size={16} color="#5A32FB" />
-            </Pressable>
             <Pressable
               onPress={onDescribePress}
               className="rounded-md bg-interactive-3 px-2 py-2"
