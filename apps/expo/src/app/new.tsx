@@ -123,7 +123,7 @@ const PhotoGrid = React.memo(
                 style={{
                   width: imageSize,
                   height: imageSize,
-                  padding: spacing / 2,
+                  margin: spacing / 2,
                 }}
               >
                 <ExpoImage
@@ -131,6 +131,7 @@ const PhotoGrid = React.memo(
                   style={{
                     width: "100%",
                     height: "100%",
+                    borderRadius: 4,
                   }}
                   contentFit="cover"
                   contentPosition="center"
@@ -141,13 +142,20 @@ const PhotoGrid = React.memo(
             )}
             numColumns={4}
             estimatedItemSize={imageSize}
-            showsVerticalScrollIndicator={true}
-            contentContainerStyle={{ padding: spacing / 2 }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              padding: spacing / 2,
+            }}
             estimatedListSize={{
               height: imageSize * 3 + spacing * 2,
               width: windowWidth - padding,
             }}
             keyExtractor={(item) => item.id}
+            horizontal={false}
+            overrideItemLayout={(layout, _item) => {
+              layout.size = imageSize;
+              layout.span = 1;
+            }}
           />
         </View>
       </View>
@@ -366,7 +374,7 @@ export default function NewEventModal() {
   const loadRecentPhotos = useCallback(async () => {
     try {
       const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 20,
+        first: 24,
         sortBy: MediaLibrary.SortBy.creationTime,
         mediaType: [MediaLibrary.MediaType.photo],
       });
