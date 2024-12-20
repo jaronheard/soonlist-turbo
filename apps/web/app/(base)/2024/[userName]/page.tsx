@@ -1,8 +1,5 @@
 import React from "react";
 
-// use these to check if the user is signed in
-// import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
-
 import UserStatsCard from "../_components/userStatsCard";
 import dataForUsersFor2024 from "./dataForUsersFor2024";
 

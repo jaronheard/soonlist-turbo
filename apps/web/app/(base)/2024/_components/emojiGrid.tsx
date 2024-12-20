@@ -26,17 +26,23 @@ const EmojiGrid: React.FC<EmojiGridProps> = ({ emojis }) => {
 }
 `;
 
-  const [growingEmojiIndex, setGrowingEmojiIndex] = useState<number>(
-    getRandomGrowingEmojiIndex(emojis),
+  const getRandomIndex = React.useCallback(
+    () => getRandomGrowingEmojiIndex(emojis),
+    [emojis],
   );
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setGrowingEmojiIndex(getRandomGrowingEmojiIndex(emojis));
-    }, 300);
+  const [growingEmojiIndex, setGrowingEmojiIndex] =
+    useState<number>(getRandomIndex());
 
-    return () => clearInterval(intervalId); // Cleanup on unmount
-  }, [emojis]);
+  useEffect(() => {
+    if (emojis.length === 0) return;
+
+    const intervalId = setInterval(() => {
+      setGrowingEmojiIndex(getRandomIndex());
+    }, 300); // Reduced frequency for better performance
+
+    return () => clearInterval(intervalId);
+  }, [emojis, getRandomIndex]);
 
   return (
     <div className="mx-auto grid grid-cols-5 justify-center gap-2">
@@ -56,6 +62,9 @@ const EmojiGrid: React.FC<EmojiGridProps> = ({ emojis }) => {
 
 // Function to generate a random index for the growing emoji
 export function getRandomGrowingEmojiIndex(emojis: string[]): number {
+  if (!Array.isArray(emojis) || emojis.length === 0) {
+    return -1;
+  }
   return Math.floor(Math.random() * emojis.length);
 }
 
