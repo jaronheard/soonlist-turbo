@@ -24,10 +24,11 @@ interface TopEvent {
 
 interface TopCreator {
   username: string;
-  userImage: string;
-  total_events: number;
-  most_common_type: string;
   emoji: string;
+  userImage: string;
+  total_events: string;
+  most_common_type: string;
+  type_count: string;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -296,7 +297,7 @@ export default async function Page() {
                     <p className="text-sm">
                       Total captured:{" "}
                       <span className="text-lg font-bold">
-                        {creator.total_events}
+                        {parseInt(creator.total_events).toLocaleString()}
                       </span>
                     </p>
                     <p className="text-sm">
@@ -313,12 +314,49 @@ export default async function Page() {
         </Section>
         <Section>
           <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
-            Discover your 2024 highlights - from saved possibilities to shared
-            adventures!
+            {user ? (
+              "Discover your 2024 highlights - from saved possibilities to shared adventures!"
+            ) : (
+              <>
+                Join our founding members and start capturing amazing events in{" "}
+                <span className="relative inline-block font-heading text-4xl font-bold text-interactive-1">
+                  <svg
+                    width="492"
+                    height="96"
+                    viewBox="0 0 492 96"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="tranform absolute inset-0 z-[-1] h-full w-full scale-110 opacity-100"
+                  >
+                    <path
+                      d="M0.977745 90.0631L13.3028 15.2256C13.6677 13.01 15.557 11.3673 17.8018 11.314L487.107 0.163765C490.41 0.0852941 492.749 3.36593 491.598 6.46257L474.712 51.884C474.083 53.5754 472.537 54.7535 470.739 54.9104L5.99405 95.4768C2.9558 95.742 0.482147 93.0724 0.977745 90.0631Z"
+                      fill="#FEEA9F"
+                    />
+                  </svg>
+                  2025!
+                </span>
+              </>
+            )}
           </p>
-          <Link href={`/2024/${user?.username}`}>
-            <Button>See your stats!</Button>
-          </Link>
+          {user ? (
+            <Link href={`/2024/${user.username}`}>
+              <Button>See your stats!</Button>
+            </Link>
+          ) : (
+            <div className="flex flex-col items-center gap-4">
+              <Link href="/sign-up">
+                <Button
+                  size="lg"
+                  className="animate-bounce bg-interactive-1 text-lg font-bold hover:bg-interactive-1/90"
+                >
+                  Become a Founding Member
+                </Button>
+              </Link>
+              <p className="text-sm text-gray-600">
+                Limited time offer • Join the community today!
+              </p>
+            </div>
+          )}
           <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
             Let's make 2025 your biggest year of capturing yet!
           </p>
