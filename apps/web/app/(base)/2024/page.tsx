@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link"; // Import Link from Next.js
+
 import { currentUser } from "@clerk/nextjs/server";
 
 import { Button } from "@soonlist/ui/button";
@@ -9,6 +10,25 @@ import EmojiGrid from "./_components/emojiGrid";
 import Section from "./_components/section";
 import WeeklyDistribution from "./_components/weeklyDistribution";
 import dataFor2024 from "./dataFor2024";
+
+// Add these interfaces at the top of the file, after imports
+interface TopEvent {
+  id: string;
+  event_name: string;
+  event_type: string;
+  follow_count: string;
+  creator_username: string;
+  images: string[];
+  filePath?: string;
+}
+
+interface TopCreator {
+  username: string;
+  userImage: string;
+  total_events: number;
+  most_common_type: string;
+  emoji: string;
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -25,7 +45,7 @@ export default async function Page() {
       <div className="mx-auto text-center">
         <h1 className="font-heading text-5xl font-bold leading-none tracking-tighterish text-gray-700 md:text-7xl md:leading-none">
           2024 <br />
-          <span className="relative inline-block text-6xl text-interactive-1 md:text-8xl">
+          <span className="relative inline-block text-6xl text-interactive-1 md:text-8xl md:leading-none">
             <svg
               width="492"
               height="96"
@@ -167,24 +187,27 @@ export default async function Page() {
           <p className="m-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
             The most followed events were:
           </p>
-          {stats.topFollowedEvents.map((event, index) => (
+          {stats.topFollowedEvents.map((event: TopEvent, index) => (
             <Link key={event.id} href={`/event/${event.id}`}>
               <div
                 className={`mb-4 flex transform items-start space-x-4 ${index % 2 === 0 ? "rotate-1" : "-rotate-1"} mx-auto max-w-md rounded-md border border-gray-300 p-4 shadow-md transition-colors duration-200 hover:bg-purple-100`}
               >
-                <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md">
-                  <Image
-                    src={event.images[0]}
-                    alt={event.event_name}
-                    layout="fill"
-                    className="absolute inset-0 object-cover"
-                  />
-                </div>
+                {event.images?.[0] && (
+                  <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md">
+                    <Image
+                      src={event.images[0]}
+                      alt={event.event_name}
+                      fill
+                      sizes="(max-width: 768px) 96px, 96px"
+                      className="absolute inset-0 object-cover"
+                    />
+                  </div>
+                )}
                 <div className="flex flex-grow flex-col text-left">
                   <p className="font-heading text-2xl font-bold text-interactive-1">
                     {event.event_name}
                   </p>
-                  <p className="text-sm ">
+                  <p className="text-sm">
                     captured by{" "}
                     <span className="font-bold">{event.creator_username}</span>
                   </p>
@@ -243,27 +266,29 @@ export default async function Page() {
             Our super capturers were:
           </p>
           <div className="flex flex-wrap">
-            {stats.topCreators.map((creator, index) => {
-              // Generate a random rotation value between -3 and 3 degrees
-              const rotation = Math.floor(Math.random() * 7) - 3; // Random value from -3 to 3
+            {stats.topCreators.map((creator: TopCreator, _index) => {
+              const rotation = Math.floor(Math.random() * 7) - 3;
               const rotationClass =
                 rotation < 0
                   ? `-rotate-${Math.abs(rotation)}`
-                  : `rotate-${rotation}`; // Correctly format rotation class
+                  : `rotate-${rotation}`;
 
               return (
                 <div
                   key={creator.username}
                   className={`mb-8 flex w-full transform items-start space-x-4 rounded-md border border-gray-300 bg-white p-4 shadow-md md:w-1/2 ${rotationClass}`}
                 >
-                  <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border-4 border-yellow-300">
-                    <Image
-                      src={creator.userImage}
-                      alt={creator.username}
-                      layout="fill"
-                      className="absolute inset-0 object-cover"
-                    />
-                  </div>
+                  {creator.userImage && (
+                    <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border-4 border-yellow-300">
+                      <Image
+                        src={creator.userImage}
+                        alt={creator.username}
+                        fill
+                        sizes="48px"
+                        className="absolute inset-0 object-cover"
+                      />
+                    </div>
+                  )}
                   <div className="flex flex-col text-left">
                     <p className="font-heading text-2xl font-bold text-interactive-1">
                       <strong>@{creator.username}</strong> {creator.emoji}
