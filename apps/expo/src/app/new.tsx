@@ -378,12 +378,10 @@ export default function NewEventModal() {
         sortBy: MediaLibrary.SortBy.creationTime,
         mediaType: [MediaLibrary.MediaType.photo],
       });
-
       const photos: RecentPhoto[] = assets.map((asset) => ({
         id: asset.id,
         uri: asset.uri,
       }));
-
       setRecentPhotos(photos);
     } catch (error) {
       console.error("Error loading recent photos:", error);
@@ -391,10 +389,10 @@ export default function NewEventModal() {
   }, [setRecentPhotos]);
 
   useEffect(() => {
-    if (hasMediaPermission) {
+    if (hasMediaPermission && recentPhotos.length === 0) {
       void loadRecentPhotos();
     }
-  }, [hasMediaPermission, loadRecentPhotos]);
+  }, [hasMediaPermission, recentPhotos.length, loadRecentPhotos]);
 
   useEffect(() => {
     if (shouldRefreshMediaLibrary) {

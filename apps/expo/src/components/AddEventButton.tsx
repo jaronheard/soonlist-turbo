@@ -11,59 +11,18 @@ import { showToast } from "~/utils/toast";
 
 export default function AddEventButton() {
   const router = useRouter();
-  const {
-    hasMediaPermission,
-    setRecentPhotos,
-    isLoadingPhotos,
-    setIsLoadingPhotos,
-    setPhotoLoadingError,
-  } = useAppStore((state) => ({
+  const { hasMediaPermission } = useAppStore((state) => ({
     hasMediaPermission: state.hasMediaPermission,
-    setRecentPhotos: state.setRecentPhotos,
-    isLoadingPhotos: state.isLoadingPhotos,
-    setIsLoadingPhotos: state.setIsLoadingPhotos,
-    setPhotoLoadingError: state.setPhotoLoadingError,
   }));
 
-  const handlePress = useCallback(async () => {
+  const handlePress = useCallback(() => {
     if (!hasMediaPermission) {
       showToast("Photo access is needed to add photos to events", "error");
       router.push("/new");
       return;
     }
-
-    try {
-      setIsLoadingPhotos(true);
-      setPhotoLoadingError(null);
-
-      const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 20,
-        mediaType: MediaLibrary.MediaType.photo,
-        sortBy: [MediaLibrary.SortBy.creationTime],
-      });
-
-      const photos = assets.map((asset) => ({
-        id: asset.id,
-        uri: asset.uri,
-      }));
-
-      setRecentPhotos(photos);
-    } catch (error) {
-      console.error("Error loading recent photos:", error);
-      setPhotoLoadingError("Failed to load photos");
-      showToast("Unable to load recent photos", "error");
-    } finally {
-      setIsLoadingPhotos(false);
-    }
-
     router.push("/new");
-  }, [
-    hasMediaPermission,
-    router,
-    setIsLoadingPhotos,
-    setPhotoLoadingError,
-    setRecentPhotos,
-  ]);
+  }, [hasMediaPermission, router]);
 
   return (
     <View className="absolute bottom-0 left-0 right-0">
@@ -100,14 +59,9 @@ export default function AddEventButton() {
 
       <TouchableOpacity
         onPress={handlePress}
-        disabled={isLoadingPhotos}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex-row items-center justify-center gap-2 rounded-full bg-interactive-2 p-6 shadow-lg"
       >
-        {isLoadingPhotos ? (
-          <ActivityIndicator size="small" color="#5A32FB" />
-        ) : (
-          <Plus size={28} color="#5A32FB" />
-        )}
+        <Plus size={28} color="#5A32FB" />
       </TouchableOpacity>
     </View>
   );
