@@ -1,8 +1,7 @@
 import React, { useCallback } from "react";
-import { ActivityIndicator, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
 
