@@ -176,22 +176,6 @@ const dataForUsersFor2024Array = [
     first_event_date: "2024-11-24 01:00:00",
   },
   {
-    user_id: "user_2pBqnOUVCqo7719ZdWRh2jCuSJA",
-    username: "kaylakennett",
-    emoji: "💐",
-    created_at: "2024-11-22 04:33:04",
-    total_events_captured: "6",
-    unique_event_types: "5",
-    favorite_type: "opening",
-    favorite_category: "food",
-    events_followed: "5",
-    first_event_id: "biadjjbqczvx",
-    first_event_name: "Sushi Closet Opening",
-    first_event_image:
-      "https://upcdn.io/12a1yek/raw/uploads/2024/11/23/4kBDHPLmDn-file.jpeg",
-    first_event_date: "2024-11-24 01:00:00",
-  },
-  {
     user_id: "user_2ZFNomQiHvl8GHJ4ZMFyy5qrqPp",
     username: "boogiebuffet",
     emoji: "😎",
