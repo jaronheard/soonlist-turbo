@@ -25,11 +25,11 @@ import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { RootSiblingParent } from "react-native-root-siblings";
 import Constants, { AppOwnership } from "expo-constants";
-import { BottomSheetModalProvider } from "@discord/bottom-sheet";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
 import { useCalendar } from "~/hooks/useCalendar";
+import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
@@ -112,40 +112,38 @@ function RootLayout() {
           <TRPCProvider>
             <SafeAreaProvider>
               <MenuProvider>
-                <BottomSheetModalProvider>
-                  <PostHogProvider
-                    apiKey={Config.posthogApiKey}
-                    options={{
-                      host: "https://us.i.posthog.com",
-                      disabled: process.env.APP_VARIANT === "development",
-                      enableSessionReplay:
-                        process.env.APP_VARIANT !== "development",
-                      sessionReplayConfig: {
-                        // Whether text inputs are masked. Default is true.
-                        // Password inputs are always masked regardless
-                        maskAllTextInputs: false,
-                        // Whether images are masked. Default is true.
-                        maskAllImages: false,
-                        // Capture logs automatically. Default is true.
-                        // Android only (Native Logcat only)
-                        captureLog: false,
-                        // Whether network requests are captured in recordings. Default is true
-                        // Only metric-like data like speed, size, and response code are captured.
-                        // No data is captured from the request or response body.
-                        // iOS only
-                        captureNetworkTelemetry: true,
-                        // Deboucer delay used to reduce the number of snapshots captured and reduce performance impact. Default is 500ms
-                        androidDebouncerDelayMs: 500,
-                        // Deboucer delay used to reduce the number of snapshots captured and reduce performance impact. Default is 1000ms
-                        iOSdebouncerDelayMs: 1000,
-                      },
-                    }}
-                  >
-                    <NotificationProvider>
-                      <RootLayoutContent />
-                    </NotificationProvider>
-                  </PostHogProvider>
-                </BottomSheetModalProvider>
+                <PostHogProvider
+                  apiKey={Config.posthogApiKey}
+                  options={{
+                    host: "https://us.i.posthog.com",
+                    disabled: process.env.APP_VARIANT === "development",
+                    enableSessionReplay:
+                      process.env.APP_VARIANT !== "development",
+                    sessionReplayConfig: {
+                      // Whether text inputs are masked. Default is true.
+                      // Password inputs are always masked regardless
+                      maskAllTextInputs: false,
+                      // Whether images are masked. Default is true.
+                      maskAllImages: false,
+                      // Capture logs automatically. Default is true.
+                      // Android only (Native Logcat only)
+                      captureLog: false,
+                      // Whether network requests are captured in recordings. Default is true
+                      // Only metric-like data like speed, size, and response code are captured.
+                      // No data is captured from the request or response body.
+                      // iOS only
+                      captureNetworkTelemetry: true,
+                      // Deboucer delay used to reduce the number of snapshots captured and reduce performance impact. Default is 500ms
+                      androidDebouncerDelayMs: 500,
+                      // Deboucer delay used to reduce the number of snapshots captured and reduce performance impact. Default is 1000ms
+                      iOSdebouncerDelayMs: 1000,
+                    },
+                  }}
+                >
+                  <NotificationProvider>
+                    <RootLayoutContent />
+                  </NotificationProvider>
+                </PostHogProvider>
               </MenuProvider>
             </SafeAreaProvider>
           </TRPCProvider>
@@ -210,6 +208,13 @@ const InitialLayout = () => {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="new"
+        options={{
+          presentation: "modal",
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 };
@@ -219,6 +224,7 @@ function RootLayoutContent() {
   const { handleCalendarSelect, INITIAL_CALENDAR_LIMIT } = useCalendar();
   const { setIsCalendarModalVisible } = useAppStore();
   useAppStateRefresh();
+  useMediaPermissions();
   const ref = useNavigationContainerRef();
 
   useEffect(() => {

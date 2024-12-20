@@ -33,7 +33,7 @@ class ShareViewController: UIViewController {
     do {
       if let data = try await item.loadItem(forTypeIdentifier: "public.text") as? String {
         if let encoded = data.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-           let url = URL(string: "\(self.appScheme)://feed?intent=new&text=\(encoded)") {
+           let url = URL(string: "\(self.appScheme)://new?text=\(encoded)") {
           _ = self.openURL(url)
         }
       }
@@ -47,7 +47,7 @@ class ShareViewController: UIViewController {
     do {
       if let data = try await item.loadItem(forTypeIdentifier: "public.url") as? URL {
         if let encoded = data.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-           let url = URL(string: "\(self.appScheme)://feed?intent=new&text=\(encoded)") {
+           let url = URL(string: "\(self.appScheme)://new?text=\(encoded)") {
           _ = self.openURL(url)
         }
       }
@@ -76,7 +76,7 @@ class ShareViewController: UIViewController {
     if valid,
        let imageUriInfo = imageUriInfo,
        let encoded = imageUriInfo.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-       let url = URL(string: "\(self.appScheme)://feed?intent=new&imageUri=\(encoded)") {
+       let url = URL(string: "\(self.appScheme)://new?imageUri=\(encoded)") {
         _ = self.openURL(url)
     }
 

@@ -26,7 +26,7 @@ export const showToast = (
 
   Toast.show(message, {
     duration: options?.duration ?? Toast.durations.SHORT,
-    position: options?.position ?? -70,
+    position: options?.position ?? 40,
     animation: true,
     hideOnPress: true,
     delay: 0,

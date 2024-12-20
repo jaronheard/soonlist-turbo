@@ -1,11 +1,9 @@
-import type { BottomSheetModal } from "@discord/bottom-sheet";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback } from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
-import AddEventBottomSheet from "~/components/AddEventBottomSheet";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { ProfileMenu } from "~/components/ProfileMenu";
@@ -16,7 +14,6 @@ import { api } from "~/utils/api";
 
 export default function Page() {
   const { user } = useUser();
-  const bottomSheetRef = useRef<BottomSheetModal>(null);
 
   const eventsQuery = api.event.getDiscoverInfinite.useInfiniteQuery(
     {
@@ -57,8 +54,6 @@ export default function Page() {
     );
   }
 
-  const handlePresentModalPress = () => bottomSheetRef.current?.present();
-
   if (eventsQuery.isLoading || savedEventIdsQuery.isLoading) {
     return <LoadingSpinner />;
   }
@@ -90,8 +85,7 @@ export default function Page() {
           showCreator="always"
         />
       </View>
-      <AddEventButton onPress={handlePresentModalPress} />
-      <AddEventBottomSheet ref={bottomSheetRef} />
+      <AddEventButton />
     </View>
   );
 }
