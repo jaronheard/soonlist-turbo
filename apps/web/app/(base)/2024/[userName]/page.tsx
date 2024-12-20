@@ -118,6 +118,18 @@ const Page = async ({ params }: Props) => {
             Here's how your stats look in 2024!
           </p>
           <UserStatsCard {...userData} />
+          <p className="my-6 text-center text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+            Take a screenshot and share it on Instagram! Tag{" "}
+            <a
+              href="https://instagram.com/soonlistapp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold transition-colors hover:text-interactive-1"
+            >
+              @soonlistapp
+            </a>
+            !
+          </p>
         </div>
       )}
 
