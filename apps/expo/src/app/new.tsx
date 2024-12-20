@@ -1,13 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
-  ActionSheetIOS,
   ActivityIndicator,
   Dimensions,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -23,7 +20,6 @@ import { useUser } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 import {
   Camera,
-  ChevronDown,
   FolderOpen,
   Link as LinkIcon,
   Sparkles,
@@ -47,6 +43,9 @@ const styles = StyleSheet.create({
   previewContainerFull: {
     width: Dimensions.get("window").width - 32,
     flex: 1,
+  },
+  photoGridContainer: {
+    height: ((Dimensions.get("window").width - 32) / 4) * 3 + 4,
   },
 });
 
@@ -572,17 +571,17 @@ export default function NewEventModal() {
               </View>
             )}
           </View>
-        </View>
 
-        <View className={`${isFromIntent ? "" : "flex-1"} px-4`}>
           {!isFromIntent && (
-            <PhotoGrid
-              hasMediaPermission={hasMediaPermission}
-              recentPhotos={recentPhotos}
-              onPhotoSelect={(uri) => handleImagePreview(uri)}
-              onCameraPress={() => void handleCameraCapture()}
-              onDescribePress={handleDescribePress}
-            />
+            <View style={styles.photoGridContainer}>
+              <PhotoGrid
+                hasMediaPermission={hasMediaPermission}
+                recentPhotos={recentPhotos}
+                onPhotoSelect={(uri) => handleImagePreview(uri)}
+                onCameraPress={() => void handleCameraCapture()}
+                onDescribePress={handleDescribePress}
+              />
+            </View>
           )}
         </View>
 
