@@ -29,7 +29,7 @@ export default function WeeklyDistribution({
                   <div className="rounded bg-white p-2 shadow">
                     <p>
                       Events:{" "}
-                      <span className="font-bold">{`${payload[0].value}`}</span>
+                      <span className="font-bold">{`${payload[0]?.value}`}</span>
                     </p>
                   </div>
                 );
