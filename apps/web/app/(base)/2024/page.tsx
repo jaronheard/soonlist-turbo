@@ -6,6 +6,7 @@ import { currentUser } from "@clerk/nextjs/server";
 
 import { Button } from "@soonlist/ui/button";
 
+import { env } from "~/env";
 import EmojiGrid from "./_components/emojiGrid";
 import Section from "./_components/section";
 import WeeklyDistribution from "./_components/weeklyDistribution";
@@ -31,11 +32,17 @@ interface TopCreator {
   type_count: string;
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  return {
+export const metadata: Metadata = {
+  title: `Captured 2024! | Soonlist`,
+  openGraph: {
     title: `Captured 2024! | Soonlist`,
-  };
-}
+    description:
+      "Community highlights from 2024. Let's take a look back at the year together!",
+    url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/2024`,
+    type: "article",
+    images: ["/soonlist-2024-captured.png"],
+  },
+};
 
 export default async function Page() {
   const user = await currentUser();
@@ -193,7 +200,7 @@ export default async function Page() {
               <div
                 className={`mb-4 flex transform items-start space-x-4 ${index % 2 === 0 ? "rotate-1" : "-rotate-1"} mx-auto max-w-md rounded-md border border-gray-300 p-4 shadow-md transition-colors duration-200 hover:bg-purple-100`}
               >
-                {event.images?.[0] && (
+                {event.images[0] && (
                   <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md">
                     <Image
                       src={event.images[0]}

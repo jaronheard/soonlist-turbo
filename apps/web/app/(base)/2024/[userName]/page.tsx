@@ -1,11 +1,19 @@
 import React from "react";
 
+import { env } from "~/env";
 import UserStatsCard from "../_components/userStatsCard";
 import dataForUsersFor2024 from "./dataForUsersFor2024";
 
 export function generateMetadata({ params }: Props) {
   return {
     title: `@${params.userName} | Captured 2024! | Soonlist`,
+    openGraph: {
+      title: `@${params.userName} | Captured 2024! | Soonlist`,
+      description: `@${params.userName}'s year in captured events!`,
+      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/2024/${params.userName}`,
+      type: "article",
+      images: ["/soonlist-2024-captured.png"],
+    },
   };
 }
 
