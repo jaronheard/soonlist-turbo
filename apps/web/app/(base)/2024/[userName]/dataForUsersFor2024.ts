@@ -1,3 +1,24 @@
+// First define the interface for a single user's data
+export interface UserData2024 {
+  user_id: string;
+  username: string;
+  emoji: string | null;
+  created_at: string;
+  total_events_captured: string;
+  unique_event_types: string;
+  favorite_type: string | null;
+  favorite_category: string | null;
+  events_followed: string;
+  first_event_id: string | null;
+  first_event_name: string | null;
+  first_event_image: string | null;
+  first_event_date: string | null;
+  user_index?: number;
+}
+
+// Define the shape of the final data structure using Record type
+type UsersData2024 = Record<string, UserData2024>;
+
 const dataForUsersFor2024Array = [
   {
     user_id: "user_2ZFNoiajf80Q4ZiTQj8hAgatRCt",
@@ -1056,10 +1077,12 @@ const dataForUsersFor2024Array = [
   },
 ];
 
-const dataForUsersFor2024 = dataForUsersFor2024Array.reduce(
+const dataForUsersFor2024 = dataForUsersFor2024Array.reduce<UsersData2024>(
   (acc, user, index) => {
-    acc[user.username] = user;
-    acc[user.username].user_index = index;
+    acc[user.username] = {
+      ...user,
+      user_index: index,
+    };
     return acc;
   },
   {},

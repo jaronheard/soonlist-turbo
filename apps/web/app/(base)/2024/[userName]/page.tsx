@@ -16,9 +16,13 @@ interface Props {
 // Example usage:
 const Page = ({ params }: Props) => {
   const userName = params.userName;
-
   let component = <div />;
-  if (!userName || !dataForUsersFor2024[userName]) {
+  if (userName && userName in dataForUsersFor2024) {
+    const userData = dataForUsersFor2024[userName];
+    if (userData) {
+      component = <UserStatsCard {...userData} />;
+    }
+  } else {
     component = (
       <div>
         <p className="text-center text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
@@ -30,9 +34,6 @@ const Page = ({ params }: Props) => {
         </p>
       </div>
     );
-  } else {
-    const userData = dataForUsersFor2024[userName];
-    component = <UserStatsCard {...userData} />;
   }
 
   //   const userData =   {

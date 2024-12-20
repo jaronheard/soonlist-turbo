@@ -6,14 +6,14 @@ import { Logo } from "~/components/Logo";
 
 interface UserStatsCardProps {
   username: string;
-  emoji: string;
+  emoji: string | null;
   total_events_captured: string;
-  favorite_type: string;
-  favorite_category: string;
-  first_event_id: string;
-  first_event_name: string;
-  first_event_image: string;
-  first_event_date: string;
+  favorite_type: string | null;
+  favorite_category: string | null;
+  first_event_id: string | null;
+  first_event_name: string | null;
+  first_event_image: string | null;
+  first_event_date: string | null;
   created_at: string;
 }
 
@@ -43,7 +43,7 @@ const Stat = ({
   color,
 }: {
   label: string;
-  value: string;
+  value: string | null;
   top: string;
   left: string;
   color: string;

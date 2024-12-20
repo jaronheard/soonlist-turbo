@@ -9,8 +9,13 @@ import {
   YAxis,
 } from "recharts";
 
+interface WeeklyDistributionData {
+  day_of_week: string;
+  event_count: number;
+}
+
 interface WeeklyDistributionProps {
-  weekdayDistribution: object[];
+  weekdayDistribution: WeeklyDistributionData[];
 }
 
 export default function WeeklyDistribution({
@@ -25,11 +30,11 @@ export default function WeeklyDistribution({
           <Tooltip
             content={({ active, payload }) => {
               if (active && payload?.length) {
+                const value = payload[0]?.value as number;
                 return (
                   <div className="rounded bg-white p-2 shadow">
                     <p>
-                      Events:{" "}
-                      <span className="font-bold">{`${payload[0]?.value}`}</span>
+                      Events: <span className="font-bold">{value}</span>
                     </p>
                   </div>
                 );
