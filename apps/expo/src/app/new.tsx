@@ -56,29 +56,15 @@ const PhotoGrid = React.memo(
     onPhotoSelect,
     onCameraPress,
     onDescribePress,
+    onMorePhotos,
   }: {
     hasMediaPermission: boolean;
     recentPhotos: RecentPhoto[];
     onPhotoSelect: (uri: string) => void;
     onCameraPress: () => void;
     onDescribePress: () => void;
+    onMorePhotos: () => void;
   }) => {
-    const handleMorePhotos = async () => {
-      try {
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: 0.8,
-        });
-
-        if (!result.canceled && result.assets[0]) {
-          onPhotoSelect(result.assets[0].uri);
-        }
-      } catch (error) {
-        console.error("Error picking image:", error);
-        showToast("Failed to pick image", "error");
-      }
-    };
-
     if (!hasMediaPermission || recentPhotos.length === 0) return null;
 
     const windowWidth = Dimensions.get("window").width;
@@ -92,7 +78,7 @@ const PhotoGrid = React.memo(
       <View className="" style={{ height: imageSize * 3 + spacing * 2 }}>
         <View className="mb-2 flex-row items-center justify-between">
           <Pressable
-            onPress={handleMorePhotos}
+            onPress={onMorePhotos}
             className="flex-row items-center gap-1"
           >
             <Text className="text-sm font-medium text-white">Recents</Text>
@@ -230,6 +216,22 @@ export default function NewEventModal() {
     },
     [handleLinkPreview, setInput, setLinkPreview],
   );
+
+  const handleMorePhotos = useCallback(async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        handleImagePreview(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      showToast("Failed to pick image", "error");
+    }
+  }, [handleImagePreview]);
 
   const handleCameraCapture = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -570,11 +572,12 @@ export default function NewEventModal() {
                 </Pressable>
               </View>
             ) : (
-              <View className="h-full w-full items-center justify-center border border-neutral-300 bg-neutral-50">
-                <Text className="text-base text-neutral-500">
-                  Select a photo
-                </Text>
-              </View>
+              <Pressable
+                onPress={() => void handleMorePhotos()}
+                className="h-full w-full items-center justify-center border border-neutral-300 bg-neutral-50"
+              >
+                <Text className="text-base text-neutral-500">Select...</Text>
+              </Pressable>
             )}
           </View>
 
@@ -586,6 +589,7 @@ export default function NewEventModal() {
                 onPhotoSelect={(uri) => handleImagePreview(uri)}
                 onCameraPress={() => void handleCameraCapture()}
                 onDescribePress={handleDescribePress}
+                onMorePhotos={() => void handleMorePhotos()}
               />
             </View>
           )}
