@@ -14,11 +14,16 @@ export default function AddEventButton() {
   const {
     hasMediaPermission,
     setRecentPhotos,
-    recentPhotos,
     isLoadingPhotos,
     setIsLoadingPhotos,
     setPhotoLoadingError,
-  } = useAppStore();
+  } = useAppStore((state) => ({
+    hasMediaPermission: state.hasMediaPermission,
+    setRecentPhotos: state.setRecentPhotos,
+    isLoadingPhotos: state.isLoadingPhotos,
+    setIsLoadingPhotos: state.setIsLoadingPhotos,
+    setPhotoLoadingError: state.setPhotoLoadingError,
+  }));
 
   const handlePress = useCallback(async () => {
     if (!hasMediaPermission) {
@@ -27,40 +32,37 @@ export default function AddEventButton() {
       return;
     }
 
-    if (recentPhotos.length === 0) {
-      try {
-        setIsLoadingPhotos(true);
-        setPhotoLoadingError(null);
+    try {
+      setIsLoadingPhotos(true);
+      setPhotoLoadingError(null);
 
-        const { assets } = await MediaLibrary.getAssetsAsync({
-          first: 100,
-          mediaType: MediaLibrary.MediaType.photo,
-          sortBy: [MediaLibrary.SortBy.creationTime],
-        });
+      const { assets } = await MediaLibrary.getAssetsAsync({
+        first: 20,
+        mediaType: MediaLibrary.MediaType.photo,
+        sortBy: [MediaLibrary.SortBy.creationTime],
+      });
 
-        const photos = assets.map((asset) => ({
-          id: asset.id,
-          uri: asset.uri,
-        }));
+      const photos = assets.map((asset) => ({
+        id: asset.id,
+        uri: asset.uri,
+      }));
 
-        setRecentPhotos(photos);
-      } catch (error) {
-        console.error("Error loading recent photos:", error);
-        setPhotoLoadingError("Failed to load photos");
-        showToast("Unable to load recent photos", "error");
-      } finally {
-        setIsLoadingPhotos(false);
-      }
+      setRecentPhotos(photos);
+    } catch (error) {
+      console.error("Error loading recent photos:", error);
+      setPhotoLoadingError("Failed to load photos");
+      showToast("Unable to load recent photos", "error");
+    } finally {
+      setIsLoadingPhotos(false);
     }
 
     router.push("/new");
   }, [
     hasMediaPermission,
-    recentPhotos.length,
-    setRecentPhotos,
     router,
     setIsLoadingPhotos,
     setPhotoLoadingError,
+    setRecentPhotos,
   ]);
 
   return (
