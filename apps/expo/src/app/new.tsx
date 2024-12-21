@@ -376,7 +376,7 @@ export default function NewEventModal() {
   const loadRecentPhotos = useCallback(async () => {
     try {
       const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 24,
+        first: 16,
         sortBy: MediaLibrary.SortBy.creationTime,
         mediaType: [MediaLibrary.MediaType.photo],
       });
