@@ -98,11 +98,11 @@ const Page = async ({ params }: Props) => {
       {/* Case 1: Not logged in */}
       {!user && (
         <div className="flex flex-col items-center justify-center">
-          <p className="my-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+          <p className="mb-2 mt-4 max-w-[280px] px-4 text-center text-xl leading-tight text-gray-700 sm:my-6 sm:max-w-none sm:px-0 md:text-2xl">
             Here's how {userName}'s stats look in 2024!
           </p>
           <UserStatsCard {...userData} />
-          <Link href="/join" className="my-6">
+          <Link href="/join" className="mb-2 mt-4 sm:my-6">
             <Button>Become a Founding Member</Button>
           </Link>
           <Link href="/sign-in">
@@ -114,11 +114,11 @@ const Page = async ({ params }: Props) => {
       {/* Case 2: Logged in, viewing own stats */}
       {user && user.username === userName && (
         <div className="flex flex-col items-center justify-center">
-          <p className="my-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+          <p className="mb-2 mt-4 max-w-[280px] px-4 text-center text-xl leading-tight text-gray-700 sm:my-6 sm:max-w-none sm:px-0 md:text-2xl">
             Here's how your stats look in 2024!
           </p>
           <UserStatsCard {...userData} />
-          <p className="my-6 text-center text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+          <p className="mb-2 mt-4 max-w-[280px] px-4 text-center text-xl leading-tight text-gray-700 sm:my-6 sm:max-w-none sm:px-0 md:text-2xl">
             Take a screenshot and share it on Instagram! Tag{" "}
             <a
               href="https://instagram.com/soonlistapp"
@@ -136,11 +136,11 @@ const Page = async ({ params }: Props) => {
       {/* Case 3: Logged in, viewing someone else's stats */}
       {user && user.username !== userName && (
         <div className="flex flex-col items-center justify-center">
-          <p className="my-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
+          <p className="mb-2 mt-4 max-w-[280px] px-4 text-center text-xl leading-tight text-gray-700 sm:my-6 sm:max-w-none sm:px-0 md:text-2xl">
             Here's how {userName}'s stats look in 2024!
           </p>
           <UserStatsCard {...userData} />
-          <Link href={`/2024/${user.username}`} className="mt-6">
+          <Link href={`/2024/${user.username}`} className="mb-2 mt-4 sm:mt-6">
             <Button>See your stats!</Button>
           </Link>
         </div>
