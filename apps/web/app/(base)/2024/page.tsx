@@ -44,6 +44,14 @@ export const metadata: Metadata = {
   },
 };
 
+const typesToPlural = {
+  concert: "concerts",
+  party: "parties",
+  performance: "performances",
+  festival: "festivals",
+  meeting: "meetings",
+};
+
 export default async function Page() {
   const user = await currentUser();
   const stats = dataFor2024;
@@ -148,7 +156,10 @@ export default async function Page() {
                           : `bg-accent-yellow`
                   } inline-block rounded-md px-2 py-1 text-3xl text-neutral-1 shadow-sm`}
                 >
-                  <span className="capitalize">{type.type}s</span>{" "}
+                  <span className="capitalize">
+                    {/* eslint-disable-next-line @typescript-eslint/consistent-type-assertions */}
+                    {typesToPlural[type.type as keyof typeof typesToPlural]}
+                  </span>{" "}
                   <span className="font-bold">
                     {type.count.toLocaleString()}
                   </span>
