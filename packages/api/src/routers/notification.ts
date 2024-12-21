@@ -2,6 +2,8 @@ import type {
   ExpoPushMessage,
   ExpoPushTicket,
   ExpoPushToken,
+  ExpoPushSuccessTicket,
+  ExpoPushErrorTicket,
 } from "expo-server-sdk";
 import { Expo } from "expo-server-sdk";
 import { anthropic } from "@ai-sdk/anthropic";
@@ -16,7 +18,7 @@ import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 import { db, inArray, or } from "@soonlist/db";
 import { eventFollows, events, pushTokens, users } from "@soonlist/db/schema";
 
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "../trpc";
 import { getTicketId } from "../utils/expo";
 import { generateNotificationId } from "../utils/notification";
 import { posthog } from "../utils/posthog";
@@ -379,4 +381,87 @@ export const notificationRouter = createTRPCRouter({
           })),
       };
     }),
+
+  broadcastToAllUsers: protectedProcedure
+    .input(
+      z.object({
+        title: z.string(),
+        body: z.string(),
+        data: z.record(z.unknown()).optional(),
+        adminSecret: z.string(), // Add authentication
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify admin rights
+      if (input.adminSecret !== process.env.ADMIN_SECRET) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid admin secret",
+        });
+      }
+
+      // Fetch all valid push tokens
+      const usersWithTokens = await ctx.db
+        .select({
+          userId: pushTokens.userId,
+          expoPushToken: pushTokens.expoPushToken,
+        })
+        .from(pushTokens)
+        .innerJoin(
+          users,
+          sql`${users.id} COLLATE utf8mb4_unicode_ci = ${pushTokens.userId} COLLATE utf8mb4_unicode_ci`,
+        )
+        .where(
+          sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
+        );
+
+      // Process notifications in batches
+      const batchSize = 100;
+      const results: ExpoPushTicket[] = [];
+
+      for (let i = 0; i < usersWithTokens.length; i += batchSize) {
+        const batch = usersWithTokens.slice(i, i + batchSize);
+        const messages: ExpoPushMessage[] = batch.map((user) => ({
+          to: user.expoPushToken,
+          sound: "default",
+          title: input.title,
+          body: input.body,
+          data: {
+            ...input.data,
+            notificationId: generateNotificationId(),
+          },
+        }));
+
+        try {
+          const tickets = await expo.sendPushNotificationsAsync(messages);
+          results.push(...tickets);
+
+          // Log to PostHog
+          batch.forEach((user, index) => {
+            posthog.capture({
+              distinctId: user.userId,
+              event: "notification_sent",
+              properties: {
+                success: true,
+                notificationId: messages[index]?.data?.notificationId,
+                type: "broadcast",
+                source: "notification_router",
+                ticketId: getTicketId(tickets[index]),
+              },
+            });
+          });
+        } catch (error) {
+          console.error("Error sending batch:", error);
+        }
+      }
+
+      return {
+        success: true,
+        totalProcessed: usersWithTokens.length,
+        successfulNotifications: results.filter(
+          (r): r is ExpoPushSuccessTicket => 
+            r !== undefined && 'status' in r && r.status === "ok"
+        ).length,
+      } as const;
+    });
 });
