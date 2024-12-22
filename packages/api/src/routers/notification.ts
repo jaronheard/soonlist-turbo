@@ -379,4 +379,141 @@ export const notificationRouter = createTRPCRouter({
           })),
       };
     }),
+
+  sendCapturedNotifications: publicProcedure
+    .input(
+      z.object({
+        cronSecret: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      // Verify the cronSecret
+      if (input.cronSecret !== process.env.CRON_SECRET) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid CRON_SECRET",
+        });
+      }
+
+      // Fetch all users with valid push tokens
+      const usersWithTokens = await db
+        .select({
+          userId: pushTokens.userId,
+          expoPushToken: pushTokens.expoPushToken,
+        })
+        .from(pushTokens)
+        .innerJoin(
+          users,
+          sql`${users.id} COLLATE utf8mb4_unicode_ci = ${pushTokens.userId} COLLATE utf8mb4_unicode_ci`,
+        )
+        .where(
+          sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
+        );
+
+      const results: {
+        success: boolean;
+        ticket?: ExpoPushTicket;
+        error?: string;
+        notificationId: string;
+        userId: string;
+      }[] = [];
+
+      // Process notifications in batches
+      const batchSize = 100;
+      for (let i = 0; i < usersWithTokens.length; i += batchSize) {
+        const batch = usersWithTokens.slice(i, i + batchSize);
+        const messages: ExpoPushMessage[] = batch.map((user) => {
+          const notificationId = generateNotificationId();
+          return {
+            to: user.expoPushToken,
+            sound: "default",
+            title: "Your 2024 Captured is Here! ✨",
+            body: "See how many possibilities you turned into memories",
+            data: {
+              url: "https://www.soonlist.com/2024",
+              notificationId,
+            } as const,
+          };
+        });
+
+        try {
+          const tickets = await expo.sendPushNotificationsAsync(messages);
+
+          batch.forEach((user, index) => {
+            const message = messages[index];
+            if (!message) {
+              console.error(`No message found for index ${index}`);
+              return;
+            }
+
+            const result = {
+              success: true,
+              ticket: tickets[index],
+              notificationId: (message.data as { notificationId: string })
+                .notificationId,
+              userId: user.userId,
+            };
+            results.push(result);
+
+            posthog.capture({
+              distinctId: user.userId,
+              event: "notification_sent",
+              properties: {
+                success: true,
+                notificationId: result.notificationId,
+                type: "captured_2024",
+                source: "notification_router",
+                ticketId: getTicketId(tickets[index]),
+              },
+            });
+          });
+        } catch (error) {
+          console.error("Error sending batch:", error);
+          batch.forEach((user) => {
+            const result = {
+              success: false,
+              error: (error as Error).message,
+              notificationId: generateNotificationId(),
+              userId: user.userId,
+            };
+            results.push(result);
+
+            posthog.capture({
+              distinctId: user.userId,
+              event: "notification_sent",
+              properties: {
+                success: false,
+                notificationId: result.notificationId,
+                type: "captured_2024",
+                source: "notification_router",
+                error: result.error,
+              },
+            });
+          });
+        }
+      }
+
+      // Track batch results
+      posthog.capture({
+        distinctId: "system",
+        event: "captured_notifications_batch",
+        properties: {
+          totalProcessed: usersWithTokens.length,
+          successfulNotifications: results.filter((r) => r.success).length,
+          failedNotifications: results.filter((r) => !r.success).length,
+        },
+      });
+
+      return {
+        success: true,
+        totalProcessed: usersWithTokens.length,
+        successfulNotifications: results.filter((r) => r.success).length,
+        errors: results
+          .filter((r) => !r.success)
+          .map((result) => ({
+            userId: result.userId,
+            error: result.error ?? "Unknown error",
+          })),
+      };
+    }),
 });

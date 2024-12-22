@@ -82,6 +82,10 @@ interface AppState {
   // Add explicit types for these actions
   setIsLoadingPhotos: (isLoading: boolean) => void;
   setPhotoLoadingError: (error: string | null) => void;
+
+  // Add the captured banner state
+  showCapturedBanner: boolean;
+  setShowCapturedBanner: (show: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -180,6 +184,7 @@ export const useAppStore = create<AppState>()(
           shouldRefreshMediaLibrary: false,
           isLoadingPhotos: false,
           photoLoadingError: null,
+          showCapturedBanner: true,
         }),
       clearCalendarData: () =>
         set({
@@ -217,6 +222,10 @@ export const useAppStore = create<AppState>()(
         set({ isLoadingPhotos: isLoading }),
       setPhotoLoadingError: (error: string | null) =>
         set({ photoLoadingError: error }),
+
+      // Add the captured banner state and setter
+      showCapturedBanner: true,
+      setShowCapturedBanner: (show) => set({ showCapturedBanner: show }),
     }),
     {
       name: "app-storage",
