@@ -8,7 +8,7 @@ import {
   renderers,
 } from "react-native-popup-menu";
 import { useRouter } from "expo-router";
-import { Check } from "lucide-react-native";
+import { Check, ChevronDown } from "lucide-react-native";
 
 interface NavigationMenuProps {
   active?: "upcoming" | "past" | "discover";
@@ -21,7 +21,7 @@ const routes = [
 ];
 
 const screenWidth = Dimensions.get("window").width;
-const menuMinWidth = screenWidth * 0.6;
+const menuMinWidth = screenWidth * 0.5;
 
 export function NavigationMenu({ active }: NavigationMenuProps) {
   const router = useRouter();
@@ -57,8 +57,9 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
         }}
         onPress={() => setVisible(!visible)}
       >
-        <View className="flex-row items-center">
+        <View className="flex-row items-center space-x-1">
           <Text className="text-xl font-bold text-white">{currentRoute}</Text>
+          <ChevronDown size={24} color="white" />
         </View>
       </MenuTrigger>
       <MenuOptions
