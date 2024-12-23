@@ -26,6 +26,7 @@ import {
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
+import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
@@ -248,7 +249,7 @@ export function UserEventListItem(props: {
   );
 }
 
-export default function UserEventsList(props: {
+interface UserEventsListProps {
   events: Event[];
   ActionButton?: React.ComponentType<ActionButtonProps>;
   showCreator: ShowCreatorOption;
@@ -256,7 +257,15 @@ export default function UserEventsList(props: {
   onRefresh: () => Promise<void>;
   onEndReached: () => void;
   isFetchingNextPage: boolean;
-}) {
+  stats?: {
+    capturesThisWeek: number;
+    weeklyGoal: number;
+    upcomingEvents: number;
+    allTimeEvents: number;
+  };
+}
+
+export default function UserEventsList(props: UserEventsListProps) {
   const {
     events,
     ActionButton,
@@ -265,6 +274,7 @@ export default function UserEventsList(props: {
     onRefresh,
     onEndReached,
     isFetchingNextPage,
+    stats,
   } = props;
   const { user } = useUser();
   const username = user?.username || "";
@@ -307,6 +317,8 @@ export default function UserEventsList(props: {
     await onRefresh();
   };
 
+  const renderHeader = () => (stats ? <EventStats {...stats} /> : null);
+
   if (collapsedEvents.length === 0 && !isRefetching) {
     return renderEmptyState();
   }
@@ -316,6 +328,7 @@ export default function UserEventsList(props: {
       <FlashList
         data={collapsedEvents}
         estimatedItemSize={60}
+        ListHeaderComponent={renderHeader}
         renderItem={({ item, index }) => {
           const isSaved =
             savedIdsQuery.data?.some(
