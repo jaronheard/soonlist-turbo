@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import {
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import {
   Menu,
   MenuOption,
@@ -10,29 +15,31 @@ import {
 import { useRouter } from "expo-router";
 import { Check, ChevronDown } from "lucide-react-native";
 
+type RouteType = "upcoming" | "past" | "discover";
+
 interface NavigationMenuProps {
-  active?: "upcoming" | "past" | "discover";
+  active?: RouteType;
 }
 
 const routes = [
   { label: "Upcoming", path: "/feed" },
   { label: "Past", path: "/past" },
   { label: "Discover", path: "/discover" },
-];
+] as const;
 
-const screenWidth = Dimensions.get("window").width;
-const menuMinWidth = screenWidth * 0.5;
+function isRouteActive(routePath: string, active?: RouteType) {
+  if (!active) return routePath === "/feed"; // default to upcoming
+  return routePath === (active === "upcoming" ? "/feed" : `/${active}`);
+}
 
 export function NavigationMenu({ active }: NavigationMenuProps) {
+  const { width: screenWidth } = useWindowDimensions();
+  const menuMinWidth = screenWidth * 0.5;
   const router = useRouter();
   const [visible, setVisible] = useState(false);
 
-  // Update current route logic to match active route more accurately
   const currentRoute =
-    routes.find((r) => {
-      if (active === "upcoming") return r.path === "/feed";
-      return r.path.replace("/", "") === active;
-    })?.label ?? "Upcoming";
+    routes.find((r) => isRouteActive(r.path, active))?.label ?? "Upcoming";
 
   return (
     <Menu
@@ -43,7 +50,6 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
         placement: "bottom",
         preferredPlacement: "bottom",
         anchorStyle: { backgroundColor: "transparent" },
-        // Center align the menu with the trigger
         anchorOrigin: { x: 0.5, y: 0 },
         popoverOrigin: { x: 0.5, y: 0 },
       }}
@@ -75,16 +81,13 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
         }}
       >
         {routes.map((route, index) => {
-          const isActive =
-            route.path === "/feed"
-              ? active === "upcoming"
-              : route.path.replace("/", "") === active;
+          const isActive = isRouteActive(route.path, active);
           return (
             <MenuOption
               key={route.path}
               onSelect={() => {
                 setVisible(false);
-                router.push(route.path as never);
+                router.push(route.path);
               }}
               customStyles={{
                 optionWrapper: {
