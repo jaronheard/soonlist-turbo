@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
-import { Pressable, Text, View } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { View } from "react-native";
+import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import AddEventButton from "~/components/AddEventButton";
@@ -34,10 +34,6 @@ export default function PastEvents() {
     await eventsQuery.refetch();
   }, [eventsQuery]);
 
-  if (eventsQuery.isLoading) {
-    return <LoadingSpinner />;
-  }
-
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
   return (
@@ -50,19 +46,26 @@ export default function PastEvents() {
               <ProfileMenu />
             </View>
           ),
+          headerBackTitle: "Back",
+          headerBackVisible: true,
         }}
       />
       <View className="flex-1 bg-white">
-        <UserEventsList
-          events={events}
-          onRefresh={onRefresh}
-          onEndReached={loadMore}
-          showCreator="otherUsers"
-          isRefetching={eventsQuery.isRefetching}
-          isFetchingNextPage={eventsQuery.isFetchingNextPage}
-          // ... rest of props ...
-        />
-        <AddEventButton />
+        {eventsQuery.isPending ? (
+          <LoadingSpinner />
+        ) : (
+          <View className="flex-1">
+            <UserEventsList
+              events={events}
+              onRefresh={onRefresh}
+              onEndReached={loadMore}
+              showCreator="otherUsers"
+              isRefetching={eventsQuery.isRefetching}
+              isFetchingNextPage={eventsQuery.isFetchingNextPage}
+            />
+            <AddEventButton />
+          </View>
+        )}
       </View>
     </>
   );

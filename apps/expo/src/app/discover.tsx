@@ -55,10 +55,6 @@ export default function Page() {
     );
   }
 
-  if (eventsQuery.isLoading || savedEventIdsQuery.isLoading) {
-    return <LoadingSpinner />;
-  }
-
   return (
     <View className="flex-1">
       <Stack.Screen
@@ -74,18 +70,24 @@ export default function Page() {
           ),
         }}
       />
-      <View className="flex-1">
-        <UserEventsList
-          events={events}
-          isRefetching={eventsQuery.isRefetching}
-          onRefresh={onRefresh}
-          onEndReached={loadMore}
-          isFetchingNextPage={eventsQuery.isFetchingNextPage}
-          ActionButton={SaveButtonWrapper}
-          showCreator="always"
-        />
+      <View className="flex-1 bg-white">
+        {eventsQuery.isPending || savedEventIdsQuery.isPending ? (
+          <LoadingSpinner />
+        ) : (
+          <View className="flex-1">
+            <UserEventsList
+              events={events}
+              isRefetching={eventsQuery.isRefetching}
+              onRefresh={onRefresh}
+              onEndReached={loadMore}
+              isFetchingNextPage={eventsQuery.isFetchingNextPage}
+              ActionButton={SaveButtonWrapper}
+              showCreator="always"
+            />
+            <AddEventButton />
+          </View>
+        )}
       </View>
-      <AddEventButton />
     </View>
   );
 }

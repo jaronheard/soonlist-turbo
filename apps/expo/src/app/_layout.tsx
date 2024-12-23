@@ -183,6 +183,8 @@ const InitialLayout = () => {
           headerShown: true,
           headerRight: undefined,
           headerTitle: "Discover",
+          headerBackTitle: "Back",
+          headerBackVisible: true,
         }}
       />
       <Stack.Screen

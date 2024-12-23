@@ -330,14 +330,6 @@ export default function UserEventsList(props: {
       <Text className="mb-6 text-center text-base text-neutral-2">
         Events you capture will show up in My Feed
       </Text>
-      <Animated.View
-        style={[
-          { position: "absolute", bottom: 64, right: 64 },
-          animatedArrowStyle,
-        ]}
-      >
-        <HandDrawnArrow />
-      </Animated.View>
     </View>
   );
 
