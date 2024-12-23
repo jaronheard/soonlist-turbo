@@ -15,14 +15,16 @@ export function EventStats({
   allTimeEvents,
 }: EventStatsProps) {
   return (
-    <View className="mx-4 mb-4 mt-2 flex-row justify-between rounded-xl bg-neutral-50 p-4">
+    <View className="flex-row justify-between bg-interactive-3 px-4 py-2.5">
       <View className="flex-1 items-center border-r border-neutral-200 px-2">
-        <Text className="text-2xl font-bold text-neutral-900">
-          {capturesThisWeek}
+        <View className="flex-row items-baseline">
+          <Text className="text-2xl font-bold text-neutral-900">
+            {capturesThisWeek}
+          </Text>
           <Text className="text-sm font-normal text-neutral-500">
             /{weeklyGoal}
           </Text>
-        </Text>
+        </View>
         <Text className="text-xs text-neutral-500">This Week</Text>
       </View>
       <View className="flex-1 items-center border-r border-neutral-200 px-2">
