@@ -47,13 +47,6 @@ const eventIdSchema = z.object({
   id: z.string(),
 });
 
-interface GetStatsOutput {
-  capturesThisWeek: number;
-  weeklyGoal: number;
-  upcomingEvents: number;
-  allTimeEvents: number;
-}
-
 export const eventRouter = createTRPCRouter({
   getForUser: publicProcedure
     .input(z.object({ userName: z.string() }))
