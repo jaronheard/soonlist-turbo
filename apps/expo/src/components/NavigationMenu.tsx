@@ -5,11 +5,10 @@ import {
   MenuOption,
   MenuOptions,
   MenuTrigger,
+  renderers,
 } from "react-native-popup-menu";
 import { useRouter } from "expo-router";
-
-// You may need to match your actual "ProfileMenu" styling imports
-// e.g. from "react-native-popup-menu" or a custom styling approach
+import { Check } from "lucide-react-native";
 
 interface NavigationMenuProps {
   active?: "upcoming" | "past" | "discover";
@@ -22,16 +21,33 @@ const routes = [
 ];
 
 const screenWidth = Dimensions.get("window").width;
-const menuMinWidth = screenWidth * 0.6; // match ProfileMenu's 60% width
+const menuMinWidth = screenWidth * 0.6;
 
 export function NavigationMenu({ active }: NavigationMenuProps) {
   const router = useRouter();
   const [visible, setVisible] = useState(false);
+
+  // Update current route logic to match active route more accurately
   const currentRoute =
-    routes.find((r) => r.path.includes(active ?? ""))?.label ?? "Select Route";
+    routes.find((r) => {
+      const routePath = r.path.replace("/", "");
+      return routePath === (active ?? "feed");
+    })?.label ?? "Upcoming";
 
   return (
-    <Menu opened={visible} onBackdropPress={() => setVisible(false)}>
+    <Menu
+      opened={visible}
+      onBackdropPress={() => setVisible(false)}
+      renderer={renderers.Popover}
+      rendererProps={{
+        placement: "bottom",
+        preferredPlacement: "bottom",
+        anchorStyle: { backgroundColor: "transparent" },
+        // Center align the menu with the trigger
+        anchorOrigin: { x: 0.5, y: 0 },
+        popoverOrigin: { x: 0.5, y: 0 },
+      }}
+    >
       <MenuTrigger
         customStyles={{
           TriggerTouchableComponent: TouchableOpacity,
@@ -41,53 +57,52 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
         }}
         onPress={() => setVisible(!visible)}
       >
-        {/* Trigger styled similarly to ProfileMenu */}
         <View className="flex-row items-center">
-          <Text className="font-base text-xl">{currentRoute}</Text>
+          <Text className="text-xl font-bold text-white">{currentRoute}</Text>
         </View>
       </MenuTrigger>
       <MenuOptions
         customStyles={{
           optionsContainer: {
             overflow: "hidden",
-            marginTop: 8,
-            marginHorizontal: 8,
             borderRadius: 14,
             borderWidth: 1,
             borderColor: "#C7C7C7",
             minWidth: menuMinWidth,
+            backgroundColor: "white",
           },
         }}
       >
-        {routes.map((route, index) => (
-          <MenuOption
-            key={route.path}
-            onSelect={() => {
-              setVisible(false);
-              router.push(route.path as never);
-            }}
-            customStyles={{
-              optionWrapper: {
-                padding: 0,
-                borderBottomWidth: index < routes.length - 1 ? 0.5 : 0,
-                borderBottomColor: "#C7C7C7",
-              },
-            }}
-          >
-            <View className="flex-row items-center justify-between px-4 py-3">
-              <Text
-                className={`font-base text-xl ${
-                  active === route.path.replace("/", "")
-                    ? "font-bold"
-                    : "text-black"
-                }`}
-              >
-                {route.label}
-              </Text>
-              {/* You could add an icon or caret on the right if desired */}
-            </View>
-          </MenuOption>
-        ))}
+        {routes.map((route, index) => {
+          const isActive = route.path.replace("/", "") === (active ?? "feed");
+          return (
+            <MenuOption
+              key={route.path}
+              onSelect={() => {
+                setVisible(false);
+                router.push(route.path as never);
+              }}
+              customStyles={{
+                optionWrapper: {
+                  padding: 0,
+                  borderBottomWidth: index < routes.length - 1 ? 0.5 : 0,
+                  borderBottomColor: "#C7C7C7",
+                },
+              }}
+            >
+              <View className="flex-row items-center justify-between px-4 py-3">
+                <Text
+                  className={`text-xl ${
+                    isActive ? "font-bold text-black" : "text-black"
+                  }`}
+                >
+                  {route.label}
+                </Text>
+                {isActive && <Check size={20} color="#000000" />}
+              </View>
+            </MenuOption>
+          );
+        })}
       </MenuOptions>
     </Menu>
   );
