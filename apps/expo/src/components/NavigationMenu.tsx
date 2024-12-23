@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import {
   Menu,
   MenuOption,
@@ -21,6 +21,9 @@ const routes = [
   { label: "Discover", path: "/discover" },
 ];
 
+const screenWidth = Dimensions.get("window").width;
+const menuMinWidth = screenWidth * 0.6; // match ProfileMenu's 60% width
+
 export function NavigationMenu({ active }: NavigationMenuProps) {
   const router = useRouter();
   const [visible, setVisible] = useState(false);
@@ -29,11 +32,18 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
 
   return (
     <Menu opened={visible} onBackdropPress={() => setVisible(false)}>
-      <MenuTrigger onPress={() => setVisible(!visible)}>
-        {/* Trigger button styled similarly to ProfileMenu */}
+      <MenuTrigger
+        customStyles={{
+          TriggerTouchableComponent: TouchableOpacity,
+          triggerTouchable: {
+            activeOpacity: 0.6,
+          },
+        }}
+        onPress={() => setVisible(!visible)}
+      >
+        {/* Trigger styled similarly to ProfileMenu */}
         <View className="flex-row items-center">
-          <Text className="mr-2 text-lg font-semibold">{currentRoute}</Text>
-          {/* Possibly a chevron or caret icon here */}
+          <Text className="font-base text-xl">{currentRoute}</Text>
         </View>
       </MenuTrigger>
       <MenuOptions
@@ -45,25 +55,37 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
             borderRadius: 14,
             borderWidth: 1,
             borderColor: "#C7C7C7",
-            minWidth: 200, // Adjust as needed
+            minWidth: menuMinWidth,
           },
         }}
       >
-        {routes.map((route) => (
+        {routes.map((route, index) => (
           <MenuOption
             key={route.path}
             onSelect={() => {
               setVisible(false);
               router.push(route.path as never);
             }}
+            customStyles={{
+              optionWrapper: {
+                padding: 0,
+                borderBottomWidth: index < routes.length - 1 ? 0.5 : 0,
+                borderBottomColor: "#C7C7C7",
+              },
+            }}
           >
-            <Text
-              className={`px-4 py-2 ${
-                active === route.path.replace("/", "") ? "font-bold" : ""
-              }`}
-            >
-              {route.label}
-            </Text>
+            <View className="flex-row items-center justify-between px-4 py-3">
+              <Text
+                className={`font-base text-xl ${
+                  active === route.path.replace("/", "")
+                    ? "font-bold"
+                    : "text-black"
+                }`}
+              >
+                {route.label}
+              </Text>
+              {/* You could add an icon or caret on the right if desired */}
+            </View>
           </MenuOption>
         ))}
       </MenuOptions>
