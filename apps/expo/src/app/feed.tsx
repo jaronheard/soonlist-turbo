@@ -8,7 +8,6 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
-import { EventStats } from "~/components/EventStats";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
@@ -118,7 +117,6 @@ function MyFeed() {
           <LoadingSpinner />
         ) : (
           <View className="flex-1">
-            {statsQuery.data && <EventStats {...statsQuery.data} />}
             <UserEventsList
               events={events}
               isRefetching={eventsQuery.isRefetching}
@@ -127,6 +125,7 @@ function MyFeed() {
               isFetchingNextPage={eventsQuery.isFetchingNextPage}
               ActionButton={GoButton}
               showCreator="otherUsers"
+              stats={statsQuery.data}
             />
             <AddEventButton />
           </View>
