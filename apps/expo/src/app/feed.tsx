@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import React, { useCallback, useEffect } from "react";
+import { Linking, Pressable, View } from "react-native";
+import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 import { Map } from "lucide-react-native";
 
@@ -9,6 +9,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
@@ -37,34 +38,6 @@ function GoButton({
     >
       <Map color="white" size={20} />
     </Pressable>
-  );
-}
-
-function HeaderTabs({ active }: { active: "upcoming" | "past" | "discover" }) {
-  const router = useRouter();
-
-  return (
-    <View className="flex-row">
-      <Pressable onPress={() => router.push("/feed")} className="mr-4">
-        <Text
-          className={active === "upcoming" ? "text-blue-600" : "text-black"}
-        >
-          Upcoming
-        </Text>
-      </Pressable>
-      <Pressable onPress={() => router.push("/past")} className="mr-4">
-        <Text className={active === "past" ? "text-blue-600" : "text-black"}>
-          Past
-        </Text>
-      </Pressable>
-      <Pressable onPress={() => router.push("/discover")}>
-        <Text
-          className={active === "discover" ? "text-blue-600" : "text-black"}
-        >
-          Discover
-        </Text>
-      </Pressable>
-    </View>
   );
 }
 
@@ -123,7 +96,7 @@ function MyFeed() {
     <>
       <Stack.Screen
         options={{
-          headerTitle: () => <HeaderTabs active="upcoming" />,
+          headerTitle: () => <NavigationMenu active="upcoming" />,
           headerBackVisible: false,
           headerRight: () => (
             <View className="mr-2 flex-row items-center gap-2">
