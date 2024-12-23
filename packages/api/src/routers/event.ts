@@ -47,6 +47,13 @@ const eventIdSchema = z.object({
   id: z.string(),
 });
 
+interface GetStatsOutput {
+  capturesThisWeek: number;
+  weeklyGoal: number;
+  upcomingEvents: number;
+  allTimeEvents: number;
+}
+
 export const eventRouter = createTRPCRouter({
   getForUser: publicProcedure
     .input(z.object({ userName: z.string() }))
@@ -1004,5 +1011,91 @@ export const eventRouter = createTRPCRouter({
         .where(eq(events.id, id));
 
       return updatedEvent;
+    }),
+  getStats: publicProcedure
+    .input(
+      z.object({
+        userName: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const now = new Date();
+
+      // Get start and end of current week using Temporal API
+      const today = Temporal.PlainDate.from(now.toISOString().split("T")[0]!);
+      const startOfWeek = today.subtract({ days: today.dayOfWeek - 1 });
+      const endOfWeek = startOfWeek.add({ days: 6 });
+
+      // Convert Temporal dates back to JavaScript Date objects
+      const startDate = new Date(startOfWeek.toString());
+      const endDate = new Date(endOfWeek.toString());
+
+      // First get the user's ID
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.username, input.userName),
+        columns: { id: true },
+      });
+
+      if (!user) {
+        return {
+          capturesThisWeek: 0,
+          weeklyGoal: 5,
+          upcomingEvents: 0,
+          allTimeEvents: 0,
+        };
+      }
+
+      // Get user's own events for this week
+      const capturesThisWeek = await ctx.db.query.events
+        .findMany({
+          where: and(
+            eq(events.userName, input.userName),
+            gte(events.createdAt, startDate),
+            lte(events.createdAt, endDate),
+          ),
+        })
+        .then((events) => events.length);
+
+      // Get upcoming events (own and followed)
+      const upcomingEvents = await ctx.db.query.events
+        .findMany({
+          where: and(
+            or(
+              eq(events.userName, input.userName),
+              inArray(
+                events.id,
+                ctx.db
+                  .select({ eventId: eventFollows.eventId })
+                  .from(eventFollows)
+                  .where(eq(eventFollows.userId, user.id)),
+              ),
+            ),
+            gte(events.startDateTime, now),
+          ),
+        })
+        .then((events) => events.length);
+
+      // Get all time events (own and followed)
+      const allTimeEvents = await ctx.db.query.events
+        .findMany({
+          where: or(
+            eq(events.userName, input.userName),
+            inArray(
+              events.id,
+              ctx.db
+                .select({ eventId: eventFollows.eventId })
+                .from(eventFollows)
+                .where(eq(eventFollows.userId, user.id)),
+            ),
+          ),
+        })
+        .then((events) => events.length);
+
+      return {
+        capturesThisWeek,
+        weeklyGoal: 5,
+        upcomingEvents,
+        allTimeEvents,
+      };
     }),
 });

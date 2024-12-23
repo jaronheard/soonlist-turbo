@@ -8,6 +8,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
+import { EventStats } from "~/components/EventStats";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
@@ -55,6 +56,10 @@ function MyFeed() {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   );
+
+  const statsQuery = api.event.getStats.useQuery({
+    userName: user?.username ?? "",
+  });
 
   const onRefresh = useCallback(async () => {
     await eventsQuery.refetch();
@@ -109,10 +114,11 @@ function MyFeed() {
         }}
       />
       <View className="flex-1 bg-white">
-        {eventsQuery.isPending ? (
+        {eventsQuery.isPending || statsQuery.isPending ? (
           <LoadingSpinner />
         ) : (
           <View className="flex-1">
+            {statsQuery.data && <EventStats {...statsQuery.data} />}
             <UserEventsList
               events={events}
               isRefetching={eventsQuery.isRefetching}
