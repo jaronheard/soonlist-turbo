@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import React, { useCallback, useEffect } from "react";
+import { Linking, Pressable, View } from "react-native";
 import { Stack } from "expo-router";
 import { SignedIn, useUser } from "@clerk/clerk-expo";
 import { Map } from "lucide-react-native";
@@ -9,6 +9,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
@@ -40,43 +41,14 @@ function GoButton({
   );
 }
 
-function FilterButton({
-  label,
-  isActive,
-  onPress,
-}: {
-  label: string;
-  isActive: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="px-3 py-2"
-      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-    >
-      <View className={`${isActive ? "border-b-2 border-interactive-1" : ""}`}>
-        <Text
-          className={`text-sm font-medium ${
-            isActive ? "text-interactive-1" : "text-gray-400"
-          }`}
-        >
-          {label}
-        </Text>
-      </View>
-    </Pressable>
-  );
-}
-
 function MyFeed() {
   const { user } = useUser();
   const { handleIntent } = useIntentHandler();
-  const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
       userName: user?.username ?? "",
-      filter,
+      filter: "upcoming",
       limit: 20,
     },
     {
@@ -124,8 +96,7 @@ function MyFeed() {
     <>
       <Stack.Screen
         options={{
-          title: "My Feed",
-          headerTitle: "My Feed",
+          headerTitle: () => <NavigationMenu active="upcoming" />,
           headerBackVisible: false,
           headerRight: () => (
             <View className="mr-2 flex-row items-center gap-2">
@@ -142,18 +113,6 @@ function MyFeed() {
           <LoadingSpinner />
         ) : (
           <View className="flex-1">
-            <View className="flex-row justify-center border-b border-gray-200 bg-interactive-3">
-              <FilterButton
-                label="Upcoming"
-                isActive={filter === "upcoming"}
-                onPress={() => setFilter("upcoming")}
-              />
-              <FilterButton
-                label="Past"
-                isActive={filter === "past"}
-                onPress={() => setFilter("past")}
-              />
-            </View>
             <UserEventsList
               events={events}
               isRefetching={eventsQuery.isRefetching}
