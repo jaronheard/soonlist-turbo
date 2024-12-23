@@ -7,13 +7,6 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from "react-native-reanimated";
-import Svg, { Path } from "react-native-svg";
 import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -66,18 +59,6 @@ function formatDate(
       : formattedStartTime;
   return { date: formattedDate, time: timeRange.trim() };
 }
-
-const HandDrawnArrow = () => (
-  <Svg width="120" height="120" viewBox="0 0 120 120" fill="none">
-    <Path
-      d="M10 10 C 35 35, 60 60, 112.5 112.5 M112.5 112.5 L 90 105 M112.5 112.5 L 105 90"
-      stroke="#5A32FB"
-      strokeWidth="6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </Svg>
-);
 
 export function UserEventListItem(props: {
   event: Event;
@@ -294,33 +275,6 @@ export default function UserEventsList(props: {
 
   // Collapse similar events
   const collapsedEvents = collapseSimilarEvents(events, user?.id);
-
-  const arrowOffsetX = useSharedValue(0);
-  const arrowOffsetY = useSharedValue(0);
-
-  useEffect(() => {
-    const duration = 780; // Reduced from 1200 to 780 (35% faster)
-    const distance = 8; // Reduced from 16 to 8 (half as much movement)
-    arrowOffsetX.value = withRepeat(
-      withTiming(distance, { duration }),
-      -1,
-      true,
-    );
-    arrowOffsetY.value = withRepeat(
-      withTiming(distance, { duration }),
-      -1,
-      true,
-    );
-  }, []);
-
-  const animatedArrowStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: arrowOffsetX.value },
-        { translateY: arrowOffsetY.value },
-      ],
-    };
-  });
 
   const renderEmptyState = () => (
     <View className="flex-1 items-center justify-center px-6 py-10">
