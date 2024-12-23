@@ -30,8 +30,8 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
   // Update current route logic to match active route more accurately
   const currentRoute =
     routes.find((r) => {
-      const routePath = r.path.replace("/", "");
-      return routePath === (active ?? "feed");
+      if (active === "upcoming") return r.path === "/feed";
+      return r.path.replace("/", "") === active;
     })?.label ?? "Upcoming";
 
   return (
@@ -74,7 +74,10 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
         }}
       >
         {routes.map((route, index) => {
-          const isActive = route.path.replace("/", "") === (active ?? "feed");
+          const isActive =
+            route.path === "/feed"
+              ? active === "upcoming"
+              : route.path.replace("/", "") === active;
           return (
             <MenuOption
               key={route.path}
