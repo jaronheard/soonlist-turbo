@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import { Calendar, History, Plus } from "lucide-react-native";
 
 interface EventStatsProps {
@@ -9,26 +10,64 @@ interface EventStatsProps {
   allTimeEvents: number;
 }
 
+function CircularProgress({ progress }: { progress: number }) {
+  const size = 24;
+  const strokeWidth = 2;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - progress * circumference;
+
+  return (
+    <View className="relative">
+      <Svg width={size} height={size}>
+        {/* Background circle */}
+        <Circle
+          stroke="#FFD1BA"
+          fill="none"
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeWidth={strokeWidth}
+          opacity={0.2}
+        />
+        {/* Progress circle */}
+        <Circle
+          stroke="#FFD1BA"
+          fill="none"
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <View className="absolute bottom-0 left-0 right-0 top-0 items-center justify-center">
+        <Plus size={16} color="#FFD1BA" />
+      </View>
+    </View>
+  );
+}
+
 export function EventStats({
   capturesThisWeek,
   weeklyGoal,
   upcomingEvents,
   allTimeEvents,
 }: EventStatsProps) {
+  const progress = Math.min(capturesThisWeek / weeklyGoal, 1);
+
   return (
     <View className="flex-row justify-between bg-white px-4 py-2.5">
       <View className="relative flex-1 px-4">
         <View className="absolute right-0 top-[10%] h-[80%] w-[1px] bg-neutral-200" />
-        <View className="flex-row items-center gap-1">
-          <Plus size={16} color="#FFD1BA" />
-          <View className="flex-row items-baseline">
-            <Text className="text-lg font-bold text-neutral-900">
-              {capturesThisWeek}
-            </Text>
-            <Text className="text-xs font-normal text-neutral-500">
-              /{weeklyGoal}
-            </Text>
-          </View>
+        <View className="flex-row items-center gap-2">
+          <CircularProgress progress={progress} />
+          <Text className="text-lg font-bold text-neutral-900">
+            {capturesThisWeek}
+          </Text>
         </View>
         <Text className="text-xs text-neutral-500">This Week</Text>
       </View>
