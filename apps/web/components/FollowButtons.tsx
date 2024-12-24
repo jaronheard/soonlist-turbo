@@ -175,6 +175,7 @@ export function FollowUserButton({
       void utils.user.getIfFollowing.invalidate();
       void utils.event.getFollowingForUser.invalidate();
       void utils.event.getFollowingUpcomingForUser.invalidate();
+      void utils.event.getStats.invalidate();
       router.refresh();
     },
   });
@@ -188,6 +189,7 @@ export function FollowUserButton({
       void utils.user.getIfFollowing.invalidate();
       void utils.event.getFollowingForUser.invalidate();
       void utils.event.getFollowingUpcomingForUser.invalidate();
+      void utils.event.getStats.invalidate();
       router.refresh();
     },
   });

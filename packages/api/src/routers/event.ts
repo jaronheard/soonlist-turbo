@@ -1013,15 +1013,8 @@ export const eventRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const now = new Date();
-
-      // Get start and end of current week using Temporal API
-      const today = Temporal.PlainDate.from(now.toISOString().split("T")[0]!);
-      const startOfWeek = today.subtract({ days: today.dayOfWeek - 1 });
-      const endOfWeek = startOfWeek.add({ days: 6 });
-
-      // Convert Temporal dates back to JavaScript Date objects
-      const startDate = new Date(startOfWeek.toString());
-      const endDate = new Date(endOfWeek.toString());
+      const sevenDaysAgo = new Date(now);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
       // First get the user's ID
       const user = await ctx.db.query.users.findFirst({
@@ -1038,13 +1031,13 @@ export const eventRouter = createTRPCRouter({
         };
       }
 
-      // Get user's own events for this week
+      // Get user's own events for the last 7 days
       const capturesThisWeek = await ctx.db.query.events
         .findMany({
           where: and(
             eq(events.userName, input.userName),
-            gte(events.createdAt, startDate),
-            lte(events.createdAt, endDate),
+            gte(events.createdAt, sevenDaysAgo),
+            lte(events.createdAt, now),
           ),
         })
         .then((events) => events.length);

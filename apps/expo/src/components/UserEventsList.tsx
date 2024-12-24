@@ -7,10 +7,10 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { FlashList } from "@shopify/flash-list";
 import { EyeOff, Globe2, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -325,9 +325,9 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   return (
     <>
-      <FlashList
+      <FlatList
         data={collapsedEvents}
-        estimatedItemSize={60}
+        // estimatedItemSize={60}
         ListHeaderComponent={renderHeader}
         renderItem={({ item, index }) => {
           const isSaved =
