@@ -176,15 +176,24 @@ export default function NewEventModal() {
 
   const eventFromRawTextAndNotification =
     api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
-      onSettled: () => void utils.event.getEventsForUser.invalidate(),
+      onSettled: () => {
+        void utils.event.getEventsForUser.invalidate();
+        void utils.event.getStats.invalidate();
+      },
     });
   const eventFromImageThenCreateThenNotification =
     api.ai.eventFromImageThenCreateThenNotification.useMutation({
-      onSettled: () => void utils.event.getEventsForUser.invalidate(),
+      onSettled: () => {
+        void utils.event.getEventsForUser.invalidate();
+        void utils.event.getStats.invalidate();
+      },
     });
   const eventFromUrlThenCreateThenNotification =
     api.ai.eventFromUrlThenCreateThenNotification.useMutation({
-      onSettled: () => void utils.event.getEventsForUser.invalidate(),
+      onSettled: () => {
+        void utils.event.getEventsForUser.invalidate();
+        void utils.event.getStats.invalidate();
+      },
     });
 
   const handleImagePreview = useCallback(
