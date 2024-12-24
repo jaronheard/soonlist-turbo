@@ -37,6 +37,10 @@ interface ActionButtonProps {
   event: Event;
 }
 
+interface PromoCardProps {
+  type: "addEvents";
+}
+
 function formatDate(
   date: string,
   startTime: string | undefined,
@@ -249,6 +253,23 @@ export function UserEventListItem(props: {
   );
 }
 
+function PromoCard({ type }: PromoCardProps) {
+  if (type === "addEvents") {
+    return (
+      <View className="mx-4 my-6 rounded-lg bg-accent-yellow p-6">
+        <Text className="mb-2 text-lg font-bold text-neutral-1">
+          Capture now, decide later
+        </Text>
+        <Text className="text-base text-neutral-2">
+          Capture everything interesting. Your future self will thank you!
+        </Text>
+      </View>
+    );
+  }
+
+  return null;
+}
+
 interface UserEventsListProps {
   events: Event[];
   ActionButton?: React.ComponentType<ActionButtonProps>;
@@ -263,6 +284,7 @@ interface UserEventsListProps {
     upcomingEvents: number;
     allTimeEvents: number;
   };
+  promoCard?: PromoCardProps;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -275,6 +297,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     onEndReached,
     isFetchingNextPage,
     stats,
+    promoCard,
   } = props;
   const { user } = useUser();
   const username = user?.username || "";
@@ -297,12 +320,16 @@ export default function UserEventsList(props: UserEventsListProps) {
     </View>
   );
 
-  const renderFooter = () =>
-    isFetchingNextPage ? (
-      <View className="py-4">
-        <ActivityIndicator size="large" color="#5A32FB" />
-      </View>
-    ) : null;
+  const renderFooter = () => (
+    <>
+      {isFetchingNextPage ? (
+        <View className="py-4">
+          <ActivityIndicator size="large" color="#5A32FB" />
+        </View>
+      ) : null}
+      {events.length > 1 && promoCard ? <PromoCard {...promoCard} /> : null}
+    </>
+  );
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
