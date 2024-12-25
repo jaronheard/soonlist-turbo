@@ -361,6 +361,7 @@ export default function NewEventModal() {
           action: {
             label: "View event",
             onClick: () => {
+              toast.dismiss();
               router.push(`/event/${eventId}`);
             },
           },
