@@ -1,10 +1,33 @@
+import type { ToastOptions as RNToastOptions } from "react-native-root-toast";
 import Toast from "react-native-root-toast";
 
 type ToastType = "success" | "error" | "info" | "loading";
 
-interface ToastOptions {
+interface CustomToastOptions {
   duration?: number;
   position?: number;
+  onHide?: () => void;
+}
+
+// Define proper types for the Toast API
+interface ToastConfig extends RNToastOptions {
+  containerStyle?: {
+    borderRadius: number;
+    paddingHorizontal: number;
+    paddingVertical: number;
+    shadowOffset: {
+      width: number;
+      height: number;
+    };
+    shadowOpacity: number;
+    shadowRadius: number;
+    elevation: number;
+  };
+  textStyle?: {
+    color: string;
+    fontWeight: string;
+    fontSize: number;
+  };
 }
 
 const toastStyles: Record<
@@ -20,11 +43,11 @@ const toastStyles: Record<
 export const showToast = (
   message: string,
   type: ToastType = "info",
-  options?: ToastOptions,
-) => {
+  options?: CustomToastOptions,
+): number => {
   const style = toastStyles[type];
 
-  Toast.show(message, {
+  const toast = Toast.show(message, {
     duration: options?.duration ?? Toast.durations.SHORT,
     position: options?.position ?? Toast.positions.CENTER - 200,
     animation: true,
@@ -50,5 +73,12 @@ export const showToast = (
       fontWeight: "500",
       fontSize: 14,
     },
-  });
+    onHide: options?.onHide,
+  } as ToastConfig);
+
+  return toast;
+};
+
+export const hideToast = (toast: number): void => {
+  Toast.hide(toast);
 };

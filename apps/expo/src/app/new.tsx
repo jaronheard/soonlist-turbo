@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Toast from "react-native-root-toast";
 import * as FileSystem from "expo-file-system";
 import { Image as ExpoImage } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
@@ -31,7 +32,7 @@ import type { RecentPhoto } from "~/store";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
-import { showToast } from "~/utils/toast";
+import { hideToast, showToast } from "~/utils/toast";
 
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
@@ -281,7 +282,14 @@ export default function NewEventModal() {
     if (!input.trim() && !imagePreview && !linkPreview) return;
 
     router.canGoBack() ? router.back() : router.navigate("feed");
-    showToast("Got it. Notification soon!", "success");
+
+    const loadingToast = showToast(
+      "Processing details. Capture another?",
+      "info",
+      {
+        duration: Toast.durations.LONG * 2,
+      },
+    );
 
     try {
       if (linkPreview) {
@@ -345,8 +353,12 @@ export default function NewEventModal() {
           visibility: "private",
         });
       }
+
+      hideToast(loadingToast);
+      showToast("Captured successfully!", "success");
     } catch (error) {
       console.error("Error creating event:", error);
+      hideToast(loadingToast);
       showToast("Failed to create event. Please try again.", "error");
     } finally {
       resetAddEventState();
