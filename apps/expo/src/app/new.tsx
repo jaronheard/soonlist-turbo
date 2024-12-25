@@ -2,6 +2,7 @@ import React, { useCallback, useEffect } from "react";
 import {
   ActivityIndicator,
   Dimensions,
+  FlatList,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -67,7 +68,7 @@ const PhotoGrid = React.memo(
     onDescribePress: () => void;
     onMorePhotos: () => void;
   }) => {
-    if (!hasMediaPermission || recentPhotos.length === 0) {
+    if (!hasMediaPermission) {
       const windowWidth = Dimensions.get("window").width;
       const padding = 32;
       const spacing = 2;
@@ -129,47 +130,56 @@ const PhotoGrid = React.memo(
         </View>
 
         <View className="flex-1 bg-transparent">
-          <FlashList
-            data={recentPhotos}
-            renderItem={({ item }) => (
-              <Pressable
-                onPress={() => onPhotoSelect(item.uri)}
-                style={{
-                  width: imageSize,
-                  height: imageSize,
-                  margin: spacing / 2,
-                }}
-              >
-                <ExpoImage
-                  source={{ uri: item.uri }}
+          <FlatList
+            data={[{ id: "plus-button", uri: "" }, ...recentPhotos]}
+            renderItem={({ item }) => {
+              if (item.id === "plus-button") {
+                return (
+                  <Pressable
+                    onPress={onMorePhotos}
+                    style={{
+                      width: imageSize,
+                      height: imageSize,
+                      margin: spacing / 2,
+                    }}
+                    className="items-center justify-center rounded-md bg-white"
+                  >
+                    <Plus size={20} color="#5A32FB" />
+                  </Pressable>
+                );
+              }
+
+              return (
+                <Pressable
+                  onPress={() => onPhotoSelect(item.uri)}
                   style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: 4,
+                    width: imageSize,
+                    height: imageSize,
+                    margin: spacing / 2,
                   }}
-                  contentFit="cover"
-                  contentPosition="center"
-                  transition={100}
-                  cachePolicy="memory"
-                />
-              </Pressable>
-            )}
+                >
+                  <ExpoImage
+                    source={{ uri: item.uri }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: 4,
+                    }}
+                    contentFit="cover"
+                    contentPosition="center"
+                    transition={100}
+                    cachePolicy="memory"
+                  />
+                </Pressable>
+              );
+            }}
             numColumns={4}
-            estimatedItemSize={imageSize}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
               padding: spacing / 2,
             }}
-            estimatedListSize={{
-              height: imageSize * 3 + spacing * 2,
-              width: windowWidth - padding,
-            }}
             keyExtractor={(item) => item.id}
             horizontal={false}
-            overrideItemLayout={(layout, _item) => {
-              layout.size = imageSize;
-              layout.span = 1;
-            }}
           />
         </View>
       </View>
@@ -436,7 +446,7 @@ export default function NewEventModal() {
   const loadRecentPhotos = useCallback(async () => {
     try {
       const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 16,
+        first: 15,
         sortBy: MediaLibrary.SortBy.creationTime,
         mediaType: [MediaLibrary.MediaType.photo],
       });
