@@ -2,26 +2,28 @@ import React, { useCallback } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
-import { toast } from "sonner-native";
 
 import { useAppStore } from "~/store";
 
 export default function AddEventButton() {
   const router = useRouter();
-  const { hasMediaPermission } = useAppStore((state) => ({
-    hasMediaPermission: state.hasMediaPermission,
-  }));
 
-  const handlePress = useCallback(() => {
-    if (!hasMediaPermission) {
-      toast.error("Photo access is needed to add photos to events");
-      router.push("/new");
-      return;
+  const handlePress = useCallback(async () => {
+    try {
+      // Request photo permissions on-demand
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      useAppStore.setState({
+        hasMediaPermission: status === MediaLibrary.PermissionStatus.GRANTED,
+      });
+    } catch (error) {
+      console.error("Error requesting media permissions:", error);
     }
+    // Navigate to /new whether granted or not
     router.push("/new");
-  }, [hasMediaPermission, router]);
+  }, [router]);
 
   return (
     <View className="absolute bottom-0 left-0 right-0">

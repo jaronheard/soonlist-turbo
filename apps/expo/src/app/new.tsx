@@ -2,7 +2,9 @@ import React, { useCallback, useEffect } from "react";
 import {
   ActivityIndicator,
   Dimensions,
+  FlatList,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -17,11 +19,12 @@ import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { FlashList } from "@shopify/flash-list";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   Camera,
   ChevronRight,
   Link as LinkIcon,
+  Plus,
   Sparkles,
   Type,
   X,
@@ -51,7 +54,6 @@ const styles = StyleSheet.create({
 
 const PhotoGrid = React.memo(
   ({
-    hasMediaPermission,
     recentPhotos,
     onPhotoSelect,
     onCameraPress,
@@ -65,8 +67,6 @@ const PhotoGrid = React.memo(
     onDescribePress: () => void;
     onMorePhotos: () => void;
   }) => {
-    if (!hasMediaPermission || recentPhotos.length === 0) return null;
-
     const windowWidth = Dimensions.get("window").width;
     const padding = 32;
     const spacing = 2;
@@ -101,47 +101,56 @@ const PhotoGrid = React.memo(
         </View>
 
         <View className="flex-1 bg-transparent">
-          <FlashList
-            data={recentPhotos}
-            renderItem={({ item }) => (
-              <Pressable
-                onPress={() => onPhotoSelect(item.uri)}
-                style={{
-                  width: imageSize,
-                  height: imageSize,
-                  margin: spacing / 2,
-                }}
-              >
-                <ExpoImage
-                  source={{ uri: item.uri }}
+          <FlatList
+            data={[{ id: "plus-button", uri: "" }, ...recentPhotos]}
+            renderItem={({ item }) => {
+              if (item.id === "plus-button") {
+                return (
+                  <Pressable
+                    onPress={onMorePhotos}
+                    style={{
+                      width: imageSize,
+                      height: imageSize,
+                      margin: spacing / 2,
+                    }}
+                    className="items-center justify-center rounded-md bg-white"
+                  >
+                    <Plus size={20} color="#5A32FB" />
+                  </Pressable>
+                );
+              }
+
+              return (
+                <Pressable
+                  onPress={() => onPhotoSelect(item.uri)}
                   style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: 4,
+                    width: imageSize,
+                    height: imageSize,
+                    margin: spacing / 2,
                   }}
-                  contentFit="cover"
-                  contentPosition="center"
-                  transition={100}
-                  cachePolicy="memory"
-                />
-              </Pressable>
-            )}
+                >
+                  <ExpoImage
+                    source={{ uri: item.uri }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: 4,
+                    }}
+                    contentFit="cover"
+                    contentPosition="center"
+                    transition={100}
+                    cachePolicy="memory"
+                  />
+                </Pressable>
+              );
+            }}
             numColumns={4}
-            estimatedItemSize={imageSize}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
               padding: spacing / 2,
             }}
-            estimatedListSize={{
-              height: imageSize * 3 + spacing * 2,
-              width: windowWidth - padding,
-            }}
             keyExtractor={(item) => item.id}
             horizontal={false}
-            overrideItemLayout={(layout, _item) => {
-              layout.size = imageSize;
-              layout.span = 1;
-            }}
           />
         </View>
       </View>
@@ -408,7 +417,7 @@ export default function NewEventModal() {
   const loadRecentPhotos = useCallback(async () => {
     try {
       const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 16,
+        first: 15,
         sortBy: MediaLibrary.SortBy.creationTime,
         mediaType: [MediaLibrary.MediaType.photo],
       });
@@ -430,6 +439,7 @@ export default function NewEventModal() {
 
   useEffect(() => {
     if (shouldRefreshMediaLibrary) {
+      clearPreview();
       void loadRecentPhotos();
       setShouldRefreshMediaLibrary(false);
     }
@@ -437,6 +447,7 @@ export default function NewEventModal() {
     shouldRefreshMediaLibrary,
     loadRecentPhotos,
     setShouldRefreshMediaLibrary,
+    clearPreview,
   ]);
 
   useEffect(() => {
@@ -493,6 +504,44 @@ export default function NewEventModal() {
   ]);
 
   const isFromIntent = Boolean(text || imageUri);
+
+  useFocusEffect(
+    useCallback(() => {
+      let toastId: string | number | undefined;
+
+      void (async () => {
+        const { status } = await MediaLibrary.getPermissionsAsync();
+        const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+
+        if (!isGranted && !isFromIntent) {
+          clearPreview();
+          toastId = toast("Grant photo access", {
+            duration: Infinity,
+            action: {
+              label: "Open Settings",
+              onClick: () => {
+                void Linking.openSettings();
+              },
+            },
+            closeButton: true,
+            description:
+              "Soonlist is easiest to use when you grant photo access.",
+          });
+        }
+
+        useAppStore.setState({
+          hasMediaPermission: isGranted,
+        });
+      })();
+
+      // Cleanup function to dismiss toast when navigating away
+      return () => {
+        if (toastId) {
+          toast.dismiss(toastId);
+        }
+      };
+    }, [clearPreview, isFromIntent]),
+  );
 
   return (
     <KeyboardAvoidingView
