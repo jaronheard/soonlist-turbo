@@ -17,6 +17,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { useFocusEffect } from "@react-navigation/native";
 import { FlashList } from "@shopify/flash-list";
 import {
   Camera,
@@ -65,6 +66,50 @@ const PhotoGrid = React.memo(
     onDescribePress: () => void;
     onMorePhotos: () => void;
   }) => {
+    if (!hasMediaPermission) {
+      const windowWidth = Dimensions.get("window").width;
+      const padding = 32;
+      const spacing = 2;
+      const columns = 4;
+      const availableWidth = windowWidth - padding;
+      const imageSize = (availableWidth - (columns - 1) * spacing) / columns;
+
+      async function handleGrantAccess() {
+        try {
+          const { status } = await MediaLibrary.requestPermissionsAsync();
+          useAppStore.setState({
+            hasMediaPermission:
+              status === MediaLibrary.PermissionStatus.GRANTED,
+          });
+          if (status === MediaLibrary.PermissionStatus.GRANTED) {
+            await onMorePhotos();
+          }
+        } catch (err) {
+          toast.error("Unable to request access to photos.");
+          console.error(err);
+        }
+      }
+
+      return (
+        <View
+          className="flex-row flex-wrap"
+          style={{ height: imageSize * 3 + spacing * 2 }}
+        >
+          <Pressable
+            onPress={handleGrantAccess}
+            style={{
+              width: imageSize,
+              height: imageSize,
+              margin: spacing / 2,
+            }}
+            className="items-center justify-center rounded-md bg-interactive-3"
+          >
+            <Text className="text-sm font-medium text-white">Grant Access</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
     if (!hasMediaPermission || recentPhotos.length === 0) return null;
 
     const windowWidth = Dimensions.get("window").width;
@@ -493,6 +538,18 @@ export default function NewEventModal() {
   ]);
 
   const isFromIntent = Boolean(text || imageUri);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Re-check permissions on focus in case user changed them in Settings
+      void (async () => {
+        const { status } = await MediaLibrary.getPermissionsAsync();
+        useAppStore.setState({
+          hasMediaPermission: status === MediaLibrary.PermissionStatus.GRANTED,
+        });
+      })();
+    }, []),
+  );
 
   return (
     <KeyboardAvoidingView
