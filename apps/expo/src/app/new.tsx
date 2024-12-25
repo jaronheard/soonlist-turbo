@@ -287,16 +287,20 @@ export default function NewEventModal() {
     });
 
     try {
+      let eventId: string | undefined;
       if (linkPreview) {
-        await eventFromUrlThenCreateThenNotification.mutateAsync({
-          url: linkPreview,
-          timezone: "America/Los_Angeles",
-          expoPushToken,
-          lists: [],
-          userId: user?.id || "",
-          username: user?.username || "",
-          visibility: "private",
-        });
+        const result = await eventFromUrlThenCreateThenNotification.mutateAsync(
+          {
+            url: linkPreview,
+            timezone: "America/Los_Angeles",
+            expoPushToken,
+            lists: [],
+            userId: user?.id || "",
+            username: user?.username || "",
+            visibility: "private",
+          },
+        );
+        eventId = result.eventId;
       } else if (imagePreview) {
         setIsImageLoading(true);
         try {
@@ -325,20 +329,22 @@ export default function NewEventModal() {
 
           const { fileUrl } = JSON.parse(response.body) as { fileUrl: string };
 
-          await eventFromImageThenCreateThenNotification.mutateAsync({
-            imageUrl: fileUrl,
-            timezone: "America/Los_Angeles",
-            expoPushToken,
-            lists: [],
-            userId: user?.id || "",
-            username: user?.username || "",
-            visibility: "private",
-          });
+          const result =
+            await eventFromImageThenCreateThenNotification.mutateAsync({
+              imageUrl: fileUrl,
+              timezone: "America/Los_Angeles",
+              expoPushToken,
+              lists: [],
+              userId: user?.id || "",
+              username: user?.username || "",
+              visibility: "private",
+            });
+          eventId = result.eventId;
         } finally {
           setIsImageLoading(false);
         }
       } else {
-        await eventFromRawTextAndNotification.mutateAsync({
+        const result = await eventFromRawTextAndNotification.mutateAsync({
           rawText: input,
           timezone: "America/Los_Angeles",
           expoPushToken,
@@ -347,10 +353,18 @@ export default function NewEventModal() {
           username: user?.username || "",
           visibility: "private",
         });
+        eventId = result.eventId;
       }
 
-      if (!hasNotificationPermission) {
-        toast.success("Captured successfully!");
+      if (!hasNotificationPermission && eventId) {
+        toast.success("Captured successfully!", {
+          action: {
+            label: "View event",
+            onClick: () => {
+              router.push(`/event/${eventId}`);
+            },
+          },
+        });
       }
     } catch (error) {
       console.error("Error creating event:", error);
