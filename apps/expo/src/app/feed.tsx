@@ -126,6 +126,7 @@ function MyFeed() {
               ActionButton={GoButton}
               showCreator="otherUsers"
               stats={statsQuery.data}
+              promoCard={{ type: "addEvents" }}
             />
             <AddEventButton />
           </View>

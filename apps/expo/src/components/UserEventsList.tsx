@@ -37,6 +37,10 @@ interface ActionButtonProps {
   event: Event;
 }
 
+interface PromoCardProps {
+  type: "addEvents";
+}
+
 function formatDate(
   date: string,
   startTime: string | undefined,
@@ -249,6 +253,23 @@ export function UserEventListItem(props: {
   );
 }
 
+function PromoCard({ type }: PromoCardProps) {
+  if (type === "addEvents") {
+    return (
+      <View className="mx-4 rounded-2xl bg-accent-yellow/80 p-4">
+        <Text className="mb-1 text-lg font-semibold text-neutral-1">
+          Keep capturing
+        </Text>
+        <Text className="text-base text-neutral-2">
+          Fill your list with possibilities. Tap + to add more.
+        </Text>
+      </View>
+    );
+  }
+
+  return null;
+}
+
 interface UserEventsListProps {
   events: Event[];
   ActionButton?: React.ComponentType<ActionButtonProps>;
@@ -263,6 +284,7 @@ interface UserEventsListProps {
     upcomingEvents: number;
     allTimeEvents: number;
   };
+  promoCard?: PromoCardProps;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -275,6 +297,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     onEndReached,
     isFetchingNextPage,
     stats,
+    promoCard,
   } = props;
   const { user } = useUser();
   const username = user?.username || "";
@@ -297,12 +320,20 @@ export default function UserEventsList(props: UserEventsListProps) {
     </View>
   );
 
-  const renderFooter = () =>
-    isFetchingNextPage ? (
-      <View className="py-4">
-        <ActivityIndicator size="large" color="#5A32FB" />
-      </View>
-    ) : null;
+  const renderFooter = () => (
+    <>
+      {isFetchingNextPage ? (
+        <View className="py-4">
+          <ActivityIndicator size="large" color="#5A32FB" />
+        </View>
+      ) : null}
+      {events.length >= 1 && promoCard ? (
+        <View className="mb-4 mt-2">
+          <PromoCard {...promoCard} />
+        </View>
+      ) : null}
+    </>
+  );
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -354,7 +385,9 @@ export default function UserEventsList(props: UserEventsListProps) {
         }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
-        contentContainerStyle={{ paddingBottom: 16 }}
+        contentContainerStyle={{
+          paddingBottom: 120, // Increased padding to account for AddEventButton
+        }}
         ListFooterComponent={renderFooter()}
       />
     </>
