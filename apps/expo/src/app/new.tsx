@@ -67,7 +67,7 @@ const PhotoGrid = React.memo(
     onDescribePress: () => void;
     onMorePhotos: () => void;
   }) => {
-    if (!hasMediaPermission) {
+    if (!hasMediaPermission || recentPhotos.length === 0) {
       const windowWidth = Dimensions.get("window").width;
       const padding = 32;
       const spacing = 2;
@@ -94,8 +94,6 @@ const PhotoGrid = React.memo(
         </View>
       );
     }
-
-    if (!hasMediaPermission || recentPhotos.length === 0) return null;
 
     const windowWidth = Dimensions.get("window").width;
     const padding = 32;
@@ -460,6 +458,7 @@ export default function NewEventModal() {
 
   useEffect(() => {
     if (shouldRefreshMediaLibrary) {
+      clearPreview();
       void loadRecentPhotos();
       setShouldRefreshMediaLibrary(false);
     }
@@ -467,6 +466,7 @@ export default function NewEventModal() {
     shouldRefreshMediaLibrary,
     loadRecentPhotos,
     setShouldRefreshMediaLibrary,
+    clearPreview,
   ]);
 
   useEffect(() => {
@@ -526,14 +526,19 @@ export default function NewEventModal() {
 
   useFocusEffect(
     useCallback(() => {
-      // Re-check permissions on focus in case user changed them in Settings
       void (async () => {
         const { status } = await MediaLibrary.getPermissionsAsync();
+        const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+
+        if (!isGranted) {
+          clearPreview();
+        }
+
         useAppStore.setState({
-          hasMediaPermission: status === MediaLibrary.PermissionStatus.GRANTED,
+          hasMediaPermission: isGranted,
         });
       })();
-    }, []),
+    }, [clearPreview]),
   );
 
   return (
