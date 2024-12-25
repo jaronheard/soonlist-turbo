@@ -23,6 +23,7 @@ import {
   Camera,
   ChevronRight,
   Link as LinkIcon,
+  Plus,
   Sparkles,
   Type,
   X,
@@ -74,37 +75,21 @@ const PhotoGrid = React.memo(
       const availableWidth = windowWidth - padding;
       const imageSize = (availableWidth - (columns - 1) * spacing) / columns;
 
-      async function handleGrantAccess() {
-        try {
-          const { status } = await MediaLibrary.requestPermissionsAsync();
-          useAppStore.setState({
-            hasMediaPermission:
-              status === MediaLibrary.PermissionStatus.GRANTED,
-          });
-          if (status === MediaLibrary.PermissionStatus.GRANTED) {
-            await onMorePhotos();
-          }
-        } catch (err) {
-          toast.error("Unable to request access to photos.");
-          console.error(err);
-        }
-      }
-
       return (
         <View
           className="flex-row flex-wrap"
           style={{ height: imageSize * 3 + spacing * 2 }}
         >
           <Pressable
-            onPress={handleGrantAccess}
+            onPress={onMorePhotos}
             style={{
               width: imageSize,
               height: imageSize,
               margin: spacing / 2,
             }}
-            className="items-center justify-center rounded-md bg-interactive-3"
+            className="items-center justify-center rounded-md bg-white"
           >
-            <Text className="text-sm font-medium text-white">Grant Access</Text>
+            <Plus size={20} color="#5A32FB" />
           </Pressable>
         </View>
       );
