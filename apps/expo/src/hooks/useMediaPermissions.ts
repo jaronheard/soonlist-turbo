@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import * as MediaLibrary from "expo-media-library";
-import { toast } from "sonner-native";
 
 import { useAppStore } from "~/store";
 

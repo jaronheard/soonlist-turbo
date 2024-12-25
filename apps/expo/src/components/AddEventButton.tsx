@@ -5,15 +5,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
-import { toast } from "sonner-native";
 
 import { useAppStore } from "~/store";
 
 export default function AddEventButton() {
   const router = useRouter();
-  const { hasMediaPermission } = useAppStore((state) => ({
-    hasMediaPermission: state.hasMediaPermission,
-  }));
 
   const handlePress = useCallback(async () => {
     try {

@@ -20,7 +20,6 @@ import * as MediaLibrary from "expo-media-library";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useFocusEffect } from "@react-navigation/native";
-import { FlashList } from "@shopify/flash-list";
 import {
   Camera,
   ChevronRight,
@@ -55,7 +54,6 @@ const styles = StyleSheet.create({
 
 const PhotoGrid = React.memo(
   ({
-    hasMediaPermission,
     recentPhotos,
     onPhotoSelect,
     onCameraPress,
