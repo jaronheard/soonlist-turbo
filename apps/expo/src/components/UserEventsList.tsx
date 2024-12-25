@@ -256,8 +256,8 @@ export function UserEventListItem(props: {
 function PromoCard({ type }: PromoCardProps) {
   if (type === "addEvents") {
     return (
-      <View className="mx-4 my-6 rounded-lg bg-accent-yellow p-6">
-        <Text className="mb-2 text-lg font-bold text-neutral-1">
+      <View className="mx-4 rounded-2xl bg-accent-yellow/80 p-4">
+        <Text className="mb-1 text-lg font-semibold text-neutral-1">
           Keep capturing
         </Text>
         <Text className="text-base text-neutral-2">
@@ -327,7 +327,11 @@ export default function UserEventsList(props: UserEventsListProps) {
           <ActivityIndicator size="large" color="#5A32FB" />
         </View>
       ) : null}
-      {events.length > 1 && promoCard ? <PromoCard {...promoCard} /> : null}
+      {events.length >= 1 && promoCard ? (
+        <View className="mb-4 mt-2">
+          <PromoCard {...promoCard} />
+        </View>
+      ) : null}
     </>
   );
 
