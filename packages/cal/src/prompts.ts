@@ -274,6 +274,7 @@ The system using the output requires specific date and time formatting.
 - Times MUST be in 24-hour format HH:MM:SS (e.g., 14:30:00 for 2:30 PM).
 - Always include seconds in the time, even if they're 00.
 - Always provide both startTime and endTime.
+- When interpreting dates, assume they are in the future unless clearly stated otherwise.
 - If start time is not explicitly stated, infer a reasonable start time based on the event type and context (e.g., 19:00:00 for an evening concert, 10:00:00 for a morning workshop).
 - If end time is not explicitly stated, infer a reasonable duration based on the event type and context (e.g., 2 hours for a movie, 3 hours for a concert, etc.).
 - Ensure the endDate is always provided and is either the same as or later than the startDate.
@@ -306,7 +307,7 @@ export const getPrompt = (timezone = "America/Los_Angeles") => {
   return {
     text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2024.09.26.3", // Increment the version number
+    version: "v2024.12.25.1", // Increment the version number
   };
 };
 
