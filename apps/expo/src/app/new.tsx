@@ -4,6 +4,7 @@ import {
   Dimensions,
   FlatList,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -52,6 +53,32 @@ const styles = StyleSheet.create({
   },
 });
 
+function PermissionPromptCard() {
+  const handleOpenSettings = useCallback(() => {
+    void Linking.openSettings();
+  }, []);
+
+  return (
+    <View className="rounded-2xl bg-accent-yellow p-4">
+      <Text className="mb-1 text-lg font-semibold text-neutral-1">
+        Grant photo access
+      </Text>
+      <Text className="mb-3 text-base text-neutral-2">
+        Enable photo access to select from your library, or use the Share menu
+        from your photos app.
+      </Text>
+      <Pressable
+        onPress={handleOpenSettings}
+        className="self-start rounded-md bg-white px-4 py-2"
+      >
+        <Text className="text-sm font-medium text-neutral-1">
+          Open Settings
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
 const PhotoGrid = React.memo(
   ({
     hasMediaPermission,
@@ -68,34 +95,6 @@ const PhotoGrid = React.memo(
     onDescribePress: () => void;
     onMorePhotos: () => void;
   }) => {
-    if (!hasMediaPermission) {
-      const windowWidth = Dimensions.get("window").width;
-      const padding = 32;
-      const spacing = 2;
-      const columns = 4;
-      const availableWidth = windowWidth - padding;
-      const imageSize = (availableWidth - (columns - 1) * spacing) / columns;
-
-      return (
-        <View
-          className="flex-row flex-wrap"
-          style={{ height: imageSize * 3 + spacing * 2 }}
-        >
-          <Pressable
-            onPress={onMorePhotos}
-            style={{
-              width: imageSize,
-              height: imageSize,
-              margin: spacing / 2,
-            }}
-            className="items-center justify-center rounded-md bg-white"
-          >
-            <Plus size={20} color="#5A32FB" />
-          </Pressable>
-        </View>
-      );
-    }
-
     const windowWidth = Dimensions.get("window").width;
     const padding = 32;
     const spacing = 2;
@@ -105,6 +104,11 @@ const PhotoGrid = React.memo(
 
     return (
       <View className="" style={{ height: imageSize * 3 + spacing * 2 }}>
+        {!hasMediaPermission && (
+          <View className="mb-4">
+            <PermissionPromptCard />
+          </View>
+        )}
         <View className="mb-2 flex-row items-center justify-between">
           <Pressable
             onPress={onMorePhotos}
