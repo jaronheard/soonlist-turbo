@@ -11,7 +11,6 @@ import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
-import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { api } from "~/utils/api";
@@ -103,11 +102,8 @@ function MyFeed() {
           headerTitle: () => <NavigationMenu active="upcoming" />,
           headerBackVisible: false,
           headerRight: () => (
-            <View className="mr-2 flex-row items-center gap-2">
-              <SignedIn>
-                <ShareButton webPath={`/${user?.username}/upcoming`} />
-              </SignedIn>
-              <ProfileMenu />
+            <View className="mr-2">
+              <ProfileMenu showShare />
             </View>
           ),
         }}

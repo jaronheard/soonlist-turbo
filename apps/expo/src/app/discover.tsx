@@ -61,10 +61,7 @@ export default function Page() {
         options={{
           headerTitle: () => <NavigationMenu active="discover" />,
           headerRight: () => (
-            <View className="mr-2 flex-row items-center gap-2">
-              <SignedIn>
-                <ShareButton webPath="/explore" />
-              </SignedIn>
+            <View className="mr-2">
               <ProfileMenu />
             </View>
           ),
