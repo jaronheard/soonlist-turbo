@@ -123,7 +123,7 @@ export function NotificationProvider({
       const { status: existingStatus } =
         await Notifications.getPermissionsAsync();
       setHasNotificationPermission(
-        existingStatus === Notifications.PermissionStatus.GRANTED,
+        existingStatus === ("granted" as Notifications.PermissionStatus),
       );
     }
 
