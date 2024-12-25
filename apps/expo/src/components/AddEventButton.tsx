@@ -4,9 +4,9 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
+import { toast } from "sonner-native";
 
 import { useAppStore } from "~/store";
-import { showToast } from "~/utils/toast";
 
 export default function AddEventButton() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function AddEventButton() {
 
   const handlePress = useCallback(() => {
     if (!hasMediaPermission) {
-      showToast("Photo access is needed to add photos to events", "error");
+      toast.error("Photo access is needed to add photos to events");
       router.push("/new");
       return;
     }

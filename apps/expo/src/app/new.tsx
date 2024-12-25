@@ -26,12 +26,12 @@ import {
   Type,
   X,
 } from "lucide-react-native";
+import { toast } from "sonner-native";
 
 import type { RecentPhoto } from "~/store";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
-import { showToast } from "~/utils/toast";
 
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
@@ -151,7 +151,7 @@ const PhotoGrid = React.memo(
 
 export default function NewEventModal() {
   const router = useRouter();
-  const { expoPushToken } = useNotification();
+  const { expoPushToken, hasNotificationPermission } = useNotification();
   const utils = api.useUtils();
   const { user } = useUser();
   const {
@@ -238,14 +238,14 @@ export default function NewEventModal() {
       }
     } catch (error) {
       console.error("Error picking image:", error);
-      showToast("Failed to pick image", "error");
+      toast.error("Failed to pick image");
     }
   }, [handleImagePreview]);
 
   const handleCameraCapture = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== ImagePicker.PermissionStatus.GRANTED) {
-      showToast("Camera permission is required to take a photo", "error");
+      toast.error("Camera permission is required to take a photo");
       return;
     }
 
@@ -281,19 +281,26 @@ export default function NewEventModal() {
     if (!input.trim() && !imagePreview && !linkPreview) return;
 
     router.canGoBack() ? router.back() : router.navigate("feed");
-    showToast("Got it. Notification soon!", "success");
+
+    toast.info("Processing details. Add another?", {
+      duration: 5000,
+    });
 
     try {
+      let eventId: string | undefined;
       if (linkPreview) {
-        await eventFromUrlThenCreateThenNotification.mutateAsync({
-          url: linkPreview,
-          timezone: "America/Los_Angeles",
-          expoPushToken,
-          lists: [],
-          userId: user?.id || "",
-          username: user?.username || "",
-          visibility: "private",
-        });
+        const result = await eventFromUrlThenCreateThenNotification.mutateAsync(
+          {
+            url: linkPreview,
+            timezone: "America/Los_Angeles",
+            expoPushToken,
+            lists: [],
+            userId: user?.id || "",
+            username: user?.username || "",
+            visibility: "private",
+          },
+        );
+        eventId = result.eventId;
       } else if (imagePreview) {
         setIsImageLoading(true);
         try {
@@ -322,20 +329,22 @@ export default function NewEventModal() {
 
           const { fileUrl } = JSON.parse(response.body) as { fileUrl: string };
 
-          await eventFromImageThenCreateThenNotification.mutateAsync({
-            imageUrl: fileUrl,
-            timezone: "America/Los_Angeles",
-            expoPushToken,
-            lists: [],
-            userId: user?.id || "",
-            username: user?.username || "",
-            visibility: "private",
-          });
+          const result =
+            await eventFromImageThenCreateThenNotification.mutateAsync({
+              imageUrl: fileUrl,
+              timezone: "America/Los_Angeles",
+              expoPushToken,
+              lists: [],
+              userId: user?.id || "",
+              username: user?.username || "",
+              visibility: "private",
+            });
+          eventId = result.eventId;
         } finally {
           setIsImageLoading(false);
         }
       } else {
-        await eventFromRawTextAndNotification.mutateAsync({
+        const result = await eventFromRawTextAndNotification.mutateAsync({
           rawText: input,
           timezone: "America/Los_Angeles",
           expoPushToken,
@@ -344,10 +353,23 @@ export default function NewEventModal() {
           username: user?.username || "",
           visibility: "private",
         });
+        eventId = result.eventId;
+      }
+
+      if (!hasNotificationPermission && eventId) {
+        toast.success("Captured successfully!", {
+          action: {
+            label: "View event",
+            onClick: () => {
+              toast.dismiss();
+              router.push(`/event/${eventId}`);
+            },
+          },
+        });
       }
     } catch (error) {
       console.error("Error creating event:", error);
-      showToast("Failed to create event. Please try again.", "error");
+      toast.error("Failed to create event. Please try again.");
     } finally {
       resetAddEventState();
     }
@@ -356,6 +378,7 @@ export default function NewEventModal() {
     imagePreview,
     linkPreview,
     expoPushToken,
+    hasNotificationPermission,
     user,
     router,
     setIsImageLoading,

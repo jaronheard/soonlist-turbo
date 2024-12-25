@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import * as MediaLibrary from "expo-media-library";
+import { toast } from "sonner-native";
 
 import { useAppStore } from "~/store";
-import { showToast } from "~/utils/toast";
 
 export function useMediaPermissions() {
   const { setHasMediaPermission } = useAppStore();
@@ -33,11 +33,11 @@ export function useMediaPermissions() {
           const message = canAskAgain
             ? "Photo access denied. Please grant permission in settings."
             : "Photo access permanently denied. Update permissions in system settings.";
-          showToast(message, "error");
+          toast.error(message);
         }
       } catch (error) {
         console.error("Error requesting media permissions:", error);
-        showToast("Failed to request photo permissions", "error");
+        toast.error("Failed to request photo permissions");
         setHasMediaPermission(false);
       }
     }

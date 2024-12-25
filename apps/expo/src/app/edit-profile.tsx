@@ -17,12 +17,12 @@ import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Globe, Instagram, Mail, Phone } from "lucide-react-native";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner-native";
 import { z } from "zod";
 
 import { Button } from "~/components/Button";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { api } from "~/utils/api";
-import { showToast } from "~/utils/toast";
 
 const profileSchema = z.object({
   username: z
@@ -91,17 +91,19 @@ export default function EditProfileScreen() {
 
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
+      const loadingToastId = toast.loading("Updating profile...");
       setIsSubmitting(true);
       try {
         if (data.username !== user?.username) {
           await user?.update({ username: data.username });
         }
         await updateProfile.mutateAsync(data);
-        showToast("Profile updated successfully", "success");
+        toast.dismiss(loadingToastId);
+        toast.success("Profile updated successfully");
       } catch (error) {
         console.error("Error updating profile:", error);
-        showToast("An unexpected error occurred", "error");
-        // Handle error (e.g., show error message to user)
+        toast.dismiss(loadingToastId);
+        toast.error("An unexpected error occurred");
       } finally {
         setIsSubmitting(false);
       }
@@ -110,11 +112,13 @@ export default function EditProfileScreen() {
   );
 
   const pickImage = useCallback(async () => {
+    const loadingToastId = toast.loading("Updating profile image...");
     try {
       const permissionResult =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
+        toast.dismiss(loadingToastId);
         throw new Error("Permission to access photos was denied");
       }
 
@@ -127,11 +131,13 @@ export default function EditProfileScreen() {
       });
 
       if (result.canceled) {
+        toast.dismiss(loadingToastId);
         return;
       }
 
       const asset = result.assets[0];
       if (!asset) {
+        toast.dismiss(loadingToastId);
         throw new Error("No image asset selected");
       }
 
@@ -139,6 +145,7 @@ export default function EditProfileScreen() {
       const base64 = asset.base64;
       const mimeType = asset.mimeType;
       if (!base64 || !mimeType) {
+        toast.dismiss(loadingToastId);
         throw new Error("Image data is incomplete");
       }
 
@@ -147,13 +154,15 @@ export default function EditProfileScreen() {
       await user?.setProfileImage({
         file: image,
       });
-      showToast("Profile image updated successfully", "success");
+      toast.dismiss(loadingToastId);
+      toast.success("Profile image updated successfully");
     } catch (error) {
       console.error("Error in pickImage:", error);
+      toast.dismiss(loadingToastId);
       if (error instanceof Error) {
-        showToast(error.message, "error");
+        toast.error(error.message);
       } else {
-        showToast("An unexpected error occurred", "error");
+        toast.error("An unexpected error occurred");
       }
       // Revert to the previous image if the update fails
       setProfileImage(user?.imageUrl ?? null);

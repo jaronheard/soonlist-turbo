@@ -25,6 +25,7 @@ import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { RootSiblingParent } from "react-native-root-siblings";
 import Constants, { AppOwnership } from "expo-constants";
+import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
@@ -244,6 +245,7 @@ function RootLayoutContent() {
           onDismiss={() => setIsCalendarModalVisible(false)}
           initialLimit={INITIAL_CALENDAR_LIMIT}
         />
+        <Toaster position="top-center" offset={100} visibleToasts={1} />
       </View>
     </RootSiblingParent>
   );

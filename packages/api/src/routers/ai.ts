@@ -789,6 +789,7 @@ export const aiRouter = createTRPCRouter({
           return {
             success: true,
             ticket,
+            eventId: createEvent.id,
           };
         } catch (error) {
           console.error("Error sending notification:", error);
@@ -1134,6 +1135,7 @@ export const aiRouter = createTRPCRouter({
           return {
             success: true,
             ticket,
+            eventId: createEvent.id,
           };
         } catch (error) {
           console.error("Error sending notification:", error);
@@ -1489,6 +1491,7 @@ export const aiRouter = createTRPCRouter({
           return {
             success: true,
             ticket,
+            eventId: createEvent.id,
           };
         } catch (error) {
           console.error("Error sending notification:", error);
