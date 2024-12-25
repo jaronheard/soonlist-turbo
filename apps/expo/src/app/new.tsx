@@ -53,32 +53,6 @@ const styles = StyleSheet.create({
   },
 });
 
-function PermissionPromptCard() {
-  const handleOpenSettings = useCallback(() => {
-    void Linking.openSettings();
-  }, []);
-
-  return (
-    <View className="rounded-2xl bg-accent-yellow p-4">
-      <Text className="mb-1 text-lg font-semibold text-neutral-1">
-        Grant photo access
-      </Text>
-      <Text className="mb-3 text-base text-neutral-2">
-        Enable photo access to select from your library, or use the Share menu
-        from your photos app.
-      </Text>
-      <Pressable
-        onPress={handleOpenSettings}
-        className="self-start rounded-md bg-white px-4 py-2"
-      >
-        <Text className="text-sm font-medium text-neutral-1">
-          Open Settings
-        </Text>
-      </Pressable>
-    </View>
-  );
-}
-
 const PhotoGrid = React.memo(
   ({
     hasMediaPermission,
@@ -104,11 +78,6 @@ const PhotoGrid = React.memo(
 
     return (
       <View className="" style={{ height: imageSize * 3 + spacing * 2 }}>
-        {!hasMediaPermission && (
-          <View className="mb-4">
-            <PermissionPromptCard />
-          </View>
-        )}
         <View className="mb-2 flex-row items-center justify-between">
           <Pressable
             onPress={onMorePhotos}
@@ -540,19 +509,40 @@ export default function NewEventModal() {
 
   useFocusEffect(
     useCallback(() => {
+      let toastId: string | number | undefined;
+
       void (async () => {
         const { status } = await MediaLibrary.getPermissionsAsync();
         const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
 
-        if (!isGranted) {
+        if (!isGranted && !isFromIntent) {
           clearPreview();
+          toastId = toast("Grant photo access", {
+            duration: Infinity,
+            action: {
+              label: "Open Settings",
+              onClick: () => {
+                void Linking.openSettings();
+              },
+            },
+            closeButton: true,
+            description:
+              "Soonlist is easiest to use when you grant photo access.",
+          });
         }
 
         useAppStore.setState({
           hasMediaPermission: isGranted,
         });
       })();
-    }, [clearPreview]),
+
+      // Cleanup function to dismiss toast when navigating away
+      return () => {
+        if (toastId) {
+          toast.dismiss(toastId);
+        }
+      };
+    }, [clearPreview, isFromIntent]),
   );
 
   return (
