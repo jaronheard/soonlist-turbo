@@ -23,7 +23,6 @@ import "../styles.css";
 import type { ErrorBoundaryProps } from "expo-router";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { RootSiblingParent } from "react-native-root-siblings";
 import Constants, { AppOwnership } from "expo-constants";
 import { Toaster } from "sonner-native";
 
@@ -235,18 +234,16 @@ function RootLayoutContent() {
   }, [ref]);
 
   return (
-    <RootSiblingParent>
-      <View style={{ flex: 1 }}>
-        <AuthAndTokenSync expoPushToken={expoPushToken} />
-        <InitialLayout />
-        <StatusBar />
-        <CalendarSelectionModal
-          onSelect={handleCalendarSelect}
-          onDismiss={() => setIsCalendarModalVisible(false)}
-          initialLimit={INITIAL_CALENDAR_LIMIT}
-        />
-        <Toaster position="top-center" offset={100} visibleToasts={1} />
-      </View>
-    </RootSiblingParent>
+    <View style={{ flex: 1 }}>
+      <AuthAndTokenSync expoPushToken={expoPushToken} />
+      <InitialLayout />
+      <StatusBar />
+      <CalendarSelectionModal
+        onSelect={handleCalendarSelect}
+        onDismiss={() => setIsCalendarModalVisible(false)}
+        initialLimit={INITIAL_CALENDAR_LIMIT}
+      />
+      <Toaster position="top-center" offset={100} visibleToasts={1} />
+    </View>
   );
 }
