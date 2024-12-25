@@ -258,10 +258,10 @@ function PromoCard({ type }: PromoCardProps) {
     return (
       <View className="mx-4 my-6 rounded-lg bg-accent-yellow p-6">
         <Text className="mb-2 text-lg font-bold text-neutral-1">
-          Capture now, decide later
+          Keep capturing
         </Text>
         <Text className="text-base text-neutral-2">
-          Capture everything interesting. Your future self will thank you!
+          Fill your list with possibilities. Tap + to add more.
         </Text>
       </View>
     );
@@ -381,7 +381,9 @@ export default function UserEventsList(props: UserEventsListProps) {
         }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
-        contentContainerStyle={{ paddingBottom: 16 }}
+        contentContainerStyle={{
+          paddingBottom: 120, // Increased padding to account for AddEventButton
+        }}
         ListFooterComponent={renderFooter()}
       />
     </>
