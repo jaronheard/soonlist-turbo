@@ -1,11 +1,11 @@
 import { Alert, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
+import { toast } from "sonner-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import { useAppStore } from "~/store";
-import { showToast } from "~/utils/toast";
 
 const INITIAL_CALENDAR_LIMIT = 5;
 
@@ -155,7 +155,7 @@ export function useCalendar() {
       );
 
       if (eventId) {
-        showToast("Event successfully added to calendar", "success");
+        toast.success("Event successfully added to calendar");
       }
 
       const newUsage = { ...calendarUsage };
@@ -163,7 +163,7 @@ export function useCalendar() {
       setCalendarUsage(newUsage);
     } catch (error) {
       console.error("Error adding event to calendar:", error);
-      showToast("Failed to add event to calendar. Please try again.", "error");
+      toast.error("Failed to add event to calendar. Please try again.");
     } finally {
       setSelectedEvent(null);
     }

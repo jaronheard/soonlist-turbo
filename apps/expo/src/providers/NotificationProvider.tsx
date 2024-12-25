@@ -15,6 +15,7 @@ import { usePostHog } from "posthog-react-native";
 
 interface NotificationContextType {
   expoPushToken: string;
+  hasNotificationPermission: boolean;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -108,6 +109,8 @@ export function NotificationProvider({
   children: React.ReactNode;
 }) {
   const [expoPushToken, setExpoPushToken] = useState("");
+  const [hasNotificationPermission, setHasNotificationPermission] =
+    useState(false);
   const [, setNotification] = useState<Notifications.Notification | undefined>(
     undefined,
   );
@@ -116,6 +119,16 @@ export function NotificationProvider({
   const posthog = usePostHog();
 
   useEffect(() => {
+    async function checkPermissions() {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      setHasNotificationPermission(
+        existingStatus === Notifications.PermissionStatus.GRANTED,
+      );
+    }
+
+    void checkPermissions();
+
     registerForPushNotificationsAsync()
       .then((token) => setExpoPushToken(token ?? ""))
       .catch((error: string) => setExpoPushToken(`${error}`));
@@ -214,7 +227,9 @@ export function NotificationProvider({
   }, [posthog]);
 
   return (
-    <NotificationContext.Provider value={{ expoPushToken }}>
+    <NotificationContext.Provider
+      value={{ expoPushToken, hasNotificationPermission }}
+    >
       {children}
     </NotificationContext.Provider>
   );

@@ -30,6 +30,7 @@ import {
   ShareIcon,
   Trash2,
 } from "lucide-react-native";
+import { toast } from "sonner-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -38,7 +39,6 @@ import { useCalendar } from "~/hooks/useCalendar";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import Config from "~/utils/config";
-import { showToast } from "~/utils/toast";
 
 const screenWidth = Dimensions.get("window").width;
 const menuMinWidth = screenWidth * 0.6; // 60% of screen width
@@ -72,58 +72,26 @@ export function EventMenu({
   const router = useRouter();
 
   const deleteEventMutation = api.event.delete.useMutation({
-    onMutate: () => {
-      showToast("Deleting event...", "loading");
-    },
     onSuccess: () => {
       void utils.event.invalidate();
-      showToast("Event deleted successfully", "success");
-    },
-    onError: (error) => {
-      showToast(`Failed to delete event: ${error.message}`, "error");
     },
   });
 
   const unfollowEventMutation = api.event.unfollow.useMutation({
-    onMutate: () => {
-      showToast("Unfollowing event...", "loading");
-    },
     onSuccess: () => {
       void utils.event.invalidate();
-      showToast("Event unfollowed", "success");
-    },
-    onError: (error) => {
-      showToast(`Failed to unfollow event: ${error.message}`, "error");
     },
   });
 
   const followEventMutation = api.event.follow.useMutation({
-    onMutate: () => {
-      showToast("Following event...", "loading");
-    },
     onSuccess: () => {
       void utils.event.invalidate();
-      showToast("Event followed", "success");
-    },
-    onError: (error) => {
-      showToast(`Failed to follow event: ${error.message}`, "error");
     },
   });
 
   const toggleVisibilityMutation = api.event.toggleVisibility.useMutation({
-    onMutate: (variables) => {
-      const action =
-        variables.visibility === "public" ? "Adding to" : "Removing from";
-      showToast(`${action} Discover...`, "loading");
-    },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       void utils.event.invalidate();
-      const action =
-        variables.visibility === "public" ? "added to" : "removed from";
-      showToast(`Event ${action} Discover`, "success");
-    },
-    onError: (error) => {
-      showToast(`Failed to update event visibility: ${error.message}`, "error");
     },
   });
 
@@ -207,37 +175,42 @@ export function EventMenu({
   };
 
   const handleDelete = async () => {
-    showToast("Deleting event...", "loading");
+    const loadingToastId = toast.loading("Deleting event...");
     try {
       if (onDelete) {
         await onDelete();
-        showToast("Event deleted successfully", "success");
       } else {
         await deleteEventMutation.mutateAsync({ id: event.id });
       }
+      toast.dismiss(loadingToastId);
+      toast.success("Event deleted successfully");
     } catch (error) {
-      showToast(`Failed to delete event: ${(error as Error).message}`, "error");
+      toast.dismiss(loadingToastId);
+      toast.error(`Failed to delete event: ${(error as Error).message}`);
     }
   };
 
   const handleUnfollow = async () => {
-    showToast("Unfollowing event...", "loading");
+    const loadingToastId = toast.loading("Unfollowing event...");
     try {
       await unfollowEventMutation.mutateAsync({ id: event.id });
+      toast.dismiss(loadingToastId);
+      toast.success("Event unfollowed");
     } catch (error) {
-      showToast(
-        `Failed to unfollow event: ${(error as Error).message}`,
-        "error",
-      );
+      toast.dismiss(loadingToastId);
+      toast.error(`Failed to unfollow event: ${(error as Error).message}`);
     }
   };
 
   const handleFollow = async () => {
-    showToast("Following event...", "loading");
+    const loadingToastId = toast.loading("Following event...");
     try {
       await followEventMutation.mutateAsync({ id: event.id });
+      toast.dismiss(loadingToastId);
+      toast.success("Event followed");
     } catch (error) {
-      showToast(`Failed to follow event: ${(error as Error).message}`, "error");
+      toast.dismiss(loadingToastId);
+      toast.error(`Failed to follow event: ${(error as Error).message}`);
     }
   };
 
@@ -259,16 +232,20 @@ export function EventMenu({
     newVisibility: "public" | "private",
   ) => {
     const action = newVisibility === "public" ? "Adding to" : "Removing from";
-    showToast(`${action} Discover...`, "loading");
+    const loadingToastId = toast.loading(`${action} Discover...`);
     try {
       await toggleVisibilityMutation.mutateAsync({
         id: event.id,
         visibility: newVisibility,
       });
+      toast.dismiss(loadingToastId);
+      const actionCompleted =
+        newVisibility === "public" ? "added to" : "removed from";
+      toast.success(`Event ${actionCompleted} Discover`);
     } catch (error) {
-      showToast(
+      toast.dismiss(loadingToastId);
+      toast.error(
         `Failed to update event visibility: ${(error as Error).message}`,
-        "error",
       );
     }
   };

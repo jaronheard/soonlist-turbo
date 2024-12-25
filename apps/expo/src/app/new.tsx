@@ -10,7 +10,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import Toast from "react-native-root-toast";
 import * as FileSystem from "expo-file-system";
 import { Image as ExpoImage } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
@@ -27,12 +26,12 @@ import {
   Type,
   X,
 } from "lucide-react-native";
+import { toast } from "sonner-native";
 
 import type { RecentPhoto } from "~/store";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
-import { hideToast, showToast } from "~/utils/toast";
 
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
@@ -152,7 +151,7 @@ const PhotoGrid = React.memo(
 
 export default function NewEventModal() {
   const router = useRouter();
-  const { expoPushToken } = useNotification();
+  const { expoPushToken, hasNotificationPermission } = useNotification();
   const utils = api.useUtils();
   const { user } = useUser();
   const {
@@ -239,14 +238,14 @@ export default function NewEventModal() {
       }
     } catch (error) {
       console.error("Error picking image:", error);
-      showToast("Failed to pick image", "error");
+      toast.error("Failed to pick image");
     }
   }, [handleImagePreview]);
 
   const handleCameraCapture = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== ImagePicker.PermissionStatus.GRANTED) {
-      showToast("Camera permission is required to take a photo", "error");
+      toast.error("Camera permission is required to take a photo");
       return;
     }
 
@@ -283,13 +282,9 @@ export default function NewEventModal() {
 
     router.canGoBack() ? router.back() : router.navigate("feed");
 
-    const loadingToast = showToast(
-      "Processing details. Capture another?",
-      "info",
-      {
-        duration: Toast.durations.LONG * 2,
-      },
-    );
+    toast.info("Processing details. Add another?", {
+      duration: 5000,
+    });
 
     try {
       if (linkPreview) {
@@ -354,12 +349,12 @@ export default function NewEventModal() {
         });
       }
 
-      hideToast(loadingToast);
-      showToast("Captured successfully!", "success");
+      if (!hasNotificationPermission) {
+        toast.success("Captured successfully!");
+      }
     } catch (error) {
       console.error("Error creating event:", error);
-      hideToast(loadingToast);
-      showToast("Failed to create event. Please try again.", "error");
+      toast.error("Failed to create event. Please try again.");
     } finally {
       resetAddEventState();
     }
@@ -368,6 +363,7 @@ export default function NewEventModal() {
     imagePreview,
     linkPreview,
     expoPushToken,
+    hasNotificationPermission,
     user,
     router,
     setIsImageLoading,
