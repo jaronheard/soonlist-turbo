@@ -392,7 +392,7 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   const renderHeader = () => (stats ? <EventStats {...stats} /> : null);
 
-  if (collapsedEvents.length === 0 && !isRefetching) {
+  if (collapsedEvents.length === 0) {
     return renderEmptyState();
   }
 
