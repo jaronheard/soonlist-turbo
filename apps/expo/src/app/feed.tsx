@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { Map } from "lucide-react-native";
+import { MapPinned } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -36,7 +36,7 @@ function GoButton({
       }
       className="flex-row items-center rounded-full bg-interactive-1/90 p-2"
     >
-      <Map color="white" size={20} />
+      <MapPinned color="white" size={20} />
     </Pressable>
   );
 }
