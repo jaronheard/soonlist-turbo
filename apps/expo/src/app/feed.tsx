@@ -15,6 +15,7 @@ import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import UserEventsList from "~/components/UserEventsList";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
+import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 
 function GoButton({
@@ -45,6 +46,7 @@ function GoButton({
 function MyFeed() {
   const { user } = useUser();
   const { handleIntent } = useIntentHandler();
+  const { isAddingEvent } = useAppStore();
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -137,6 +139,7 @@ function MyFeed() {
               showCreator="otherUsers"
               stats={statsQuery.data}
               promoCard={{ type: "addEvents" }}
+              isAddingEvent={isAddingEvent}
             />
             <AddEventButton />
           </View>

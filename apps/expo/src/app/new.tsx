@@ -290,6 +290,7 @@ export default function NewEventModal() {
     if (!input.trim() && !imagePreview && !linkPreview) return;
 
     router.canGoBack() ? router.back() : router.navigate("feed");
+    useAppStore.getState().setIsAddingEvent(true);
 
     toast.info("Processing details. Add another?", {
       duration: 5000,
@@ -381,6 +382,7 @@ export default function NewEventModal() {
       toast.error("Failed to create event. Please try again.");
     } finally {
       resetAddEventState();
+      useAppStore.getState().setIsAddingEvent(false);
     }
   }, [
     input,
