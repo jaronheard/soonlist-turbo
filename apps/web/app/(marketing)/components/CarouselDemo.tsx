@@ -12,14 +12,12 @@ import {
 } from "@soonlist/ui/carousel";
 
 const images = [
-  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/1.png",
-  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/2.png",
-  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/3.png",
-  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/4.png",
-  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/5.png",
-  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/6.png",
-  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/7.png",
-  // "https://upcdn.io/12a1yek/raw/uploads/Soonlist/8.png",
+  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/1a.png",
+  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/2a.png",
+  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/3a.png",
+  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/4a.png",
+  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/5a.png",
+  "https://upcdn.io/12a1yek/raw/uploads/Soonlist/6a.png",
 ];
 
 export function CarouselDemo() {
