@@ -66,7 +66,6 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
     try {
       const url = `${Config.apiBaseUrl}/${user.username}/upcoming`;
       await Share.share({
-        message: url,
         url: url,
       });
     } catch (error) {
