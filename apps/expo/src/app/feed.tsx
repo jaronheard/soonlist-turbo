@@ -10,7 +10,6 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { Logo } from "~/components/Logo";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import UserEventsList from "~/components/UserEventsList";

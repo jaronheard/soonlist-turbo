@@ -341,7 +341,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     return (
       <View className="mb-16 flex-1 items-center justify-center px-6 py-10">
         <Image
-          // @ts-expect-error - require type
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           source={require("../assets/icon.png")}
           style={{
             width: 64,
