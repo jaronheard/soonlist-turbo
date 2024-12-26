@@ -1,17 +1,17 @@
 import React, { useCallback, useEffect } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { Stack } from "expo-router";
-import { SignedIn, useUser } from "@clerk/clerk-expo";
-import { Map } from "lucide-react-native";
+import { useUser } from "@clerk/clerk-expo";
+import { MapPinned } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { Logo } from "~/components/Logo";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
-import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { api } from "~/utils/api";
@@ -36,7 +36,7 @@ function GoButton({
       }
       className="flex-row items-center rounded-full bg-interactive-1/90 p-2"
     >
-      <Map color="white" size={20} />
+      <MapPinned color="white" size={20} />
     </Pressable>
   );
 }
@@ -102,12 +102,14 @@ function MyFeed() {
         options={{
           headerTitle: () => <NavigationMenu active="upcoming" />,
           headerBackVisible: false,
+          headerLeft: () => (
+            <Pressable onPress={() => onRefresh()}>
+              <Logo className="h-full w-full p-1" variant="icon" />
+            </Pressable>
+          ),
           headerRight: () => (
-            <View className="mr-2 flex-row items-center gap-2">
-              <SignedIn>
-                <ShareButton webPath={`/${user?.username}/upcoming`} />
-              </SignedIn>
-              <ProfileMenu />
+            <View className="mr-2">
+              <ProfileMenu showShare />
             </View>
           ),
         }}

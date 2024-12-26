@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
-import { SignedIn, useUser } from "@clerk/clerk-expo";
+import { useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
@@ -9,7 +9,6 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import SaveButton from "~/components/SaveButton";
-import ShareButton from "~/components/ShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
 
@@ -61,10 +60,7 @@ export default function Page() {
         options={{
           headerTitle: () => <NavigationMenu active="discover" />,
           headerRight: () => (
-            <View className="mr-2 flex-row items-center gap-2">
-              <SignedIn>
-                <ShareButton webPath="/explore" />
-              </SignedIn>
+            <View className="mr-2">
               <ProfileMenu />
             </View>
           ),

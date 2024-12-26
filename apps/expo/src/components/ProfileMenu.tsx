@@ -1,5 +1,5 @@
 import React from "react";
-import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Share, Text, TouchableOpacity, View } from "react-native";
 import {
   Menu,
   MenuOption,
@@ -10,17 +10,28 @@ import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
-import { HelpCircle, LogOut, MessageCircle, User } from "lucide-react-native";
+import {
+  HelpCircle,
+  LogOut,
+  MessageCircle,
+  ShareIcon,
+  User,
+} from "lucide-react-native";
 
 import { deleteAuthData } from "~/hooks/useAuthSync";
 import { useAppStore } from "~/store";
 import { cn } from "~/utils/cn";
+import Config from "~/utils/config";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 const screenWidth = Dimensions.get("window").width;
 const menuMinWidth = screenWidth * 0.6; // 60% of screen width
 
-export function ProfileMenu() {
+interface ProfileMenuProps {
+  showShare?: boolean;
+}
+
+export function ProfileMenu({ showShare }: ProfileMenuProps) {
   const { signOut } = useAuth();
   const { user } = useUser();
   const router = useRouter();
@@ -49,7 +60,24 @@ export function ProfileMenu() {
     }
   };
 
+  const handleShare = async () => {
+    if (!user?.username) return;
+
+    try {
+      const url = `${Config.apiBaseUrl}/${user.username}/upcoming`;
+      await Share.share({
+        message: url,
+        url: url,
+      });
+    } catch (error) {
+      console.error("Error sharing:", error);
+    }
+  };
+
   const menuItems = [
+    ...(showShare
+      ? [{ title: "Share", icon: ShareIcon, onSelect: handleShare }]
+      : []),
     { title: "Profile", icon: User, onSelect: handleEditProfile },
     { title: "How to use", icon: HelpCircle, onSelect: showOnboarding },
     { title: "Support", icon: MessageCircle, onSelect: presentIntercom },
