@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import { Linking, Pressable, View } from "react-native";
+import { Image } from "expo-image";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { MapPinned } from "lucide-react-native";
@@ -9,11 +10,11 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { Logo } from "~/components/Logo";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import UserEventsList from "~/components/UserEventsList";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
+import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 
 function GoButton({
@@ -44,6 +45,7 @@ function GoButton({
 function MyFeed() {
   const { user } = useUser();
   const { handleIntent } = useIntentHandler();
+  const { isAddingEvent } = useAppStore();
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -103,9 +105,16 @@ function MyFeed() {
           headerTitle: () => <NavigationMenu active="upcoming" />,
           headerBackVisible: false,
           headerLeft: () => (
-            <Pressable onPress={() => onRefresh()}>
-              <Logo className="h-full w-full p-1" variant="icon" />
-            </Pressable>
+            <Image
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              source={require("../assets/icon.png")}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+              }}
+              contentFit="contain"
+            />
           ),
           headerRight: () => (
             <View className="mr-2">
@@ -129,6 +138,7 @@ function MyFeed() {
               showCreator="otherUsers"
               stats={statsQuery.data}
               promoCard={{ type: "addEvents" }}
+              isAddingEvent={isAddingEvent}
             />
             <AddEventButton />
           </View>

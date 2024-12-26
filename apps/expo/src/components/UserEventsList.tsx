@@ -25,6 +25,7 @@ import {
   timeFormatDateInfo,
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
+import { EventListItemSkeleton } from "./EventListItemSkeleton";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
@@ -301,6 +302,7 @@ interface UserEventsListProps {
     allTimeEvents: number;
   };
   promoCard?: PromoCardProps;
+  isAddingEvent?: boolean;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -314,6 +316,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     isFetchingNextPage,
     stats,
     promoCard,
+    isAddingEvent,
   } = props;
   const { user } = useUser();
   const username = user?.username || "";
@@ -325,16 +328,39 @@ export default function UserEventsList(props: UserEventsListProps) {
   // Collapse similar events
   const collapsedEvents = collapseSimilarEvents(events, user?.id);
 
-  const renderEmptyState = () => (
-    <View className="flex-1 items-center justify-center px-6 py-10">
-      <Text className="mb-2 text-center text-2xl font-bold text-neutral-1">
-        Capture an event
-      </Text>
-      <Text className="mb-6 text-center text-base text-neutral-2">
-        Events you capture will show up in My Feed
-      </Text>
-    </View>
-  );
+  const renderEmptyState = () => {
+    if (isAddingEvent) {
+      return (
+        <View className="flex-1">
+          {stats && <EventStats {...stats} />}
+          <EventListItemSkeleton />
+        </View>
+      );
+    }
+
+    return (
+      <View className="mb-16 flex-1 items-center justify-center px-6 py-10">
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          source={require("../assets/icon.png")}
+          style={{
+            width: 64,
+            height: 64,
+            marginBottom: 16,
+            borderRadius: 8,
+          }}
+          contentFit="contain"
+        />
+        <Text className="mb-2 rounded-lg text-center text-2xl font-bold text-neutral-1">
+          Start capturing
+        </Text>
+        <Text className="mb-6 text-center text-base text-neutral-2">
+          Create your personal list of possibilities.{"\n"}
+          Tap the plus button to get started.
+        </Text>
+      </View>
+    );
+  };
 
   const renderFooter = () => (
     <>
