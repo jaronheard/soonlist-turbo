@@ -16,12 +16,12 @@ interface UserProfileFlairProps {
 }
 
 const sizeClasses: Record<Size, string> = {
-  xs: "text-xs -bottom-2 -right-1",
-  sm: "text-sm -bottom-2 -right-1",
-  md: "text-base -bottom-2 -right-1",
-  lg: "text-lg -bottom-2 -right-1",
-  xl: "text-xl -bottom-2 -right-1",
-  "2xl": "text-2xl -bottom-2 -right-1",
+  xs: "text-xs top-0 -right-2",
+  sm: "text-sm top-0 -right-2",
+  md: "text-base top-0 -right-2",
+  lg: "text-lg top-0 -right-2",
+  xl: "text-xl top-0 -right-2",
+  "2xl": "text-2xl top-0 -right-2",
 };
 
 function UserEmoji({
