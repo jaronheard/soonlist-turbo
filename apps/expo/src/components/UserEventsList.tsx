@@ -11,7 +11,7 @@ import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { EyeOff, Globe2, MapPin, User } from "lucide-react-native";
+import { Copy, EyeOff, Globe2, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -71,8 +71,16 @@ export function UserEventListItem(props: {
   isLastItem?: boolean;
   showCreator: ShowCreatorOption;
   isSaved: boolean;
+  similarEventsCount?: number;
 }) {
-  const { event, ActionButton, isLastItem, showCreator, isSaved } = props;
+  const {
+    event,
+    ActionButton,
+    isLastItem,
+    showCreator,
+    isSaved,
+    similarEventsCount,
+  } = props;
   const { fontScale } = useWindowDimensions();
   const id = event.id;
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -148,7 +156,15 @@ export function UserEventListItem(props: {
             )}
           >
             {isOwner && (
-              <View className="absolute right-4 top-2 opacity-60">
+              <View className="absolute right-4 top-2 flex-row items-center gap-2 opacity-60">
+                {similarEventsCount ? (
+                  <View className="bg-neutral-5/90 flex-row items-center gap-1 rounded-full px-1">
+                    <Copy size={12} color="#627496" />
+                    <Text className="text-xs text-neutral-2">
+                      {similarEventsCount}
+                    </Text>
+                  </View>
+                ) : null}
                 {event.visibility === "public" ? (
                   <Globe2 size={iconSize} color="#627496" />
                 ) : (
@@ -366,6 +382,8 @@ export default function UserEventsList(props: UserEventsListProps) {
               (savedEvent) => savedEvent.id === item.event.id,
             ) ?? false;
 
+          const similarEventsCount = item.similarEvents.length;
+
           return (
             <UserEventListItem
               event={item.event}
@@ -373,6 +391,9 @@ export default function UserEventsList(props: UserEventsListProps) {
               isLastItem={index === collapsedEvents.length - 1}
               showCreator={showCreator}
               isSaved={isSaved}
+              similarEventsCount={
+                similarEventsCount > 0 ? similarEventsCount : undefined
+              }
             />
           );
         }}
