@@ -49,25 +49,16 @@ function Skeleton({ width, height, className }: SkeletonProps) {
 
 export function EventListItemSkeleton() {
   return (
-    <View className="relative -mx-2 flex-row items-center rounded-lg border-b border-neutral-3 bg-white p-4 px-6 pt-12">
-      {/* Placeholder icons in the top-right area */}
-      <View className="absolute right-4 top-2 flex-row items-center gap-2 opacity-60">
-        <Skeleton width={24} height={24} className="rounded-full" />
-        <Skeleton width={24} height={24} className="rounded-full" />
-      </View>
-
-      <View className="mr-4 flex-1">
+    <View className="relative -mx-2 flex-row items-center rounded-lg bg-white p-4 px-6 pt-12">
+      <View className="mr-4 flex-1 gap-2">
         {/* Date and time */}
-        <Skeleton width={120} height={20} className="mb-2" />
+        <Skeleton width="70%" height={20} />
 
         {/* Title */}
-        <Skeleton width="90%" height={28} className="mb-2" />
+        <Skeleton width="90%" height={40} />
 
         {/* Location */}
-        <Skeleton width={150} height={20} className="mb-2" />
-
-        {/* Username */}
-        <Skeleton width={100} height={20} />
+        <Skeleton width="70%" height={20} />
       </View>
 
       {/* Image placeholder */}
