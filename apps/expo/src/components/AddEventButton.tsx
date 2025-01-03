@@ -6,23 +6,26 @@ import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
 
+import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
 import { useAppStore } from "~/store";
 
 export default function AddEventButton() {
   const router = useRouter();
+  const { hasMediaPermission } = useAppStore();
 
   const handlePress = useCallback(async () => {
     try {
-      // Request photo permissions on-demand
       const { status } = await MediaLibrary.requestPermissionsAsync();
       useAppStore.setState({
         hasMediaPermission: status === MediaLibrary.PermissionStatus.GRANTED,
       });
+
+      // Always navigate to /new, the screen will handle showing the appropriate UI
+      router.push("/new");
     } catch (error) {
       console.error("Error requesting media permissions:", error);
+      router.push("/new");
     }
-    // Navigate to /new whether granted or not
-    router.push("/new");
   }, [router]);
 
   return (

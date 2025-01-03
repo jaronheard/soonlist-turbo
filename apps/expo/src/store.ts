@@ -69,6 +69,7 @@ interface AppState {
   // Media-related state & actions
   recentPhotos: RecentPhoto[];
   hasMediaPermission: boolean;
+  hasFullPhotoAccess: boolean;
   setRecentPhotos: (photos: RecentPhoto[]) => void;
   setHasMediaPermission: (hasPermission: boolean) => void;
 
@@ -200,6 +201,7 @@ export const useAppStore = create<AppState>()(
       // Media-related state & actions
       recentPhotos: [],
       hasMediaPermission: false,
+      hasFullPhotoAccess: false,
       setRecentPhotos: (photos) =>
         set((state) => {
           // Only update if the photos are different
@@ -216,10 +218,8 @@ export const useAppStore = create<AppState>()(
         set({ shouldRefreshMediaLibrary: value }),
 
       // Add these new actions
-      setIsLoadingPhotos: (isLoading: boolean) =>
-        set({ isLoadingPhotos: isLoading }),
-      setPhotoLoadingError: (error: string | null) =>
-        set({ photoLoadingError: error }),
+      setIsLoadingPhotos: (isLoading) => set({ isLoadingPhotos: isLoading }),
+      setPhotoLoadingError: (error) => set({ photoLoadingError: error }),
 
       isAddingEvent: false,
       setIsAddingEvent: (isAdding) => set({ isAddingEvent: isAdding }),

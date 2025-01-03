@@ -9,9 +9,10 @@ export function useMediaPermissions() {
   useEffect(() => {
     let subscription: MediaLibrary.Subscription | undefined;
 
-    async function subscribeIfGranted() {
-      // Only subscribe if permissions have already been granted
+    async function checkPermissionsAndSubscribe() {
       const { status } = await MediaLibrary.getPermissionsAsync();
+      setHasMediaPermission(status === MediaLibrary.PermissionStatus.GRANTED);
+
       if (status === MediaLibrary.PermissionStatus.GRANTED) {
         subscription = MediaLibrary.addListener(
           ({ hasIncrementalChanges, insertedAssets }) => {
@@ -27,7 +28,7 @@ export function useMediaPermissions() {
       }
     }
 
-    void subscribeIfGranted();
+    void checkPermissionsAndSubscribe();
 
     return () => {
       if (subscription) {
