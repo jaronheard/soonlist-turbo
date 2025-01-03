@@ -4,18 +4,28 @@ import {
   Pressable,
   RefreshControl,
   Text,
+  TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import * as MediaLibrary from "expo-media-library";
+import { Link, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { Copy, EyeOff, Globe2, MapPin, User } from "lucide-react-native";
+import {
+  Copy,
+  EyeOff,
+  Globe2,
+  MapPin,
+  PlusCircle,
+  User,
+} from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import {
@@ -271,16 +281,34 @@ export function UserEventListItem(props: {
 }
 
 function PromoCard({ type }: PromoCardProps) {
+  const router = useRouter();
+  const { fontScale } = useWindowDimensions();
+
+  const handlePress = async () => {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      useAppStore.setState({
+        hasMediaPermission: status === MediaLibrary.PermissionStatus.GRANTED,
+      });
+    } catch (error) {
+      console.error("Error requesting media permissions:", error);
+    }
+    router.push("/new");
+  };
+
   if (type === "addEvents") {
     return (
-      <View className="mx-4 rounded-2xl bg-accent-yellow/80 p-4">
-        <Text className="mb-1 text-lg font-semibold text-neutral-1">
-          Keep capturing
-        </Text>
-        <Text className="text-base text-neutral-2">
-          Fill your list with possibilities. Tap + to add more.
-        </Text>
-      </View>
+      <TouchableOpacity onPress={handlePress}>
+        <View className="mx-4 rounded-2xl bg-accent-yellow/80 p-4">
+          <Text className="mb-1 text-lg font-semibold text-neutral-1">
+            Keep capturing
+          </Text>
+          <Text className="text-base text-neutral-2">
+            Fill your list with possibilities. Tap{" "}
+            <PlusCircle size={16 * fontScale} color="#4B5563" /> to add more.
+          </Text>
+        </View>
+      </TouchableOpacity>
     );
   }
 
