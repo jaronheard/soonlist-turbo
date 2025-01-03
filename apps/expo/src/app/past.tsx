@@ -46,8 +46,7 @@ export default function PastEvents() {
               <ProfileMenu />
             </View>
           ),
-          headerBackTitle: "Back",
-          headerBackVisible: true,
+          headerBackVisible: false,
         }}
       />
       <View className="flex-1 bg-white">

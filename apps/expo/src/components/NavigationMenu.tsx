@@ -41,6 +41,11 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
   const currentRoute =
     routes.find((r) => isRouteActive(r.path, active))?.label ?? "Upcoming";
 
+  const handleNavigation = (path: string) => {
+    setVisible(false);
+    router.replace(path);
+  };
+
   return (
     <Menu
       opened={visible}
@@ -85,10 +90,7 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
           return (
             <MenuOption
               key={route.path}
-              onSelect={() => {
-                setVisible(false);
-                router.push(route.path);
-              }}
+              onSelect={() => handleNavigation(route.path)}
               customStyles={{
                 optionWrapper: {
                   padding: 0,
