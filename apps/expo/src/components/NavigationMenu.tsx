@@ -41,7 +41,7 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
   const currentRoute =
     routes.find((r) => isRouteActive(r.path, active))?.label ?? "Upcoming";
 
-  const handleNavigation = (path: string) => {
+  const handleNavigation = (path: (typeof routes)[number]["path"]) => {
     setVisible(false);
     router.replace(path);
   };
