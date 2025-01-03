@@ -30,22 +30,43 @@ const slides: OnboardingSlide[] = [
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const renderSlide = ({ item }: { item: OnboardingSlide }) => (
-  <View className="w-screen items-center justify-start pt-10">
-    <Image
-      source={item.image}
-      className="h-[90%] w-[90%]"
-      resizeMode="contain"
-    />
-  </View>
-);
-
 export function StoryOnboarding() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const router = useRouter();
   const setHasCompletedOnboarding = useAppStore(
     (state) => state.setHasCompletedOnboarding,
+  );
+
+  const completeOnboarding = () => {
+    setHasCompletedOnboarding(true);
+    router.replace("/feed");
+  };
+
+  const renderSlide = ({
+    item,
+    index,
+  }: {
+    item: OnboardingSlide;
+    index: number;
+  }) => (
+    <View className="w-screen items-center justify-start pt-10">
+      <TouchableOpacity
+        onPress={() => {
+          if (index === slides.length - 1) {
+            completeOnboarding();
+          }
+        }}
+        activeOpacity={index === slides.length - 1 ? 0.8 : 1}
+        className="h-[90%] w-[90%] items-center justify-center"
+      >
+        <Image
+          source={item.image}
+          className="h-full w-full"
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
+    </View>
   );
 
   const handleNext = () => {
@@ -59,17 +80,12 @@ export function StoryOnboarding() {
     }
   };
 
-  const completeOnboarding = () => {
-    setHasCompletedOnboarding(true);
-    router.replace("/feed");
-  };
-
   return (
     <View className="flex-1 bg-interactive-2">
       <FlatList
         ref={flatListRef}
         data={slides}
-        renderItem={renderSlide}
+        renderItem={({ item, index }) => renderSlide({ item, index })}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
