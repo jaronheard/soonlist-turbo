@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import {
+  ActionSheetIOS,
   ActivityIndicator,
   Dimensions,
   FlatList,
@@ -33,6 +34,7 @@ import {
 import { toast } from "sonner-native";
 
 import type { RecentPhoto } from "~/store";
+import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
@@ -59,8 +61,11 @@ const PhotoGrid = React.memo(
     onPhotoSelect,
     onCameraPress,
     onMorePhotos,
+    hasMediaPermission,
+    hasFullPhotoAccess,
   }: {
     hasMediaPermission: boolean;
+    hasFullPhotoAccess: boolean;
     recentPhotos: RecentPhoto[];
     onPhotoSelect: (uri: string) => void;
     onCameraPress: () => void;
@@ -73,16 +78,22 @@ const PhotoGrid = React.memo(
     const availableWidth = windowWidth - padding;
     const imageSize = (availableWidth - (columns - 1) * spacing) / columns;
 
+    const handleManagePress = () => {
+      void Linking.openSettings();
+    };
+
+    // Only show the plus button if we have media permission
+    const gridData = hasMediaPermission
+      ? [{ id: "plus-button", uri: "" }, ...recentPhotos]
+      : [];
+
     return (
-      <View className="" style={{ height: imageSize * 3 + spacing * 2 }}>
-        <View className="mb-2 flex-row items-center justify-between">
-          <Pressable
-            onPress={onMorePhotos}
-            className="flex-row items-center gap-1"
-          >
+      <View className="flex-1">
+        <View className="mb-1 flex-row items-center justify-between">
+          <View className="flex-row items-center gap-1">
             <Text className="text-xl font-bold text-white">Recents</Text>
             <ChevronRight size={16} color="#fff" />
-          </Pressable>
+          </View>
           <View className="flex-row gap-2">
             <Pressable
               onPress={onCameraPress}
@@ -93,14 +104,52 @@ const PhotoGrid = React.memo(
           </View>
         </View>
 
+        {hasMediaPermission && !hasFullPhotoAccess && (
+          <View className="my-2 flex-row items-center justify-between">
+            <Text className="flex-1 text-sm text-neutral-3">
+              You've given Soonlist access to a select number of photos and
+              videos.
+            </Text>
+            <Pressable
+              onPress={handleManagePress}
+              className="ml-4 rounded-sm px-2 py-1"
+            >
+              <Text className="text-sm font-semibold text-white">Manage</Text>
+            </Pressable>
+          </View>
+        )}
+
         <View className="flex-1 bg-transparent">
           <FlatList
-            data={[{ id: "plus-button", uri: "" }, ...recentPhotos]}
+            data={gridData}
             renderItem={({ item }) => {
               if (item.id === "plus-button") {
                 return (
                   <Pressable
-                    onPress={onMorePhotos}
+                    onPress={() => {
+                      if (hasMediaPermission && !hasFullPhotoAccess) {
+                        // Show action sheet for partial access
+                        ActionSheetIOS.showActionSheetWithOptions(
+                          {
+                            options: [
+                              "Select More Photos",
+                              "Change Settings",
+                              "Cancel",
+                            ],
+                            cancelButtonIndex: 2,
+                          },
+                          (buttonIndex) => {
+                            if (buttonIndex === 0) {
+                              void MediaLibrary.presentPermissionsPickerAsync();
+                            } else if (buttonIndex === 1) {
+                              void Linking.openSettings();
+                            }
+                          },
+                        );
+                      } else {
+                        onMorePhotos();
+                      }
+                    }}
                     style={{
                       width: imageSize,
                       height: imageSize,
@@ -174,6 +223,7 @@ export default function NewEventModal() {
     shouldRefreshMediaLibrary,
     setShouldRefreshMediaLibrary,
     setRecentPhotos,
+    hasFullPhotoAccess,
   } = useAppStore();
 
   const eventFromRawTextAndNotification =
@@ -409,41 +459,89 @@ export default function NewEventModal() {
     imageUri?: string;
   }>();
 
-  const loadRecentPhotos = useCallback(async () => {
-    try {
-      const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 15,
-        sortBy: MediaLibrary.SortBy.creationTime,
-        mediaType: [MediaLibrary.MediaType.photo],
-      });
-      const photos: RecentPhoto[] = assets.map((asset) => ({
-        id: asset.id,
-        uri: asset.uri,
-      }));
-      setRecentPhotos(photos);
-    } catch (error) {
-      console.error("Error loading recent photos:", error);
-    }
-  }, [setRecentPhotos]);
+  useFocusEffect(
+    useCallback(() => {
+      let subscription: MediaLibrary.Subscription | undefined;
 
-  useEffect(() => {
-    if (hasMediaPermission && recentPhotos.length === 0) {
-      void loadRecentPhotos();
-    }
-  }, [hasMediaPermission, recentPhotos.length, loadRecentPhotos]);
+      async function checkPermissionsAndLoadPhotos() {
+        const { status, accessPrivileges } =
+          await MediaLibrary.getPermissionsAsync();
+        const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+        const hasFullAccess = accessPrivileges === "all";
+
+        useAppStore.setState({
+          hasMediaPermission: isGranted,
+          hasFullPhotoAccess: hasFullAccess,
+        });
+
+        if (isGranted) {
+          try {
+            const { assets } = await MediaLibrary.getAssetsAsync({
+              first: 15,
+              sortBy: MediaLibrary.SortBy.creationTime,
+              mediaType: [MediaLibrary.MediaType.photo],
+            });
+
+            // Verify each asset is accessible
+            const accessibleAssets = await Promise.all(
+              assets.map(async (asset) => {
+                try {
+                  const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+                  return assetInfo.localUri
+                    ? {
+                        id: asset.id,
+                        uri: assetInfo.localUri,
+                      }
+                    : null;
+                } catch (e) {
+                  return null;
+                }
+              }),
+            );
+
+            // Filter out null results and set photos
+            const photos: RecentPhoto[] = accessibleAssets.filter(
+              (asset): asset is RecentPhoto => asset !== null,
+            );
+            setRecentPhotos(photos);
+
+            subscription = MediaLibrary.addListener(
+              ({ hasIncrementalChanges, insertedAssets }) => {
+                if (
+                  hasIncrementalChanges &&
+                  insertedAssets &&
+                  insertedAssets.length > 0
+                ) {
+                  useAppStore.setState({ shouldRefreshMediaLibrary: true });
+                }
+              },
+            );
+          } catch (error) {
+            console.error("Error loading recent photos:", error);
+          }
+        } else {
+          console.log("loadRecentPhotos: No media permission, skipping load");
+        }
+      }
+
+      void checkPermissionsAndLoadPhotos();
+
+      return () => {
+        if (subscription) {
+          subscription.remove();
+        }
+      };
+    }, [setRecentPhotos]),
+  );
 
   useEffect(() => {
     if (shouldRefreshMediaLibrary) {
+      console.log("Refreshing media library");
       clearPreview();
-      void loadRecentPhotos();
       setShouldRefreshMediaLibrary(false);
+      // The photos will be reloaded by the focus effect
     }
-  }, [
-    shouldRefreshMediaLibrary,
-    loadRecentPhotos,
-    setShouldRefreshMediaLibrary,
-    clearPreview,
-  ]);
+  }, [shouldRefreshMediaLibrary, clearPreview, setShouldRefreshMediaLibrary]);
 
   useEffect(() => {
     setInput("");
@@ -475,6 +573,7 @@ export default function NewEventModal() {
       }
     } else {
       const mostRecentPhoto = recentPhotos[0] as RecentPhoto | undefined;
+      console.log("Initializing with most recent photo:", mostRecentPhoto);
       if (mostRecentPhoto?.uri) {
         setActiveInput("upload");
         setIsOptionSelected(true);
@@ -499,44 +598,6 @@ export default function NewEventModal() {
   ]);
 
   const isFromIntent = Boolean(text || imageUri);
-
-  useFocusEffect(
-    useCallback(() => {
-      let toastId: string | number | undefined;
-
-      void (async () => {
-        const { status } = await MediaLibrary.getPermissionsAsync();
-        const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
-
-        if (!isGranted && !isFromIntent) {
-          clearPreview();
-          toastId = toast("Grant photo access", {
-            duration: Infinity,
-            action: {
-              label: "Open Settings",
-              onClick: () => {
-                void Linking.openSettings();
-              },
-            },
-            closeButton: true,
-            description:
-              "Soonlist is easiest to use when you grant photo access.",
-          });
-        }
-
-        useAppStore.setState({
-          hasMediaPermission: isGranted,
-        });
-      })();
-
-      // Cleanup function to dismiss toast when navigating away
-      return () => {
-        if (toastId) {
-          toast.dismiss(toastId);
-        }
-      };
-    }, [clearPreview, isFromIntent]),
-  );
 
   return (
     <KeyboardAvoidingView
@@ -652,135 +713,141 @@ export default function NewEventModal() {
           },
         }}
       />
-      <View className="flex-1 bg-interactive-1">
-        <View className="flex-1 px-4">
-          <View
-            className={`${
-              isFromIntent ? "flex-1" : "mb-4"
-            } overflow-hidden rounded-md bg-interactive-2`}
-            style={
-              isFromIntent
-                ? styles.previewContainerFull
-                : styles.previewContainer
-            }
-          >
-            {imagePreview ? (
-              <View className="relative h-full w-full">
-                <ExpoImage
-                  source={{ uri: imagePreview }}
-                  style={{ width: "100%", height: "100%" }}
-                  contentFit="contain"
-                  contentPosition="center"
-                />
-                <Pressable
-                  onPress={clearPreview}
-                  className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
-                >
-                  <X size={16} color="black" />
-                </Pressable>
-                {isImageLoading && (
-                  <View className="absolute bottom-2 right-2">
-                    <ActivityIndicator size="small" color="#DCE0E8" />
-                  </View>
-                )}
-              </View>
-            ) : linkPreview ? (
-              <View className="relative h-full w-full bg-neutral-200">
-                <View className="h-full w-full items-center justify-center">
-                  <LinkIcon size={24} color="black" />
-                  <Text
-                    className="mt-2 px-4 text-center text-sm font-medium"
-                    numberOfLines={2}
-                    ellipsizeMode="middle"
+
+      {!hasMediaPermission && !isFromIntent && activeInput !== "describe" ? (
+        <PhotoAccessPrompt />
+      ) : (
+        <View className="flex-1 bg-interactive-1">
+          <View className="flex-1 px-4">
+            <View
+              className={`${
+                isFromIntent ? "flex-1" : "mb-4"
+              } overflow-hidden rounded-md bg-interactive-2`}
+              style={
+                isFromIntent
+                  ? styles.previewContainerFull
+                  : styles.previewContainer
+              }
+            >
+              {imagePreview ? (
+                <View className="relative h-full w-full">
+                  <ExpoImage
+                    source={{ uri: imagePreview }}
+                    style={{ width: "100%", height: "100%" }}
+                    contentFit="contain"
+                    contentPosition="center"
+                  />
+                  <Pressable
+                    onPress={clearPreview}
+                    className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
                   >
-                    {linkPreview}
-                  </Text>
+                    <X size={16} color="black" />
+                  </Pressable>
+                  {isImageLoading && (
+                    <View className="absolute bottom-2 right-2">
+                      <ActivityIndicator size="small" color="#DCE0E8" />
+                    </View>
+                  )}
                 </View>
+              ) : linkPreview ? (
+                <View className="relative h-full w-full bg-neutral-200">
+                  <View className="h-full w-full items-center justify-center">
+                    <LinkIcon size={24} color="black" />
+                    <Text
+                      className="mt-2 px-4 text-center text-sm font-medium"
+                      numberOfLines={2}
+                      ellipsizeMode="middle"
+                    >
+                      {linkPreview}
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={clearPreview}
+                    className="absolute right-2 top-2 rounded-full bg-white p-1"
+                  >
+                    <X size={16} color="black" />
+                  </Pressable>
+                </View>
+              ) : activeInput === "url" ? (
+                <View className="h-full border border-neutral-300 px-3 py-2">
+                  <TextInput
+                    placeholder="Paste URL"
+                    value={input}
+                    onChangeText={handleTextChange}
+                    multiline
+                    style={[
+                      { height: "100%" },
+                      Platform.select({
+                        android: { textAlignVertical: "top" },
+                      }),
+                    ]}
+                    autoFocus={true}
+                  />
+                </View>
+              ) : activeInput === "describe" ? (
+                <View className="relative h-full border border-neutral-300 px-3 py-2">
+                  <TextInput
+                    placeholder="Describe your event"
+                    value={input}
+                    onChangeText={handleTextChange}
+                    multiline
+                    style={[
+                      { height: "100%" },
+                      Platform.select({
+                        android: { textAlignVertical: "top" },
+                      }),
+                    ]}
+                    autoFocus={true}
+                  />
+                  <Pressable
+                    onPress={clearPreview}
+                    className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+                  >
+                    <X size={16} color="black" />
+                  </Pressable>
+                </View>
+              ) : (
                 <Pressable
-                  onPress={clearPreview}
-                  className="absolute right-2 top-2 rounded-full bg-white p-1"
+                  onPress={() => void handleMorePhotos()}
+                  className="h-full w-full items-center justify-center border border-neutral-300 bg-neutral-50"
                 >
-                  <X size={16} color="black" />
+                  <Text className="text-base text-neutral-500">Select...</Text>
                 </Pressable>
-              </View>
-            ) : activeInput === "url" ? (
-              <View className="h-full border border-neutral-300 px-3 py-2">
-                <TextInput
-                  placeholder="Paste URL"
-                  value={input}
-                  onChangeText={handleTextChange}
-                  multiline
-                  style={[
-                    { height: "100%" },
-                    Platform.select({
-                      android: { textAlignVertical: "top" },
-                    }),
-                  ]}
-                  autoFocus={true}
+              )}
+            </View>
+
+            {!isFromIntent && (
+              <View style={styles.photoGridContainer}>
+                <PhotoGrid
+                  hasMediaPermission={hasMediaPermission}
+                  hasFullPhotoAccess={hasFullPhotoAccess}
+                  recentPhotos={recentPhotos}
+                  onPhotoSelect={(uri) => handleImagePreview(uri)}
+                  onCameraPress={() => void handleCameraCapture()}
+                  onMorePhotos={() => void handleMorePhotos()}
                 />
               </View>
-            ) : activeInput === "describe" ? (
-              <View className="relative h-full border border-neutral-300 px-3 py-2">
-                <TextInput
-                  placeholder="Describe your event"
-                  value={input}
-                  onChangeText={handleTextChange}
-                  multiline
-                  style={[
-                    { height: "100%" },
-                    Platform.select({
-                      android: { textAlignVertical: "top" },
-                    }),
-                  ]}
-                  autoFocus={true}
-                />
-                <Pressable
-                  onPress={clearPreview}
-                  className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
-                >
-                  <X size={16} color="black" />
-                </Pressable>
-              </View>
-            ) : (
-              <Pressable
-                onPress={() => void handleMorePhotos()}
-                className="h-full w-full items-center justify-center border border-neutral-300 bg-neutral-50"
-              >
-                <Text className="text-base text-neutral-500">Select...</Text>
-              </Pressable>
             )}
           </View>
 
-          {!isFromIntent && (
-            <View style={styles.photoGridContainer}>
-              <PhotoGrid
-                hasMediaPermission={hasMediaPermission}
-                recentPhotos={recentPhotos}
-                onPhotoSelect={(uri) => handleImagePreview(uri)}
-                onCameraPress={() => void handleCameraCapture()}
-                onMorePhotos={() => void handleMorePhotos()}
-              />
-            </View>
-          )}
+          <View className="shadow-top bg-interactive-1 px-4 pb-8 pt-4">
+            <Pressable
+              onPress={handleCreateEvent}
+              disabled={!input.trim() && !imagePreview && !linkPreview}
+              className={`w-full flex-row items-center justify-center rounded-full px-3 py-3 ${
+                !input.trim() && !imagePreview && !linkPreview
+                  ? "bg-neutral-200"
+                  : "bg-white"
+              }`}
+            >
+              <Sparkles size={16} color="#5A32FB" />
+              <Text className="ml-2 text-xl font-bold text-[#5A32FB]">
+                Capture event
+              </Text>
+            </Pressable>
+          </View>
         </View>
-
-        <View className="shadow-top bg-interactive-1 px-4 pb-8 pt-4">
-          <Pressable
-            onPress={handleCreateEvent}
-            disabled={!input.trim() && !imagePreview && !linkPreview}
-            className={`w-full flex-row items-center justify-center rounded-full px-3 py-3 ${
-              !input.trim() && !imagePreview && !linkPreview
-                ? "bg-neutral-200"
-                : "bg-white"
-            }`}
-          >
-            <Sparkles size={16} color="#5A32FB" />
-            <Text className="ml-2 text-xl font-bold text-[#5A32FB]">
-              Capture event
-            </Text>
-          </Pressable>
-        </View>
-      </View>
+      )}
     </KeyboardAvoidingView>
   );
 }

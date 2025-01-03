@@ -10,20 +10,27 @@ import { useAppStore } from "~/store";
 
 export default function AddEventButton() {
   const router = useRouter();
+  const { hasMediaPermission } = useAppStore();
 
   const handlePress = useCallback(async () => {
+    // If we already have any level of permission (full or partial), just navigate
+    if (hasMediaPermission) {
+      router.push("/new");
+      return;
+    }
+
+    // Only request permissions if we don't have any access yet
     try {
-      // Request photo permissions on-demand
       const { status } = await MediaLibrary.requestPermissionsAsync();
       useAppStore.setState({
         hasMediaPermission: status === MediaLibrary.PermissionStatus.GRANTED,
       });
+      router.push("/new");
     } catch (error) {
       console.error("Error requesting media permissions:", error);
+      router.push("/new");
     }
-    // Navigate to /new whether granted or not
-    router.push("/new");
-  }, [router]);
+  }, [router, hasMediaPermission]);
 
   return (
     <View className="absolute bottom-0 left-0 right-0">
