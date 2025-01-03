@@ -5,6 +5,7 @@ import { useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
+import { HeaderLogo } from "~/components/HeaderLogo";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
@@ -59,6 +60,7 @@ export default function Page() {
       <Stack.Screen
         options={{
           headerTitle: () => <NavigationMenu active="discover" />,
+          headerLeft: () => <HeaderLogo />,
           headerRight: () => (
             <View className="mr-2">
               <ProfileMenu />

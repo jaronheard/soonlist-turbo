@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import AddEventButton from "~/components/AddEventButton";
+import { HeaderLogo } from "~/components/HeaderLogo";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
@@ -41,6 +42,7 @@ export default function PastEvents() {
       <Stack.Screen
         options={{
           headerTitle: () => <NavigationMenu active="past" />,
+          headerLeft: () => <HeaderLogo />,
           headerRight: () => (
             <View className="mr-2 flex-row items-center gap-2">
               <ProfileMenu />
