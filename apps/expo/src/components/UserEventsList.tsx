@@ -333,6 +333,30 @@ interface UserEventsListProps {
   isAddingEvent?: boolean;
 }
 
+function LoadingEventItem() {
+  return (
+    <View className="-mx-2 flex-row items-center rounded-lg bg-white p-4 px-6 pt-12">
+      <View className="mr-4 flex-1">
+        <View className="mb-2">
+          <View className="h-5 w-32 animate-pulse rounded-md bg-neutral-3" />
+        </View>
+        <View className="mb-2">
+          <View className="h-7 w-48 animate-pulse rounded-md bg-neutral-3" />
+        </View>
+        <View className="mb-2 flex-row items-center gap-1">
+          <View className="h-5 w-40 animate-pulse rounded-md bg-neutral-3" />
+        </View>
+      </View>
+      <View className="relative">
+        <View className="h-20 w-20 animate-pulse rounded-2xl bg-neutral-3" />
+      </View>
+      <View className="absolute left-0 right-0 top-2 flex items-center justify-center">
+        <View className="h-6 w-24 animate-pulse rounded-full bg-neutral-3" />
+      </View>
+    </View>
+  );
+}
+
 export default function UserEventsList(props: UserEventsListProps) {
   const {
     events,
@@ -361,7 +385,9 @@ export default function UserEventsList(props: UserEventsListProps) {
       return (
         <View className="flex-1">
           {stats && <EventStats {...stats} />}
-          <EventListItemSkeleton />
+          <View className="px-4">
+            <LoadingEventItem />
+          </View>
         </View>
       );
     }
@@ -369,7 +395,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     return (
       <View className="mb-16 flex-1 items-center justify-center px-6 py-10">
         <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           source={require("../assets/icon.png")}
           style={{
             width: 64,
