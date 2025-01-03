@@ -24,6 +24,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         ios: {
           deploymentTarget: "15.0",
+          infoPlist: {
+            PHPhotoLibraryPreventAutomaticLimitedAccessAlert: true,
+          },
         },
       },
     ],
