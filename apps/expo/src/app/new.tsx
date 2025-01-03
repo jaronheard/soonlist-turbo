@@ -459,11 +459,11 @@ export default function NewEventModal() {
     imageUri?: string;
   }>();
 
-  const loadRecentPhotos = useCallback(() => {
-    let subscription: MediaLibrary.Subscription | undefined;
+  useFocusEffect(
+    useCallback(() => {
+      let subscription: MediaLibrary.Subscription | undefined;
 
-    async function loadRecentPhotos() {
-      try {
+      async function checkPermissionsAndLoadPhotos() {
         const { status, accessPrivileges } =
           await MediaLibrary.getPermissionsAsync();
         const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
@@ -475,76 +475,73 @@ export default function NewEventModal() {
         });
 
         if (isGranted) {
-          const { assets } = await MediaLibrary.getAssetsAsync({
-            first: 15,
-            sortBy: MediaLibrary.SortBy.creationTime,
-            mediaType: [MediaLibrary.MediaType.photo],
-          });
+          try {
+            const { assets } = await MediaLibrary.getAssetsAsync({
+              first: 15,
+              sortBy: MediaLibrary.SortBy.creationTime,
+              mediaType: [MediaLibrary.MediaType.photo],
+            });
 
-          // Verify each asset is accessible by attempting to get its info
-          const accessibleAssets = await Promise.all(
-            assets.map(async (asset) => {
-              try {
-                const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
-                return assetInfo.localUri
-                  ? {
-                      id: asset.id,
-                      uri: assetInfo.localUri,
-                    }
-                  : null;
-              } catch (e) {
-                return null;
-              }
-            }),
-          );
+            // Verify each asset is accessible
+            const accessibleAssets = await Promise.all(
+              assets.map(async (asset) => {
+                try {
+                  const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+                  return assetInfo.localUri
+                    ? {
+                        id: asset.id,
+                        uri: assetInfo.localUri,
+                      }
+                    : null;
+                } catch (e) {
+                  return null;
+                }
+              }),
+            );
 
-          // Filter out null results and set photos
-          const photos: RecentPhoto[] = accessibleAssets.filter(
-            (asset): asset is RecentPhoto => asset !== null,
-          );
-          setRecentPhotos(photos);
+            // Filter out null results and set photos
+            const photos: RecentPhoto[] = accessibleAssets.filter(
+              (asset): asset is RecentPhoto => asset !== null,
+            );
+            setRecentPhotos(photos);
 
-          // Set up subscription for photo library changes
-          subscription = MediaLibrary.addListener(
-            ({ hasIncrementalChanges, insertedAssets }) => {
-              if (
-                hasIncrementalChanges &&
-                insertedAssets &&
-                insertedAssets.length > 0
-              ) {
-                useAppStore.setState({ shouldRefreshMediaLibrary: true });
-              }
-            },
-          );
+            subscription = MediaLibrary.addListener(
+              ({ hasIncrementalChanges, insertedAssets }) => {
+                if (
+                  hasIncrementalChanges &&
+                  insertedAssets &&
+                  insertedAssets.length > 0
+                ) {
+                  useAppStore.setState({ shouldRefreshMediaLibrary: true });
+                }
+              },
+            );
+          } catch (error) {
+            console.error("Error loading recent photos:", error);
+          }
+        } else {
+          console.log("loadRecentPhotos: No media permission, skipping load");
         }
-      } catch (error) {
-        console.error("Error loading recent photos:", error);
       }
-    }
 
-    if (hasMediaPermission) {
-      void loadRecentPhotos();
-    }
+      void checkPermissionsAndLoadPhotos();
 
-    return () => {
-      if (subscription) {
-        subscription.remove();
-      }
-    };
-  }, [hasMediaPermission, setRecentPhotos]);
+      return () => {
+        if (subscription) {
+          subscription.remove();
+        }
+      };
+    }, [setRecentPhotos]),
+  );
 
   useEffect(() => {
     if (shouldRefreshMediaLibrary) {
+      console.log("Refreshing media library");
       clearPreview();
-      void loadRecentPhotos();
       setShouldRefreshMediaLibrary(false);
+      // The photos will be reloaded by the focus effect
     }
-  }, [
-    shouldRefreshMediaLibrary,
-    loadRecentPhotos,
-    setShouldRefreshMediaLibrary,
-    clearPreview,
-  ]);
+  }, [shouldRefreshMediaLibrary, clearPreview, setShouldRefreshMediaLibrary]);
 
   useEffect(() => {
     setInput("");
@@ -576,6 +573,7 @@ export default function NewEventModal() {
       }
     } else {
       const mostRecentPhoto = recentPhotos[0] as RecentPhoto | undefined;
+      console.log("Initializing with most recent photo:", mostRecentPhoto);
       if (mostRecentPhoto?.uri) {
         setActiveInput("upload");
         setIsOptionSelected(true);
@@ -600,24 +598,6 @@ export default function NewEventModal() {
   ]);
 
   const isFromIntent = Boolean(text || imageUri);
-
-  useFocusEffect(
-    useCallback(() => {
-      void (async () => {
-        const { status, accessPrivileges } =
-          await MediaLibrary.getPermissionsAsync();
-        const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
-        const hasFullAccess = accessPrivileges === "all";
-
-        useAppStore.setState({
-          hasMediaPermission: isGranted,
-          hasFullPhotoAccess: hasFullAccess,
-        });
-      })();
-
-      return () => {};
-    }, []),
-  );
 
   return (
     <KeyboardAvoidingView

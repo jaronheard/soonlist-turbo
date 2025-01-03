@@ -21,7 +21,6 @@ export function useMediaPermissions() {
       });
 
       if (isGranted) {
-        // Set up subscription for permission changes
         subscription = MediaLibrary.addListener(({ hasIncrementalChanges }) => {
           if (hasIncrementalChanges) {
             void checkPermissionsAndSubscribe();
