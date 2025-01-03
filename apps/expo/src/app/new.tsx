@@ -90,10 +90,13 @@ const PhotoGrid = React.memo(
     return (
       <View className="flex-1">
         <View className="mb-1 flex-row items-center justify-between">
-          <View className="flex-row items-center gap-1">
+          <Pressable
+            className="flex-row items-center gap-1"
+            onPress={onMorePhotos}
+          >
             <Text className="text-xl font-bold text-white">Recents</Text>
             <ChevronRight size={16} color="#fff" />
-          </View>
+          </Pressable>
           <View className="flex-row gap-2">
             <Pressable
               onPress={onCameraPress}
