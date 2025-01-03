@@ -85,7 +85,7 @@ export function StoryOnboarding() {
       <FlatList
         ref={flatListRef}
         data={slides}
-        renderItem={({ item, index }) => renderSlide({ item, index })}
+        renderItem={({ item, index }: { item: OnboardingSlide; index: number }) => renderSlide({ item, index })}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
