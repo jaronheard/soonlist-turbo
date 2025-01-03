@@ -357,7 +357,7 @@ export default function UserEventsList(props: UserEventsListProps) {
   const collapsedEvents = collapseSimilarEvents(events, user?.id);
 
   const renderEmptyState = () => {
-    if (isAddingEvent) {
+    if (isAddingEvent && events.length === 0) {
       return (
         <View className="flex-1">
           {stats && <EventStats {...stats} />}
@@ -420,7 +420,7 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   const renderHeader = () => (stats ? <EventStats {...stats} /> : null);
 
-  if (collapsedEvents.length === 0) {
+  if (collapsedEvents.length === 0 && !isAddingEvent) {
     return renderEmptyState();
   }
 
@@ -428,8 +428,8 @@ export default function UserEventsList(props: UserEventsListProps) {
     <>
       <FlatList
         data={collapsedEvents}
-        // estimatedItemSize={60}
         ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
           const isSaved =
             savedIdsQuery.data?.some(
@@ -461,7 +461,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         contentContainerStyle={{
-          paddingBottom: 120, // Increased padding to account for AddEventButton
+          paddingBottom: 120,
         }}
         ListFooterComponent={renderFooter()}
       />
