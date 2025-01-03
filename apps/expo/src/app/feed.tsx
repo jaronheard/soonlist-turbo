@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect } from "react";
 import { Linking, Pressable, View } from "react-native";
-import { Image } from "expo-image";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { MapPinned } from "lucide-react-native";
@@ -9,6 +8,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
+import { HeaderLogo } from "~/components/HeaderLogo";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
@@ -103,24 +103,13 @@ function MyFeed() {
       <Stack.Screen
         options={{
           headerTitle: () => <NavigationMenu active="upcoming" />,
-          headerBackVisible: false,
-          headerLeft: () => (
-            <Image
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              source={require("../assets/icon.png")}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-              }}
-              contentFit="contain"
-            />
-          ),
+          headerLeft: () => <HeaderLogo />,
           headerRight: () => (
             <View className="mr-2">
               <ProfileMenu showShare />
             </View>
           ),
+          headerBackVisible: false,
         }}
       />
       <View className="flex-1 bg-white">
