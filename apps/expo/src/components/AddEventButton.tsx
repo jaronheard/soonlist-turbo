@@ -6,12 +6,11 @@ import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
 
-import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
 import { useAppStore } from "~/store";
 
 export default function AddEventButton() {
   const router = useRouter();
-  const { hasMediaPermission, hasFullPhotoAccess } = useAppStore();
+  const { hasMediaPermission } = useAppStore();
 
   const handlePress = useCallback(async () => {
     // If we already have any level of permission (full or partial), just navigate
