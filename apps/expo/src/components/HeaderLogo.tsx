@@ -37,6 +37,7 @@ export function HeaderLogo() {
   return (
     <AnimatedPressable onPress={handlePress} style={animatedStyle}>
       <Image
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         source={require("../assets/icon.png")}
         style={{
           width: 32,

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect } from "react";
 import { Linking, Pressable, View } from "react-native";
-import { Image } from "expo-image";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { MapPinned } from "lucide-react-native";
