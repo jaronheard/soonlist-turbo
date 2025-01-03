@@ -23,6 +23,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import {
   Camera,
   ChevronRight,
+  Image,
   Link as LinkIcon,
   Plus,
   Sparkles,
@@ -57,14 +58,12 @@ const PhotoGrid = React.memo(
     recentPhotos,
     onPhotoSelect,
     onCameraPress,
-    onDescribePress,
     onMorePhotos,
   }: {
     hasMediaPermission: boolean;
     recentPhotos: RecentPhoto[];
     onPhotoSelect: (uri: string) => void;
     onCameraPress: () => void;
-    onDescribePress: () => void;
     onMorePhotos: () => void;
   }) => {
     const windowWidth = Dimensions.get("window").width;
@@ -81,21 +80,15 @@ const PhotoGrid = React.memo(
             onPress={onMorePhotos}
             className="flex-row items-center gap-1"
           >
-            <Text className="text-sm font-medium text-white">Recents</Text>
+            <Text className="text-xl font-bold text-white">Recents</Text>
             <ChevronRight size={16} color="#fff" />
           </Pressable>
           <View className="flex-row gap-2">
             <Pressable
-              onPress={onDescribePress}
-              className="rounded-md bg-interactive-3 px-2 py-2"
-            >
-              <Type size={16} color="#5A32FB" />
-            </Pressable>
-            <Pressable
               onPress={onCameraPress}
-              className="rounded-md bg-interactive-3 px-2 py-2"
+              className="rounded-full bg-interactive-3 p-1.5"
             >
-              <Camera size={16} color="#5A32FB" />
+              <Camera size={24} color="#5A32FB" />
             </Pressable>
           </View>
         </View>
@@ -552,17 +545,111 @@ export default function NewEventModal() {
     >
       <Stack.Screen
         options={{
-          title: isFromIntent ? "Selected image" : "Select image",
+          title: "",
           headerShown: true,
-          headerTitleStyle: {
-            fontSize: 17,
-            color: "#fff",
-          },
           headerShadowVisible: false,
           headerStyle: {
             backgroundColor: "#5A32FB",
           },
           headerTintColor: "#fff",
+          headerTitle: () => {
+            if (isFromIntent) {
+              if (linkPreview) {
+                return (
+                  <View className="flex-row items-center gap-2">
+                    <LinkIcon size={20} color="#fff" />
+                    <Text className="text-xl font-bold text-white">
+                      Selected link
+                    </Text>
+                  </View>
+                );
+              }
+              if (imagePreview) {
+                return (
+                  <View className="flex-row items-center gap-2">
+                    <Image size={20} color="#fff" />
+                    <Text className="text-xl font-bold text-white">
+                      Selected image
+                    </Text>
+                  </View>
+                );
+              }
+              return (
+                <View className="flex-row items-center gap-2">
+                  <Type size={20} color="#fff" />
+                  <Text className="text-xl font-bold text-white">
+                    Describe event
+                  </Text>
+                </View>
+              );
+            }
+
+            return (
+              <View className="flex-row items-center rounded-full bg-interactive-3/20 p-0.5">
+                <Pressable
+                  onPress={() => {
+                    if (activeInput === "describe") {
+                      handleDescribePress();
+                    }
+                  }}
+                  className={`rounded-l-full px-4 py-2 ${
+                    activeInput !== "describe" ? "bg-interactive-1" : ""
+                  }`}
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Image
+                      size={20}
+                      color={
+                        activeInput !== "describe"
+                          ? "#fff"
+                          : "rgba(255, 255, 255, 0.6)"
+                      }
+                    />
+                    <Text
+                      className={`text-xl font-bold ${
+                        activeInput !== "describe"
+                          ? "text-white"
+                          : "text-white/60"
+                      }`}
+                    >
+                      Select image
+                    </Text>
+                  </View>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    if (activeInput !== "describe") {
+                      handleDescribePress();
+                    }
+                  }}
+                  className={`rounded-r-full px-4 py-2 ${
+                    activeInput === "describe" ? "bg-interactive-1" : ""
+                  }`}
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Type
+                      size={20}
+                      color={
+                        activeInput === "describe"
+                          ? "#fff"
+                          : "rgba(255, 255, 255, 0.6)"
+                      }
+                    />
+                    <Text
+                      className={`text-xl font-bold ${
+                        activeInput === "describe"
+                          ? "text-white"
+                          : "text-white/60"
+                      }`}
+                    >
+                      Describe event
+                    </Text>
+                  </View>
+                </Pressable>
+              </View>
+            );
+          },
         }}
       />
       <View className="flex-1 bg-interactive-1">
@@ -671,7 +758,6 @@ export default function NewEventModal() {
                 recentPhotos={recentPhotos}
                 onPhotoSelect={(uri) => handleImagePreview(uri)}
                 onCameraPress={() => void handleCameraCapture()}
-                onDescribePress={handleDescribePress}
                 onMorePhotos={() => void handleMorePhotos()}
               />
             </View>
