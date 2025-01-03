@@ -90,7 +90,10 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
           return (
             <MenuOption
               key={route.path}
-              onSelect={() => handleNavigation(route.path)}
+              onSelect={() => {
+                setVisible(false);
+                if (!isActive) handleNavigation(route.path);
+              }}
               customStyles={{
                 optionWrapper: {
                   padding: 0,
