@@ -4,27 +4,29 @@ import * as MediaLibrary from "expo-media-library";
 import { useAppStore } from "~/store";
 
 export function useMediaPermissions() {
-  const { setHasMediaPermission } = useAppStore();
+  const { setHasMediaPermission, setRecentPhotos } = useAppStore();
 
   useEffect(() => {
     let subscription: MediaLibrary.Subscription | undefined;
 
     async function checkPermissionsAndSubscribe() {
-      const { status } = await MediaLibrary.getPermissionsAsync();
-      setHasMediaPermission(status === MediaLibrary.PermissionStatus.GRANTED);
+      const { status, accessPrivileges } =
+        await MediaLibrary.getPermissionsAsync();
+      const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+      const hasFullAccess = accessPrivileges === "all";
 
-      if (status === MediaLibrary.PermissionStatus.GRANTED) {
-        subscription = MediaLibrary.addListener(
-          ({ hasIncrementalChanges, insertedAssets }) => {
-            if (
-              hasIncrementalChanges &&
-              insertedAssets &&
-              insertedAssets.length > 0
-            ) {
-              useAppStore.setState({ shouldRefreshMediaLibrary: true });
-            }
-          },
-        );
+      useAppStore.setState({
+        hasMediaPermission: isGranted,
+        hasFullPhotoAccess: hasFullAccess,
+      });
+
+      if (isGranted) {
+        // Set up subscription for permission changes
+        subscription = MediaLibrary.addListener(({ hasIncrementalChanges }) => {
+          if (hasIncrementalChanges) {
+            void checkPermissionsAndSubscribe();
+          }
+        });
       }
     }
 
@@ -35,5 +37,5 @@ export function useMediaPermissions() {
         subscription.remove();
       }
     };
-  }, [setHasMediaPermission]);
+  }, [setHasMediaPermission, setRecentPhotos]);
 }

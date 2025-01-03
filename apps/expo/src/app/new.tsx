@@ -82,6 +82,11 @@ const PhotoGrid = React.memo(
       void Linking.openSettings();
     };
 
+    // Only show the plus button if we have media permission
+    const gridData = hasMediaPermission
+      ? [{ id: "plus-button", uri: "" }, ...recentPhotos]
+      : [];
+
     return (
       <View className="flex-1">
         <View className="mb-1 flex-row items-center justify-between">
@@ -116,7 +121,7 @@ const PhotoGrid = React.memo(
 
         <View className="flex-1 bg-transparent">
           <FlatList
-            data={[{ id: "plus-button", uri: "" }, ...recentPhotos]}
+            data={gridData}
             renderItem={({ item }) => {
               if (item.id === "plus-button") {
                 return (
@@ -454,28 +459,79 @@ export default function NewEventModal() {
     imageUri?: string;
   }>();
 
-  const loadRecentPhotos = useCallback(async () => {
-    try {
-      const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 15,
-        sortBy: MediaLibrary.SortBy.creationTime,
-        mediaType: [MediaLibrary.MediaType.photo],
-      });
-      const photos: RecentPhoto[] = assets.map((asset) => ({
-        id: asset.id,
-        uri: asset.uri,
-      }));
-      setRecentPhotos(photos);
-    } catch (error) {
-      console.error("Error loading recent photos:", error);
-    }
-  }, [setRecentPhotos]);
+  const loadRecentPhotos = useCallback(() => {
+    let subscription: MediaLibrary.Subscription | undefined;
 
-  useEffect(() => {
-    if (hasMediaPermission && recentPhotos.length === 0) {
+    async function loadRecentPhotos() {
+      try {
+        const { status, accessPrivileges } =
+          await MediaLibrary.getPermissionsAsync();
+        const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+        const hasFullAccess = accessPrivileges === "all";
+
+        useAppStore.setState({
+          hasMediaPermission: isGranted,
+          hasFullPhotoAccess: hasFullAccess,
+        });
+
+        if (isGranted) {
+          const { assets } = await MediaLibrary.getAssetsAsync({
+            first: 15,
+            sortBy: MediaLibrary.SortBy.creationTime,
+            mediaType: [MediaLibrary.MediaType.photo],
+          });
+
+          // Verify each asset is accessible by attempting to get its info
+          const accessibleAssets = await Promise.all(
+            assets.map(async (asset) => {
+              try {
+                const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+                return assetInfo.localUri
+                  ? {
+                      id: asset.id,
+                      uri: assetInfo.localUri,
+                    }
+                  : null;
+              } catch (e) {
+                return null;
+              }
+            }),
+          );
+
+          // Filter out null results and set photos
+          const photos: RecentPhoto[] = accessibleAssets.filter(
+            (asset): asset is RecentPhoto => asset !== null,
+          );
+          setRecentPhotos(photos);
+
+          // Set up subscription for photo library changes
+          subscription = MediaLibrary.addListener(
+            ({ hasIncrementalChanges, insertedAssets }) => {
+              if (
+                hasIncrementalChanges &&
+                insertedAssets &&
+                insertedAssets.length > 0
+              ) {
+                useAppStore.setState({ shouldRefreshMediaLibrary: true });
+              }
+            },
+          );
+        }
+      } catch (error) {
+        console.error("Error loading recent photos:", error);
+      }
+    }
+
+    if (hasMediaPermission) {
       void loadRecentPhotos();
     }
-  }, [hasMediaPermission, recentPhotos.length, loadRecentPhotos]);
+
+    return () => {
+      if (subscription) {
+        subscription.remove();
+      }
+    };
+  }, [hasMediaPermission, setRecentPhotos]);
 
   useEffect(() => {
     if (shouldRefreshMediaLibrary) {
