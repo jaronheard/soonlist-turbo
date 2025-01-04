@@ -25,6 +25,7 @@ import {
   Camera,
   ChevronRight,
   Image,
+  Images,
   Link as LinkIcon,
   Plus,
   Sparkles,
@@ -50,9 +51,6 @@ const styles = StyleSheet.create({
     width: Dimensions.get("window").width - 32,
     flex: 1,
   },
-  photoGridContainer: {
-    height: ((Dimensions.get("window").width - 32) / 4) * 3 + 4,
-  },
 });
 
 const PhotoGrid = React.memo(
@@ -72,11 +70,9 @@ const PhotoGrid = React.memo(
     onMorePhotos: () => void;
   }) => {
     const windowWidth = Dimensions.get("window").width;
-    const padding = 32;
-    const spacing = 2;
+    const spacing = 1;
     const columns = 4;
-    const availableWidth = windowWidth - padding;
-    const imageSize = (availableWidth - (columns - 1) * spacing) / columns;
+    const imageSize = (windowWidth - (columns - 1) * spacing) / columns;
 
     const handleManagePress = () => {
       void Linking.openSettings();
@@ -84,12 +80,12 @@ const PhotoGrid = React.memo(
 
     // Only show the plus button if we have media permission
     const gridData = hasMediaPermission
-      ? [{ id: "plus-button", uri: "" }, ...recentPhotos]
+      ? [...recentPhotos, { id: "plus-button", uri: "" }]
       : [];
 
     return (
       <View className="flex-1">
-        <View className="mb-1 flex-row items-center justify-between">
+        <View className="mb-3 flex-row items-center justify-between px-4">
           <Pressable
             className="flex-row items-center gap-0.5"
             onPress={onMorePhotos}
@@ -108,20 +104,24 @@ const PhotoGrid = React.memo(
         </View>
 
         {hasMediaPermission && !hasFullPhotoAccess && (
-          <Pressable
-            onPress={handleManagePress}
-            className="my-2 flex-row items-center justify-between rounded-md py-1"
-          >
-            <Text className="flex-1 text-sm text-neutral-3">
-              You've given Soonlist access to a select number of photos.
-            </Text>
-            <View className="ml-4 rounded-sm px-2 py-1">
-              <Text className="text-base font-semibold text-white">Manage</Text>
-            </View>
-          </Pressable>
+          <View className="px-4">
+            <Pressable
+              onPress={handleManagePress}
+              className="my-2 flex-row items-center justify-between rounded-md py-1"
+            >
+              <Text className="flex-1 text-sm text-neutral-3">
+                You've given Soonlist access to a select number of photos.
+              </Text>
+              <View className="ml-4 rounded-sm px-2 py-1">
+                <Text className="text-base font-semibold text-white">
+                  Manage
+                </Text>
+              </View>
+            </Pressable>
+          </View>
         )}
 
-        <View className="flex-1 bg-transparent">
+        <View className="flex-1">
           <FlatList
             data={gridData}
             renderItem={({ item }) => {
@@ -155,11 +155,12 @@ const PhotoGrid = React.memo(
                     style={{
                       width: imageSize,
                       height: imageSize,
-                      margin: spacing / 2,
+                      marginVertical: spacing / 2,
+                      marginHorizontal: spacing / 2,
                     }}
-                    className="items-center justify-center rounded-md bg-white"
+                    className="items-center justify-center bg-interactive-3"
                   >
-                    <Plus size={20} color="#5A32FB" />
+                    <Images size={36} color="#5A32FB" />
                   </Pressable>
                 );
               }
@@ -170,7 +171,8 @@ const PhotoGrid = React.memo(
                   style={{
                     width: imageSize,
                     height: imageSize,
-                    margin: spacing / 2,
+                    marginVertical: spacing / 2,
+                    marginHorizontal: spacing / 2,
                   }}
                 >
                   <ExpoImage
@@ -178,7 +180,6 @@ const PhotoGrid = React.memo(
                     style={{
                       width: "100%",
                       height: "100%",
-                      borderRadius: 4,
                     }}
                     contentFit="cover"
                     contentPosition="center"
@@ -191,7 +192,7 @@ const PhotoGrid = React.memo(
             numColumns={4}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
-              padding: spacing / 2,
+              paddingBottom: 100,
             }}
             keyExtractor={(item) => item.id}
             horizontal={false}
@@ -720,11 +721,11 @@ export default function NewEventModal() {
         <PhotoAccessPrompt />
       ) : (
         <View className="flex-1 bg-interactive-1">
-          <View className="flex-1 px-4">
+          <View className="flex-1">
             <View
               className={`${
                 isFromIntent ? "flex-1" : "mb-4"
-              } overflow-hidden rounded-md bg-interactive-2`}
+              } mx-4 overflow-hidden rounded-md bg-interactive-2`}
               style={
                 isFromIntent
                   ? styles.previewContainerFull
@@ -819,7 +820,7 @@ export default function NewEventModal() {
             </View>
 
             {!isFromIntent && (
-              <View style={styles.photoGridContainer}>
+              <View className="flex-1">
                 <PhotoGrid
                   hasMediaPermission={hasMediaPermission}
                   hasFullPhotoAccess={hasFullPhotoAccess}
@@ -832,11 +833,11 @@ export default function NewEventModal() {
             )}
           </View>
 
-          <View className="shadow-top bg-interactive-1 px-4 pb-8 pt-4">
+          <View className="absolute bottom-8 left-0 right-0 px-4">
             <Pressable
               onPress={handleCreateEvent}
               disabled={!input.trim() && !imagePreview && !linkPreview}
-              className={`w-full flex-row items-center justify-center rounded-full px-3 py-3 ${
+              className={`w-full flex-row items-center justify-center rounded-full px-3 py-3 shadow-lg ${
                 !input.trim() && !imagePreview && !linkPreview
                   ? "bg-neutral-200"
                   : "bg-white"
