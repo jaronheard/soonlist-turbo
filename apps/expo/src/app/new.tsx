@@ -174,7 +174,7 @@ const PhotoGrid = React.memo(
                     height: imageSize,
                     marginVertical: spacing / 2,
                     marginHorizontal: spacing / 2,
-                    backgroundColor: "white",
+                    backgroundColor: "#E0D9FF",
                   }}
                 >
                   <ExpoImage
@@ -205,6 +205,25 @@ const PhotoGrid = React.memo(
     );
   },
 );
+
+function loadRecentPhotos(setRecentPhotos: (photos: RecentPhoto[]) => void) {
+  void (async () => {
+    try {
+      const { assets } = await MediaLibrary.getAssetsAsync({
+        first: 15,
+        sortBy: MediaLibrary.SortBy.creationTime,
+        mediaType: [MediaLibrary.MediaType.photo],
+      });
+      const photos = assets.map((asset) => ({
+        id: asset.id,
+        uri: asset.uri,
+      }));
+      setRecentPhotos(photos);
+    } catch (error) {
+      console.error("Error loading recent photos:", error);
+    }
+  })();
+}
 
 export default function NewEventModal() {
   const router = useRouter();
@@ -601,6 +620,25 @@ export default function NewEventModal() {
     setInput,
     setIsOptionSelected,
     setLinkPreview,
+  ]);
+
+  useEffect(() => {
+    if (hasMediaPermission && recentPhotos.length === 0) {
+      loadRecentPhotos(setRecentPhotos);
+    }
+  }, [hasMediaPermission, recentPhotos.length, setRecentPhotos]);
+
+  useEffect(() => {
+    if (shouldRefreshMediaLibrary) {
+      clearPreview();
+      loadRecentPhotos(setRecentPhotos);
+      setShouldRefreshMediaLibrary(false);
+    }
+  }, [
+    shouldRefreshMediaLibrary,
+    setShouldRefreshMediaLibrary,
+    clearPreview,
+    setRecentPhotos,
   ]);
 
   const isFromIntent = Boolean(text || imageUri);
