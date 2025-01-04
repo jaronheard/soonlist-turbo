@@ -803,7 +803,7 @@ export default function NewEventModal() {
               ) : activeInput === "describe" ? (
                 <View className="relative h-full border border-neutral-300 px-3 py-2">
                   <TextInput
-                    placeholder="Describe your event"
+                    placeholder="Describe the event you want to capture..."
                     value={input}
                     onChangeText={handleTextChange}
                     multiline
