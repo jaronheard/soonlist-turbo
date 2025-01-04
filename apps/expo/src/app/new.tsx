@@ -27,6 +27,7 @@ import {
   Image,
   ImagePlus,
   Link as LinkIcon,
+  Mic,
   Sparkles,
   Type,
   X,
@@ -605,6 +606,11 @@ export default function NewEventModal() {
 
   const isFromIntent = Boolean(text || imageUri);
 
+  // First, let's create a new handler for just clearing the text
+  const clearText = useCallback(() => {
+    setInput("");
+  }, [setInput]);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -801,26 +807,35 @@ export default function NewEventModal() {
                   />
                 </View>
               ) : activeInput === "describe" ? (
-                <View className="relative h-full border border-neutral-300 px-3 py-2">
+                <View className="relative h-full border border-neutral-300 bg-white px-3 py-2">
                   <TextInput
-                    placeholder="Describe the event you want to capture..."
+                    placeholder={
+                      "Describe event in natural language...\n\n" +
+                      "For example:\n" +
+                      "• House party at Alex's Friday night, wear red\n" +
+                      "• Nationale art opening next Saturday 2-4"
+                    }
+                    placeholderTextColor="#627496"
                     value={input}
                     onChangeText={handleTextChange}
                     multiline
                     style={[
-                      { height: "100%" },
                       Platform.select({
                         android: { textAlignVertical: "top" },
                       }),
                     ]}
                     autoFocus={true}
+                    className="h-full text-xl"
                   />
-                  <Pressable
-                    onPress={clearPreview}
-                    className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
-                  >
-                    <X size={16} color="black" />
-                  </Pressable>
+
+                  {input.length > 0 && (
+                    <Pressable
+                      onPress={clearText}
+                      className="absolute right-2 top-2 rounded-full bg-neutral-200 p-2"
+                    >
+                      <X size={16} color="black" />
+                    </Pressable>
+                  )}
                 </View>
               ) : (
                 <Pressable
