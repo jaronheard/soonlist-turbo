@@ -91,35 +91,34 @@ const PhotoGrid = React.memo(
       <View className="flex-1">
         <View className="mb-1 flex-row items-center justify-between">
           <Pressable
-            className="flex-row items-center gap-1"
+            className="flex-row items-center gap-0.5"
             onPress={onMorePhotos}
           >
             <Text className="text-xl font-bold text-white">Recents</Text>
-            <ChevronRight size={16} color="#fff" />
+            <ChevronRight size={20} color="#fff" />
           </Pressable>
           <View className="flex-row gap-2">
             <Pressable
               onPress={onCameraPress}
-              className="rounded-full bg-interactive-3 p-1.5"
+              className="rounded-full bg-interactive-3 p-2"
             >
-              <Camera size={24} color="#5A32FB" />
+              <Camera size={20} color="#5A32FB" />
             </Pressable>
           </View>
         </View>
 
         {hasMediaPermission && !hasFullPhotoAccess && (
-          <View className="my-2 flex-row items-center justify-between">
+          <Pressable
+            onPress={handleManagePress}
+            className="my-2 flex-row items-center justify-between rounded-md py-1"
+          >
             <Text className="flex-1 text-sm text-neutral-3">
-              You've given Soonlist access to a select number of photos and
-              videos.
+              You've given Soonlist access to a select number of photos.
             </Text>
-            <Pressable
-              onPress={handleManagePress}
-              className="ml-4 rounded-sm px-2 py-1"
-            >
-              <Text className="text-sm font-semibold text-white">Manage</Text>
-            </Pressable>
-          </View>
+            <View className="ml-4 rounded-sm px-2 py-1">
+              <Text className="text-base font-semibold text-white">Manage</Text>
+            </View>
+          </Pressable>
         )}
 
         <View className="flex-1 bg-transparent">
@@ -621,8 +620,8 @@ export default function NewEventModal() {
               if (linkPreview) {
                 return (
                   <View className="flex-row items-center gap-2">
-                    <LinkIcon size={20} color="#fff" />
-                    <Text className="text-xl font-bold text-white">
+                    <LinkIcon size={16} color="#fff" />
+                    <Text className="text-lg font-bold text-white">
                       Selected link
                     </Text>
                   </View>
@@ -630,9 +629,9 @@ export default function NewEventModal() {
               }
               if (imagePreview) {
                 return (
-                  <View className="flex-row items-center gap-2">
-                    <Image size={20} color="#fff" />
-                    <Text className="text-xl font-bold text-white">
+                  <View className="flex-row items-center gap-1">
+                    <Image size={16} color="#fff" />
+                    <Text className="text-lg font-bold text-white">
                       Selected image
                     </Text>
                   </View>
@@ -640,8 +639,8 @@ export default function NewEventModal() {
               }
               return (
                 <View className="flex-row items-center gap-2">
-                  <Type size={20} color="#fff" />
-                  <Text className="text-xl font-bold text-white">
+                  <Type size={16} color="#fff" />
+                  <Text className="text-lg font-bold text-white">
                     Describe event
                   </Text>
                 </View>
@@ -649,20 +648,20 @@ export default function NewEventModal() {
             }
 
             return (
-              <View className="flex-row items-center rounded-full bg-interactive-3/20 p-0.5">
+              <View className="flex-row items-center rounded-md bg-interactive-3/20 p-0.5">
                 <Pressable
                   onPress={() => {
                     if (activeInput === "describe") {
                       handleDescribePress();
                     }
                   }}
-                  className={`rounded-l-full px-4 py-2 ${
+                  className={`rounded-l-md px-3 py-1.5 ${
                     activeInput !== "describe" ? "bg-interactive-1" : ""
                   }`}
                 >
                   <View className="flex-row items-center gap-2">
                     <Image
-                      size={20}
+                      size={16}
                       color={
                         activeInput !== "describe"
                           ? "#fff"
@@ -670,7 +669,7 @@ export default function NewEventModal() {
                       }
                     />
                     <Text
-                      className={`text-xl font-bold ${
+                      className={`text-lg font-bold ${
                         activeInput !== "describe"
                           ? "text-white"
                           : "text-white/60"
@@ -687,13 +686,13 @@ export default function NewEventModal() {
                       handleDescribePress();
                     }
                   }}
-                  className={`rounded-r-full px-4 py-2 ${
+                  className={`rounded-r-md px-3 py-1.5 ${
                     activeInput === "describe" ? "bg-interactive-1" : ""
                   }`}
                 >
                   <View className="flex-row items-center gap-2">
                     <Type
-                      size={20}
+                      size={16}
                       color={
                         activeInput === "describe"
                           ? "#fff"
@@ -701,7 +700,7 @@ export default function NewEventModal() {
                       }
                     />
                     <Text
-                      className={`text-xl font-bold ${
+                      className={`text-lg font-bold ${
                         activeInput === "describe"
                           ? "text-white"
                           : "text-white/60"
@@ -742,9 +741,9 @@ export default function NewEventModal() {
                   />
                   <Pressable
                     onPress={clearPreview}
-                    className="absolute right-2 top-2 rounded-full bg-neutral-200 p-1"
+                    className="absolute right-2 top-2 rounded-full bg-interactive-3 p-1"
                   >
-                    <X size={16} color="black" />
+                    <X size={20} color="#5A32FB" />
                   </Pressable>
                   {isImageLoading && (
                     <View className="absolute bottom-2 right-2">
