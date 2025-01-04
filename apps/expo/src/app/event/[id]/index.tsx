@@ -244,6 +244,8 @@ export default function Page() {
                       style={{ width: 20, height: 20, borderRadius: 10 }}
                       contentFit="cover"
                       contentPosition="center"
+                      cachePolicy="memory-disk"
+                      transition={100}
                     />
                   ) : (
                     <User size={20} color="#627496" />

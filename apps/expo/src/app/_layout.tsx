@@ -1,4 +1,4 @@
-import { Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
 import { MenuProvider } from "react-native-popup-menu";
 import {
   SafeAreaProvider,
@@ -237,7 +237,7 @@ function RootLayoutContent() {
     <View style={{ flex: 1 }}>
       <AuthAndTokenSync expoPushToken={expoPushToken} />
       <InitialLayout />
-      <StatusBar />
+      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
       <CalendarSelectionModal
         onSelect={handleCalendarSelect}
         onDismiss={() => setIsCalendarModalVisible(false)}

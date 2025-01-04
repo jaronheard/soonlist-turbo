@@ -111,6 +111,8 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
               }}
               contentFit="cover"
               contentPosition="center"
+              cachePolicy="memory-disk"
+              transition={100}
             />
           ) : (
             <View className="h-10 w-10 items-center justify-center rounded-full bg-gray-200">

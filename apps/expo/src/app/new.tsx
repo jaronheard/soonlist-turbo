@@ -60,6 +60,7 @@ const PhotoGrid = React.memo(
     onMorePhotos,
     hasMediaPermission,
     hasFullPhotoAccess,
+    selectedUri,
   }: {
     hasMediaPermission: boolean;
     hasFullPhotoAccess: boolean;
@@ -67,6 +68,7 @@ const PhotoGrid = React.memo(
     onPhotoSelect: (uri: string) => void;
     onCameraPress: () => void;
     onMorePhotos: () => void;
+    selectedUri: string | null;
   }) => {
     const windowWidth = Dimensions.get("window").width;
     const spacing = 1;
@@ -172,6 +174,7 @@ const PhotoGrid = React.memo(
                     height: imageSize,
                     marginVertical: spacing / 2,
                     marginHorizontal: spacing / 2,
+                    backgroundColor: "white",
                   }}
                 >
                   <ExpoImage
@@ -179,11 +182,12 @@ const PhotoGrid = React.memo(
                     style={{
                       width: "100%",
                       height: "100%",
+                      opacity: selectedUri === item.uri ? 0.5 : 1,
                     }}
                     contentFit="cover"
                     contentPosition="center"
                     transition={100}
-                    cachePolicy="memory"
+                    cachePolicy="memory-disk"
                   />
                 </Pressable>
               );
@@ -619,7 +623,7 @@ export default function NewEventModal() {
             if (isFromIntent) {
               if (linkPreview) {
                 return (
-                  <View className="flex-row items-center gap-2">
+                  <View className="mt-2 flex-row items-center gap-2">
                     <LinkIcon size={16} color="#fff" />
                     <Text className="text-lg font-bold text-white">
                       Selected link
@@ -629,7 +633,7 @@ export default function NewEventModal() {
               }
               if (imagePreview) {
                 return (
-                  <View className="flex-row items-center gap-1">
+                  <View className="mt-2 flex-row items-center gap-1">
                     <Image size={16} color="#fff" />
                     <Text className="text-lg font-bold text-white">
                       Selected image
@@ -638,7 +642,7 @@ export default function NewEventModal() {
                 );
               }
               return (
-                <View className="flex-row items-center gap-2">
+                <View className="mt-2 flex-row items-center gap-2">
                   <Type size={16} color="#fff" />
                   <Text className="text-lg font-bold text-white">
                     Describe event
@@ -648,7 +652,7 @@ export default function NewEventModal() {
             }
 
             return (
-              <View className="flex-row items-center rounded-md bg-interactive-3/20 p-0.5">
+              <View className="mt-2 flex-row items-center rounded-md bg-interactive-3/20 p-0.5">
                 <Pressable
                   onPress={() => {
                     if (activeInput === "describe") {
@@ -719,7 +723,7 @@ export default function NewEventModal() {
       {!hasMediaPermission && !isFromIntent && activeInput !== "describe" ? (
         <PhotoAccessPrompt />
       ) : (
-        <View className="flex-1 bg-interactive-1">
+        <View className="mt-2 flex-1 bg-interactive-1">
           <View className="flex-1">
             <View
               className={`${
@@ -738,6 +742,8 @@ export default function NewEventModal() {
                     style={{ width: "100%", height: "100%" }}
                     contentFit="contain"
                     contentPosition="center"
+                    transition={100}
+                    cachePolicy="memory-disk"
                   />
                   <Pressable
                     onPress={clearPreview}
@@ -827,6 +833,7 @@ export default function NewEventModal() {
                   onPhotoSelect={(uri) => handleImagePreview(uri)}
                   onCameraPress={() => void handleCameraCapture()}
                   onMorePhotos={() => void handleMorePhotos()}
+                  selectedUri={imagePreview}
                 />
               </View>
             )}
@@ -838,12 +845,25 @@ export default function NewEventModal() {
               disabled={!input.trim() && !imagePreview && !linkPreview}
               className={`w-full flex-row items-center justify-center rounded-full px-3 py-3 shadow-lg ${
                 !input.trim() && !imagePreview && !linkPreview
-                  ? "bg-neutral-200"
+                  ? "bg-neutral-3"
                   : "bg-white"
               }`}
             >
-              <Sparkles size={16} color="#5A32FB" />
-              <Text className="ml-2 text-xl font-bold text-[#5A32FB]">
+              <Sparkles
+                size={16}
+                color={
+                  !input.trim() && !imagePreview && !linkPreview
+                    ? "#627496"
+                    : "#5A32FB"
+                }
+              />
+              <Text
+                className={`ml-2 text-xl font-bold ${
+                  !input.trim() && !imagePreview && !linkPreview
+                    ? "text-neutral-2"
+                    : "text-[#5A32FB]"
+                }`}
+              >
                 Capture event
               </Text>
             </Pressable>
