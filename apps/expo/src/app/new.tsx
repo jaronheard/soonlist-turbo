@@ -60,6 +60,7 @@ const PhotoGrid = React.memo(
     onMorePhotos,
     hasMediaPermission,
     hasFullPhotoAccess,
+    selectedUri,
   }: {
     hasMediaPermission: boolean;
     hasFullPhotoAccess: boolean;
@@ -67,6 +68,7 @@ const PhotoGrid = React.memo(
     onPhotoSelect: (uri: string) => void;
     onCameraPress: () => void;
     onMorePhotos: () => void;
+    selectedUri: string | null;
   }) => {
     const windowWidth = Dimensions.get("window").width;
     const spacing = 1;
@@ -172,6 +174,7 @@ const PhotoGrid = React.memo(
                     height: imageSize,
                     marginVertical: spacing / 2,
                     marginHorizontal: spacing / 2,
+                    backgroundColor: "white",
                   }}
                 >
                   <ExpoImage
@@ -179,11 +182,12 @@ const PhotoGrid = React.memo(
                     style={{
                       width: "100%",
                       height: "100%",
+                      opacity: selectedUri === item.uri ? 0.5 : 1,
                     }}
                     contentFit="cover"
                     contentPosition="center"
                     transition={100}
-                    cachePolicy="memory"
+                    cachePolicy="memory-disk"
                   />
                 </Pressable>
               );
@@ -738,6 +742,8 @@ export default function NewEventModal() {
                     style={{ width: "100%", height: "100%" }}
                     contentFit="contain"
                     contentPosition="center"
+                    transition={100}
+                    cachePolicy="memory-disk"
                   />
                   <Pressable
                     onPress={clearPreview}
@@ -827,6 +833,7 @@ export default function NewEventModal() {
                   onPhotoSelect={(uri) => handleImagePreview(uri)}
                   onCameraPress={() => void handleCameraCapture()}
                   onMorePhotos={() => void handleMorePhotos()}
+                  selectedUri={imagePreview}
                 />
               </View>
             )}
