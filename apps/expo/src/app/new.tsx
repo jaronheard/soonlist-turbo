@@ -619,7 +619,7 @@ export default function NewEventModal() {
             if (isFromIntent) {
               if (linkPreview) {
                 return (
-                  <View className="flex-row items-center gap-2">
+                  <View className="mt-2 flex-row items-center gap-2">
                     <LinkIcon size={16} color="#fff" />
                     <Text className="text-lg font-bold text-white">
                       Selected link
@@ -629,7 +629,7 @@ export default function NewEventModal() {
               }
               if (imagePreview) {
                 return (
-                  <View className="flex-row items-center gap-1">
+                  <View className="mt-2 flex-row items-center gap-1">
                     <Image size={16} color="#fff" />
                     <Text className="text-lg font-bold text-white">
                       Selected image
@@ -638,7 +638,7 @@ export default function NewEventModal() {
                 );
               }
               return (
-                <View className="flex-row items-center gap-2">
+                <View className="mt-2 flex-row items-center gap-2">
                   <Type size={16} color="#fff" />
                   <Text className="text-lg font-bold text-white">
                     Describe event
@@ -648,7 +648,7 @@ export default function NewEventModal() {
             }
 
             return (
-              <View className="flex-row items-center rounded-md bg-interactive-3/20 p-0.5">
+              <View className="mt-2 flex-row items-center rounded-md bg-interactive-3/20 p-0.5">
                 <Pressable
                   onPress={() => {
                     if (activeInput === "describe") {
@@ -719,7 +719,7 @@ export default function NewEventModal() {
       {!hasMediaPermission && !isFromIntent && activeInput !== "describe" ? (
         <PhotoAccessPrompt />
       ) : (
-        <View className="flex-1 bg-interactive-1">
+        <View className="mt-2 flex-1 bg-interactive-1">
           <View className="flex-1">
             <View
               className={`${
