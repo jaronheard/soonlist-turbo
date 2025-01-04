@@ -25,7 +25,7 @@ import {
   Camera,
   ChevronRight,
   Image,
-  Images,
+  ImagePlus,
   Link as LinkIcon,
   Sparkles,
   Type,
@@ -161,7 +161,7 @@ const PhotoGrid = React.memo(
                     }}
                     className="items-center justify-center bg-interactive-3"
                   >
-                    <Images size={36} color="#5A32FB" />
+                    <ImagePlus size={36} color="#5A32FB" />
                   </Pressable>
                 );
               }
@@ -652,15 +652,17 @@ export default function NewEventModal() {
             }
 
             return (
-              <View className="mt-2 flex-row items-center rounded-md bg-interactive-3/20 p-0.5">
+              <View className="mt-2 flex-row items-center">
                 <Pressable
                   onPress={() => {
                     if (activeInput === "describe") {
                       handleDescribePress();
                     }
                   }}
-                  className={`rounded-l-md px-3 py-1.5 ${
-                    activeInput !== "describe" ? "bg-interactive-1" : ""
+                  className={`${
+                    activeInput !== "describe"
+                      ? "border-b-2 border-interactive-3"
+                      : ""
                   }`}
                 >
                   <View className="flex-row items-center gap-2">
@@ -684,14 +686,20 @@ export default function NewEventModal() {
                   </View>
                 </Pressable>
 
+                <Text className="px-3 text-lg font-semibold text-white/60">
+                  or
+                </Text>
+
                 <Pressable
                   onPress={() => {
                     if (activeInput !== "describe") {
                       handleDescribePress();
                     }
                   }}
-                  className={`rounded-r-md px-3 py-1.5 ${
-                    activeInput === "describe" ? "bg-interactive-1" : ""
+                  className={`${
+                    activeInput === "describe"
+                      ? "border-b-2 border-interactive-3"
+                      : ""
                   }`}
                 >
                   <View className="flex-row items-center gap-2">
@@ -817,9 +825,9 @@ export default function NewEventModal() {
               ) : (
                 <Pressable
                   onPress={() => void handleMorePhotos()}
-                  className="h-full w-full items-center justify-center border border-neutral-300 bg-neutral-50"
+                  className="h-full w-full items-center justify-center bg-interactive-3"
                 >
-                  <Text className="text-base text-neutral-500">Select...</Text>
+                  <ImagePlus size={64} color="#5A32FB" />
                 </Pressable>
               )}
             </View>
