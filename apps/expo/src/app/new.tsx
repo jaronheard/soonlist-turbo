@@ -230,6 +230,7 @@ export default function NewEventModal() {
     setShouldRefreshMediaLibrary,
     setRecentPhotos,
     hasFullPhotoAccess,
+    setIsLoadingPhotos,
   } = useAppStore();
 
   const eventFromRawTextAndNotification =
@@ -469,19 +470,27 @@ export default function NewEventModal() {
     useCallback(() => {
       let subscription: MediaLibrary.Subscription | undefined;
 
-      async function checkPermissionsAndLoadPhotos() {
-        const { status, accessPrivileges } =
-          await MediaLibrary.getPermissionsAsync();
-        const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
-        const hasFullAccess = accessPrivileges === "all";
+      async function checkPermissionsAndLoadPhotos(forceRefresh = false) {
+        // If we already have cached photos and no explicit forceRefresh,
+        // do a quick background refresh instead of showing a loading state.
+        if (!forceRefresh && recentPhotos.length > 0) {
+          console.log("Using cached photos, skipping loading state...");
+          void refreshPhotosInBackground();
+          return;
+        }
 
-        useAppStore.setState({
-          hasMediaPermission: isGranted,
-          hasFullPhotoAccess: hasFullAccess,
-        });
+        try {
+          setIsLoadingPhotos(true);
+          const { status, accessPrivileges } =
+            await MediaLibrary.getPermissionsAsync();
+          const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+          const hasFullAccess = accessPrivileges === "all";
+          useAppStore.setState({
+            hasMediaPermission: isGranted,
+            hasFullPhotoAccess: hasFullAccess,
+          });
 
-        if (isGranted) {
-          try {
+          if (isGranted) {
             const { assets } = await MediaLibrary.getAssetsAsync({
               first: 15,
               sortBy: MediaLibrary.SortBy.creationTime,
@@ -522,14 +531,52 @@ export default function NewEventModal() {
                 }
               },
             );
-          } catch (error) {
-            console.error("Error loading recent photos:", error);
+          } else {
+            console.log("loadRecentPhotos: No media permission, skipping load");
           }
-        } else {
-          console.log("loadRecentPhotos: No media permission, skipping load");
+        } catch (error) {
+          console.error("Error loading recent photos:", error);
+        } finally {
+          setIsLoadingPhotos(false);
         }
       }
 
+      // If we have cached photos, do a background refresh that doesn't set loading to true:
+      async function refreshPhotosInBackground() {
+        try {
+          const { assets } = await MediaLibrary.getAssetsAsync({
+            first: 15,
+            sortBy: MediaLibrary.SortBy.creationTime,
+            mediaType: [MediaLibrary.MediaType.photo],
+          });
+          // Verify each asset is accessible
+          const accessibleAssets = await Promise.all(
+            assets.map(async (asset) => {
+              try {
+                const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+                return assetInfo.localUri
+                  ? {
+                      id: asset.id,
+                      uri: assetInfo.localUri,
+                    }
+                  : null;
+              } catch (e) {
+                return null;
+              }
+            }),
+          );
+
+          // Filter out null results and set photos
+          const photos: RecentPhoto[] = accessibleAssets.filter(
+            (asset): asset is RecentPhoto => asset !== null,
+          );
+          setRecentPhotos(photos);
+        } catch (e) {
+          console.error("Background refresh for photos failed:", e);
+        }
+      }
+
+      // Call our local function
       void checkPermissionsAndLoadPhotos();
 
       return () => {
@@ -537,7 +584,7 @@ export default function NewEventModal() {
           subscription.remove();
         }
       };
-    }, [setRecentPhotos]),
+    }, [recentPhotos, setRecentPhotos, setIsLoadingPhotos]),
   );
 
   useEffect(() => {
