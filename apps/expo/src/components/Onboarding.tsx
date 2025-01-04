@@ -18,6 +18,8 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
           }
           style={{ width: "100%", height: 160, marginBottom: 24 }}
           contentFit="contain"
+          cachePolicy="memory-disk"
+          transition={100}
         />
 
         <Text className="mb-6 text-center text-xl">
