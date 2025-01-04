@@ -52,6 +52,8 @@ const styles = StyleSheet.create({
   },
 });
 
+const PLACEHOLDER_BLURHASH = "LEHV6nWB2yk8pyo0adR*.7kCMdnj";
+
 const PhotoGrid = React.memo(
   ({
     recentPhotos,
@@ -179,6 +181,7 @@ const PhotoGrid = React.memo(
                 >
                   <ExpoImage
                     source={{ uri: item.uri }}
+                    placeholder={PLACEHOLDER_BLURHASH}
                     style={{
                       width: "100%",
                       height: "100%",
@@ -230,7 +233,6 @@ export default function NewEventModal() {
     setShouldRefreshMediaLibrary,
     setRecentPhotos,
     hasFullPhotoAccess,
-    setIsLoadingPhotos,
   } = useAppStore();
 
   const eventFromRawTextAndNotification =
@@ -470,27 +472,19 @@ export default function NewEventModal() {
     useCallback(() => {
       let subscription: MediaLibrary.Subscription | undefined;
 
-      async function checkPermissionsAndLoadPhotos(forceRefresh = false) {
-        // If we already have cached photos and no explicit forceRefresh,
-        // do a quick background refresh instead of showing a loading state.
-        if (!forceRefresh && recentPhotos.length > 0) {
-          console.log("Using cached photos, skipping loading state...");
-          void refreshPhotosInBackground();
-          return;
-        }
+      async function checkPermissionsAndLoadPhotos() {
+        const { status, accessPrivileges } =
+          await MediaLibrary.getPermissionsAsync();
+        const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+        const hasFullAccess = accessPrivileges === "all";
 
-        try {
-          setIsLoadingPhotos(true);
-          const { status, accessPrivileges } =
-            await MediaLibrary.getPermissionsAsync();
-          const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
-          const hasFullAccess = accessPrivileges === "all";
-          useAppStore.setState({
-            hasMediaPermission: isGranted,
-            hasFullPhotoAccess: hasFullAccess,
-          });
+        useAppStore.setState({
+          hasMediaPermission: isGranted,
+          hasFullPhotoAccess: hasFullAccess,
+        });
 
-          if (isGranted) {
+        if (isGranted) {
+          try {
             const { assets } = await MediaLibrary.getAssetsAsync({
               first: 15,
               sortBy: MediaLibrary.SortBy.creationTime,
@@ -531,52 +525,14 @@ export default function NewEventModal() {
                 }
               },
             );
-          } else {
-            console.log("loadRecentPhotos: No media permission, skipping load");
+          } catch (error) {
+            console.error("Error loading recent photos:", error);
           }
-        } catch (error) {
-          console.error("Error loading recent photos:", error);
-        } finally {
-          setIsLoadingPhotos(false);
+        } else {
+          console.log("loadRecentPhotos: No media permission, skipping load");
         }
       }
 
-      // If we have cached photos, do a background refresh that doesn't set loading to true:
-      async function refreshPhotosInBackground() {
-        try {
-          const { assets } = await MediaLibrary.getAssetsAsync({
-            first: 15,
-            sortBy: MediaLibrary.SortBy.creationTime,
-            mediaType: [MediaLibrary.MediaType.photo],
-          });
-          // Verify each asset is accessible
-          const accessibleAssets = await Promise.all(
-            assets.map(async (asset) => {
-              try {
-                const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
-                return assetInfo.localUri
-                  ? {
-                      id: asset.id,
-                      uri: assetInfo.localUri,
-                    }
-                  : null;
-              } catch (e) {
-                return null;
-              }
-            }),
-          );
-
-          // Filter out null results and set photos
-          const photos: RecentPhoto[] = accessibleAssets.filter(
-            (asset): asset is RecentPhoto => asset !== null,
-          );
-          setRecentPhotos(photos);
-        } catch (e) {
-          console.error("Background refresh for photos failed:", e);
-        }
-      }
-
-      // Call our local function
       void checkPermissionsAndLoadPhotos();
 
       return () => {
@@ -584,7 +540,7 @@ export default function NewEventModal() {
           subscription.remove();
         }
       };
-    }, [recentPhotos, setRecentPhotos, setIsLoadingPhotos]),
+    }, [setRecentPhotos]),
   );
 
   useEffect(() => {
