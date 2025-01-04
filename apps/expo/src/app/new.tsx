@@ -27,7 +27,6 @@ import {
   Image,
   ImagePlus,
   Link as LinkIcon,
-  Mic,
   Sparkles,
   Type,
   X,
