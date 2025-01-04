@@ -187,7 +187,7 @@ const PhotoGrid = React.memo(
                     contentFit="cover"
                     contentPosition="center"
                     transition={100}
-                    cachePolicy="disk"
+                    cachePolicy="memory"
                   />
                 </Pressable>
               );
@@ -205,25 +205,6 @@ const PhotoGrid = React.memo(
     );
   },
 );
-
-function loadRecentPhotos(setRecentPhotos: (photos: RecentPhoto[]) => void) {
-  void (async () => {
-    try {
-      const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 15,
-        sortBy: MediaLibrary.SortBy.creationTime,
-        mediaType: [MediaLibrary.MediaType.photo],
-      });
-      const photos = assets.map((asset) => ({
-        id: asset.id,
-        uri: asset.uri,
-      }));
-      setRecentPhotos(photos);
-    } catch (error) {
-      console.error("Error loading recent photos:", error);
-    }
-  })();
-}
 
 export default function NewEventModal() {
   const router = useRouter();
@@ -484,6 +465,23 @@ export default function NewEventModal() {
     imageUri?: string;
   }>();
 
+  const loadRecentPhotos = useCallback(async () => {
+    try {
+      const { assets } = await MediaLibrary.getAssetsAsync({
+        first: 15,
+        sortBy: MediaLibrary.SortBy.creationTime,
+        mediaType: [MediaLibrary.MediaType.photo],
+      });
+      const photos: RecentPhoto[] = assets.map((asset) => ({
+        id: asset.id,
+        uri: asset.uri,
+      }));
+      setRecentPhotos(photos);
+    } catch (error) {
+      console.error("Error loading recent photos:", error);
+    }
+  }, [setRecentPhotos]);
+
   useFocusEffect(
     useCallback(() => {
       let subscription: MediaLibrary.Subscription | undefined;
@@ -624,14 +622,19 @@ export default function NewEventModal() {
 
   useEffect(() => {
     if (hasMediaPermission && recentPhotos.length === 0) {
-      loadRecentPhotos(setRecentPhotos);
+      void loadRecentPhotos();
     }
-  }, [hasMediaPermission, recentPhotos.length, setRecentPhotos]);
+  }, [
+    hasMediaPermission,
+    recentPhotos.length,
+    setRecentPhotos,
+    loadRecentPhotos,
+  ]);
 
   useEffect(() => {
     if (shouldRefreshMediaLibrary) {
       clearPreview();
-      loadRecentPhotos(setRecentPhotos);
+      void loadRecentPhotos();
       setShouldRefreshMediaLibrary(false);
     }
   }, [
@@ -639,6 +642,7 @@ export default function NewEventModal() {
     setShouldRefreshMediaLibrary,
     clearPreview,
     setRecentPhotos,
+    loadRecentPhotos,
   ]);
 
   const isFromIntent = Boolean(text || imageUri);
@@ -799,7 +803,7 @@ export default function NewEventModal() {
                     contentFit="contain"
                     contentPosition="center"
                     transition={100}
-                    cachePolicy="disk"
+                    cachePolicy="memory"
                   />
                   <Pressable
                     onPress={clearPreview}
