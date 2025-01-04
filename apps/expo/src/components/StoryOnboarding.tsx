@@ -20,12 +20,12 @@ interface OnboardingSlide {
 }
 
 const slides: OnboardingSlide[] = [
-  { id: "1", image: require("../assets/1a.png") as ImageSourcePropType },
-  { id: "2", image: require("../assets/2a.png") as ImageSourcePropType },
-  { id: "3", image: require("../assets/3a.png") as ImageSourcePropType },
-  { id: "4", image: require("../assets/4a.png") as ImageSourcePropType },
-  { id: "5", image: require("../assets/5a.png") as ImageSourcePropType },
-  { id: "6", image: require("../assets/6a.png") as ImageSourcePropType },
+  { id: "1", image: require("../assets/1b.png") as ImageSourcePropType },
+  { id: "2", image: require("../assets/2b.png") as ImageSourcePropType },
+  { id: "3", image: require("../assets/3b.png") as ImageSourcePropType },
+  { id: "4", image: require("../assets/4b.png") as ImageSourcePropType },
+  { id: "5", image: require("../assets/5b.png") as ImageSourcePropType },
+  { id: "6", image: require("../assets/6b.png") as ImageSourcePropType },
 ];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
