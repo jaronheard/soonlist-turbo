@@ -187,7 +187,7 @@ const PhotoGrid = React.memo(
                     contentFit="cover"
                     contentPosition="center"
                     transition={100}
-                    cachePolicy="memory-disk"
+                    cachePolicy="disk"
                   />
                 </Pressable>
               );
@@ -761,7 +761,7 @@ export default function NewEventModal() {
                     contentFit="contain"
                     contentPosition="center"
                     transition={100}
-                    cachePolicy="memory-disk"
+                    cachePolicy="disk"
                   />
                   <Pressable
                     onPress={clearPreview}

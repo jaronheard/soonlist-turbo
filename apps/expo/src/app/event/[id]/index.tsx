@@ -244,7 +244,7 @@ export default function Page() {
                       style={{ width: 20, height: 20, borderRadius: 10 }}
                       contentFit="cover"
                       contentPosition="center"
-                      cachePolicy="memory-disk"
+                      cachePolicy="disk"
                       transition={100}
                     />
                   ) : (
