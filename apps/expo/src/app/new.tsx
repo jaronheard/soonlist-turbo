@@ -838,12 +838,25 @@ export default function NewEventModal() {
               disabled={!input.trim() && !imagePreview && !linkPreview}
               className={`w-full flex-row items-center justify-center rounded-full px-3 py-3 shadow-lg ${
                 !input.trim() && !imagePreview && !linkPreview
-                  ? "bg-neutral-200"
+                  ? "bg-neutral-3"
                   : "bg-white"
               }`}
             >
-              <Sparkles size={16} color="#5A32FB" />
-              <Text className="ml-2 text-xl font-bold text-[#5A32FB]">
+              <Sparkles
+                size={16}
+                color={
+                  !input.trim() && !imagePreview && !linkPreview
+                    ? "#627496"
+                    : "#5A32FB"
+                }
+              />
+              <Text
+                className={`ml-2 text-xl font-bold ${
+                  !input.trim() && !imagePreview && !linkPreview
+                    ? "text-neutral-2"
+                    : "text-[#5A32FB]"
+                }`}
+              >
                 Capture event
               </Text>
             </Pressable>
