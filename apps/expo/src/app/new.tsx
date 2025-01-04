@@ -27,7 +27,6 @@ import {
   Image,
   Images,
   Link as LinkIcon,
-  Plus,
   Sparkles,
   Type,
   X,
