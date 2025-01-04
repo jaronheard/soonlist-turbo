@@ -45,7 +45,7 @@ export function HeaderLogo() {
           borderRadius: 8,
         }}
         contentFit="contain"
-        cachePolicy="memory-disk"
+        cachePolicy="disk"
         transition={100}
       />
     </AnimatedPressable>

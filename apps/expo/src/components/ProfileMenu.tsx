@@ -111,7 +111,7 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
               }}
               contentFit="cover"
               contentPosition="center"
-              cachePolicy="memory-disk"
+              cachePolicy="disk"
               transition={100}
             />
           ) : (

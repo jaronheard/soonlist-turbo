@@ -191,7 +191,7 @@ const SignInWithOAuth = () => {
             source={require("../assets/onboarding-events-collage.png")}
             style={{ height: height * 0.3, width: "100%", maxHeight: 250 }}
             contentFit="contain"
-            cachePolicy="memory-disk"
+            cachePolicy="disk"
             transition={100}
           />
           <Text className="my-4 text-center text-base text-gray-600">

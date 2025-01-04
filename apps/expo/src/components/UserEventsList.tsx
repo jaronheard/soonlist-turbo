@@ -220,7 +220,7 @@ export function UserEventListItem(props: {
                         }}
                         contentFit="cover"
                         contentPosition="center"
-                        cachePolicy="memory-disk"
+                        cachePolicy="disk"
                         transition={100}
                       />
                     ) : (
@@ -245,7 +245,7 @@ export function UserEventListItem(props: {
                     borderRadius: 20,
                   }}
                   contentFit="cover"
-                  cachePolicy="memory-disk"
+                  cachePolicy="disk"
                   transition={100}
                 />
               ) : (
@@ -382,7 +382,7 @@ export default function UserEventsList(props: UserEventsListProps) {
             borderRadius: 8,
           }}
           contentFit="contain"
-          cachePolicy="memory-disk"
+          cachePolicy="disk"
           transition={100}
         />
         <Text className="mb-2 rounded-lg text-center text-2xl font-bold text-neutral-1">
