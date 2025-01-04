@@ -662,7 +662,7 @@ export default function NewEventModal() {
                   className={`${
                     activeInput !== "describe"
                       ? "border-b-2 border-interactive-3"
-                      : ""
+                      : "border-b-2 border-transparent"
                   }`}
                 >
                   <View className="flex-row items-center gap-2">
@@ -686,7 +686,7 @@ export default function NewEventModal() {
                   </View>
                 </Pressable>
 
-                <Text className="px-3 text-lg font-semibold text-white/60">
+                <Text className="border-b-2 border-transparent px-3 text-lg font-semibold text-white/60">
                   or
                 </Text>
 
@@ -699,7 +699,7 @@ export default function NewEventModal() {
                   className={`${
                     activeInput === "describe"
                       ? "border-b-2 border-interactive-3"
-                      : ""
+                      : "border-b-2 border-transparent"
                   }`}
                 >
                   <View className="flex-row items-center gap-2">
