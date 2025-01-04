@@ -31,6 +31,7 @@ import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
 import { useCalendar } from "~/hooks/useCalendar";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
+import { useRecentPhotos } from "~/hooks/useRecentPhotos";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
@@ -227,6 +228,7 @@ function RootLayoutContent() {
   const { setIsCalendarModalVisible } = useAppStore();
   useAppStateRefresh();
   useMediaPermissions();
+  useRecentPhotos();
   const ref = useNavigationContainerRef();
 
   useEffect(() => {
