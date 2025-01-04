@@ -613,7 +613,12 @@ export default function NewEventModal() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={
+        activeInput === "describe" && Platform.OS === "ios"
+          ? "padding"
+          : "height"
+      }
+      keyboardVerticalOffset={116}
       className="flex-1 bg-interactive-1"
     >
       <Stack.Screen
@@ -847,7 +852,7 @@ export default function NewEventModal() {
               )}
             </View>
 
-            {!isFromIntent && (
+            {!isFromIntent && activeInput !== "describe" && (
               <View className="flex-1">
                 <PhotoGrid
                   hasMediaPermission={hasMediaPermission}
