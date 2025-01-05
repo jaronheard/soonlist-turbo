@@ -361,10 +361,9 @@ export default function UserEventsList(props: UserEventsListProps) {
   const collapsedEvents = collapseSimilarEvents(events, user?.id);
 
   const renderEmptyState = () => {
-    if (isAddingEvent && events.length === 0) {
+    if (isAddingEvent && collapsedEvents.length === 0) {
       return (
         <View className="flex-1">
-          {stats && <EventStats {...stats} />}
           <EventListItemSkeleton />
         </View>
       );
@@ -425,10 +424,6 @@ export default function UserEventsList(props: UserEventsListProps) {
   };
 
   const renderHeader = () => (stats ? <EventStats {...stats} /> : null);
-
-  if (collapsedEvents.length === 0 && !isAddingEvent) {
-    return renderEmptyState();
-  }
 
   return (
     <>
