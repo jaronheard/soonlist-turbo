@@ -1,9 +1,14 @@
 import type { CoreMessage } from "ai";
+import type { ExpoPushMessage } from "expo-server-sdk";
+import Expo from "expo-server-sdk";
 import { openai } from "@ai-sdk/openai";
+import { Temporal } from "@js-temporal/polyfill";
+import { TRPCError } from "@trpc/server";
 import { waitUntil } from "@vercel/functions";
 import { generateObject } from "ai";
 import { Langfuse } from "langfuse";
 
+import type { NewComment, NewEvent, NewEventToLists } from "@soonlist/db/types";
 import {
   addCommonAddToCalendarProps,
   EventMetadataSchema,
@@ -12,8 +17,18 @@ import {
   getSystemMessage,
   getSystemMessageMetadata,
 } from "@soonlist/cal";
+import { eq } from "@soonlist/db";
+import {
+  comments,
+  events as eventsSchema,
+  eventToLists,
+} from "@soonlist/db/schema";
 
 import type { Context } from "../trpc";
+import { generatePublicId } from "../utils";
+import { getTicketId } from "../utils/expo";
+import { generateNotificationId } from "../utils/notification";
+import { posthog } from "../utils/posthog";
 
 const langfuse = new Langfuse({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
@@ -249,4 +264,214 @@ export async function fetchAndProcessEvent({
   const events = addCommonAddToCalendarProps([eventObject]);
   const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
   return { events, response };
+}
+
+// Create a single Expo SDK client to be reused
+const expo = new Expo();
+
+export interface CreateEventParams {
+  ctx: Context;
+  input: {
+    timezone: string;
+    expoPushToken: string;
+    comment?: string;
+    lists: { value: string }[];
+    visibility?: "public" | "private";
+    userId: string;
+    username: string;
+  };
+  firstEvent: {
+    name: string;
+    startDate: string;
+    endDate: string;
+    startTime?: string;
+    endTime?: string;
+    timeZone?: string;
+    eventMetadata?: unknown;
+    images?: string[];
+    [key: string]: unknown;
+  };
+  dailyEventsPromise: Promise<{ id: string }[]>;
+  source: "rawText" | "url" | "image";
+}
+
+interface NotificationContent {
+  title: string;
+  subtitle: string;
+  body: string;
+}
+
+function getNotificationContent(
+  eventName: string,
+  count: number,
+): NotificationContent {
+  if (count === 1) {
+    return {
+      title: "Event captured ✨",
+      body: "First capture today! 🤔 What's next?",
+      subtitle: eventName,
+    };
+  } else if (count === 2) {
+    return {
+      title: "Event captured ✨",
+      body: "2 captures today! ✌️ Keep 'em coming!",
+      subtitle: eventName,
+    };
+  } else if (count === 3) {
+    return {
+      title: "Event captured ✨",
+      body: "3 captures today! 🔥 You're on fire!",
+      subtitle: eventName,
+    };
+  } else {
+    return {
+      title: "Event captured ✨",
+      body: `${count} captures today! 🌌 The sky's the limit!`,
+      subtitle: eventName,
+    };
+  }
+}
+
+export async function createEventAndNotify(params: CreateEventParams) {
+  const { ctx, input, firstEvent, dailyEventsPromise, source } = params;
+  const { userId, username } = input;
+
+  if (!userId) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "No user id found in session",
+    });
+  }
+
+  if (!username) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "No username found in session",
+    });
+  }
+
+  if (!firstEvent) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "No events found in response",
+    });
+  }
+
+  const hasComment = input.comment && input.comment.length > 0;
+  const hasLists = input.lists.length > 0;
+  const hasVisibility = input.visibility && input.visibility.length > 0;
+
+  let { startTime, endTime, timeZone } = firstEvent;
+  if (!timeZone) {
+    timeZone = "America/Los_Angeles";
+  }
+  if (!startTime) {
+    startTime = "00:00";
+  }
+  if (!endTime) {
+    endTime = "23:59";
+  }
+
+  const start = Temporal.ZonedDateTime.from(
+    `${firstEvent.startDate}T${startTime}[${timeZone}]`,
+  );
+  const end = Temporal.ZonedDateTime.from(
+    `${firstEvent.endDate}T${endTime}[${timeZone}]`,
+  );
+  const startUtcDate = new Date(start.epochMilliseconds);
+  const endUtcDate = new Date(end.epochMilliseconds);
+
+  const eventid = generatePublicId();
+
+  const values: NewEvent = {
+    id: eventid,
+    userId,
+    userName: username,
+    event: firstEvent,
+    eventMetadata: firstEvent.eventMetadata,
+    startDateTime: startUtcDate,
+    endDateTime: endUtcDate,
+    ...(hasVisibility && {
+      visibility: input.visibility,
+    }),
+  };
+
+  // Create the event in a transaction
+  await ctx.db.transaction(async (tx: Context["db"]) => {
+    // Insert event
+    await tx.insert(eventsSchema).values(values);
+
+    // Insert comment, if any
+    if (hasComment) {
+      await tx.insert(comments).values({
+        eventId: eventid,
+        content: input.comment ?? "",
+        userId,
+      } as NewComment);
+    }
+
+    // Insert event-to-lists, if any
+    if (hasLists) {
+      await tx.delete(eventToLists).where(eq(eventToLists.eventId, eventid));
+      await tx.insert(eventToLists).values(
+        input.lists.map((list) => ({
+          eventId: eventid,
+          listId: list.value,
+        })) as NewEventToLists[],
+      );
+    }
+  });
+
+  // Resolve daily events
+  const dailyEvents = await dailyEventsPromise;
+  const eventCount = dailyEvents.length;
+
+  // Create push notification
+  const { title, subtitle, body } = getNotificationContent(
+    firstEvent.name,
+    eventCount,
+  );
+  const notificationId = generateNotificationId();
+  const message: ExpoPushMessage = {
+    to: input.expoPushToken,
+    sound: "default",
+    title,
+    subtitle,
+    body,
+    data: {
+      url: `/event/${eventid}`,
+      notificationId,
+    },
+  };
+
+  try {
+    const [ticket] = await expo.sendPushNotificationsAsync([message]);
+    posthog.capture({
+      distinctId: userId,
+      event: "notification_sent",
+      properties: {
+        success: true,
+        notificationId,
+        type: "event_creation",
+        eventId: eventid,
+        title,
+        source: "ai_router",
+        method: source,
+        ticketId: getTicketId(ticket),
+      },
+    });
+
+    return {
+      success: true,
+      ticket,
+      eventId: eventid,
+      event: values,
+    };
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
+  }
 }
