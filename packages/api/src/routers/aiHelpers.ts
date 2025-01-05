@@ -107,7 +107,11 @@ function createLoggedObjectGenerator({
         },
       });
       waitUntil(langfuse.flushAsync());
-      throw error;
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to generate AI response",
+        cause: error,
+      });
     }
   };
 }
@@ -223,7 +227,10 @@ export async function fetchAndProcessEvent({
     });
     const rawText = await jinaReader.text();
     if (!rawText) {
-      throw new Error("Failed to fetch the text from the URL.");
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Failed to fetch the text from the URL",
+      });
     }
     eventMessages = constructMessagesRawText({
       systemPrompt: systemPromptEvent.text,
@@ -352,8 +359,8 @@ export async function createEventAndNotify(params: CreateEventParams) {
 
   if (!firstEvent) {
     throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "No events found in response",
+      code: "BAD_REQUEST",
+      message: "No valid event found in response",
     });
   }
 

@@ -1,6 +1,7 @@
 import type { ExpoPushMessage } from "expo-server-sdk";
 import Expo from "expo-server-sdk";
 import { Temporal } from "@js-temporal/polyfill";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { and, eq, gte, lte } from "@soonlist/db";
@@ -108,7 +109,10 @@ export const aiRouter = createTRPCRouter({
           !events[0]?.startDate ||
           !events[0]?.endDate
         ) {
-          throw new Error("No valid event found in response");
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "No valid event found in response",
+          });
         }
 
         const dailyEventsPromise = ctx.db
@@ -134,24 +138,25 @@ export const aiRouter = createTRPCRouter({
 
         return result;
       } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
         const { expoPushToken } = input;
 
-        const title = "Soonlist";
-        const body = "There was an error creating your event.";
-
         if (!Expo.isExpoPushToken(expoPushToken)) {
-          throw new Error(
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            `Push token ${expoPushToken} is not a valid Expo push token`,
-          );
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Invalid Expo push token: ${expoPushToken}`,
+          });
         }
 
         const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
-          title,
-          body,
+          title: "Soonlist",
+          body: "There was an error creating your event.",
           data: {
             url: "/feed",
             notificationId,
@@ -164,12 +169,12 @@ export const aiRouter = createTRPCRouter({
             success: true,
             ticket,
           };
-        } catch (error) {
-          console.error("Error sending notification:", error);
-          return {
-            success: false,
-            error: (error as Error).message,
-          };
+        } catch (notifError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to send error notification",
+            cause: notifError,
+          });
         }
       }
     }),
@@ -202,7 +207,10 @@ export const aiRouter = createTRPCRouter({
           !events[0]?.startDate ||
           !events[0]?.endDate
         ) {
-          throw new Error("No valid event found in response");
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "No valid event found in response",
+          });
         }
 
         const result = await createEventAndNotify({
@@ -215,24 +223,25 @@ export const aiRouter = createTRPCRouter({
 
         return result;
       } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
         const { expoPushToken } = input;
 
-        const title = "Soonlist";
-        const body = "There was an error creating your event.";
-
         if (!Expo.isExpoPushToken(expoPushToken)) {
-          throw new Error(
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            `Push token ${expoPushToken} is not a valid Expo push token`,
-          );
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Invalid Expo push token: ${expoPushToken}`,
+          });
         }
 
         const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
-          title,
-          body,
+          title: "Soonlist",
+          body: "There was an error creating your event.",
           data: {
             url: "/feed",
             notificationId,
@@ -245,12 +254,12 @@ export const aiRouter = createTRPCRouter({
             success: true,
             ticket,
           };
-        } catch (error) {
-          console.error("Error sending notification:", error);
-          return {
-            success: false,
-            error: (error as Error).message,
-          };
+        } catch (notifError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to send error notification",
+            cause: notifError,
+          });
         }
       }
     }),
@@ -283,7 +292,10 @@ export const aiRouter = createTRPCRouter({
           !events[0]?.startDate ||
           !events[0]?.endDate
         ) {
-          throw new Error("No valid event found in response");
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "No valid event found in response",
+          });
         }
 
         const result = await createEventAndNotify({
@@ -304,24 +316,25 @@ export const aiRouter = createTRPCRouter({
 
         return result;
       } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
         const { expoPushToken } = input;
 
-        const title = "Soonlist";
-        const body = "There was an error creating your event.";
-
         if (!Expo.isExpoPushToken(expoPushToken)) {
-          throw new Error(
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            `Push token ${expoPushToken} is not a valid Expo push token`,
-          );
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Invalid Expo push token: ${expoPushToken}`,
+          });
         }
 
         const notificationId = generateNotificationId();
         const message: ExpoPushMessage = {
           to: expoPushToken,
           sound: "default",
-          title,
-          body,
+          title: "Soonlist",
+          body: "There was an error creating your event.",
           data: {
             url: "/feed",
             notificationId,
@@ -334,12 +347,12 @@ export const aiRouter = createTRPCRouter({
             success: true,
             ticket,
           };
-        } catch (error) {
-          console.error("Error sending notification:", error);
-          return {
-            success: false,
-            error: (error as Error).message,
-          };
+        } catch (notifError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to send error notification",
+            cause: notifError,
+          });
         }
       }
     }),
