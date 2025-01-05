@@ -1,6 +1,4 @@
 import type { CoreMessage } from "ai";
-import type { ExpoPushMessage } from "expo-server-sdk";
-import Expo from "expo-server-sdk";
 import { openai } from "@ai-sdk/openai";
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
@@ -26,9 +24,10 @@ import {
 
 import type { Context } from "../trpc";
 import { generatePublicId } from "../utils";
-import { getTicketId } from "../utils/expo";
-import { generateNotificationId } from "../utils/notification";
-import { posthog } from "../utils/posthog";
+import {
+  getNotificationContent,
+  sendNotification,
+} from "../utils/notificationHelpers";
 
 const langfuse = new Langfuse({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
@@ -273,9 +272,6 @@ export async function fetchAndProcessEvent({
   return { events, response };
 }
 
-// Create a single Expo SDK client to be reused
-const expo = new Expo();
-
 export interface CreateEventParams {
   ctx: Context;
   input: {
@@ -300,43 +296,6 @@ export interface CreateEventParams {
   };
   dailyEventsPromise: Promise<{ id: string }[]>;
   source: "rawText" | "url" | "image";
-}
-
-interface NotificationContent {
-  title: string;
-  subtitle: string;
-  body: string;
-}
-
-function getNotificationContent(
-  eventName: string,
-  count: number,
-): NotificationContent {
-  if (count === 1) {
-    return {
-      title: "Event captured ✨",
-      body: "First capture today! 🤔 What's next?",
-      subtitle: eventName,
-    };
-  } else if (count === 2) {
-    return {
-      title: "Event captured ✨",
-      body: "2 captures today! ✌️ Keep 'em coming!",
-      subtitle: eventName,
-    };
-  } else if (count === 3) {
-    return {
-      title: "Event captured ✨",
-      body: "3 captures today! 🔥 You're on fire!",
-      subtitle: eventName,
-    };
-  } else {
-    return {
-      title: "Event captured ✨",
-      body: `${count} captures today! 🌌 The sky's the limit!`,
-      subtitle: eventName,
-    };
-  }
 }
 
 export async function createEventAndNotify(params: CreateEventParams) {
@@ -433,54 +392,31 @@ export async function createEventAndNotify(params: CreateEventParams) {
   const dailyEvents = await dailyEventsPromise;
   const eventCount = dailyEvents.length;
 
-  // Create push notification
+  // Create push notification using the extracted helper
   const { title, subtitle, body } = getNotificationContent(
     firstEvent.name,
     eventCount,
   );
-  const notificationId = generateNotificationId();
-  const message: ExpoPushMessage = {
-    to: input.expoPushToken,
-    sound: "default",
+
+  const notificationResult = await sendNotification({
+    expoPushToken: input.expoPushToken,
     title,
     subtitle,
     body,
-    data: {
-      url: `/event/${eventid}`,
-      notificationId,
-    },
+    url: `/event/${eventid}`,
+    userId,
+    eventId: eventid,
+    source: "ai_router",
+    method: source,
+  });
+
+  return {
+    success: notificationResult.success,
+    ticket: notificationResult.ticket,
+    eventId: eventid,
+    event: values,
+    ...(notificationResult.error && { error: notificationResult.error }),
   };
-
-  try {
-    const [ticket] = await expo.sendPushNotificationsAsync([message]);
-    posthog.capture({
-      distinctId: userId,
-      event: "notification_sent",
-      properties: {
-        success: true,
-        notificationId,
-        type: "event_creation",
-        eventId: eventid,
-        title,
-        source: "ai_router",
-        method: source,
-        ticketId: getTicketId(ticket),
-      },
-    });
-
-    return {
-      success: true,
-      ticket,
-      eventId: eventid,
-      event: values,
-    };
-  } catch (error) {
-    console.error("Error sending notification:", error);
-    return {
-      success: false,
-      error: (error as Error).message,
-    };
-  }
 }
 
 export function validateFirstEvent(events: unknown[]) {
