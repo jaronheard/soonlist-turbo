@@ -1,24 +1,10 @@
-import type { CoreMessage } from "ai";
 import type { ExpoPushMessage } from "expo-server-sdk";
 import Expo from "expo-server-sdk";
-import { openai } from "@ai-sdk/openai";
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
-import { waitUntil } from "@vercel/functions";
-import { generateObject } from "ai";
-import { Langfuse } from "langfuse";
-import SuperJSON from "superjson";
 import { z } from "zod";
 
 import type { NewComment, NewEvent, NewEventToLists } from "@soonlist/db/types";
-import {
-  addCommonAddToCalendarProps,
-  EventMetadataSchema,
-  EventSchema,
-  getPrompt,
-  getSystemMessage,
-  getSystemMessageMetadata,
-} from "@soonlist/cal";
 import { and, eq, gte, lte } from "@soonlist/db";
 import {
   comments,
@@ -26,26 +12,12 @@ import {
   eventToLists,
 } from "@soonlist/db/schema";
 
-import type { Context } from "../trpc";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { generatePublicId } from "../utils";
 import { getTicketId } from "../utils/expo";
 import { generateNotificationId } from "../utils/notification";
 import { posthog } from "../utils/posthog";
-
-const langfuse = new Langfuse({
-  publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
-  secretKey: process.env.LANGFUSE_SECRET_KEY || "",
-  baseUrl: process.env.LANGFUSE_BASE_URL || "",
-});
-
-const MODEL = "gpt-4o";
-const aiConfig = {
-  model: openai(MODEL),
-  mode: "json",
-  temperature: 0.2,
-  maxRetries: 0,
-} as const;
+import { fetchAndProcessEvent } from "./aiHelpers";
 
 const prototypeEventCreateBaseSchema = z.object({
   timezone: z.string(),
@@ -117,126 +89,6 @@ function getNotificationContent(eventName: string, count: number) {
 // Add this near the top of the file with other constants
 const JINA_API_URL = "https://r.jina.ai";
 
-function createLoggedObjectGenerator(
-  ctx: Context,
-  input: { rawText?: string; timezone: string },
-  promptVersion: string,
-) {
-  return async <T>(
-    generateObjectOptions: Parameters<typeof generateObject<T>>[0],
-    loggingOptions: { name: string },
-  ): Promise<ReturnType<typeof generateObject<T>>> => {
-    const trace = langfuse.trace({
-      name: loggingOptions.name,
-      sessionId: ctx.auth.sessionId,
-      userId: ctx.auth.userId,
-      input: input.rawText,
-      version: promptVersion,
-    });
-    const generation = trace.generation({
-      name: "generation",
-      input: input.rawText,
-      model: MODEL,
-      version: promptVersion,
-    });
-    generation.update({
-      completionStartTime: new Date(),
-    });
-    try {
-      const result = await generateObject(generateObjectOptions);
-      generation.end({
-        output: result.object,
-      });
-      generation.score({
-        name: "eventToJson",
-        value: result.object === null ? 0 : 1,
-      });
-      trace.update({
-        output: result.object,
-        metadata: {
-          finishReason: result.finishReason,
-          logprobs: result.logprobs,
-          rawResponse: result.rawResponse,
-          warnings: result.warnings,
-        },
-      });
-      waitUntil(langfuse.flushAsync());
-      return result;
-    } catch (error) {
-      console.error("An error occurred while generating the response:", error);
-      generation.score({
-        name: "eventToJson",
-        value: 0,
-      });
-      trace.update({
-        output: null,
-        metadata: {
-          finishReason: "error",
-          error: error,
-        },
-      });
-      waitUntil(langfuse.flushAsync());
-      throw error;
-    }
-  };
-}
-
-function getPrompts(timezone: string) {
-  return {
-    systemPromptEvent: getSystemMessage(),
-    systemPromptMetadata: getSystemMessageMetadata(),
-    prompt: getPrompt(timezone),
-    promptVersion: getPrompt(timezone).version,
-  };
-}
-
-function constructMessagesRawText({
-  systemPrompt,
-  prompt,
-  rawText,
-}: {
-  systemPrompt: string;
-  prompt: string;
-  rawText: string;
-}): CoreMessage[] {
-  return [
-    { role: "system", content: systemPrompt },
-    {
-      role: "user",
-      content: `${prompt} Input: """
-      ${rawText}
-      """`,
-    },
-  ];
-}
-
-function constructMessagesImage({
-  systemPrompt,
-  prompt,
-  imageUrl,
-}: {
-  systemPrompt: string;
-  prompt: string;
-  imageUrl: string;
-}): CoreMessage[] {
-  return [
-    { role: "system", content: systemPrompt },
-    {
-      role: "user",
-      content: prompt,
-    },
-    {
-      role: "user",
-      content: [
-        {
-          type: "image",
-          image: new URL(imageUrl),
-        },
-      ],
-    },
-  ];
-}
-
 export const aiRouter = createTRPCRouter({
   eventFromRawText: protectedProcedure
     .input(
@@ -246,51 +98,11 @@ export const aiRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const PROCEDURE_NAME = "eventFromRawText";
-      const { systemPromptEvent, systemPromptMetadata, prompt, promptVersion } =
-        getPrompts(input.timezone);
-      const createLoggedObject = createLoggedObjectGenerator(
+      return fetchAndProcessEvent({
         ctx,
         input,
-        promptVersion,
-      );
-
-      const eventMessages = constructMessagesRawText({
-        systemPrompt: systemPromptEvent.text,
-        prompt: prompt.text,
-        rawText: input.rawText,
+        fnName: "eventFromRawText",
       });
-
-      const metadataMessages = constructMessagesRawText({
-        systemPrompt: systemPromptMetadata.text,
-        prompt: prompt.textMetadata,
-        rawText: input.rawText,
-      });
-
-      const [event, metadata] = await Promise.all([
-        createLoggedObject(
-          {
-            ...aiConfig,
-            messages: eventMessages,
-            schema: EventSchema,
-          },
-          { name: `${PROCEDURE_NAME}.event` },
-        ),
-        createLoggedObject(
-          {
-            ...aiConfig,
-            messages: metadataMessages,
-            schema: EventMetadataSchema,
-          },
-          { name: "eventFromRawText.metadata" },
-        ),
-      ]);
-
-      const eventObject = { ...event.object, eventMetadata: metadata.object };
-
-      const events = addCommonAddToCalendarProps([eventObject]);
-      const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
-      return { events, response };
     }),
   eventsFromUrl: protectedProcedure
     .input(
@@ -300,58 +112,11 @@ export const aiRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const PROCEDURE_NAME = "eventFromUrl";
-      const { systemPromptEvent, systemPromptMetadata, prompt, promptVersion } =
-        getPrompts(input.timezone);
-      const createLoggedObject = createLoggedObjectGenerator(
+      return fetchAndProcessEvent({
         ctx,
         input,
-        promptVersion,
-      );
-
-      const jinaReader = await fetch(`https://r.jina.ai/${input.url}`, {
-        method: "GET",
+        fnName: "eventFromUrl",
       });
-      const rawText = await jinaReader.text();
-      if (!rawText) {
-        throw new Error("Failed to fetch the text from the URL.");
-      }
-
-      const eventMessages = constructMessagesRawText({
-        systemPrompt: systemPromptEvent.text,
-        prompt: prompt.text,
-        rawText: rawText,
-      });
-
-      const metadataMessages = constructMessagesRawText({
-        systemPrompt: systemPromptMetadata.text,
-        prompt: prompt.textMetadata,
-        rawText: rawText,
-      });
-
-      const [event, metadata] = await Promise.all([
-        createLoggedObject(
-          {
-            ...aiConfig,
-            messages: eventMessages,
-            schema: EventSchema,
-          },
-          { name: `${PROCEDURE_NAME}.event` },
-        ),
-        createLoggedObject(
-          {
-            ...aiConfig,
-            messages: metadataMessages,
-            schema: EventMetadataSchema,
-          },
-          { name: `${PROCEDURE_NAME}.metadata` },
-        ),
-      ]);
-      const eventObject = { ...event.object, eventMetadata: metadata.object };
-
-      const events = addCommonAddToCalendarProps([eventObject]);
-      const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
-      return { events, response };
     }),
   eventFromImage: protectedProcedure
     .input(
@@ -361,170 +126,21 @@ export const aiRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const PROCEDURE_NAME = "eventFromImage";
-      const { systemPromptEvent, systemPromptMetadata, prompt, promptVersion } =
-        getPrompts(input.timezone);
-      const createLoggedObject = createLoggedObjectGenerator(
+      return fetchAndProcessEvent({
         ctx,
         input,
-        promptVersion,
-      );
-
-      const eventMessages = constructMessagesImage({
-        systemPrompt: systemPromptEvent.text,
-        prompt: prompt.text,
-        imageUrl: input.imageUrl,
+        fnName: "eventFromImage",
       });
-
-      const metadataMessages = constructMessagesImage({
-        systemPrompt: systemPromptMetadata.text,
-        prompt: prompt.textMetadata,
-        imageUrl: input.imageUrl,
-      });
-
-      const [event, metadata] = await Promise.all([
-        createLoggedObject(
-          {
-            ...aiConfig,
-            messages: eventMessages,
-            schema: EventSchema,
-          },
-          { name: `${PROCEDURE_NAME}.event` },
-        ),
-        createLoggedObject(
-          {
-            ...aiConfig,
-            messages: metadataMessages,
-            schema: EventMetadataSchema,
-          },
-          { name: `${PROCEDURE_NAME}.metadata` },
-        ),
-      ]);
-
-      const eventObject = { ...event.object, eventMetadata: metadata.object };
-
-      const events = addCommonAddToCalendarProps([eventObject]);
-      const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
-      return { events, response };
     }),
   eventFromRawTextThenCreateThenNotification: publicProcedure
     .input(prototypeEventCreateSchema)
     .mutation(async ({ ctx, input }) => {
-      const system = getSystemMessage();
-      const systemMetadata = getSystemMessageMetadata();
-      const prompt = getPrompt(input.timezone);
-
-      console.log("input", SuperJSON.stringify(input));
-
-      // START - duplicated except for input with eventFromImage
-      const generateObjectWithLogging = async <T>(
-        generateObjectOptions: Parameters<typeof generateObject<T>>[0],
-        loggingOptions: { name: string },
-      ): Promise<ReturnType<typeof generateObject<T>>> => {
-        const trace = langfuse.trace({
-          name: loggingOptions.name,
-          sessionId: ctx.auth.sessionId,
-          userId: ctx.auth.userId,
-          input: input.rawText,
-          version: prompt.version,
-        });
-        const generation = trace.generation({
-          name: "generation",
-          input: input.rawText,
-          model: MODEL,
-          version: prompt.version,
-        });
-        generation.update({
-          completionStartTime: new Date(),
-        });
-        try {
-          const result = await generateObject(generateObjectOptions);
-          generation.end({
-            output: result.object,
-          });
-          generation.score({
-            name: "eventToJson",
-            value: result.object === null ? 0 : 1,
-          });
-          trace.update({
-            output: result.object,
-            metadata: {
-              finishReason: result.finishReason,
-              logprobs: result.logprobs,
-              rawResponse: result.rawResponse,
-              warnings: result.warnings,
-            },
-          });
-          waitUntil(langfuse.flushAsync());
-          return result;
-        } catch (error) {
-          console.error(
-            "An error occurred while generating the response:",
-            error,
-          );
-          generation.score({
-            name: "eventToJson",
-            value: 0,
-          });
-          trace.update({
-            output: null,
-            metadata: {
-              finishReason: "error",
-              error: error,
-            },
-          });
-          waitUntil(langfuse.flushAsync());
-          throw error;
-        }
-      };
       try {
-        // END - duplicated except for input with eventFromImage
-        const [event, metadata] = await Promise.all([
-          generateObjectWithLogging(
-            {
-              model: openai(MODEL),
-              mode: "json",
-              temperature: 0.2,
-              maxRetries: 0,
-              messages: [
-                { role: "system", content: system.text },
-                {
-                  role: "user",
-                  content: `${prompt.text} Input: """
-              ${input.rawText}
-              """`,
-                },
-              ],
-              schema: EventSchema,
-            },
-            { name: "eventFromRawText.event" },
-          ),
-          generateObjectWithLogging(
-            {
-              model: openai(MODEL),
-              mode: "json",
-              temperature: 0.2,
-              maxRetries: 0,
-              messages: [
-                { role: "system", content: systemMetadata.text },
-                {
-                  role: "user",
-                  content: `${prompt.textMetadata} Input: """
-              ${input.rawText}
-              """`,
-                },
-              ],
-              schema: EventMetadataSchema,
-            },
-            { name: "eventFromRawText.metadata" },
-          ),
-        ]);
-
-        const eventObject = { ...event.object, eventMetadata: metadata.object };
-
-        const events = addCommonAddToCalendarProps([eventObject]);
-        // const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
-        // return { events, response };
+        const { events } = await fetchAndProcessEvent({
+          ctx,
+          input,
+          fnName: "eventFromRawTextThenCreateThenNotification",
+        });
 
         // adapted logic from event.create
         const userId = input.userId;
@@ -743,73 +359,6 @@ export const aiRouter = createTRPCRouter({
   eventFromUrlThenCreateThenNotification: publicProcedure
     .input(prototypeEventCreateFromUrlSchema)
     .mutation(async ({ ctx, input }) => {
-      const system = getSystemMessage();
-      const systemMetadata = getSystemMessageMetadata();
-      const prompt = getPrompt(input.timezone);
-
-      console.log("input", SuperJSON.stringify(input));
-
-      const generateObjectWithLogging = async <T>(
-        generateObjectOptions: Parameters<typeof generateObject<T>>[0],
-        loggingOptions: { name: string },
-      ): Promise<ReturnType<typeof generateObject<T>>> => {
-        const trace = langfuse.trace({
-          name: loggingOptions.name,
-          sessionId: ctx.auth.sessionId,
-          userId: ctx.auth.userId,
-          input: input.url,
-          version: prompt.version,
-        });
-        const generation = trace.generation({
-          name: "generation",
-          input: input.url,
-          model: MODEL,
-          version: prompt.version,
-        });
-        generation.update({
-          completionStartTime: new Date(),
-        });
-        try {
-          const result = await generateObject(generateObjectOptions);
-          generation.end({
-            output: result.object,
-          });
-          generation.score({
-            name: "eventToJson",
-            value: result.object === null ? 0 : 1,
-          });
-          trace.update({
-            output: result.object,
-            metadata: {
-              finishReason: result.finishReason,
-              logprobs: result.logprobs,
-              rawResponse: result.rawResponse,
-              warnings: result.warnings,
-            },
-          });
-          waitUntil(langfuse.flushAsync());
-          return result;
-        } catch (error) {
-          console.error(
-            "An error occurred while generating the response:",
-            error,
-          );
-          generation.score({
-            name: "eventToJson",
-            value: 0,
-          });
-          trace.update({
-            output: null,
-            metadata: {
-              finishReason: "error",
-              error: error,
-            },
-          });
-          waitUntil(langfuse.flushAsync());
-          throw error;
-        }
-      };
-
       try {
         // Get daily event count (non-blocking)
         const dailyEventsPromise = ctx.db
@@ -823,66 +372,11 @@ export const aiRouter = createTRPCRouter({
             ),
           );
 
-        // Extract content from URL before AI processing
-        const jinaResponse = await fetch(`${JINA_API_URL}/${input.url}`);
-        if (!jinaResponse.ok) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to fetch content from URL",
-          });
-        }
-        const rawText = await jinaResponse.text();
-        if (!rawText) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "No content found at URL",
-          });
-        }
-
-        const [event, metadata] = await Promise.all([
-          generateObjectWithLogging(
-            {
-              model: openai(MODEL),
-              mode: "json",
-              temperature: 0.2,
-              maxRetries: 0,
-              messages: [
-                { role: "system", content: system.text },
-                {
-                  role: "user",
-                  content: `${prompt.text} Input: """
-              ${rawText}
-              """`,
-                },
-              ],
-              schema: EventSchema,
-            },
-            { name: "eventFromUrl.event" },
-          ),
-          generateObjectWithLogging(
-            {
-              model: openai(MODEL),
-              mode: "json",
-              temperature: 0.2,
-              maxRetries: 0,
-              messages: [
-                { role: "system", content: systemMetadata.text },
-                {
-                  role: "user",
-                  content: `${prompt.textMetadata} Input: """
-              ${rawText}
-              """`,
-                },
-              ],
-              schema: EventMetadataSchema,
-            },
-            { name: "eventFromUrl.metadata" },
-          ),
-        ]);
-
-        const eventObject = { ...event.object, eventMetadata: metadata.object };
-
-        const events = addCommonAddToCalendarProps([eventObject]);
+        const { events } = await fetchAndProcessEvent({
+          ctx,
+          input,
+          fnName: "eventFromUrlThenCreateThenNotification",
+        });
 
         // Create the event
         const userId = input.userId;
@@ -1090,75 +584,6 @@ export const aiRouter = createTRPCRouter({
   eventFromImageThenCreateThenNotification: publicProcedure
     .input(prototypeEventCreateFromImageSchema)
     .mutation(async ({ ctx, input }) => {
-      const system = getSystemMessage();
-      const systemMetadata = getSystemMessageMetadata();
-      const prompt = getPrompt(input.timezone);
-
-      console.log("input", SuperJSON.stringify(input));
-
-      // Reuse the generateObjectWithLogging function
-      const generateObjectWithLogging = async <T>(
-        generateObjectOptions: Parameters<typeof generateObject<T>>[0],
-        loggingOptions: { name: string },
-      ): Promise<ReturnType<typeof generateObject<T>>> => {
-        const trace = langfuse.trace({
-          name: loggingOptions.name,
-          sessionId: ctx.auth.sessionId,
-          userId: ctx.auth.userId,
-          input: input.imageUrl,
-          version: prompt.version,
-        });
-        const generation = trace.generation({
-          name: "generation",
-          input: input.imageUrl,
-          model: MODEL,
-          version: prompt.version,
-        });
-        generation.update({
-          completionStartTime: new Date(),
-        });
-        try {
-          const result = await generateObject(generateObjectOptions);
-          generation.end({
-            output: result.object,
-          });
-          generation.score({
-            name: "eventToJson",
-            value: result.object === null ? 0 : 1,
-            comment: "Untested",
-          });
-          trace.update({
-            output: result.object,
-            metadata: {
-              finishReason: result.finishReason,
-              logprobs: result.logprobs,
-              rawResponse: result.rawResponse,
-              warnings: result.warnings,
-            },
-          });
-          waitUntil(langfuse.flushAsync());
-          return result;
-        } catch (error) {
-          console.error(
-            "An error occurred while generating the response:",
-            error,
-          );
-          generation.score({
-            name: "eventToJson",
-            value: 0,
-          });
-          trace.update({
-            output: null,
-            metadata: {
-              finishReason: "error",
-              error: error,
-            },
-          });
-          waitUntil(langfuse.flushAsync());
-          throw error;
-        }
-      };
-
       try {
         // Get daily event count (non-blocking)
         const dailyEventsPromise = ctx.db
@@ -1172,67 +597,11 @@ export const aiRouter = createTRPCRouter({
             ),
           );
 
-        const [event, metadata] = await Promise.all([
-          generateObjectWithLogging(
-            {
-              model: openai(MODEL),
-              mode: "json",
-              temperature: 0.2,
-              maxRetries: 0,
-              messages: [
-                { role: "system", content: system.text },
-                {
-                  role: "user",
-                  content: prompt.text,
-                },
-                {
-                  role: "user",
-                  content: [
-                    {
-                      type: "image",
-                      image: new URL(input.imageUrl),
-                    },
-                  ],
-                },
-              ],
-              schema: EventSchema,
-            },
-            { name: "eventFromImage.event" },
-          ),
-          generateObjectWithLogging(
-            {
-              model: openai(MODEL),
-              mode: "json",
-              temperature: 0.2,
-              maxRetries: 0,
-              messages: [
-                { role: "system", content: systemMetadata.text },
-                {
-                  role: "user",
-                  content: prompt.textMetadata,
-                },
-                {
-                  role: "user",
-                  content: [
-                    {
-                      type: "image",
-                      image: new URL(input.imageUrl),
-                    },
-                  ],
-                },
-              ],
-              schema: EventMetadataSchema,
-            },
-            { name: "eventFromImage.metadata" },
-          ),
-        ]);
-
-        const eventObject = { ...event.object, eventMetadata: metadata.object };
-
-        const events = addCommonAddToCalendarProps([eventObject]);
-
-        // const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
-        // return { events, response };
+        const { events } = await fetchAndProcessEvent({
+          ctx,
+          input,
+          fnName: "eventFromImageThenCreateThenNotification",
+        });
 
         // adapted logic from event.create
         const userId = input.userId;
