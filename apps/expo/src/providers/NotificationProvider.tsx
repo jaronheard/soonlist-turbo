@@ -119,19 +119,26 @@ export function NotificationProvider({
   const posthog = usePostHog();
 
   useEffect(() => {
-    async function checkPermissions() {
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-      setHasNotificationPermission(
-        existingStatus === ("granted" as Notifications.PermissionStatus),
-      );
+    async function registerAndCheckPermissions() {
+      try {
+        const token = await registerForPushNotificationsAsync();
+        setExpoPushToken(token ?? "");
+      } catch (error: unknown) {
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        setExpoPushToken(`${error}`);
+      } finally {
+        /*
+         * After trying to register for push notifications,
+         * confirm the final permission status:
+         */
+        const { status } = await Notifications.getPermissionsAsync();
+        setHasNotificationPermission(
+          status === ("granted" as Notifications.PermissionStatus),
+        );
+      }
     }
 
-    void checkPermissions();
-
-    registerForPushNotificationsAsync()
-      .then((token) => setExpoPushToken(token ?? ""))
-      .catch((error: string) => setExpoPushToken(`${error}`));
+    void registerAndCheckPermissions();
 
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
