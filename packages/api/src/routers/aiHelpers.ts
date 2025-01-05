@@ -176,7 +176,7 @@ export interface AIEventResponse {
   success: boolean;
   ticket?: unknown;
   eventId: string;
-  event: EventWithMetadata;
+  eventData: EventWithMetadata;
   error?: string;
 }
 
@@ -304,6 +304,7 @@ export interface CreateEventParams {
     visibility?: "public" | "private";
     userId: string;
     username: string;
+    imageUrl?: string;
   };
   firstEvent: EventWithMetadata;
   dailyEventsPromise: Promise<{ id: string }[]>;
@@ -314,7 +315,7 @@ export async function createEventAndNotify(
   params: CreateEventParams,
 ): Promise<AIEventResponse> {
   const { ctx, input, firstEvent, dailyEventsPromise, source } = params;
-  const { userId, username } = input;
+  const { userId, username, imageUrl } = input;
 
   if (!userId) {
     throw new TRPCError({
@@ -360,7 +361,12 @@ export async function createEventAndNotify(
     id: eventid,
     userId,
     userName: username,
-    event: firstEvent,
+    event: {
+      ...firstEvent,
+      ...(imageUrl && {
+        images: [imageUrl, imageUrl, imageUrl, imageUrl],
+      }),
+    },
     eventMetadata: firstEvent.eventMetadata,
     startDateTime: startUtcDate,
     endDateTime: endUtcDate,
@@ -421,7 +427,7 @@ export async function createEventAndNotify(
     success: notificationResult.success,
     ticket: notificationResult.ticket,
     eventId: eventid,
-    event: values.event,
+    eventData: values.event,
     ...(notificationResult.error && { error: notificationResult.error }),
   };
 }

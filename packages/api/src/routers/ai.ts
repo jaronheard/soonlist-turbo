@@ -285,15 +285,7 @@ export const aiRouter = createTRPCRouter({
           const result = await createEventAndNotify({
             ctx,
             input,
-            firstEvent: {
-              ...validatedEvent,
-              images: [
-                input.imageUrl,
-                input.imageUrl,
-                input.imageUrl,
-                input.imageUrl,
-              ],
-            },
+            firstEvent: validatedEvent,
             dailyEventsPromise,
             source: "image",
           });
