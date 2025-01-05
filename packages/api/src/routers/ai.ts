@@ -7,6 +7,11 @@ import { z } from "zod";
 import { and, eq, gte, lte } from "@soonlist/db";
 import { events as eventsSchema } from "@soonlist/db/schema";
 
+import type {
+  AIErrorResponse,
+  AIEventResponse,
+  ProcessedEventResponse,
+} from "./aiHelpers";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { generateNotificationId } from "../utils/notification";
 import {
@@ -62,7 +67,7 @@ export const aiRouter = createTRPCRouter({
         timezone: z.string(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ ctx, input }): Promise<ProcessedEventResponse> => {
       return fetchAndProcessEvent({
         ctx,
         input,
@@ -99,235 +104,241 @@ export const aiRouter = createTRPCRouter({
     }),
   eventFromRawTextThenCreateThenNotification: publicProcedure
     .input(prototypeEventCreateSchema)
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const { events } = await fetchAndProcessEvent({
-          ctx,
-          input,
-          fnName: "eventFromRawTextThenCreateThenNotification",
-        });
-
-        const validatedEvent = validateFirstEvent(events);
-
-        const dailyEventsPromise = ctx.db
-          .select({
-            id: eventsSchema.id,
-          })
-          .from(eventsSchema)
-          .where(
-            and(
-              eq(eventsSchema.userId, input.userId),
-              gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
-              lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
-            ),
-          );
-
-        const result = await createEventAndNotify({
-          ctx,
-          input,
-          firstEvent: validatedEvent,
-          dailyEventsPromise,
-          source: "rawText",
-        });
-
-        return result;
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-
-        const { expoPushToken } = input;
-
-        if (!Expo.isExpoPushToken(expoPushToken)) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `Invalid Expo push token: ${String(expoPushToken)}`,
-          });
-        }
-
-        const notificationId = generateNotificationId();
-        const message: ExpoPushMessage = {
-          to: expoPushToken,
-          sound: "default",
-          title: "Soonlist",
-          body: "There was an error creating your event.",
-          data: {
-            url: "/feed",
-            notificationId,
-          },
-        };
-
+    .mutation(
+      async ({ ctx, input }): Promise<AIEventResponse | AIErrorResponse> => {
         try {
-          const [ticket] = await expo.sendPushNotificationsAsync([message]);
-          return {
-            success: true,
-            ticket,
-          };
-        } catch (notifError) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to send error notification",
-            cause: notifError,
+          const { events } = await fetchAndProcessEvent({
+            ctx,
+            input,
+            fnName: "eventFromRawTextThenCreateThenNotification",
           });
+
+          const validatedEvent = validateFirstEvent(events);
+
+          const dailyEventsPromise = ctx.db
+            .select({
+              id: eventsSchema.id,
+            })
+            .from(eventsSchema)
+            .where(
+              and(
+                eq(eventsSchema.userId, input.userId),
+                gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
+                lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
+              ),
+            );
+
+          const result = await createEventAndNotify({
+            ctx,
+            input,
+            firstEvent: validatedEvent,
+            dailyEventsPromise,
+            source: "rawText",
+          });
+
+          return result;
+        } catch (error) {
+          if (error instanceof TRPCError) {
+            throw error;
+          }
+
+          const { expoPushToken } = input;
+
+          if (!Expo.isExpoPushToken(expoPushToken)) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Invalid Expo push token: ${String(expoPushToken)}`,
+            });
+          }
+
+          const notificationId = generateNotificationId();
+          const message: ExpoPushMessage = {
+            to: expoPushToken,
+            sound: "default",
+            title: "Soonlist",
+            body: "There was an error creating your event.",
+            data: {
+              url: "/feed",
+              notificationId,
+            },
+          };
+
+          try {
+            const [ticket] = await expo.sendPushNotificationsAsync([message]);
+            return {
+              success: true,
+              ticket,
+            };
+          } catch (notifError) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to send error notification",
+              cause: notifError,
+            });
+          }
         }
-      }
-    }),
+      },
+    ),
   eventFromUrlThenCreateThenNotification: publicProcedure
     .input(prototypeEventCreateFromUrlSchema)
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const dailyEventsPromise = ctx.db
-          .select({
-            id: eventsSchema.id,
-          })
-          .from(eventsSchema)
-          .where(
-            and(
-              eq(eventsSchema.userId, input.userId),
-              gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
-              lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
-            ),
-          );
-
-        const { events } = await fetchAndProcessEvent({
-          ctx,
-          input,
-          fnName: "eventFromUrlThenCreateThenNotification",
-        });
-
-        const validatedEvent = validateFirstEvent(events);
-
-        const result = await createEventAndNotify({
-          ctx,
-          input,
-          firstEvent: validatedEvent,
-          dailyEventsPromise,
-          source: "url",
-        });
-
-        return result;
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-
-        const { expoPushToken } = input;
-
-        if (!Expo.isExpoPushToken(expoPushToken)) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `Invalid Expo push token: ${String(expoPushToken)}`,
-          });
-        }
-
-        const notificationId = generateNotificationId();
-        const message: ExpoPushMessage = {
-          to: expoPushToken,
-          sound: "default",
-          title: "Soonlist",
-          body: "There was an error creating your event.",
-          data: {
-            url: "/feed",
-            notificationId,
-          },
-        };
-
+    .mutation(
+      async ({ ctx, input }): Promise<AIEventResponse | AIErrorResponse> => {
         try {
-          const [ticket] = await expo.sendPushNotificationsAsync([message]);
-          return {
-            success: true,
-            ticket,
-          };
-        } catch (notifError) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to send error notification",
-            cause: notifError,
+          const dailyEventsPromise = ctx.db
+            .select({
+              id: eventsSchema.id,
+            })
+            .from(eventsSchema)
+            .where(
+              and(
+                eq(eventsSchema.userId, input.userId),
+                gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
+                lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
+              ),
+            );
+
+          const { events } = await fetchAndProcessEvent({
+            ctx,
+            input,
+            fnName: "eventFromUrlThenCreateThenNotification",
           });
+
+          const validatedEvent = validateFirstEvent(events);
+
+          const result = await createEventAndNotify({
+            ctx,
+            input,
+            firstEvent: validatedEvent,
+            dailyEventsPromise,
+            source: "url",
+          });
+
+          return result;
+        } catch (error) {
+          if (error instanceof TRPCError) {
+            throw error;
+          }
+
+          const { expoPushToken } = input;
+
+          if (!Expo.isExpoPushToken(expoPushToken)) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Invalid Expo push token: ${String(expoPushToken)}`,
+            });
+          }
+
+          const notificationId = generateNotificationId();
+          const message: ExpoPushMessage = {
+            to: expoPushToken,
+            sound: "default",
+            title: "Soonlist",
+            body: "There was an error creating your event.",
+            data: {
+              url: "/feed",
+              notificationId,
+            },
+          };
+
+          try {
+            const [ticket] = await expo.sendPushNotificationsAsync([message]);
+            return {
+              success: true,
+              ticket,
+            };
+          } catch (notifError) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to send error notification",
+              cause: notifError,
+            });
+          }
         }
-      }
-    }),
+      },
+    ),
   eventFromImageThenCreateThenNotification: publicProcedure
     .input(prototypeEventCreateFromImageSchema)
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const dailyEventsPromise = ctx.db
-          .select({
-            id: eventsSchema.id,
-          })
-          .from(eventsSchema)
-          .where(
-            and(
-              eq(eventsSchema.userId, input.userId),
-              gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
-              lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
-            ),
-          );
-
-        const { events } = await fetchAndProcessEvent({
-          ctx,
-          input,
-          fnName: "eventFromImageThenCreateThenNotification",
-        });
-
-        const validatedEvent = validateFirstEvent(events);
-
-        const result = await createEventAndNotify({
-          ctx,
-          input,
-          firstEvent: {
-            ...validatedEvent,
-            images: [
-              input.imageUrl,
-              input.imageUrl,
-              input.imageUrl,
-              input.imageUrl,
-            ],
-          },
-          dailyEventsPromise,
-          source: "image",
-        });
-
-        return result;
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-
-        const { expoPushToken } = input;
-
-        if (!Expo.isExpoPushToken(expoPushToken)) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `Invalid Expo push token: ${String(expoPushToken)}`,
-          });
-        }
-
-        const notificationId = generateNotificationId();
-        const message: ExpoPushMessage = {
-          to: expoPushToken,
-          sound: "default",
-          title: "Soonlist",
-          body: "There was an error creating your event.",
-          data: {
-            url: "/feed",
-            notificationId,
-          },
-        };
-
+    .mutation(
+      async ({ ctx, input }): Promise<AIEventResponse | AIErrorResponse> => {
         try {
-          const [ticket] = await expo.sendPushNotificationsAsync([message]);
-          return {
-            success: true,
-            ticket,
-          };
-        } catch (notifError) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to send error notification",
-            cause: notifError,
+          const dailyEventsPromise = ctx.db
+            .select({
+              id: eventsSchema.id,
+            })
+            .from(eventsSchema)
+            .where(
+              and(
+                eq(eventsSchema.userId, input.userId),
+                gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
+                lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
+              ),
+            );
+
+          const { events } = await fetchAndProcessEvent({
+            ctx,
+            input,
+            fnName: "eventFromImageThenCreateThenNotification",
           });
+
+          const validatedEvent = validateFirstEvent(events);
+
+          const result = await createEventAndNotify({
+            ctx,
+            input,
+            firstEvent: {
+              ...validatedEvent,
+              images: [
+                input.imageUrl,
+                input.imageUrl,
+                input.imageUrl,
+                input.imageUrl,
+              ],
+            },
+            dailyEventsPromise,
+            source: "image",
+          });
+
+          return result;
+        } catch (error) {
+          if (error instanceof TRPCError) {
+            throw error;
+          }
+
+          const { expoPushToken } = input;
+
+          if (!Expo.isExpoPushToken(expoPushToken)) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Invalid Expo push token: ${String(expoPushToken)}`,
+            });
+          }
+
+          const notificationId = generateNotificationId();
+          const message: ExpoPushMessage = {
+            to: expoPushToken,
+            sound: "default",
+            title: "Soonlist",
+            body: "There was an error creating your event.",
+            data: {
+              url: "/feed",
+              notificationId,
+            },
+          };
+
+          try {
+            const [ticket] = await expo.sendPushNotificationsAsync([message]);
+            return {
+              success: true,
+              ticket,
+            };
+          } catch (notifError) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to send error notification",
+              cause: notifError,
+            });
+          }
         }
-      }
-    }),
+      },
+    ),
 });

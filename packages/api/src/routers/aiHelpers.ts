@@ -6,10 +6,12 @@ import { waitUntil } from "@vercel/functions";
 import { generateObject } from "ai";
 import { Langfuse } from "langfuse";
 
+import type { EventWithMetadata } from "@soonlist/cal";
 import {
   addCommonAddToCalendarProps,
   EventMetadataSchema,
   EventSchema,
+  EventWithMetadataSchema,
   getPrompt,
   getSystemMessage,
   getSystemMessageMetadata,
@@ -170,6 +172,24 @@ function constructMessagesImage({
   ];
 }
 
+export interface AIEventResponse {
+  success: boolean;
+  ticket?: unknown;
+  eventId: string;
+  event: EventWithMetadata;
+  error?: string;
+}
+
+export interface AIErrorResponse {
+  success: boolean;
+  ticket?: unknown;
+}
+
+export interface ProcessedEventResponse {
+  events: EventWithMetadata[];
+  response: string;
+}
+
 export async function fetchAndProcessEvent({
   ctx,
   input,
@@ -183,7 +203,10 @@ export async function fetchAndProcessEvent({
     url?: string;
   };
   fnName: string;
-}) {
+}): Promise<{
+  events: EventWithMetadata[];
+  response: string;
+}> {
   const { systemPromptEvent, systemPromptMetadata, prompt, promptVersion } =
     getPrompts(input.timezone);
   const createLoggedObject = createLoggedObjectGenerator({
@@ -282,22 +305,14 @@ export interface CreateEventParams {
     userId: string;
     username: string;
   };
-  firstEvent: {
-    name: string;
-    startDate: string;
-    endDate: string;
-    startTime?: string;
-    endTime?: string;
-    timeZone?: string;
-    eventMetadata?: unknown;
-    images?: string[];
-    [key: string]: unknown;
-  };
+  firstEvent: EventWithMetadata;
   dailyEventsPromise: Promise<{ id: string }[]>;
   source: "rawText" | "url" | "image";
 }
 
-export async function createEventAndNotify(params: CreateEventParams) {
+export async function createEventAndNotify(
+  params: CreateEventParams,
+): Promise<AIEventResponse> {
   const { ctx, input, firstEvent, dailyEventsPromise, source } = params;
   const { userId, username } = input;
 
@@ -406,7 +421,7 @@ export async function createEventAndNotify(params: CreateEventParams) {
     success: notificationResult.success,
     ticket: notificationResult.ticket,
     eventId: eventid,
-    event: values,
+    event: values.event,
     ...(notificationResult.error && { error: notificationResult.error }),
   };
 }
@@ -421,7 +436,7 @@ export function validateFirstEvent(events: unknown[]) {
 
   try {
     // This will throw if validation fails
-    const validatedEvent = EventSchema.parse(events[0]);
+    const validatedEvent = EventWithMetadataSchema.parse(events[0]);
     return validatedEvent;
   } catch (error) {
     throw new TRPCError({
