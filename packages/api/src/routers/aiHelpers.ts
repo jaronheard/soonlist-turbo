@@ -482,3 +482,24 @@ export async function createEventAndNotify(params: CreateEventParams) {
     };
   }
 }
+
+export function validateFirstEvent(events: unknown[]) {
+  if (!events.length) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "No events found in response",
+    });
+  }
+
+  try {
+    // This will throw if validation fails
+    const validatedEvent = EventSchema.parse(events[0]);
+    return validatedEvent;
+  } catch (error) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Invalid event data received",
+      cause: error,
+    });
+  }
+}

@@ -9,7 +9,11 @@ import { events as eventsSchema } from "@soonlist/db/schema";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { generateNotificationId } from "../utils/notification";
-import { createEventAndNotify, fetchAndProcessEvent } from "./aiHelpers";
+import {
+  createEventAndNotify,
+  fetchAndProcessEvent,
+  validateFirstEvent,
+} from "./aiHelpers";
 
 const prototypeEventCreateBaseSchema = z.object({
   timezone: z.string(),
@@ -103,17 +107,7 @@ export const aiRouter = createTRPCRouter({
           fnName: "eventFromRawTextThenCreateThenNotification",
         });
 
-        if (
-          !events.length ||
-          !events[0]?.name ||
-          !events[0]?.startDate ||
-          !events[0]?.endDate
-        ) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "No valid event found in response",
-          });
-        }
+        const validatedEvent = validateFirstEvent(events);
 
         const dailyEventsPromise = ctx.db
           .select({
@@ -131,7 +125,7 @@ export const aiRouter = createTRPCRouter({
         const result = await createEventAndNotify({
           ctx,
           input,
-          firstEvent: events[0],
+          firstEvent: validatedEvent,
           dailyEventsPromise,
           source: "rawText",
         });
@@ -201,22 +195,12 @@ export const aiRouter = createTRPCRouter({
           fnName: "eventFromUrlThenCreateThenNotification",
         });
 
-        if (
-          !events.length ||
-          !events[0]?.name ||
-          !events[0]?.startDate ||
-          !events[0]?.endDate
-        ) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "No valid event found in response",
-          });
-        }
+        const validatedEvent = validateFirstEvent(events);
 
         const result = await createEventAndNotify({
           ctx,
           input,
-          firstEvent: events[0],
+          firstEvent: validatedEvent,
           dailyEventsPromise,
           source: "url",
         });
@@ -232,7 +216,7 @@ export const aiRouter = createTRPCRouter({
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Invalid Expo push token: ${expoPushToken}`,
+            message: `Invalid Expo push token: ${String(expoPushToken)}`,
           });
         }
 
@@ -286,23 +270,13 @@ export const aiRouter = createTRPCRouter({
           fnName: "eventFromImageThenCreateThenNotification",
         });
 
-        if (
-          !events.length ||
-          !events[0]?.name ||
-          !events[0]?.startDate ||
-          !events[0]?.endDate
-        ) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "No valid event found in response",
-          });
-        }
+        const validatedEvent = validateFirstEvent(events);
 
         const result = await createEventAndNotify({
           ctx,
           input,
           firstEvent: {
-            ...events[0],
+            ...validatedEvent,
             images: [
               input.imageUrl,
               input.imageUrl,
@@ -325,7 +299,7 @@ export const aiRouter = createTRPCRouter({
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Invalid Expo push token: ${expoPushToken}`,
+            message: `Invalid Expo push token: ${String(expoPushToken)}`,
           });
         }
 
