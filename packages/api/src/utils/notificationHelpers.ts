@@ -108,7 +108,7 @@ export async function sendNotification({
     console.error("Error sending notification:", error);
     return {
       success: false,
-      error: (error as Error).message,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
     };
   }
 }

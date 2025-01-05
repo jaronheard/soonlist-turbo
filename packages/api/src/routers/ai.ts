@@ -141,7 +141,7 @@ export const aiRouter = createTRPCRouter({
         if (!Expo.isExpoPushToken(expoPushToken)) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Invalid Expo push token: ${expoPushToken}`,
+            message: `Invalid Expo push token: ${String(expoPushToken)}`,
           });
         }
 

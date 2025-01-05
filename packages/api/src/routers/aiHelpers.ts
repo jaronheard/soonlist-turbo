@@ -6,7 +6,6 @@ import { waitUntil } from "@vercel/functions";
 import { generateObject } from "ai";
 import { Langfuse } from "langfuse";
 
-import type { NewComment, NewEvent, NewEventToLists } from "@soonlist/db/types";
 import {
   addCommonAddToCalendarProps,
   EventMetadataSchema,
@@ -316,13 +315,6 @@ export async function createEventAndNotify(params: CreateEventParams) {
     });
   }
 
-  if (!firstEvent) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "No valid event found in response",
-    });
-  }
-
   const hasComment = input.comment && input.comment.length > 0;
   const hasLists = input.lists.length > 0;
   const hasVisibility = input.visibility && input.visibility.length > 0;
@@ -349,7 +341,7 @@ export async function createEventAndNotify(params: CreateEventParams) {
 
   const eventid = generatePublicId();
 
-  const values: NewEvent = {
+  const values = {
     id: eventid,
     userId,
     userName: username,
@@ -373,7 +365,7 @@ export async function createEventAndNotify(params: CreateEventParams) {
         eventId: eventid,
         content: input.comment ?? "",
         userId,
-      } as NewComment);
+      });
     }
 
     // Insert event-to-lists, if any
@@ -383,7 +375,7 @@ export async function createEventAndNotify(params: CreateEventParams) {
         input.lists.map((list) => ({
           eventId: eventid,
           listId: list.value,
-        })) as NewEventToLists[],
+        })),
       );
     }
   });
