@@ -120,12 +120,17 @@ export function NotificationProvider({
 
   useEffect(() => {
     async function registerAndCheckPermissions() {
+      const PERMISSION_GRANTED = 'granted' as const;
       try {
         const token = await registerForPushNotificationsAsync();
         setExpoPushToken(token ?? "");
       } catch (error: unknown) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        setExpoPushToken(`${error}`);
+        setExpoPushToken("");
+        if (error instanceof Error) {
+          console.error("Push notification registration failed:", error.message);
+        } else {
+          console.error("Push notification registration failed:", error);
+        }
       } finally {
         /*
          * After trying to register for push notifications,
@@ -133,7 +138,7 @@ export function NotificationProvider({
          */
         const { status } = await Notifications.getPermissionsAsync();
         setHasNotificationPermission(
-          status === ("granted" as Notifications.PermissionStatus),
+          status === PERMISSION_GRANTED
         );
       }
     }
