@@ -206,6 +206,17 @@ const PhotoGrid = React.memo(
   },
 );
 
+interface EventResponse {
+  success: boolean;
+  eventId?: string;
+}
+
+function isSuccessResponse(
+  result: EventResponse,
+): result is EventResponse & { eventId: string } {
+  return result.success;
+}
+
 export default function NewEventModal() {
   const router = useRouter();
   const { expoPushToken, hasNotificationPermission } = useNotification();
@@ -359,7 +370,9 @@ export default function NewEventModal() {
             visibility: "private",
           },
         );
-        eventId = result.eventId;
+        if (isSuccessResponse(result)) {
+          eventId = result.eventId;
+        }
       } else if (imagePreview) {
         setIsImageLoading(true);
         try {
@@ -398,7 +411,9 @@ export default function NewEventModal() {
               username: user?.username || "",
               visibility: "private",
             });
-          eventId = result.eventId;
+          if (isSuccessResponse(result)) {
+            eventId = result.eventId;
+          }
         } finally {
           setIsImageLoading(false);
         }
@@ -412,7 +427,9 @@ export default function NewEventModal() {
           username: user?.username || "",
           visibility: "private",
         });
-        eventId = result.eventId;
+        if (isSuccessResponse(result)) {
+          eventId = result.eventId;
+        }
       }
 
       if (!hasNotificationPermission && eventId) {

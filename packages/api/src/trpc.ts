@@ -37,6 +37,8 @@ interface AuthContextProps {
   user: User | null;
 }
 
+export type Context = Awaited<ReturnType<typeof createContextInner>>;
+
 export const createContextInner = ({ auth, user }: AuthContextProps) => {
   return {
     db,
