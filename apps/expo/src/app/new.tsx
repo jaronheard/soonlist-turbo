@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
   previewContainerFull: {
     width: Dimensions.get("window").width - 32,
     flex: 1,
+    maxHeight: Dimensions.get("window").height - 240,
   },
 });
 
