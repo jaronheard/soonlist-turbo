@@ -11,7 +11,7 @@ import {
 import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
   Copy,
@@ -92,6 +92,7 @@ export function UserEventListItem(props: {
     isSaved,
     similarEventsCount,
   } = props;
+  const router = useRouter();
   const { fontScale } = useWindowDimensions();
   const id = event.id;
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -155,131 +156,139 @@ export function UserEventListItem(props: {
       isSaved={isSaved}
       menuType="context"
     >
-      <Link href={`/event/${id}`} asChild>
-        <Pressable>
-          <View
-            className={cn(
-              "-mx-2 flex-row items-center rounded-lg p-4 px-6",
-              relativeTime ? "pt-12" : "pt-8",
-              isLastItem ? "" : "border-b border-neutral-3",
-              isHappeningNow ? "bg-accent-yellow" : "bg-white",
-              "relative",
-            )}
-          >
-            {isOwner && (
-              <View className="absolute right-4 top-2 flex-row items-center gap-2 opacity-60">
-                {similarEventsCount ? (
-                  <View className="bg-neutral-5/90 flex-row items-center gap-1 rounded-full px-1">
-                    <Copy size={12} color="#627496" />
-                    <Text className="text-xs text-neutral-2">
-                      {similarEventsCount}
-                    </Text>
-                  </View>
-                ) : null}
-                {event.visibility === "public" ? (
-                  <Globe2 size={iconSize} color="#627496" />
-                ) : (
-                  <EyeOff size={iconSize} color="#627496" />
-                )}
-              </View>
-            )}
-            <View className="mr-4 flex-1">
-              <View className="mb-2">
-                <Text className="text-base font-medium text-neutral-2">
-                  {date} • {time}
+      <Pressable
+        onPress={() => {
+          // Short press → navigate
+          router.push(`/event/${id}`);
+        }}
+        onLongPress={(e) => {
+          // Long press → stop native press so menu can open without navigation
+          e.stopPropagation();
+        }}
+        delayLongPress={350} // optional; adjust as desired
+      >
+        <View
+          className={cn(
+            "-mx-2 flex-row items-center rounded-lg p-4 px-6",
+            relativeTime ? "pt-12" : "pt-8",
+            isLastItem ? "" : "border-b border-neutral-3",
+            isHappeningNow ? "bg-accent-yellow" : "bg-white",
+            "relative",
+          )}
+        >
+          {isOwner && (
+            <View className="absolute right-4 top-2 flex-row items-center gap-2 opacity-60">
+              {similarEventsCount ? (
+                <View className="bg-neutral-5/90 flex-row items-center gap-1 rounded-full px-1">
+                  <Copy size={12} color="#627496" />
+                  <Text className="text-xs text-neutral-2">
+                    {similarEventsCount}
+                  </Text>
+                </View>
+              ) : null}
+              {event.visibility === "public" ? (
+                <Globe2 size={iconSize} color="#627496" />
+              ) : (
+                <EyeOff size={iconSize} color="#627496" />
+              )}
+            </View>
+          )}
+          <View className="mr-4 flex-1">
+            <View className="mb-2">
+              <Text className="text-base font-medium text-neutral-2">
+                {date} • {time}
+              </Text>
+            </View>
+            <Text
+              className="mb-2 text-xl font-bold text-neutral-1"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {e.name}
+            </Text>
+            {e.location ? (
+              <View className="mb-2 flex-row items-center gap-1">
+                <MapPin size={iconSize} color="#627496" />
+                <Text
+                  className="flex-1 text-base text-neutral-2"
+                  numberOfLines={1}
+                >
+                  {e.location}
                 </Text>
               </View>
-              <Text
-                className="mb-2 text-xl font-bold text-neutral-1"
-                numberOfLines={2}
-                ellipsizeMode="tail"
-              >
-                {e.name}
-              </Text>
-              {e.location ? (
-                <View className="mb-2 flex-row items-center gap-1">
-                  <MapPin size={iconSize} color="#627496" />
-                  <Text
-                    className="flex-1 text-base text-neutral-2"
-                    numberOfLines={1}
-                  >
-                    {e.location}
-                  </Text>
-                </View>
-              ) : null}
-              {shouldShowCreator ? (
-                <View className="flex-row items-center gap-2">
-                  <UserProfileFlair username={eventUser.username} size="xs">
-                    {eventUser.userImage ? (
-                      <Image
-                        source={{ uri: eventUser.userImage }}
-                        style={{
-                          width: iconSize,
-                          height: iconSize,
-                          borderRadius: 9999,
-                        }}
-                        contentFit="cover"
-                        contentPosition="center"
-                        cachePolicy="disk"
-                        transition={100}
-                      />
-                    ) : (
-                      <User size={iconSize} color="#627496" />
-                    )}
-                  </UserProfileFlair>
-                  <Text className="text-sm text-neutral-2">
-                    @{eventUser.username}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-            <View className="relative flex items-center justify-center">
-              {e.images?.[3] ? (
-                <Image
-                  source={{
-                    uri: `${e.images[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
-                  }}
-                  style={{
-                    width: imageSize,
-                    height: imageSize,
-                    borderRadius: 20,
-                  }}
-                  contentFit="cover"
-                  cachePolicy="disk"
-                  transition={100}
-                />
-              ) : (
-                <View
-                  className="rounded-2xl bg-accent-yellow"
-                  style={{
-                    width: imageSize,
-                    height: imageSize,
-                  }}
-                />
-              )}
-              {ActionButton && (
-                <View className="absolute -bottom-2 -right-2">
-                  <ActionButton event={event} />
-                </View>
-              )}
-            </View>
-            {relativeTime && (
-              <View className="absolute left-0 right-0 top-2 flex items-center justify-center">
-                <View
-                  className={cn(
-                    "rounded-full px-2 py-1",
-                    isHappeningNow ? "bg-white" : "bg-accent-yellow",
+            ) : null}
+            {shouldShowCreator ? (
+              <View className="flex-row items-center gap-2">
+                <UserProfileFlair username={eventUser.username} size="xs">
+                  {eventUser.userImage ? (
+                    <Image
+                      source={{ uri: eventUser.userImage }}
+                      style={{
+                        width: iconSize,
+                        height: iconSize,
+                        borderRadius: 9999,
+                      }}
+                      contentFit="cover"
+                      contentPosition="center"
+                      cachePolicy="disk"
+                      transition={100}
+                    />
+                  ) : (
+                    <User size={iconSize} color="#627496" />
                   )}
-                >
-                  <Text className="text-sm font-medium text-neutral-1">
-                    {relativeTime}
-                  </Text>
-                </View>
+                </UserProfileFlair>
+                <Text className="text-sm text-neutral-2">
+                  @{eventUser.username}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+          <View className="relative flex items-center justify-center">
+            {e.images?.[3] ? (
+              <Image
+                source={{
+                  uri: `${e.images[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
+                }}
+                style={{
+                  width: imageSize,
+                  height: imageSize,
+                  borderRadius: 20,
+                }}
+                contentFit="cover"
+                cachePolicy="disk"
+                transition={100}
+              />
+            ) : (
+              <View
+                className="rounded-2xl bg-accent-yellow"
+                style={{
+                  width: imageSize,
+                  height: imageSize,
+                }}
+              />
+            )}
+            {ActionButton && (
+              <View className="absolute -bottom-2 -right-2">
+                <ActionButton event={event} />
               </View>
             )}
           </View>
-        </Pressable>
-      </Link>
+          {relativeTime && (
+            <View className="absolute left-0 right-0 top-2 flex items-center justify-center">
+              <View
+                className={cn(
+                  "rounded-full px-2 py-1",
+                  isHappeningNow ? "bg-white" : "bg-accent-yellow",
+                )}
+              >
+                <Text className="text-sm font-medium text-neutral-1">
+                  {relativeTime}
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </Pressable>
     </EventMenu>
   );
 }
