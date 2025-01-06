@@ -35,9 +35,9 @@ function GoButton({
       onPress={() =>
         location ? openGoogleMaps(location) : console.log("No location")
       }
-      className="flex-row items-center rounded-full bg-interactive-1/90 p-2"
+      className="flex-row items-center rounded-full bg-interactive-2 p-1.5 shadow-sm"
     >
-      <MapPinned color="white" size={20} />
+      <MapPinned color="#5A32FB" size={24} />
     </Pressable>
   );
 }

@@ -95,15 +95,15 @@ export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
     <Pressable
       onPress={handlePress}
       disabled={!isLoaded}
-      className={`flex-row items-center rounded-full p-2 ${
-        isSaved ? "bg-interactive-3/90" : "bg-interactive-3/90"
+      className={`flex-row items-center rounded-full p-1 ${
+        isSaved ? "bg-interactive-2" : "bg-interactive-2"
       } ${!isLoaded ? "opacity-50" : ""}`}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         {isSaved ? (
-          <Heart color="#5A32FB" size={20} strokeWidth={2.5} fill={"#5A32FB"} />
+          <Heart color="#5A32FB" size={24} fill={"#5A32FB"} />
         ) : (
-          <Heart color="#5A32FB" size={20} strokeWidth={2.5} fill="white" />
+          <Heart color="#5A32FB" size={24} fill="white" />
         )}
       </Animated.View>
     </Pressable>
