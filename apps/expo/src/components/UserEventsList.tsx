@@ -11,7 +11,7 @@ import {
 import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
   Copy,
