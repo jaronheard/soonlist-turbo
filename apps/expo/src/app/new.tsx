@@ -242,28 +242,32 @@ export default function NewEventModal() {
     setShouldRefreshMediaLibrary,
     setRecentPhotos,
     hasFullPhotoAccess,
-    setIsAddingEvent,
   } = useAppStore();
-
   const eventFromRawTextAndNotification =
     api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
-      onSettled: () => {
-        void utils.event.getEventsForUser.invalidate();
-        void utils.event.getStats.invalidate();
+      onSuccess: () => {
+        return Promise.all([
+          void utils.event.getEventsForUser.invalidate(),
+          void utils.event.getStats.invalidate(),
+        ]);
       },
     });
   const eventFromImageThenCreateThenNotification =
     api.ai.eventFromImageThenCreateThenNotification.useMutation({
-      onSettled: () => {
-        void utils.event.getEventsForUser.invalidate();
-        void utils.event.getStats.invalidate();
+      onSuccess: () => {
+        return Promise.all([
+          void utils.event.getEventsForUser.invalidate(),
+          void utils.event.getStats.invalidate(),
+        ]);
       },
     });
   const eventFromUrlThenCreateThenNotification =
     api.ai.eventFromUrlThenCreateThenNotification.useMutation({
-      onSettled: () => {
-        void utils.event.getEventsForUser.invalidate();
-        void utils.event.getStats.invalidate();
+      onSuccess: () => {
+        return Promise.all([
+          void utils.event.getEventsForUser.invalidate(),
+          void utils.event.getStats.invalidate(),
+        ]);
       },
     });
 
@@ -352,7 +356,6 @@ export default function NewEventModal() {
     if (!input.trim() && !imagePreview && !linkPreview) return;
 
     router.canGoBack() ? router.back() : router.navigate("feed");
-    setIsAddingEvent(true);
 
     toast.info("Processing details. Add another?", {
       duration: 5000,
@@ -458,7 +461,6 @@ export default function NewEventModal() {
       toast.error("Failed to create event. Please try again.");
     } finally {
       resetAddEventState();
-      setIsAddingEvent(false);
     }
   }, [
     input,
@@ -473,7 +475,6 @@ export default function NewEventModal() {
     eventFromImageThenCreateThenNotification,
     eventFromRawTextAndNotification,
     resetAddEventState,
-    setIsAddingEvent,
   ]);
 
   const handleDescribePress = useCallback(() => {

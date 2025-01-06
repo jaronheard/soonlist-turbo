@@ -2,6 +2,7 @@ import React, { useCallback, useEffect } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { useMutationState } from "@tanstack/react-query";
 import { MapPinned } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -14,7 +15,6 @@ import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import UserEventsList from "~/components/UserEventsList";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
-import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 
 function GoButton({
@@ -45,7 +45,6 @@ function GoButton({
 function MyFeed() {
   const { user } = useUser();
   const { handleIntent } = useIntentHandler();
-  const { isAddingEvent } = useAppStore();
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -73,6 +72,16 @@ function MyFeed() {
   }, [eventsQuery]);
 
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
+
+  // Track any pending AI mutations
+  const pendingAIMutations = useMutationState({
+    filters: {
+      mutationKey: ["ai"],
+      status: "pending",
+    },
+  });
+
+  const isAddingEvent = pendingAIMutations.length > 0;
 
   useEffect(() => {
     console.log("Setting up URL handling effect");
@@ -127,7 +136,6 @@ function MyFeed() {
               showCreator="otherUsers"
               stats={statsQuery.data}
               promoCard={{ type: "addEvents" }}
-              isAddingEvent={isAddingEvent}
             />
             <AddEventButton />
           </View>
