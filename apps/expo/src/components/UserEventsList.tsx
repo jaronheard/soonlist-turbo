@@ -391,7 +391,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     }
 
     return (
-      <View className="mb-16 flex-1 items-center justify-center px-6 py-10">
+      <View className="flex-1 items-center justify-center px-6">
         <Image
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           source={require("../assets/icon.png")}
@@ -408,7 +408,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         <Text className="mb-2 rounded-lg text-center text-2xl font-bold text-neutral-1">
           Start capturing
         </Text>
-        <Text className="mb-6 text-center text-base text-neutral-2">
+        <Text className="text-center text-base text-neutral-2">
           Create your personal list of possibilities.{"\n"}
           Tap the plus button to get started.
         </Text>
@@ -484,6 +484,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         onEndReachedThreshold={0.5}
         contentContainerStyle={{
           paddingBottom: 120,
+          flexGrow: 1,
         }}
         ListFooterComponent={renderFooter()}
       />
