@@ -1,4 +1,4 @@
-import { Alert, Platform } from "react-native";
+import { Alert, Linking, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
 import { toast } from "sonner-native";
 
@@ -32,10 +32,14 @@ export function useCalendar() {
     try {
       const { status } = await Calendar.requestCalendarPermissionsAsync();
       if (status !== Calendar.PermissionStatus.GRANTED) {
-        Alert.alert(
-          "Permission Required",
-          "Calendar permission is required to add events.",
-        );
+        toast.error("Calendar permission required", {
+          action: {
+            label: "Settings",
+            onClick: () => {
+              void Linking.openSettings();
+            },
+          },
+        });
         return;
       }
 
