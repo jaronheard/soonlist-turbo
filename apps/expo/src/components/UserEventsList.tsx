@@ -370,7 +370,7 @@ export default function UserEventsList(props: UserEventsListProps) {
   const collapsedEvents = collapseSimilarEvents(events, user?.id);
 
   const renderEmptyState = () => {
-    if (isAddingEvent && collapsedEvents.length === 0) {
+    if ((isAddingEvent || isRefetching) && collapsedEvents.length === 0) {
       return (
         <View className="flex-1">
           <EventListItemSkeleton />

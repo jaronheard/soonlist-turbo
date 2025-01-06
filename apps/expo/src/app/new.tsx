@@ -34,6 +34,7 @@ import {
 import { toast } from "sonner-native";
 
 import type { RecentPhoto } from "~/store";
+import type { RouterOutputs } from "~/utils/api";
 import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
@@ -241,6 +242,7 @@ export default function NewEventModal() {
     setShouldRefreshMediaLibrary,
     setRecentPhotos,
     hasFullPhotoAccess,
+    setIsAddingEvent,
   } = useAppStore();
 
   const eventFromRawTextAndNotification =
@@ -350,7 +352,7 @@ export default function NewEventModal() {
     if (!input.trim() && !imagePreview && !linkPreview) return;
 
     router.canGoBack() ? router.back() : router.navigate("feed");
-    useAppStore.getState().setIsAddingEvent(true);
+    setIsAddingEvent(true);
 
     toast.info("Processing details. Add another?", {
       duration: 5000,
@@ -358,6 +360,8 @@ export default function NewEventModal() {
 
     try {
       let eventId: string | undefined;
+      let event: RouterOutputs["event"]["get"] | undefined;
+
       if (linkPreview) {
         const result = await eventFromUrlThenCreateThenNotification.mutateAsync(
           {
@@ -372,6 +376,7 @@ export default function NewEventModal() {
         );
         if (isSuccessResponse(result)) {
           eventId = result.eventId;
+          event = result.event;
         }
       } else if (imagePreview) {
         setIsImageLoading(true);
@@ -413,6 +418,7 @@ export default function NewEventModal() {
             });
           if (isSuccessResponse(result)) {
             eventId = result.eventId;
+            event = result.event;
           }
         } finally {
           setIsImageLoading(false);
@@ -429,8 +435,12 @@ export default function NewEventModal() {
         });
         if (isSuccessResponse(result)) {
           eventId = result.eventId;
+          event = result.event;
         }
       }
+
+      // TODO: implement update here
+      console.log("event", event);
 
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {
@@ -448,7 +458,7 @@ export default function NewEventModal() {
       toast.error("Failed to create event. Please try again.");
     } finally {
       resetAddEventState();
-      useAppStore.getState().setIsAddingEvent(false);
+      setIsAddingEvent(false);
     }
   }, [
     input,
@@ -463,6 +473,7 @@ export default function NewEventModal() {
     eventFromImageThenCreateThenNotification,
     eventFromRawTextAndNotification,
     resetAddEventState,
+    setIsAddingEvent,
   ]);
 
   const handleDescribePress = useCallback(() => {
