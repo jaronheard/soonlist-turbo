@@ -321,7 +321,14 @@ export default function NewEventModal() {
   const handleCameraCapture = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== ImagePicker.PermissionStatus.GRANTED) {
-      toast.error("Camera permission is required to take a photo");
+      toast.error("Camera permission required", {
+        action: {
+          label: "Settings",
+          onClick: () => {
+            void Linking.openSettings();
+          },
+        },
+      });
       return;
     }
 
