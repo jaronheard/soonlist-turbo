@@ -22,36 +22,84 @@ export default function SignInScreen() {
   const router = useRouter();
   const posthog = usePostHog();
   const [generalError, setGeneralError] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
       emailAddress: "",
       password: "",
     },
+    mode: "onChange",
   });
 
   const onSignInPress = async (data: SignInFormData) => {
-    if (!isLoaded) return;
+    if (!isLoaded || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setGeneralError("");
 
     try {
       const completeSignIn = await signIn.create({
-        identifier: data.emailAddress,
+        identifier: data.emailAddress.trim(),
         password: data.password,
       });
-      posthog.identify(data.emailAddress, {
-        email: data.emailAddress,
-      });
-      await setActive({ session: completeSignIn.createdSessionId });
+
+      if (completeSignIn.status === "complete") {
+        posthog.identify(data.emailAddress, {
+          email: data.emailAddress,
+        });
+        await setActive({ session: completeSignIn.createdSessionId });
+      } else {
+        console.log("Sign in status:", completeSignIn.status);
+        setGeneralError("Additional verification required");
+      }
     } catch (err: unknown) {
-      console.error("Error during sign in:", err);
-      setGeneralError(
-        err instanceof Error ? err.message : "An error occurred during sign in",
-      );
+      console.error("Error during sign in:", {
+        name: err instanceof Error ? err.name : "Unknown",
+        message: err instanceof Error ? err.message : "Unknown error",
+        stack: err instanceof Error ? err.stack : undefined,
+        fullError: JSON.stringify(err, null, 2),
+      });
+
+      if (err instanceof Error) {
+        const clerkError = err as {
+          errors?: { message: string; code: string }[];
+        };
+        if (clerkError.errors?.[0]) {
+          const errorDetails = clerkError.errors[0];
+          console.log("Clerk error details:", errorDetails);
+
+          switch (errorDetails.code) {
+            case "form_identifier_not_found":
+              setGeneralError("No account found with this email address");
+              break;
+            case "form_password_incorrect":
+              setGeneralError("Incorrect password");
+              break;
+            case "form_identifier_verification_failed":
+              setGeneralError("Email verification required");
+              break;
+            case "rate_limit_exceeded":
+              setGeneralError("Too many attempts. Please try again later");
+              break;
+            default:
+              setGeneralError(
+                errorDetails.message || "An error occurred during sign in",
+              );
+          }
+        } else {
+          setGeneralError(err.message);
+        }
+      } else {
+        setGeneralError("An unexpected error occurred. Please try again");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -88,7 +136,7 @@ export default function SignInScreen() {
           </Text>
 
           {generalError ? (
-            <Text className="mb-4 text-center text-red-500">
+            <Text className="mb-4 px-4 text-center text-red-500">
               {generalError}
             </Text>
           ) : null}
@@ -102,13 +150,16 @@ export default function SignInScreen() {
                   autoCapitalize="none"
                   autoComplete="email"
                   autoCorrect={false}
-                  defaultValue={value}
-                  onChangeText={onChange}
+                  value={value}
+                  onChangeText={(text) => onChange(text.trim())}
                   onBlur={onBlur}
                   placeholder="Email"
-                  className="mb-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                  className={`mb-2 w-full rounded-lg border ${
+                    errors.emailAddress ? "border-red-500" : "border-gray-300"
+                  } bg-white px-4 py-3`}
                   returnKeyType="next"
                   keyboardType="email-address"
+                  editable={!isSubmitting}
                 />
               )}
             />
@@ -128,14 +179,17 @@ export default function SignInScreen() {
                   autoComplete="password"
                   autoCorrect={false}
                   autoCapitalize="none"
-                  defaultValue={value}
+                  value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   placeholder="Password"
                   secureTextEntry={true}
-                  className="mb-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                  className={`mb-2 w-full rounded-lg border ${
+                    errors.password ? "border-red-500" : "border-gray-300"
+                  } bg-white px-4 py-3`}
                   returnKeyType="done"
                   onSubmitEditing={handleSubmit(onSignInPress)}
+                  editable={!isSubmitting}
                 />
               )}
             />
@@ -146,10 +200,13 @@ export default function SignInScreen() {
 
           <Pressable
             onPress={handleSubmit(onSignInPress)}
-            className="w-full rounded-full bg-interactive-1 px-6 py-3"
+            disabled={isSubmitting || !isValid}
+            className={`w-full rounded-full px-6 py-3 ${
+              isSubmitting || !isValid ? "bg-gray-400" : "bg-interactive-1"
+            }`}
           >
             <Text className="text-center text-lg font-bold text-white">
-              Sign in
+              {isSubmitting ? "Signing in..." : "Sign in"}
             </Text>
           </Pressable>
 
