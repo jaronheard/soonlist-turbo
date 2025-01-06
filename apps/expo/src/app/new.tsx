@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActionSheetIOS,
   ActivityIndicator,
@@ -595,6 +595,8 @@ export default function NewEventModal() {
     }
   }, [shouldRefreshMediaLibrary, clearPreview, setShouldRefreshMediaLibrary]);
 
+  const [initialized, setInitialized] = useState(false);
+
   useEffect(() => {
     setInput("");
     setImagePreview(null);
@@ -635,6 +637,8 @@ export default function NewEventModal() {
         setIsOptionSelected(false);
       }
     }
+
+    setInitialized(true);
   }, [
     text,
     imageUri,
@@ -680,6 +684,11 @@ export default function NewEventModal() {
   const clearText = useCallback(() => {
     setInput("");
   }, [setInput]);
+
+  // NEW: early return until we've set up our initial screen
+  if (!initialized) {
+    return null;
+  }
 
   return (
     <KeyboardAvoidingView
