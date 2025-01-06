@@ -34,7 +34,6 @@ import {
 import { toast } from "sonner-native";
 
 import type { RecentPhoto } from "~/store";
-import type { RouterOutputs } from "~/utils/api";
 import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
@@ -371,7 +370,6 @@ export default function NewEventModal() {
 
     try {
       let eventId: string | undefined;
-      let event: RouterOutputs["event"]["get"] | undefined;
 
       if (linkPreview) {
         const result = await eventFromUrlThenCreateThenNotification.mutateAsync(
@@ -387,7 +385,6 @@ export default function NewEventModal() {
         );
         if (isSuccessResponse(result)) {
           eventId = result.eventId;
-          event = result.event;
         }
       } else if (imagePreview) {
         setIsImageLoading(true);
@@ -429,7 +426,6 @@ export default function NewEventModal() {
             });
           if (isSuccessResponse(result)) {
             eventId = result.eventId;
-            event = result.event;
           }
         } finally {
           setIsImageLoading(false);
@@ -446,12 +442,8 @@ export default function NewEventModal() {
         });
         if (isSuccessResponse(result)) {
           eventId = result.eventId;
-          event = result.event;
         }
       }
-
-      // TODO: implement update here
-      console.log("event", event);
 
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {
