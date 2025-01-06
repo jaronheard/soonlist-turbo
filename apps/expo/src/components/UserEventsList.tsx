@@ -13,6 +13,7 @@ import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
   Copy,
   EyeOff,
@@ -343,7 +344,6 @@ interface UserEventsListProps {
     allTimeEvents: number;
   };
   promoCard?: PromoCardProps;
-  isAddingEvent?: boolean;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -357,9 +357,9 @@ export default function UserEventsList(props: UserEventsListProps) {
     isFetchingNextPage,
     stats,
     promoCard,
-    isAddingEvent,
   } = props;
   const { user } = useUser();
+  const queryClient = useQueryClient();
   const username = user?.username || "";
 
   const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
@@ -369,8 +369,20 @@ export default function UserEventsList(props: UserEventsListProps) {
   // Collapse similar events
   const collapsedEvents = collapseSimilarEvents(events, user?.id);
 
+  const pendingAIMutations = useMutationState(
+    {
+      filters: {
+        mutationKey: [["ai"]],
+      },
+      select: (mutation) => mutation.state.status,
+    },
+    queryClient,
+  );
+  const isAddingEvent =
+    pendingAIMutations.filter((mutation) => mutation === "pending").length > 0;
+
   const renderEmptyState = () => {
-    if (isAddingEvent && collapsedEvents.length === 0) {
+    if ((isAddingEvent || isRefetching) && collapsedEvents.length === 0) {
       return (
         <View className="flex-1">
           <EventListItemSkeleton />

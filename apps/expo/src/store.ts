@@ -83,9 +83,6 @@ interface AppState {
   // Add explicit types for these actions
   setIsLoadingPhotos: (isLoading: boolean) => void;
   setPhotoLoadingError: (error: string | null) => void;
-
-  isAddingEvent: boolean;
-  setIsAddingEvent: (isAdding: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -220,9 +217,6 @@ export const useAppStore = create<AppState>()(
       // Add these new actions
       setIsLoadingPhotos: (isLoading) => set({ isLoadingPhotos: isLoading }),
       setPhotoLoadingError: (error) => set({ photoLoadingError: error }),
-
-      isAddingEvent: false,
-      setIsAddingEvent: (isAdding) => set({ isAddingEvent: isAdding }),
     }),
     {
       name: "app-storage",

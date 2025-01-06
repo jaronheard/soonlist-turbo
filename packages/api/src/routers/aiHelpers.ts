@@ -19,10 +19,12 @@ import {
 import { eq } from "@soonlist/db";
 import {
   comments,
+  events,
   events as eventsSchema,
   eventToLists,
 } from "@soonlist/db/schema";
 
+import type { RouterOutputs } from "..";
 import type { Context } from "../trpc";
 import { generatePublicId } from "../utils";
 import {
@@ -176,7 +178,7 @@ export interface AIEventResponse {
   success: boolean;
   ticket?: unknown;
   eventId: string;
-  eventData: EventWithMetadata;
+  event: RouterOutputs["event"]["get"];
   error?: string;
 }
 
@@ -375,7 +377,6 @@ export async function createEventAndNotify(
     }),
   };
 
-  // Create the event in a transaction
   await ctx.db.transaction(async (tx: Context["db"]) => {
     // Insert event
     await tx.insert(eventsSchema).values(values);
@@ -399,7 +400,36 @@ export async function createEventAndNotify(
         })),
       );
     }
+
+    return eventid;
   });
+
+  const createdEvent = await ctx.db.query.events
+    .findMany({
+      where: eq(events.id, eventid),
+      with: {
+        user: {
+          with: {
+            lists: true,
+          },
+        },
+        eventFollows: true,
+        comments: true,
+        eventToLists: {
+          with: {
+            list: true,
+          },
+        },
+      },
+    })
+    .then((events) => events[0] || null);
+
+  if (!createdEvent) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to create event",
+    });
+  }
 
   // Resolve daily events
   const dailyEvents = await dailyEventsPromise;
@@ -427,7 +457,7 @@ export async function createEventAndNotify(
     success: notificationResult.success,
     ticket: notificationResult.ticket,
     eventId: eventid,
-    eventData: values.event,
+    event: createdEvent,
     ...(notificationResult.error && { error: notificationResult.error }),
   };
 }
