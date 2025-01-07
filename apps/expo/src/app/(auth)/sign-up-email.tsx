@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Linking, Pressable, Text, TextInput, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { router, Stack } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,9 +61,8 @@ export default function SignUpScreen() {
     <KeyboardAwareScrollView
       contentContainerStyle={{ flexGrow: 1 }}
       keyboardShouldPersistTaps="handled"
-      enableAutomaticScroll={true}
-      extraScrollHeight={150}
-      enableOnAndroid={true}
+      extraKeyboardSpace={150}
+      enabled
     >
       <Stack.Screen
         options={{
