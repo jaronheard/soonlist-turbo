@@ -85,7 +85,8 @@ export default function EditProfileScreen() {
   const updateProfile = api.user.updateAdditionalInfo.useMutation({
     onMutate: () => setIsSubmitting(true),
     onSettled: () => setIsSubmitting(false),
-    onSuccess: () => router.back(),
+    onSuccess: () =>
+      router.canGoBack() ? router.back() : router.navigate("/feed"),
   });
 
   const onSubmit = useCallback(
@@ -185,9 +186,9 @@ export default function EditProfileScreen() {
     if (isDirty && isValid) {
       void handleSubmit(onSubmit)();
     } else {
-      router.back();
+      router.canGoBack() ? router.back() : router.navigate("/feed");
     }
-  }, [isDirty, isValid, handleSubmit, onSubmit, router]);
+  }, [isDirty, isValid, handleSubmit, onSubmit]);
 
   return (
     <KeyboardAvoidingView

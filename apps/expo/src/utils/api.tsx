@@ -8,6 +8,8 @@ import superjson from "superjson";
 
 import type { AppRouter } from "@soonlist/api";
 
+import Config from "./config";
+
 /**
  * A set of typesafe hooks for consuming your API.
  */
@@ -31,7 +33,7 @@ const getBaseUrl = () => {
   const localhost = debuggerHost?.split(":")[0];
 
   if (!localhost) {
-    return process.env.EXPO_PUBLIC_API_BASE_URL || "https://www.soonlist.com";
+    return Config.apiBaseUrl || "https://www.soonlist.com";
   }
   return `http://${localhost}:3000`;
 };

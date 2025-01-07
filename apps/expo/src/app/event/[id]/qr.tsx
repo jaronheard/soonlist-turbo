@@ -49,7 +49,9 @@ export default function QRModal() {
       <View className="flex-1 items-center justify-center p-4">
         <TouchableOpacity
           className="absolute right-4 top-12 z-10 rounded-full bg-interactive-1 p-2"
-          onPress={() => router.back()}
+          onPress={() =>
+            router.canGoBack() ? router.back() : router.navigate("/feed")
+          }
         >
           <X size={24} color="white" />
         </TouchableOpacity>

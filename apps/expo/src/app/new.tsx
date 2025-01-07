@@ -361,7 +361,7 @@ export default function NewEventModal() {
   const handleCreateEvent = useCallback(async () => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
 
-    router.canGoBack() ? router.back() : router.navigate("feed");
+    router.canGoBack() ? router.back() : router.navigate("/feed");
 
     toast.info("Processing details. Add another?", {
       duration: 5000,
