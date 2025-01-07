@@ -8,9 +8,9 @@ overrides:
   promise: ^8.3.0
 
 patchedDependencies:
-  expo-secure-store@12.8.1:
-    hash: cwj7rupk5qsghvwsmaweq5mrgy
-    path: patches/expo-secure-store@12.8.1.patch
+  expo-secure-store:
+    hash: 2z2dmx6eplvhg7vgywbv4g3idi
+    path: patches/expo-secure-store.patch
   xcode@3.0.1:
     hash: njoq7pmows35o3loucybo3jchy
     path: patches/xcode@3.0.1.patch
@@ -159,7 +159,7 @@ importers:
         version: 4.0.15(nesr3nom4dctg4qo2gwm2jy3ty)
       expo-secure-store:
         specifier: ^14.0.0
-        version: 14.0.0(expo@52.0.23(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)))(encoding@0.1.13)(graphql@15.8.0)(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1))
+        version: 14.0.0(patch_hash=2z2dmx6eplvhg7vgywbv4g3idi)(expo@52.0.23(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)))(encoding@0.1.13)(graphql@15.8.0)(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1))
       expo-splash-screen:
         specifier: ~0.29.18
         version: 0.29.18(expo@52.0.23(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)))(encoding@0.1.13)(graphql@15.8.0)(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1))
@@ -16268,7 +16268,7 @@ snapshots:
       - supports-color
       - typescript
 
-  expo-secure-store@14.0.0(expo@52.0.23(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)))(encoding@0.1.13)(graphql@15.8.0)(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)):
+  expo-secure-store@14.0.0(patch_hash=2z2dmx6eplvhg7vgywbv4g3idi)(expo@52.0.23(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)))(encoding@0.1.13)(graphql@15.8.0)(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)):
     dependencies:
       expo: 52.0.23(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)))(encoding@0.1.13)(graphql@15.8.0)(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
 
