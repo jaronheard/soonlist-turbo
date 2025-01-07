@@ -77,6 +77,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         isAccessMediaLocationEnabled: true,
       },
     ],
+    ["expo-router"],
     // [
     //   "expo-background-fetch",
     //   {

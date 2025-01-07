@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { Stack, useRouter } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Globe, Instagram, Mail, Phone } from "lucide-react-native";
@@ -40,7 +40,6 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function EditProfileScreen() {
   const { user } = useUser();
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.imageUrl ?? null,

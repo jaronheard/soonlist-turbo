@@ -1,6 +1,6 @@
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { X } from "lucide-react-native";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
@@ -11,7 +11,6 @@ import Config from "~/utils/config";
 
 export default function QRModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
 
   const { data: event } = api.event.get.useQuery(
     { eventId: id },

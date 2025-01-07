@@ -7,7 +7,7 @@ import {
   MenuTrigger,
 } from "react-native-popup-menu";
 import { Image as ExpoImage } from "expo-image";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import {
@@ -34,7 +34,6 @@ interface ProfileMenuProps {
 export function ProfileMenu({ showShare }: ProfileMenuProps) {
   const { signOut } = useAuth();
   const { user } = useUser();
-  const router = useRouter();
   const resetStore = useAppStore((state) => state.resetStore);
 
   const showOnboarding = () => {

@@ -11,7 +11,7 @@ import {
 import AutoHeightImage from "react-native-auto-height-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { EyeOff, Globe2, MapPin, User } from "lucide-react-native";
 
@@ -27,7 +27,6 @@ import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
 
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const utils = api.useUtils();
   const { width } = Dimensions.get("window");
   const insets = useSafeAreaInsets();

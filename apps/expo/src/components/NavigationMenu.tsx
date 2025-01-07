@@ -12,7 +12,7 @@ import {
   MenuTrigger,
   renderers,
 } from "react-native-popup-menu";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import { Check, ChevronDown } from "lucide-react-native";
 
 type RouteType = "upcoming" | "past" | "discover";
@@ -35,7 +35,6 @@ function isRouteActive(routePath: string, active?: RouteType) {
 export function NavigationMenu({ active }: NavigationMenuProps) {
   const { width: screenWidth } = useWindowDimensions();
   const menuMinWidth = screenWidth * 0.5;
-  const router = useRouter();
   const [visible, setVisible] = useState(false);
 
   const currentRoute =

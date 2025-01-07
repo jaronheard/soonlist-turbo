@@ -3,13 +3,12 @@ import { TouchableOpacity, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import { Plus } from "lucide-react-native";
 
 import { useAppStore } from "~/store";
 
 export default function AddEventButton() {
-  const router = useRouter();
   const { hasMediaPermission } = useAppStore();
 
   const handlePress = useCallback(async () => {

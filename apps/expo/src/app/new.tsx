@@ -18,7 +18,7 @@ import { Image as ExpoImage } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useFocusEffect } from "@react-navigation/native";
 import {
@@ -219,7 +219,6 @@ function isSuccessResponse(
 }
 
 export default function NewEventModal() {
-  const router = useRouter();
   const { expoPushToken, hasNotificationPermission } = useNotification();
   const utils = api.useUtils();
   const { user } = useUser();

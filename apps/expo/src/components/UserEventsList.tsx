@@ -11,7 +11,7 @@ import {
 import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
@@ -93,7 +93,6 @@ export function UserEventListItem(props: {
     isSaved,
     similarEventsCount,
   } = props;
-  const router = useRouter();
   const { fontScale } = useWindowDimensions();
   const id = event.id;
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -295,7 +294,6 @@ export function UserEventListItem(props: {
 }
 
 function PromoCard({ type }: PromoCardProps) {
-  const router = useRouter();
   const { fontScale } = useWindowDimensions();
 
   const handlePress = async () => {
