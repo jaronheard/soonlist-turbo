@@ -87,7 +87,6 @@
     "react-native-auto-height-image": "^3.2.4",
     "react-native-context-menu-view": "^1.16.0",
     "react-native-gesture-handler": "~2.20.2",
-    "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-keyboard-controller": "^1.15.2",
     "react-native-popup-menu": "^0.16.1",
     "react-native-qrcode-svg": "^6.3.0",
