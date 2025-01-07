@@ -76,13 +76,19 @@ interface AppState {
   shouldRefreshMediaLibrary: boolean;
   setShouldRefreshMediaLibrary: (value: boolean) => void;
 
-  // Add these new state properties
+  // Photo loading and pagination state
   isLoadingPhotos: boolean;
   photoLoadingError: string | null;
+  endCursor: string | undefined;
+  hasMorePhotos: boolean;
+  isLoadingMore: boolean;
 
-  // Add explicit types for these actions
+  // Photo loading and pagination actions
   setIsLoadingPhotos: (isLoading: boolean) => void;
   setPhotoLoadingError: (error: string | null) => void;
+  setEndCursor: (endCursor: string | undefined) => void;
+  setHasMorePhotos: (value: boolean) => void;
+  setIsLoadingMore: (value: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -199,6 +205,15 @@ export const useAppStore = create<AppState>()(
       recentPhotos: [],
       hasMediaPermission: false,
       hasFullPhotoAccess: false,
+      shouldRefreshMediaLibrary: false,
+
+      // Photo loading and pagination state
+      endCursor: undefined,
+      hasMorePhotos: true,
+      isLoadingMore: false,
+      isLoadingPhotos: false,
+      photoLoadingError: null,
+
       setRecentPhotos: (photos) =>
         set((state) => {
           // Only update if the photos are different
@@ -209,14 +224,15 @@ export const useAppStore = create<AppState>()(
         }),
       setHasMediaPermission: (hasPermission) =>
         set({ hasMediaPermission: hasPermission }),
-
-      shouldRefreshMediaLibrary: false,
       setShouldRefreshMediaLibrary: (value) =>
         set({ shouldRefreshMediaLibrary: value }),
 
-      // Add these new actions
+      // Photo loading and pagination actions
       setIsLoadingPhotos: (isLoading) => set({ isLoadingPhotos: isLoading }),
       setPhotoLoadingError: (error) => set({ photoLoadingError: error }),
+      setEndCursor: (endCursor) => set({ endCursor }),
+      setHasMorePhotos: (value) => set({ hasMorePhotos: value }),
+      setIsLoadingMore: (value) => set({ isLoadingMore: value }),
     }),
     {
       name: "app-storage",

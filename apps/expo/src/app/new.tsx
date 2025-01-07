@@ -62,6 +62,8 @@ const PhotoGrid = React.memo(
     hasMediaPermission,
     hasFullPhotoAccess,
     selectedUri,
+    onEndReached,
+    isLoadingMore,
   }: {
     hasMediaPermission: boolean;
     hasFullPhotoAccess: boolean;
@@ -70,6 +72,8 @@ const PhotoGrid = React.memo(
     onCameraPress: () => void;
     onMorePhotos: () => void;
     selectedUri: string | null;
+    onEndReached: () => void;
+    isLoadingMore: boolean;
   }) => {
     const windowWidth = Dimensions.get("window").width;
     const spacing = 1;
@@ -197,9 +201,22 @@ const PhotoGrid = React.memo(
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
               paddingBottom: 100,
+              flexGrow: 1,
             }}
-            keyExtractor={(item) => item.id}
             horizontal={false}
+            removeClippedSubviews
+            onEndReached={onEndReached}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isLoadingMore ? (
+                <View className="py-4">
+                  <ActivityIndicator size="small" color="#fff" />
+                </View>
+              ) : null
+            }
+            initialNumToRender={20}
+            maxToRenderPerBatch={20}
+            windowSize={21}
           />
         </View>
       </View>
@@ -242,6 +259,12 @@ export default function NewEventModal() {
     setShouldRefreshMediaLibrary,
     setRecentPhotos,
     hasFullPhotoAccess,
+    endCursor,
+    hasMorePhotos,
+    isLoadingMore,
+    setEndCursor,
+    setHasMorePhotos,
+    setIsLoadingMore,
   } = useAppStore();
   const eventFromRawTextAndNotification =
     api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
@@ -494,22 +517,68 @@ export default function NewEventModal() {
     imageUri?: string;
   }>();
 
+  const PHOTOS_PER_PAGE = 20;
+
   const loadRecentPhotos = useCallback(async () => {
+    if (isLoadingMore || !hasMorePhotos) return;
+
+    setIsLoadingMore(true);
+
     try {
-      const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 15,
+      const {
+        assets,
+        hasNextPage,
+        endCursor: newEndCursor,
+      } = await MediaLibrary.getAssetsAsync({
+        first: PHOTOS_PER_PAGE,
+        after: endCursor,
         sortBy: MediaLibrary.SortBy.creationTime,
         mediaType: [MediaLibrary.MediaType.photo],
       });
-      const photos: RecentPhoto[] = assets.map((asset) => ({
-        id: asset.id,
-        uri: asset.uri,
-      }));
-      setRecentPhotos(photos);
+
+      // Validate each asset
+      const accessibleAssets = await Promise.all(
+        assets.map(async (asset) => {
+          try {
+            const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+            return assetInfo.localUri
+              ? { id: asset.id, uri: assetInfo.localUri }
+              : null;
+          } catch {
+            return null;
+          }
+        }),
+      );
+
+      const photos: RecentPhoto[] = accessibleAssets.filter(
+        (asset): asset is RecentPhoto => asset !== null,
+      );
+
+      setRecentPhotos([...recentPhotos, ...photos]);
+      setHasMorePhotos(hasNextPage);
+      setEndCursor(newEndCursor);
     } catch (error) {
       console.error("Error loading recent photos:", error);
+      toast.error("Failed to load photos.");
+    } finally {
+      setIsLoadingMore(false);
     }
-  }, [setRecentPhotos]);
+  }, [
+    isLoadingMore,
+    hasMorePhotos,
+    endCursor,
+    recentPhotos,
+    setIsLoadingMore,
+    setHasMorePhotos,
+    setEndCursor,
+    setRecentPhotos,
+  ]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!isLoadingMore && hasMorePhotos) {
+      void loadRecentPhotos();
+    }
+  }, [isLoadingMore, hasMorePhotos, loadRecentPhotos]);
 
   useFocusEffect(
     useCallback(() => {
@@ -941,6 +1010,8 @@ export default function NewEventModal() {
                   onCameraPress={() => void handleCameraCapture()}
                   onMorePhotos={() => void handleMorePhotos()}
                   selectedUri={imagePreview}
+                  onEndReached={handleLoadMore}
+                  isLoadingMore={isLoadingMore}
                 />
               </View>
             )}
