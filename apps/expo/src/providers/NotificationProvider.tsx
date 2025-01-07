@@ -210,7 +210,7 @@ export function NotificationProvider({
           console.error("Failed to capture notification event:", error);
         }
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        router.push(data.url as Href<string>);
+        router.push(data.url as Href);
       }
     }
 
