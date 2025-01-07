@@ -71,7 +71,7 @@ export default function SignUpScreen() {
           headerShown: true,
           headerTitle: "Sign Up",
           headerBackTitle: "Back",
-          headerBackTitleVisible: true,
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <View className="flex-1 bg-interactive-3 px-6">

@@ -120,7 +120,7 @@ export default function SignInScreen() {
           headerShown: true,
           headerTitle: "Sign in",
           headerBackTitle: "Back",
-          headerBackTitleVisible: true,
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <View className="flex-1 bg-interactive-3 px-6">
