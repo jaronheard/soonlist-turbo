@@ -11,17 +11,16 @@ export interface RecentPhoto {
 }
 
 interface AppState {
+  // Navigation and UI state
   filter: "upcoming" | "past";
-  intentParams: { text?: string; imageUri?: string } | null;
   isCalendarModalVisible: boolean;
   showAllCalendars: boolean;
-  setFilter: (filter: "upcoming" | "past") => void;
-  setIntentParams: (
-    params: { text?: string; imageUri?: string } | null,
-  ) => void;
-  setIsCalendarModalVisible: (isVisible: boolean) => void;
-  setShowAllCalendars: (show: boolean) => void;
-  resetIntentParams: () => void;
+  hasCompletedOnboarding: boolean;
+
+  // Intent handling
+  intentParams: { text?: string; imageUri?: string } | null;
+
+  // Event creation state
   input: string;
   imagePreview: string | null;
   linkPreview: string | null;
@@ -29,6 +28,39 @@ interface AppState {
   isImageLoading: boolean;
   isImageUploading: boolean;
   uploadedImageUrl: string | null;
+  isOptionSelected: boolean;
+  activeInput: "camera" | "upload" | "url" | "describe" | null;
+
+  // Calendar state
+  defaultCalendarId: string | null;
+  availableCalendars: Calendar.Calendar[];
+  selectedEvent: RouterOutputs["event"]["getUpcomingForUser"][number] | null;
+  calendarUsage: Record<string, number>;
+
+  // Media and photo state
+  recentPhotos: RecentPhoto[];
+  hasMediaPermission: boolean;
+  hasFullPhotoAccess: boolean;
+  shouldRefreshMediaLibrary: boolean;
+  isLoadingPhotos: boolean;
+  photoLoadingError: string | null;
+  endCursor: string | undefined;
+  hasMorePhotos: boolean;
+  isLoadingMore: boolean;
+
+  // Navigation and UI actions
+  setFilter: (filter: "upcoming" | "past") => void;
+  setIsCalendarModalVisible: (isVisible: boolean) => void;
+  setShowAllCalendars: (show: boolean) => void;
+  setHasCompletedOnboarding: (status: boolean) => void;
+
+  // Intent actions
+  setIntentParams: (
+    params: { text?: string; imageUri?: string } | null,
+  ) => void;
+  resetIntentParams: () => void;
+
+  // Event creation actions
   setInput: (input: string) => void;
   setImagePreview: (preview: string | null) => void;
   setLinkPreview: (preview: string | null) => void;
@@ -36,16 +68,14 @@ interface AppState {
   setIsImageLoading: (isLoading: boolean) => void;
   setIsImageUploading: (isUploading: boolean) => void;
   setUploadedImageUrl: (url: string | null) => void;
+  setIsOptionSelected: (isSelected: boolean) => void;
+  setActiveInput: (
+    input: "camera" | "upload" | "url" | "describe" | null,
+  ) => void;
   resetAddEventState: () => void;
   resetEventStateOnNewSelection: () => void;
 
-  // Calendar-related state
-  defaultCalendarId: string | null;
-  availableCalendars: Calendar.Calendar[];
-  selectedEvent: RouterOutputs["event"]["getUpcomingForUser"][number] | null;
-  calendarUsage: Record<string, number>;
-
-  // Calendar-related actions
+  // Calendar actions
   setDefaultCalendarId: (id: string | null) => void;
   setAvailableCalendars: (calendars: Calendar.Calendar[]) => void;
   setSelectedEvent: (
@@ -54,59 +84,33 @@ interface AppState {
   setCalendarUsage: (usage: Record<string, number>) => void;
   clearCalendarData: () => void;
 
-  hasCompletedOnboarding: boolean;
-  setHasCompletedOnboarding: (status: boolean) => void;
-  resetStore: () => void;
-
-  // New event state & actions
-  isOptionSelected: boolean;
-  activeInput: "camera" | "upload" | "url" | "describe" | null;
-  setIsOptionSelected: (isSelected: boolean) => void;
-  setActiveInput: (
-    input: "camera" | "upload" | "url" | "describe" | null,
-  ) => void;
-
-  // Media-related state & actions
-  recentPhotos: RecentPhoto[];
-  hasMediaPermission: boolean;
-  hasFullPhotoAccess: boolean;
+  // Media and photo actions
   setRecentPhotos: (photos: RecentPhoto[]) => void;
   setHasMediaPermission: (hasPermission: boolean) => void;
-
-  shouldRefreshMediaLibrary: boolean;
   setShouldRefreshMediaLibrary: (value: boolean) => void;
-
-  // Photo loading and pagination state
-  isLoadingPhotos: boolean;
-  photoLoadingError: string | null;
-  endCursor: string | undefined;
-  hasMorePhotos: boolean;
-  isLoadingMore: boolean;
-
-  // Photo loading and pagination actions
   setIsLoadingPhotos: (isLoading: boolean) => void;
   setPhotoLoadingError: (error: string | null) => void;
   setEndCursor: (endCursor: string | undefined) => void;
   setHasMorePhotos: (value: boolean) => void;
   setIsLoadingMore: (value: boolean) => void;
+
+  // Global actions
+  resetStore: () => void;
 }
 
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
+      // Navigation and UI state
       filter: "upcoming",
-      intentParams: null,
       isCalendarModalVisible: false,
       showAllCalendars: false,
-      isLoadingPhotos: false,
-      photoLoadingError: null,
+      hasCompletedOnboarding: false,
 
-      setFilter: (filter) => set({ filter }),
-      setIntentParams: (params) => set({ intentParams: params }),
-      setIsCalendarModalVisible: (isVisible) =>
-        set({ isCalendarModalVisible: isVisible }),
-      setShowAllCalendars: (show) => set({ showAllCalendars: show }),
-      resetIntentParams: () => set({ intentParams: null }),
+      // Intent handling
+      intentParams: null,
+
+      // Event creation state
       input: "",
       imagePreview: null,
       linkPreview: null,
@@ -114,6 +118,39 @@ export const useAppStore = create<AppState>()(
       isImageLoading: false,
       isImageUploading: false,
       uploadedImageUrl: null,
+      isOptionSelected: false,
+      activeInput: null,
+
+      // Calendar state
+      defaultCalendarId: null,
+      availableCalendars: [],
+      selectedEvent: null,
+      calendarUsage: {},
+
+      // Media and photo state
+      recentPhotos: [],
+      hasMediaPermission: false,
+      hasFullPhotoAccess: false,
+      shouldRefreshMediaLibrary: false,
+      isLoadingPhotos: false,
+      photoLoadingError: null,
+      endCursor: undefined,
+      hasMorePhotos: true,
+      isLoadingMore: false,
+
+      // Navigation and UI actions
+      setFilter: (filter) => set({ filter }),
+      setIsCalendarModalVisible: (isVisible) =>
+        set({ isCalendarModalVisible: isVisible }),
+      setShowAllCalendars: (show) => set({ showAllCalendars: show }),
+      setHasCompletedOnboarding: (status) =>
+        set({ hasCompletedOnboarding: status }),
+
+      // Intent actions
+      setIntentParams: (params) => set({ intentParams: params }),
+      resetIntentParams: () => set({ intentParams: null }),
+
+      // Event creation actions
       setInput: (input) => set({ input }),
       setImagePreview: (preview) => set({ imagePreview: preview }),
       setLinkPreview: (preview) => set({ linkPreview: preview }),
@@ -122,6 +159,9 @@ export const useAppStore = create<AppState>()(
       setIsImageUploading: (isUploading) =>
         set({ isImageUploading: isUploading }),
       setUploadedImageUrl: (url) => set({ uploadedImageUrl: url }),
+      setIsOptionSelected: (isSelected) =>
+        set({ isOptionSelected: isSelected }),
+      setActiveInput: (input) => set({ activeInput: input }),
       resetAddEventState: () =>
         set({
           input: "",
@@ -143,25 +183,39 @@ export const useAppStore = create<AppState>()(
           isImageLoading: false,
           isImageUploading: false,
           uploadedImageUrl: null,
-          // Keep isOptionSelected and activeInput unchanged
         }),
 
-      // Calendar-related state
-      defaultCalendarId: null,
-      availableCalendars: [],
-      selectedEvent: null,
-      calendarUsage: {},
-
-      // Calendar-related actions
+      // Calendar actions
       setDefaultCalendarId: (id) => set({ defaultCalendarId: id }),
       setAvailableCalendars: (calendars) =>
         set({ availableCalendars: calendars }),
       setSelectedEvent: (event) => set({ selectedEvent: event }),
       setCalendarUsage: (usage) => set({ calendarUsage: usage }),
+      clearCalendarData: () =>
+        set({
+          defaultCalendarId: null,
+          calendarUsage: {},
+        }),
 
-      hasCompletedOnboarding: false,
-      setHasCompletedOnboarding: (status) =>
-        set({ hasCompletedOnboarding: status }),
+      // Media and photo actions
+      setRecentPhotos: (photos) =>
+        set((state) => {
+          if (JSON.stringify(state.recentPhotos) === JSON.stringify(photos)) {
+            return state;
+          }
+          return { recentPhotos: photos };
+        }),
+      setHasMediaPermission: (hasPermission) =>
+        set({ hasMediaPermission: hasPermission }),
+      setShouldRefreshMediaLibrary: (value) =>
+        set({ shouldRefreshMediaLibrary: value }),
+      setIsLoadingPhotos: (isLoading) => set({ isLoadingPhotos: isLoading }),
+      setPhotoLoadingError: (error) => set({ photoLoadingError: error }),
+      setEndCursor: (endCursor) => set({ endCursor }),
+      setHasMorePhotos: (value) => set({ hasMorePhotos: value }),
+      setIsLoadingMore: (value) => set({ isLoadingMore: value }),
+
+      // Global actions
       resetStore: () =>
         set({
           filter: "upcoming",
@@ -187,52 +241,10 @@ export const useAppStore = create<AppState>()(
           shouldRefreshMediaLibrary: false,
           isLoadingPhotos: false,
           photoLoadingError: null,
+          endCursor: undefined,
+          hasMorePhotos: true,
+          isLoadingMore: false,
         }),
-      clearCalendarData: () =>
-        set({
-          defaultCalendarId: null,
-          calendarUsage: {},
-        }),
-
-      // New event state & actions
-      isOptionSelected: false,
-      activeInput: null,
-      setIsOptionSelected: (isSelected) =>
-        set({ isOptionSelected: isSelected }),
-      setActiveInput: (input) => set({ activeInput: input }),
-
-      // Media-related state & actions
-      recentPhotos: [],
-      hasMediaPermission: false,
-      hasFullPhotoAccess: false,
-      shouldRefreshMediaLibrary: false,
-
-      // Photo loading and pagination state
-      endCursor: undefined,
-      hasMorePhotos: true,
-      isLoadingMore: false,
-      isLoadingPhotos: false,
-      photoLoadingError: null,
-
-      setRecentPhotos: (photos) =>
-        set((state) => {
-          // Only update if the photos are different
-          if (JSON.stringify(state.recentPhotos) === JSON.stringify(photos)) {
-            return state;
-          }
-          return { recentPhotos: photos };
-        }),
-      setHasMediaPermission: (hasPermission) =>
-        set({ hasMediaPermission: hasPermission }),
-      setShouldRefreshMediaLibrary: (value) =>
-        set({ shouldRefreshMediaLibrary: value }),
-
-      // Photo loading and pagination actions
-      setIsLoadingPhotos: (isLoading) => set({ isLoadingPhotos: isLoading }),
-      setPhotoLoadingError: (error) => set({ photoLoadingError: error }),
-      setEndCursor: (endCursor) => set({ endCursor }),
-      setHasMorePhotos: (value) => set({ hasMorePhotos: value }),
-      setIsLoadingMore: (value) => set({ isLoadingMore: value }),
     }),
     {
       name: "app-storage",
@@ -241,7 +253,7 @@ export const useAppStore = create<AppState>()(
   ),
 );
 
-// Add a new selector to optimize recentPhotos access
+// Selectors
 export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
 export const useHasMediaPermission = () =>
   useAppStore((state) => state.hasMediaPermission);
