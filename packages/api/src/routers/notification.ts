@@ -218,6 +218,133 @@ async function processUserNotification(user: {
 }
 
 export const notificationRouter = createTRPCRouter({
+  sendMarketingNotification: publicProcedure
+    .input(
+      z.object({
+        adminSecret: z.string(),
+        title: z.string(),
+        body: z.string(),
+        data: z.record(z.unknown()).optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      // Check if the provided adminSecret matches the environment variable
+      if (input.adminSecret !== process.env.ADMIN_SECRET) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid ADMIN_SECRET",
+        });
+      }
+
+      // Fetch all users with valid push tokens
+      const usersWithTokens = await db
+        .select({
+          userId: pushTokens.userId,
+          expoPushToken: pushTokens.expoPushToken,
+        })
+        .from(pushTokens)
+        .innerJoin(
+          users,
+          sql`${users.id} COLLATE utf8mb4_unicode_ci = ${pushTokens.userId} COLLATE utf8mb4_unicode_ci`,
+        )
+        .where(
+          sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
+        );
+
+      // Process notifications concurrently
+      const results = await Promise.all(
+        usersWithTokens.map(async (user) => {
+          const notificationId = generateNotificationId();
+          try {
+            if (!Expo.isExpoPushToken(user.expoPushToken)) {
+              return {
+                success: false,
+                error: "Invalid push token",
+                notificationId,
+                userId: user.userId,
+              };
+            }
+
+            const message: ExpoPushMessage = {
+              to: user.expoPushToken,
+              sound: "default",
+              title: input.title,
+              body: input.body,
+              data: {
+                ...input.data,
+                notificationId,
+              },
+            };
+
+            const [ticket] = await expo.sendPushNotificationsAsync([message]);
+
+            posthog.capture({
+              distinctId: user.userId,
+              event: "notification_sent",
+              properties: {
+                success: true,
+                notificationId,
+                type: "marketing",
+                source: "notification_router",
+                title: input.title,
+                hasData: !!input.data,
+                ticketId: getTicketId(ticket),
+              },
+            });
+
+            return {
+              success: true,
+              ticket,
+              notificationId,
+              userId: user.userId,
+            };
+          } catch (error) {
+            posthog.capture({
+              distinctId: user.userId,
+              event: "notification_sent",
+              properties: {
+                success: false,
+                notificationId,
+                type: "marketing",
+                error: (error as Error).message,
+                title: input.title,
+                hasData: !!input.data,
+              },
+            });
+
+            return {
+              success: false,
+              error: (error as Error).message,
+              notificationId,
+              userId: user.userId,
+            };
+          }
+        }),
+      );
+
+      // Track batch results
+      posthog.capture({
+        distinctId: "system",
+        event: "marketing_notifications_batch",
+        properties: {
+          totalProcessed: usersWithTokens.length,
+          successfulNotifications: results.filter((r) => r.success).length,
+          failedNotifications: results.filter((r) => !r.success).length,
+        },
+      });
+
+      return {
+        success: true,
+        totalProcessed: usersWithTokens.length,
+        successfulNotifications: results.filter((r) => r.success).length,
+        errors: results
+          .filter((r) => !r.success)
+          .map((result) => ({
+            userId: result.userId,
+            error: result.error ?? "Unknown error",
+          })),
+      };
+    }),
   sendSingleNotification: publicProcedure
     .input(sendNotificationInputSchema)
     .mutation(async ({ ctx, input }) => {
