@@ -12,11 +12,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   icon: IS_DEV ? "./assets/icon-dev.png" : "./assets/icon.png",
   userInterfaceStyle: "light",
-  splash: {
-    image: "./assets/splash.png",
-    resizeMode: "contain",
-    backgroundColor: "#ffffff",
-  },
   assetBundlePatterns: ["**/*"],
   plugins: [
     [
@@ -78,6 +73,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     ["expo-router"],
+    [
+      "expo-splash-screen",
+      {
+        backgroundColor: "#232323",
+        image: "./assets/splash-logo.png",
+        dark: {
+          image: "./assets/splash-logo.png",
+          backgroundColor: "#E0D9FF",
+        },
+        imageWidth: 200,
+      },
+    ],
     // [
     //   "expo-background-fetch",
     //   {
