@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
   try {
     await caller.notification.sendMarketingNotification({
-      adminSecret: process.env.CRON_SECRET || "",
+      cronSecret: process.env.CRON_SECRET || "",
       title: "📸 Soonlist Just Got Better!",
       body: "Tap to explore our streamlined capture flow, event stats & more. Not seeing it? Update in TestFlight.",
       data: {

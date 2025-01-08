@@ -221,18 +221,18 @@ export const notificationRouter = createTRPCRouter({
   sendMarketingNotification: publicProcedure
     .input(
       z.object({
-        adminSecret: z.string(),
+        cronSecret: z.string(),
         title: z.string(),
         body: z.string(),
         data: z.record(z.unknown()).optional(),
       }),
     )
     .mutation(async ({ input }) => {
-      // Check if the provided adminSecret matches the environment variable
-      if (input.adminSecret !== process.env.ADMIN_SECRET) {
+      // Check if the provided cronSecret matches the environment variable
+      if (input.cronSecret !== process.env.CRON_SECRET) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid ADMIN_SECRET",
+          message: "Invalid CRON_SECRET",
         });
       }
 
