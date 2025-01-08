@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/marketing-notification",
-      "schedule": ""
+      "schedule": "0 0 31 12 *"
     }
   ]
 }
