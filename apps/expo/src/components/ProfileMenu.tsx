@@ -1,11 +1,5 @@
 import React from "react";
-import { Dimensions, Share, Text, TouchableOpacity, View } from "react-native";
-import {
-  Menu,
-  MenuOption,
-  MenuOptions,
-  MenuTrigger,
-} from "react-native-popup-menu";
+import { View } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useAuth, useUser } from "@clerk/clerk-expo";
@@ -17,15 +11,12 @@ import {
   ShareIcon,
   User,
 } from "lucide-react-native";
+import * as DropdownMenu from "zeego/dropdown-menu";
 
 import { deleteAuthData } from "~/hooks/useAuthSync";
 import { useAppStore } from "~/store";
-import { cn } from "~/utils/cn";
 import Config from "~/utils/config";
 import { UserProfileFlair } from "./UserProfileFlair";
-
-const screenWidth = Dimensions.get("window").width;
-const menuMinWidth = screenWidth * 0.6; // 60% of screen width
 
 interface ProfileMenuProps {
   showShare?: boolean;
@@ -61,42 +52,13 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
 
   const handleShare = async () => {
     if (!user?.username) return;
-
-    try {
-      const url = `${Config.apiBaseUrl}/${user.username}/upcoming`;
-      await Share.share({
-        url: url,
-      });
-    } catch (error) {
-      console.error("Error sharing:", error);
-    }
+    const url = `${Config.apiBaseUrl}/${user.username}/upcoming`;
+    await Share.share({ url });
   };
 
-  const menuItems = [
-    ...(showShare
-      ? [{ title: "Share", icon: ShareIcon, onSelect: handleShare }]
-      : []),
-    { title: "Profile", icon: User, onSelect: handleEditProfile },
-    { title: "How to use", icon: HelpCircle, onSelect: showOnboarding },
-    { title: "Support", icon: MessageCircle, onSelect: presentIntercom },
-    {
-      title: "Sign out",
-      icon: LogOut,
-      onSelect: handleSignOut,
-      destructive: true,
-    },
-  ];
-
   return (
-    <Menu>
-      <MenuTrigger
-        customStyles={{
-          TriggerTouchableComponent: TouchableOpacity,
-          triggerTouchable: {
-            activeOpacity: 0.6,
-          },
-        }}
-      >
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger>
         <UserProfileFlair username={user?.username ?? ""} size="sm">
           {user?.imageUrl ? (
             <ExpoImage
@@ -119,49 +81,54 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
             </View>
           )}
         </UserProfileFlair>
-      </MenuTrigger>
-      <MenuOptions
-        customStyles={{
-          optionsContainer: {
-            overflow: "hidden",
-            marginTop: 8,
-            marginHorizontal: 8,
-            borderRadius: 14,
-            minWidth: menuMinWidth,
-            borderWidth: 1,
-            borderColor: "#C7C7C7",
-          },
-        }}
-      >
-        {menuItems.map((item, index) => (
-          <MenuOption
-            key={index}
-            onSelect={item.onSelect}
-            customStyles={{
-              optionWrapper: {
-                padding: 0,
-                borderBottomWidth: index < menuItems.length - 1 ? 0.5 : 0,
-                borderBottomColor: "#C7C7C7",
+      </DropdownMenu.Trigger>
+
+      <DropdownMenu.Content>
+        {showShare && (
+          <DropdownMenu.Item key="share" onSelect={handleShare}>
+            <DropdownMenu.ItemIcon ios={{ name: "square.and.arrow.up" }}>
+              <ShareIcon />
+            </DropdownMenu.ItemIcon>
+            <DropdownMenu.ItemTitle>Share</DropdownMenu.ItemTitle>
+          </DropdownMenu.Item>
+        )}
+
+        <DropdownMenu.Item key="profile" onSelect={handleEditProfile}>
+          <DropdownMenu.ItemIcon ios={{ name: "person.circle" }}>
+            <User />
+          </DropdownMenu.ItemIcon>
+          <DropdownMenu.ItemTitle>Profile</DropdownMenu.ItemTitle>
+        </DropdownMenu.Item>
+
+        <DropdownMenu.Item key="how-to-use" onSelect={showOnboarding}>
+          <DropdownMenu.ItemIcon ios={{ name: "questionmark.circle" }}>
+            <HelpCircle />
+          </DropdownMenu.ItemIcon>
+          <DropdownMenu.ItemTitle>How to use</DropdownMenu.ItemTitle>
+        </DropdownMenu.Item>
+
+        <DropdownMenu.Item key="support" onSelect={presentIntercom}>
+          <DropdownMenu.ItemIcon ios={{ name: "message.circle" }}>
+            <MessageCircle />
+          </DropdownMenu.ItemIcon>
+          <DropdownMenu.ItemTitle>Support</DropdownMenu.ItemTitle>
+        </DropdownMenu.Item>
+
+        <DropdownMenu.Item key="sign-out" onSelect={handleSignOut} destructive>
+          <DropdownMenu.ItemIcon
+            ios={{
+              name: "rectangle.portrait.and.arrow.right",
+              hierarchicalColor: {
+                light: "#FF3B30",
+                dark: "#FF3B30",
               },
             }}
           >
-            <View className="flex-row items-center justify-between px-4 py-3">
-              <Text
-                className={cn("font-base text-xl", {
-                  "text-[#FF3B30]": item.destructive,
-                  "text-black": !item.destructive,
-                })}
-              >
-                {item.title}
-              </Text>
-              <item.icon
-                size={20}
-                color={item.destructive ? "#FF3B30" : "#000000"}
-              />
-            </View>
-          </MenuOption>
-        ))}
-      </MenuOptions>
-    </Menu>
+            <LogOut />
+          </DropdownMenu.ItemIcon>
+          <DropdownMenu.ItemTitle>Sign out</DropdownMenu.ItemTitle>
+        </DropdownMenu.Item>
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
   );
 }
