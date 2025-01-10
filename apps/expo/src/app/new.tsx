@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { KeyboardAvoidingView, Linking, Platform, View } from "react-native";
+import {
+  Dimensions,
+  Linking,
+  Platform,
+  SafeAreaView,
+  View,
+} from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
@@ -18,6 +25,7 @@ import { PhotoGrid } from "~/components/PhotoGrid";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
+import { cn } from "~/utils/cn";
 
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
@@ -504,15 +512,7 @@ export default function NewEventModal() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={
-        activeInput === "describe" && Platform.OS === "ios"
-          ? "padding"
-          : "height"
-      }
-      keyboardVerticalOffset={116}
-      className="flex-1 bg-interactive-1"
-    >
+    <SafeAreaView className="flex-1 bg-interactive-1">
       <Stack.Screen
         options={{
           title: "",
@@ -538,9 +538,9 @@ export default function NewEventModal() {
       {!hasMediaPermission && !isFromIntent && activeInput !== "describe" ? (
         <PhotoAccessPrompt />
       ) : (
-        <View className="flex-1 bg-interactive-1">
-          <View className="flex-1">
-            <View className="px-4 py-2">
+        <View className="relative flex-1 bg-interactive-2">
+          <View className="flex-1 ">
+            <View className="bg-red-500 px-4 pb-4 pt-2">
               <EventPreview
                 containerClassName="rounded-xl overflow-hidden"
                 imagePreview={imagePreview}
@@ -553,12 +553,18 @@ export default function NewEventModal() {
                 isFromIntent={isFromIntent}
                 isImageLoading={isImageLoading}
                 handleMorePhotos={handleMorePhotos}
-                previewContainerStyle={isFromIntent ? "full" : "default"}
+                previewContainerStyle={
+                  isFromIntent
+                    ? "full"
+                    : activeInput === "describe"
+                      ? "compact"
+                      : "square"
+                }
               />
             </View>
 
             {!isFromIntent && activeInput !== "describe" && (
-              <View className="flex-1 px-4">
+              <View className="flex-1 bg-blue-500 px-4">
                 <PhotoGrid
                   containerClassName="mt-2"
                   hasMediaPermission={hasMediaPermission}
@@ -573,7 +579,13 @@ export default function NewEventModal() {
             )}
           </View>
 
-          <View className="px-4 pb-8">
+          <View
+            className={cn(
+              "px-4",
+              !isFromIntent &&
+                "absolute bottom-16 left-0 right-0 bg-transparent",
+            )}
+          >
             <CaptureEventButton
               handleCreateEvent={handleCreateEvent}
               input={input}
@@ -583,6 +595,6 @@ export default function NewEventModal() {
           </View>
         </View>
       )}
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
