@@ -34,7 +34,7 @@ class ShareViewController: UIViewController {
       if let data = try await item.loadItem(forTypeIdentifier: "public.text") as? String {
         if let encoded = data.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
            let url = URL(string: "\(self.appScheme)://new?text=\(encoded)") {
-          _ = self.openURL(url)
+          _ = self.openInContainerApp(url)
         }
       }
       self.completeRequest()
@@ -48,7 +48,7 @@ class ShareViewController: UIViewController {
       if let data = try await item.loadItem(forTypeIdentifier: "public.url") as? URL {
         if let encoded = data.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
            let url = URL(string: "\(self.appScheme)://new?text=\(encoded)") {
-          _ = self.openURL(url)
+          _ = self.openInContainerApp(url)
         }
       }
       self.completeRequest()
@@ -77,7 +77,7 @@ class ShareViewController: UIViewController {
        let imageUriInfo = imageUriInfo,
        let encoded = imageUriInfo.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
        let url = URL(string: "\(self.appScheme)://new?imageUri=\(encoded)") {
-        _ = self.openURL(url)
+        _ = self.openInContainerApp(url)
     }
 
     self.completeRequest()
@@ -113,14 +113,9 @@ class ShareViewController: UIViewController {
     self.extensionContext?.completeRequest(returningItems: nil)
   }
 
-  @objc func openURL(_ url: URL) -> Bool {
-    var responder: UIResponder? = self
-    while responder != nil {
-      if let application = responder as? UIApplication {
-          return application.perform(#selector(openURL(_:)), with: url) != nil
-      }
-      responder = responder?.next
-    }
-    return false
+  @discardableResult
+  private func openInContainerApp(_ url: URL) -> Bool {
+    extensionContext?.open(url, completionHandler: nil)
+    return true
   }
 }
