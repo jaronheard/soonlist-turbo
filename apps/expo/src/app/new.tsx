@@ -1,5 +1,13 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Keyboard, Linking, Platform, SafeAreaView, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Easing,
+  Keyboard,
+  Linking,
+  Platform,
+  SafeAreaView,
+  View,
+} from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
@@ -24,7 +32,6 @@ import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 
-// Adjust this regex if needed
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
 interface EventResponse {
@@ -38,24 +45,39 @@ function isSuccessResponse(
 }
 
 export default function NewEventModal() {
-  // --- NEW: local state for keyboard height
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  // Keep a plain Animated.Value for the actual keyboard height
+  const keyboardHeightAnim = useRef(new Animated.Value(0)).current;
 
-  // Subscribe/unsubscribe to keyboard events
+  // Offset we always want (like your 64px)
+  const OFFSET_VALUE = 64;
+
+  // We'll combine them with Animated.add
+  // So the final marginBottom is keyboardHeight + OFFSET_VALUE
+  const marginBottomAnim = Animated.add(keyboardHeightAnim, OFFSET_VALUE);
+
+  // Listen for keyboard show/hide and animate up/down
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
+      Animated.timing(keyboardHeightAnim, {
+        toValue: e.endCoordinates.height,
+        duration: 200,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: false,
+      }).start();
     });
     const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardHeight(0);
+      Animated.timing(keyboardHeightAnim, {
+        toValue: 0,
+        duration: 200,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: false,
+      }).start();
     });
-
     return () => {
       showSub.remove();
       hideSub.remove();
     };
-  }, []);
-  // --- END NEW
+  }, [keyboardHeightAnim]);
 
   const { expoPushToken, hasNotificationPermission } = useNotification();
   const utils = api.useUtils();
@@ -284,7 +306,6 @@ export default function NewEventModal() {
         }
       }
 
-      // Example success toast if no push notification permission
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {
           action: {
@@ -373,7 +394,6 @@ export default function NewEventModal() {
               mediaType: [MediaLibrary.MediaType.photo],
             });
 
-            // Verify each asset is accessible
             const accessibleAssets = await Promise.all(
               assets.map(async (asset) => {
                 try {
@@ -425,13 +445,11 @@ export default function NewEventModal() {
       console.log("Refreshing media library");
       clearPreview();
       setShouldRefreshMediaLibrary(false);
-      // The photos will be reloaded by the focus effect
     }
   }, [shouldRefreshMediaLibrary, clearPreview, setShouldRefreshMediaLibrary]);
 
   const [initialized, setInitialized] = useState(false);
 
-  // On mount, decide the initial active state
   useEffect(() => {
     setInput("");
     setImagePreview(null);
@@ -461,7 +479,6 @@ export default function NewEventModal() {
         setIsOptionSelected(false);
       }
     } else {
-      // if no text or image passed, maybe show the newest photo
       const mostRecentPhoto = recentPhotos[0];
       console.log("Initializing with most recent photo:", mostRecentPhoto);
       if (mostRecentPhoto?.uri) {
@@ -511,12 +528,10 @@ export default function NewEventModal() {
 
   const isFromIntent = Boolean(text || imageUri);
 
-  // Clears just the text
   const clearText = useCallback(() => {
     setInput("");
   }, [setInput]);
 
-  // until initial states are set
   if (!initialized) {
     return null;
   }
@@ -543,7 +558,6 @@ export default function NewEventModal() {
         }}
       />
 
-      {/* Main content area */}
       {!hasMediaPermission && !isFromIntent && activeInput !== "describe" ? (
         <PhotoAccessPrompt />
       ) : (
@@ -572,7 +586,6 @@ export default function NewEventModal() {
               />
             </View>
 
-            {/* If not from a share intent and not describing, show photo grid */}
             {!isFromIntent && activeInput !== "describe" ? (
               <View className="flex-1 px-4">
                 <PhotoGrid
@@ -590,13 +603,10 @@ export default function NewEventModal() {
             )}
           </View>
 
-          {/* Bottom container.  Use marginBottom to avoid being hidden by the keyboard. */}
-          <View
+          {/* The bottom container. We'll animate marginBottom to always = keyboardHeight + 64 */}
+          <Animated.View
             className={cn("px-4")}
-            style={{
-              marginBottom: keyboardHeight + 64,
-              // Remove absolute positioning, transforms, etc.
-            }}
+            style={{ marginBottom: marginBottomAnim }}
           >
             <CaptureEventButton
               handleCreateEvent={handleCreateEvent}
@@ -604,7 +614,7 @@ export default function NewEventModal() {
               imagePreview={imagePreview}
               linkPreview={linkPreview}
             />
-          </View>
+          </Animated.View>
         </View>
       )}
     </SafeAreaView>
