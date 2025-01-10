@@ -5,13 +5,13 @@ class ShareViewController: UIViewController {
   let appScheme = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share") ? "soonlist" : "soonlist.dev"
   let appGroup = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share") ? "group.com.soonlist" : "group.com.soonlist.dev"
 
-  //
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
 
     guard let extensionItem = extensionContext?.inputItems.first as? NSExtensionItem,
           let firstAttachment = extensionItem.attachments?.first
     else {
+      // Nothing to share; bail out
       self.completeRequest()
       return
     }
@@ -24,6 +24,7 @@ class ShareViewController: UIViewController {
       } else if firstAttachment.hasItemConformingToTypeIdentifier("public.url") {
         await self.handleUrl(item: firstAttachment)
       } else {
+        // If no recognized type, bail out
         self.completeRequest()
       }
     }
@@ -31,29 +32,33 @@ class ShareViewController: UIViewController {
 
   private func handleText(item: NSItemProvider) async {
     do {
-      if let data = try await item.loadItem(forTypeIdentifier: "public.text") as? String {
-        if let encoded = data.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-           let url = URL(string: "\(self.appScheme)://new?text=\(encoded)") {
-          _ = self.openInContainerApp(url)
-        }
+      // Try to load text from the attachment
+      if let data = try await item.loadItem(forTypeIdentifier: "public.text") as? String,
+         let encoded = data.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
+         let url = URL(string: "\(appScheme)://new?text=\(encoded)") {
+        // We successfully got a URL; open it and don't call completeRequest() here.
+        openInContainerApp(url)
+      } else {
+        // If text load or URL creation failed, just complete
+        completeRequest()
       }
-      self.completeRequest()
     } catch {
-      self.completeRequest()
+      // If any error, complete
+      completeRequest()
     }
   }
 
   private func handleUrl(item: NSItemProvider) async {
     do {
-      if let data = try await item.loadItem(forTypeIdentifier: "public.url") as? URL {
-        if let encoded = data.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-           let url = URL(string: "\(self.appScheme)://new?text=\(encoded)") {
-          _ = self.openInContainerApp(url)
-        }
+      if let data = try await item.loadItem(forTypeIdentifier: "public.url") as? URL,
+         let encoded = data.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
+         let url = URL(string: "\(appScheme)://new?text=\(encoded)") {
+        openInContainerApp(url)
+      } else {
+        completeRequest()
       }
-      self.completeRequest()
     } catch {
-      self.completeRequest()
+      completeRequest()
     }
   }
 
@@ -62,44 +67,39 @@ class ShareViewController: UIViewController {
     var imageUriInfo: String?
 
     do {
-        if let dataUri = try await item.loadItem(forTypeIdentifier: "public.image") as? URL {
-            let data = try Data(contentsOf: dataUri)
-            let image = UIImage(data: data)
-            imageUriInfo = self.saveImageWithInfo(image)
-        } else if let image = try await item.loadItem(forTypeIdentifier: "public.image") as? UIImage {
-            imageUriInfo = self.saveImageWithInfo(image)
-        }
+      // Attempt to load the image
+      if let dataUri = try await item.loadItem(forTypeIdentifier: "public.image") as? URL {
+        let data = try Data(contentsOf: dataUri)
+        let image = UIImage(data: data)
+        imageUriInfo = saveImageWithInfo(image)
+      } else if let image = try await item.loadItem(forTypeIdentifier: "public.image") as? UIImage {
+        imageUriInfo = saveImageWithInfo(image)
+      }
     } catch {
-        valid = false
+      valid = false
     }
 
     if valid,
        let imageUriInfo = imageUriInfo,
        let encoded = imageUriInfo.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-       let url = URL(string: "\(self.appScheme)://new?imageUri=\(encoded)") {
-        _ = self.openInContainerApp(url)
+       let url = URL(string: "\(appScheme)://new?imageUri=\(encoded)") {
+      openInContainerApp(url)
+    } else {
+      completeRequest()
     }
-
-    self.completeRequest()
   }
 
   private func saveImageWithInfo(_ image: UIImage?) -> String? {
-    guard let image = image else {
-      return nil
-    }
+    guard let image = image else { return nil }
 
     do {
-      // Saving this file to the bundle group's directory lets us access it from
-      // inside of the app. Otherwise, we wouldn't have access even though the
-      // extension does.
-      if let dir = FileManager()
-        .containerURL(
-          forSecurityApplicationGroupIdentifier: self.appGroup) {
+      // Write the JPEG to the shared container
+      if let dir = FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroup) {
         let filePath = "\(dir.absoluteString)\(ProcessInfo.processInfo.globallyUniqueString).jpeg"
-
         if let newUri = URL(string: filePath),
            let jpegData = image.jpegData(compressionQuality: 1) {
           try jpegData.write(to: newUri)
+          // Return something like "file:///...|width|height"
           return "\(newUri.absoluteString)|\(image.size.width)|\(image.size.height)"
         }
       }
@@ -110,12 +110,14 @@ class ShareViewController: UIViewController {
   }
 
   private func completeRequest() {
-    self.extensionContext?.completeRequest(returningItems: nil)
+    extensionContext?.completeRequest(returningItems: nil)
   }
 
-  @discardableResult
-  private func openInContainerApp(_ url: URL) -> Bool {
-    extensionContext?.open(url, completionHandler: nil)
-    return true
+  private func openInContainerApp(_ url: URL) {
+    extensionContext?.open(url) { success in
+      NSLog("Opened container app. Success? \(success)")
+      // Now that we've attempted to open, we can complete the request
+      self.completeRequest()
+    }
   }
 }
