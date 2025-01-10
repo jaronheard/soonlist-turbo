@@ -140,12 +140,15 @@ class ShareViewController: UIViewController {
     extensionContext?.completeRequest(returningItems: nil)
   }
 
-  private func openInContainerApp(_ url: URL) {
-    NSLog("Attempting to open container app with URL: \(url.absoluteString)")
-    extensionContext?.open(url) { success in
-      NSLog("Opened container app. Success? \(success)")
-      // Once done, we close out
-      self.completeRequest()
+  @objc func openInContainerApp(_ url: URL) -> Bool {
+    var responder: UIResponder? = self
+    while responder != nil {
+      if let application = responder as? UIApplication {
+        application.open(url)
+        return true
+      }
+      responder = responder?.next
     }
+    return false
   }
 }
