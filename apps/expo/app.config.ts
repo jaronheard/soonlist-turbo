@@ -106,6 +106,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     usesAppleSignIn: true,
     infoPlist: {
       UIBackgroundModes: ["fetch"],
+      CFBundleURLTypes: [
+        {
+          CFBundleURLName: "Soonlist Schemes",
+          // Include the dev scheme and the main scheme
+          CFBundleURLSchemes: ["soonlist", "soonlist.dev"],
+        },
+        // If you also need to keep "com.soonlist.app" as a URL scheme:
+        {
+          CFBundleURLName: "Additional Scheme",
+          CFBundleURLSchemes: ["com.soonlist.app"],
+        },
+      ],
     },
   },
   android: {
