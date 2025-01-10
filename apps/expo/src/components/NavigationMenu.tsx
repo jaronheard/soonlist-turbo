@@ -5,15 +5,9 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import {
-  Menu,
-  MenuOption,
-  MenuOptions,
-  MenuTrigger,
-  renderers,
-} from "react-native-popup-menu";
 import { router } from "expo-router";
 import { Check, ChevronDown } from "lucide-react-native";
+import * as DropdownMenu from "zeego/dropdown-menu";
 
 type RouteType = "upcoming" | "past" | "discover";
 
@@ -34,87 +28,77 @@ function isRouteActive(routePath: string, active?: RouteType) {
 
 export function NavigationMenu({ active }: NavigationMenuProps) {
   const { width: screenWidth } = useWindowDimensions();
-  const menuMinWidth = screenWidth * 0.5;
-  const [visible, setVisible] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const currentRoute =
     routes.find((r) => isRouteActive(r.path, active))?.label ?? "Upcoming";
 
   const handleNavigation = (path: (typeof routes)[number]["path"]) => {
-    setVisible(false);
+    setMenuOpen(false);
     router.replace(path);
   };
 
   return (
-    <Menu
-      opened={visible}
-      onBackdropPress={() => setVisible(false)}
-      renderer={renderers.Popover}
-      rendererProps={{
-        placement: "bottom",
-        preferredPlacement: "bottom",
-        anchorStyle: { backgroundColor: "transparent" },
-        anchorOrigin: { x: 0.5, y: 0 },
-        popoverOrigin: { x: 0.5, y: 0 },
-      }}
-    >
-      <MenuTrigger
-        customStyles={{
-          TriggerTouchableComponent: TouchableOpacity,
-          triggerTouchable: {
-            activeOpacity: 0.6,
-          },
-        }}
-        onPress={() => setVisible(!visible)}
-      >
-        <View className="flex-row items-center space-x-1">
-          <Text className="text-xl font-bold text-white">{currentRoute}</Text>
-          <ChevronDown size={24} color="white" />
-        </View>
-      </MenuTrigger>
-      <MenuOptions
-        customStyles={{
-          optionsContainer: {
-            overflow: "hidden",
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: "#C7C7C7",
-            minWidth: menuMinWidth,
-            backgroundColor: "white",
-          },
+    <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
+      <DropdownMenu.Trigger action="press" asChild>
+        <TouchableOpacity activeOpacity={0.6}>
+          <View className="flex-row items-center space-x-1">
+            <Text className="text-xl font-bold text-white">{currentRoute}</Text>
+            <ChevronDown size={24} color="white" />
+          </View>
+        </TouchableOpacity>
+      </DropdownMenu.Trigger>
+
+      <DropdownMenu.Content
+        // Set alignment and offset to mimic a "native" feel
+        side="bottom"
+        align="center"
+        style={{
+          minWidth: screenWidth * 0.5,
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: "#C7C7C7",
+          backgroundColor: "white",
         }}
       >
         {routes.map((route, index) => {
           const isActive = isRouteActive(route.path, active);
+
           return (
-            <MenuOption
+            <DropdownMenu.Item
               key={route.path}
+              textValue={route.label}
               onSelect={() => {
-                setVisible(false);
-                if (!isActive) handleNavigation(route.path);
+                if (!isActive) {
+                  handleNavigation(route.path);
+                }
               }}
-              customStyles={{
-                optionWrapper: {
-                  padding: 0,
-                  borderBottomWidth: index < routes.length - 1 ? 0.5 : 0,
-                  borderBottomColor: "#C7C7C7",
-                },
+              style={{
+                borderBottomWidth: index < routes.length - 1 ? 0.5 : 0,
+                borderBottomColor: "#C7C7C7",
               }}
             >
               <View className="flex-row items-center justify-between px-4 py-3">
-                <Text
-                  className={`text-xl ${
-                    isActive ? "font-bold text-black" : "text-black"
-                  }`}
-                >
-                  {route.label}
-                </Text>
-                {isActive && <Check size={20} color="#000000" />}
+                <DropdownMenu.ItemTitle>
+                  <Text
+                    className={`text-xl ${
+                      isActive ? "font-bold text-black" : "text-black"
+                    }`}
+                  >
+                    {route.label}
+                  </Text>
+                </DropdownMenu.ItemTitle>
+                {isActive && (
+                  <DropdownMenu.ItemIndicator>
+                    {/* Native checkmark on iOS/Android, fallback to this icon on web */}
+                    <Check size={20} color="#000000" />
+                  </DropdownMenu.ItemIndicator>
+                )}
               </View>
-            </MenuOption>
+            </DropdownMenu.Item>
           );
         })}
-      </MenuOptions>
-    </Menu>
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
   );
 }
