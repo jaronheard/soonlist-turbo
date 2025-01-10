@@ -1,19 +1,16 @@
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  Dimensions,
-  Linking,
-  Platform,
-  SafeAreaView,
-  View,
-} from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { Keyboard, Linking, Platform, SafeAreaView, View } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import {
+  router,
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+} from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useFocusEffect } from "@react-navigation/native";
 import { toast } from "sonner-native";
 
 import type { RecentPhoto } from "~/store";
@@ -27,13 +24,13 @@ import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 
+// Adjust this regex if needed
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
 interface EventResponse {
   success: boolean;
   eventId?: string;
 }
-
 function isSuccessResponse(
   result: EventResponse,
 ): result is EventResponse & { eventId: string } {
@@ -41,9 +38,29 @@ function isSuccessResponse(
 }
 
 export default function NewEventModal() {
+  // --- NEW: local state for keyboard height
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // Subscribe/unsubscribe to keyboard events
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+  // --- END NEW
+
   const { expoPushToken, hasNotificationPermission } = useNotification();
   const utils = api.useUtils();
   const { user } = useUser();
+
   const {
     input,
     imagePreview,
@@ -64,12 +81,13 @@ export default function NewEventModal() {
     setRecentPhotos,
     hasFullPhotoAccess,
   } = useAppStore();
+
   const eventFromRawTextAndNotification =
     api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
       onSuccess: () => {
         return Promise.all([
-          void utils.event.getEventsForUser.invalidate(),
-          void utils.event.getStats.invalidate(),
+          utils.event.getEventsForUser.invalidate(),
+          utils.event.getStats.invalidate(),
         ]);
       },
     });
@@ -77,8 +95,8 @@ export default function NewEventModal() {
     api.ai.eventFromImageThenCreateThenNotification.useMutation({
       onSuccess: () => {
         return Promise.all([
-          void utils.event.getEventsForUser.invalidate(),
-          void utils.event.getStats.invalidate(),
+          utils.event.getEventsForUser.invalidate(),
+          utils.event.getStats.invalidate(),
         ]);
       },
     });
@@ -86,8 +104,8 @@ export default function NewEventModal() {
     api.ai.eventFromUrlThenCreateThenNotification.useMutation({
       onSuccess: () => {
         return Promise.all([
-          void utils.event.getEventsForUser.invalidate(),
-          void utils.event.getStats.invalidate(),
+          utils.event.getEventsForUser.invalidate(),
+          utils.event.getStats.invalidate(),
         ]);
       },
     });
@@ -266,6 +284,7 @@ export default function NewEventModal() {
         }
       }
 
+      // Example success toast if no push notification permission
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {
           action: {
@@ -290,7 +309,6 @@ export default function NewEventModal() {
     expoPushToken,
     hasNotificationPermission,
     user,
-    router,
     setIsImageLoading,
     eventFromUrlThenCreateThenNotification,
     eventFromImageThenCreateThenNotification,
@@ -361,18 +379,13 @@ export default function NewEventModal() {
                 try {
                   const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
                   return assetInfo.localUri
-                    ? {
-                        id: asset.id,
-                        uri: assetInfo.localUri,
-                      }
+                    ? { id: asset.id, uri: assetInfo.localUri }
                     : null;
                 } catch (e) {
                   return null;
                 }
               }),
             );
-
-            // Filter out null results and set photos
             const photos = accessibleAssets.filter(
               (asset): asset is RecentPhoto => asset !== null,
             );
@@ -393,7 +406,7 @@ export default function NewEventModal() {
             console.error("Error loading recent photos:", error);
           }
         } else {
-          console.log("loadRecentPhotos: No media permission, skipping load");
+          console.log("No media permission, skipping load");
         }
       }
 
@@ -418,6 +431,7 @@ export default function NewEventModal() {
 
   const [initialized, setInitialized] = useState(false);
 
+  // On mount, decide the initial active state
   useEffect(() => {
     setInput("");
     setImagePreview(null);
@@ -447,6 +461,7 @@ export default function NewEventModal() {
         setIsOptionSelected(false);
       }
     } else {
+      // if no text or image passed, maybe show the newest photo
       const mostRecentPhoto = recentPhotos[0];
       console.log("Initializing with most recent photo:", mostRecentPhoto);
       if (mostRecentPhoto?.uri) {
@@ -478,12 +493,7 @@ export default function NewEventModal() {
     if (hasMediaPermission && recentPhotos.length === 0) {
       void loadRecentPhotos();
     }
-  }, [
-    hasMediaPermission,
-    recentPhotos.length,
-    setRecentPhotos,
-    loadRecentPhotos,
-  ]);
+  }, [hasMediaPermission, recentPhotos.length, loadRecentPhotos]);
 
   useEffect(() => {
     if (shouldRefreshMediaLibrary) {
@@ -501,12 +511,12 @@ export default function NewEventModal() {
 
   const isFromIntent = Boolean(text || imageUri);
 
-  // First, let's create a new handler for just clearing the text
+  // Clears just the text
   const clearText = useCallback(() => {
     setInput("");
   }, [setInput]);
 
-  // NEW: early return until we've set up our initial screen
+  // until initial states are set
   if (!initialized) {
     return null;
   }
@@ -518,9 +528,7 @@ export default function NewEventModal() {
           title: "",
           headerShown: true,
           headerShadowVisible: false,
-          headerStyle: {
-            backgroundColor: "#5A32FB",
-          },
+          headerStyle: { backgroundColor: "#5A32FB" },
           headerTintColor: "#fff",
           headerTitle: () => (
             <NewEventHeader
@@ -535,12 +543,13 @@ export default function NewEventModal() {
         }}
       />
 
+      {/* Main content area */}
       {!hasMediaPermission && !isFromIntent && activeInput !== "describe" ? (
         <PhotoAccessPrompt />
       ) : (
-        <View className="relative flex-1 bg-interactive-2">
-          <View className="flex-1 ">
-            <View className="bg-red-500 px-4 pb-4 pt-2">
+        <View className="flex-1 bg-interactive-1">
+          <View className="flex-1">
+            <View className="px-4 pt-2">
               <EventPreview
                 containerClassName="rounded-xl overflow-hidden"
                 imagePreview={imagePreview}
@@ -563,10 +572,10 @@ export default function NewEventModal() {
               />
             </View>
 
-            {!isFromIntent && activeInput !== "describe" && (
-              <View className="flex-1 bg-blue-500 px-4">
+            {/* If not from a share intent and not describing, show photo grid */}
+            {!isFromIntent && activeInput !== "describe" ? (
+              <View className="flex-1 px-4">
                 <PhotoGrid
-                  containerClassName="mt-2"
                   hasMediaPermission={hasMediaPermission}
                   hasFullPhotoAccess={hasFullPhotoAccess}
                   recentPhotos={recentPhotos}
@@ -576,15 +585,18 @@ export default function NewEventModal() {
                   selectedUri={imagePreview}
                 />
               </View>
+            ) : (
+              <View className="flex-1" />
             )}
           </View>
 
+          {/* Bottom container.  Use marginBottom to avoid being hidden by the keyboard. */}
           <View
-            className={cn(
-              "px-4",
-              !isFromIntent &&
-                "absolute bottom-16 left-0 right-0 bg-transparent",
-            )}
+            className={cn("px-4")}
+            style={{
+              marginBottom: keyboardHeight + 64,
+              // Remove absolute positioning, transforms, etc.
+            }}
           >
             <CaptureEventButton
               handleCreateEvent={handleCreateEvent}
