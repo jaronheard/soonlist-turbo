@@ -30,7 +30,7 @@
     "lint": "eslint",
     "push": "pnpm with-env drizzle-kit push --config src/config.ts",
     "studio": "pnpm with-env drizzle-kit studio --config src/config.ts",
-    "studio:production": "pnpm with-env:production drizzle-kit studio --config src/config.ts",
+    "studio:prod": "pnpm with-env:production drizzle-kit studio --config src/config.ts",
     "dr": "pscale dr create timetime dev",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env.local --",
