@@ -23,7 +23,7 @@ interface EventPreviewProps {
   isFromIntent: boolean;
   isImageLoading: boolean;
   handleMorePhotos: () => void;
-  previewContainerStyle: "full" | "square" | "compact" | "default";
+  previewContainerStyle: "full" | "default";
   containerClassName?: string;
 }
 
@@ -46,13 +46,7 @@ export function EventPreview({
       className={cn(
         "overflow-hidden rounded-xl bg-white",
         containerClassName,
-        previewContainerStyle === "full"
-          ? "flex-1"
-          : previewContainerStyle === "square"
-            ? "aspect-square"
-            : previewContainerStyle === "compact"
-              ? "h-[180px]"
-              : "h-[200px]",
+        previewContainerStyle === "full" ? "flex-1" : "h-[200px]",
       )}
     >
       {imagePreview ? (
@@ -119,13 +113,13 @@ export function EventPreview({
               "• House party at Alex's Friday night, wear red\n" +
               "• Nationale art opening next Saturday 2-4"
             }
-            placeholderTextColor="#A1A1AA"
+            placeholderTextColor="#627496"
             value={input}
             onChangeText={handleTextChange}
             multiline
             style={[Platform.select({ android: { textAlignVertical: "top" } })]}
             autoFocus={true}
-            className="h-full text-lg"
+            className="h-full text-xl"
           />
 
           {input.length > 0 && (

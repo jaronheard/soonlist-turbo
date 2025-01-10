@@ -53,7 +53,7 @@ export const PhotoGrid = React.memo(
 
     return (
       <View className={cn("flex-1", containerClassName)}>
-        <View className="flex-row items-center justify-between py-2">
+        <View className="flex-row items-center justify-between">
           <Pressable
             className="flex-row items-center gap-0.5"
             onPress={onMorePhotos}

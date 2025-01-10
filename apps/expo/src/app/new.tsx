@@ -18,7 +18,6 @@ import { PhotoGrid } from "~/components/PhotoGrid";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
-import { cn } from "~/utils/cn";
 
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
@@ -511,8 +510,8 @@ export default function NewEventModal() {
           ? "padding"
           : "height"
       }
-      keyboardVerticalOffset={56}
-      className="relative flex-1 bg-interactive-1"
+      keyboardVerticalOffset={116}
+      className="flex-1 bg-interactive-1"
     >
       <Stack.Screen
         options={{
@@ -541,7 +540,7 @@ export default function NewEventModal() {
       ) : (
         <View className="flex-1 bg-interactive-1">
           <View className="flex-1">
-            <View className="px-4 pt-2">
+            <View className="px-4 py-2">
               <EventPreview
                 containerClassName="rounded-xl overflow-hidden"
                 imagePreview={imagePreview}
@@ -554,19 +553,14 @@ export default function NewEventModal() {
                 isFromIntent={isFromIntent}
                 isImageLoading={isImageLoading}
                 handleMorePhotos={handleMorePhotos}
-                previewContainerStyle={
-                  isFromIntent
-                    ? "full"
-                    : activeInput === "describe"
-                      ? "compact"
-                      : "square"
-                }
+                previewContainerStyle={isFromIntent ? "full" : "default"}
               />
             </View>
 
             {!isFromIntent && activeInput !== "describe" && (
               <View className="flex-1 px-4">
                 <PhotoGrid
+                  containerClassName="mt-2"
                   hasMediaPermission={hasMediaPermission}
                   hasFullPhotoAccess={hasFullPhotoAccess}
                   recentPhotos={recentPhotos}
@@ -579,13 +573,7 @@ export default function NewEventModal() {
             )}
           </View>
 
-          <View
-            className={cn(
-              "px-4 pb-4",
-              !isFromIntent &&
-                "absolute bottom-14 left-0 right-0 bg-transparent",
-            )}
-          >
+          <View className="px-4 pb-8">
             <CaptureEventButton
               handleCreateEvent={handleCreateEvent}
               input={input}
