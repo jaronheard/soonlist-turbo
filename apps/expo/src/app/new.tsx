@@ -1,211 +1,26 @@
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActionSheetIOS,
-  ActivityIndicator,
-  Dimensions,
-  FlatList,
-  KeyboardAvoidingView,
-  Linking,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Linking, Platform, View } from "react-native";
 import * as FileSystem from "expo-file-system";
-import { Image as ExpoImage } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useFocusEffect } from "@react-navigation/native";
-import {
-  Camera,
-  ChevronRight,
-  Image,
-  ImagePlus,
-  Link as LinkIcon,
-  Sparkles,
-  Type,
-  X,
-} from "lucide-react-native";
 import { toast } from "sonner-native";
 
 import type { RecentPhoto } from "~/store";
+import { CaptureEventButton } from "~/components/CaptureEventButton";
+import { EventPreview } from "~/components/EventPreview";
+import { NewEventHeader } from "~/components/NewEventHeader";
 import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
+import { PhotoGrid } from "~/components/PhotoGrid";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
+import { cn } from "~/utils/cn";
 
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
-
-const styles = StyleSheet.create({
-  previewContainer: {
-    width: Dimensions.get("window").width - 32,
-    aspectRatio: 1,
-  },
-  previewContainerFull: {
-    width: Dimensions.get("window").width - 32,
-    flex: 1,
-    maxHeight: Dimensions.get("window").height - 240,
-  },
-});
-
-const PhotoGrid = React.memo(
-  ({
-    recentPhotos,
-    onPhotoSelect,
-    onCameraPress,
-    onMorePhotos,
-    hasMediaPermission,
-    hasFullPhotoAccess,
-    selectedUri,
-  }: {
-    hasMediaPermission: boolean;
-    hasFullPhotoAccess: boolean;
-    recentPhotos: RecentPhoto[];
-    onPhotoSelect: (uri: string) => void;
-    onCameraPress: () => void;
-    onMorePhotos: () => void;
-    selectedUri: string | null;
-  }) => {
-    const windowWidth = Dimensions.get("window").width;
-    const spacing = 1;
-    const columns = 4;
-    const imageSize = (windowWidth - (columns - 1) * spacing) / columns;
-
-    const handleManagePress = () => {
-      void Linking.openSettings();
-    };
-
-    // Only show the plus button if we have media permission
-    const gridData = hasMediaPermission
-      ? [...recentPhotos, { id: "plus-button", uri: "" }]
-      : [];
-
-    return (
-      <View className="flex-1">
-        <View className="mb-3 flex-row items-center justify-between px-4">
-          <Pressable
-            className="flex-row items-center gap-0.5"
-            onPress={onMorePhotos}
-          >
-            <Text className="text-xl font-bold text-white">Recents</Text>
-            <ChevronRight size={20} color="#fff" />
-          </Pressable>
-          <View className="flex-row gap-2">
-            <Pressable
-              onPress={onCameraPress}
-              className="rounded-full bg-interactive-3 p-2"
-            >
-              <Camera size={20} color="#5A32FB" />
-            </Pressable>
-          </View>
-        </View>
-
-        {hasMediaPermission && !hasFullPhotoAccess && (
-          <View className="px-4">
-            <Pressable
-              onPress={handleManagePress}
-              className="my-2 flex-row items-center justify-between rounded-md py-1"
-            >
-              <Text className="flex-1 text-sm text-neutral-3">
-                You've given Soonlist access to a select number of photos.
-              </Text>
-              <View className="ml-4 rounded-sm px-2 py-1">
-                <Text className="text-base font-semibold text-white">
-                  Manage
-                </Text>
-              </View>
-            </Pressable>
-          </View>
-        )}
-
-        <View className="flex-1">
-          <FlatList
-            data={gridData}
-            renderItem={({ item }) => {
-              if (item.id === "plus-button") {
-                return (
-                  <Pressable
-                    onPress={() => {
-                      if (hasMediaPermission && !hasFullPhotoAccess) {
-                        // Show action sheet for partial access
-                        ActionSheetIOS.showActionSheetWithOptions(
-                          {
-                            options: [
-                              "Select More Photos",
-                              "Change Settings",
-                              "Cancel",
-                            ],
-                            cancelButtonIndex: 2,
-                          },
-                          (buttonIndex) => {
-                            if (buttonIndex === 0) {
-                              void MediaLibrary.presentPermissionsPickerAsync();
-                            } else if (buttonIndex === 1) {
-                              void Linking.openSettings();
-                            }
-                          },
-                        );
-                      } else {
-                        onMorePhotos();
-                      }
-                    }}
-                    style={{
-                      width: imageSize,
-                      height: imageSize,
-                      marginVertical: spacing / 2,
-                      marginHorizontal: spacing / 2,
-                    }}
-                    className="items-center justify-center bg-interactive-3"
-                  >
-                    <ImagePlus size={36} color="#5A32FB" />
-                  </Pressable>
-                );
-              }
-
-              return (
-                <Pressable
-                  onPress={() => onPhotoSelect(item.uri)}
-                  style={{
-                    width: imageSize,
-                    height: imageSize,
-                    marginVertical: spacing / 2,
-                    marginHorizontal: spacing / 2,
-                    backgroundColor: "#E0D9FF",
-                  }}
-                >
-                  <ExpoImage
-                    source={{ uri: item.uri }}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      opacity: selectedUri === item.uri ? 0.5 : 1,
-                    }}
-                    contentFit="cover"
-                    contentPosition="center"
-                    transition={100}
-                    cachePolicy="memory"
-                  />
-                </Pressable>
-              );
-            }}
-            numColumns={4}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingBottom: 100,
-            }}
-            keyExtractor={(item) => item.id}
-            horizontal={false}
-          />
-        </View>
-      </View>
-    );
-  },
-);
 
 interface EventResponse {
   success: boolean;
@@ -500,7 +315,7 @@ export default function NewEventModal() {
         sortBy: MediaLibrary.SortBy.creationTime,
         mediaType: [MediaLibrary.MediaType.photo],
       });
-      const photos: RecentPhoto[] = assets.map((asset) => ({
+      const photos = assets.map((asset) => ({
         id: asset.id,
         uri: asset.uri,
       }));
@@ -551,7 +366,7 @@ export default function NewEventModal() {
             );
 
             // Filter out null results and set photos
-            const photos: RecentPhoto[] = accessibleAssets.filter(
+            const photos = accessibleAssets.filter(
               (asset): asset is RecentPhoto => asset !== null,
             );
             setRecentPhotos(photos);
@@ -625,7 +440,7 @@ export default function NewEventModal() {
         setIsOptionSelected(false);
       }
     } else {
-      const mostRecentPhoto = recentPhotos[0] as RecentPhoto | undefined;
+      const mostRecentPhoto = recentPhotos[0];
       console.log("Initializing with most recent photo:", mostRecentPhoto);
       if (mostRecentPhoto?.uri) {
         setActiveInput("upload");
@@ -696,8 +511,8 @@ export default function NewEventModal() {
           ? "padding"
           : "height"
       }
-      keyboardVerticalOffset={116}
-      className="flex-1 bg-interactive-1"
+      keyboardVerticalOffset={56}
+      className="relative flex-1 bg-interactive-1"
     >
       <Stack.Screen
         options={{
@@ -708,231 +523,51 @@ export default function NewEventModal() {
             backgroundColor: "#5A32FB",
           },
           headerTintColor: "#fff",
-          headerTitle: () => {
-            if (isFromIntent) {
-              if (linkPreview) {
-                return (
-                  <View className="mt-2 flex-row items-center gap-2">
-                    <LinkIcon size={16} color="#fff" />
-                    <Text className="text-lg font-bold text-white">
-                      Selected link
-                    </Text>
-                  </View>
-                );
-              }
-              if (imagePreview) {
-                return (
-                  <View className="mt-2 flex-row items-center gap-1">
-                    <Image size={16} color="#fff" />
-                    <Text className="text-lg font-bold text-white">
-                      Selected image
-                    </Text>
-                  </View>
-                );
-              }
-              return (
-                <View className="mt-2 flex-row items-center gap-2">
-                  <Type size={16} color="#fff" />
-                  <Text className="text-lg font-bold text-white">
-                    Describe event
-                  </Text>
-                </View>
-              );
-            }
-
-            return (
-              <View className="mt-2 flex-row items-center">
-                <Pressable
-                  onPress={() => {
-                    if (activeInput === "describe") {
-                      handleDescribePress();
-                    }
-                  }}
-                  className={`${
-                    activeInput !== "describe"
-                      ? "border-b-2 border-interactive-3"
-                      : "border-b-2 border-transparent"
-                  }`}
-                >
-                  <View className="flex-row items-center gap-2">
-                    <Image
-                      size={16}
-                      color={
-                        activeInput !== "describe"
-                          ? "#fff"
-                          : "rgba(255, 255, 255, 0.6)"
-                      }
-                    />
-                    <Text
-                      className={`text-lg font-bold ${
-                        activeInput !== "describe"
-                          ? "text-white"
-                          : "text-white/60"
-                      }`}
-                    >
-                      Select image
-                    </Text>
-                  </View>
-                </Pressable>
-
-                <Text className="border-b-2 border-transparent px-3 text-lg font-semibold text-white/60">
-                  or
-                </Text>
-
-                <Pressable
-                  onPress={() => {
-                    if (activeInput !== "describe") {
-                      handleDescribePress();
-                    }
-                  }}
-                  className={`${
-                    activeInput === "describe"
-                      ? "border-b-2 border-interactive-3"
-                      : "border-b-2 border-transparent"
-                  }`}
-                >
-                  <View className="flex-row items-center gap-2">
-                    <Type
-                      size={16}
-                      color={
-                        activeInput === "describe"
-                          ? "#fff"
-                          : "rgba(255, 255, 255, 0.6)"
-                      }
-                    />
-                    <Text
-                      className={`text-lg font-bold ${
-                        activeInput === "describe"
-                          ? "text-white"
-                          : "text-white/60"
-                      }`}
-                    >
-                      Describe event
-                    </Text>
-                  </View>
-                </Pressable>
-              </View>
-            );
-          },
+          headerTitle: () => (
+            <NewEventHeader
+              containerClassName="mt-2"
+              isFromIntent={isFromIntent}
+              linkPreview={linkPreview}
+              imagePreview={imagePreview}
+              activeInput={activeInput}
+              handleDescribePress={handleDescribePress}
+            />
+          ),
         }}
       />
 
       {!hasMediaPermission && !isFromIntent && activeInput !== "describe" ? (
         <PhotoAccessPrompt />
       ) : (
-        <View className="mt-2 flex-1 bg-interactive-1">
+        <View className="flex-1 bg-interactive-1">
           <View className="flex-1">
-            <View
-              className={`${
-                isFromIntent ? "flex-1" : "mb-4"
-              } mx-4 overflow-hidden rounded-md bg-interactive-2`}
-              style={
-                isFromIntent
-                  ? styles.previewContainerFull
-                  : styles.previewContainer
-              }
-            >
-              {imagePreview ? (
-                <View className="relative h-full w-full">
-                  <ExpoImage
-                    source={{ uri: imagePreview }}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="contain"
-                    contentPosition="center"
-                    transition={100}
-                    cachePolicy="memory"
-                  />
-                  <Pressable
-                    onPress={clearPreview}
-                    className="absolute right-2 top-2 rounded-full bg-interactive-3 p-1"
-                  >
-                    <X size={20} color="#5A32FB" />
-                  </Pressable>
-                  {isImageLoading && (
-                    <View className="absolute bottom-2 right-2">
-                      <ActivityIndicator size="small" color="#DCE0E8" />
-                    </View>
-                  )}
-                </View>
-              ) : linkPreview ? (
-                <View className="relative h-full w-full bg-neutral-200">
-                  <View className="h-full w-full items-center justify-center">
-                    <LinkIcon size={24} color="black" />
-                    <Text
-                      className="mt-2 px-4 text-center text-sm font-medium"
-                      numberOfLines={2}
-                      ellipsizeMode="middle"
-                    >
-                      {linkPreview}
-                    </Text>
-                  </View>
-                  <Pressable
-                    onPress={clearPreview}
-                    className="absolute right-2 top-2 rounded-full bg-white p-1"
-                  >
-                    <X size={16} color="black" />
-                  </Pressable>
-                </View>
-              ) : activeInput === "url" ? (
-                <View className="h-full border border-neutral-300 px-3 py-2">
-                  <TextInput
-                    placeholder="Paste URL"
-                    value={input}
-                    onChangeText={handleTextChange}
-                    multiline
-                    style={[
-                      { height: "100%" },
-                      Platform.select({
-                        android: { textAlignVertical: "top" },
-                      }),
-                    ]}
-                    autoFocus={true}
-                  />
-                </View>
-              ) : activeInput === "describe" ? (
-                <View className="relative h-full border border-neutral-300 bg-white px-3 py-2">
-                  <TextInput
-                    placeholder={
-                      "Describe event in natural language...\n\n" +
-                      "For example:\n" +
-                      "• House party at Alex's Friday night, wear red\n" +
-                      "• Nationale art opening next Saturday 2-4"
-                    }
-                    placeholderTextColor="#627496"
-                    value={input}
-                    onChangeText={handleTextChange}
-                    multiline
-                    style={[
-                      Platform.select({
-                        android: { textAlignVertical: "top" },
-                      }),
-                    ]}
-                    autoFocus={true}
-                    className="h-full text-xl"
-                  />
-
-                  {input.length > 0 && (
-                    <Pressable
-                      onPress={clearText}
-                      className="absolute right-2 top-2 rounded-full bg-neutral-200 p-2"
-                    >
-                      <X size={16} color="black" />
-                    </Pressable>
-                  )}
-                </View>
-              ) : (
-                <Pressable
-                  onPress={() => void handleMorePhotos()}
-                  className="h-full w-full items-center justify-center bg-interactive-3"
-                >
-                  <ImagePlus size={64} color="#5A32FB" />
-                </Pressable>
-              )}
+            <View className="px-4 pb-4 pt-2">
+              <EventPreview
+                containerClassName="rounded-xl overflow-hidden"
+                imagePreview={imagePreview}
+                linkPreview={linkPreview}
+                input={input}
+                handleTextChange={handleTextChange}
+                clearPreview={clearPreview}
+                clearText={clearText}
+                activeInput={activeInput}
+                isFromIntent={isFromIntent}
+                isImageLoading={isImageLoading}
+                handleMorePhotos={handleMorePhotos}
+                previewContainerStyle={
+                  isFromIntent
+                    ? "full"
+                    : activeInput === "describe"
+                      ? "compact"
+                      : "square"
+                }
+              />
             </View>
 
             {!isFromIntent && activeInput !== "describe" && (
-              <View className="flex-1">
+              <View className="flex-1 px-4">
                 <PhotoGrid
+                  containerClassName="mt-2"
                   hasMediaPermission={hasMediaPermission}
                   hasFullPhotoAccess={hasFullPhotoAccess}
                   recentPhotos={recentPhotos}
@@ -945,34 +580,19 @@ export default function NewEventModal() {
             )}
           </View>
 
-          <View className="absolute bottom-8 left-0 right-0 px-4">
-            <Pressable
-              onPress={handleCreateEvent}
-              disabled={!input.trim() && !imagePreview && !linkPreview}
-              className={`w-full flex-row items-center justify-center rounded-full px-3 py-3 shadow-lg ${
-                !input.trim() && !imagePreview && !linkPreview
-                  ? "bg-neutral-3"
-                  : "bg-white"
-              }`}
-            >
-              <Sparkles
-                size={16}
-                color={
-                  !input.trim() && !imagePreview && !linkPreview
-                    ? "#627496"
-                    : "#5A32FB"
-                }
-              />
-              <Text
-                className={`ml-2 text-xl font-bold ${
-                  !input.trim() && !imagePreview && !linkPreview
-                    ? "text-neutral-2"
-                    : "text-[#5A32FB]"
-                }`}
-              >
-                Capture event
-              </Text>
-            </Pressable>
+          <View
+            className={cn(
+              "px-4 pb-4",
+              !isFromIntent &&
+                "absolute bottom-14 left-0 right-0 bg-transparent",
+            )}
+          >
+            <CaptureEventButton
+              handleCreateEvent={handleCreateEvent}
+              input={input}
+              imagePreview={imagePreview}
+              linkPreview={linkPreview}
+            />
           </View>
         </View>
       )}
