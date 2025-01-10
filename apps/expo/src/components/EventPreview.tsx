@@ -20,7 +20,6 @@ interface EventPreviewProps {
   clearPreview: () => void;
   clearText: () => void;
   activeInput: string | null;
-  isFromIntent: boolean;
   isImageLoading: boolean;
   handleMorePhotos: () => void;
   previewContainerStyle: "full" | "square" | "compact" | "default";
@@ -35,7 +34,6 @@ export function EventPreview({
   clearPreview,
   clearText,
   activeInput,
-  isFromIntent,
   isImageLoading,
   handleMorePhotos,
   previewContainerStyle,

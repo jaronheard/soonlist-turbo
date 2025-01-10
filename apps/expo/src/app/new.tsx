@@ -4,7 +4,6 @@ import {
   Easing,
   Keyboard,
   Linking,
-  Platform,
   SafeAreaView,
   View,
 } from "react-native";
@@ -573,7 +572,6 @@ export default function NewEventModal() {
                 clearPreview={clearPreview}
                 clearText={clearText}
                 activeInput={activeInput}
-                isFromIntent={isFromIntent}
                 isImageLoading={isImageLoading}
                 handleMorePhotos={handleMorePhotos}
                 previewContainerStyle={

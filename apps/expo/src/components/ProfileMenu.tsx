@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "react-native";
+import { Share, View } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useAuth, useUser } from "@clerk/clerk-expo";
