@@ -87,6 +87,8 @@
     "react-native-auto-height-image": "^3.2.4",
     "react-native-context-menu-view": "^1.16.0",
     "react-native-gesture-handler": "~2.20.2",
+    "react-native-ios-context-menu": "^3.1.0",
+    "react-native-ios-utilities": "^5.1.0",
     "react-native-keyboard-controller": "^1.15.2",
     "react-native-popup-menu": "^0.16.1",
     "react-native-qrcode-svg": "^6.3.0",
@@ -96,6 +98,7 @@
     "react-native-svg": "15.8.0",
     "sonner-native": "^0.16.2",
     "superjson": "2.2.1",
+    "zeego": "^2.0.4",
     "zustand": "4.5.5"
   },
   "devDependencies": {
