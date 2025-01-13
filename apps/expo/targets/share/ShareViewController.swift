@@ -47,15 +47,14 @@ class ShareViewController: UIViewController {
         if let encoded = data.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
            let url = URL(string: "\(appScheme)://new?text=\(encoded)") {
           NSLog("Constructed URL: \(url.absoluteString)")
-          openInContainerApp(url)
-          return
+          _ = self.openURL(url)
         }
       }
-      NSLog("Could not load or encode text. Completing.")
-      completeRequest()
+      NSLog("Completing handleText")
+      self.completeRequest()
     } catch {
       NSLog("handleText error: \(error)")
-      completeRequest()
+      _ = self.completeRequest()
     }
   }
 
@@ -67,15 +66,14 @@ class ShareViewController: UIViewController {
         if let encoded = data.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
            let url = URL(string: "\(appScheme)://new?text=\(encoded)") {
           NSLog("Constructed custom scheme URL: \(url.absoluteString)")
-          openInContainerApp(url)
-          return
+          _ = self.openURL(url)
         }
       }
-      NSLog("Could not load or encode URL. Completing.")
-      completeRequest()
+      NSLog("Completing handleUrl")
+      self.completeRequest()
     } catch {
       NSLog("handleUrl error: \(error)")
-      completeRequest()
+      self.completeRequest()
     }
   }
 
@@ -105,10 +103,12 @@ class ShareViewController: UIViewController {
        let encoded = imageUriInfo.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
        let url = URL(string: "\(appScheme)://new?imageUri=\(encoded)") {
       NSLog("Constructed custom scheme URL for image: \(url.absoluteString)")
-      openInContainerApp(url)
+      _ = self.openURL(url)
+      NSLog("Completing handleImage")
+      self.completeRequest()
     } else {
       NSLog("Image handling invalid or no imageUriInfo. Completing.")
-      completeRequest()
+      self.completeRequest()
     }
   }
 
@@ -137,10 +137,10 @@ class ShareViewController: UIViewController {
 
   private func completeRequest() {
     NSLog("completeRequest called. Dismissing share extension.")
-    extensionContext?.completeRequest(returningItems: nil)
+    self.extensionContext?.completeRequest(returningItems: nil)
   }
 
-  @objc func openInContainerApp(_ url: URL) -> Bool {
+  @objc func openURL(_ url: URL) -> Bool {
     var responder: UIResponder? = self
     while responder != nil {
       if let application = responder as? UIApplication {
