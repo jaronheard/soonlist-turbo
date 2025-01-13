@@ -38,37 +38,22 @@ export default function PastEvents() {
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
   return (
-    <>
-      {/* <Stack.Screen
-        options={{
-          headerTitle: () => (
-            <View className="flex-1 items-center justify-center">
-              <NavigationMenu active="past" />
-            </View>
-          ),
-          headerTitleAlign: "center",
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => <ProfileMenu />,
-          headerBackVisible: false,
-        }}
-      /> */}
-      <View className="flex-1 bg-white">
-        {eventsQuery.isPending ? (
-          <LoadingSpinner />
-        ) : (
-          <View className="flex-1">
-            <UserEventsList
-              events={events}
-              onRefresh={onRefresh}
-              onEndReached={loadMore}
-              showCreator="otherUsers"
-              isRefetching={eventsQuery.isRefetching}
-              isFetchingNextPage={eventsQuery.isFetchingNextPage}
-            />
-            <AddEventButton />
-          </View>
-        )}
-      </View>
-    </>
+    <View className="flex-1 bg-white">
+      {eventsQuery.isPending ? (
+        <LoadingSpinner />
+      ) : (
+        <View className="flex-1">
+          <UserEventsList
+            events={events}
+            onRefresh={onRefresh}
+            onEndReached={loadMore}
+            showCreator="otherUsers"
+            isRefetching={eventsQuery.isRefetching}
+            isFetchingNextPage={eventsQuery.isFetchingNextPage}
+          />
+          <AddEventButton />
+        </View>
+      )}
+    </View>
   );
 }

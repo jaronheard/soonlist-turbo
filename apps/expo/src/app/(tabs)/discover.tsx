@@ -56,38 +56,23 @@ export default function Page() {
   }
 
   return (
-    <View className="flex-1">
-      {/* <Stack.Screen
-        options={{
-          headerTitle: () => (
-            <View className="flex-1 items-center justify-center">
-              <NavigationMenu active="discover" />
-            </View>
-          ),
-          headerTitleAlign: "center",
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => <ProfileMenu />,
-          headerBackVisible: false,
-        }}
-      /> */}
-      <View className="flex-1 bg-white">
-        {eventsQuery.isPending || savedEventIdsQuery.isPending ? (
-          <LoadingSpinner />
-        ) : (
-          <View className="flex-1">
-            <UserEventsList
-              events={events}
-              isRefetching={eventsQuery.isRefetching}
-              onRefresh={onRefresh}
-              onEndReached={loadMore}
-              isFetchingNextPage={eventsQuery.isFetchingNextPage}
-              ActionButton={SaveButtonWrapper}
-              showCreator="always"
-            />
-            <AddEventButton />
-          </View>
-        )}
-      </View>
+    <View className="flex-1 bg-white">
+      {eventsQuery.isPending || savedEventIdsQuery.isPending ? (
+        <LoadingSpinner />
+      ) : (
+        <View className="flex-1">
+          <UserEventsList
+            events={events}
+            isRefetching={eventsQuery.isRefetching}
+            onRefresh={onRefresh}
+            onEndReached={loadMore}
+            isFetchingNextPage={eventsQuery.isFetchingNextPage}
+            ActionButton={SaveButtonWrapper}
+            showCreator="always"
+          />
+          <AddEventButton />
+        </View>
+      )}
     </View>
   );
 }

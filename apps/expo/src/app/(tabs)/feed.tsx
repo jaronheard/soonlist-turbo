@@ -108,41 +108,26 @@ function MyFeed() {
   }, [handleIntent]);
 
   return (
-    <>
-      {/* <Stack.Screen
-        options={{
-          headerTitle: () => (
-            <View className="flex-1 items-center justify-center">
-              <NavigationMenu active="upcoming" />
-            </View>
-          ),
-          headerTitleAlign: "center",
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => <ProfileMenu showShare />,
-          headerBackVisible: false,
-        }}
-      /> */}
-      <View className="flex-1 bg-white">
-        {eventsQuery.isPending && !isAddingEvent ? (
-          <LoadingSpinner />
-        ) : (
-          <View className="flex-1">
-            <UserEventsList
-              events={events}
-              isRefetching={eventsQuery.isRefetching}
-              onRefresh={onRefresh}
-              onEndReached={loadMore}
-              isFetchingNextPage={eventsQuery.isFetchingNextPage}
-              ActionButton={GoButton}
-              showCreator="otherUsers"
-              stats={statsQuery.data}
-              promoCard={{ type: "addEvents" }}
-            />
-            <AddEventButton />
-          </View>
-        )}
-      </View>
-    </>
+    <View className="flex-1 bg-white">
+      {eventsQuery.isPending && !isAddingEvent ? (
+        <LoadingSpinner />
+      ) : (
+        <View className="flex-1">
+          <UserEventsList
+            events={events}
+            isRefetching={eventsQuery.isRefetching}
+            onRefresh={onRefresh}
+            onEndReached={loadMore}
+            isFetchingNextPage={eventsQuery.isFetchingNextPage}
+            ActionButton={GoButton}
+            showCreator="otherUsers"
+            stats={statsQuery.data}
+            promoCard={{ type: "addEvents" }}
+          />
+          <AddEventButton />
+        </View>
+      )}
+    </View>
   );
 }
 
