@@ -109,7 +109,7 @@ function MyFeed() {
 
   return (
     <View className="flex-1 bg-white">
-      {eventsQuery.isPending && !isAddingEvent ? (
+      {eventsQuery.isPending && !eventsQuery.isRefetching && !isAddingEvent ? (
         <LoadingSpinner />
       ) : (
         <View className="flex-1">

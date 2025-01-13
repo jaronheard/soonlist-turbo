@@ -57,7 +57,7 @@ export default function Page() {
 
   return (
     <View className="flex-1 bg-white">
-      {eventsQuery.isPending || savedEventIdsQuery.isPending ? (
+      {eventsQuery.isPending && !eventsQuery.isRefetching ? (
         <LoadingSpinner />
       ) : (
         <View className="flex-1">
