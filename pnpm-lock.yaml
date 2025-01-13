@@ -8,7 +8,7 @@ overrides:
   promise: ^8.3.0
 
 patchedDependencies:
-  expo-secure-store:
+  expo-secure-store@14.0.0:
     hash: 2z2dmx6eplvhg7vgywbv4g3idi
     path: patches/expo-secure-store.patch
   xcode@3.0.1:
