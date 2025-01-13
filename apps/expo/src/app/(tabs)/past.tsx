@@ -1,13 +1,9 @@
 import React, { useCallback } from "react";
 import { View } from "react-native";
-import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import AddEventButton from "~/components/AddEventButton";
-import { HeaderLogo } from "~/components/HeaderLogo";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { NavigationMenu } from "~/components/NavigationMenu";
-import { ProfileMenu } from "~/components/ProfileMenu";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
 
