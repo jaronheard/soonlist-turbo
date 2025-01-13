@@ -109,7 +109,7 @@ function MyFeed() {
 
   return (
     <>
-      <Stack.Screen
+      {/* <Stack.Screen
         options={{
           headerTitle: () => (
             <View className="flex-1 items-center justify-center">
@@ -121,7 +121,7 @@ function MyFeed() {
           headerRight: () => <ProfileMenu showShare />,
           headerBackVisible: false,
         }}
-      />
+      /> */}
       <View className="flex-1 bg-white">
         {eventsQuery.isPending && !isAddingEvent ? (
           <LoadingSpinner />
