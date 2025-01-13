@@ -7,7 +7,7 @@ runs:
     - uses: pnpm/action-setup@v3
       with:
         version: 9.0.6
-        
+
     - uses: actions/setup-node@v4
       with:
         node-version: 20.12.0
@@ -18,3 +18,7 @@ runs:
 
     - shell: bash
       run: pnpm install --frozen-lockfile
+
+    - shell: bash
+      run: |
+        sudo chmod +w apps/expo/.gitignore
