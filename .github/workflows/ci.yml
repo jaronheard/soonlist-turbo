@@ -33,10 +33,12 @@ jobs:
         shell: bash
         run: cp .env.example .env
 
-      - name: Ensure write permissions
+      - name: Create and ensure write permissions on .gitignore
         shell: bash
-        run: chmod +w .gitignore
         working-directory: apps/expo
+        run: |
+          touch .gitignore
+          chmod +w .gitignore
 
       - name: Generate typed routes for Expo Router
         working-directory: apps/expo
@@ -68,10 +70,12 @@ jobs:
       - name: Setup
         uses: ./tooling/github/setup
 
-      - name: Ensure write permissions
+      - name: Create and ensure write permissions on .gitignore
         shell: bash
-        run: chmod +w .gitignore
         working-directory: apps/expo
+        run: |
+          touch .gitignore
+          chmod +w .gitignore
 
       - name: Generate typed routes for Expo Router
         working-directory: apps/expo
