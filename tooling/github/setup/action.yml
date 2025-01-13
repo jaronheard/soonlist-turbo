@@ -21,4 +21,8 @@ runs:
 
     - shell: bash
       run: |
-        sudo chmod +w apps/expo/.gitignore
+        ls -la
+
+    - shell: bash
+      run: |
+        sudo chmod -R +w apps/expo
