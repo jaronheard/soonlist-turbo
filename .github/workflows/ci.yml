@@ -33,6 +33,11 @@ jobs:
         shell: bash
         run: cp .env.example .env
 
+      - name: Ensure write permissions
+        shell: bash
+        run: chmod +w .gitignore
+        working-directory: apps/expo
+
       - name: Generate typed routes for Expo Router
         working-directory: apps/expo
         run: npx expo customize tsconfig.json
@@ -62,6 +67,11 @@ jobs:
 
       - name: Setup
         uses: ./tooling/github/setup
+
+      - name: Ensure write permissions
+        shell: bash
+        run: chmod +w .gitignore
+        working-directory: apps/expo
 
       - name: Generate typed routes for Expo Router
         working-directory: apps/expo

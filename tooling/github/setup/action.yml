@@ -18,11 +18,3 @@ runs:
 
     - shell: bash
       run: pnpm install --frozen-lockfile
-
-    - shell: bash
-      run: |
-        ls -la
-
-    - shell: bash
-      run: |
-        sudo chmod -R +w apps/expo
