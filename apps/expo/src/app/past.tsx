@@ -41,13 +41,14 @@ export default function PastEvents() {
     <>
       <Stack.Screen
         options={{
-          headerTitle: () => <NavigationMenu active="past" />,
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => (
-            <View className="mr-2 flex-row items-center gap-2">
-              <ProfileMenu />
+          headerTitle: () => (
+            <View className="flex-1 items-center justify-center">
+              <NavigationMenu active="past" />
             </View>
           ),
+          headerTitleAlign: "center",
+          headerLeft: () => <HeaderLogo />,
+          headerRight: () => <ProfileMenu />,
           headerBackVisible: false,
         }}
       />

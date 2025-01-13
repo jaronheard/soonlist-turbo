@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
-import { Stack, useRouter } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
@@ -25,7 +25,6 @@ WebBrowser.maybeCompleteAuthSession();
 
 const SignInWithOAuth = () => {
   useWarmUpBrowser();
-  const router = useRouter();
   const { height } = useWindowDimensions();
   const posthog = usePostHog();
 

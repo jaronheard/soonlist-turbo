@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { Stack, useRouter } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Globe, Instagram, Mail, Phone } from "lucide-react-native";
@@ -40,7 +40,6 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function EditProfileScreen() {
   const { user } = useUser();
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.imageUrl ?? null,
@@ -86,7 +85,8 @@ export default function EditProfileScreen() {
   const updateProfile = api.user.updateAdditionalInfo.useMutation({
     onMutate: () => setIsSubmitting(true),
     onSettled: () => setIsSubmitting(false),
-    onSuccess: () => router.back(),
+    onSuccess: () =>
+      router.canGoBack() ? router.back() : router.navigate("/feed"),
   });
 
   const onSubmit = useCallback(
@@ -186,9 +186,9 @@ export default function EditProfileScreen() {
     if (isDirty && isValid) {
       void handleSubmit(onSubmit)();
     } else {
-      router.back();
+      router.canGoBack() ? router.back() : router.navigate("/feed");
     }
-  }, [isDirty, isValid, handleSubmit, onSubmit, router]);
+  }, [isDirty, isValid, handleSubmit, onSubmit]);
 
   return (
     <KeyboardAvoidingView

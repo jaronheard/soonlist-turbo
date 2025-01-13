@@ -1,6 +1,6 @@
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { X } from "lucide-react-native";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
@@ -11,7 +11,6 @@ import Config from "~/utils/config";
 
 export default function QRModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
 
   const { data: event } = api.event.get.useQuery(
     { eventId: id },
@@ -50,7 +49,9 @@ export default function QRModal() {
       <View className="flex-1 items-center justify-center p-4">
         <TouchableOpacity
           className="absolute right-4 top-12 z-10 rounded-full bg-interactive-1 p-2"
-          onPress={() => router.back()}
+          onPress={() =>
+            router.canGoBack() ? router.back() : router.navigate("/feed")
+          }
         >
           <X size={24} color="white" />
         </TouchableOpacity>

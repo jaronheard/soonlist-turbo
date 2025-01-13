@@ -59,13 +59,14 @@ export default function Page() {
     <View className="flex-1">
       <Stack.Screen
         options={{
-          headerTitle: () => <NavigationMenu active="discover" />,
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => (
-            <View className="mr-2">
-              <ProfileMenu />
+          headerTitle: () => (
+            <View className="flex-1 items-center justify-center">
+              <NavigationMenu active="discover" />
             </View>
           ),
+          headerTitleAlign: "center",
+          headerLeft: () => <HeaderLogo />,
+          headerRight: () => <ProfileMenu />,
           headerBackVisible: false,
         }}
       />

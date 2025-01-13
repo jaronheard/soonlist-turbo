@@ -7,12 +7,11 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Image } from "expo-image";
-import { usePathname, useRouter } from "expo-router";
+import { router, usePathname } from "expo-router";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function HeaderLogo() {
-  const router = useRouter();
   const pathname = usePathname();
   const rotation = useSharedValue(0);
 

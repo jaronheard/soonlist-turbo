@@ -111,13 +111,14 @@ function MyFeed() {
     <>
       <Stack.Screen
         options={{
-          headerTitle: () => <NavigationMenu active="upcoming" />,
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => (
-            <View className="mr-2">
-              <ProfileMenu showShare />
+          headerTitle: () => (
+            <View className="flex-1 items-center justify-center">
+              <NavigationMenu active="upcoming" />
             </View>
           ),
+          headerTitleAlign: "center",
+          headerLeft: () => <HeaderLogo />,
+          headerRight: () => <ProfileMenu showShare />,
           headerBackVisible: false,
         }}
       />

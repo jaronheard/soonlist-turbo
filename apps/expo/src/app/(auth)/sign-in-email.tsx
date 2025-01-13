@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Linking, Pressable, Text, TextInput, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Stack, useRouter } from "expo-router";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { router, Stack } from "expo-router";
 import { useSignIn } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePostHog } from "posthog-react-native";
@@ -19,7 +19,6 @@ type SignInFormData = z.infer<typeof signInSchema>;
 
 export default function SignInScreen() {
   const { isLoaded, signIn, setActive } = useSignIn();
-  const router = useRouter();
   const posthog = usePostHog();
   const [generalError, setGeneralError] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -111,16 +110,15 @@ export default function SignInScreen() {
     <KeyboardAwareScrollView
       contentContainerStyle={{ flexGrow: 1 }}
       keyboardShouldPersistTaps="handled"
-      enableAutomaticScroll={true}
-      extraScrollHeight={150}
-      enableOnAndroid={true}
+      extraKeyboardSpace={150}
+      enabled
     >
       <Stack.Screen
         options={{
           headerShown: true,
           headerTitle: "Sign in",
           headerBackTitle: "Back",
-          headerBackTitleVisible: true,
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <View className="flex-1 bg-interactive-3 px-6">

@@ -12,18 +12,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   icon: IS_DEV ? "./assets/icon-dev.png" : "./assets/icon.png",
   userInterfaceStyle: "light",
-  splash: {
-    image: "./assets/splash.png",
-    resizeMode: "contain",
-    backgroundColor: "#ffffff",
-  },
   assetBundlePatterns: ["**/*"],
   plugins: [
     [
       "expo-build-properties",
       {
         ios: {
-          deploymentTarget: "15.0",
+          deploymentTarget: "15.1",
           infoPlist: {
             PHPhotoLibraryPreventAutomaticLimitedAccessAlert: true,
           },
@@ -77,6 +72,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         isAccessMediaLocationEnabled: true,
       },
     ],
+    ["expo-router"],
+    [
+      "expo-splash-screen",
+      {
+        backgroundColor: "#E0D9FF",
+        image: "./assets/splash-logo.png",
+        dark: {
+          image: "./assets/splash-logo.png",
+          backgroundColor: "#E0D9FF",
+        },
+        imageWidth: 200,
+      },
+    ],
     // [
     //   "expo-background-fetch",
     //   {
@@ -98,6 +106,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     usesAppleSignIn: true,
     infoPlist: {
       UIBackgroundModes: ["fetch"],
+      CFBundleURLTypes: [
+        {
+          CFBundleURLName: "Soonlist Schemes",
+          // Include the dev scheme and the main scheme
+          CFBundleURLSchemes: ["soonlist", "soonlist.dev"],
+        },
+        // If you also need to keep "com.soonlist.app" as a URL scheme:
+        {
+          CFBundleURLName: "Additional Scheme",
+          CFBundleURLSchemes: ["com.soonlist.app"],
+        },
+      ],
     },
   },
   android: {
@@ -117,6 +137,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     tsconfigPaths: true,
     typedRoutes: true,
   },
+  newArchEnabled: true,
   // plugins: ["expo-router"],
   extra: {
     eas: {

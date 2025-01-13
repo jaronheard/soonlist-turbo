@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 
 import { useAppStore } from "~/store";
 
@@ -33,7 +33,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export function StoryOnboarding() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
-  const router = useRouter();
   const setHasCompletedOnboarding = useAppStore(
     (state) => state.setHasCompletedOnboarding,
   );

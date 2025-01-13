@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Linking, Pressable, Text, TextInput, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Stack, useRouter } from "expo-router";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { router, Stack } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
@@ -21,7 +21,6 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpScreen() {
   const { isLoaded, signUp } = useSignUp();
-  const router = useRouter();
   const [generalError, setGeneralError] = React.useState("");
 
   const {
@@ -62,16 +61,15 @@ export default function SignUpScreen() {
     <KeyboardAwareScrollView
       contentContainerStyle={{ flexGrow: 1 }}
       keyboardShouldPersistTaps="handled"
-      enableAutomaticScroll={true}
-      extraScrollHeight={150}
-      enableOnAndroid={true}
+      extraKeyboardSpace={150}
+      enabled
     >
       <Stack.Screen
         options={{
           headerShown: true,
           headerTitle: "Sign Up",
           headerBackTitle: "Back",
-          headerBackTitleVisible: true,
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <View className="flex-1 bg-interactive-3 px-6">

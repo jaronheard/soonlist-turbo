@@ -6,6 +6,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import { useAppStore } from "~/store";
+import Config from "~/utils/config";
 
 const INITIAL_CALENDAR_LIMIT = 5;
 
@@ -132,7 +133,7 @@ export function useCalendar() {
         throw new Error("Invalid date parsed");
       }
 
-      const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+      const baseUrl = Config.apiBaseUrl;
       if (!baseUrl) {
         throw new Error("EXPO_PUBLIC_API_BASE_URL is not defined");
       }

@@ -16,7 +16,7 @@ import {
   MenuTrigger,
 } from "react-native-popup-menu";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import {
   CalendarPlus,
   EyeOff,
@@ -69,7 +69,6 @@ export function EventMenu({
 }: EventMenuProps) {
   const utils = api.useUtils();
   const { handleAddToCal: addToCalendar } = useCalendar();
-  const router = useRouter();
 
   const deleteEventMutation = api.event.delete.useMutation({
     onSuccess: () => {

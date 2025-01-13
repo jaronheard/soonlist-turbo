@@ -8,7 +8,7 @@
       "node": "20.12.0",
       "pnpm": "9.0.6",
       "ios": {
-        "resourceClass": "m-medium"
+        "resourceClass": "large"
       },
       "channel": "base"
     },

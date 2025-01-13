@@ -10,18 +10,35 @@ interface Config {
   posthogApiKey: string;
 }
 
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL as string;
+const clerkPublishableKey = process.env
+  .EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY as string;
+const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY as string;
+
+if (!apiBaseUrl) {
+  throw new Error("EXPO_PUBLIC_API_BASE_URL is required");
+}
+
+if (!clerkPublishableKey) {
+  throw new Error("EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY is required");
+}
+
+if (!posthogApiKey) {
+  throw new Error("EXPO_PUBLIC_POSTHOG_API_KEY is required");
+}
+
 const Config: Config = {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  env: Constants.expoConfig?.extra?.eas?.projectId
-    ? Updates.channel === "production"
+  env: (Constants.expoConfig as { extra?: { eas?: { projectId?: string } } })
+    .extra?.eas?.projectId
+    ? (Updates.channel ?? "development") === "production"
       ? "production"
       : "development"
     : process.env.NODE_ENV === "production"
       ? "production"
       : "development",
-  apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || "",
-  clerkPublishableKey: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "",
-  posthogApiKey: process.env.EXPO_PUBLIC_POSTHOG_API_KEY || "",
+  apiBaseUrl,
+  clerkPublishableKey,
+  posthogApiKey,
 };
 
 export default Config;

@@ -21,6 +21,8 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -31,6 +33,13 @@ jobs:
         shell: bash
         run: cp .env.example .env
 
+      - name: Create and ensure write permissions on .gitignore
+        shell: bash
+        working-directory: apps/expo
+        run: |
+          touch .gitignore
+          chmod +w .gitignore
+
       - name: Generate typed routes for Expo Router
         working-directory: apps/expo
         run: npx expo customize tsconfig.json
@@ -40,6 +49,8 @@ jobs:
 
   format:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -51,15 +62,34 @@ jobs:
 
   typecheck:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup
         uses: ./tooling/github/setup
 
+      - name: Create and ensure write permissions on .gitignore
+        shell: bash
+        working-directory: apps/expo
+        run: |
+          touch .gitignore
+          chmod +w .gitignore
+
       - name: Generate typed routes for Expo Router
         working-directory: apps/expo
         run: npx expo customize tsconfig.json
 
+      - name: Show TypeScript version
+        run: npx tsc --version
+
+      - name: Clean TypeScript cache
+        run: |
+          find . -name "*.tsbuildinfo" -delete
+          find . -name ".turbo" -type d -exec rm -rf {} +
+
       - name: Typecheck
         run: pnpm typecheck
+        env:
+          DEBUG: "*"

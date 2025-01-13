@@ -23,6 +23,7 @@ import "../styles.css";
 import type { ErrorBoundaryProps } from "expo-router";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import Constants, { AppOwnership } from "expo-constants";
 import { Toaster } from "sonner-native";
 
@@ -34,6 +35,11 @@ import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
+
+export const unstable_settings = {
+  // Ensure any route can link back to `/`
+  initialRouteName: "feed",
+};
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const insets = useSafeAreaInsets();
@@ -104,51 +110,53 @@ function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ClerkProvider
-        publishableKey={clerkPublishableKey}
-        tokenCache={tokenCache}
-      >
-        <ClerkLoaded>
-          <TRPCProvider>
-            <SafeAreaProvider>
-              <MenuProvider>
-                <PostHogProvider
-                  apiKey={Config.posthogApiKey}
-                  options={{
-                    host: "https://us.i.posthog.com",
-                    disabled: process.env.APP_VARIANT === "development",
-                    enableSessionReplay:
-                      process.env.APP_VARIANT !== "development",
-                    sessionReplayConfig: {
-                      // Whether text inputs are masked. Default is true.
-                      // Password inputs are always masked regardless
-                      maskAllTextInputs: false,
-                      // Whether images are masked. Default is true.
-                      maskAllImages: false,
-                      // Capture logs automatically. Default is true.
-                      // Android only (Native Logcat only)
-                      captureLog: false,
-                      // Whether network requests are captured in recordings. Default is true
-                      // Only metric-like data like speed, size, and response code are captured.
-                      // No data is captured from the request or response body.
-                      // iOS only
-                      captureNetworkTelemetry: true,
-                      // Deboucer delay used to reduce the number of snapshots captured and reduce performance impact. Default is 500ms
-                      androidDebouncerDelayMs: 500,
-                      // Deboucer delay used to reduce the number of snapshots captured and reduce performance impact. Default is 1000ms
-                      iOSdebouncerDelayMs: 1000,
-                    },
-                  }}
-                >
-                  <NotificationProvider>
-                    <RootLayoutContent />
-                  </NotificationProvider>
-                </PostHogProvider>
-              </MenuProvider>
-            </SafeAreaProvider>
-          </TRPCProvider>
-        </ClerkLoaded>
-      </ClerkProvider>
+      <KeyboardProvider>
+        <ClerkProvider
+          publishableKey={clerkPublishableKey}
+          tokenCache={tokenCache}
+        >
+          <ClerkLoaded>
+            <TRPCProvider>
+              <SafeAreaProvider>
+                <MenuProvider>
+                  <PostHogProvider
+                    apiKey={Config.posthogApiKey}
+                    options={{
+                      host: "https://us.i.posthog.com",
+                      disabled: process.env.APP_VARIANT === "development",
+                      enableSessionReplay:
+                        process.env.APP_VARIANT !== "development",
+                      sessionReplayConfig: {
+                        // Whether text inputs are masked. Default is true.
+                        // Password inputs are always masked regardless
+                        maskAllTextInputs: false,
+                        // Whether images are masked. Default is true.
+                        maskAllImages: false,
+                        // Capture logs automatically. Default is true.
+                        // Android only (Native Logcat only)
+                        captureLog: false,
+                        // Whether network requests are captured in recordings. Default is true
+                        // Only metric-like data like speed, size, and response code are captured.
+                        // No data is captured from the request or response body.
+                        // iOS only
+                        captureNetworkTelemetry: true,
+                        // Deboucer delay used to reduce the number of snapshots captured and reduce performance impact. Default is 500ms
+                        androidDebouncerDelayMs: 500,
+                        // Deboucer delay used to reduce the number of snapshots captured and reduce performance impact. Default is 1000ms
+                        iOSdebouncerDelayMs: 1000,
+                      },
+                    }}
+                  >
+                    <NotificationProvider>
+                      <RootLayoutContent />
+                    </NotificationProvider>
+                  </PostHogProvider>
+                </MenuProvider>
+              </SafeAreaProvider>
+            </TRPCProvider>
+          </ClerkLoaded>
+        </ClerkProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }
