@@ -61,7 +61,7 @@ export function EventPreview({
             contentFit="contain"
             contentPosition="center"
             transition={100}
-            cachePolicy="memory"
+            cachePolicy="disk"
           />
           <Pressable
             onPress={clearPreview}
@@ -93,20 +93,6 @@ export function EventPreview({
           >
             <X size={16} color="black" />
           </Pressable>
-        </View>
-      ) : activeInput === "url" ? (
-        <View className="h-full border border-neutral-300 px-3 py-2">
-          <TextInput
-            placeholder="Paste URL"
-            value={input}
-            onChangeText={handleTextChange}
-            multiline
-            style={[
-              { height: "100%" },
-              Platform.select({ android: { textAlignVertical: "top" } }),
-            ]}
-            autoFocus={true}
-          />
         </View>
       ) : activeInput === "describe" ? (
         <View className="relative h-full border border-neutral-300 bg-white px-3 py-2">

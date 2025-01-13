@@ -156,7 +156,7 @@ export const PhotoGrid = React.memo(
                     contentFit="cover"
                     contentPosition="center"
                     transition={100}
-                    cachePolicy="memory"
+                    cachePolicy="disk"
                   />
                 </Pressable>
               );
