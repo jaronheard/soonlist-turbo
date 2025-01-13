@@ -89,7 +89,7 @@ jobs:
           find . -name "*.tsbuildinfo" -delete
           find . -name ".turbo" -type d -exec rm -rf {} +
 
-      - name: Typecheck with verbose logging
-        run: pnpm typecheck --verbose
+      - name: Typecheck
+        run: pnpm typecheck
         env:
           DEBUG: "*"
