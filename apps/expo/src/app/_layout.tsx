@@ -179,20 +179,9 @@ const InitialLayout = () => {
       }}
     >
       <Stack.Screen
-        name="feed"
+        name="(tabs)"
         options={{
-          headerShown: true,
-          headerRight: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="discover"
-        options={{
-          headerShown: true,
-          headerRight: undefined,
-          headerTitle: "Discover",
-          headerBackTitle: "Back",
-          headerBackVisible: true,
+          headerShown: false,
         }}
       />
       <Stack.Screen

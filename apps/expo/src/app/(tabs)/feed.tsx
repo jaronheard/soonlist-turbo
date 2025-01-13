@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect } from "react";
 import { Linking, Pressable, View } from "react-native";
-import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutationState } from "@tanstack/react-query";
 import { MapPinned } from "lucide-react-native";
@@ -9,10 +8,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
-import { HeaderLogo } from "~/components/HeaderLogo";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { NavigationMenu } from "~/components/NavigationMenu";
-import { ProfileMenu } from "~/components/ProfileMenu";
 import UserEventsList from "~/components/UserEventsList";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { api } from "~/utils/api";
@@ -108,41 +104,26 @@ function MyFeed() {
   }, [handleIntent]);
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          headerTitle: () => (
-            <View className="flex-1 items-center justify-center">
-              <NavigationMenu active="upcoming" />
-            </View>
-          ),
-          headerTitleAlign: "center",
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => <ProfileMenu showShare />,
-          headerBackVisible: false,
-        }}
-      />
-      <View className="flex-1 bg-white">
-        {eventsQuery.isPending && !isAddingEvent ? (
-          <LoadingSpinner />
-        ) : (
-          <View className="flex-1">
-            <UserEventsList
-              events={events}
-              isRefetching={eventsQuery.isRefetching}
-              onRefresh={onRefresh}
-              onEndReached={loadMore}
-              isFetchingNextPage={eventsQuery.isFetchingNextPage}
-              ActionButton={GoButton}
-              showCreator="otherUsers"
-              stats={statsQuery.data}
-              promoCard={{ type: "addEvents" }}
-            />
-            <AddEventButton />
-          </View>
-        )}
-      </View>
-    </>
+    <View className="flex-1 bg-white">
+      {eventsQuery.isPending && !eventsQuery.isRefetching && !isAddingEvent ? (
+        <LoadingSpinner />
+      ) : (
+        <View className="flex-1">
+          <UserEventsList
+            events={events}
+            isRefetching={eventsQuery.isRefetching}
+            onRefresh={onRefresh}
+            onEndReached={loadMore}
+            isFetchingNextPage={eventsQuery.isFetchingNextPage}
+            ActionButton={GoButton}
+            showCreator="otherUsers"
+            stats={statsQuery.data}
+            promoCard={{ type: "addEvents" }}
+          />
+          <AddEventButton />
+        </View>
+      )}
+    </View>
   );
 }
 

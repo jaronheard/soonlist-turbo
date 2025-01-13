@@ -1,14 +1,10 @@
 import React, { useCallback } from "react";
 import { View } from "react-native";
-import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
-import { HeaderLogo } from "~/components/HeaderLogo";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { NavigationMenu } from "~/components/NavigationMenu";
-import { ProfileMenu } from "~/components/ProfileMenu";
 import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
@@ -56,38 +52,23 @@ export default function Page() {
   }
 
   return (
-    <View className="flex-1">
-      <Stack.Screen
-        options={{
-          headerTitle: () => (
-            <View className="flex-1 items-center justify-center">
-              <NavigationMenu active="discover" />
-            </View>
-          ),
-          headerTitleAlign: "center",
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => <ProfileMenu />,
-          headerBackVisible: false,
-        }}
-      />
-      <View className="flex-1 bg-white">
-        {eventsQuery.isPending || savedEventIdsQuery.isPending ? (
-          <LoadingSpinner />
-        ) : (
-          <View className="flex-1">
-            <UserEventsList
-              events={events}
-              isRefetching={eventsQuery.isRefetching}
-              onRefresh={onRefresh}
-              onEndReached={loadMore}
-              isFetchingNextPage={eventsQuery.isFetchingNextPage}
-              ActionButton={SaveButtonWrapper}
-              showCreator="always"
-            />
-            <AddEventButton />
-          </View>
-        )}
-      </View>
+    <View className="flex-1 bg-white">
+      {eventsQuery.isPending && !eventsQuery.isRefetching ? (
+        <LoadingSpinner />
+      ) : (
+        <View className="flex-1">
+          <UserEventsList
+            events={events}
+            isRefetching={eventsQuery.isRefetching}
+            onRefresh={onRefresh}
+            onEndReached={loadMore}
+            isFetchingNextPage={eventsQuery.isFetchingNextPage}
+            ActionButton={SaveButtonWrapper}
+            showCreator="always"
+          />
+          <AddEventButton />
+        </View>
+      )}
     </View>
   );
 }
