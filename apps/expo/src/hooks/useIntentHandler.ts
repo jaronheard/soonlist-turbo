@@ -25,19 +25,14 @@ export function useIntentHandler() {
 
       console.log("[useIntentHandler] Processing URL:", url);
       const parsedUrl = new URL(url);
+      const pathname = parsedUrl.pathname.replace(/^\/+/, ""); // Remove leading slashes
       const params = parsedUrl.searchParams;
-      const intentType = params.get("intent");
 
-      console.log("[useIntentHandler] Intent type:", intentType);
+      console.log("[useIntentHandler] Route:", pathname);
 
-      if (!intentType) {
-        console.log("[useIntentHandler] No intent type found, returning null");
-        return null;
-      }
-
-      switch (intentType) {
+      switch (pathname) {
         case "new": {
-          console.log("[useIntentHandler] Processing 'new' intent");
+          console.log("[useIntentHandler] Processing 'new' route");
           const text = params.get("text");
           const imageUri = params.get("imageUri");
 
@@ -65,12 +60,12 @@ export function useIntentHandler() {
           break;
         }
         default: {
-          console.warn(`[useIntentHandler] Unknown intent type: ${intentType}`);
+          console.warn(`[useIntentHandler] Unknown route: ${pathname}`);
         }
       }
 
       console.log(
-        "[useIntentHandler] Returning null - no matching intent handled",
+        "[useIntentHandler] Returning null - no matching route handled",
       );
       return null;
     },
