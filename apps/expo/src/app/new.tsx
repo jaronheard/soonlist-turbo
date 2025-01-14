@@ -1,86 +1,29 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  Easing,
-  Keyboard,
-  Linking,
-  SafeAreaView,
-  View,
-} from "react-native";
-import * as FileSystem from "expo-file-system";
-import * as ImageManipulator from "expo-image-manipulator";
+import React, { useCallback } from "react";
+import { Animated, Linking, SafeAreaView, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import * as MediaLibrary from "expo-media-library";
-import {
-  router,
-  Stack,
-  useFocusEffect,
-  useLocalSearchParams,
-} from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
-import type { RecentPhoto } from "~/store";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";
 import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
 import { PhotoGrid } from "~/components/PhotoGrid";
+import { useCreateEvent } from "~/hooks/useCreateEvent";
+import { useInitializeInput } from "~/hooks/useInitializeInput";
+import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
-import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 
-const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
-
-interface EventResponse {
-  success: boolean;
-  eventId?: string;
-}
-function isSuccessResponse(
-  result: EventResponse,
-): result is EventResponse & { eventId: string } {
-  return result.success;
-}
+const OFFSET_VALUE = 64;
 
 export default function NewEventModal() {
-  // Keep a plain Animated.Value for the actual keyboard height
-  const keyboardHeightAnim = useRef(new Animated.Value(0)).current;
-
-  // Offset we always want (like your 64px)
-  const OFFSET_VALUE = 64;
-
-  // We'll combine them with Animated.add
-  // So the final marginBottom is keyboardHeight + OFFSET_VALUE
-  const marginBottomAnim = Animated.add(keyboardHeightAnim, OFFSET_VALUE);
-
-  // Listen for keyboard show/hide and animate up/down
-  useEffect(() => {
-    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
-      Animated.timing(keyboardHeightAnim, {
-        toValue: e.endCoordinates.height,
-        duration: 200,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: false,
-      }).start();
-    });
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      Animated.timing(keyboardHeightAnim, {
-        toValue: 0,
-        duration: 200,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: false,
-      }).start();
-    });
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, [keyboardHeightAnim]);
-
+  const { marginBottomAnim } = useKeyboardHeight(OFFSET_VALUE);
   const { expoPushToken, hasNotificationPermission } = useNotification();
-  const utils = api.useUtils();
   const { user } = useUser();
+  const { createEvent } = useCreateEvent();
 
   const {
     input,
@@ -97,39 +40,8 @@ export default function NewEventModal() {
     setActiveInput,
     recentPhotos,
     hasMediaPermission,
-    shouldRefreshMediaLibrary,
-    setShouldRefreshMediaLibrary,
-    setRecentPhotos,
     hasFullPhotoAccess,
   } = useAppStore();
-
-  const eventFromRawTextAndNotification =
-    api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
-      onSuccess: () => {
-        return Promise.all([
-          utils.event.getEventsForUser.invalidate(),
-          utils.event.getStats.invalidate(),
-        ]);
-      },
-    });
-  const eventFromImageThenCreateThenNotification =
-    api.ai.eventFromImageThenCreateThenNotification.useMutation({
-      onSuccess: () => {
-        return Promise.all([
-          utils.event.getEventsForUser.invalidate(),
-          utils.event.getStats.invalidate(),
-        ]);
-      },
-    });
-  const eventFromUrlThenCreateThenNotification =
-    api.ai.eventFromUrlThenCreateThenNotification.useMutation({
-      onSuccess: () => {
-        return Promise.all([
-          utils.event.getEventsForUser.invalidate(),
-          utils.event.getStats.invalidate(),
-        ]);
-      },
-    });
 
   const handleImagePreview = useCallback(
     (uri: string) => {
@@ -221,6 +133,7 @@ export default function NewEventModal() {
 
   const handleCreateEvent = useCallback(async () => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
+    if (!user?.id || !user.username || !expoPushToken) return;
 
     router.canGoBack() ? router.back() : router.navigate("/feed");
 
@@ -229,81 +142,15 @@ export default function NewEventModal() {
     });
 
     try {
-      let eventId: string | undefined;
-
-      if (linkPreview) {
-        const result = await eventFromUrlThenCreateThenNotification.mutateAsync(
-          {
-            url: linkPreview,
-            timezone: "America/Los_Angeles",
-            expoPushToken,
-            lists: [],
-            userId: user?.id || "",
-            username: user?.username || "",
-            visibility: "private",
-          },
-        );
-        if (isSuccessResponse(result)) {
-          eventId = result.eventId;
-        }
-      } else if (imagePreview) {
-        setIsImageLoading(true);
-        try {
-          const manipulatedImage = await ImageManipulator.manipulateAsync(
-            imagePreview,
-            [{ resize: { width: 1284 } }],
-            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
-          );
-
-          const response = await FileSystem.uploadAsync(
-            "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
-            manipulatedImage.uri,
-            {
-              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-              httpMethod: "POST",
-              headers: {
-                "Content-Type": "image/jpeg",
-                Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
-              },
-            },
-          );
-
-          if (response.status !== 200) {
-            throw new Error(`Upload failed with status ${response.status}`);
-          }
-
-          const { fileUrl } = JSON.parse(response.body) as { fileUrl: string };
-
-          const result =
-            await eventFromImageThenCreateThenNotification.mutateAsync({
-              imageUrl: fileUrl,
-              timezone: "America/Los_Angeles",
-              expoPushToken,
-              lists: [],
-              userId: user?.id || "",
-              username: user?.username || "",
-              visibility: "private",
-            });
-          if (isSuccessResponse(result)) {
-            eventId = result.eventId;
-          }
-        } finally {
-          setIsImageLoading(false);
-        }
-      } else {
-        const result = await eventFromRawTextAndNotification.mutateAsync({
-          rawText: input,
-          timezone: "America/Los_Angeles",
-          expoPushToken,
-          lists: [],
-          userId: user?.id || "",
-          username: user?.username || "",
-          visibility: "private",
-        });
-        if (isSuccessResponse(result)) {
-          eventId = result.eventId;
-        }
-      }
+      setIsImageLoading(true);
+      const eventId = await createEvent({
+        rawText: input,
+        linkPreview: linkPreview ?? undefined,
+        imageUri: imagePreview ?? undefined,
+        userId: user.id,
+        username: user.username,
+        expoPushToken,
+      });
 
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {
@@ -320,6 +167,7 @@ export default function NewEventModal() {
       console.error("Error creating event:", error);
       toast.error("Failed to create event. Please try again.");
     } finally {
+      setIsImageLoading(false);
       resetAddEventState();
     }
   }, [
@@ -330,9 +178,7 @@ export default function NewEventModal() {
     hasNotificationPermission,
     user,
     setIsImageLoading,
-    eventFromUrlThenCreateThenNotification,
-    eventFromImageThenCreateThenNotification,
-    eventFromRawTextAndNotification,
+    createEvent,
     resetAddEventState,
   ]);
 
@@ -353,177 +199,11 @@ export default function NewEventModal() {
     imageUri?: string;
   }>();
 
-  const loadRecentPhotos = useCallback(async () => {
-    try {
-      const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 15,
-        sortBy: MediaLibrary.SortBy.creationTime,
-        mediaType: [MediaLibrary.MediaType.photo],
-      });
-      const photos = assets.map((asset) => ({
-        id: asset.id,
-        uri: asset.uri,
-      }));
-      setRecentPhotos(photos);
-    } catch (error) {
-      console.error("Error loading recent photos:", error);
-    }
-  }, [setRecentPhotos]);
-
-  useFocusEffect(
-    useCallback(() => {
-      let subscription: MediaLibrary.Subscription | undefined;
-
-      async function checkPermissionsAndLoadPhotos() {
-        const { status, accessPrivileges } =
-          await MediaLibrary.getPermissionsAsync();
-        const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
-        const hasFullAccess = accessPrivileges === "all";
-
-        useAppStore.setState({
-          hasMediaPermission: isGranted,
-          hasFullPhotoAccess: hasFullAccess,
-        });
-
-        if (isGranted) {
-          try {
-            const { assets } = await MediaLibrary.getAssetsAsync({
-              first: 15,
-              sortBy: MediaLibrary.SortBy.creationTime,
-              mediaType: [MediaLibrary.MediaType.photo],
-            });
-
-            const accessibleAssets = await Promise.all(
-              assets.map(async (asset) => {
-                try {
-                  const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
-                  return assetInfo.localUri
-                    ? { id: asset.id, uri: assetInfo.localUri }
-                    : null;
-                } catch (e) {
-                  return null;
-                }
-              }),
-            );
-            const photos = accessibleAssets.filter(
-              (asset): asset is RecentPhoto => asset !== null,
-            );
-            setRecentPhotos(photos);
-
-            subscription = MediaLibrary.addListener(
-              ({ hasIncrementalChanges, insertedAssets }) => {
-                if (
-                  hasIncrementalChanges &&
-                  insertedAssets &&
-                  insertedAssets.length > 0
-                ) {
-                  useAppStore.setState({ shouldRefreshMediaLibrary: true });
-                }
-              },
-            );
-          } catch (error) {
-            console.error("Error loading recent photos:", error);
-          }
-        } else {
-          console.log("No media permission, skipping load");
-        }
-      }
-
-      void checkPermissionsAndLoadPhotos();
-
-      return () => {
-        if (subscription) {
-          subscription.remove();
-        }
-      };
-    }, [setRecentPhotos]),
-  );
-
-  useEffect(() => {
-    if (shouldRefreshMediaLibrary) {
-      console.log("Refreshing media library");
-      clearPreview();
-      setShouldRefreshMediaLibrary(false);
-    }
-  }, [shouldRefreshMediaLibrary, clearPreview, setShouldRefreshMediaLibrary]);
-
-  const [initialized, setInitialized] = useState(false);
-
-  useEffect(() => {
-    setInput("");
-    setImagePreview(null);
-    setLinkPreview(null);
-
-    if (text) {
-      handleTextChange(text);
-      setActiveInput("describe");
-      setIsOptionSelected(true);
-    } else if (imageUri) {
-      if (VALID_IMAGE_REGEX.test(imageUri)) {
-        const [uri, width, height] = imageUri.split("|");
-        if (uri) {
-          if (uri.startsWith("http")) {
-            handleLinkPreview(uri);
-            setActiveInput("url");
-          } else {
-            void handleImagePreview(uri);
-            setActiveInput("upload");
-          }
-        }
-        setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
-        setIsOptionSelected(true);
-      } else {
-        console.warn("Invalid image URI format:", imageUri);
-        setActiveInput("describe");
-        setIsOptionSelected(false);
-      }
-    } else {
-      const mostRecentPhoto = recentPhotos[0];
-      console.log("Initializing with most recent photo:", mostRecentPhoto);
-      if (mostRecentPhoto?.uri) {
-        setActiveInput("upload");
-        setIsOptionSelected(true);
-        void handleImagePreview(mostRecentPhoto.uri);
-      } else {
-        setActiveInput("describe");
-        setIsOptionSelected(false);
-      }
-    }
-
-    setInitialized(true);
-  }, [
+  const { initialized } = useInitializeInput({
     text,
     imageUri,
-    handleImagePreview,
-    handleLinkPreview,
-    handleTextChange,
     recentPhotos,
-    setActiveInput,
-    setImagePreview,
-    setInput,
-    setIsOptionSelected,
-    setLinkPreview,
-  ]);
-
-  useEffect(() => {
-    if (hasMediaPermission && recentPhotos.length === 0) {
-      void loadRecentPhotos();
-    }
-  }, [hasMediaPermission, recentPhotos.length, loadRecentPhotos]);
-
-  useEffect(() => {
-    if (shouldRefreshMediaLibrary) {
-      clearPreview();
-      void loadRecentPhotos();
-      setShouldRefreshMediaLibrary(false);
-    }
-  }, [
-    shouldRefreshMediaLibrary,
-    setShouldRefreshMediaLibrary,
-    clearPreview,
-    setRecentPhotos,
-    loadRecentPhotos,
-  ]);
+  });
 
   const isFromIntent = Boolean(text || imageUri);
 
@@ -601,7 +281,6 @@ export default function NewEventModal() {
             )}
           </View>
 
-          {/* The bottom container. We'll animate marginBottom to always = keyboardHeight + 64 */}
           <Animated.View
             className={cn("px-4")}
             style={{ marginBottom: marginBottomAnim }}
