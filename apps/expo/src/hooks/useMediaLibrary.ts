@@ -3,7 +3,6 @@ import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { useFocusEffect } from "expo-router";
 
-import type { RecentPhoto } from "~/store";
 import { useAppStore } from "~/store";
 
 export function useMediaLibrary() {
@@ -13,6 +12,7 @@ export function useMediaLibrary() {
     setShouldRefreshMediaLibrary,
   } = useAppStore();
 
+  // Reusable function to load the most recent photos
   const loadRecentPhotos = useCallback(async () => {
     try {
       const { assets } = await MediaLibrary.getAssetsAsync({
@@ -34,6 +34,7 @@ export function useMediaLibrary() {
     }
   }, [setRecentPhotos]);
 
+  // Use focus effect to check permissions and add a subscription listener
   useFocusEffect(
     useCallback(() => {
       let subscription: MediaLibrary.Subscription | undefined;
@@ -51,40 +52,12 @@ export function useMediaLibrary() {
 
         if (isGranted) {
           try {
-            const { assets } = await MediaLibrary.getAssetsAsync({
-              first: 15,
-              sortBy: MediaLibrary.SortBy.creationTime,
-              mediaType: [MediaLibrary.MediaType.photo],
+            await loadRecentPhotos();
+
+            // Listen for changes in the photo library
+            subscription = MediaLibrary.addListener(() => {
+              useAppStore.setState({ shouldRefreshMediaLibrary: true });
             });
-
-            const accessibleAssets = await Promise.all(
-              assets.map(async (asset) => {
-                try {
-                  const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
-                  return assetInfo.localUri
-                    ? { id: asset.id, uri: assetInfo.localUri }
-                    : null;
-                } catch (e) {
-                  return null;
-                }
-              }),
-            );
-            const photos = accessibleAssets.filter(
-              (asset): asset is RecentPhoto => asset !== null,
-            );
-            setRecentPhotos(photos);
-
-            subscription = MediaLibrary.addListener(
-              ({ hasIncrementalChanges, insertedAssets }) => {
-                if (
-                  hasIncrementalChanges &&
-                  insertedAssets &&
-                  insertedAssets.length > 0
-                ) {
-                  useAppStore.setState({ shouldRefreshMediaLibrary: true });
-                }
-              },
-            );
           } catch (error) {
             console.error("Error loading recent photos:", error);
           }
@@ -100,9 +73,10 @@ export function useMediaLibrary() {
           subscription.remove();
         }
       };
-    }, [setRecentPhotos]),
+    }, [loadRecentPhotos]),
   );
 
+  // Whenever shouldRefreshMediaLibrary is set, load photos and reset the flag
   useEffect(() => {
     if (shouldRefreshMediaLibrary) {
       void loadRecentPhotos();

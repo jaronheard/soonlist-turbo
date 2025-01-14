@@ -13,6 +13,7 @@ import { PhotoGrid } from "~/components/PhotoGrid";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInitializeInput } from "~/hooks/useInitializeInput";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
+import { useMediaLibrary } from "~/hooks/useMediaLibrary";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 import { cn } from "~/utils/cn";
@@ -24,6 +25,7 @@ export default function NewEventModal() {
   const { expoPushToken, hasNotificationPermission } = useNotification();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
+  useMediaLibrary();
 
   const {
     input,
