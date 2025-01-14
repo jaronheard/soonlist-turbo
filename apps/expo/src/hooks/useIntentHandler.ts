@@ -1,4 +1,5 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
+import { Linking } from "react-native";
 
 import { useAppStore } from "~/store";
 
@@ -75,6 +76,30 @@ export function useIntentHandler() {
     },
     [setIntentParams],
   );
+
+  useEffect(() => {
+    console.log("Setting up URL handling effect");
+
+    const handleInitialURL = async () => {
+      console.log("Handling initial URL");
+      const initialUrl = await Linking.getInitialURL();
+      console.log("Initial URL:", initialUrl);
+      if (initialUrl) {
+        handleIntent(initialUrl);
+      }
+    };
+
+    void handleInitialURL();
+
+    const subscription = Linking.addEventListener("url", ({ url }) => {
+      handleIntent(url);
+    });
+
+    return () => {
+      console.log("Cleaning up URL handling effect");
+      subscription.remove();
+    };
+  }, [handleIntent]);
 
   return { handleIntent };
 }
