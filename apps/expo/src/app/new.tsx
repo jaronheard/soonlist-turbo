@@ -283,7 +283,7 @@ export default function NewEventModal() {
           </View>
 
           <Animated.View
-            className={cn("px-4")}
+            className={cn("absolute bottom-0 left-0 right-0 px-4")}
             style={{ marginBottom: marginBottomAnim }}
           >
             <CaptureEventButton

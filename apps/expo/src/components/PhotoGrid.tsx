@@ -144,11 +144,15 @@ export const PhotoGrid = React.memo(
 
     // Memoize the getItemLayout function
     const getItemLayout = useMemo(
-      () => (_: any, index: number) => ({
-        length: imageSize,
-        offset: imageSize * Math.floor(index / columns),
-        index,
-      }),
+      () =>
+        (
+          _data: ArrayLike<RecentPhoto & { id: string }> | null | undefined,
+          index: number,
+        ) => ({
+          length: imageSize,
+          offset: imageSize * Math.floor(index / columns),
+          index,
+        }),
       [imageSize, columns],
     );
 
@@ -227,7 +231,7 @@ export const PhotoGrid = React.memo(
             initialNumToRender={12}
             removeClippedSubviews={true}
             getItemLayout={getItemLayout}
-            contentContainerStyle={{ paddingBottom: 100, gap: spacing }}
+            contentContainerStyle={{ paddingBottom: 140, gap: spacing }}
             columnWrapperStyle={{ gap: spacing }}
           />
         </View>

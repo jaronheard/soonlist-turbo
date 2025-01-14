@@ -23,26 +23,24 @@ export function CaptureEventButton({
 
   return (
     <View className={containerClassName}>
-      <View className="overflow-hidden rounded-full bg-white/10 p-[1px] shadow-lg">
-        <Pressable
-          onPress={handleCreateEvent}
-          disabled={isDisabled}
+      <Pressable
+        onPress={handleCreateEvent}
+        disabled={isDisabled}
+        className={cn(
+          "w-full flex-row items-center justify-center rounded-full px-3 py-3.5 shadow-lg",
+          isDisabled ? "bg-neutral-3" : "bg-white",
+        )}
+      >
+        <Sparkles size={20} color={isDisabled ? "#627496" : "#5A32FB"} />
+        <Text
           className={cn(
-            "w-full flex-row items-center justify-center rounded-full px-3 py-3.5",
-            isDisabled ? "bg-neutral-3" : "bg-white",
+            "ml-2 text-2xl font-bold",
+            isDisabled ? "text-neutral-2" : "text-[#5A32FB]",
           )}
         >
-          <Sparkles size={16} color={isDisabled ? "#627496" : "#5A32FB"} />
-          <Text
-            className={cn(
-              "ml-2 text-xl font-bold",
-              isDisabled ? "text-neutral-2" : "text-[#5A32FB]",
-            )}
-          >
-            Capture event
-          </Text>
-        </Pressable>
-      </View>
+          Capture event
+        </Text>
+      </Pressable>
     </View>
   );
 }
