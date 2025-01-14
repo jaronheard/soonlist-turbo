@@ -185,8 +185,8 @@ importers:
         specifier: ~4.1.23
         version: 4.1.23(3xjkrhbysagj2zoalfmok67voq)
       posthog-react-native:
-        specifier: ^3.6.1
-        version: 3.6.1(tmzalyntdsnhh4gv4imsrpk4oe)
+        specifier: ^3.6.2
+        version: 3.6.2(tmzalyntdsnhh4gv4imsrpk4oe)
       posthog-react-native-session-replay:
         specifier: ^0.1.9
         version: 0.1.9(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
@@ -199,9 +199,6 @@ importers:
       react-native:
         specifier: ~0.76.5
         version: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)
-      react-native-auto-height-image:
-        specifier: ^3.2.4
-        version: 3.2.4(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       react-native-context-menu-view:
         specifier: ^1.16.0
         version: 1.16.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
@@ -8297,8 +8294,8 @@ packages:
       react: '*'
       react-native: '*'
 
-  posthog-react-native@3.6.1:
-    resolution: {integrity: sha512-IRGfLEranh+8nTvUsyw97XeqhGwi0ine/F6tMGrdT+RmlsRFA9eRYLwupkdCviRL9mMVugBY6J4v1R1MvBw+1w==}
+  posthog-react-native@3.6.2:
+    resolution: {integrity: sha512-ED82NGuYK9844pt8TWJWrw3ALBf8D41cm9Gjd52Q/jop0i/vXlRccwz1qEWT+l7byywcJFSin0Jp2R0+ueW38Q==}
     peerDependencies:
       '@react-native-async-storage/async-storage': '>=1.0.0'
       '@react-navigation/native': '>= 5.0.10'
@@ -8545,12 +8542,6 @@ packages:
 
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
-
-  react-native-auto-height-image@3.2.4:
-    resolution: {integrity: sha512-PTVzLuYY4Q5IDAk0QmnSNK12VnUPlt+ZiEJUlo5JUiHverR5Lg386iHK7D2bVkTNo7SCahIPlWzdSuX5Col3XQ==}
-    peerDependencies:
-      react: ^17.0.0
-      react-native: ^0.63.0
 
   react-native-context-menu-view@1.16.0:
     resolution: {integrity: sha512-zqeOAizM7MVV9o6h/quS0REQikBq3J4BkIRLFygY6RiCjr6rwuzSGkif7JRCHpAQQumSKlLqYl4N2h3AdoIHVg==}
@@ -19032,7 +19023,7 @@ snapshots:
       react: 18.3.1
       react-native: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)
 
-  posthog-react-native@3.6.1(tmzalyntdsnhh4gv4imsrpk4oe):
+  posthog-react-native@3.6.2(tmzalyntdsnhh4gv4imsrpk4oe):
     optionalDependencies:
       '@react-native-async-storage/async-storage': 1.23.1(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))
       '@react-navigation/native': 7.0.14(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
@@ -19221,12 +19212,6 @@ snapshots:
     optional: true
 
   react-is@18.3.1: {}
-
-  react-native-auto-height-image@3.2.4(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
-    dependencies:
-      prop-types: 15.8.1
-      react: 18.3.1
-      react-native: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)
 
   react-native-context-menu-view@1.16.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
     dependencies:
