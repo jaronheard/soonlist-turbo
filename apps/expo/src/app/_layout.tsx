@@ -36,11 +36,6 @@ import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
-export const unstable_settings = {
-  // Ensure any route can link back to `/`
-  initialRouteName: "feed",
-};
-
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const insets = useSafeAreaInsets();
 
