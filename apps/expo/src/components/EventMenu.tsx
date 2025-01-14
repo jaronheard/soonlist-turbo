@@ -165,7 +165,7 @@ export function EventMenu({
       const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(eventData.location)}`;
       void Linking.openURL(url);
     } else {
-      console.log("No location available for directions");
+      console.error("No location available for directions");
     }
   };
 

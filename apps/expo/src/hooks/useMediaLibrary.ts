@@ -61,8 +61,6 @@ export function useMediaLibrary() {
           } catch (error) {
             console.error("Error loading recent photos:", error);
           }
-        } else {
-          console.log("No media permission, skipping load");
         }
       }
 

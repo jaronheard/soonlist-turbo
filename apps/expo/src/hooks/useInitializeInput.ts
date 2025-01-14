@@ -85,7 +85,6 @@ export function useInitializeInput({
       }
     } else {
       const mostRecentPhoto = recentPhotos[0];
-      console.log("Initializing with most recent photo:", mostRecentPhoto);
       if (mostRecentPhoto?.uri) {
         setActiveInput("upload");
         setIsOptionSelected(true);

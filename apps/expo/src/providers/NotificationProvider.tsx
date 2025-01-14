@@ -86,7 +86,6 @@ async function registerForPushNotificationsAsync() {
           projectId,
         })
       ).data;
-      console.log(pushTokenString);
       return pushTokenString;
     } catch (e: unknown) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
