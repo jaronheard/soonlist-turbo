@@ -41,13 +41,27 @@ export function useInitializeInput({
     [setLinkPreview, setInput],
   );
 
+  const handleTextChange = useCallback(
+    (text: string) => {
+      setInput(text);
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const urls = text.match(urlRegex);
+      if (urls && urls.length > 0) {
+        handleLinkPreview(urls[0]);
+      } else {
+        setLinkPreview(null);
+      }
+    },
+    [handleLinkPreview, setInput, setLinkPreview],
+  );
+
   useEffect(() => {
     setInput("");
     setImagePreview(null);
     setLinkPreview(null);
 
     if (text) {
-      setInput(text);
+      handleTextChange(text);
       setActiveInput("describe");
       setIsOptionSelected(true);
     } else if (imageUri) {
@@ -88,6 +102,7 @@ export function useInitializeInput({
     imageUri,
     handleImagePreview,
     handleLinkPreview,
+    handleTextChange,
     recentPhotos,
     setActiveInput,
     setImagePreview,

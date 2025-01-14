@@ -142,7 +142,6 @@ export default function NewEventModal() {
     });
 
     try {
-      setIsImageLoading(true);
       const eventId = await createEvent({
         rawText: input,
         linkPreview: linkPreview ?? undefined,
@@ -167,7 +166,6 @@ export default function NewEventModal() {
       console.error("Error creating event:", error);
       toast.error("Failed to create event. Please try again.");
     } finally {
-      setIsImageLoading(false);
       resetAddEventState();
     }
   }, [
