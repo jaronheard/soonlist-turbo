@@ -268,10 +268,10 @@ export default function NewEventModal() {
                 isImageLoading={isImageLoading}
                 handleMorePhotos={handleMorePhotosPress}
                 previewContainerStyle={
-                  isFromIntent
-                    ? "full"
-                    : activeInput === "describe"
-                      ? "compact"
+                  activeInput === "describe"
+                    ? "compact"
+                    : isFromIntent
+                      ? "full"
                       : "square"
                 }
               />

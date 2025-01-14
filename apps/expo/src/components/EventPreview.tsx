@@ -51,6 +51,7 @@ export function EventPreview({
       className={cn(
         "overflow-hidden rounded-xl bg-white",
         containerClassName,
+        activeInput === "describe" ? "min-h-[180px]" : "",
         containerHeight,
       )}
     >
