@@ -81,30 +81,76 @@ export function useCreateEvent() {
       if (imageUri) {
         try {
           setIsImageLoading(true);
-          const manipulatedImage = await ImageManipulator.manipulateAsync(
-            imageUri,
-            [{ resize: { width: 1284 } }],
-            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
-          );
 
-          const response = await FileSystem.uploadAsync(
-            "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
-            manipulatedImage.uri,
-            {
-              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-              httpMethod: "POST",
-              headers: {
-                "Content-Type": "image/jpeg",
-                Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
+          // Validate image URI
+          if (!imageUri.startsWith("file://")) {
+            throw new Error("Invalid image URI format");
+          }
+
+          // 1. Manipulate image
+          let manipulatedImage;
+          try {
+            manipulatedImage = await ImageManipulator.manipulateAsync(
+              imageUri,
+              [{ resize: { width: 1284 } }],
+              { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+            );
+          } catch (error) {
+            throw new Error(
+              `Failed to manipulate image: ${error instanceof Error ? error.message : "Unknown error"}`,
+            );
+          }
+
+          // Validate manipulated image
+          if (!manipulatedImage.uri) {
+            throw new Error("Image manipulation failed - no URI returned");
+          }
+
+          // 2. Upload image
+          let response;
+          try {
+            response = await FileSystem.uploadAsync(
+              "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
+              manipulatedImage.uri,
+              {
+                uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+                httpMethod: "POST",
+                headers: {
+                  "Content-Type": "image/jpeg",
+                  Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
+                },
               },
-            },
-          );
+            );
+          } catch (error) {
+            throw new Error(
+              `Failed to upload image: ${error instanceof Error ? error.message : "Network error"}`,
+            );
+          }
 
           if (response.status !== 200) {
-            throw new Error(`Upload failed: ${response.status}`);
+            throw new Error(
+              `Upload failed with status ${response.status}: ${response.body}`,
+            );
           }
-          const { fileUrl } = JSON.parse(response.body) as { fileUrl: string };
 
+          // 3. Parse response
+          let fileUrl: string;
+          try {
+            if (!response.body) {
+              throw new Error("Empty response from upload server");
+            }
+            const parsed = JSON.parse(response.body) as { fileUrl?: string };
+            if (!parsed.fileUrl) {
+              throw new Error("No file URL in response");
+            }
+            fileUrl = parsed.fileUrl;
+          } catch (error) {
+            throw new Error(
+              `Failed to parse upload response: ${error instanceof Error ? error.message : "Invalid JSON"}`,
+            );
+          }
+
+          // 4. Create event
           const result = (await eventFromImage.mutateAsync({
             imageUrl: fileUrl,
             userId,
@@ -114,7 +160,15 @@ export function useCreateEvent() {
             timezone: "America/Los_Angeles",
             visibility: "private",
           })) as CreateEventResult;
-          return result.success && result.eventId ? result.eventId : undefined;
+
+          if (!result.success) {
+            throw new Error(result.error ?? "Failed to create event");
+          }
+
+          return result.eventId;
+        } catch (error) {
+          console.error("[useCreateEvent] Image upload failed:", error);
+          throw error;
         } finally {
           setIsImageLoading(false);
         }
@@ -136,7 +190,7 @@ export function useCreateEvent() {
 
       return undefined;
     },
-    [eventFromUrl, eventFromImage, eventFromRaw],
+    [eventFromUrl, setIsImageLoading, eventFromImage, eventFromRaw],
   );
 
   return { createEvent };

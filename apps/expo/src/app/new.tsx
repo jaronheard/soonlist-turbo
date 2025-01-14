@@ -33,7 +33,6 @@ export default function NewEventModal() {
     setInput,
     setImagePreview,
     setLinkPreview,
-    setIsImageLoading,
     resetAddEventState,
     activeInput,
     setIsOptionSelected,
@@ -148,14 +147,12 @@ export default function NewEventModal() {
     setLinkPreview(null);
     setInput("");
     setIsOptionSelected(false);
-    setActiveInput(null);
     resetAddEventState();
   }, [
     setImagePreview,
     setLinkPreview,
     setInput,
     setIsOptionSelected,
-    setActiveInput,
     resetAddEventState,
   ]);
 
@@ -203,7 +200,6 @@ export default function NewEventModal() {
     expoPushToken,
     hasNotificationPermission,
     user,
-    setIsImageLoading,
     createEvent,
     resetAddEventState,
   ]);

@@ -20,55 +20,73 @@ export function useIntentHandler() {
   }, [incomingUrl]);
 
   function handleDeepLink(url: string) {
-    // 1. Fix scheme if necessary
-    // e.g. soonlist.dev:// => soonlist.dev:/// (just like Bluesky does)
-    if (
-      url.startsWith("soonlist.dev://") &&
-      !url.startsWith("soonlist.dev:///")
-    ) {
-      url = url.replace("soonlist.dev://", "soonlist.dev:///");
-    }
+    try {
+      // 1. Fix scheme if necessary
+      if (
+        url.startsWith("soonlist.dev://") &&
+        !url.startsWith("soonlist.dev:///")
+      ) {
+        url = url.replace("soonlist.dev://", "soonlist.dev:///");
+      }
 
-    // 2. Parse the URL
-    const parsedUrl = new URL(url);
-    // e.g. if it's soonlist.dev:///new?text=hello => route is "new"
-    const route = parsedUrl.pathname.replace(/^\/+/, "");
-    const params = parsedUrl.searchParams;
-
-    // 3. Switch on the route
-    switch (route) {
-      case "new": {
-        const textParam = params.get("text");
-        const imageUriParam = params.get("imageUri");
-
-        // If there's text
-        if (textParam) {
-          const decoded = decodeURIComponent(textParam);
-          // Save in store so we can grab it if we want
-          setIntentParams({ text: decoded });
-
-          // Optionally push the route with the param.
-          // This ensures `useLocalSearchParams()` sees "text=hello"
-          router.push(`/new?text=${encodeURIComponent(decoded)}`);
-          return;
-        }
-
-        // If there's an image
-        if (imageUriParam) {
-          const decoded = decodeURIComponent(imageUriParam);
-          setIntentParams({ imageUri: decoded });
-          router.push(`/new?imageUri=${encodeURIComponent(decoded)}`);
-          return;
-        }
-
-        // If no text or image, still navigate to /new
-        router.push("/new");
+      // 2. Parse the URL
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(url);
+      } catch (error) {
+        console.error("[useIntentHandler] Invalid URL:", url, error);
         return;
       }
 
-      default:
-        // You could handle other routes here if needed
-        break;
+      const route = parsedUrl.pathname.replace(/^\/+/, "");
+      const params = parsedUrl.searchParams;
+
+      // 3. Switch on the route
+      switch (route) {
+        case "new": {
+          const textParam = params.get("text");
+          const imageUriParam = params.get("imageUri");
+
+          if (textParam) {
+            try {
+              const decoded = decodeURIComponent(textParam);
+              setIntentParams({ text: decoded });
+              router.push(`/new?text=${encodeURIComponent(decoded)}`);
+              return;
+            } catch (error) {
+              console.error(
+                "[useIntentHandler] Failed to decode text param:",
+                error,
+              );
+              return;
+            }
+          }
+
+          if (imageUriParam) {
+            try {
+              const decoded = decodeURIComponent(imageUriParam);
+              setIntentParams({ imageUri: decoded });
+              router.push(`/new?imageUri=${encodeURIComponent(decoded)}`);
+              return;
+            } catch (error) {
+              console.error(
+                "[useIntentHandler] Failed to decode imageUri param:",
+                error,
+              );
+              return;
+            }
+          }
+
+          router.push("/new");
+          return;
+        }
+
+        default:
+          console.warn("[useIntentHandler] Unhandled route:", route);
+          break;
+      }
+    } catch (error) {
+      console.error("[useIntentHandler] Failed to handle deep link:", error);
     }
   }
 }
