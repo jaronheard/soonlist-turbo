@@ -13,6 +13,7 @@ import { PhotoGrid } from "~/components/PhotoGrid";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInitializeInput } from "~/hooks/useInitializeInput";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
+import { useMediaLibrary } from "~/hooks/useMediaLibrary";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 import { cn } from "~/utils/cn";
@@ -24,6 +25,7 @@ export default function NewEventModal() {
   const { expoPushToken, hasNotificationPermission } = useNotification();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
+  useMediaLibrary();
 
   const {
     input,
@@ -281,7 +283,7 @@ export default function NewEventModal() {
           </View>
 
           <Animated.View
-            className={cn("px-4")}
+            className={cn("absolute bottom-0 left-0 right-0 px-4")}
             style={{ marginBottom: marginBottomAnim }}
           >
             <CaptureEventButton

@@ -62,8 +62,11 @@ export function EventPreview({
             style={{ width: "100%", height: "100%" }}
             contentFit="contain"
             contentPosition="center"
-            transition={100}
-            cachePolicy="disk"
+            transition={200}
+            cachePolicy="memory-disk"
+            placeholder={null}
+            placeholderContentFit="contain"
+            className="bg-muted/10"
           />
           <Pressable
             onPress={clearPreview}
