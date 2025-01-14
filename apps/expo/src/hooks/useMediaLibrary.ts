@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react";
+import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { useFocusEffect } from "expo-router";
 
@@ -23,6 +24,10 @@ export function useMediaLibrary() {
         id: asset.id,
         uri: asset.uri,
       }));
+
+      // Prefetch all photos in parallel
+      await Promise.all(photos.map((photo) => Image.prefetch(photo.uri)));
+
       setRecentPhotos(photos);
     } catch (error) {
       console.error("Error loading recent photos:", error);

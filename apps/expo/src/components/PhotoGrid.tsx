@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ActionSheetIOS,
   Dimensions,
@@ -26,6 +26,96 @@ interface PhotoGridProps {
   containerClassName?: string;
 }
 
+// Memoize the grid item component
+const GridItem = React.memo(
+  ({
+    item,
+    imageSize,
+    spacing,
+    onPhotoSelect,
+    selectedUri,
+    hasMediaPermission,
+    hasFullPhotoAccess,
+    onMorePhotos,
+  }: {
+    item: RecentPhoto & { id: string };
+    imageSize: number;
+    spacing: number;
+    onPhotoSelect: (uri: string) => void;
+    selectedUri: string | null;
+    hasMediaPermission: boolean;
+    hasFullPhotoAccess: boolean;
+    onMorePhotos: () => void;
+  }) => {
+    if (item.id === "plus-button") {
+      return (
+        <Pressable
+          onPress={() => {
+            if (hasMediaPermission && !hasFullPhotoAccess) {
+              ActionSheetIOS.showActionSheetWithOptions(
+                {
+                  options: ["Select More Photos", "Change Settings", "Cancel"],
+                  cancelButtonIndex: 2,
+                },
+                (buttonIndex) => {
+                  if (buttonIndex === 0) {
+                    void MediaLibrary.presentPermissionsPickerAsync();
+                  } else if (buttonIndex === 1) {
+                    void Linking.openSettings();
+                  }
+                },
+              );
+            } else {
+              onMorePhotos();
+            }
+          }}
+          style={{
+            width: imageSize,
+            height: imageSize,
+            marginVertical: spacing / 2,
+            marginHorizontal: spacing / 2,
+          }}
+          className="items-center justify-center bg-interactive-3"
+        >
+          <ImagePlus size={36} color="#5A32FB" />
+        </Pressable>
+      );
+    }
+
+    return (
+      <Pressable
+        onPress={() => onPhotoSelect(item.uri)}
+        className={cn(
+          "aspect-square bg-muted/20",
+          selectedUri === item.uri && "opacity-50",
+        )}
+        style={{
+          width: imageSize,
+          height: imageSize,
+          marginVertical: spacing / 2,
+          marginHorizontal: spacing / 2,
+        }}
+      >
+        <ExpoImage
+          source={{ uri: item.uri }}
+          style={{
+            width: "100%",
+            height: "100%",
+          }}
+          contentFit="cover"
+          contentPosition="center"
+          transition={200}
+          cachePolicy="memory-disk"
+          recyclingKey={item.id}
+          placeholder={null}
+          placeholderContentFit="cover"
+          className="bg-muted/10"
+        />
+      </Pressable>
+    );
+  },
+);
+
 export const PhotoGrid = React.memo(
   ({
     hasMediaPermission,
@@ -47,9 +137,48 @@ export const PhotoGrid = React.memo(
     };
 
     // Only show the plus button if we have media permission
-    const gridData = hasMediaPermission
-      ? [...recentPhotos, { id: "plus-button", uri: "" }]
-      : [];
+    const gridData = useMemo(
+      () =>
+        hasMediaPermission
+          ? [...recentPhotos, { id: "plus-button", uri: "" }]
+          : [],
+      [hasMediaPermission, recentPhotos],
+    );
+
+    // Memoize the getItemLayout function
+    const getItemLayout = useMemo(
+      () => (_: any, index: number) => ({
+        length: imageSize,
+        offset: imageSize * Math.floor(index / columns),
+        index,
+      }),
+      [imageSize, columns],
+    );
+
+    const renderItem = useMemo(
+      () =>
+        ({ item }: { item: RecentPhoto & { id: string } }) => (
+          <GridItem
+            item={item}
+            imageSize={imageSize}
+            spacing={spacing}
+            onPhotoSelect={onPhotoSelect}
+            selectedUri={selectedUri}
+            hasMediaPermission={hasMediaPermission}
+            hasFullPhotoAccess={hasFullPhotoAccess}
+            onMorePhotos={onMorePhotos}
+          />
+        ),
+      [
+        imageSize,
+        spacing,
+        onPhotoSelect,
+        selectedUri,
+        hasMediaPermission,
+        hasFullPhotoAccess,
+        onMorePhotos,
+      ],
+    );
 
     return (
       <View className={cn("flex-1", containerClassName)}>
@@ -92,75 +221,7 @@ export const PhotoGrid = React.memo(
         <View className="flex-1">
           <FlatList
             data={gridData}
-            renderItem={({ item }) => {
-              if (item.id === "plus-button") {
-                return (
-                  <Pressable
-                    onPress={() => {
-                      if (hasMediaPermission && !hasFullPhotoAccess) {
-                        // Show action sheet for partial access
-                        ActionSheetIOS.showActionSheetWithOptions(
-                          {
-                            options: [
-                              "Select More Photos",
-                              "Change Settings",
-                              "Cancel",
-                            ],
-                            cancelButtonIndex: 2,
-                          },
-                          (buttonIndex) => {
-                            if (buttonIndex === 0) {
-                              void MediaLibrary.presentPermissionsPickerAsync();
-                            } else if (buttonIndex === 1) {
-                              void Linking.openSettings();
-                            }
-                          },
-                        );
-                      } else {
-                        onMorePhotos();
-                      }
-                    }}
-                    style={{
-                      width: imageSize,
-                      height: imageSize,
-                      marginVertical: spacing / 2,
-                      marginHorizontal: spacing / 2,
-                    }}
-                    className="items-center justify-center bg-interactive-3"
-                  >
-                    <ImagePlus size={36} color="#5A32FB" />
-                  </Pressable>
-                );
-              }
-
-              return (
-                <Pressable
-                  onPress={() => onPhotoSelect(item.uri)}
-                  className={cn(
-                    "aspect-square bg-muted/20",
-                    selectedUri === item.uri && "opacity-50",
-                  )}
-                  style={{
-                    width: imageSize,
-                    height: imageSize,
-                    marginVertical: spacing / 2,
-                    marginHorizontal: spacing / 2,
-                  }}
-                >
-                  <ExpoImage
-                    source={{ uri: item.uri }}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                    }}
-                    contentFit="cover"
-                    contentPosition="center"
-                    transition={100}
-                    cachePolicy="disk"
-                  />
-                </Pressable>
-              );
-            }}
+            renderItem={renderItem}
             numColumns={4}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
@@ -168,6 +229,12 @@ export const PhotoGrid = React.memo(
             }}
             keyExtractor={(item) => item.id}
             horizontal={false}
+            windowSize={5}
+            maxToRenderPerBatch={16}
+            updateCellsBatchingPeriod={50}
+            initialNumToRender={12}
+            removeClippedSubviews={true}
+            getItemLayout={getItemLayout}
           />
         </View>
       </View>
