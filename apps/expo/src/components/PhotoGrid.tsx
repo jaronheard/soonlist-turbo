@@ -31,7 +31,6 @@ const GridItem = React.memo(
   ({
     item,
     imageSize,
-    spacing,
     onPhotoSelect,
     selectedUri,
     hasMediaPermission,
@@ -40,7 +39,6 @@ const GridItem = React.memo(
   }: {
     item: RecentPhoto & { id: string };
     imageSize: number;
-    spacing: number;
     onPhotoSelect: (uri: string) => void;
     selectedUri: string | null;
     hasMediaPermission: boolean;
@@ -72,8 +70,6 @@ const GridItem = React.memo(
           style={{
             width: imageSize,
             height: imageSize,
-            marginVertical: spacing / 2,
-            marginHorizontal: spacing / 2,
           }}
           className="items-center justify-center bg-interactive-3"
         >
@@ -92,8 +88,6 @@ const GridItem = React.memo(
         style={{
           width: imageSize,
           height: imageSize,
-          marginVertical: spacing / 2,
-          marginHorizontal: spacing / 2,
         }}
       >
         <ExpoImage
@@ -128,9 +122,12 @@ export const PhotoGrid = React.memo(
     containerClassName,
   }: PhotoGridProps) => {
     const windowWidth = Dimensions.get("window").width;
-    const spacing = 1;
+    const spacing = 2;
     const columns = 4;
-    const imageSize = (windowWidth - (columns - 1) * spacing) / columns;
+    const containerPadding = 0;
+    const availableWidth =
+      windowWidth - spacing * (columns - 1) - containerPadding * 2;
+    const imageSize = availableWidth / columns;
 
     const handleManagePress = () => {
       void Linking.openSettings();
@@ -161,7 +158,6 @@ export const PhotoGrid = React.memo(
           <GridItem
             item={item}
             imageSize={imageSize}
-            spacing={spacing}
             onPhotoSelect={onPhotoSelect}
             selectedUri={selectedUri}
             hasMediaPermission={hasMediaPermission}
@@ -171,7 +167,6 @@ export const PhotoGrid = React.memo(
         ),
       [
         imageSize,
-        spacing,
         onPhotoSelect,
         selectedUri,
         hasMediaPermission,
@@ -218,15 +213,12 @@ export const PhotoGrid = React.memo(
           </View>
         )}
 
-        <View className="flex-1">
+        <View className="-mx-4 flex-1">
           <FlatList
             data={gridData}
             renderItem={renderItem}
             numColumns={4}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingBottom: 100,
-            }}
             keyExtractor={(item) => item.id}
             horizontal={false}
             windowSize={5}
@@ -235,6 +227,8 @@ export const PhotoGrid = React.memo(
             initialNumToRender={12}
             removeClippedSubviews={true}
             getItemLayout={getItemLayout}
+            contentContainerStyle={{ paddingBottom: 100, gap: spacing }}
+            columnWrapperStyle={{ gap: spacing }}
           />
         </View>
       </View>
