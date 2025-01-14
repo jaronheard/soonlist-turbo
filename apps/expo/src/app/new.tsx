@@ -43,6 +43,34 @@ export default function NewEventModal() {
     hasFullPhotoAccess,
   } = useAppStore();
 
+  const { text, imageUri } = useLocalSearchParams<{
+    text?: string;
+    imageUri?: string;
+  }>();
+
+  const finalText = text;
+  const finalImageUri = imageUri;
+
+  // 1. Initialize the input
+  const { initialized } = useInitializeInput({
+    text: finalText,
+    imageUri: finalImageUri,
+    recentPhotos,
+  });
+
+  const isFromIntent = Boolean(finalText || finalImageUri);
+
+  console.log("finalText", finalText);
+  console.log("finalImageUri", finalImageUri);
+  console.log("initialized", initialized);
+  console.log("isFromIntent", isFromIntent);
+  console.log("activeInput", activeInput);
+  console.log("input", input);
+  console.log("imagePreview", imagePreview);
+  console.log("linkPreview", linkPreview);
+  console.log("isImageLoading", isImageLoading);
+
+  // Handlers
   const handleImagePreview = useCallback(
     (uri: string) => {
       setImagePreview(uri);
@@ -73,7 +101,7 @@ export default function NewEventModal() {
     [handleLinkPreview, setInput, setLinkPreview],
   );
 
-  const handleMorePhotos = useCallback(async () => {
+  const handleMorePhotosPress = useCallback(async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -115,7 +143,7 @@ export default function NewEventModal() {
     }
   }, [handleImagePreview, setInput]);
 
-  const clearPreview = useCallback(() => {
+  const handleClearPreview = useCallback(() => {
     setImagePreview(null);
     setLinkPreview(null);
     setInput("");
@@ -182,30 +210,17 @@ export default function NewEventModal() {
 
   const handleDescribePress = useCallback(() => {
     if (activeInput === "describe") {
-      clearPreview();
+      handleClearPreview();
       setActiveInput("upload");
       setIsOptionSelected(true);
     } else {
-      clearPreview();
+      handleClearPreview();
       setActiveInput("describe");
       setIsOptionSelected(true);
     }
-  }, [clearPreview, setActiveInput, setIsOptionSelected, activeInput]);
+  }, [handleClearPreview, setActiveInput, setIsOptionSelected, activeInput]);
 
-  const { text, imageUri } = useLocalSearchParams<{
-    text?: string;
-    imageUri?: string;
-  }>();
-
-  const { initialized } = useInitializeInput({
-    text,
-    imageUri,
-    recentPhotos,
-  });
-
-  const isFromIntent = Boolean(text || imageUri);
-
-  const clearText = useCallback(() => {
+  const handleClearText = useCallback(() => {
     setInput("");
   }, [setInput]);
 
@@ -247,11 +262,11 @@ export default function NewEventModal() {
                 linkPreview={linkPreview}
                 input={input}
                 handleTextChange={handleTextChange}
-                clearPreview={clearPreview}
-                clearText={clearText}
+                clearPreview={handleClearPreview}
+                clearText={handleClearText}
                 activeInput={activeInput}
                 isImageLoading={isImageLoading}
-                handleMorePhotos={handleMorePhotos}
+                handleMorePhotos={handleMorePhotosPress}
                 previewContainerStyle={
                   isFromIntent
                     ? "full"
@@ -270,7 +285,7 @@ export default function NewEventModal() {
                   recentPhotos={recentPhotos}
                   onPhotoSelect={(uri) => handleImagePreview(uri)}
                   onCameraPress={() => void handleCameraCapture()}
-                  onMorePhotos={() => void handleMorePhotos()}
+                  onMorePhotos={() => void handleMorePhotosPress()}
                   selectedUri={imagePreview}
                 />
               </View>

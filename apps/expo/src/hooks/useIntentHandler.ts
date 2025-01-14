@@ -1,100 +1,74 @@
-import { useCallback, useEffect } from "react";
-import { Linking } from "react-native";
+// apps/expo/src/hooks/useIntentHandler.ts
+import { useEffect } from "react";
+import { useURL } from "expo-linking";
+import { useRouter } from "expo-router";
 
 import { useAppStore } from "~/store";
 
-const scheme =
-  process.env.EXPO_PUBLIC_APP_ENV === "development"
-    ? "soonlist.dev"
-    : "soonlist";
-
-const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
+let prevUrl = "";
 
 export function useIntentHandler() {
+  // The deep link that triggered the app’s opening
+  const incomingUrl = useURL();
+  const router = useRouter();
   const { setIntentParams } = useAppStore();
 
-  const handleIntent = useCallback(
-    (url: string) => {
-      console.log("[useIntentHandler] Handling intent with URL:", url);
-      console.log("[useIntentHandler] Current scheme:", scheme);
-
-      if (url.startsWith(`${scheme}://`) && !url.startsWith(`${scheme}:///`)) {
-        console.log("[useIntentHandler] Fixing URL format");
-        url = url.replace(`${scheme}://`, `${scheme}:///`);
-      }
-
-      console.log("[useIntentHandler] Processing URL:", url);
-      const parsedUrl = new URL(url);
-      const pathname = parsedUrl.pathname.replace(/^\/+/, ""); // Remove leading slashes
-      const params = parsedUrl.searchParams;
-
-      console.log("[useIntentHandler] Route:", pathname);
-
-      switch (pathname) {
-        case "new": {
-          console.log("[useIntentHandler] Processing 'new' route");
-          const text = params.get("text");
-          const imageUri = params.get("imageUri");
-
-          console.log("[useIntentHandler] Text param:", text);
-          console.log("[useIntentHandler] ImageUri param:", imageUri);
-
-          if (text) {
-            const decodedText = decodeURIComponent(text);
-            console.log(
-              "[useIntentHandler] Setting text intent params:",
-              decodedText,
-            );
-            setIntentParams({ text: decodedText });
-            return { type: "new", text: decodedText };
-          } else if (imageUri && VALID_IMAGE_REGEX.test(imageUri)) {
-            const decodedUri = decodeURIComponent(imageUri);
-            console.log(
-              "[useIntentHandler] Setting image intent params:",
-              decodedUri,
-            );
-            setIntentParams({ imageUri: decodedUri });
-            return { type: "new", imageUri: decodedUri };
-          }
-          console.log("[useIntentHandler] No valid text or image params found");
-          break;
-        }
-        default: {
-          console.warn(`[useIntentHandler] Unknown route: ${pathname}`);
-        }
-      }
-
-      console.log(
-        "[useIntentHandler] Returning null - no matching route handled",
-      );
-      return null;
-    },
-    [setIntentParams],
-  );
-
   useEffect(() => {
-    console.log("Setting up URL handling effect");
+    if (!incomingUrl || incomingUrl === prevUrl) return;
+    prevUrl = incomingUrl;
+    handleDeepLink(incomingUrl);
+  }, [incomingUrl]);
 
-    const handleInitialURL = async () => {
-      console.log("Handling initial URL");
-      const initialUrl = await Linking.getInitialURL();
-      console.log("Initial URL:", initialUrl);
-      if (initialUrl) {
-        handleIntent(initialUrl);
+  function handleDeepLink(url: string) {
+    // 1. Fix scheme if necessary
+    // e.g. soonlist.dev:// => soonlist.dev:/// (just like Bluesky does)
+    if (
+      url.startsWith("soonlist.dev://") &&
+      !url.startsWith("soonlist.dev:///")
+    ) {
+      url = url.replace("soonlist.dev://", "soonlist.dev:///");
+    }
+
+    // 2. Parse the URL
+    const parsedUrl = new URL(url);
+    // e.g. if it's soonlist.dev:///new?text=hello => route is "new"
+    const route = parsedUrl.pathname.replace(/^\/+/, "");
+    const params = parsedUrl.searchParams;
+
+    // 3. Switch on the route
+    switch (route) {
+      case "new": {
+        const textParam = params.get("text");
+        const imageUriParam = params.get("imageUri");
+
+        // If there's text
+        if (textParam) {
+          const decoded = decodeURIComponent(textParam);
+          // Save in store so we can grab it if we want
+          setIntentParams({ text: decoded });
+
+          // Optionally push the route with the param.
+          // This ensures `useLocalSearchParams()` sees "text=hello"
+          router.push(`/new?text=${encodeURIComponent(decoded)}`);
+          return;
+        }
+
+        // If there's an image
+        if (imageUriParam) {
+          const decoded = decodeURIComponent(imageUriParam);
+          setIntentParams({ imageUri: decoded });
+          router.push(`/new?imageUri=${encodeURIComponent(decoded)}`);
+          return;
+        }
+
+        // If no text or image, still navigate to /new
+        router.push("/new");
+        return;
       }
-    };
 
-    void handleInitialURL();
-
-    const subscription = Linking.addEventListener("url", ({ url }) => {
-      handleIntent(url);
-    });
-
-    return () => {
-      console.log("Cleaning up URL handling effect");
-      subscription.remove();
-    };
-  }, [handleIntent]);
-
-  return { handleIntent };
+      default:
+        // You could handle other routes here if needed
+        break;
+    }
+  }
 }

@@ -39,21 +39,22 @@ export function EventPreview({
   previewContainerStyle,
   containerClassName,
 }: EventPreviewProps) {
+  const containerHeight = {
+    full: "flex-1",
+    square: "aspect-square",
+    compact: "h-[180px]",
+    default: "h-[200px]",
+  }[previewContainerStyle];
+
   return (
     <View
       className={cn(
         "overflow-hidden rounded-xl bg-white",
         containerClassName,
-        previewContainerStyle === "full"
-          ? "flex-1"
-          : previewContainerStyle === "square"
-            ? "aspect-square"
-            : previewContainerStyle === "compact"
-              ? "h-[180px]"
-              : "h-[200px]",
+        containerHeight,
       )}
     >
-      {imagePreview ? (
+      {imagePreview && (
         <View className="relative h-full w-full">
           <ExpoImage
             source={{ uri: imagePreview }}
@@ -75,7 +76,9 @@ export function EventPreview({
             </View>
           )}
         </View>
-      ) : linkPreview ? (
+      )}
+
+      {!imagePreview && linkPreview && (
         <View className="relative h-full w-full bg-neutral-200">
           <View className="h-full w-full items-center justify-center">
             <LinkIcon size={24} color="black" />
@@ -94,7 +97,9 @@ export function EventPreview({
             <X size={16} color="black" />
           </Pressable>
         </View>
-      ) : activeInput === "describe" ? (
+      )}
+
+      {!imagePreview && !linkPreview && activeInput === "describe" && (
         <View className="relative h-full border border-neutral-300 bg-white px-3 py-2">
           <TextInput
             placeholder={
@@ -121,7 +126,9 @@ export function EventPreview({
             </Pressable>
           )}
         </View>
-      ) : (
+      )}
+
+      {!imagePreview && !linkPreview && activeInput !== "describe" && (
         <Pressable
           onPress={() => void handleMorePhotos()}
           className="h-full w-full items-center justify-center bg-interactive-3"
