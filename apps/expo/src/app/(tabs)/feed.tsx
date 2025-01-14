@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutationState } from "@tanstack/react-query";
@@ -10,7 +10,6 @@ import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
-import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { api } from "~/utils/api";
 
 function GoButton({
@@ -40,7 +39,6 @@ function GoButton({
 
 function MyFeed() {
   const { user } = useUser();
-  const { handleIntent } = useIntentHandler();
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -78,30 +76,6 @@ function MyFeed() {
   });
 
   const isAddingEvent = pendingAIMutations.length > 0;
-
-  useEffect(() => {
-    console.log("Setting up URL handling effect");
-
-    const handleInitialURL = async () => {
-      console.log("Handling initial URL");
-      const initialUrl = await Linking.getInitialURL();
-      console.log("Initial URL:", initialUrl);
-      if (initialUrl) {
-        handleIntent(initialUrl);
-      }
-    };
-
-    void handleInitialURL();
-
-    const subscription = Linking.addEventListener("url", ({ url }) => {
-      handleIntent(url);
-    });
-
-    return () => {
-      console.log("Cleaning up URL handling effect");
-      subscription.remove();
-    };
-  }, [handleIntent]);
 
   return (
     <View className="flex-1 bg-white">
