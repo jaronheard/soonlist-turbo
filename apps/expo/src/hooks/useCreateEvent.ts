@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
+import * as MediaLibrary from "expo-media-library";
 
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
@@ -82,8 +83,24 @@ export function useCreateEvent() {
         try {
           setIsImageLoading(true);
 
+          // Convert photo library URI to file URI if needed
+          let fileUri = imageUri;
+          if (imageUri.startsWith("ph://")) {
+            const assetId = imageUri.replace("ph://", "").split("/")[0];
+            if (!assetId) {
+              throw new Error("Invalid photo library asset ID");
+            }
+            const asset = await MediaLibrary.getAssetInfoAsync(assetId);
+            if (!asset.localUri) {
+              throw new Error(
+                "Could not get local URI for photo library asset",
+              );
+            }
+            fileUri = asset.localUri;
+          }
+
           // Validate image URI
-          if (!imageUri.startsWith("file://")) {
+          if (!fileUri.startsWith("file://")) {
             throw new Error("Invalid image URI format");
           }
 
@@ -91,7 +108,7 @@ export function useCreateEvent() {
           let manipulatedImage;
           try {
             manipulatedImage = await ImageManipulator.manipulateAsync(
-              imageUri,
+              fileUri,
               [{ resize: { width: 1284 } }],
               { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
             );
