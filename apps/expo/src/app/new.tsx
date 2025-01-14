@@ -59,16 +59,6 @@ export default function NewEventModal() {
 
   const isFromIntent = Boolean(finalText || finalImageUri);
 
-  console.log("finalText", finalText);
-  console.log("finalImageUri", finalImageUri);
-  console.log("initialized", initialized);
-  console.log("isFromIntent", isFromIntent);
-  console.log("activeInput", activeInput);
-  console.log("input", input);
-  console.log("imagePreview", imagePreview);
-  console.log("linkPreview", linkPreview);
-  console.log("isImageLoading", isImageLoading);
-
   // Handlers
   const handleImagePreview = useCallback(
     (uri: string) => {
