@@ -377,6 +377,8 @@ export function EventMenu({
           borderRadius: 14,
           margin: 8,
         }}
+        side="bottom"
+        align="center"
       >
         {getMenuItems().map((item, index) => (
           <DropdownMenuItem
