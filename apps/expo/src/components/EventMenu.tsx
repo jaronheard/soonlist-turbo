@@ -38,6 +38,7 @@ import {
 import {
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuItemIcon,
   DropdownMenuItemTitle,
   DropdownMenuRoot,
   DropdownMenuTrigger,
@@ -71,7 +72,7 @@ interface MenuItem {
     | "square.and.pencil"
     | "trash"
     | "plus.circle"
-    | "minus.circle"; // Valid SF Symbols
+    | "minus.circle"; // Valid SF Symbols for iOS
   destructive?: boolean;
 }
 
@@ -281,6 +282,7 @@ export function EventMenu({
       case "Share":
         void handleShare();
         break;
+        w;
       case "Directions":
         handleDirections();
         break;
@@ -337,7 +339,7 @@ export function EventMenu({
         >
           {getMenuItems().map((item, index) => (
             <ContextMenuItem
-              key={`${item.title}_${index}`}
+              key={`context_menu_${item.title}_${index}`}
               textValue={item.title}
               destructive={item.destructive}
               onSelect={() => handleMenuSelect(item.title)}
@@ -382,25 +384,25 @@ export function EventMenu({
       >
         {getMenuItems().map((item, index) => (
           <DropdownMenuItem
-            key={`${item.title}_${index}`}
+            key={`dropdown_menu_${item.title}_${index}`}
             textValue={item.title}
             destructive={item.destructive}
             onSelect={() => handleMenuSelect(item.title)}
           >
-            <View className="flex-row items-center justify-between px-4 py-3">
-              <DropdownMenuItemTitle
-                style={{
-                  fontSize: 16,
-                  color: item.destructive ? "#FF3B30" : "#000",
-                }}
-              >
-                {item.title}
-              </DropdownMenuItemTitle>
+            <DropdownMenuItemTitle
+              style={{
+                fontSize: 16,
+                color: item.destructive ? "#FF3B30" : "#000",
+              }}
+            >
+              {item.title}
+            </DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: item.systemIcon }}>
               <item.lucideIcon
                 size={20}
                 color={item.destructive ? "#FF3B30" : "#000"}
               />
-            </View>
+            </DropdownMenuItemIcon>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
