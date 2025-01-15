@@ -282,7 +282,6 @@ export function EventMenu({
       case "Share":
         void handleShare();
         break;
-        w;
       case "Directions":
         handleDirections();
         break;
