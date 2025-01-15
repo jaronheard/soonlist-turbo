@@ -60,7 +60,7 @@ const SignInWithOAuth = () => {
           await setActiveSignIn({ session: result.createdSessionId });
           const email = Clerk.session?.user.emailAddresses[0]?.emailAddress;
           const userId = Clerk.session?.user.id;
-          const intercomLogin = await Intercom.loginUserWithUserAttributes({
+          const _ = await Intercom.loginUserWithUserAttributes({
             email,
             userId,
           });
