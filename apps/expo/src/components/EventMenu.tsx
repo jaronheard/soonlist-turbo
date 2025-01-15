@@ -4,17 +4,9 @@ import {
   Dimensions,
   Linking,
   Share,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import ContextMenu from "react-native-context-menu-view";
-import {
-  Menu,
-  MenuOption,
-  MenuOptions,
-  MenuTrigger,
-} from "react-native-popup-menu";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import {
@@ -35,9 +27,24 @@ import { toast } from "sonner-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import {
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuItemIcon,
+  ContextMenuItemTitle,
+  ContextMenuRoot,
+  ContextMenuTrigger,
+} from "~/components/ui/context-menu-primitives";
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuItemIcon,
+  DropdownMenuItemTitle,
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu-primitives";
 import { useCalendar } from "~/hooks/useCalendar";
 import { api } from "~/utils/api";
-import { cn } from "~/utils/cn";
 import Config from "~/utils/config";
 
 const screenWidth = Dimensions.get("window").width;
@@ -55,7 +62,17 @@ interface EventMenuProps {
 interface MenuItem {
   title: string;
   lucideIcon: LucideIcon;
-  systemIcon: string;
+  systemIcon:
+    | "square.and.arrow.up"
+    | "qrcode"
+    | "map"
+    | "calendar.badge.plus"
+    | "eye.slash"
+    | "globe"
+    | "square.and.pencil"
+    | "trash"
+    | "plus.circle"
+    | "minus.circle"; // Valid SF Symbols for iOS
   destructive?: boolean;
 }
 
@@ -106,7 +123,11 @@ export function EventMenu({
         lucideIcon: QrCode,
         systemIcon: "qrcode",
       },
-      { title: "Directions", lucideIcon: Map, systemIcon: "map" },
+      {
+        title: "Directions",
+        lucideIcon: Map,
+        systemIcon: "map",
+      },
       {
         title: "Add to calendar",
         lucideIcon: CalendarPlus,
@@ -162,7 +183,9 @@ export function EventMenu({
   const handleDirections = () => {
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     if (eventData.location) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(eventData.location)}`;
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+        eventData.location,
+      )}`;
       void Linking.openURL(url);
     } else {
       console.error("No location available for directions");
@@ -290,84 +313,98 @@ export function EventMenu({
     }
   };
 
+  // RENDER: if context menu
   if (menuType === "context") {
     return (
-      <ContextMenu
-        actions={getMenuItems().map((item) => ({
-          title: item.title,
-          systemIcon: item.systemIcon,
-          destructive: item.destructive,
-        }))}
-        onPress={(e) => {
-          const menuItems = getMenuItems();
-          const selectedItem = menuItems[e.nativeEvent.index];
-          if (selectedItem) {
-            handleMenuSelect(selectedItem.title);
-          }
-        }}
-      >
-        {children}
-      </ContextMenu>
-    );
-  } else {
-    return (
-      <Menu>
-        <MenuTrigger
-          customStyles={{
-            TriggerTouchableComponent: TouchableOpacity,
-            triggerTouchable: {
-              activeOpacity: 0.6,
-            },
-          }}
-        >
-          <View className="rounded-full p-1">
-            <MoreVertical size={20} color="#FFF" />
-          </View>
-        </MenuTrigger>
-        <MenuOptions
-          customStyles={{
-            optionsContainer: {
-              overflow: "hidden",
-              marginTop: 8,
-              marginHorizontal: 8,
-              borderRadius: 14,
-              minWidth: menuMinWidth,
-              borderWidth: 1,
-              borderColor: "#C7C7C7",
-            },
+      <ContextMenuRoot>
+        <ContextMenuTrigger asChild>
+          {children ?? (
+            <TouchableOpacity activeOpacity={0.6}>
+              <View className="rounded-full p-1">
+                <MoreVertical size={20} color="#FFF" />
+              </View>
+            </TouchableOpacity>
+          )}
+        </ContextMenuTrigger>
+
+        <ContextMenuContent
+          style={{
+            minWidth: menuMinWidth,
+            borderWidth: 1,
+            borderColor: "#C7C7C7",
+            borderRadius: 14,
+            margin: 8,
           }}
         >
           {getMenuItems().map((item, index) => (
-            <MenuOption
-              key={index}
+            <ContextMenuItem
+              key={`context_menu_${item.title}_${index}`}
+              textValue={item.title}
+              destructive={item.destructive}
               onSelect={() => handleMenuSelect(item.title)}
-              customStyles={{
-                optionWrapper: {
-                  padding: 0,
-                  borderBottomWidth:
-                    index < getMenuItems().length - 1 ? 0.5 : 0,
-                  borderBottomColor: "#C7C7C7",
-                },
-              }}
             >
-              <View className="flex-row items-center justify-between px-4 py-3">
-                <Text
-                  className={cn("font-base text-xl", {
-                    "text-[#FF3B30]": item.destructive,
-                    "text-black": !item.destructive,
-                  })}
-                >
-                  {item.title}
-                </Text>
+              <ContextMenuItemTitle>{item.title}</ContextMenuItemTitle>
+              <ContextMenuItemIcon ios={{ name: item.systemIcon }}>
                 <item.lucideIcon
                   size={20}
                   color={item.destructive ? "#FF3B30" : "#000000"}
                 />
-              </View>
-            </MenuOption>
+              </ContextMenuItemIcon>
+            </ContextMenuItem>
           ))}
-        </MenuOptions>
-      </Menu>
+        </ContextMenuContent>
+      </ContextMenuRoot>
     );
   }
+
+  // RENDER: if popup menu
+  return (
+    <DropdownMenuRoot>
+      <DropdownMenuTrigger asChild>
+        {children ?? (
+          <TouchableOpacity activeOpacity={0.6}>
+            <View className="rounded-full p-1">
+              <MoreVertical size={20} color="#FFF" />
+            </View>
+          </TouchableOpacity>
+        )}
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent
+        style={{
+          minWidth: menuMinWidth,
+          borderWidth: 1,
+          borderColor: "#C7C7C7",
+          borderRadius: 14,
+          margin: 8,
+        }}
+        side="bottom"
+        align="center"
+      >
+        {getMenuItems().map((item, index) => (
+          <DropdownMenuItem
+            key={`dropdown_menu_${item.title}_${index}`}
+            textValue={item.title}
+            destructive={item.destructive}
+            onSelect={() => handleMenuSelect(item.title)}
+          >
+            <DropdownMenuItemTitle
+              style={{
+                fontSize: 16,
+                color: item.destructive ? "#FF3B30" : "#000",
+              }}
+            >
+              {item.title}
+            </DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: item.systemIcon }}>
+              <item.lucideIcon
+                size={20}
+                color={item.destructive ? "#FF3B30" : "#000"}
+              />
+            </DropdownMenuItemIcon>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenuRoot>
+  );
 }
