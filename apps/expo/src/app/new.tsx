@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
-import { Animated, Linking, SafeAreaView, View } from "react-native";
+import { Animated, Linking, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
