@@ -243,7 +243,7 @@ export default function NewEventModal() {
       ) : (
         <View className="flex-1 bg-interactive-1">
           <View className="flex-1">
-            <View className="px-4 pt-2">
+            <View className="flex-1 px-4 pt-2">
               <EventPreview
                 containerClassName="rounded-xl overflow-hidden"
                 imagePreview={imagePreview}
@@ -278,7 +278,7 @@ export default function NewEventModal() {
                 />
               </View>
             ) : (
-              <View className="flex-1" />
+              <View className="" />
             )}
           </View>
 

@@ -20,12 +20,8 @@ const saveAuthData = async (authData: {
           ? "group.com.soonlist.dev"
           : "group.com.soonlist",
     });
-    console.log("Auth data saved successfully");
   } catch (error) {
-    console.error(
-      "Error saving auth data:",
-      error instanceof Error ? error.message : String(error),
-    );
+    console.error(error instanceof Error ? error.message : String(error));
   }
 };
 
@@ -37,7 +33,6 @@ export const deleteAuthData = async () => {
           ? "group.com.soonlist.dev"
           : "group.com.soonlist",
     });
-    console.log("Auth data deleted successfully");
   } catch (error: unknown) {
     console.error(
       "Error deleting auth data:",

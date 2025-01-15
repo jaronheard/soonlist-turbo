@@ -54,7 +54,6 @@ export default function SignInScreen() {
         });
         await setActive({ session: completeSignIn.createdSessionId });
       } else {
-        console.log("Sign in status:", completeSignIn.status);
         setGeneralError("Additional verification required");
       }
     } catch (err: unknown) {
@@ -71,7 +70,7 @@ export default function SignInScreen() {
         };
         if (clerkError.errors?.[0]) {
           const errorDetails = clerkError.errors[0];
-          console.log("Clerk error details:", errorDetails);
+          console.error("Clerk error details:", errorDetails);
 
           switch (errorDetails.code) {
             case "form_identifier_not_found":

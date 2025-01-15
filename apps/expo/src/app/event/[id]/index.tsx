@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
-  Animated,
   Dimensions,
   Pressable,
   RefreshControl,
@@ -8,7 +7,6 @@ import {
   Text,
   View,
 } from "react-native";
-import AutoHeightImage from "react-native-auto-height-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
@@ -33,10 +31,7 @@ export default function Page() {
   const { user: currentUser } = useUser();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  const pulseAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [imageHeight, setImageHeight] = useState(0);
 
   const username = currentUser?.username || "";
   const eventQuery = api.event.get.useQuery({ eventId: id });
@@ -61,33 +56,6 @@ export default function Page() {
     setRefreshing(true);
     void eventQuery.refetch().then(() => setRefreshing(false));
   }, [eventQuery]);
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 0,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
-  }, [pulseAnim]);
-
-  useEffect(() => {
-    if (imageLoaded) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [fadeAnim, imageLoaded]);
 
   const HeaderRight = useCallback(() => {
     if (!eventQuery.data) return null;
@@ -261,32 +229,23 @@ export default function Page() {
           </View>
           {eventData.images?.[3] && (
             <View className="mb-4">
-              {!imageLoaded && (
-                <Animated.View
-                  style={{
-                    width: width - 32,
-                    height: 400,
-                    backgroundColor: "#DCE0E8",
-                    opacity: pulseAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.5, 1],
-                    }),
-                  }}
-                />
-              )}
-              <Animated.View
-                style={{
-                  opacity: fadeAnim,
+              <Image
+                source={{
+                  uri: `${eventData.images[3]}?max-w=1284&fit=cover&f=webp&q=80`,
                 }}
-              >
-                <AutoHeightImage
-                  source={{
-                    uri: `${eventData.images[3]}?max-w=1284&fit=cover&f=webp&q=80`,
-                  }}
-                  width={width - 32}
-                  onLoad={() => setImageLoaded(true)}
-                />
-              </Animated.View>
+                style={{ width: width - 32, height: imageHeight || width - 32 }}
+                contentFit="contain"
+                contentPosition="center"
+                transition={200}
+                cachePolicy="memory-disk"
+                className="bg-muted/10"
+                onLoad={(e) => {
+                  const { width: naturalWidth, height: naturalHeight } =
+                    e.source;
+                  const aspectRatio = naturalHeight / naturalWidth;
+                  setImageHeight((width - 32) * aspectRatio);
+                }}
+              />
             </View>
           )}
         </View>

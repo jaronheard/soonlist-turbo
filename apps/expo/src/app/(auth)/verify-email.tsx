@@ -52,7 +52,7 @@ const VerifyEmail = () => {
           username: completeSignUp.username,
         });
       } else {
-        console.log(JSON.stringify(completeSignUp, null, 2));
+        console.error(JSON.stringify(completeSignUp, null, 2));
         setGeneralError("Verification failed. Please try again.");
       }
     } catch (err: unknown) {

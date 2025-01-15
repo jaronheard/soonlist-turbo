@@ -39,20 +39,18 @@ export function EventPreview({
   previewContainerStyle,
   containerClassName,
 }: EventPreviewProps) {
-  const containerHeight = {
-    full: "flex-1",
-    square: "aspect-square",
-    compact: "h-[180px]",
-    default: "h-[200px]",
-  }[previewContainerStyle];
-
   return (
     <View
       className={cn(
-        "overflow-hidden rounded-xl bg-white",
+        "overflow-hidden rounded-xl",
         containerClassName,
-        activeInput === "describe" ? "min-h-[180px]" : "",
-        containerHeight,
+        activeInput === "describe"
+          ? "min-h-[180px] bg-white"
+          : "bg-interactive-2",
+        previewContainerStyle === "full" && "aspect-[3/4]",
+        previewContainerStyle === "square" && "aspect-square",
+        previewContainerStyle === "compact" && "h-[180px]",
+        previewContainerStyle === "default" && "h-[200px]",
       )}
     >
       {imagePreview && (

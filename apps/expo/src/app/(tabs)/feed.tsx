@@ -28,7 +28,7 @@ function GoButton({
   return (
     <Pressable
       onPress={() =>
-        location ? openGoogleMaps(location) : console.log("No location")
+        location ? openGoogleMaps(location) : console.error("No location")
       }
       className="flex-row items-center rounded-full bg-interactive-2 p-1.5 shadow-sm"
     >

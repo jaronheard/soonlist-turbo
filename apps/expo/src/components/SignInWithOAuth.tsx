@@ -69,7 +69,6 @@ const SignInWithOAuth = () => {
               email,
             });
           }
-          console.log(intercomLogin, "intercomLogin");
         } else if (result.signUp?.status === "missing_requirements") {
           setPendingSignUp(result.signUp);
           setShowUsernameInput(true);
