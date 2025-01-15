@@ -29,7 +29,9 @@ const tiers = [
       "Early access to iOS app",
       "Shape product development",
       "Unique profile emoji",
-      "Locked-in price",
+      "Locked-in price forever",
+      "Priority access to free codes for friends",
+      "$20 referral bonus for each new member",
     ],
     mostPopular: true,
     free: false,
@@ -101,7 +103,7 @@ export function FoundingMemberPricing({
         </h1>
         <div className="mt-8 rounded-xl bg-accent-orange p-6 text-center">
           <h2 className="font-heading text-2xl font-bold text-interactive-1">
-            Limited availability
+            Limited availability - Ends January 21st!
           </h2>
           <p className="mt-2 text-4xl font-bold text-neutral-1">
             Only 💯&nbsp;Founding Member spots&nbsp;🎈
@@ -178,6 +180,11 @@ export function FoundingMemberPricing({
                   (Just {tier.priceMonthly} /month)
                 </span>
               </p>
+              <p className="mt-0 flex items-center gap-x-3">
+                <span className="font-mono text-lg font-semibold italic leading-6 text-neutral-2">
+                  + Earn $20 for each friend you refer!
+                </span>
+              </p>
               {tier.mostPopular && (
                 <>
                   <div className="p-2"></div>
@@ -204,6 +211,9 @@ export function FoundingMemberPricing({
                 ))}
               </ul>
             </div>
+            <p className="mt-4 animate-pulse text-lg font-semibold text-interactive-1">
+              {remainingSpots} spots left • Offer ends January 21st
+            </p>
             <div className="mt-8">
               {tier.soon && (
                 <Button aria-describedby={tier.id} className="w-full" disabled>
