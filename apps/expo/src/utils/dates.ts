@@ -356,3 +356,69 @@ export function isOver(endDateInfo: DateInfo): boolean {
 
   return now > endDate;
 }
+
+/**
+ * Takes a date (YYYY-MM-DD), optional start/end times (HH:MM), and an event timezone.
+ * Returns a user-facing { date, time } string pair in local time.
+ */
+export function formatEventDateRange(
+  date: string,
+  startTime: string | undefined,
+  endTime: string | undefined,
+  eventTimezone: string,
+): { date: string; time: string } {
+  if (!date) return { date: "", time: "" };
+
+  // Always use the user's local timezone
+  const localTimezone = getUserTimeZone();
+  const startDateInfo = getDateTimeInfo(date, startTime || "");
+  if (!startDateInfo) return { date: "", time: "" };
+
+  // Convert start date from eventTimezone to local time if eventTimezone is valid
+  if (eventTimezone && eventTimezone !== "unknown" && startTime) {
+    try {
+      const zonedDateTime = Temporal.ZonedDateTime.from(
+        `${date}T${startTime || "00:00:00"}[${eventTimezone}]`,
+      );
+      const localDateTime = zonedDateTime.withTimeZone(localTimezone);
+      startDateInfo.hour = localDateTime.hour;
+      startDateInfo.minute = localDateTime.minute;
+    } catch (error) {
+      console.error("Error converting start time:", error);
+    }
+  }
+
+  const formattedDate = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${startDateInfo.monthName} ${startDateInfo.day}`;
+  const formattedStartTime = startTime ? timeFormatDateInfo(startDateInfo) : "";
+
+  // Handle end date/time if provided
+  let formattedEndTime = "";
+  if (endTime) {
+    const endDateInfo = getDateTimeInfo(date, endTime);
+    if (
+      endDateInfo &&
+      eventTimezone &&
+      eventTimezone !== "unknown" &&
+      endTime
+    ) {
+      try {
+        const zonedDateTime = Temporal.ZonedDateTime.from(
+          `${date}T${endTime}[${eventTimezone}]`,
+        );
+        const localDateTime = zonedDateTime.withTimeZone(localTimezone);
+        endDateInfo.hour = localDateTime.hour;
+        endDateInfo.minute = localDateTime.minute;
+      } catch (error) {
+        console.error("Error converting end time:", error);
+      }
+    }
+    formattedEndTime = endDateInfo ? timeFormatDateInfo(endDateInfo) : "";
+  }
+
+  const timeRange =
+    startTime && endTime
+      ? `${formattedStartTime} - ${formattedEndTime}`
+      : formattedStartTime;
+
+  return { date: formattedDate, time: timeRange.trim() };
+}

@@ -13,7 +13,6 @@ import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { Temporal } from "@js-temporal/polyfill";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
   Copy,
@@ -31,10 +30,10 @@ import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import {
+  formatEventDateRange,
   formatRelativeTime,
   getDateTimeInfo,
   isOver,
-  timeFormatDateInfo,
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventListItemSkeleton } from "./EventListItemSkeleton";
@@ -52,59 +51,6 @@ interface ActionButtonProps {
 
 interface PromoCardProps {
   type: "addEvents";
-}
-
-function formatDate(
-  date: string,
-  startTime: string | undefined,
-  endTime: string | undefined,
-  eventTimezone: string,
-) {
-  // Convert from event timezone to local time
-  const localTimezone = Temporal.Now.timeZoneId();
-  const startDateInfo = getDateTimeInfo(date, startTime || "");
-  if (!startDateInfo) return { date: "", time: "" };
-
-  // If we have a valid event timezone, convert the time
-  if (eventTimezone && eventTimezone !== "unknown") {
-    try {
-      const zonedDateTime = Temporal.ZonedDateTime.from(
-        `${date}T${startTime || "00:00:00"}[${eventTimezone}]`,
-      );
-      const localDateTime = zonedDateTime.withTimeZone(localTimezone);
-      startDateInfo.hour = localDateTime.hour;
-      startDateInfo.minute = localDateTime.minute;
-    } catch (error) {
-      console.error("Error converting timezone:", error);
-    }
-  }
-
-  const formattedDate = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${startDateInfo.monthName} ${startDateInfo.day}`;
-  const formattedStartTime = startTime ? timeFormatDateInfo(startDateInfo) : "";
-
-  let formattedEndTime = "";
-  if (endTime) {
-    const endDateInfo = getDateTimeInfo(date, endTime);
-    if (endDateInfo && eventTimezone && eventTimezone !== "unknown") {
-      try {
-        const zonedDateTime = Temporal.ZonedDateTime.from(
-          `${date}T${endTime}[${eventTimezone}]`,
-        );
-        const localDateTime = zonedDateTime.withTimeZone(localTimezone);
-        endDateInfo.hour = localDateTime.hour;
-        endDateInfo.minute = localDateTime.minute;
-      } catch (error) {
-        console.error("Error converting timezone:", error);
-      }
-    }
-    formattedEndTime = endDateInfo ? timeFormatDateInfo(endDateInfo) : "";
-  }
-
-  const timeRange =
-    startTime && endTime
-      ? `${formattedStartTime} - ${formattedEndTime}`
-      : formattedStartTime;
-  return { date: formattedDate, time: timeRange.trim() };
 }
 
 export function UserEventListItem(props: {
@@ -128,10 +74,11 @@ export function UserEventListItem(props: {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const e = event.event as AddToCalendarButtonPropsRestricted;
 
-  const { date, time } = useMemo(
-    () =>
-      formatDate(e.startDate || "", e.startTime, e.endTime, e.timeZone || ""),
-    [e.startDate, e.startTime, e.endTime, e.timeZone],
+  const dateString = formatEventDateRange(
+    e.startDate || "",
+    e.startTime,
+    e.endTime,
+    e.timeZone || "",
   );
 
   const startDateInfo = useMemo(
@@ -224,7 +171,7 @@ export function UserEventListItem(props: {
           <View className="mr-4 flex-1">
             <View className="mb-2">
               <Text className="text-base font-medium text-neutral-2">
-                {date} • {time}
+                {dateString.date} • {dateString.time}
               </Text>
             </View>
             <Text
