@@ -162,23 +162,6 @@ export function getDateInfo(
 }
 
 /**
- * Parse a date in the given event timezone (if provided) as if it were UTC midnight,
- * then convert to the user's local time. Returns a DateInfo in the user's local time.
- *
- * Note: The name is potentially misleading if you truly need "UTC"; but this ensures
- * consistent local display while accepting a date that might be intended for UTC.
- */
-export function getDateInfoUTC(
-  dateString: string,
-  eventTimezone?: string,
-): DateInfo | null {
-  // If you really want to treat the input as "UTC midnight," parse with "UTC" first.
-  const timezoneForParsing =
-    eventTimezone && eventTimezone !== "unknown" ? eventTimezone : "UTC";
-  return getDateTimeInfo(dateString, "00:00", timezoneForParsing);
-}
-
-/**
  * Check if an event that starts on `startDateInfo` and ends on `endDateInfo`
  * ends the next day (by local time) before 6am.
  */
