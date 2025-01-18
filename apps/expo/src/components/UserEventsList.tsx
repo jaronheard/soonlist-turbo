@@ -30,10 +30,10 @@ import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import {
+  formatEventDateRange,
   formatRelativeTime,
   getDateTimeInfo,
   isOver,
-  timeFormatDateInfo,
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventListItemSkeleton } from "./EventListItemSkeleton";
@@ -51,30 +51,6 @@ interface ActionButtonProps {
 
 interface PromoCardProps {
   type: "addEvents";
-}
-
-function formatDate(
-  date: string,
-  startTime: string | undefined,
-  endTime: string | undefined,
-  timeZone: string,
-) {
-  const startDateInfo = getDateTimeInfo(date, startTime || "", timeZone);
-  if (!startDateInfo) return { date: "", time: "" };
-
-  const formattedDate = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${startDateInfo.monthName} ${startDateInfo.day}`;
-  const formattedStartTime = startTime ? timeFormatDateInfo(startDateInfo) : "";
-  const formattedEndTime = endTime
-    ? timeFormatDateInfo(
-        getDateTimeInfo(date, endTime, timeZone) || startDateInfo,
-      )
-    : "";
-
-  const timeRange =
-    startTime && endTime
-      ? `${formattedStartTime} - ${formattedEndTime}`
-      : formattedStartTime;
-  return { date: formattedDate, time: timeRange.trim() };
 }
 
 export function UserEventListItem(props: {
@@ -98,16 +74,16 @@ export function UserEventListItem(props: {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const e = event.event as AddToCalendarButtonPropsRestricted;
 
-  const { date, time } = useMemo(
-    () =>
-      formatDate(e.startDate || "", e.startTime, e.endTime, e.timeZone || ""),
-    [e.startDate, e.startTime, e.endTime, e.timeZone],
+  const dateString = formatEventDateRange(
+    e.startDate || "",
+    e.startTime,
+    e.endTime,
+    e.timeZone || "",
   );
 
   const startDateInfo = useMemo(
-    () =>
-      getDateTimeInfo(e.startDate || "", e.startTime || "", e.timeZone || ""),
-    [e.startDate, e.startTime, e.timeZone],
+    () => getDateTimeInfo(e.startDate || "", e.startTime || ""),
+    [e.startDate, e.startTime],
   );
 
   const endDateInfo = useMemo(
@@ -115,9 +91,8 @@ export function UserEventListItem(props: {
       getDateTimeInfo(
         e.endDate || e.startDate || "",
         e.endTime || e.startTime || "",
-        e.timeZone || "",
       ),
-    [e.endDate, e.startDate, e.endTime, e.startTime, e.timeZone],
+    [e.endDate, e.startDate, e.endTime, e.startTime],
   );
 
   const eventIsOver = useMemo(() => {
@@ -196,7 +171,7 @@ export function UserEventListItem(props: {
           <View className="mr-4 flex-1">
             <View className="mb-2">
               <Text className="text-base font-medium text-neutral-2">
-                {date} • {time}
+                {dateString.date} • {dateString.time}
               </Text>
             </View>
             <Text

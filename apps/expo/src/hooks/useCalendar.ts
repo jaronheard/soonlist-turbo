@@ -1,5 +1,6 @@
 import { Alert, Linking, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
+import { Temporal } from "@js-temporal/polyfill";
 import { toast } from "sonner-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -93,38 +94,39 @@ export function useCalendar() {
 
       const e = selectedEvent.event as AddToCalendarButtonPropsRestricted;
 
-      const parseDate = (dateString: string, timeString: string): Date => {
-        const [year, month, day] = dateString.split("-").map(Number);
-        const [hours, minutes] = timeString.split(":").map(Number);
-
-        if (
-          year === undefined ||
-          month === undefined ||
-          day === undefined ||
-          hours === undefined ||
-          minutes === undefined
-        ) {
+      const parseDate = (
+        dateString: string,
+        timeString: string,
+        timezone: string,
+      ): Date => {
+        try {
+          const eventDateTime = Temporal.ZonedDateTime.from(
+            `${dateString}T${timeString || "00:00:00"}[${timezone}]`,
+          );
+          return new Date(eventDateTime.epochMilliseconds);
+        } catch (error) {
+          console.error("Error parsing date:", error);
           throw new Error("Invalid date or time format");
         }
-
-        return new Date(year, month - 1, day, hours, minutes);
       };
+
+      const eventTimezone = e.timeZone || Temporal.Now.timeZoneId();
 
       let startDate: Date;
       let endDate: Date;
 
       if (e.startDate && e.startTime) {
-        startDate = parseDate(e.startDate, e.startTime);
+        startDate = parseDate(e.startDate, e.startTime, eventTimezone);
       } else if (e.startDate) {
-        startDate = parseDate(e.startDate, "00:00");
+        startDate = parseDate(e.startDate, "00:00", eventTimezone);
       } else {
         throw new Error("Start date is required");
       }
 
       if (e.endDate && e.endTime) {
-        endDate = parseDate(e.endDate, e.endTime);
+        endDate = parseDate(e.endDate, e.endTime, eventTimezone);
       } else if (e.endDate) {
-        endDate = parseDate(e.endDate, "23:59");
+        endDate = parseDate(e.endDate, "23:59", eventTimezone);
       } else {
         endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
       }
@@ -151,7 +153,7 @@ export function useCalendar() {
         endDate,
         location: e.location,
         notes: fullDescription,
-        timeZone: e.timeZone,
+        timeZone: eventTimezone,
       };
 
       const eventId = await Calendar.createEventAsync(

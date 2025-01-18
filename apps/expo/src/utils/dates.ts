@@ -2,6 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 
+// Existing event defaults
 export const blankEvent = {
   options: [
     "Apple",
@@ -32,16 +33,6 @@ export const blankEvent = {
   endTime: "" as const,
   timeZone: "" as const,
 } as AddToCalendarButtonProps;
-
-const daysOfWeek = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
 
 const daysOfWeekTemporal = [
   "Monday",
@@ -78,67 +69,39 @@ export interface DateInfo {
   minute: number;
 }
 
+export function getUserTimeZone(): string {
+  return Temporal.Now.timeZoneId();
+}
+
+/**
+ * Safely parse a time string in HH:MM or HH:MM:SS format; if invalid, fallback.
+ */
+function coerceTimeString(timeString: string) {
+  // Quick check for "empty" time
+  if (!timeString) return "23:59:59";
+
+  // Basic pattern check (HH:MM[:SS])
+  const timePattern = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
+  if (!timePattern.test(timeString)) {
+    // Fallback to adding ":00" or final fallback
+    if (!timeString.includes(":")) {
+      timeString += ":00";
+      if (timePattern.test(timeString)) return timeString;
+    }
+    return "23:59:59";
+  }
+  return timeString;
+}
+
+/**
+ * Parse a date+time in the given event timezone (if provided), then convert to local time.
+ * Returns a DateInfo object in the USER'S LOCAL TIME.
+ */
 export function getDateTimeInfo(
   dateString: string,
   timeString: string,
-  timezone: string,
-  userTimezone?: string,
+  eventTimezone?: string,
 ): DateInfo | null {
-  // timezone cannot be "unknown"
-  const timezonePattern = /^((?!unknown).)*$/;
-  if (!timezonePattern.test(timezone)) {
-    console.error("Invalid timezone, assuming America/Los_Angeles.");
-    timezone = "America/Los_Angeles";
-  }
-  if (!userTimezone) {
-    userTimezone = timezone;
-  }
-  if (!timezonePattern.test(userTimezone)) {
-    console.error("Invalid userTimezone, assuming America/Los_Angeles.");
-    userTimezone = "America/Los_Angeles";
-  }
-
-  // check is timestring is valid (HH:MM:SS)
-  const timePattern = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
-  if (!timePattern.test(timeString)) {
-    timeString += ":00";
-  }
-  if (!timePattern.test(timeString)) {
-    timeString = "23:59:59";
-  }
-
-  const hasTime = timeString !== "";
-  const zonedDateTime = Temporal.ZonedDateTime.from(
-    `${dateString}${hasTime ? "T" : ""}${timeString}[${timezone}]`,
-  );
-  const userZonedDateTime = zonedDateTime.withTimeZone(
-    userTimezone || timezone,
-  );
-
-  const dayOfWeek = daysOfWeekTemporal[userZonedDateTime.dayOfWeek - 1];
-  if (!dayOfWeek) {
-    console.error("Invalid dayOfWeek / date format. Use YYYY-MM-DD.");
-    return null;
-  }
-  const monthName = monthNames[userZonedDateTime.month - 1];
-  if (!monthName) {
-    console.error("Invalid monthName / date format. Use YYYY-MM-DD.");
-    return null;
-  }
-  const dateInfo = {
-    month: userZonedDateTime.month,
-    monthName: monthName,
-    day: userZonedDateTime.day,
-    year: userZonedDateTime.year,
-    dayOfWeek: dayOfWeek,
-    hour: userZonedDateTime.hour,
-    minute: userZonedDateTime.minute,
-  } as DateInfo;
-
-  return dateInfo;
-}
-
-export function getDateInfo(dateString: string): DateInfo | null {
   // Validate input
   const datePattern = /^\d{4}-\d{2}-\d{2}$/;
   if (!datePattern.test(dateString)) {
@@ -146,76 +109,62 @@ export function getDateInfo(dateString: string): DateInfo | null {
     return null;
   }
 
-  // Create a Date object
-  const date = new Date(dateString);
+  // Ensure timeString is valid enough to parse
+  timeString = coerceTimeString(timeString);
 
-  // Check if date is valid
-  if (isNaN(date.getTime())) {
-    console.error("Invalid date.");
+  const userTimezone = getUserTimeZone();
+  const parseInTimezone =
+    eventTimezone && eventTimezone !== "unknown" ? eventTimezone : userTimezone;
+
+  try {
+    // First parse in event timezone
+    const zonedDateTime = Temporal.ZonedDateTime.from(
+      `${dateString}T${timeString}[${parseInTimezone}]`,
+    );
+    // Convert to local time
+    const localDateTime = zonedDateTime.withTimeZone(userTimezone);
+
+    const dayOfWeek = daysOfWeekTemporal[localDateTime.dayOfWeek - 1];
+    if (!dayOfWeek) {
+      console.error("Invalid dayOfWeek / date format. Use YYYY-MM-DD.");
+      return null;
+    }
+    const monthName = monthNames[localDateTime.month - 1];
+    if (!monthName) {
+      console.error("Invalid monthName / date format. Use YYYY-MM-DD.");
+      return null;
+    }
+
+    return {
+      month: localDateTime.month,
+      day: localDateTime.day,
+      year: localDateTime.year,
+      dayOfWeek,
+      monthName,
+      hour: localDateTime.hour,
+      minute: localDateTime.minute,
+    };
+  } catch (error) {
+    console.error("Error parsing date/time:", error);
     return null;
   }
-
-  // Get month, day, and year
-  const month = date.getMonth() + 1; // Months are zero-based
-  const day = date.getDate();
-  const year = date.getFullYear();
-  const hour = date.getHours();
-  const minute = date.getMinutes();
-
-  const dayOfWeek = daysOfWeek[date.getDay()];
-  if (!dayOfWeek) {
-    console.error("Invalid dayOfWeek / date format. Use YYYY-MM-DD.");
-    return null;
-  }
-
-  const monthName = monthNames[date.getMonth()];
-  if (!monthName) {
-    console.error("Invalid monthName / date format. Use YYYY-MM-DD.");
-    return null;
-  }
-
-  return { month, monthName, day, year, dayOfWeek, hour, minute };
-}
-export function getDateInfoUTC(dateString: string): DateInfo | null {
-  // Validate input
-  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-  if (!datePattern.test(dateString)) {
-    console.error("Invalid date format. Use YYYY-MM-DD.");
-    return null;
-  }
-
-  // Create a Date object in UTC
-  const date = new Date(`${dateString}T00:00:00Z`);
-
-  // Check if date is valid
-  if (isNaN(date.getTime())) {
-    console.error("Invalid date.");
-    return null;
-  }
-
-  // Get month, day, and year
-  const month = date.getUTCMonth() + 1; // Months are zero-based
-  const day = date.getUTCDate();
-  const year = date.getUTCFullYear();
-  const hour = date.getUTCHours();
-  const minute = date.getUTCMinutes();
-
-  // Get day of the week
-  const dayOfWeek = daysOfWeek[date.getUTCDay()];
-  if (!dayOfWeek) {
-    console.error("Invalid dayOfWeek / date format. Use YYYY-MM-DD.");
-    return null;
-  }
-
-  const monthName = monthNames[date.getUTCMonth()];
-  if (!monthName) {
-    console.error("Invalid monthName / date format. Use YYYY-MM-DD.");
-    return null;
-  }
-
-  return { month, monthName, day, year, dayOfWeek, hour, minute };
 }
 
+/**
+ * Parse a date in the given event timezone (if provided), sets time to 00:00:00,
+ * then converts to local time. Return a DateInfo in the user's local time.
+ */
+export function getDateInfo(
+  dateString: string,
+  eventTimezone?: string,
+): DateInfo | null {
+  return getDateTimeInfo(dateString, "00:00", eventTimezone);
+}
+
+/**
+ * Check if an event that starts on `startDateInfo` and ends on `endDateInfo`
+ * ends the next day (by local time) before 6am.
+ */
 export function endsNextDayBeforeMorning(
   startDateInfo: DateInfo | null,
   endDateInfo: DateInfo | null,
@@ -226,11 +175,15 @@ export function endsNextDayBeforeMorning(
   const isNextDay =
     (startDateInfo.month === endDateInfo.month &&
       startDateInfo.day === endDateInfo.day - 1) ||
-    (startDateInfo.month !== endDateInfo.month && endDateInfo.day === 1); //TODO: this is a hack
+    (startDateInfo.month !== endDateInfo.month && endDateInfo.day === 1); // Rough check
   const isBeforeMorning = endDateInfo.hour < 6;
   return isNextDay && isBeforeMorning;
 }
 
+/**
+ * Returns true if `startTime` is exactly tomorrow relative to `now`, from a
+ * local calendar-date perspective.
+ */
 export function timeIsTomorrow(now: Date, startTime: Date): boolean {
   // Normalize the current date to midnight
   const normalizedNow = new Date(
@@ -246,14 +199,11 @@ export function timeIsTomorrow(now: Date, startTime: Date): boolean {
     startTime.getDate(),
   );
 
-  // Calculate the difference in time
+  // Difference in days
   const timeDifference =
     normalizedStartTime.getTime() - normalizedNow.getTime();
-
-  // Convert the time difference to days
   const dayDifference = timeDifference / (1000 * 60 * 60 * 24);
 
-  // Check if the difference is exactly 1 day
   return dayDifference === 1;
 }
 
@@ -264,6 +214,9 @@ export function eventTimesAreDefined(
   return startTime !== undefined && endTime !== undefined;
 }
 
+/**
+ * Check if the local start and end day differ. Used for multi-day checks.
+ */
 export function spansMultipleDays(
   startDateInfo: DateInfo | null,
   endDateInfo: DateInfo | null,
@@ -271,10 +224,17 @@ export function spansMultipleDays(
   if (!startDateInfo || !endDateInfo) {
     return false;
   }
-  const notSameDay = startDateInfo.day !== endDateInfo.day;
-  return notSameDay;
+  return (
+    startDateInfo.day !== endDateInfo.day ||
+    startDateInfo.month !== endDateInfo.month ||
+    startDateInfo.year !== endDateInfo.year
+  );
 }
 
+/**
+ * If an event extends into more than one local day, AND it's not just
+ * "ends next day before 6am," returns true.
+ */
 export function showMultipleDays(
   startDateInfo: DateInfo | null,
   endDateInfo: DateInfo | null,
@@ -288,30 +248,36 @@ export function showMultipleDays(
   );
 }
 
+/**
+ * Format a raw "HH:MM" string (24-hour) into a 12-hour time with AM/PM.
+ */
 export function timeFormat(time?: string) {
   if (!time) {
     return "";
   }
-  // eslint-disable-next-line prefer-const
-  let [hours, minutes] = time.split(":").map(Number);
-  if (hours === undefined || minutes === undefined) {
-    return "";
-  }
+  const [rawHours, rawMinutes] = time.split(":").map(Number);
+  const hours = rawHours ?? 0;
+  const minutes = rawMinutes ?? 0;
   const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12;
-  hours = hours === 0 ? 12 : hours; // Convert 0 to 12 for 12 AM
-  return `${hours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+  const twelveHour = hours % 12 || 12;
+  return `${twelveHour}:${minutes.toString().padStart(2, "0")} ${ampm}`;
 }
 
+/**
+ * Convert a DateInfo (already in local time) to a string like "6:30PM".
+ */
 export function timeFormatDateInfo(dateInfo: DateInfo) {
   let hours = dateInfo.hour;
   const minutes = dateInfo.minute;
   const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12;
-  hours = hours === 0 ? 12 : hours; // Convert 0 to 12 for 12 AM
+  hours = hours % 12 || 12;
   return `${hours}:${minutes.toString().padStart(2, "0")}${ampm}`;
 }
 
+/**
+ * Return a very rough relative time string (e.g. "Starts in 2 hours")
+ * assuming dateInfo is already in the user's local time.
+ */
 export function formatRelativeTime(dateInfo: DateInfo): string {
   const now = new Date();
   const startDate = new Date(
@@ -321,7 +287,13 @@ export function formatRelativeTime(dateInfo: DateInfo): string {
     dateInfo.hour,
     dateInfo.minute,
   );
+
   const difference = startDate.getTime() - now.getTime();
+  if (difference < 0) {
+    return "Happening now";
+  }
+
+  // Days, hours, minutes until start
   const days = Math.floor(difference / (1000 * 60 * 60 * 24));
   const hours = Math.floor(difference / (1000 * 60 * 60));
   const minutes = Math.floor(difference / (1000 * 60));
@@ -330,27 +302,28 @@ export function formatRelativeTime(dateInfo: DateInfo): string {
   const isSameMonth = dateInfo.month - 1 === now.getMonth();
   const isSameYear = dateInfo.year === now.getFullYear();
   const isToday = isSameDay && isSameMonth && isSameYear;
-  const isTomorrow = timeIsTomorrow(now, startDate);
-
-  if (difference < 0) {
-    return "Happening now";
-  }
+  const tomorrowCheck = timeIsTomorrow(now, startDate);
 
   if (days === 0 && hours === 0) {
     return `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`;
   }
   if (days === 0 && hours < 1) {
-    return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${
+      minutes === 1 ? "" : "s"
+    }`;
   }
   if (isToday) {
     return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
   }
-  if (isTomorrow) {
+  if (tomorrowCheck) {
     return `Tomorrow`;
   }
-  return ``;
+  return "";
 }
 
+/**
+ * Return true if the event is over (now > endDateInfo), using local times.
+ */
 export function isOver(endDateInfo: DateInfo): boolean {
   const now = new Date();
   const endDate = new Date(
@@ -360,6 +333,51 @@ export function isOver(endDateInfo: DateInfo): boolean {
     endDateInfo.hour,
     endDateInfo.minute,
   );
-
   return now > endDate;
+}
+
+/**
+ * Takes a date (YYYY-MM-DD), optional start/end times (HH:MM), and an event timezone.
+ * Returns a user-facing { date, time } string pair in local time.
+ */
+export function formatEventDateRange(
+  date: string,
+  startTime: string | undefined,
+  endTime: string | undefined,
+  eventTimezone: string,
+): { date: string; time: string } {
+  if (!date) return { date: "", time: "" };
+
+  // Get local DateInfo for the start
+  const startDateInfo = getDateTimeInfo(
+    date,
+    startTime || "",
+    eventTimezone || "unknown",
+  );
+  if (!startDateInfo) return { date: "", time: "" };
+
+  const formattedDate = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${
+    startDateInfo.monthName
+  } ${startDateInfo.day}`;
+  const formattedStartTime = startTime ? timeFormatDateInfo(startDateInfo) : "";
+
+  // Handle end
+  let formattedEndTime = "";
+  if (endTime) {
+    const endDateInfo = getDateTimeInfo(
+      date,
+      endTime,
+      eventTimezone || "unknown",
+    );
+    if (endDateInfo) {
+      formattedEndTime = timeFormatDateInfo(endDateInfo);
+    }
+  }
+
+  const timeRange =
+    startTime && endTime
+      ? `${formattedStartTime} - ${formattedEndTime}`
+      : formattedStartTime;
+
+  return { date: formattedDate, time: timeRange.trim() };
 }

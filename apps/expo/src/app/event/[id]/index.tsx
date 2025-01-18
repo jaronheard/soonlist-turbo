@@ -21,7 +21,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import ShareButton from "~/components/ShareButton";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { api } from "~/utils/api";
-import { getDateTimeInfo, timeFormatDateInfo } from "~/utils/dates";
+import { formatEventDateRange } from "~/utils/dates";
 
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -116,36 +116,11 @@ export default function Page() {
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const isCurrentUserEvent = currentUser?.id === event.userId;
 
-  const formatDate = (date: string, startTime?: string, endTime?: string) => {
-    const startDateInfo = getDateTimeInfo(
-      date,
-      startTime || "",
-      eventData.timeZone || "",
-    );
-    if (!startDateInfo) return { date: "", time: "" };
-
-    const formattedDate = `${startDateInfo.dayOfWeek}, ${startDateInfo.monthName} ${startDateInfo.day}`;
-    const formattedStartTime = startTime
-      ? timeFormatDateInfo(startDateInfo)
-      : "";
-    const formattedEndTime = endTime
-      ? timeFormatDateInfo(
-          getDateTimeInfo(date, endTime, eventData.timeZone || "") ||
-            startDateInfo,
-        )
-      : "";
-
-    const timeRange =
-      startTime && endTime
-        ? `${formattedStartTime} - ${formattedEndTime}`
-        : formattedStartTime;
-    return { date: formattedDate, time: timeRange.trim() };
-  };
-
-  const { date, time } = formatDate(
+  const { date, time } = formatEventDateRange(
     eventData.startDate || "",
     eventData.startTime,
     eventData.endTime,
+    eventData.timeZone || "",
   );
 
   return (
