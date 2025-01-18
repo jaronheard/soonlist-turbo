@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { Temporal } from "@js-temporal/polyfill";
 import { EyeOff, Globe2, MapPin, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -117,23 +118,48 @@ export default function Page() {
   const isCurrentUserEvent = currentUser?.id === event.userId;
 
   const formatDate = (date: string, startTime?: string, endTime?: string) => {
-    const startDateInfo = getDateTimeInfo(
-      date,
-      startTime || "",
-      eventData.timeZone || "",
-    );
+    // Convert from event timezone to local time
+    const localTimezone = Temporal.Now.timeZoneId();
+    const eventTimezone = eventData.timeZone || localTimezone;
+    const startDateInfo = getDateTimeInfo(date, startTime || "");
     if (!startDateInfo) return { date: "", time: "" };
+
+    // If we have a valid event timezone, convert the time
+    if (eventTimezone && eventTimezone !== "unknown") {
+      try {
+        const zonedDateTime = Temporal.ZonedDateTime.from(
+          `${date}T${startTime || "00:00:00"}[${eventTimezone}]`,
+        );
+        const localDateTime = zonedDateTime.withTimeZone(localTimezone);
+        startDateInfo.hour = localDateTime.hour;
+        startDateInfo.minute = localDateTime.minute;
+      } catch (error) {
+        console.error("Error converting timezone:", error);
+      }
+    }
 
     const formattedDate = `${startDateInfo.dayOfWeek}, ${startDateInfo.monthName} ${startDateInfo.day}`;
     const formattedStartTime = startTime
       ? timeFormatDateInfo(startDateInfo)
       : "";
-    const formattedEndTime = endTime
-      ? timeFormatDateInfo(
-          getDateTimeInfo(date, endTime, eventData.timeZone || "") ||
-            startDateInfo,
-        )
-      : "";
+
+    let formattedEndTime = "";
+    if (endTime) {
+      const endDateInfo = getDateTimeInfo(date, endTime);
+      if (endDateInfo && eventTimezone && eventTimezone !== "unknown") {
+        try {
+          const zonedDateTime = Temporal.ZonedDateTime.from(
+            `${date}T${endTime}[${eventTimezone}]`,
+          );
+          const localDateTime = zonedDateTime.withTimeZone(localTimezone);
+          endDateInfo.hour = localDateTime.hour;
+          endDateInfo.minute = localDateTime.minute;
+        } catch (error) {
+          console.error("Error converting timezone:", error);
+        }
+      }
+      formattedEndTime = endDateInfo ? timeFormatDateInfo(endDateInfo) : "";
+    }
 
     const timeRange =
       startTime && endTime

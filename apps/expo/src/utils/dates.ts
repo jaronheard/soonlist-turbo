@@ -78,25 +78,16 @@ export interface DateInfo {
   minute: number;
 }
 
+export function getUserTimeZone(): string {
+  return Temporal.Now.timeZoneId();
+}
+
 export function getDateTimeInfo(
   dateString: string,
   timeString: string,
-  timezone: string,
-  userTimezone?: string,
 ): DateInfo | null {
-  // timezone cannot be "unknown"
-  const timezonePattern = /^((?!unknown).)*$/;
-  if (!timezonePattern.test(timezone)) {
-    console.error("Invalid timezone, assuming America/Los_Angeles.");
-    timezone = "America/Los_Angeles";
-  }
-  if (!userTimezone) {
-    userTimezone = timezone;
-  }
-  if (!timezonePattern.test(userTimezone)) {
-    console.error("Invalid userTimezone, assuming America/Los_Angeles.");
-    userTimezone = "America/Los_Angeles";
-  }
+  // Always use the user's local timezone
+  const localTimezone = Temporal.Now.timeZoneId();
 
   // check is timestring is valid (HH:MM:SS)
   const timePattern = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
@@ -107,35 +98,37 @@ export function getDateTimeInfo(
     timeString = "23:59:59";
   }
 
-  const hasTime = timeString !== "";
-  const zonedDateTime = Temporal.ZonedDateTime.from(
-    `${dateString}${hasTime ? "T" : ""}${timeString}[${timezone}]`,
-  );
-  const userZonedDateTime = zonedDateTime.withTimeZone(
-    userTimezone || timezone,
-  );
+  try {
+    const hasTime = timeString !== "";
+    const zonedDateTime = Temporal.ZonedDateTime.from(
+      `${dateString}${hasTime ? "T" : ""}${timeString}[${localTimezone}]`,
+    );
 
-  const dayOfWeek = daysOfWeekTemporal[userZonedDateTime.dayOfWeek - 1];
-  if (!dayOfWeek) {
-    console.error("Invalid dayOfWeek / date format. Use YYYY-MM-DD.");
+    const dayOfWeek = daysOfWeekTemporal[zonedDateTime.dayOfWeek - 1];
+    if (!dayOfWeek) {
+      console.error("Invalid dayOfWeek / date format. Use YYYY-MM-DD.");
+      return null;
+    }
+    const monthName = monthNames[zonedDateTime.month - 1];
+    if (!monthName) {
+      console.error("Invalid monthName / date format. Use YYYY-MM-DD.");
+      return null;
+    }
+    const dateInfo = {
+      month: zonedDateTime.month,
+      monthName: monthName,
+      day: zonedDateTime.day,
+      year: zonedDateTime.year,
+      dayOfWeek: dayOfWeek,
+      hour: zonedDateTime.hour,
+      minute: zonedDateTime.minute,
+    } as DateInfo;
+
+    return dateInfo;
+  } catch (error) {
+    console.error("Error parsing date:", error);
     return null;
   }
-  const monthName = monthNames[userZonedDateTime.month - 1];
-  if (!monthName) {
-    console.error("Invalid monthName / date format. Use YYYY-MM-DD.");
-    return null;
-  }
-  const dateInfo = {
-    month: userZonedDateTime.month,
-    monthName: monthName,
-    day: userZonedDateTime.day,
-    year: userZonedDateTime.year,
-    dayOfWeek: dayOfWeek,
-    hour: userZonedDateTime.hour,
-    minute: userZonedDateTime.minute,
-  } as DateInfo;
-
-  return dateInfo;
 }
 
 export function getDateInfo(dateString: string): DateInfo | null {

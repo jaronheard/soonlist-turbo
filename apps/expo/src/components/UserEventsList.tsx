@@ -13,6 +13,7 @@ import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { Temporal } from "@js-temporal/polyfill";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
   Copy,
@@ -57,18 +58,47 @@ function formatDate(
   date: string,
   startTime: string | undefined,
   endTime: string | undefined,
-  timeZone: string,
+  eventTimezone: string,
 ) {
-  const startDateInfo = getDateTimeInfo(date, startTime || "", timeZone);
+  // Convert from event timezone to local time
+  const localTimezone = Temporal.Now.timeZoneId();
+  const startDateInfo = getDateTimeInfo(date, startTime || "");
   if (!startDateInfo) return { date: "", time: "" };
+
+  // If we have a valid event timezone, convert the time
+  if (eventTimezone && eventTimezone !== "unknown") {
+    try {
+      const zonedDateTime = Temporal.ZonedDateTime.from(
+        `${date}T${startTime || "00:00:00"}[${eventTimezone}]`,
+      );
+      const localDateTime = zonedDateTime.withTimeZone(localTimezone);
+      startDateInfo.hour = localDateTime.hour;
+      startDateInfo.minute = localDateTime.minute;
+    } catch (error) {
+      console.error("Error converting timezone:", error);
+    }
+  }
 
   const formattedDate = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${startDateInfo.monthName} ${startDateInfo.day}`;
   const formattedStartTime = startTime ? timeFormatDateInfo(startDateInfo) : "";
-  const formattedEndTime = endTime
-    ? timeFormatDateInfo(
-        getDateTimeInfo(date, endTime, timeZone) || startDateInfo,
-      )
-    : "";
+
+  let formattedEndTime = "";
+  if (endTime) {
+    const endDateInfo = getDateTimeInfo(date, endTime);
+    if (endDateInfo && eventTimezone && eventTimezone !== "unknown") {
+      try {
+        const zonedDateTime = Temporal.ZonedDateTime.from(
+          `${date}T${endTime}[${eventTimezone}]`,
+        );
+        const localDateTime = zonedDateTime.withTimeZone(localTimezone);
+        endDateInfo.hour = localDateTime.hour;
+        endDateInfo.minute = localDateTime.minute;
+      } catch (error) {
+        console.error("Error converting timezone:", error);
+      }
+    }
+    formattedEndTime = endDateInfo ? timeFormatDateInfo(endDateInfo) : "";
+  }
 
   const timeRange =
     startTime && endTime
@@ -105,9 +135,8 @@ export function UserEventListItem(props: {
   );
 
   const startDateInfo = useMemo(
-    () =>
-      getDateTimeInfo(e.startDate || "", e.startTime || "", e.timeZone || ""),
-    [e.startDate, e.startTime, e.timeZone],
+    () => getDateTimeInfo(e.startDate || "", e.startTime || ""),
+    [e.startDate, e.startTime],
   );
 
   const endDateInfo = useMemo(
@@ -115,9 +144,8 @@ export function UserEventListItem(props: {
       getDateTimeInfo(
         e.endDate || e.startDate || "",
         e.endTime || e.startTime || "",
-        e.timeZone || "",
       ),
-    [e.endDate, e.startDate, e.endTime, e.startTime, e.timeZone],
+    [e.endDate, e.startDate, e.endTime, e.startTime],
   );
 
   const eventIsOver = useMemo(() => {
