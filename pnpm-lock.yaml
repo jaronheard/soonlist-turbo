@@ -202,6 +202,9 @@ importers:
       react-native-keyboard-controller:
         specifier: ^1.15.2
         version: 1.15.2(react-native-reanimated@3.16.6(@babel/core@7.26.0)(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+      react-native-purchases:
+        specifier: ^8.5.0
+        version: 8.5.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       react-native-qrcode-svg:
         specifier: ^6.3.0
         version: 6.3.12(react-native-svg@15.8.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
@@ -3868,6 +3871,9 @@ packages:
 
   '@remix-run/web-stream@1.1.0':
     resolution: {integrity: sha512-KRJtwrjRV5Bb+pM7zxcTJkhIqWWSy+MYsIxHK+0m5atcznsf15YwUBWHWulZerV2+vvHH1Lp1DD7pw6qKW8SgA==}
+
+  '@revenuecat/purchases-typescript-internal@13.14.0':
+    resolution: {integrity: sha512-PVB3mfqElRwewyufdd3WEbLj7fyGQ36fAGMC6nRdA86H9tZI8TwH3db1BBCX49SK5QrDaaOF7E3VHXXe0/zB5w==}
 
   '@rollup/plugin-commonjs@26.0.1':
     resolution: {integrity: sha512-UnsKoZK6/aGIH6AdkptXhNvhaqftcjq3zZdT+LY5Ftms6JR06nADcDsYp5hTU9E2lbJUEOhdlY5J4DNTneM+jQ==}
@@ -8535,6 +8541,12 @@ packages:
       react: '*'
       react-native: '*'
       react-native-reanimated: '>=3.0.0'
+
+  react-native-purchases@8.5.0:
+    resolution: {integrity: sha512-Qu8P+ZNKH9e9mRnwD7lsdlgrN4HPy79fStSe9GDvVD89922jO0isdUz2m1d2vLAxR2Yawq+O0ggi0uUhA1NzUg==}
+    peerDependencies:
+      react: '>= 16.6.3'
+      react-native: '*'
 
   react-native-qrcode-svg@6.3.12:
     resolution: {integrity: sha512-7Bx23ZdFNJJdVXyW9BJmFWdI5kccjnpotzmL3exkV0irUKTmj51jesxpn5sqtgVdYFE4IUVoGzdS+8qg6Ua9BA==}
@@ -13840,6 +13852,8 @@ snapshots:
     dependencies:
       web-streams-polyfill: 3.3.3
 
+  '@revenuecat/purchases-typescript-internal@13.14.0': {}
+
   '@rollup/plugin-commonjs@26.0.1(rollup@3.29.5)':
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@3.29.5)
@@ -19109,6 +19123,12 @@ snapshots:
       react-native: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)
       react-native-is-edge-to-edge: 1.1.6(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       react-native-reanimated: 3.16.6(@babel/core@7.26.0)(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+
+  react-native-purchases@8.5.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
+    dependencies:
+      '@revenuecat/purchases-typescript-internal': 13.14.0
+      react: 18.3.1
+      react-native: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)
 
   react-native-qrcode-svg@6.3.12(react-native-svg@15.8.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
     dependencies:
