@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import { Animated, Linking, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -218,7 +217,7 @@ export default function NewEventModal() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-interactive-1">
+    <View className="flex-1 bg-interactive-1">
       <Stack.Screen
         options={{
           title: "",
@@ -296,6 +295,6 @@ export default function NewEventModal() {
           </Animated.View>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
