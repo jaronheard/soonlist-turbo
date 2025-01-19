@@ -30,16 +30,23 @@ const slides: OnboardingSlide[] = [
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export function StoryOnboarding() {
+interface StoryOnboardingProps {
+  onFinish?: () => Promise<void> | void;
+}
+
+export function StoryOnboarding({ onFinish }: StoryOnboardingProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
-  const setHasCompletedOnboarding = useAppStore(
-    (state) => state.setHasCompletedOnboarding,
-  );
 
-  const completeOnboarding = () => {
-    setHasCompletedOnboarding(true);
+  const handleFinish = async () => {
+    if (onFinish) {
+      await onFinish();
+    }
     router.replace("/feed");
+  };
+
+  const completeOnboarding = async () => {
+    await handleFinish();
   };
 
   const renderSlide = ({
@@ -53,7 +60,7 @@ export function StoryOnboarding() {
       <TouchableOpacity
         onPress={() => {
           if (index === slides.length - 1) {
-            completeOnboarding();
+            void completeOnboarding();
           }
         }}
         activeOpacity={index === slides.length - 1 ? 0.8 : 1}
@@ -75,7 +82,7 @@ export function StoryOnboarding() {
         animated: true,
       });
     } else {
-      completeOnboarding();
+      void completeOnboarding();
     }
   };
 

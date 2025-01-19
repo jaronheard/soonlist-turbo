@@ -2,6 +2,7 @@ import type { PropsWithChildren } from "react";
 import type { CustomerInfo } from "react-native-purchases";
 import { createContext, useContext, useEffect, useState } from "react";
 import Purchases from "react-native-purchases";
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { useAuth } from "@clerk/clerk-expo";
 
 import { initializeRevenueCat } from "~/lib/revenue-cat";
@@ -11,6 +12,7 @@ interface RevenueCatContextType {
   customerInfo: CustomerInfo | null;
   login: (userId: string) => Promise<void>;
   logout: () => Promise<void>;
+  showProPaywallIfNeeded: () => Promise<void>;
 }
 
 const RevenueCatContext = createContext<RevenueCatContextType | undefined>(
@@ -61,6 +63,26 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     }
   }
 
+  async function showProPaywallIfNeeded() {
+    console.log("showProPaywallIfNeeded");
+    try {
+      const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
+        requiredEntitlementIdentifier: "unlimited",
+      });
+      switch (paywallResult) {
+        case PAYWALL_RESULT.PURCHASED:
+        case PAYWALL_RESULT.RESTORED:
+          // User now has Pro; update local customerInfo automatically via listener
+          break;
+        default:
+          // Not purchased, or user cancelled
+          break;
+      }
+    } catch (err) {
+      console.error("Error presenting paywall:", err);
+    }
+  }
+
   return (
     <RevenueCatContext.Provider
       value={{
@@ -68,6 +90,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
         customerInfo,
         login,
         logout,
+        showProPaywallIfNeeded,
       }}
     >
       {children}

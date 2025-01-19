@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { Animated, Linking, View } from "react-native";
+import Purchases from "react-native-purchases";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { router, Stack, useLocalSearchParams } from "expo-router";
@@ -16,7 +17,9 @@ import { useInitializeInput } from "~/hooks/useInitializeInput";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { useMediaLibrary } from "~/hooks/useMediaLibrary";
 import { useNotification } from "~/providers/NotificationProvider";
+import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
+import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 
 const OFFSET_VALUE = 64;
@@ -61,6 +64,14 @@ export default function NewEventModal() {
   });
 
   const isFromIntent = Boolean(finalText || finalImageUri);
+
+  const statsQuery = api.event.getStats.useQuery({
+    userName: user?.username ?? "",
+  });
+  const currentEventsCount = statsQuery.data?.allTimeEvents ?? 0;
+
+  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
+  const isPro = Boolean(customerInfo?.entitlements.active.pro);
 
   // Handlers
   const handleImagePreview = useCallback(
@@ -149,7 +160,7 @@ export default function NewEventModal() {
     resetAddEventState,
   ]);
 
-  const handleCreateEvent = useCallback(async () => {
+  const handleSubmit = async () => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username || !expoPushToken) return;
 
@@ -158,6 +169,19 @@ export default function NewEventModal() {
     toast.info("Processing details. Add another?", {
       duration: 5000,
     });
+
+    // If user is not Pro, enforce the limit of 5 total events
+    if (!isPro && currentEventsCount >= 5) {
+      await showProPaywallIfNeeded();
+      // Re-check after paywall
+      const newInfo = await Purchases.getCustomerInfo();
+      if (!newInfo.entitlements.active.pro) {
+        toast.error(
+          "You've reached your free limit. Please upgrade to add more events.",
+        );
+        return;
+      }
+    }
 
     try {
       const eventId = await createEvent({
@@ -186,16 +210,7 @@ export default function NewEventModal() {
     } finally {
       resetAddEventState();
     }
-  }, [
-    input,
-    imagePreview,
-    linkPreview,
-    expoPushToken,
-    hasNotificationPermission,
-    user,
-    createEvent,
-    resetAddEventState,
-  ]);
+  };
 
   const handleDescribePress = useCallback(() => {
     if (activeInput === "describe") {
@@ -288,7 +303,7 @@ export default function NewEventModal() {
             style={{ marginBottom: marginBottomAnim }}
           >
             <CaptureEventButton
-              handleCreateEvent={handleCreateEvent}
+              handleCreateEvent={handleSubmit}
               input={input}
               imagePreview={imagePreview}
               linkPreview={linkPreview}
