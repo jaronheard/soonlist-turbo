@@ -23,6 +23,15 @@ export function CalendarButton(props: CalendarButtonProps) {
       ? `Collected by [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${props.username}/events|@${props.username}[/url] on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
       : `Collected on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}|Soonlist[/url]`;
   eventForCalendar.description = `${props.event.description}[br][br]${additionalText}`;
+  eventForCalendar.options = [
+    "Apple",
+    "Google",
+    "iCal",
+    "Microsoft365",
+    "MicrosoftTeams",
+    "Outlook.com",
+    "Yahoo",
+  ];
 
   if (props.type === "dropdown") {
     return (
