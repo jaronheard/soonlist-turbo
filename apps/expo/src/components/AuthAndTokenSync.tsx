@@ -15,7 +15,7 @@ interface Props {
 
 export default function AuthAndTokenSync({ expoPushToken }: Props) {
   const { isSignedIn, userId } = useAuth();
-  const { login, logout, isInitialized } = useRevenueCat();
+  const { login, logout, isInitialized, customerInfo } = useRevenueCat();
   const authData = useAuthSync({ expoPushToken });
   const createTokenMutation = api.pushToken.create.useMutation({});
   const posthog = usePostHog();
@@ -30,9 +30,12 @@ export default function AuthAndTokenSync({ expoPushToken }: Props) {
       void login(userId);
     } else {
       // Log out from RevenueCat when user signs out
-      void logout();
+      // prevent logout if anonymous user
+      if (customerInfo) {
+        void logout();
+      }
     }
-  }, [isInitialized, isSignedIn, userId, login, logout]);
+  }, [isInitialized, isSignedIn, userId, login, logout, customerInfo]);
 
   useEffect(() => {
     if (
