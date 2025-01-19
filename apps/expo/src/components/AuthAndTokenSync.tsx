@@ -14,8 +14,8 @@ interface Props {
 }
 
 export default function AuthAndTokenSync({ expoPushToken }: Props) {
-  const { isLoaded, isSignedIn, userId } = useAuth();
-  const { login, logout } = useRevenueCat();
+  const { isSignedIn, userId } = useAuth();
+  const { login, logout, isInitialized } = useRevenueCat();
   const authData = useAuthSync({ expoPushToken });
   const createTokenMutation = api.pushToken.create.useMutation({});
   const posthog = usePostHog();
@@ -23,7 +23,7 @@ export default function AuthAndTokenSync({ expoPushToken }: Props) {
   const lastSavedTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isInitialized) return;
 
     if (isSignedIn && userId) {
       // Identify user in RevenueCat when they sign in
@@ -32,7 +32,7 @@ export default function AuthAndTokenSync({ expoPushToken }: Props) {
       // Log out from RevenueCat when user signs out
       void logout();
     }
-  }, [isLoaded, isSignedIn, userId, login, logout]);
+  }, [isInitialized, isSignedIn, userId, login, logout]);
 
   useEffect(() => {
     if (
