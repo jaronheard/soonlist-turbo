@@ -103,7 +103,7 @@ export function FoundingMemberPricing({
         </h1>
         <div className="mt-8 rounded-xl bg-accent-orange p-6 text-center">
           <h2 className="font-heading text-2xl font-bold text-interactive-1">
-            Limited availability - Ends January 21st!
+            Limited availability - Ends January 31st!
           </h2>
           <p className="mt-2 text-4xl font-bold text-neutral-1">
             Only 💯&nbsp;Founding Member spots&nbsp;🎈
@@ -212,7 +212,7 @@ export function FoundingMemberPricing({
               </ul>
             </div>
             <p className="mt-4 animate-pulse text-lg font-semibold text-interactive-1">
-              {remainingSpots} spots left • Offer ends January 21st
+              {remainingSpots} spots left • Offer ends January 31st
             </p>
             <div className="mt-8">
               {tier.soon && (
