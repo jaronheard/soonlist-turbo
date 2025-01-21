@@ -6,7 +6,6 @@ import type { DemoEvent } from "~/components/demoData";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
 import { EventPreview } from "~/components/EventPreview";
-import { NewEventHeader } from "~/components/NewEventHeader";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 
@@ -30,11 +29,6 @@ export default function DemoCaptureScreen() {
 
   const handleSubmit = () => {
     router.dismissTo(`/onboarding/demo-feed?eventId=${selectedEvent.id}`);
-  };
-
-  const handleDescribePress = () => {
-    // No-op in demo mode
-    return;
   };
 
   const handleTextChange = () => {
@@ -69,16 +63,7 @@ export default function DemoCaptureScreen() {
           headerShadowVisible: false,
           headerStyle: { backgroundColor: "#5A32FB" },
           headerTintColor: "#fff",
-          headerTitle: () => (
-            <NewEventHeader
-              containerClassName="mt-2"
-              isFromIntent={false}
-              linkPreview={null}
-              imagePreview={selectedEvent.imageUri ?? null}
-              activeInput="upload"
-              handleDescribePress={handleDescribePress}
-            />
-          ),
+          headerTitle: "Capture event (demo)",
         }}
       />
 
