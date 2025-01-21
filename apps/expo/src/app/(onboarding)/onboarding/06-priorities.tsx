@@ -26,7 +26,7 @@ export default function PrioritiesScreen() {
   const handlePrioritySelect = (priority: Priority) => {
     setSelectedPriority(priority);
     setUserPriority(priority);
-    router.push("/onboarding/demo-intro");
+    router.push("/onboarding/07-we-got-you");
   };
 
   return (

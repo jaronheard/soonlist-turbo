@@ -3,44 +3,32 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { ArrowUp } from "lucide-react-native";
-
-import { useAppStore } from "~/store";
+import { Plus } from "lucide-react-native";
 
 export default function DemoIntroScreen() {
-  const userPriority = useAppStore((state) => state.userPriority);
-
-  const getPriorityMessage = () => {
-    if (userPriority?.includes("connections")) {
-      return "Having all your possibilities in one place will help you make more meaningful connections";
-    }
-    if (userPriority?.includes("out more")) {
-      return "Having all your possibilities in one place will help you get out more";
-    }
-    if (userPriority?.includes("best event")) {
-      return "Having all your possibilities in one place will help you choose the best events";
-    }
-    if (userPriority?.includes("planning")) {
-      return "Having all your possibilities in one place will help you plan more flexibly";
-    }
-    if (userPriority?.includes("community")) {
-      return "Having all your possibilities in one place will help you build more community";
-    }
-    return "Having all your possibilities in one place will help you do more of what matters";
-  };
-
   return (
     <View className="flex-1 bg-interactive-2">
       <View className="flex-1 items-center justify-center px-4">
-        <Text className="mb-4 text-center text-4xl font-bold text-black">
-          💖 We got you
+        <Text className="mb-8 text-center text-3xl font-bold text-black">
+          Here's how it works
         </Text>
-        <Text className="mb-12 text-center text-2xl text-black">
-          {getPriorityMessage()}
-        </Text>
-        <Text className="text-center text-xl font-semibold text-black">
-          Try it now
-        </Text>
+        <View className="mb-12 w-full gap-3">
+          <View className="rounded-xl border-2 border-accent-blue/30 bg-accent-blue p-4">
+            <Text className="text-xl font-bold text-black">
+              1️⃣ Screenshot events you see
+            </Text>
+          </View>
+          <View className="rounded-xl border-2 border-accent-orange/30 bg-accent-orange p-4">
+            <Text className="text-xl font-bold text-black">
+              2️⃣ Add photos to Soonlist
+            </Text>
+          </View>
+          <View className="rounded-xl border-2 border-accent-green/30 bg-accent-green p-4">
+            <Text className="text-xl font-bold text-black">
+              3️⃣ See all your possibilities
+            </Text>
+          </View>
+        </View>
       </View>
 
       <View className="h-40">
@@ -79,7 +67,7 @@ export default function DemoIntroScreen() {
           onPress={() => router.push("/onboarding/demo-capture")}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex-row items-center justify-center rounded-full bg-[#E0D9FF] p-6 shadow-lg"
         >
-          <ArrowUp size={28} color="#5A32FB" />
+          <Plus size={28} color="#5A32FB" />
         </TouchableOpacity>
       </View>
     </View>
