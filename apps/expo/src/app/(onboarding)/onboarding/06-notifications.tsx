@@ -30,14 +30,16 @@ export default function NotificationsScreen() {
     true,
   );
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    position: "absolute",
-    left: "25%",
-    top: "100%",
-    paddingLeft: 8,
-    paddingTop: 0,
-    transform: [{ translateY: translateY.value }],
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      position: "absolute",
+      left: "25%",
+      top: "100%",
+      paddingLeft: 8,
+      paddingTop: 0,
+      transform: [{ translateY: translateY.value }],
+    };
+  });
 
   const handleNotificationPermission = async () => {
     if (showRealPrompt) {

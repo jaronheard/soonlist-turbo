@@ -36,6 +36,12 @@ Error Handling and Validation:
 - Model expected errors as return values in Server Actions
 - Use error boundaries for unexpected errors
 
+React:
+
+- Always question if an effect (e.g. useEffect, useLayoutEffect) is needed. Generally only use if it's synchonizing with an external system.
+- Prefer using React Query (@tanstack/react-query) for synchronizing with external systems.
+- Avoid prematurely optimizing and using useMemo, useCallback, etc, but do use them when necessary.
+
 UI and Styling:
 
 - Use Shadcn UI, Radix, and Tailwind for components and styling in the Next.js app
@@ -61,7 +67,7 @@ Next.js Specific:
 
 - Follow Next.js App Router conventions for routing and data fetching
 - Use Server Components where possible to reduce client-side JavaScript
-- Minimize 'use client', 'useEffect', and 'setState'; favor React Server Components (RSC)
+- Favor React Server Components (RSC)
 - Wrap client components in Suspense with fallback
 
 Expo Specific:
@@ -70,7 +76,13 @@ Expo Specific:
 - Implement expo-router for navigation
 - Use react-native specific components and APIs
 - Optimize performance using React Native best practices
-- Use Zustand for client-side state management with a single global store
-- Use 
+- Use Zustand for client-side state management with a single global store\
 
-Follow Next.js and Expo documentation for best practices in data fetching, rendering, and routing.
+Expo Animations:
+
+- Use React Native Reanimated for animations. Prefer using Animated components (e.g. Animated.View), powered by shared values.
+- Shared values are a driving factor of all animations and we define them using a useSharedValue hook.
+- Shared values are always accessed and modified by their .value property (eg. sv.value = 100;).
+- To create smooth animations modify shared values using a
+
+  Follow Next.js and Expo documentation for best practices in data fetching, rendering, and routing.
