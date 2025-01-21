@@ -10,7 +10,7 @@ import { NewEventHeader } from "~/components/NewEventHeader";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 
-const OFFSET_VALUE = 64;
+const OFFSET_VALUE = 112; // 112px is the height of the header + the bottom padding?
 
 // Ensure we have at least one event with an image
 const DEFAULT_EVENT = DEMO_CAPTURE_EVENTS.find((event) => event.imageUri);
