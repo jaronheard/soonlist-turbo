@@ -3,12 +3,12 @@ import { Animated, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Stack } from "expo-router";
 
-import type { DemoEvent } from "./demoData";
+import type { DemoEvent } from "../(onboarding)/onboarding/demoData";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";
 import { PhotoGrid } from "~/components/PhotoGrid";
-import { DEMO_CAPTURE_EVENTS } from "./demoData";
+import { DEMO_CAPTURE_EVENTS } from "../(onboarding)/onboarding/demoData";
 
 // Ensure we have at least one event with an image
 const DEFAULT_EVENT = DEMO_CAPTURE_EVENTS.find((event) => event.imageUri);

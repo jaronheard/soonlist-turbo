@@ -50,7 +50,7 @@ export default function PhotosScreen() {
         );
       }
 
-      router.push("/onboarding/demo-capture");
+      router.push("/onboarding/demo-intro");
     } else {
       setShowRealPrompt(true);
     }

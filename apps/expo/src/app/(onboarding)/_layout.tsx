@@ -9,6 +9,6 @@ export default function OnboardingLayout() {
         headerShown: false,
         animation: "ios_from_right",
       }}
-    />
+    ></Stack>
   );
 }

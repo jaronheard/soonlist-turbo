@@ -216,6 +216,13 @@ const InitialLayout = () => {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="onboarding/demo-capture"
+        options={{
+          presentation: "modal",
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 };
