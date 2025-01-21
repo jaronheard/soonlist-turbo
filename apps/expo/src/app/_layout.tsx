@@ -188,6 +188,12 @@ const InitialLayout = () => {
         }}
       />
       <Stack.Screen
+        name="(onboarding)"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="event/[id]/index"
         options={{
           title: "Event Details",

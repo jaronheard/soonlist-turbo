@@ -27,11 +27,6 @@ export default function AgeScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
       <QuestionContainer
         question="How old are you?"
         currentStep={1}

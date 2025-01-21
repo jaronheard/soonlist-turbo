@@ -28,11 +28,6 @@ export default function SourceScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
       <QuestionContainer
         question="Where did you hear about us?"
         currentStep={2}

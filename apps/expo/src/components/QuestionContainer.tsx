@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface QuestionContainerProps {
   question: string;
@@ -17,7 +18,7 @@ export function QuestionContainer({
   const progress = (currentStep / totalSteps) * 100;
 
   return (
-    <View className="flex-1 bg-interactive-3">
+    <SafeAreaView className="flex-1 bg-interactive-3">
       <View className="h-1 w-full bg-gray-200">
         <View
           className="h-full bg-interactive-1 transition-all duration-300"
@@ -30,6 +31,6 @@ export function QuestionContainer({
         </Text>
         {children}
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
