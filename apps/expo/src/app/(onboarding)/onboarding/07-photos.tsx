@@ -33,13 +33,13 @@ export default function PhotosScreen() {
       currentStep={7}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
-      <View className="flex-1 items-center justify-center px-4">
-        <View className="w-full max-w-sm space-y-5 rounded-[28px] bg-white p-6">
-          <Text className="text-center text-xl font-semibold">
-            Enable Full Photo Access to save events instantly
+      <View className="-mt-16 flex-1 items-center justify-center px-12">
+        <View className="w-full max-w-sm rounded-[28px] bg-interactive-3 p-6">
+          <Text className="text-center text-xl font-semibold leading-6">
+            Enable Full Access to save events instantly
           </Text>
-          <Text className="text-center text-base text-gray-500">
-            Choose 'Allow access to all photos' in the next step.
+          <Text className="mt-1 text-center text-sm">
+            Soonlist is faster with full access.
           </Text>
           {/* Placeholder Image Grid */}
           <View className="-mx-6 mt-2 flex-row flex-wrap bg-white">
@@ -57,10 +57,10 @@ export default function PhotosScreen() {
           </View>
 
           <View className="-mx-6 rounded-xl border-b border-gray-200 px-4 py-4">
-            <Text className="text-center text-base text-gray-900">
+            <Text className="text-center text-sm font-bold text-gray-900">
               Full access is recommended
             </Text>
-            <Text className="mt-2 text-center text-[15px] leading-5 text-gray-500">
+            <Text className="mt-1 text-center text-sm leading-5 text-gray-500">
               Full access makes it faster to save events. We only capture photos
               you select.
             </Text>
