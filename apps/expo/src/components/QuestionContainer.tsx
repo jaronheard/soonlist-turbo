@@ -18,17 +18,15 @@ export function QuestionContainer({
   const progress = (currentStep / totalSteps) * 100;
 
   return (
-    <SafeAreaView className="flex-1 bg-interactive-3">
-      <View className="h-1 w-full bg-gray-200">
+    <SafeAreaView className="flex-1 bg-interactive-1">
+      <View className="h-1 w-full bg-white">
         <View
-          className="h-full bg-interactive-1 transition-all duration-300"
+          className="h-full bg-interactive-2 transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </View>
       <View className="flex-1 px-6 pt-8">
-        <Text className="mb-8 text-2xl font-bold text-gray-900">
-          {question}
-        </Text>
+        <Text className="mb-8 text-2xl font-bold text-white">{question}</Text>
         {children}
       </View>
     </SafeAreaView>
