@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { router, Stack } from "expo-router";
+import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
@@ -23,7 +23,7 @@ export default function SourceScreen() {
   const handleSourceSelect = (source: Source) => {
     setSelectedSource(source);
     // Store the source in your app state here if needed
-    router.push("/feed");
+    router.push("/onboarding/03-priorities");
   };
 
   return (
