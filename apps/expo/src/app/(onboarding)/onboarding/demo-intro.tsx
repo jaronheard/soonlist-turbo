@@ -1,11 +1,43 @@
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Plus } from "lucide-react-native";
+import { ChevronDown, Plus } from "lucide-react-native";
 
 export default function DemoIntroScreen() {
+  const translateY = useSharedValue(0);
+
+  // Start the animation immediately
+  translateY.value = withRepeat(
+    withTiming(-12, {
+      duration: 500,
+      easing: Easing.inOut(Easing.sin),
+    }),
+    -1,
+    true,
+  );
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      position: "absolute",
+      top: -16, // position above the button
+      left: "50%",
+      transform: [
+        { translateX: -32 }, // half of the chevron size to center it
+        { translateY: translateY.value },
+      ],
+      zIndex: 10,
+    };
+  });
+
   return (
     <View className="flex-1 bg-interactive-2">
       <View className="flex-1 items-center justify-center px-4">
@@ -28,6 +60,9 @@ export default function DemoIntroScreen() {
               3️⃣ See all your possibilities
             </Text>
           </View>
+          <Text className="mt-8 text-center text-3xl font-bold text-black">
+            Try it now!
+          </Text>
         </View>
       </View>
 
@@ -65,10 +100,13 @@ export default function DemoIntroScreen() {
 
         <TouchableOpacity
           onPress={() => router.push("/onboarding/demo-capture")}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex-row items-center justify-center rounded-full bg-[#E0D9FF] p-6 shadow-lg"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex-row items-center justify-center rounded-full bg-[#5A32FB] p-6 shadow-lg"
         >
-          <Plus size={28} color="#5A32FB" />
+          <Plus size={28} color="#E0D9FF" />
         </TouchableOpacity>
+        <Animated.View style={animatedStyle}>
+          <ChevronDown size={64} color="#000" strokeWidth={4} />
+        </Animated.View>
       </View>
     </View>
   );
