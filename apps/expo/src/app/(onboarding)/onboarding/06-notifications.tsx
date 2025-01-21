@@ -59,11 +59,11 @@ export default function NotificationsScreen() {
 
   return (
     <QuestionContainer
-      question="Enable Notifications"
+      question=""
       currentStep={6}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
-      <View className="mx-4 flex-1 items-center justify-center">
+      <View className="mx-4 -mt-32 flex-1 items-center justify-center">
         <View className="relative">
           <View className="rounded-2xl bg-white">
             <View className="px-2 pb-3 pt-4">
@@ -85,13 +85,14 @@ export default function NotificationsScreen() {
                 <Pressable
                   className="w-full border-l border-[#3c3c43]/30 py-3"
                   onPress={handleNotificationPermission}
+                  hitSlop={40}
                 >
                   <Text className="text-center text-lg font-bold text-[#007AFF]">
                     Allow
                   </Text>
                 </Pressable>
                 <Animated.View style={animatedStyle}>
-                  <ChevronUp size={64} color="#FFF" />
+                  <ChevronUp size={64} color="#FFF" strokeWidth={4} />
                 </Animated.View>
               </View>
             </View>
