@@ -2,8 +2,8 @@ import React, { useMemo } from "react";
 import { Button, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import type { DemoEvent } from "../demoData";
-import { DEMO_CAPTURE_EVENTS, DEMO_FEED_BASE } from "../demoData";
+import type { DemoEvent } from "~/components/demoData";
+import { DEMO_CAPTURE_EVENTS, DEMO_FEED_BASE } from "~/components/demoData";
 
 export default function DemoEventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();

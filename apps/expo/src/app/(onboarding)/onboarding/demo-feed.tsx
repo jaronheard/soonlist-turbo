@@ -4,10 +4,10 @@ import * as Notifications from "expo-notifications";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
 
-import type { DemoEvent } from "./demoData";
+import type { DemoEvent } from "~/components/demoData";
+import { DEMO_CAPTURE_EVENTS, DEMO_FEED_BASE } from "~/components/demoData";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import UserEventsList from "~/components/UserEventsList"; // Reuse your existing feed list
-import { DEMO_CAPTURE_EVENTS, DEMO_FEED_BASE } from "./demoData";
 
 export default function DemoFeedScreen() {
   const { eventId } = useLocalSearchParams<{ eventId?: string }>();

@@ -2,13 +2,13 @@ import React from "react";
 import { Animated, View } from "react-native";
 import { router, Stack } from "expo-router";
 
-import type { DemoEvent } from "../(onboarding)/onboarding/demoData";
+import type { DemoEvent } from "~/components/demoData";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
+import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
 import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
-import { DEMO_CAPTURE_EVENTS } from "../(onboarding)/onboarding/demoData";
 
 const OFFSET_VALUE = 64;
 
