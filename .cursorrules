@@ -84,6 +84,6 @@ Expo Animations:
 - NEVER USE JUST useEffect!!!! Should use useSharedValue!!!
 - Shared values are a driving factor of all animations and we define them using a useSharedValue hook.
 - Shared values are always accessed and modified by their .value property (eg. sv.value = 100;).
-- To create smooth animations modify shared values using a
+- To create smooth animations modify shared values using a withTiming etc...
 
   Follow Next.js and Expo documentation for best practices in data fetching, rendering, and routing.
