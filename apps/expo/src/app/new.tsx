@@ -233,7 +233,7 @@ export default function NewEventModal() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-interactive-1">
+    <View className="flex-1 bg-interactive-1">
       <Stack.Screen
         options={{
           title: "",
@@ -311,6 +311,6 @@ export default function NewEventModal() {
           </Animated.View>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }

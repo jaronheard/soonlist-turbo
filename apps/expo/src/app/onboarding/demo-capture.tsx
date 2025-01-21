@@ -1,6 +1,5 @@
 import React from "react";
 import { Animated, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Stack } from "expo-router";
 
 import type { DemoEvent } from "../(onboarding)/onboarding/demoData";
@@ -8,7 +7,10 @@ import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";
 import { PhotoGrid } from "~/components/PhotoGrid";
+import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { DEMO_CAPTURE_EVENTS } from "../(onboarding)/onboarding/demoData";
+
+const OFFSET_VALUE = 64;
 
 // Ensure we have at least one event with an image
 const DEFAULT_EVENT = DEMO_CAPTURE_EVENTS.find((event) => event.imageUri);
@@ -27,7 +29,7 @@ export default function DemoCaptureScreen() {
   };
 
   const handleSubmit = () => {
-    router.push(`/onboarding/demo-feed?eventId=${selectedEvent.id}`);
+    router.dismissTo(`/onboarding/demo-feed?eventId=${selectedEvent.id}`);
   };
 
   const handleDescribePress = () => {
@@ -56,8 +58,10 @@ export default function DemoCaptureScreen() {
     id: event.id,
   })).filter((photo) => photo.uri);
 
+  const { marginBottomAnim } = useKeyboardHeight(OFFSET_VALUE);
+
   return (
-    <SafeAreaView className="flex-1 bg-interactive-1">
+    <View className="flex-1 bg-interactive-1">
       <Stack.Screen
         options={{
           title: "",
@@ -121,7 +125,10 @@ export default function DemoCaptureScreen() {
           </View>
         </View>
 
-        <Animated.View className="absolute bottom-0 left-0 right-0 px-4 pb-4">
+        <Animated.View
+          className="absolute bottom-0 left-0 right-0 px-4"
+          style={{ marginBottom: marginBottomAnim }}
+        >
           <CaptureEventButton
             handleCreateEvent={handleSubmit}
             input={selectedEvent.description ?? ""}
@@ -130,6 +137,6 @@ export default function DemoCaptureScreen() {
           />
         </Animated.View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
