@@ -22,7 +22,7 @@ export function QuestionOption({
       className={cn(
         "mb-3 w-full rounded-xl border-2 p-4",
         isSelected
-          ? "border-interactive-1 bg-interactive-1/5"
+          ? "border-interactive-1/30 bg-interactive-2"
           : "border-gray-200 bg-white",
         className,
       )}
@@ -30,7 +30,7 @@ export function QuestionOption({
       <Text
         className={cn(
           "text-lg",
-          isSelected ? "font-semibold text-interactive-1" : "text-gray-900",
+          isSelected ? "font-medium text-interactive-1" : "text-gray-900",
         )}
       >
         {label}
