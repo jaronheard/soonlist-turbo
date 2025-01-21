@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Button, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
