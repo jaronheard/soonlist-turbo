@@ -24,14 +24,14 @@ export default function SourceScreen() {
   const handleSourceSelect = (source: Source) => {
     setSelectedSource(source);
     // Store the source in your app state here if needed
-    router.push("/onboarding/03-priorities");
+    router.push("/onboarding/04-discovery");
   };
 
   return (
     <>
       <QuestionContainer
         question="Where did you hear about us?"
-        currentStep={2}
+        currentStep={3}
         totalSteps={TOTAL_ONBOARDING_STEPS}
       >
         <View>

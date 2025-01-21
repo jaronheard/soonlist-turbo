@@ -23,13 +23,13 @@ export default function AgeScreen() {
   const handleAgeSelect = (age: AgeRange) => {
     setSelectedAge(age);
     // Store the age in your app state here if needed
-    router.push("/onboarding/02-source");
+    router.push("/onboarding/03-source");
   };
 
   return (
     <QuestionContainer
       question="How old are you?"
-      currentStep={1}
+      currentStep={2}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <View>

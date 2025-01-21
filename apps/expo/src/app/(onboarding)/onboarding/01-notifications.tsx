@@ -49,7 +49,7 @@ export default function NotificationsScreen() {
         action: {
           label: "Continue",
           onClick: () => {
-            router.push("/onboarding/07-photos");
+            router.push("/onboarding/02-age");
             toast.dismiss();
           },
         },
@@ -64,6 +64,7 @@ export default function NotificationsScreen() {
           label: "Settings",
           onClick: () => {
             void Linking.openSettings();
+            toast.dismiss();
           },
         },
         duration: Infinity,
@@ -73,13 +74,13 @@ export default function NotificationsScreen() {
 
     await registerForPushNotifications();
     await Notifications.requestPermissionsAsync();
-    router.push("/onboarding/07-photos");
+    router.push("/onboarding/02-age");
   };
 
   return (
     <QuestionContainer
       question=""
-      currentStep={6}
+      currentStep={1}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <View className="mx-12 -mt-24 flex-1 items-center justify-center">

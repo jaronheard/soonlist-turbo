@@ -7,9 +7,11 @@ import { QuestionOption } from "~/components/QuestionOption";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const priorities = [
-  "Making new connections",
-  "Getting out more",
-  "Being more intentional about what I do",
+  "🤝 New connections & experiences",
+  "🚶 Getting out more",
+  "⭐️ Choosing the best event for me",
+  "📋 More flexible planning",
+  "🌱 Building more community",
 ] as const;
 
 type Priority = (typeof priorities)[number];
@@ -22,7 +24,7 @@ export default function PrioritiesScreen() {
   const handlePrioritySelect = (priority: Priority) => {
     setSelectedPriority(priority);
     // Store the priority in your app state here if needed
-    router.push("/onboarding/04-discovery");
+    router.push("/onboarding/demo-intro");
   };
 
   return (

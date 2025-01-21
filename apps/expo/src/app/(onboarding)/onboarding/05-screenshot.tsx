@@ -6,7 +6,7 @@ import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
-const options = ["Yes", "No"] as const;
+const options = ["Yes", "Not yet"] as const;
 type Option = (typeof options)[number];
 
 export default function ScreenshotScreen() {
@@ -15,12 +15,12 @@ export default function ScreenshotScreen() {
   const handleOptionSelect = (option: Option) => {
     setSelectedOption(option);
     // Store the answer in your app state here if needed
-    router.push("/onboarding/06-notifications");
+    router.push("/onboarding/06-priorities");
   };
 
   return (
     <QuestionContainer
-      question="Do you screenshot events you want to check out?"
+      question="Do you already screenshot events you're interested in?"
       currentStep={5}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
