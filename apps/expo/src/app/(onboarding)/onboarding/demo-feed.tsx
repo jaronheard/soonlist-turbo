@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Text, View } from "react-native";
+import { Alert, Button, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
 
 import type { DemoEvent } from "./demoData";
+import { HeaderLogo } from "~/components/HeaderLogo";
 import UserEventsList from "~/components/UserEventsList"; // Reuse your existing feed list
 import { DEMO_CAPTURE_EVENTS, DEMO_FEED_BASE } from "./demoData";
 
@@ -17,6 +19,16 @@ export default function DemoFeedScreen() {
 
   // The local feed
   const [demoFeed, setDemoFeed] = useState<DemoEvent[]>(DEMO_FEED_BASE);
+
+  // Calculate stats based on feed events
+  const stats = useMemo(() => {
+    return {
+      capturesThisWeek: demoFeed.length,
+      weeklyGoal: 5, // Set a reasonable demo goal
+      upcomingEvents: demoFeed.length,
+      allTimeEvents: demoFeed.length,
+    };
+  }, [demoFeed]);
 
   // When the screen mounts, find the chosen event
   useEffect(() => {
@@ -67,28 +79,35 @@ export default function DemoFeedScreen() {
   const feedEvents = useMemo(() => {
     // Transform demo events into the shape that your existing list expects
     // We'll do a quick inline transform
+    const now = new Date();
     return demoFeed.map((demo) => ({
-      // id, user, event, etc. For simplicity, fill in minimal fields:
       id: demo.id,
       userId: "demoUserId",
       userName: "demoUser",
-      createdAt: new Date().toISOString(),
-      startDateTime: new Date().toISOString(),
-      endDateTime: new Date().toISOString(),
-      visibility: "public",
-      event: {
-        name: demo.name,
-        location: demo.location,
-        description: demo.description ?? "",
-        startDate: demo.startDate,
-        startTime: demo.startTime,
-        images: demo.imageUri ? [demo.imageUri] : [],
-        timeZone: demo.timeZone,
-      },
+      createdAt: now,
+      updatedAt: null,
+      startDateTime: new Date(demo.startDate),
+      endDateTime: new Date(demo.startDate),
+      visibility: "public" as const,
+      event: demo,
+      eventMetadata: null,
       user: {
         id: "demoUserId",
+        createdAt: now,
+        updatedAt: null,
         username: "demoUser",
-        userImage: null,
+        email: "demo@example.com",
+        displayName: "Demo User",
+        userImage: "",
+        bio: null,
+        publicEmail: null,
+        publicPhone: null,
+        publicLocation: null,
+        publicBirthday: null,
+        emoji: null,
+        publicInsta: null,
+        publicWebsite: null,
+        publicMetadata: null,
       },
       eventFollows: [],
       comments: [],
@@ -96,24 +115,31 @@ export default function DemoFeedScreen() {
   }, [demoFeed]);
 
   return (
-    <View className="flex-1 bg-white pt-8">
-      <Text className="mb-2 text-center text-xl font-bold">
-        Demo Events Feed
-      </Text>
-      <Text className="mb-4 text-center text-sm text-neutral-500">
-        This is a demo feed. After 4 seconds, your captured event will appear.
-      </Text>
+    <View className="flex-1 bg-white">
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerTitle: "Demo Feed",
+          headerStyle: {
+            backgroundColor: "#5A32FB",
+          },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
+          headerLeft: () => <HeaderLogo />,
+        }}
+      />
 
-      <View className="flex-1">
-        <UserEventsList
-          events={feedEvents}
-          showCreator="always"
-          isRefetching={false}
-          onRefresh={async () => Alert.alert("Demo feed refresh")}
-          onEndReached={() => null}
-          isFetchingNextPage={false}
-        />
-      </View>
+      <UserEventsList
+        events={feedEvents}
+        showCreator="always"
+        isRefetching={false}
+        onRefresh={async () => Alert.alert("Demo feed refresh")}
+        onEndReached={() => null}
+        isFetchingNextPage={false}
+        stats={stats}
+      />
 
       <View className="px-4 pb-8">
         <Button
