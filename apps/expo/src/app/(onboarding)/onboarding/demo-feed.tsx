@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Button, View } from "react-native";
-import * as Notifications from "expo-notifications";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { toast } from "sonner-native";
 
 import type { DemoEvent } from "~/components/demoData";
 import { DEMO_CAPTURE_EVENTS, DEMO_FEED_BASE } from "~/components/demoData";
@@ -41,10 +39,6 @@ export default function DemoFeedScreen() {
     let timer: NodeJS.Timeout;
     if (newEvent) {
       timer = setTimeout(() => {
-        // Show a local push or toast
-        void scheduleDemoNotification(newEvent.name).catch((err) =>
-          console.error("Notification failed", err),
-        );
         setDemoFeed((prev) => [...prev, newEvent]);
       }, 4000);
     }
@@ -52,27 +46,6 @@ export default function DemoFeedScreen() {
       if (timer) clearTimeout(timer);
     };
   }, [newEvent]);
-
-  // Simulate local push for the newly "captured" event
-  async function scheduleDemoNotification(eventName: string) {
-    try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status === Notifications.PermissionStatus.GRANTED) {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Captured a new event!",
-            body: `Your demo event "${eventName}" has been added.`,
-          },
-          trigger: null,
-        });
-      } else {
-        toast(`New event added: ${eventName}`);
-      }
-    } catch (error) {
-      console.error(error);
-      toast(`Added event: ${eventName}`);
-    }
-  }
 
   // We can reuse the <UserEventsList> with minimal props
   const feedEvents = useMemo(() => {
@@ -90,6 +63,7 @@ export default function DemoFeedScreen() {
       visibility: "public" as const,
       event: demo,
       eventMetadata: null,
+      images: demo.images,
       user: {
         id: "demoUserId",
         createdAt: now,

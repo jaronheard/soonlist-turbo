@@ -6,6 +6,7 @@ export interface DemoEvent {
   startTime?: string;
   timeZone?: string;
   imageUri?: string;
+  images?: string[];
   description?: string;
 }
 
@@ -18,7 +19,14 @@ export const DEMO_CAPTURE_EVENTS: DemoEvent[] = [
     startDate: "2025-05-04",
     startTime: "18:00",
     timeZone: "America/Los_Angeles",
-    imageUri: "https://picsum.photos/400/300", // Using Lorem Picsum for placeholder images
+    imageUri:
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    images: [
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    ],
     description:
       "Local bands perform live in an outdoor setting. Food trucks on-site. Bring a blanket!",
   },
@@ -29,7 +37,14 @@ export const DEMO_CAPTURE_EVENTS: DemoEvent[] = [
     startDate: "2025-05-07",
     startTime: "14:00",
     timeZone: "America/Los_Angeles",
-    imageUri: "https://picsum.photos/450/300",
+    imageUri:
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    images: [
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    ],
     description:
       "Come see the latest creations from local painters, sculptors, and artisans.",
   },
@@ -40,7 +55,14 @@ export const DEMO_CAPTURE_EVENTS: DemoEvent[] = [
     startDate: "2025-05-10",
     startTime: "11:30",
     timeZone: "America/Los_Angeles",
-    imageUri: "https://picsum.photos/420/320",
+    imageUri:
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    images: [
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    ],
     description:
       "Sample cuisines from around the world. Live music, cooking demos, and more.",
   },
@@ -51,7 +73,14 @@ export const DEMO_CAPTURE_EVENTS: DemoEvent[] = [
     startDate: "2025-05-15",
     startTime: "17:00",
     timeZone: "America/Los_Angeles",
-    imageUri: "https://picsum.photos/400/400",
+    imageUri:
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    images: [
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    ],
     description:
       "Monthly meetup for local developers. Talks on React Native, AI, and more.",
   },
@@ -66,7 +95,14 @@ export const DEMO_FEED_BASE: DemoEvent[] = [
     startDate: "2025-05-02",
     startTime: "09:00",
     timeZone: "America/Los_Angeles",
-    imageUri: "https://picsum.photos/401/301",
+    imageUri:
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    images: [
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    ],
     description:
       "Weekly farmers market featuring fresh produce, artisan goods, and community workshops.",
   },
@@ -77,7 +113,14 @@ export const DEMO_FEED_BASE: DemoEvent[] = [
     startDate: "2025-05-05",
     startTime: "07:30",
     timeZone: "America/Los_Angeles",
-    imageUri: "https://picsum.photos/402/301",
+    imageUri:
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    images: [
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    ],
     description:
       "Early morning yoga session along the river. Bring your own mat. Beginners welcome!",
   },
@@ -88,7 +131,14 @@ export const DEMO_FEED_BASE: DemoEvent[] = [
     startDate: "2025-05-16",
     startTime: "10:00",
     timeZone: "America/Los_Angeles",
-    imageUri: "https://picsum.photos/403/301",
+    imageUri:
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    images: [
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+      "https://upcdn.io/12a1yek/raw/uploads/2025/01/20/4k3bMwR62B-file.jpeg",
+    ],
     description:
       "Casual meetup to chat about local events, community building, and new tech. Free pastries!",
   },

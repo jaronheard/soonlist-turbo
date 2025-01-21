@@ -1,6 +1,8 @@
 import React from "react";
 import { Animated, View } from "react-native";
+import * as Notifications from "expo-notifications";
 import { router, Stack } from "expo-router";
+import { toast } from "sonner-native";
 
 import type { DemoEvent } from "~/components/demoData";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
@@ -9,7 +11,7 @@ import { EventPreview } from "~/components/EventPreview";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 
-const OFFSET_VALUE = 112; // 112px is the height of the header + the bottom padding?
+const OFFSET_VALUE = 64; // 112px is the height of the header + the bottom padding?
 
 // Ensure we have at least one event with an image
 const DEFAULT_EVENT = DEMO_CAPTURE_EVENTS.find((event) => event.imageUri);
@@ -27,7 +29,37 @@ export default function DemoCaptureScreen() {
     setSelectedEvent(event);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Schedule notification for 4 seconds later
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status === Notifications.PermissionStatus.GRANTED) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Event Captured! 🎉",
+            body: `"${selectedEvent.name}" has been added to your feed`,
+            data: {
+              url: `/onboarding/demo-feed?eventId=${selectedEvent.id}`,
+              notificationId: "demo-capture-notification",
+            },
+          },
+          trigger: {
+            seconds: 4,
+            channelId: "default",
+          },
+        });
+      } else {
+        // Fallback to toast if no notification permissions
+        setTimeout(() => {
+          toast(`New event added: ${selectedEvent.name}`);
+        }, 4000);
+      }
+    } catch (error) {
+      console.error("Failed to schedule notification:", error);
+      setTimeout(() => {
+        toast(`New event added: ${selectedEvent.name}`);
+      }, 4000);
+    }
     router.dismissTo(`/onboarding/demo-feed?eventId=${selectedEvent.id}`);
   };
 
