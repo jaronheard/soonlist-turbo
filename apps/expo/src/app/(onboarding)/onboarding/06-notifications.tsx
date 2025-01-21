@@ -42,7 +42,7 @@ export default function NotificationsScreen() {
   });
 
   const handleNotificationPermission = async () => {
-    const { status } = await Notifications.getPermissionsAsync();
+    const { status, canAskAgain } = await Notifications.getPermissionsAsync();
 
     if (status === Notifications.PermissionStatus.GRANTED) {
       toast.success("Notifications already enabled", {
@@ -57,7 +57,6 @@ export default function NotificationsScreen() {
       return;
     }
 
-    const { canAskAgain } = await Notifications.getPermissionsAsync();
     if (!canAskAgain) {
       toast.error("Notification permission required", {
         description: "Please enable notifications in your device settings.",
