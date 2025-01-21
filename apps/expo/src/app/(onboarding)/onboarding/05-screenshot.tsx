@@ -14,7 +14,7 @@ export default function ScreenshotScreen() {
   const handleOptionSelect = (option: Option) => {
     setSelectedOption(option);
     // Store the answer in your app state here if needed
-    router.push("/feed");
+    router.push("/onboarding/06-notifications");
   };
 
   return (

@@ -16,6 +16,7 @@ import { usePostHog } from "posthog-react-native";
 interface NotificationContextType {
   expoPushToken: string;
   hasNotificationPermission: boolean;
+  registerForPushNotifications: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -117,28 +118,27 @@ export function NotificationProvider({
   const responseListener = useRef<Notifications.Subscription>();
   const posthog = usePostHog();
 
-  useEffect(() => {
-    async function registerAndCheckPermissions() {
-      try {
-        const token = await registerForPushNotificationsAsync();
-        setExpoPushToken(token ?? "");
-      } catch (error: unknown) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        setExpoPushToken(`${error}`);
-      } finally {
-        /*
-         * After trying to register for push notifications,
-         * confirm the final permission status:
-         */
-        const { status } = await Notifications.getPermissionsAsync();
-        setHasNotificationPermission(
-          status === ("granted" as Notifications.PermissionStatus),
-        );
-      }
+  const registerForPushNotifications = async () => {
+    try {
+      const token = await registerForPushNotificationsAsync();
+      setExpoPushToken(token ?? "");
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      setExpoPushToken(`${error}`);
+    } finally {
+      /*
+       * After trying to register for push notifications,
+       * confirm the final permission status:
+       */
+      const { status } = await Notifications.getPermissionsAsync();
+      setHasNotificationPermission(
+        status === ("granted" as Notifications.PermissionStatus),
+      );
     }
+  };
 
-    void registerAndCheckPermissions();
-
+  useEffect(() => {
+    // Only set up listeners, don't request permissions yet
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         setNotification(notification);
@@ -234,7 +234,11 @@ export function NotificationProvider({
 
   return (
     <NotificationContext.Provider
-      value={{ expoPushToken, hasNotificationPermission }}
+      value={{
+        expoPushToken,
+        hasNotificationPermission,
+        registerForPushNotifications,
+      }}
     >
       {children}
     </NotificationContext.Provider>
