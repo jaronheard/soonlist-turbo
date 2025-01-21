@@ -1,5 +1,5 @@
 import { Redirect } from "expo-router";
 
-export default function OnboardingScreen() {
-  return <Redirect href="/onboardix`ng/age" />;
+export default function OnboardingIndex() {
+  return <Redirect href="/onboarding/01-age" />;
 }

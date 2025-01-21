@@ -33,7 +33,11 @@ export default function SourceScreen() {
           headerShown: false,
         }}
       />
-      <QuestionContainer question="Where did you hear about us?">
+      <QuestionContainer
+        question="Where did you hear about us?"
+        currentStep={2}
+        totalSteps={2}
+      >
         <View>
           {sources.map((source) => (
             <QuestionOption
