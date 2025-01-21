@@ -69,22 +69,8 @@ export default function PhotosScreen() {
       return;
     }
 
-    const { status: newStatus } =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (newStatus === ImagePicker.PermissionStatus.GRANTED) {
-      router.push("/onboarding/demo-intro");
-    } else {
-      toast.error("Photo access required", {
-        description: "Please enable photo access in your device settings.",
-        action: {
-          label: "Settings",
-          onClick: () => {
-            void Linking.openSettings();
-          },
-        },
-      });
-    }
+    await ImagePicker.requestMediaLibraryPermissionsAsync();
+    router.push("/onboarding/demo-intro");
   };
 
   return (

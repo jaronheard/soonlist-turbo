@@ -72,21 +72,8 @@ export default function NotificationsScreen() {
     }
 
     await registerForPushNotifications();
-    const { status: newStatus } = await Notifications.getPermissionsAsync();
-
-    if (newStatus === Notifications.PermissionStatus.GRANTED) {
-      router.push("/onboarding/07-photos");
-    } else {
-      toast.error("Notification permission required", {
-        description: "Please enable notifications in your device settings.",
-        action: {
-          label: "Settings",
-          onClick: () => {
-            void Linking.openSettings();
-          },
-        },
-      });
-    }
+    await Notifications.requestPermissionsAsync();
+    router.push("/onboarding/07-photos");
   };
 
   return (
