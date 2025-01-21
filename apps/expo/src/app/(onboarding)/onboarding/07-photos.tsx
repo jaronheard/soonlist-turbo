@@ -63,7 +63,6 @@ export default function PhotosScreen() {
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <View className="-mt-16 flex-1 items-center justify-center px-12">
-        -
         <View className="w-full max-w-sm rounded-[28px] bg-interactive-3 p-6">
           <Text className="text-center text-xl font-semibold leading-6">
             Enable Full Access to save events instantly
