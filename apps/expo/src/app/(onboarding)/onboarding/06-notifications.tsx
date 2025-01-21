@@ -63,21 +63,21 @@ export default function NotificationsScreen() {
       currentStep={6}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
-      <View className="mx-4 -mt-32 flex-1 items-center justify-center">
+      <View className="mx-12 -mt-24 flex-1 items-center justify-center">
         <View className="relative">
           <View className="rounded-2xl bg-white">
             <View className="px-2 pb-3 pt-4">
-              <Text className="mb-2 px-8 text-center text-xl font-medium leading-7">
-                Turn on Push Notifications to capture and remember events.
+              <Text className="mb-2 px-4 text-center text-xl font-semibold leading-6">
+                Turn on Push Notifications to capture and remember.
               </Text>
-              <Text className="mb-2 px-8 text-center text-base leading-5 text-[#3c3c43]/60">
+              <Text className="mb-2 px-4 text-center text-sm leading-5">
                 Soonlist notifies you when events are created, and to help you
                 build a habit of capturing events.
               </Text>
             </View>
             <View className="flex-row border-t border-[#3c3c43]/30">
               <Pressable className="w-1/2 py-3" disabled>
-                <Text className="text-center text-lg font-medium text-[#007AFF] opacity-30">
+                <Text className="text-center text-lg font-normal text-blue-500/30">
                   Don't Allow
                 </Text>
               </Pressable>
@@ -87,7 +87,7 @@ export default function NotificationsScreen() {
                   onPress={handleNotificationPermission}
                   hitSlop={40}
                 >
-                  <Text className="text-center text-lg font-bold text-[#007AFF]">
+                  <Text className="text-center text-lg font-bold text-blue-500">
                     Allow
                   </Text>
                 </Pressable>

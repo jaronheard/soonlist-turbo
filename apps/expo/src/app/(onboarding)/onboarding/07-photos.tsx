@@ -1,13 +1,42 @@
 import React, { useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
+import { ChevronLeft } from "lucide-react-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function PhotosScreen() {
   const [showRealPrompt, setShowRealPrompt] = useState(false);
+  const translateX = useSharedValue(0);
+
+  // Start the animation immediately
+  translateX.value = withRepeat(
+    withTiming(-12, {
+      duration: 500,
+      easing: Easing.inOut(Easing.sin),
+    }),
+    -1,
+    true,
+  );
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    position: "absolute",
+    right: "-25%",
+    top: "50%",
+    transform: [
+      { translateX: translateX.value },
+      { translateY: -32 }, // half of the chevron size to center it
+    ],
+  }));
 
   const handlePhotoPermission = async () => {
     if (showRealPrompt) {
@@ -56,38 +85,40 @@ export default function PhotosScreen() {
             ))}
           </View>
 
-          <View className="-mx-6 rounded-xl border-b border-gray-200 px-4 py-4">
-            <Text className="text-center text-sm font-bold text-gray-900">
+          <View className="-mx-6 -mt-2 rounded-xl px-4 py-4">
+            <Text className="text-center text-sm font-bold">
               Full access is recommended
             </Text>
-            <Text className="mt-1 text-center text-sm leading-5 text-gray-500">
+            <Text className="mt-1 text-center text-sm leading-5">
               Full access makes it faster to save events. We only capture photos
               you select.
             </Text>
           </View>
 
-          <View className="-mx-6 -mb-6">
+          <View className="-mx-6 -mb-6 mt-2">
             <Pressable
-              onPress={() => handlePhotoPermission()}
-              className="w-full border-b border-gray-200 py-3"
+              disabled
+              className="w-full border-b border-t border-gray-200 py-3"
             >
-              <Text className="text-center text-lg font-normal text-blue-500">
+              <Text className="text-center text-lg font-normal text-blue-500/30">
                 Limit Access...
               </Text>
             </Pressable>
-            <Pressable
-              onPress={() => handlePhotoPermission()}
-              className="w-full border-b border-gray-200 py-3"
-            >
-              <Text className="text-center text-lg font-normal text-blue-500 ">
-                Allow Full Access
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => router.push("/feed")}
-              className="w-full py-3"
-            >
-              <Text className="text-center text-lg font-normal text-blue-500">
+            <View className="relative">
+              <Pressable
+                onPress={() => handlePhotoPermission()}
+                className="w-full border-b border-gray-200 py-3"
+              >
+                <Text className="text-center text-lg font-bold text-blue-500">
+                  Allow Full Access
+                </Text>
+              </Pressable>
+              <Animated.View style={animatedStyle}>
+                <ChevronLeft size={64} color="#FFF" strokeWidth={4} />
+              </Animated.View>
+            </View>
+            <Pressable disabled className="w-full py-3">
+              <Text className="text-center text-lg font-normal text-blue-500/30">
                 Don't Allow
               </Text>
             </Pressable>
