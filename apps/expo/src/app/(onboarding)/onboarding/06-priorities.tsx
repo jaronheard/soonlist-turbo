@@ -4,6 +4,7 @@ import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
+import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const priorities = [
@@ -20,10 +21,11 @@ export default function PrioritiesScreen() {
   const [selectedPriority, setSelectedPriority] = useState<Priority | null>(
     null,
   );
+  const setUserPriority = useAppStore((state) => state.setUserPriority);
 
   const handlePrioritySelect = (priority: Priority) => {
     setSelectedPriority(priority);
-    // Store the priority in your app state here if needed
+    setUserPriority(priority);
     router.push("/onboarding/demo-intro");
   };
 

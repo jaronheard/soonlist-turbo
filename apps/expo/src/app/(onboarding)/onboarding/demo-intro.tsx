@@ -3,9 +3,32 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { ArrowRight } from "lucide-react-native";
+import { ArrowUp } from "lucide-react-native";
+
+import { useAppStore } from "~/store";
 
 export default function DemoIntroScreen() {
+  const userPriority = useAppStore((state) => state.userPriority);
+
+  const getPriorityMessage = () => {
+    if (userPriority?.includes("connections")) {
+      return "Having all your possibilities in one place will help you make more meaningful connections";
+    }
+    if (userPriority?.includes("out more")) {
+      return "Having all your possibilities in one place will help you get out more";
+    }
+    if (userPriority?.includes("best event")) {
+      return "Having all your possibilities in one place will help you choose the best events";
+    }
+    if (userPriority?.includes("planning")) {
+      return "Having all your possibilities in one place will help you plan more flexibly";
+    }
+    if (userPriority?.includes("community")) {
+      return "Having all your possibilities in one place will help you build more community";
+    }
+    return "Having all your possibilities in one place will help you do more of what matters";
+  };
+
   return (
     <View className="flex-1 bg-interactive-2">
       <View className="flex-1 items-center justify-center px-4">
@@ -13,7 +36,7 @@ export default function DemoIntroScreen() {
           💖 We got you
         </Text>
         <Text className="mb-12 text-center text-2xl text-black">
-          Just screenshot events you like{"\n"}and add them to Soonlist
+          {getPriorityMessage()}
         </Text>
         <Text className="text-center text-xl font-semibold text-black">
           Try it now
@@ -56,7 +79,7 @@ export default function DemoIntroScreen() {
           onPress={() => router.push("/onboarding/demo-capture")}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex-row items-center justify-center rounded-full bg-[#E0D9FF] p-6 shadow-lg"
         >
-          <ArrowRight size={28} color="#5A32FB" />
+          <ArrowUp size={28} color="#5A32FB" />
         </TouchableOpacity>
       </View>
     </View>
