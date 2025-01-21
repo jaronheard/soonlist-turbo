@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import React from "react";
+import { Linking, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -10,13 +10,13 @@ import Animated, {
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import { ChevronUp } from "lucide-react-native";
+import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useNotification } from "~/providers/NotificationProvider";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function NotificationsScreen() {
-  const [showRealPrompt, setShowRealPrompt] = useState(false);
   const { registerForPushNotifications } = useNotification();
   const translateY = useSharedValue(0);
 
@@ -42,20 +42,51 @@ export default function NotificationsScreen() {
   });
 
   const handleNotificationPermission = async () => {
-    if (showRealPrompt) {
-      await registerForPushNotifications();
-      const { status } = await Notifications.getPermissionsAsync();
+    const { status } = await Notifications.getPermissionsAsync();
 
-      if (status !== Notifications.PermissionStatus.GRANTED) {
-        Alert.alert(
-          "Permission required",
-          "Please enable notifications in your device settings to get the most out of Soonlist.",
-        );
-      }
+    if (status === Notifications.PermissionStatus.GRANTED) {
+      toast.success("Notifications already enabled", {
+        action: {
+          label: "Continue",
+          onClick: () => {
+            router.push("/onboarding/07-photos");
+            toast.dismiss();
+          },
+        },
+      });
+      return;
+    }
 
+    const { canAskAgain } = await Notifications.getPermissionsAsync();
+    if (!canAskAgain) {
+      toast.error("Notification permission required", {
+        description: "Please enable notifications in your device settings.",
+        action: {
+          label: "Settings",
+          onClick: () => {
+            void Linking.openSettings();
+          },
+        },
+        duration: Infinity,
+      });
+      return;
+    }
+
+    await registerForPushNotifications();
+    const { status: newStatus } = await Notifications.getPermissionsAsync();
+
+    if (newStatus === Notifications.PermissionStatus.GRANTED) {
       router.push("/onboarding/07-photos");
     } else {
-      setShowRealPrompt(true);
+      toast.error("Notification permission required", {
+        description: "Please enable notifications in your device settings.",
+        action: {
+          label: "Settings",
+          onClick: () => {
+            void Linking.openSettings();
+          },
+        },
+      });
     }
   };
 
