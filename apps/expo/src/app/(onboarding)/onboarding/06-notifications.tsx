@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 
-import { Button } from "~/components/Button";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useNotification } from "~/providers/NotificationProvider";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
@@ -37,22 +36,30 @@ export default function NotificationsScreen() {
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <View className="flex-1 items-center justify-center px-4">
-        <View className="w-full max-w-sm rounded-lg bg-gray-100 p-4 shadow-sm">
-          <Text className="mb-2 text-base font-medium">
-            "Soonlist" Would Like to Send You Notifications
-          </Text>
-          <Text className="mb-4 text-sm text-gray-600">
-            We'll notify you when it's time to capture events you want to check
-            out, so you never miss an opportunity.
-          </Text>
-          <View className="flex-row justify-end space-x-4">
-            <Button
-              variant="ghost"
-              onPress={() => handleNotificationPermission()}
-              className="flex-1"
+        <View className="h-min overflow-hidden rounded-2xl bg-white">
+          <View className="px-2 pb-3 pt-4">
+            <Text className="mb-2 px-8 text-center text-xl font-medium leading-7">
+              Turn on Push Notifications to capture and remember events.
+            </Text>
+            <Text className="mb-2 px-8 text-center text-base leading-5 text-[#3c3c43]/60">
+              Soonlist notifies you when events are created, and to help you
+              build a habit of capturing events.
+            </Text>
+          </View>
+          <View className="flex-row border-t border-[#3c3c43]/30">
+            <Pressable className="w-1/2 py-3" disabled>
+              <Text className="text-center text-lg font-medium text-[#007AFF] opacity-30">
+                Don't Allow
+              </Text>
+            </Pressable>
+            <Pressable
+              className="w-1/2 border-l border-[#3c3c43]/30 py-3"
+              onPress={handleNotificationPermission}
             >
-              Allow
-            </Button>
+              <Text className="text-center text-lg font-bold text-[#007AFF]">
+                Allow
+              </Text>
+            </Pressable>
           </View>
         </View>
       </View>
