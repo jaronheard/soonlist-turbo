@@ -35,30 +35,34 @@ export default function PhotosScreen() {
     >
       <View className="flex-1 items-center justify-center px-4">
         <View className="w-full max-w-sm space-y-5 rounded-[28px] bg-white p-6">
-          <Text className="text-center text-2xl font-semibold">
-            "Soonlist (Dev)" Would Like to Access Your Photo Library
+          <Text className="text-center text-xl font-semibold">
+            Enable Full Photo Access to save events instantly
           </Text>
           <Text className="text-center text-base text-gray-500">
-            The app accesses photos you select to add events.
+            Choose 'Allow access to all photos' in the next step.
           </Text>
-
           {/* Placeholder Image Grid */}
-          <View className="mt-2 flex-row flex-wrap justify-between">
+          <View className="-mx-6 mt-2 flex-row flex-wrap bg-white">
             {Array.from({ length: 8 }).map((_, i) => (
               <View
                 key={i}
-                className="mb-2 h-20 w-[23%] rounded-xl bg-gray-100"
+                className="h-20 w-1/4 bg-gray-100"
+                style={{
+                  borderRightWidth: i % 4 !== 3 ? 1 : 0,
+                  borderBottomWidth: i < 4 ? 1 : 0,
+                  borderColor: "white",
+                }}
               />
             ))}
           </View>
 
-          <View className="rounded-xl bg-gray-50 px-4 py-4">
+          <View className="-mx-6 rounded-xl border-b border-gray-200 px-4 py-4">
             <Text className="text-center text-base text-gray-900">
-              22,720 Photos, 3,683 Videos
+              Full access is recommended
             </Text>
             <Text className="mt-2 text-center text-[15px] leading-5 text-gray-500">
-              Photos may contain data associated with location, depth
-              information, captions, and audio.
+              Full access makes it faster to save events. We only capture photos
+              you select.
             </Text>
           </View>
 
