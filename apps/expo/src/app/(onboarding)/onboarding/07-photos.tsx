@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import React from "react";
+import { Linking, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -10,12 +10,12 @@ import Animated, {
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
+import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function PhotosScreen() {
-  const [showRealPrompt, setShowRealPrompt] = useState(false);
   const translateX = useSharedValue(0);
 
   // Start the animation immediately
@@ -39,20 +39,51 @@ export default function PhotosScreen() {
   }));
 
   const handlePhotoPermission = async () => {
-    if (showRealPrompt) {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status, canAskAgain } =
+      await ImagePicker.getMediaLibraryPermissionsAsync();
 
-      if (status !== ImagePicker.PermissionStatus.GRANTED) {
-        Alert.alert(
-          "Permission required",
-          "Please enable photo access in your device settings to save screenshots and photos to Soonlist.",
-        );
-      }
+    if (status === ImagePicker.PermissionStatus.GRANTED) {
+      toast.success("Photo access already enabled", {
+        action: {
+          label: "Continue",
+          onClick: () => {
+            router.push("/onboarding/demo-intro");
+            toast.dismiss();
+          },
+        },
+      });
+      return;
+    }
 
+    if (!canAskAgain) {
+      toast.error("Photo access required", {
+        description: "Please enable photo access in your device settings.",
+        action: {
+          label: "Settings",
+          onClick: () => {
+            void Linking.openSettings();
+          },
+        },
+        duration: Infinity,
+      });
+      return;
+    }
+
+    const { status: newStatus } =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (newStatus === ImagePicker.PermissionStatus.GRANTED) {
       router.push("/onboarding/demo-intro");
     } else {
-      setShowRealPrompt(true);
+      toast.error("Photo access required", {
+        description: "Please enable photo access in your device settings.",
+        action: {
+          label: "Settings",
+          onClick: () => {
+            void Linking.openSettings();
+          },
+        },
+      });
     }
   };
 
