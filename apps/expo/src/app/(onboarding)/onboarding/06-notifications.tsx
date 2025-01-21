@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
+import { ChevronUp } from "lucide-react-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useNotification } from "~/providers/NotificationProvider";
@@ -10,6 +18,26 @@ import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 export default function NotificationsScreen() {
   const [showRealPrompt, setShowRealPrompt] = useState(false);
   const { registerForPushNotifications } = useNotification();
+  const translateY = useSharedValue(0);
+
+  // Start the animation immediately
+  translateY.value = withRepeat(
+    withTiming(-12, {
+      duration: 500,
+      easing: Easing.inOut(Easing.sin),
+    }),
+    -1,
+    true,
+  );
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    position: "absolute",
+    left: "25%",
+    top: "100%",
+    paddingLeft: 8,
+    paddingTop: 0,
+    transform: [{ translateY: translateY.value }],
+  }));
 
   const handleNotificationPermission = async () => {
     if (showRealPrompt) {
@@ -35,31 +63,38 @@ export default function NotificationsScreen() {
       currentStep={6}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
-      <View className="flex-1 items-center justify-center px-4">
-        <View className="h-min overflow-hidden rounded-2xl bg-white">
-          <View className="px-2 pb-3 pt-4">
-            <Text className="mb-2 px-8 text-center text-xl font-medium leading-7">
-              Turn on Push Notifications to capture and remember events.
-            </Text>
-            <Text className="mb-2 px-8 text-center text-base leading-5 text-[#3c3c43]/60">
-              Soonlist notifies you when events are created, and to help you
-              build a habit of capturing events.
-            </Text>
-          </View>
-          <View className="flex-row border-t border-[#3c3c43]/30">
-            <Pressable className="w-1/2 py-3" disabled>
-              <Text className="text-center text-lg font-medium text-[#007AFF] opacity-30">
-                Don't Allow
+      <View className="mx-4 flex-1 items-center justify-center">
+        <View className="relative">
+          <View className="rounded-2xl bg-white">
+            <View className="px-2 pb-3 pt-4">
+              <Text className="mb-2 px-8 text-center text-xl font-medium leading-7">
+                Turn on Push Notifications to capture and remember events.
               </Text>
-            </Pressable>
-            <Pressable
-              className="w-1/2 border-l border-[#3c3c43]/30 py-3"
-              onPress={handleNotificationPermission}
-            >
-              <Text className="text-center text-lg font-bold text-[#007AFF]">
-                Allow
+              <Text className="mb-2 px-8 text-center text-base leading-5 text-[#3c3c43]/60">
+                Soonlist notifies you when events are created, and to help you
+                build a habit of capturing events.
               </Text>
-            </Pressable>
+            </View>
+            <View className="flex-row border-t border-[#3c3c43]/30">
+              <Pressable className="w-1/2 py-3" disabled>
+                <Text className="text-center text-lg font-medium text-[#007AFF] opacity-30">
+                  Don't Allow
+                </Text>
+              </Pressable>
+              <View className="w-1/2">
+                <Pressable
+                  className="w-full border-l border-[#3c3c43]/30 py-3"
+                  onPress={handleNotificationPermission}
+                >
+                  <Text className="text-center text-lg font-bold text-[#007AFF]">
+                    Allow
+                  </Text>
+                </Pressable>
+                <Animated.View style={animatedStyle}>
+                  <ChevronUp size={64} color="#FFF" />
+                </Animated.View>
+              </View>
+            </View>
           </View>
         </View>
       </View>
