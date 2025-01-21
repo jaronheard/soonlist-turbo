@@ -1,5 +1,9 @@
 import React from "react";
 import { Text, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface QuestionContainerProps {
@@ -17,12 +21,16 @@ export function QuestionContainer({
 }: QuestionContainerProps) {
   const progress = (currentStep / totalSteps) * 100;
 
+  const progressStyle = useAnimatedStyle(() => ({
+    width: withTiming(`${progress}%`, { duration: 300 }),
+  }));
+
   return (
     <SafeAreaView className="flex-1 bg-interactive-1">
       <View className="h-1 w-full bg-white">
-        <View
-          className="h-full bg-interactive-2 transition-all duration-300"
-          style={{ width: `${progress}%` }}
+        <Animated.View
+          className="h-full bg-interactive-2"
+          style={progressStyle}
         />
       </View>
       <View className="flex-1 px-6 pt-8">

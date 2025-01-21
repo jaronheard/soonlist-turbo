@@ -4,6 +4,7 @@ import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
+import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const sources = [
   "Google Search",
@@ -31,7 +32,7 @@ export default function SourceScreen() {
       <QuestionContainer
         question="Where did you hear about us?"
         currentStep={2}
-        totalSteps={2}
+        totalSteps={TOTAL_ONBOARDING_STEPS}
       >
         <View>
           {sources.map((source) => (

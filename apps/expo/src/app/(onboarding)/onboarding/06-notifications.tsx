@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import { Button } from "~/components/Button";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useNotification } from "~/providers/NotificationProvider";
+import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function NotificationsScreen() {
   const [showRealPrompt, setShowRealPrompt] = useState(false);
@@ -33,7 +34,7 @@ export default function NotificationsScreen() {
     <QuestionContainer
       question="Enable Notifications"
       currentStep={6}
-      totalSteps={7}
+      totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <View className="flex-1 items-center justify-center px-4">
         <View className="w-full max-w-sm rounded-lg bg-gray-100 p-4 shadow-sm">

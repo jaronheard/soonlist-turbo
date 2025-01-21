@@ -4,6 +4,7 @@ import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
+import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const options = ["Yes", "No"] as const;
 type Option = (typeof options)[number];
@@ -21,7 +22,7 @@ export default function ScreenshotScreen() {
     <QuestionContainer
       question="Do you screenshot events you want to check out?"
       currentStep={5}
-      totalSteps={5}
+      totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <View>
         {options.map((option) => (

@@ -4,6 +4,7 @@ import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
+import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const priorities = [
   "Making new connections",
@@ -28,7 +29,7 @@ export default function PrioritiesScreen() {
     <QuestionContainer
       question="What matters most to you right now?"
       currentStep={3}
-      totalSteps={5}
+      totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <View>
         {priorities.map((priority) => (

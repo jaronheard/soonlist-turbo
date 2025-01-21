@@ -4,6 +4,7 @@ import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
+import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const ageRanges = [
   "Under 24",
@@ -26,23 +27,21 @@ export default function AgeScreen() {
   };
 
   return (
-    <>
-      <QuestionContainer
-        question="How old are you?"
-        currentStep={1}
-        totalSteps={2}
-      >
-        <View>
-          {ageRanges.map((age) => (
-            <QuestionOption
-              key={age}
-              label={age}
-              onPress={() => handleAgeSelect(age)}
-              isSelected={selectedAge === age}
-            />
-          ))}
-        </View>
-      </QuestionContainer>
-    </>
+    <QuestionContainer
+      question="How old are you?"
+      currentStep={1}
+      totalSteps={TOTAL_ONBOARDING_STEPS}
+    >
+      <View>
+        {ageRanges.map((age) => (
+          <QuestionOption
+            key={age}
+            label={age}
+            onPress={() => handleAgeSelect(age)}
+            isSelected={selectedAge === age}
+          />
+        ))}
+      </View>
+    </QuestionContainer>
   );
 }
