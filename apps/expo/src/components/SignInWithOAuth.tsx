@@ -1,28 +1,14 @@
 import type { OAuthStrategy } from "@clerk/types";
 import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
-} from "react-native";
-import Animated, {
-  FadeIn,
-  FadeOut,
-  Layout,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
-import { ChevronDown } from "lucide-react-native";
+import { X } from "lucide-react-native";
 import { usePostHog } from "posthog-react-native";
 
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
@@ -38,7 +24,6 @@ WebBrowser.maybeCompleteAuthSession();
 
 const SignInWithOAuth = () => {
   useWarmUpBrowser();
-  const { height } = useWindowDimensions();
   const posthog = usePostHog();
 
   const { signIn, setActive: setActiveSignIn } = useSignIn();
@@ -57,20 +42,8 @@ const SignInWithOAuth = () => {
     ReturnType<typeof useSignUp>["signUp"] | null
   >(null);
 
-  const chevronRotation = useSharedValue(0);
-
-  const animatedChevronStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotate: `${chevronRotation.value}deg` }],
-    };
-  });
-
   const toggleOtherOptions = () => {
-    const newValue = !showOtherOptions;
-    setShowOtherOptions(newValue);
-    chevronRotation.value = withTiming(newValue ? 180 : 0, {
-      duration: 400,
-    });
+    setShowOtherOptions(!showOtherOptions);
   };
 
   if (!signIn || !signUp) {
@@ -198,17 +171,11 @@ const SignInWithOAuth = () => {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-interactive-3"
-      contentContainerStyle={{ flexGrow: 1 }}
-    >
+    <View className="flex-1 bg-interactive-3">
       <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 px-4 pb-8 pt-24">
-        <AnimatedView
-          className="flex-1 justify-between"
-          layout={Layout.duration(400)}
-        >
-          <View>
+        <AnimatedView className="flex-1" layout={Layout.duration(400)}>
+          <View className="shrink-0">
             <AnimatedView
               className="mb-4 items-center"
               layout={Layout.duration(400)}
@@ -226,56 +193,63 @@ const SignInWithOAuth = () => {
               <Text className="mb-4 text-center text-lg text-gray-500">
                 Screenshots → list of possibilities
               </Text>
-              <AnimatedView layout={Layout.duration(400)} className="w-full">
-                <ExpoImage
-                  source={require("../assets/feed.png") as ImageSourcePropType}
-                  style={{
-                    height: height * 0.6,
-                    width: "100%",
-                    maxHeight: 500,
-                  }}
-                  contentFit="contain"
-                  cachePolicy="disk"
-                  transition={100}
-                />
-              </AnimatedView>
             </AnimatedView>
           </View>
 
-          <AnimatedView className="w-full" layout={Layout.duration(400)}>
+          <AnimatedView
+            layout={Layout.duration(400)}
+            className="flex-1 justify-center"
+          >
+            <ExpoImage
+              source={require("../assets/feed.png") as ImageSourcePropType}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="contain"
+              cachePolicy="disk"
+              transition={100}
+            />
+          </AnimatedView>
+
+          <AnimatedView
+            className="relative w-full shrink-0"
+            layout={Layout.duration(400)}
+          >
             <AppleSignInButton
               onPress={() => void handleOAuthFlow("oauth_apple")}
             />
             <View className="h-3" />
             <AnimatedPressable
               onPress={toggleOtherOptions}
-              className="flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
+              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
             >
-              <Text className="mr-2 text-base font-medium text-gray-700">
+              <Text className="text-base font-medium text-gray-700">
                 Other Options
               </Text>
-              <Animated.View style={animatedChevronStyle}>
-                <ChevronDown size={20} color="#374151" />
-              </Animated.View>
+              {showOtherOptions && (
+                <View className="absolute right-6">
+                  <X size={20} color="#374151" />
+                </View>
+              )}
             </AnimatedPressable>
             {showOtherOptions && (
               <AnimatedView
                 entering={FadeIn.duration(400)}
                 exiting={FadeOut.duration(300)}
                 layout={Layout.duration(400)}
+                className="absolute bottom-full w-full"
               >
+                <View className="h-3" />
+                <EmailSignInButton onPress={navigateToEmailSignUp} />
                 <View className="h-3" />
                 <GoogleSignInButton
                   onPress={() => void handleOAuthFlow("oauth_google")}
                 />
                 <View className="h-3" />
-                <EmailSignInButton onPress={navigateToEmailSignUp} />
               </AnimatedView>
             )}
           </AnimatedView>
         </AnimatedView>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
