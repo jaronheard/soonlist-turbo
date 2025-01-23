@@ -1,52 +1,75 @@
-import type { KeyboardEvent } from "react-native";
-import { useEffect, useRef } from "react";
-import { Animated, Easing, Keyboard, Platform } from "react-native";
+// useKeyboardHeight.ts
+import type {
+  EmitterSubscription,
+  KeyboardEvent,
+  KeyboardEventName,
+} from "react-native";
+import { useEffect } from "react";
+import { Keyboard, Platform } from "react-native";
+import {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
-interface UseKeyboardHeight {
-  marginBottomAnim: Animated.AnimatedAddition<number>;
-}
-
-export function useKeyboardHeight(offset: number): UseKeyboardHeight {
-  const keyboardHeightAnim = useRef(new Animated.Value(0)).current;
-  const marginBottomAnim = Animated.add(keyboardHeightAnim, offset);
+/**
+ * Returns an object containing a Reanimated `style` that
+ * you can spread onto a View. It animates marginBottom when
+ * the keyboard shows/hides, offset by `offset`.
+ */
+export function useKeyboardHeight(offset: number) {
+  const keyboardHeight = useSharedValue(0);
 
   useEffect(() => {
-    function handleShow(e: KeyboardEvent) {
-      Animated.timing(keyboardHeightAnim, {
-        toValue: e.endCoordinates.height,
-        duration: Platform.OS === "ios" ? 250 : 200,
-        easing:
-          Platform.OS === "ios"
-            ? Easing.bezier(0.17, 0.59, 0.4, 0.77) // iOS keyboard curve
-            : Easing.out(Easing.ease),
-        useNativeDriver: false,
-      }).start();
-    }
-    function handleHide() {
-      Animated.timing(keyboardHeightAnim, {
-        toValue: 0,
-        duration: Platform.OS === "ios" ? 250 : 200,
-        easing:
-          Platform.OS === "ios"
-            ? Easing.bezier(0.17, 0.59, 0.4, 0.77) // iOS keyboard curve
-            : Easing.out(Easing.ease),
-        useNativeDriver: false,
-      }).start();
+    const showEvent = Platform.select({
+      ios: "keyboardWillShow",
+      android: "keyboardDidShow",
+    });
+    const hideEvent = Platform.select({
+      ios: "keyboardWillHide",
+      android: "keyboardDidHide",
+    });
+
+    function handleKeyboardShow(e: KeyboardEvent) {
+      // iOS provides e.duration, Android often doesn’t
+      const duration = e.duration && e.duration > 0 ? e.duration : 250;
+      keyboardHeight.value = withTiming(e.endCoordinates.height, {
+        duration,
+        easing: Easing.out(Easing.ease),
+      });
     }
 
-    const showSub = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      handleShow,
+    function handleKeyboardHide(e: KeyboardEvent) {
+      // iOS provides e.duration, Android often doesn’t
+      const duration = e.duration && e.duration > 0 ? e.duration : 250;
+      keyboardHeight.value = withTiming(0, {
+        duration,
+        easing: Easing.out(Easing.ease),
+      });
+    }
+
+    const showSub: EmitterSubscription = Keyboard.addListener(
+      showEvent as KeyboardEventName,
+      handleKeyboardShow,
     );
-    const hideSub = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      handleHide,
+    const hideSub: EmitterSubscription = Keyboard.addListener(
+      hideEvent as KeyboardEventName,
+      handleKeyboardHide,
     );
+
     return () => {
       showSub.remove();
       hideSub.remove();
     };
-  }, [keyboardHeightAnim]);
+  }, [keyboardHeight]);
 
-  return { marginBottomAnim };
+  // Use a Reanimated style to transform the marginBottom
+  const style = useAnimatedStyle(() => {
+    return {
+      marginBottom: keyboardHeight.value + offset,
+    };
+  });
+
+  return { style };
 }

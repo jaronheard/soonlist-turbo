@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
-import { Animated, Linking, View } from "react-native";
+import { Linking, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { router, Stack, useLocalSearchParams } from "expo-router";
@@ -21,7 +22,7 @@ import { useAppStore } from "~/store";
 const OFFSET_VALUE = 64;
 
 export default function NewEventModal() {
-  const { marginBottomAnim } = useKeyboardHeight(OFFSET_VALUE);
+  const { style: keyboardStyle } = useKeyboardHeight(OFFSET_VALUE);
   const { expoPushToken, hasNotificationPermission } = useNotification();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
@@ -218,7 +219,7 @@ export default function NewEventModal() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#5A32FB]">
-      {/* Wrap everything in a “card” that has rounded top corners, 
+      {/* Wrap everything in a "card" that has rounded top corners, 
           hiding anything behind it so no black gap appears */}
       <View className="flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
         <View className="flex-1">
@@ -293,10 +294,7 @@ export default function NewEventModal() {
 
         {/* The capture button sits at the bottom, with optional animated margin 
             so it can float above the keyboard smoothly. */}
-        <Animated.View
-          className="px-4 pb-4"
-          style={{ paddingBottom: marginBottomAnim }}
-        >
+        <Animated.View className="px-4 pb-4" style={keyboardStyle}>
           <CaptureEventButton
             handleCreateEvent={handleCreateEvent}
             input={input}
