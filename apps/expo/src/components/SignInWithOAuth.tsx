@@ -1,4 +1,5 @@
 import type { OAuthStrategy } from "@clerk/types";
+import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
 import {
   Pressable,
@@ -8,11 +9,20 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  Layout,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
+import { ChevronDown } from "lucide-react-native";
 import { usePostHog } from "posthog-react-native";
 
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
@@ -20,6 +30,9 @@ import { AppleSignInButton } from "./AppleSignInButton";
 import { EmailSignInButton } from "./EmailSignInButton"; // You'll need to create this component
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Logo } from "./Logo";
+
+const AnimatedView = Animated.createAnimatedComponent(View);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -39,9 +52,26 @@ const SignInWithOAuth = () => {
 
   const [username, setUsername] = useState("");
   const [showUsernameInput, setShowUsernameInput] = useState(false);
+  const [showOtherOptions, setShowOtherOptions] = useState(false);
   const [pendingSignUp, setPendingSignUp] = useState<
     ReturnType<typeof useSignUp>["signUp"] | null
   >(null);
+
+  const chevronRotation = useSharedValue(0);
+
+  const animatedChevronStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${chevronRotation.value}deg` }],
+    };
+  });
+
+  const toggleOtherOptions = () => {
+    const newValue = !showOtherOptions;
+    setShowOtherOptions(newValue);
+    chevronRotation.value = withTiming(newValue ? 180 : 0, {
+      duration: 400,
+    });
+  };
 
   if (!signIn || !signUp) {
     return null;
@@ -174,40 +204,66 @@ const SignInWithOAuth = () => {
     >
       <Stack.Screen options={{ headerShown: false }} />
       <View className="px-4 py-8">
-        <View className="mb-8 items-center">
+        <AnimatedView
+          className="mb-8 items-center"
+          layout={Layout.duration(400)}
+        >
           <Logo className="h-10 w-40" />
-        </View>
-        <View className="items-center">
+        </AnimatedView>
+        <AnimatedView className="items-center" layout={Layout.duration(400)}>
           <Text className="mb-2 text-center font-heading text-4xl font-bold text-gray-700">
             Organize <Text className="text-interactive-1">possibilities</Text>
           </Text>
           <Text className="mb-4 text-center text-lg text-gray-500">
             The best way to add, organize, and share events.
           </Text>
-          <ExpoImage
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            source={require("../assets/onboarding-events-collage.png")}
-            style={{ height: height * 0.3, width: "100%", maxHeight: 250 }}
-            contentFit="contain"
-            cachePolicy="disk"
-            transition={100}
-          />
+          <AnimatedView layout={Layout.duration(400)} className="w-full">
+            <ExpoImage
+              source={
+                require("../assets/onboarding-events-collage.png") as ImageSourcePropType
+              }
+              style={{ height: height * 0.3, width: "100%", maxHeight: 250 }}
+              contentFit="contain"
+              cachePolicy="disk"
+              transition={100}
+            />
+          </AnimatedView>
           <Text className="my-4 text-center text-base text-gray-600">
             Join Soonlist to start capturing and sharing events that inspire
             you.
           </Text>
-        </View>
-        <View className="mt-4 w-full">
-          <GoogleSignInButton
-            onPress={() => void handleOAuthFlow("oauth_google")}
-          />
-          <View className="h-3" />
+        </AnimatedView>
+        <AnimatedView className="mt-4 w-full" layout={Layout.duration(400)}>
           <AppleSignInButton
             onPress={() => void handleOAuthFlow("oauth_apple")}
           />
           <View className="h-3" />
-          <EmailSignInButton onPress={navigateToEmailSignUp} />
-        </View>
+          <AnimatedPressable
+            onPress={toggleOtherOptions}
+            className="flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
+          >
+            <Text className="mr-2 text-base font-medium text-gray-700">
+              Other Options
+            </Text>
+            <Animated.View style={animatedChevronStyle}>
+              <ChevronDown size={20} color="#374151" />
+            </Animated.View>
+          </AnimatedPressable>
+          {showOtherOptions && (
+            <AnimatedView
+              entering={FadeIn.duration(400)}
+              exiting={FadeOut.duration(300)}
+              layout={Layout.duration(400)}
+            >
+              <View className="h-3" />
+              <GoogleSignInButton
+                onPress={() => void handleOAuthFlow("oauth_google")}
+              />
+              <View className="h-3" />
+              <EmailSignInButton onPress={navigateToEmailSignUp} />
+            </AnimatedView>
+          )}
+        </AnimatedView>
       </View>
     </ScrollView>
   );
