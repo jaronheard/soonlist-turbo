@@ -1,9 +1,16 @@
 import React from "react";
-import { Image, Text, View } from "react-native";
+import {
+  Button,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
-import { QuestionOption } from "~/components/QuestionOption";
 import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
@@ -74,10 +81,39 @@ export default function WeGotYouScreen() {
           </View>
         </View>
       </View>
-      <QuestionOption
-        label="Continue"
+      <TouchableOpacity
         onPress={() => router.push("/onboarding/demo-intro")}
-      />
+        style={styles.button}
+      >
+        <View style={styles.contentContainer}>
+          <Text style={styles.text}>Continue</Text>
+        </View>
+      </TouchableOpacity>
     </QuestionContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 100,
+    paddingVertical: 12,
+  },
+  contentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logo: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
+  },
+  text: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+});
