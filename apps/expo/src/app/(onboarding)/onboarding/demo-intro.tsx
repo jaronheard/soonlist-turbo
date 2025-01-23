@@ -45,17 +45,17 @@ export default function DemoIntroScreen() {
           Here's how it works
         </Text>
         <View className="mb-12 w-full gap-3">
-          <View className="rounded-xl border-2 border-accent-blue/30 bg-accent-blue p-4">
+          <View className="rounded-xl border-2 border-accent-blue/30 p-4">
             <Text className="text-xl font-bold text-black">
               1️⃣ Screenshot events you see
             </Text>
           </View>
-          <View className="rounded-xl border-2 border-accent-orange/30 bg-accent-orange p-4">
+          <View className="rounded-xl border-2 border-accent-orange/30 p-4">
             <Text className="text-xl font-bold text-black">
               2️⃣ Add photos to Soonlist
             </Text>
           </View>
-          <View className="rounded-xl border-2 border-accent-green/30 bg-accent-green p-4">
+          <View className="rounded-xl border-2 border-accent-green/30 p-4">
             <Text className="text-xl font-bold text-black">
               3️⃣ See all your possibilities
             </Text>

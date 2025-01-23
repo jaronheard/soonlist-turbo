@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
@@ -31,10 +31,13 @@ export default function PrioritiesScreen() {
 
   return (
     <QuestionContainer
-      question="What matters most to you right now?"
+      question="What's your main goal?"
       currentStep={3}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
+      <Text className="-mt-2 mb-4 text-center text-lg text-white">
+        I want to...
+      </Text>
       <View>
         {priorities.map((priority) => (
           <QuestionOption
