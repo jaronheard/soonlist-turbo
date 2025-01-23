@@ -11,7 +11,7 @@ import { EventPreview } from "~/components/EventPreview";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 
-const OFFSET_VALUE = 64; // 112px is the height of the header + the bottom padding?
+const OFFSET_VALUE = 64;
 
 // Ensure we have at least one event with an image
 const DEFAULT_EVENT = DEMO_CAPTURE_EVENTS.find((event) => event.imageUri);
@@ -22,6 +22,7 @@ if (!DEFAULT_EVENT) {
 const initialEvent: DemoEvent = DEFAULT_EVENT;
 
 export default function DemoCaptureScreen() {
+  const { marginBottomAnim } = useKeyboardHeight(OFFSET_VALUE);
   const [selectedEvent, setSelectedEvent] =
     React.useState<DemoEvent>(initialEvent);
 
@@ -83,8 +84,6 @@ export default function DemoCaptureScreen() {
     uri: event.imageUri ?? "",
     id: event.id,
   })).filter((photo) => photo.uri);
-
-  const { marginBottomAnim } = useKeyboardHeight(OFFSET_VALUE);
 
   return (
     <View className="flex-1 bg-interactive-1">
