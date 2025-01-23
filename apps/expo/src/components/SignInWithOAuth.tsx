@@ -200,69 +200,79 @@ const SignInWithOAuth = () => {
   return (
     <ScrollView
       className="flex-1 bg-interactive-3"
-      contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+      contentContainerStyle={{ flexGrow: 1 }}
     >
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="px-4 py-8">
+      <View className="flex-1 px-4 pb-8 pt-24">
         <AnimatedView
-          className="mb-8 items-center"
+          className="flex-1 justify-between"
           layout={Layout.duration(400)}
         >
-          <Logo className="h-10 w-40" />
-        </AnimatedView>
-        <AnimatedView className="items-center" layout={Layout.duration(400)}>
-          <Text className="mb-2 text-center font-heading text-4xl font-bold text-gray-700">
-            Organize <Text className="text-interactive-1">possibilities</Text>
-          </Text>
-          <Text className="mb-4 text-center text-lg text-gray-500">
-            The best way to add, organize, and share events.
-          </Text>
-          <AnimatedView layout={Layout.duration(400)} className="w-full">
-            <ExpoImage
-              source={
-                require("../assets/onboarding-events-collage.png") as ImageSourcePropType
-              }
-              style={{ height: height * 0.3, width: "100%", maxHeight: 250 }}
-              contentFit="contain"
-              cachePolicy="disk"
-              transition={100}
-            />
-          </AnimatedView>
-          <Text className="my-4 text-center text-base text-gray-600">
-            Join Soonlist to start capturing and sharing events that inspire
-            you.
-          </Text>
-        </AnimatedView>
-        <AnimatedView className="mt-4 w-full" layout={Layout.duration(400)}>
-          <AppleSignInButton
-            onPress={() => void handleOAuthFlow("oauth_apple")}
-          />
-          <View className="h-3" />
-          <AnimatedPressable
-            onPress={toggleOtherOptions}
-            className="flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
-          >
-            <Text className="mr-2 text-base font-medium text-gray-700">
-              Other Options
-            </Text>
-            <Animated.View style={animatedChevronStyle}>
-              <ChevronDown size={20} color="#374151" />
-            </Animated.View>
-          </AnimatedPressable>
-          {showOtherOptions && (
+          <View>
             <AnimatedView
-              entering={FadeIn.duration(400)}
-              exiting={FadeOut.duration(300)}
+              className="mb-4 items-center"
               layout={Layout.duration(400)}
             >
-              <View className="h-3" />
-              <GoogleSignInButton
-                onPress={() => void handleOAuthFlow("oauth_google")}
-              />
-              <View className="h-3" />
-              <EmailSignInButton onPress={navigateToEmailSignUp} />
+              <Logo className="h-10 w-40" variant="hidePreview" />
             </AnimatedView>
-          )}
+            <AnimatedView
+              className="items-center"
+              layout={Layout.duration(400)}
+            >
+              <Text className="mb-2 text-center font-heading text-4xl font-bold text-gray-700">
+                Save events{" "}
+                <Text className="text-interactive-1">instantly</Text>
+              </Text>
+              <Text className="mb-4 text-center text-lg text-gray-500">
+                Screenshots → list of possibilities
+              </Text>
+              <AnimatedView layout={Layout.duration(400)} className="w-full">
+                <ExpoImage
+                  source={require("../assets/feed.png") as ImageSourcePropType}
+                  style={{
+                    height: height * 0.6,
+                    width: "100%",
+                    maxHeight: 500,
+                  }}
+                  contentFit="contain"
+                  cachePolicy="disk"
+                  transition={100}
+                />
+              </AnimatedView>
+            </AnimatedView>
+          </View>
+
+          <AnimatedView className="w-full" layout={Layout.duration(400)}>
+            <AppleSignInButton
+              onPress={() => void handleOAuthFlow("oauth_apple")}
+            />
+            <View className="h-3" />
+            <AnimatedPressable
+              onPress={toggleOtherOptions}
+              className="flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
+            >
+              <Text className="mr-2 text-base font-medium text-gray-700">
+                Other Options
+              </Text>
+              <Animated.View style={animatedChevronStyle}>
+                <ChevronDown size={20} color="#374151" />
+              </Animated.View>
+            </AnimatedPressable>
+            {showOtherOptions && (
+              <AnimatedView
+                entering={FadeIn.duration(400)}
+                exiting={FadeOut.duration(300)}
+                layout={Layout.duration(400)}
+              >
+                <View className="h-3" />
+                <GoogleSignInButton
+                  onPress={() => void handleOAuthFlow("oauth_google")}
+                />
+                <View className="h-3" />
+                <EmailSignInButton onPress={navigateToEmailSignUp} />
+              </AnimatedView>
+            )}
+          </AnimatedView>
         </AnimatedView>
       </View>
     </ScrollView>
