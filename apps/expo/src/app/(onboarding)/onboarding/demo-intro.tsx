@@ -7,6 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -36,13 +37,13 @@ export default function DemoIntroScreen() {
   });
 
   return (
-    <View className="flex-1 bg-interactive-2">
-      <View className="flex-1 items-center justify-center px-4">
-        <Text className="mb-12 text-center text-4xl font-bold text-neutral-1">
+    <SafeAreaView className="flex-1 bg-interactive-3" edges={["top"]}>
+      <View className="flex-1 px-4 ">
+        <Text className="my-6 text-center text-4xl font-bold text-black">
           How it works
         </Text>
-        <View className="mb-12 flex w-full flex-col gap-6 space-y-6">
-          <View className="flex-row items-center rounded-2xl bg-interactive-3 p-6 shadow-sm">
+        <View className="mb-12 flex w-full flex-col space-y-4">
+          <View className="flex-row items-center rounded-2xl bg-interactive-3 p-6">
             <View className="mr-4 rounded-full bg-accent-green/30 p-3">
               <Camera size={28} color="#5A32FB" />
             </View>
@@ -56,7 +57,7 @@ export default function DemoIntroScreen() {
             </View>
           </View>
 
-          <View className="flex-row items-center rounded-2xl bg-interactive-3 p-6 shadow-sm">
+          <View className="flex-row items-center rounded-2xl bg-interactive-3 p-6">
             <View className="mr-4 rounded-full bg-accent-orange/30 p-3">
               <Sparkles size={28} color="#5A32FB" />
             </View>
@@ -70,7 +71,7 @@ export default function DemoIntroScreen() {
             </View>
           </View>
 
-          <View className="flex-row items-center rounded-2xl bg-interactive-3 p-6 shadow-sm">
+          <View className="flex-row items-center rounded-2xl bg-interactive-3 p-6">
             <View className="mr-4 rounded-full bg-accent-blue/30 p-3">
               <List size={28} color="#5A32FB" />
             </View>
@@ -118,8 +119,8 @@ export default function DemoIntroScreen() {
           />
         </View>
 
-        <Text className="absolute bottom-48 left-1/2 w-min -translate-x-1/2 rounded-full bg-accent-yellow px-4 py-2 text-center text-2xl font-semibold text-neutral-1">
-          Try it
+        <Text className="absolute bottom-48 left-1/2 w-min -translate-x-1/2 rounded-2xl bg-accent-yellow px-4 py-2 text-center text-2xl font-semibold text-neutral-1">
+          Try adding an event
         </Text>
 
         <TouchableOpacity
@@ -132,6 +133,6 @@ export default function DemoIntroScreen() {
           <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />
         </Animated.View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
