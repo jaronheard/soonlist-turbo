@@ -11,22 +11,22 @@ export default function WeGotYouScreen() {
   const userPriority = useAppStore((state) => state.userPriority);
 
   const getPriorityMessage = () => {
-    if (userPriority?.includes("connections")) {
-      return "Having all your possibilities in one place will help you make more meaningful connections";
+    if (userPriority?.includes("Meet new people")) {
+      return "See all your possibilities in one place—never miss a chance to connect.";
     }
-    if (userPriority?.includes("out more")) {
-      return "Having all your possibilities in one place will help you get out more";
+    if (userPriority?.includes("Get out more")) {
+      return "See all your possibilities in one place—always have options ready.";
     }
-    if (userPriority?.includes("best event")) {
-      return "Having all your possibilities in one place will help you choose the best events";
+    if (userPriority?.includes("Choose intentionally")) {
+      return "See all your possibilities in one place—make choices that matter.";
     }
-    if (userPriority?.includes("planning")) {
-      return "Having all your possibilities in one place will help you plan more flexibly";
+    if (userPriority?.includes("Plan flexibly")) {
+      return "See all your possibilities in one place—decide when you're ready.";
     }
-    if (userPriority?.includes("community")) {
-      return "Having all your possibilities in one place will help you build more community";
+    if (userPriority?.includes("Build community")) {
+      return "See all your possibilities in one place—bring people together.";
     }
-    return "Having all your possibilities in one place will help you do more of what matters";
+    return "See all your possibilities in one place—do more of what matters.";
   };
 
   return (
