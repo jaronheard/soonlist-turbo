@@ -1,11 +1,23 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
+
+// For now, we'll use a static testimonial but this could be made dynamic
+const testimonial = {
+  body: "Soonlist has brought SO much more ease into organizing and prioritizing events I see!",
+  author: {
+    name: "Della Mueller",
+    bio: "Designer, Portland, OR",
+    handle: "delladella",
+    imageUrl:
+      "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yaEtlMGdrZVhSWm5KNEVheVBLZlpGdUxkSDIifQ",
+  },
+};
 
 export default function WeGotYouScreen() {
   const userPriority = useAppStore((state) => state.userPriority);
@@ -35,13 +47,32 @@ export default function WeGotYouScreen() {
       currentStep={7}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
-      <View className="flex-1 items-center justify-center px-4">
-        <Text className="mb-4 text-center text-4xl font-bold text-white">
-          💖 We got you
+      <View className="w-full flex-1 items-center justify-center">
+        <Text className="mb-4 px-4 text-center text-4xl font-bold text-white">
+          We got you
         </Text>
-        <Text className="mb-12 text-center text-2xl text-white">
+        <Text className="mb-12 px-4 text-center text-2xl text-white">
           {getPriorityMessage()}
         </Text>
+        <View className="mb-12 w-full rounded-lg bg-accent-yellow px-6 py-4 shadow-sm">
+          <Text className="text-lg font-medium leading-tight text-neutral-1">
+            "{testimonial.body}"
+          </Text>
+          <View className="mt-2 flex-row items-center justify-start gap-2">
+            <Image
+              source={{ uri: testimonial.author.imageUrl }}
+              className="h-14 w-14 rounded-full border-[6px] border-accent-orange"
+            />
+            <View>
+              <Text className="text-base font-semibold leading-none text-neutral-1">
+                {testimonial.author.name}
+              </Text>
+              <Text className="text-base font-medium leading-none text-neutral-2">
+                {testimonial.author.bio}
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
       <QuestionOption
         label="Continue"
