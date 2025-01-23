@@ -8,11 +8,11 @@ import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const priorities = [
-  "🤝 New connections & experiences",
-  "🚶 Getting out more",
-  "⭐️ Choosing the best event for me",
-  "📋 More flexible planning",
-  "🌱 Building more community",
+  { text: "Meet new people", emoji: "🤝" },
+  { text: "Get out more", emoji: "💃" },
+  { text: "Choose intentionally", emoji: "🎯" },
+  { text: "Plan flexibly", emoji: "🤸‍♂️" },
+  { text: "Build community", emoji: "🌱" },
 ] as const;
 
 type Priority = (typeof priorities)[number];
@@ -25,7 +25,7 @@ export default function PrioritiesScreen() {
 
   const handlePrioritySelect = (priority: Priority) => {
     setSelectedPriority(priority);
-    setUserPriority(priority);
+    setUserPriority(`${priority.text} ${priority.emoji}`);
     router.push("/onboarding/07-we-got-you");
   };
 
@@ -35,14 +35,15 @@ export default function PrioritiesScreen() {
       currentStep={3}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
-      <Text className="-mt-2 mb-4 text-center text-lg text-white">
+      <Text className="-mt-4 mb-4 text-center text-lg text-white">
         I want to...
       </Text>
       <View>
         {priorities.map((priority) => (
           <QuestionOption
-            key={priority}
-            label={priority}
+            key={priority.text}
+            label={priority.text}
+            rightIcon={priority.emoji}
             onPress={() => handlePrioritySelect(priority)}
             isSelected={selectedPriority === priority}
           />

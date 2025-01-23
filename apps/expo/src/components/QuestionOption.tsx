@@ -7,6 +7,7 @@ interface QuestionOptionProps {
   label: string;
   onPress: () => void;
   isSelected?: boolean;
+  rightIcon?: string;
   className?: string;
 }
 
@@ -15,12 +16,13 @@ export function QuestionOption({
   onPress,
   isSelected = false,
   className,
+  rightIcon,
 }: QuestionOptionProps) {
   return (
     <Pressable
       onPress={onPress}
       className={cn(
-        "mb-3 w-full rounded-xl border-2 p-4",
+        "mb-3 w-full flex-row items-center justify-between rounded-xl border-2 p-4",
         isSelected
           ? "border-interactive-1/30 bg-interactive-2"
           : "border-gray-200 bg-white",
@@ -35,6 +37,7 @@ export function QuestionOption({
       >
         {label}
       </Text>
+      {rightIcon && <Text className="text-xl">{rightIcon}</Text>}
     </Pressable>
   );
 }
