@@ -10,7 +10,7 @@ import Animated, {
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { ChevronDown, Plus } from "lucide-react-native";
+import { Camera, ChevronDown, List, Plus, Sparkles } from "lucide-react-native";
 
 export default function DemoIntroScreen() {
   const translateY = useSharedValue(0);
@@ -28,12 +28,9 @@ export default function DemoIntroScreen() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       position: "absolute",
-      top: -16, // position above the button
+      top: -16,
       left: "50%",
-      transform: [
-        { translateX: -32 }, // half of the chevron size to center it
-        { translateY: translateY.value },
-      ],
+      transform: [{ translateX: -32 }, { translateY: translateY.value }],
       zIndex: 10,
     };
   });
@@ -41,28 +38,51 @@ export default function DemoIntroScreen() {
   return (
     <View className="flex-1 bg-interactive-2">
       <View className="flex-1 items-center justify-center px-4">
-        <Text className="mb-8 text-center text-3xl font-bold text-black">
-          Here's how it works
+        <Text className="mb-12 text-center text-4xl font-bold text-neutral-1">
+          How it works
         </Text>
-        <View className="mb-12 w-full gap-3">
-          <View className="rounded-xl border-2 border-accent-blue/30 p-4">
-            <Text className="text-xl font-bold text-black">
-              1️⃣ Screenshot events you see
-            </Text>
+        <View className="mb-12 flex w-full flex-col gap-6 space-y-6">
+          <View className="flex-row items-center rounded-2xl bg-interactive-3 p-6 shadow-sm">
+            <View className="mr-4 rounded-full bg-accent-green/30 p-3">
+              <Camera size={28} color="#5A32FB" />
+            </View>
+            <View>
+              <Text className="text-2xl font-bold text-black">
+                See & screenshot
+              </Text>
+              <Text className="text-base text-neutral-2">
+                Capture every interesting event
+              </Text>
+            </View>
           </View>
-          <View className="rounded-xl border-2 border-accent-orange/30 p-4">
-            <Text className="text-xl font-bold text-black">
-              2️⃣ Add photos to Soonlist
-            </Text>
+
+          <View className="flex-row items-center rounded-2xl bg-interactive-3 p-6 shadow-sm">
+            <View className="mr-4 rounded-full bg-accent-orange/30 p-3">
+              <Sparkles size={28} color="#5A32FB" />
+            </View>
+            <View>
+              <Text className="text-2xl font-bold text-black">
+                Add to Soonlist
+              </Text>
+              <Text className="text-base text-neutral-2">
+                Details extracted automagically
+              </Text>
+            </View>
           </View>
-          <View className="rounded-xl border-2 border-accent-green/30 p-4">
-            <Text className="text-xl font-bold text-black">
-              3️⃣ See all your possibilities
-            </Text>
+
+          <View className="flex-row items-center rounded-2xl bg-interactive-3 p-6 shadow-sm">
+            <View className="mr-4 rounded-full bg-accent-blue/30 p-3">
+              <List size={28} color="#5A32FB" />
+            </View>
+            <View>
+              <Text className="text-2xl font-bold text-black">
+                See your possibilities
+              </Text>
+              <Text className="text-base text-neutral-2">
+                All your options in one place
+              </Text>
+            </View>
           </View>
-          <Text className="mt-8 text-center text-3xl font-bold text-black">
-            Try it now!
-          </Text>
         </View>
       </View>
 
@@ -98,6 +118,10 @@ export default function DemoIntroScreen() {
           />
         </View>
 
+        <Text className="absolute bottom-48 left-1/2 w-min -translate-x-1/2 rounded-full bg-accent-yellow px-4 py-2 text-center text-2xl font-semibold text-neutral-1">
+          Try it
+        </Text>
+
         <TouchableOpacity
           onPress={() => router.push("/onboarding/demo-capture")}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex-row items-center justify-center rounded-full bg-[#5A32FB] p-6 shadow-lg"
@@ -105,7 +129,7 @@ export default function DemoIntroScreen() {
           <Plus size={28} color="#E0D9FF" />
         </TouchableOpacity>
         <Animated.View style={animatedStyle}>
-          <ChevronDown size={64} color="#000" strokeWidth={4} />
+          <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />
         </Animated.View>
       </View>
     </View>
