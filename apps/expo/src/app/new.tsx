@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
-import { Animated, Linking, View } from "react-native";
-import Purchases from "react-native-purchases";
+import { Linking, View } from "react-native";
+import Animated from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -16,15 +17,12 @@ import { useInitializeInput } from "~/hooks/useInitializeInput";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { useMediaLibrary } from "~/hooks/useMediaLibrary";
 import { useNotification } from "~/providers/NotificationProvider";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
-import { api } from "~/utils/api";
-import { cn } from "~/utils/cn";
 
 const OFFSET_VALUE = 64;
 
 export default function NewEventModal() {
-  const { marginBottomAnim } = useKeyboardHeight(OFFSET_VALUE);
+  const { style: keyboardStyle } = useKeyboardHeight(OFFSET_VALUE);
   const { expoPushToken, hasNotificationPermission } = useNotification();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
@@ -63,14 +61,6 @@ export default function NewEventModal() {
   });
 
   const isFromIntent = Boolean(finalText || finalImageUri);
-
-  const statsQuery = api.event.getStats.useQuery({
-    userName: user?.username ?? "",
-  });
-  const currentEventsCount = statsQuery.data?.allTimeEvents ?? 0;
-
-  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
-  const isPro = Boolean(customerInfo?.entitlements.active.pro);
 
   // Handlers
   const handleImagePreview = useCallback(
@@ -159,7 +149,7 @@ export default function NewEventModal() {
     resetAddEventState,
   ]);
 
-  const handleSubmit = async () => {
+  const handleCreateEvent = async () => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username || !expoPushToken) return;
 
@@ -168,19 +158,6 @@ export default function NewEventModal() {
     toast.info("Processing details. Add another?", {
       duration: 5000,
     });
-
-    // If user is not Pro, enforce the limit of 5 total events
-    if (!isPro && currentEventsCount >= 5) {
-      await showProPaywallIfNeeded();
-      // Re-check after paywall
-      const newInfo = await Purchases.getCustomerInfo();
-      if (!newInfo.entitlements.active.pro) {
-        toast.error(
-          "You've reached your free limit. Please upgrade to add more events.",
-        );
-        return;
-      }
-    }
 
     try {
       const eventId = await createEvent({
@@ -232,84 +209,91 @@ export default function NewEventModal() {
   }
 
   return (
-    <View className="flex-1 bg-interactive-1">
-      <Stack.Screen
-        options={{
-          title: "",
-          headerShown: true,
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: "#5A32FB" },
-          headerTintColor: "#fff",
-          headerTitle: () => (
-            <NewEventHeader
-              containerClassName="mt-2"
-              isFromIntent={isFromIntent}
-              linkPreview={linkPreview}
-              imagePreview={imagePreview}
-              activeInput={activeInput}
-              handleDescribePress={handleDescribePress}
-            />
-          ),
-        }}
-      />
+    <SafeAreaView className="flex-1 bg-[#5A32FB]">
+      {/* Wrap everything in a "card" that has rounded top corners, 
+          hiding anything behind it so no black gap appears */}
+      <View className="flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
+        <View className="flex-1">
+          {/* Screen header */}
+          <Stack.Screen
+            options={{
+              title: "",
+              headerShown: true,
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: "#5A32FB" },
+              headerTintColor: "#fff",
+              contentStyle: { backgroundColor: "#5A32FB" },
+              headerTitle: () => (
+                <NewEventHeader
+                  containerClassName="mt-2"
+                  isFromIntent={isFromIntent}
+                  linkPreview={linkPreview}
+                  imagePreview={imagePreview}
+                  activeInput={activeInput}
+                  handleDescribePress={handleDescribePress}
+                />
+              ),
+            }}
+          />
 
-      {!hasMediaPermission && !isFromIntent && activeInput !== "describe" ? (
-        <PhotoAccessPrompt />
-      ) : (
-        <View className="flex-1 bg-interactive-1">
-          <View className="flex-1">
-            <View className="flex-1 px-4 pt-2">
-              <EventPreview
-                containerClassName="rounded-xl overflow-hidden"
-                imagePreview={imagePreview}
-                linkPreview={linkPreview}
-                input={input}
-                handleTextChange={handleTextChange}
-                clearPreview={handleClearPreview}
-                clearText={handleClearText}
-                activeInput={activeInput}
-                isImageLoading={isImageLoading}
-                handleMorePhotos={handleMorePhotosPress}
-                previewContainerStyle={
-                  activeInput === "describe"
-                    ? "compact"
-                    : isFromIntent
-                      ? "full"
-                      : "square"
-                }
-              />
-            </View>
-
-            {!isFromIntent && activeInput !== "describe" ? (
-              <View className="flex-1 px-4">
-                <PhotoGrid
-                  hasMediaPermission={hasMediaPermission}
-                  hasFullPhotoAccess={hasFullPhotoAccess}
-                  recentPhotos={recentPhotos}
-                  onPhotoSelect={(uri) => handleImagePreview(uri)}
-                  onCameraPress={() => void handleCameraCapture()}
-                  onMorePhotos={() => void handleMorePhotosPress()}
-                  selectedUri={imagePreview}
+          {!hasMediaPermission &&
+          !isFromIntent &&
+          activeInput !== "describe" ? (
+            <PhotoAccessPrompt />
+          ) : (
+            <View className="flex-1">
+              {/* Event preview at top */}
+              <View className="px-4 pt-2">
+                <EventPreview
+                  containerClassName="rounded-xl overflow-hidden"
+                  imagePreview={imagePreview}
+                  linkPreview={linkPreview}
+                  input={input}
+                  handleTextChange={handleTextChange}
+                  clearPreview={handleClearPreview}
+                  clearText={handleClearText}
+                  activeInput={activeInput}
+                  isImageLoading={isImageLoading}
+                  handleMorePhotos={handleMorePhotosPress}
+                  previewContainerStyle={
+                    activeInput === "describe"
+                      ? "compact"
+                      : isFromIntent
+                        ? "full"
+                        : "square"
+                  }
                 />
               </View>
-            ) : (
-              <View className="" />
-            )}
-          </View>
 
-          <Animated.View
-            className={cn("absolute bottom-0 left-0 right-0 px-4")}
-            style={{ marginBottom: marginBottomAnim }}
-          >
-            <CaptureEventButton
-              handleCreateEvent={handleSubmit}
-              input={input}
-              imagePreview={imagePreview}
-              linkPreview={linkPreview}
-            />
-          </Animated.View>
+              {/* Photo grid below preview (only if not describing) */}
+              {!isFromIntent && activeInput !== "describe" && (
+                <View className="flex-1 px-4">
+                  <PhotoGrid
+                    hasMediaPermission={hasMediaPermission}
+                    hasFullPhotoAccess={hasFullPhotoAccess}
+                    recentPhotos={recentPhotos}
+                    onPhotoSelect={(uri) => handleImagePreview(uri)}
+                    onCameraPress={() => void handleCameraCapture()}
+                    onMorePhotos={() => void handleMorePhotosPress()}
+                    selectedUri={imagePreview}
+                  />
+                </View>
+              )}
+            </View>
+          )}
         </View>
-      )}
-    </View>
+
+        {/* The capture button sits at the bottom, with optional animated margin 
+            so it can float above the keyboard smoothly. */}
+        <Animated.View className="px-4 pb-4" style={keyboardStyle}>
+          <CaptureEventButton
+            handleCreateEvent={handleCreateEvent}
+            input={input}
+            imagePreview={imagePreview}
+            linkPreview={linkPreview}
+          />
+        </Animated.View>
+      </View>
+    </SafeAreaView>
   );
 }

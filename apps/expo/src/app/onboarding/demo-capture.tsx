@@ -1,5 +1,6 @@
 import React from "react";
-import { Animated, View } from "react-native";
+import { SafeAreaView, View } from "react-native";
+import Animated from "react-native-reanimated";
 import * as Notifications from "expo-notifications";
 import { router, Stack } from "expo-router";
 import { toast } from "sonner-native";
@@ -22,7 +23,7 @@ if (!DEFAULT_EVENT) {
 const initialEvent: DemoEvent = DEFAULT_EVENT;
 
 export default function DemoCaptureScreen() {
-  const { marginBottomAnim } = useKeyboardHeight(OFFSET_VALUE);
+  const { style: keyboardStyle } = useKeyboardHeight(OFFSET_VALUE);
   const [selectedEvent, setSelectedEvent] =
     React.useState<DemoEvent>(initialEvent);
 
@@ -86,65 +87,67 @@ export default function DemoCaptureScreen() {
   })).filter((photo) => photo.uri);
 
   return (
-    <View className="flex-1 bg-interactive-1">
-      <Stack.Screen
-        options={{
-          title: "",
-          headerShown: true,
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: "#5A32FB" },
-          headerTintColor: "#fff",
-          headerTitle: "Capture event (demo)",
-        }}
-      />
-
-      <View className="flex-1 bg-interactive-1">
+    <SafeAreaView className="flex-1 bg-[#5A32FB]">
+      {/* Wrap everything in a "card" that has rounded top corners, 
+          hiding anything behind it so no black gap appears */}
+      <View className="flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
         <View className="flex-1">
-          <View className="flex-1 px-4">
-            <View className="flex-1">
-              <View className="mb-4">
-                <EventPreview
-                  containerClassName="rounded-xl overflow-hidden"
-                  imagePreview={selectedEvent.imageUri ?? null}
-                  linkPreview={null}
-                  input={selectedEvent.description ?? ""}
-                  handleTextChange={handleTextChange}
-                  clearPreview={() => setSelectedEvent(initialEvent)}
-                  clearText={() => {
-                    // No-op in demo mode
-                    return;
-                  }}
-                  activeInput="upload"
-                  isImageLoading={false}
-                  handleMorePhotos={handleMorePhotos}
-                  previewContainerStyle="square"
-                />
-              </View>
+          <Stack.Screen
+            options={{
+              title: "",
+              headerShown: true,
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: "#5A32FB" },
+              headerTintColor: "#fff",
+              contentStyle: { backgroundColor: "#5A32FB" },
+              headerTitle: "Capture event (demo)",
+            }}
+          />
 
-              <View className="flex-1">
-                <PhotoGrid
-                  hasMediaPermission={true}
-                  hasFullPhotoAccess={true}
-                  recentPhotos={demoPhotos}
-                  onPhotoSelect={(uri) => {
-                    const event = DEMO_CAPTURE_EVENTS.find(
-                      (e) => e.imageUri === uri,
-                    );
-                    if (event) handleEventSelect(event);
-                  }}
-                  onCameraPress={handleCameraPress}
-                  onMorePhotos={handleMorePhotos}
-                  selectedUri={selectedEvent.imageUri ?? null}
-                />
-              </View>
+          <View className="flex-1">
+            {/* Event preview at top */}
+            <View className="px-4 pt-2">
+              <EventPreview
+                containerClassName="rounded-xl overflow-hidden"
+                imagePreview={selectedEvent.imageUri ?? null}
+                linkPreview={null}
+                input={selectedEvent.description ?? ""}
+                handleTextChange={handleTextChange}
+                clearPreview={() => setSelectedEvent(initialEvent)}
+                clearText={() => {
+                  // No-op in demo mode
+                  return;
+                }}
+                activeInput="upload"
+                isImageLoading={false}
+                handleMorePhotos={handleMorePhotos}
+                previewContainerStyle="square"
+              />
+            </View>
+
+            {/* Photo grid below preview */}
+            <View className="flex-1 px-4">
+              <PhotoGrid
+                hasMediaPermission={true}
+                hasFullPhotoAccess={true}
+                recentPhotos={demoPhotos}
+                onPhotoSelect={(uri) => {
+                  const event = DEMO_CAPTURE_EVENTS.find(
+                    (e) => e.imageUri === uri,
+                  );
+                  if (event) handleEventSelect(event);
+                }}
+                onCameraPress={handleCameraPress}
+                onMorePhotos={handleMorePhotos}
+                selectedUri={selectedEvent.imageUri ?? null}
+              />
             </View>
           </View>
         </View>
 
-        <Animated.View
-          className="absolute bottom-0 left-0 right-0 px-4"
-          style={{ marginBottom: marginBottomAnim }}
-        >
+        {/* The capture button sits at the bottom, with optional animated margin 
+            so it can float above the keyboard smoothly. */}
+        <Animated.View className="px-4 pb-4" style={keyboardStyle}>
           <CaptureEventButton
             handleCreateEvent={handleSubmit}
             input={selectedEvent.description ?? ""}
@@ -153,6 +156,6 @@ export default function DemoCaptureScreen() {
           />
         </Animated.View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
