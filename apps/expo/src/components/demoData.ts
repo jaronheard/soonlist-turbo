@@ -4,6 +4,7 @@ export interface DemoEvent {
   location: string;
   startDate: string;
   startTime?: string;
+  endTime?: string;
   timeZone?: string;
   imageUri?: string;
   images?: string[];
