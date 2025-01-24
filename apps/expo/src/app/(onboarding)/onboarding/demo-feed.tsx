@@ -165,9 +165,6 @@ export default function DemoFeedScreen() {
         onEndReached={() => null}
         isFetchingNextPage={false}
         stats={stats}
-        onEventPress={(event) => {
-          router.push(`/onboarding/demo-event/${event.id}`);
-        }}
       />
 
       <View className="px-4 pb-8">

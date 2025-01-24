@@ -3,7 +3,7 @@ import { Button, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import type { DemoEvent } from "~/components/demoData";
-import { DEMO_CAPTURE_EVENTS, DEMO_FEED_BASE } from "~/components/demoData";
+import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
 
 export default function DemoEventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -12,11 +12,7 @@ export default function DemoEventDetail() {
   const event: DemoEvent | undefined = useMemo(() => {
     if (!id) return undefined;
     // Try to find in capture array first
-    let found = DEMO_CAPTURE_EVENTS.find((e) => e.id === id);
-    if (!found) {
-      // If not found, find in feed base
-      found = DEMO_FEED_BASE.find((e) => e.id === id);
-    }
+    const found = DEMO_CAPTURE_EVENTS.find((e) => e.id === id);
     return found;
   }, [id]);
 
