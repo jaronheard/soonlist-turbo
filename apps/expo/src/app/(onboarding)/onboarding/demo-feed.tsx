@@ -1,21 +1,71 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Button, View } from "react-native";
+import * as Notifications from "expo-notifications";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { toast } from "sonner-native";
 
 import type { DemoEvent } from "~/components/demoData";
-import { DEMO_CAPTURE_EVENTS, DEMO_FEED_BASE } from "~/components/demoData";
+import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import UserEventsList from "~/components/UserEventsList"; // Reuse your existing feed list
 
+const NOTIFICATION_DELAY = 1000; // 4 seconds
+
+// Sort events by date (earliest first)
+const sortEventsByDate = (events: DemoEvent[]) => {
+  return [...events].sort((a, b) => {
+    const dateA = new Date(`${a.startDate}T${a.startTime ?? "00:00"}`);
+    const dateB = new Date(`${b.startDate}T${b.startTime ?? "00:00"}`);
+    return dateA.getTime() - dateB.getTime();
+  });
+};
+
+// Handle showing the notification
+const showNotification = async (eventId: string, eventName: string) => {
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status === Notifications.PermissionStatus.GRANTED) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Event Captured! 🎉",
+          body: `"${eventName}" has been added to your feed`,
+          data: {
+            url: `/onboarding/demo-feed?eventId=${eventId}`,
+            notificationId: "demo-capture-notification",
+          },
+        },
+        trigger: null, // Show immediately since we're already delayed
+      });
+    } else {
+      // Fallback to toast if no notification permissions
+      toast(`New event added: ${eventName}`);
+    }
+  } catch (error) {
+    console.error("Failed to show notification:", error);
+    toast(`New event added: ${eventName}`);
+  }
+};
+
 export default function DemoFeedScreen() {
-  const { eventId } = useLocalSearchParams<{ eventId?: string }>();
+  const { eventId, eventName } = useLocalSearchParams<{
+    eventId?: string;
+    eventName?: string;
+  }>();
   const router = useRouter();
 
   // The newly captured event from user selection
   const [newEvent, setNewEvent] = useState<DemoEvent | null>(null);
 
+  // Initialize feed with all events except the one being captured, sorted by date
+  const initialFeed = useMemo(() => {
+    const filteredEvents = DEMO_CAPTURE_EVENTS.filter(
+      (event) => event.id !== eventId,
+    );
+    return sortEventsByDate(filteredEvents);
+  }, [eventId]);
+
   // The local feed
-  const [demoFeed, setDemoFeed] = useState<DemoEvent[]>(DEMO_FEED_BASE);
+  const [demoFeed, setDemoFeed] = useState<DemoEvent[]>(initialFeed);
 
   // Calculate stats based on feed events
   const stats = useMemo(() => {
@@ -34,18 +84,21 @@ export default function DemoFeedScreen() {
     setNewEvent(found ?? null);
   }, [eventId]);
 
-  // After 4 seconds, if we have a newEvent, add it
+  // Add the new event and show notification after delay
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (newEvent) {
+    if (newEvent && eventName) {
       timer = setTimeout(() => {
-        setDemoFeed((prev) => [newEvent, ...prev]);
-      }, 4000);
+        // Add event to feed and sort by date
+        setDemoFeed((prev) => sortEventsByDate([newEvent, ...prev]));
+        // Show notification
+        void showNotification(eventId!, eventName);
+      }, NOTIFICATION_DELAY);
     }
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [newEvent]);
+  }, [newEvent, eventId, eventName]);
 
   // We can reuse the <UserEventsList> with minimal props
   const feedEvents = useMemo(() => {
@@ -112,6 +165,9 @@ export default function DemoFeedScreen() {
         onEndReached={() => null}
         isFetchingNextPage={false}
         stats={stats}
+        onEventPress={(event) => {
+          router.push(`/onboarding/demo-event/${event.id}`);
+        }}
       />
 
       <View className="px-4 pb-8">

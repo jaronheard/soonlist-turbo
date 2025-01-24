@@ -12,8 +12,6 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 
-import { useAppStore } from "~/store";
-
 interface OnboardingSlide {
   id: string;
   image: ImageSourcePropType;

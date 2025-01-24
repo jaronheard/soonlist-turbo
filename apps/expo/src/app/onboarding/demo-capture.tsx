@@ -1,9 +1,7 @@
 import React from "react";
 import { SafeAreaView, View } from "react-native";
 import Animated from "react-native-reanimated";
-import * as Notifications from "expo-notifications";
 import { router, Stack } from "expo-router";
-import { toast } from "sonner-native";
 
 import type { DemoEvent } from "~/components/demoData";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
@@ -32,37 +30,9 @@ export default function DemoCaptureScreen() {
   };
 
   const handleSubmit = async () => {
-    // Schedule notification for 4 seconds later
-    try {
-      const { status } = await Notifications.getPermissionsAsync();
-      if (status === Notifications.PermissionStatus.GRANTED) {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Event Captured! 🎉",
-            body: `"${selectedEvent.name}" has been added to your feed`,
-            data: {
-              url: `/onboarding/demo-feed?eventId=${selectedEvent.id}`,
-              notificationId: "demo-capture-notification",
-            },
-          },
-          trigger: {
-            seconds: 4,
-            channelId: "default",
-          },
-        });
-      } else {
-        // Fallback to toast if no notification permissions
-        setTimeout(() => {
-          toast(`New event added: ${selectedEvent.name}`);
-        }, 4000);
-      }
-    } catch (error) {
-      console.error("Failed to schedule notification:", error);
-      setTimeout(() => {
-        toast(`New event added: ${selectedEvent.name}`);
-      }, 4000);
-    }
-    router.dismissTo(`/onboarding/demo-feed?eventId=${selectedEvent.id}`);
+    router.dismissTo(
+      `/onboarding/demo-feed?eventId=${selectedEvent.id}&eventName=${encodeURIComponent(selectedEvent.name)}`,
+    );
   };
 
   const handleTextChange = () => {

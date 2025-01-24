@@ -134,7 +134,12 @@ export function UserEventListItem(props: {
       <Pressable
         onPress={() => {
           // Short press → navigate
-          router.push(`/event/${id}`);
+          const isDemoEvent = id.startsWith("demo-");
+          if (isDemoEvent) {
+            router.push(`/onboarding/demo-event/${id}`);
+          } else {
+            router.push(`/event/${id}`);
+          }
         }}
         onLongPress={(e) => {
           // Long press → stop native press so menu can open without navigation
