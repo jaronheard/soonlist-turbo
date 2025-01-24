@@ -39,7 +39,7 @@ export default function DemoFeedScreen() {
     let timer: NodeJS.Timeout;
     if (newEvent) {
       timer = setTimeout(() => {
-        setDemoFeed((prev) => [...prev, newEvent]);
+        setDemoFeed((prev) => [newEvent, ...prev]);
       }, 4000);
     }
     return () => {
