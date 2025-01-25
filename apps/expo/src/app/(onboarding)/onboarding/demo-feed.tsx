@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Button, View } from "react-native";
+import { Alert, View } from "react-native";
 import * as Notifications from "expo-notifications";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { toast } from "sonner-native";
 
 import type { DemoEvent } from "~/components/demoData";
 import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
+import { FinishDemoButton } from "~/components/FinishDemoButton";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import UserEventsList from "~/components/UserEventsList"; // Reuse your existing feed list
 
@@ -51,7 +52,6 @@ export default function DemoFeedScreen() {
     eventId?: string;
     eventName?: string;
   }>();
-  const router = useRouter();
 
   // The newly captured event from user selection
   const [newEvent, setNewEvent] = useState<DemoEvent | null>(null);
@@ -157,29 +157,20 @@ export default function DemoFeedScreen() {
         }}
       />
 
-      <UserEventsList
-        events={feedEvents}
-        showCreator="always"
-        isRefetching={false}
-        onRefresh={async () => Alert.alert("Demo feed refresh")}
-        onEndReached={() => null}
-        isFetchingNextPage={false}
-        stats={stats}
-      />
-
-      <View className="px-4 pb-8">
-        <Button
-          title="Finish or View Details"
-          onPress={() => {
-            if (newEvent) {
-              // If they want to see details of the newly added event
-              router.push(`/onboarding/demo-event/${newEvent.id}`);
-            } else {
-              // If no new event, just end
-              router.push("/feed");
-            }
-          }}
+      <View className="flex-1">
+        <UserEventsList
+          events={feedEvents}
+          showCreator="always"
+          isRefetching={false}
+          onRefresh={async () => Alert.alert("Demo feed refresh")}
+          onEndReached={() => null}
+          isFetchingNextPage={false}
+          stats={stats}
         />
+      </View>
+
+      <View className="bg-white">
+        <FinishDemoButton />
       </View>
     </View>
   );
