@@ -201,6 +201,7 @@ const SignInWithOAuth = () => {
             className="flex-1 justify-center"
           >
             <ExpoImage
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
               source={require("../assets/feed.png") as ImageSourcePropType}
               style={{ width: "100%", height: "100%" }}
               contentFit="contain"

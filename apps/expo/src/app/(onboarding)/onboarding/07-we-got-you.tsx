@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Button,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
