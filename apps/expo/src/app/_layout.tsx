@@ -32,6 +32,7 @@ import { useCalendar } from "~/hooks/useCalendar";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
+import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
@@ -142,7 +143,9 @@ function RootLayout() {
                   }}
                 >
                   <NotificationProvider>
-                    <RootLayoutContent />
+                    <RevenueCatProvider>
+                      <RootLayoutContent />
+                    </RevenueCatProvider>
                   </NotificationProvider>
                 </PostHogProvider>
               </SafeAreaProvider>
@@ -185,6 +188,12 @@ const InitialLayout = () => {
         }}
       />
       <Stack.Screen
+        name="(onboarding)"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="event/[id]/index"
         options={{
           title: "Event Details",
@@ -202,6 +211,13 @@ const InitialLayout = () => {
       />
       <Stack.Screen
         name="new"
+        options={{
+          presentation: "modal",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="onboarding/demo-capture"
         options={{
           presentation: "modal",
           headerShown: true,

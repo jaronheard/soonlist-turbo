@@ -83,6 +83,10 @@ interface AppState {
   // Add explicit types for these actions
   setIsLoadingPhotos: (isLoading: boolean) => void;
   setPhotoLoadingError: (error: string | null) => void;
+
+  // User priority
+  userPriority: string | null;
+  setUserPriority: (priority: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -94,6 +98,7 @@ export const useAppStore = create<AppState>()(
       showAllCalendars: false,
       isLoadingPhotos: false,
       photoLoadingError: null,
+      userPriority: null,
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
@@ -181,6 +186,7 @@ export const useAppStore = create<AppState>()(
           shouldRefreshMediaLibrary: false,
           isLoadingPhotos: false,
           photoLoadingError: null,
+          userPriority: null,
         }),
       clearCalendarData: () =>
         set({
@@ -217,6 +223,9 @@ export const useAppStore = create<AppState>()(
       // Add these new actions
       setIsLoadingPhotos: (isLoading) => set({ isLoadingPhotos: isLoading }),
       setPhotoLoadingError: (error) => set({ photoLoadingError: error }),
+
+      // User priority
+      setUserPriority: (priority) => set({ userPriority: priority }),
     }),
     {
       name: "app-storage",

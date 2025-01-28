@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { Sparkles } from "lucide-react-native";
 
 import { cn } from "~/utils/cn";
@@ -23,7 +23,7 @@ export function CaptureEventButton({
 
   return (
     <View className={containerClassName}>
-      <Pressable
+      <TouchableOpacity
         onPress={handleCreateEvent}
         disabled={isDisabled}
         className={cn(
@@ -40,7 +40,7 @@ export function CaptureEventButton({
         >
           Capture event
         </Text>
-      </Pressable>
+      </TouchableOpacity>
     </View>
   );
 }

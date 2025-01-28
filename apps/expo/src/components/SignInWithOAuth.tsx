@@ -1,18 +1,14 @@
 import type { OAuthStrategy } from "@clerk/types";
+import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
+import { X } from "lucide-react-native";
 import { usePostHog } from "posthog-react-native";
 
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
@@ -21,11 +17,13 @@ import { EmailSignInButton } from "./EmailSignInButton"; // You'll need to creat
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Logo } from "./Logo";
 
+const AnimatedView = Animated.createAnimatedComponent(View);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 WebBrowser.maybeCompleteAuthSession();
 
 const SignInWithOAuth = () => {
   useWarmUpBrowser();
-  const { height } = useWindowDimensions();
   const posthog = usePostHog();
 
   const { signIn, setActive: setActiveSignIn } = useSignIn();
@@ -39,9 +37,14 @@ const SignInWithOAuth = () => {
 
   const [username, setUsername] = useState("");
   const [showUsernameInput, setShowUsernameInput] = useState(false);
+  const [showOtherOptions, setShowOtherOptions] = useState(false);
   const [pendingSignUp, setPendingSignUp] = useState<
     ReturnType<typeof useSignUp>["signUp"] | null
   >(null);
+
+  const toggleOtherOptions = () => {
+    setShowOtherOptions(!showOtherOptions);
+  };
 
   if (!signIn || !signUp) {
     return null;
@@ -168,48 +171,86 @@ const SignInWithOAuth = () => {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-interactive-3"
-      contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
-    >
+    <View className="flex-1 bg-interactive-3">
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="px-4 py-8">
-        <View className="mb-8 items-center">
-          <Logo className="h-10 w-40" />
-        </View>
-        <View className="items-center">
-          <Text className="mb-2 text-center font-heading text-4xl font-bold text-gray-700">
-            Organize <Text className="text-interactive-1">possibilities</Text>
-          </Text>
-          <Text className="mb-4 text-center text-lg text-gray-500">
-            The best way to add, organize, and share events.
-          </Text>
-          <ExpoImage
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            source={require("../assets/onboarding-events-collage.png")}
-            style={{ height: height * 0.3, width: "100%", maxHeight: 250 }}
-            contentFit="contain"
-            cachePolicy="disk"
-            transition={100}
-          />
-          <Text className="my-4 text-center text-base text-gray-600">
-            Join Soonlist to start capturing and sharing events that inspire
-            you.
-          </Text>
-        </View>
-        <View className="mt-4 w-full">
-          <GoogleSignInButton
-            onPress={() => void handleOAuthFlow("oauth_google")}
-          />
-          <View className="h-3" />
-          <AppleSignInButton
-            onPress={() => void handleOAuthFlow("oauth_apple")}
-          />
-          <View className="h-3" />
-          <EmailSignInButton onPress={navigateToEmailSignUp} />
-        </View>
+      <View className="flex-1 px-4 pb-8 pt-24">
+        <AnimatedView className="flex-1" layout={Layout.duration(400)}>
+          <View className="shrink-0">
+            <AnimatedView
+              className="mb-4 items-center"
+              layout={Layout.duration(400)}
+            >
+              <Logo className="h-10 w-40" variant="hidePreview" />
+            </AnimatedView>
+            <AnimatedView
+              className="items-center"
+              layout={Layout.duration(400)}
+            >
+              <Text className="mb-2 text-center font-heading text-4xl font-bold text-gray-700">
+                Save events{" "}
+                <Text className="text-interactive-1">instantly</Text>
+              </Text>
+              <Text className="mb-4 text-center text-lg text-gray-500">
+                Screenshots → list of possibilities
+              </Text>
+            </AnimatedView>
+          </View>
+
+          <AnimatedView
+            layout={Layout.duration(400)}
+            className="flex-1 justify-center"
+          >
+            <ExpoImage
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-var-requires
+              source={require("../assets/feed.png") as ImageSourcePropType}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="contain"
+              cachePolicy="disk"
+              transition={100}
+            />
+          </AnimatedView>
+
+          <AnimatedView
+            className="relative w-full shrink-0"
+            layout={Layout.duration(400)}
+          >
+            <AppleSignInButton
+              onPress={() => void handleOAuthFlow("oauth_apple")}
+            />
+            <View className="h-3" />
+            <AnimatedPressable
+              onPress={toggleOtherOptions}
+              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
+            >
+              <Text className="text-base font-medium text-gray-700">
+                Other Options
+              </Text>
+              {showOtherOptions && (
+                <View className="absolute right-6">
+                  <X size={20} color="#374151" />
+                </View>
+              )}
+            </AnimatedPressable>
+            {showOtherOptions && (
+              <AnimatedView
+                entering={FadeIn.duration(400)}
+                exiting={FadeOut.duration(300)}
+                layout={Layout.duration(400)}
+                className="absolute bottom-full w-full"
+              >
+                <View className="h-3" />
+                <EmailSignInButton onPress={navigateToEmailSignUp} />
+                <View className="h-3" />
+                <GoogleSignInButton
+                  onPress={() => void handleOAuthFlow("oauth_google")}
+                />
+                <View className="h-3" />
+              </AnimatedView>
+            )}
+          </AnimatedView>
+        </AnimatedView>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 

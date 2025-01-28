@@ -149,7 +149,7 @@ export default function NewEventModal() {
     resetAddEventState,
   ]);
 
-  const handleCreateEvent = useCallback(async () => {
+  const handleCreateEvent = async () => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username || !expoPushToken) return;
 
@@ -186,16 +186,7 @@ export default function NewEventModal() {
     } finally {
       resetAddEventState();
     }
-  }, [
-    input,
-    imagePreview,
-    linkPreview,
-    expoPushToken,
-    hasNotificationPermission,
-    user,
-    createEvent,
-    resetAddEventState,
-  ]);
+  };
 
   const handleDescribePress = useCallback(() => {
     if (activeInput === "describe") {
