@@ -2,12 +2,17 @@ import { Pressable, Text } from "react-native";
 import { useRouter } from "expo-router";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
+import { useAppStore } from "~/store";
 
 export function FinishDemoButton() {
   const router = useRouter();
   const { showProPaywallIfNeeded } = useRevenueCat();
+  const setHasCompletedOnboarding = useAppStore(
+    (state) => state.setHasCompletedOnboarding,
+  );
 
   const handlePress = async () => {
+    setHasCompletedOnboarding(true);
     await showProPaywallIfNeeded();
     // Navigate to feed after paywall is handled
     router.push("/feed");
