@@ -44,7 +44,7 @@
     "@trpc/client": "11.0.0-rc.364",
     "@trpc/react-query": "11.0.0-rc.364",
     "@trpc/server": "11.0.0-rc.334",
-    "expo": "~52.0.23",
+    "expo": "~52.0.28",
     "expo-apple-authentication": "~7.1.2",
     "expo-application": "^6.0.1",
     "expo-asset": "~11.0.1",
