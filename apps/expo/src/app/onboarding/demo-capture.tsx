@@ -1,5 +1,5 @@
 import React from "react";
-import { SafeAreaView, View } from "react-native";
+import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { router, Stack } from "expo-router";
 
@@ -83,7 +83,7 @@ export default function DemoCaptureScreen() {
   })).filter((photo) => photo.uri !== "");
 
   return (
-    <SafeAreaView className="flex-1 bg-[#5A32FB]">
+    <View className="flex-1 bg-[#5A32FB]">
       {/* Wrap everything in a "card" that has rounded top corners, 
           hiding anything behind it so no black gap appears */}
       <View className="flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
@@ -152,6 +152,6 @@ export default function DemoCaptureScreen() {
           />
         </Animated.View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

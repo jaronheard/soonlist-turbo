@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { Linking, View } from "react-native";
 import Animated from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -220,7 +219,7 @@ export default function NewEventModal() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#5A32FB]">
+    <View className="flex-1 bg-[#5A32FB]">
       {/* Wrap everything in a "card" that has rounded top corners, 
           hiding anything behind it so no black gap appears */}
       <View className="flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
@@ -307,6 +306,6 @@ export default function NewEventModal() {
           />
         </Animated.View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
