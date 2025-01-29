@@ -1,92 +1,130 @@
 // apps/expo/src/hooks/useIntentHandler.ts
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import Constants from "expo-constants";
 import { useURL } from "expo-linking";
 import { useRouter } from "expo-router";
 
 import { useAppStore } from "~/store";
 
+const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
+
+function getAppScheme() {
+  const configScheme = Constants.expoConfig?.scheme;
+  if (configScheme === undefined) {
+    throw new Error(
+      "App scheme not configured. Please check your app.config.ts",
+    );
+  }
+
+  if (Array.isArray(configScheme)) {
+    throw new Error(
+      "Multiple schemes are not supported. Please specify a single scheme in app.config.ts",
+    );
+  }
+
+  if (!configScheme) {
+    throw new Error("No valid scheme found in app config");
+  }
+
+  return configScheme;
+}
+
+// This will throw if there's no valid scheme, which is what we want
+const APP_SCHEME = getAppScheme();
+
 let prevUrl = "";
 
 export function useIntentHandler() {
-  // The deep link that triggered the app’s opening
+  // The deep link that triggered the app's opening
   const incomingUrl = useURL();
   const router = useRouter();
   const { setIntentParams } = useAppStore();
+
+  const handleDeepLink = useCallback(
+    (url: string) => {
+      try {
+        // 1. Fix scheme if necessary
+        if (
+          url.startsWith(`${APP_SCHEME}://`) &&
+          !url.startsWith(`${APP_SCHEME}:///`)
+        ) {
+          url = url.replace(`${APP_SCHEME}://`, `${APP_SCHEME}:///`);
+        }
+
+        // 2. Parse the URL
+        let parsedUrl: URL;
+        try {
+          parsedUrl = new URL(url);
+        } catch (error) {
+          console.error("[useIntentHandler] Invalid URL:", url, error);
+          return;
+        }
+
+        const route = parsedUrl.pathname.replace(/^\/+/, "");
+        const params = parsedUrl.searchParams;
+
+        // 3. Switch on the route
+        switch (route) {
+          case "new": {
+            const textParam = params.get("text");
+            const imageUriParam = params.get("imageUri");
+
+            if (textParam) {
+              try {
+                const decoded = decodeURIComponent(textParam);
+                setIntentParams({ text: decoded });
+                router.push(`/new?text=${encodeURIComponent(decoded)}`);
+                return;
+              } catch (error) {
+                console.error(
+                  "[useIntentHandler] Failed to decode text param:",
+                  error,
+                );
+                return;
+              }
+            }
+
+            if (imageUriParam) {
+              try {
+                const decoded = decodeURIComponent(imageUriParam);
+                // Validate image URI format
+                if (!VALID_IMAGE_REGEX.test(decoded)) {
+                  console.error(
+                    "[useIntentHandler] Invalid image URI format:",
+                    decoded,
+                  );
+                  return;
+                }
+                setIntentParams({ imageUri: decoded });
+                router.push(`/new?imageUri=${encodeURIComponent(decoded)}`);
+                return;
+              } catch (error) {
+                console.error(
+                  "[useIntentHandler] Failed to decode imageUri param:",
+                  error,
+                );
+                return;
+              }
+            }
+
+            router.push("/new");
+            return;
+          }
+
+          default:
+            console.warn("[useIntentHandler] Unhandled route:", route);
+            break;
+        }
+      } catch (error) {
+        console.error("[useIntentHandler] Failed to handle deep link:", error);
+      }
+    },
+    [router, setIntentParams],
+  );
 
   useEffect(() => {
     if (!incomingUrl || incomingUrl === prevUrl) return;
     prevUrl = incomingUrl;
     handleDeepLink(incomingUrl);
-  }, [incomingUrl]);
-
-  function handleDeepLink(url: string) {
-    try {
-      // 1. Fix scheme if necessary
-      if (
-        url.startsWith("soonlist.dev://") &&
-        !url.startsWith("soonlist.dev:///")
-      ) {
-        url = url.replace("soonlist.dev://", "soonlist.dev:///");
-      }
-
-      // 2. Parse the URL
-      let parsedUrl: URL;
-      try {
-        parsedUrl = new URL(url);
-      } catch (error) {
-        console.error("[useIntentHandler] Invalid URL:", url, error);
-        return;
-      }
-
-      const route = parsedUrl.pathname.replace(/^\/+/, "");
-      const params = parsedUrl.searchParams;
-
-      // 3. Switch on the route
-      switch (route) {
-        case "new": {
-          const textParam = params.get("text");
-          const imageUriParam = params.get("imageUri");
-
-          if (textParam) {
-            try {
-              const decoded = decodeURIComponent(textParam);
-              setIntentParams({ text: decoded });
-              router.push(`/new?text=${encodeURIComponent(decoded)}`);
-              return;
-            } catch (error) {
-              console.error(
-                "[useIntentHandler] Failed to decode text param:",
-                error,
-              );
-              return;
-            }
-          }
-
-          if (imageUriParam) {
-            try {
-              const decoded = decodeURIComponent(imageUriParam);
-              setIntentParams({ imageUri: decoded });
-              router.push(`/new?imageUri=${encodeURIComponent(decoded)}`);
-              return;
-            } catch (error) {
-              console.error(
-                "[useIntentHandler] Failed to decode imageUri param:",
-                error,
-              );
-              return;
-            }
-          }
-
-          router.push("/new");
-          return;
-        }
-
-        default:
-          console.warn("[useIntentHandler] Unhandled route:", route);
-          break;
-      }
-    } catch (error) {
-      console.error("[useIntentHandler] Failed to handle deep link:", error);
-    }
-  }
+  }, [incomingUrl, handleDeepLink]);
 }

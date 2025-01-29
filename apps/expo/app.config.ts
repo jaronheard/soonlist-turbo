@@ -1,13 +1,50 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
+// Environment configuration
 const IS_DEV = process.env.APP_VARIANT === "development";
+const IS_PREVIEW = process.env.APP_VARIANT === "preview";
+
+// Get unique identifier based on environment
+const getUniqueIdentifier = () => {
+  if (IS_DEV) return "com.soonlist.app.dev";
+  if (IS_PREVIEW) return "com.soonlist.app.preview";
+  return "com.soonlist.app";
+};
+
+// Get app name based on environment
+const getAppName = () => {
+  if (IS_DEV) return "Soonlist (Dev)";
+  if (IS_PREVIEW) return "Soonlist (Preview)";
+  return "Soonlist";
+};
+
+// Get scheme based on environment
+const getScheme = () => {
+  if (IS_DEV) return "soonlist.dev";
+  if (IS_PREVIEW) return "soonlist.preview";
+  return "soonlist";
+};
+
+// Get app group based on environment
+const getAppGroup = () => {
+  if (IS_DEV) return "group.com.soonlist.dev";
+  if (IS_PREVIEW) return "group.com.soonlist.preview";
+  return "group.com.soonlist";
+};
+
+// Get schemes for current environment only
+const getSchemes = () => {
+  if (IS_DEV) return ["soonlist.dev"];
+  if (IS_PREVIEW) return ["soonlist.preview"];
+  return ["soonlist"];
+};
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   owner: "soonlist",
-  name: IS_DEV ? "Soonlist (Dev)" : "Soonlist",
+  name: getAppName(),
   slug: "timetimecc",
-  scheme: IS_DEV ? "soonlist.dev" : "soonlist",
+  scheme: getScheme(),
   version: "1.0.6",
   orientation: "portrait",
   icon: IS_DEV ? "./assets/icon-dev.png" : "./assets/icon.png",
@@ -94,14 +131,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: IS_DEV ? "com.soonlist.app.dev" : "com.soonlist.app",
+    bundleIdentifier: getUniqueIdentifier(),
     config: {
       usesNonExemptEncryption: false,
     },
     entitlements: {
-      "com.apple.security.application-groups": [
-        IS_DEV ? "group.com.soonlist.dev" : "group.com.soonlist",
-      ],
+      "com.apple.security.application-groups": [getAppGroup()],
     },
     usesAppleSignIn: true,
     infoPlist: {
@@ -109,19 +144,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       CFBundleURLTypes: [
         {
           CFBundleURLName: "Soonlist Schemes",
-          // Include the dev scheme and the main scheme
-          CFBundleURLSchemes: ["soonlist", "soonlist.dev"],
+          CFBundleURLSchemes: getSchemes(),
         },
-        // If you also need to keep "com.soonlist.app" as a URL scheme:
         {
           CFBundleURLName: "Additional Scheme",
-          CFBundleURLSchemes: ["com.soonlist.app"],
+          CFBundleURLSchemes: [getUniqueIdentifier()],
         },
       ],
     },
   },
   android: {
-    package: IS_DEV ? "com.soonlist.app.dev" : "com.soonlist.app",
+    package: getUniqueIdentifier(),
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff",
