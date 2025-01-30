@@ -23,9 +23,9 @@ const config: RevenueCatConfig = {
 
 export async function initializeRevenueCat() {
   await Purchases.setLogLevel(
-    process.env.EXPO_PUBLIC_APP_ENV === "development" 
-      ? LOG_LEVEL.DEBUG 
-      : LOG_LEVEL.INFO
+    process.env.EXPO_PUBLIC_APP_ENV === "development"
+      ? LOG_LEVEL.DEBUG
+      : LOG_LEVEL.INFO,
   );
 
   const apiKey = Platform.select({
