@@ -1,6 +1,5 @@
 import { Platform } from "react-native";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
-import * as Device from "expo-device";
 
 interface RevenueCatConfig {
   apiKey: {
