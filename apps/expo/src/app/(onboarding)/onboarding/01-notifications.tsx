@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -20,15 +20,16 @@ export default function NotificationsScreen() {
   const { registerForPushNotifications } = useNotification();
   const translateY = useSharedValue(0);
 
-  // Start the animation immediately
-  translateY.value = withRepeat(
-    withTiming(-12, {
-      duration: 500,
-      easing: Easing.inOut(Easing.sin),
-    }),
-    -1,
-    true,
-  );
+  useEffect(() => {
+    translateY.value = withRepeat(
+      withTiming(-12, {
+        duration: 500,
+        easing: Easing.inOut(Easing.sin),
+      }),
+      -1,
+      true,
+    );
+  }, [translateY]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {

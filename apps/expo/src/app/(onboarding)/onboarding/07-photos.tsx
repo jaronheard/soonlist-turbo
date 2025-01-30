@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -18,15 +18,16 @@ import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 export default function PhotosScreen() {
   const translateX = useSharedValue(0);
 
-  // Start the animation immediately
-  translateX.value = withRepeat(
-    withTiming(-12, {
-      duration: 500,
-      easing: Easing.inOut(Easing.sin),
-    }),
-    -1,
-    true,
-  );
+  useEffect(() => {
+    translateX.value = withRepeat(
+      withTiming(-12, {
+        duration: 500,
+        easing: Easing.inOut(Easing.sin),
+      }),
+      -1,
+      true,
+    );
+  }, [translateX]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     position: "absolute",
