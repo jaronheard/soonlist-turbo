@@ -1,6 +1,5 @@
 import { Platform } from "react-native";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
-import * as Device from "expo-device";
 
 interface RevenueCatConfig {
   apiKey: {
@@ -23,21 +22,23 @@ const config: RevenueCatConfig = {
 };
 
 export async function initializeRevenueCat() {
-  if (Device.isDevice) {
-    await Purchases.setLogLevel(LOG_LEVEL.DEBUG); // Set to DEBUG in development
+  await Purchases.setLogLevel(
+    process.env.EXPO_PUBLIC_APP_ENV === "development"
+      ? LOG_LEVEL.DEBUG
+      : LOG_LEVEL.INFO,
+  );
 
-    const apiKey = Platform.select({
-      ios: config.apiKey.ios,
-      android: config.apiKey.android,
-      default: "",
-    });
+  const apiKey = Platform.select({
+    ios: config.apiKey.ios,
+    android: config.apiKey.android,
+    default: "",
+  });
 
-    if (!apiKey) {
-      throw new Error("No API key for platform");
-    }
-
-    Purchases.configure({ apiKey });
+  if (!apiKey) {
+    throw new Error("No API key for platform");
   }
+
+  Purchases.configure({ apiKey });
 }
 
 export async function getCurrentSubscriptionStatus() {
