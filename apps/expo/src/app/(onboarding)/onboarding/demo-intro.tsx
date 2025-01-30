@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   Easing,
@@ -12,9 +12,11 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Camera, ChevronDown, List, Plus, Sparkles } from "lucide-react-native";
+import { toast } from "sonner-native";
 
 export default function DemoIntroScreen() {
   const translateY = useSharedValue(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Start the animation immediately
   translateY.value = withRepeat(
@@ -35,6 +37,21 @@ export default function DemoIntroScreen() {
       zIndex: 10,
     };
   });
+
+  const handlePress = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+
+    try {
+      router.push("/onboarding/demo-capture");
+    } catch (error) {
+      toast.error("Something went wrong", {
+        description: "Please try again",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-interactive-3" edges={["top"]}>
@@ -124,8 +141,9 @@ export default function DemoIntroScreen() {
         </Text>
 
         <TouchableOpacity
-          onPress={() => router.push("/onboarding/demo-capture")}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex-row items-center justify-center rounded-full bg-[#5A32FB] p-6 shadow-lg"
+          onPress={handlePress}
+          disabled={isLoading}
+          className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex-row items-center justify-center rounded-full ${isLoading ? "bg-[#5A32FB]/50" : "bg-[#5A32FB]"} p-6 shadow-lg`}
         >
           <Plus size={28} color="#E0D9FF" />
         </TouchableOpacity>

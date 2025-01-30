@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -17,6 +17,7 @@ import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function PhotosScreen() {
   const translateX = useSharedValue(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     translateX.value = withRepeat(
@@ -40,38 +41,51 @@ export default function PhotosScreen() {
   }));
 
   const handlePhotoPermission = async () => {
-    const { status, canAskAgain } =
-      await ImagePicker.getMediaLibraryPermissionsAsync();
+    if (isLoading) return;
+    setIsLoading(true);
 
-    if (status === ImagePicker.PermissionStatus.GRANTED) {
-      toast.success("Photo access already enabled", {
-        action: {
-          label: "Continue",
-          onClick: () => {
-            router.push("/onboarding/demo-intro");
-            toast.dismiss();
+    try {
+      const { status, canAskAgain } =
+        await ImagePicker.getMediaLibraryPermissionsAsync();
+
+      if (status === ImagePicker.PermissionStatus.GRANTED) {
+        toast.success("Photo access already enabled", {
+          action: {
+            label: "Continue",
+            onClick: () => {
+              router.push("/onboarding/demo-intro");
+              toast.dismiss();
+            },
           },
-        },
-      });
-      return;
-    }
+        });
+        setIsLoading(false);
+        return;
+      }
 
-    if (!canAskAgain) {
-      toast.error("Photo access required", {
-        description: "Please enable photo access in your device settings.",
-        action: {
-          label: "Settings",
-          onClick: () => {
-            void Linking.openSettings();
+      if (!canAskAgain) {
+        toast.error("Photo access required", {
+          description: "Please enable photo access in your device settings.",
+          action: {
+            label: "Settings",
+            onClick: () => {
+              void Linking.openSettings();
+            },
           },
-        },
-        duration: Infinity,
-      });
-      return;
-    }
+          duration: Infinity,
+        });
+        setIsLoading(false);
+        return;
+      }
 
-    await ImagePicker.requestMediaLibraryPermissionsAsync();
-    router.push("/onboarding/demo-intro");
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+      router.push("/onboarding/demo-intro");
+    } catch (error) {
+      toast.error("Something went wrong", {
+        description: "Please try again",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -125,10 +139,13 @@ export default function PhotosScreen() {
             <View className="relative">
               <Pressable
                 onPress={() => handlePhotoPermission()}
+                disabled={isLoading}
                 className="w-full border-b border-gray-200 py-3"
               >
-                <Text className="text-center text-lg font-bold text-blue-500">
-                  Allow Full Access
+                <Text
+                  className={`text-center text-lg font-bold ${isLoading ? "text-blue-500/50" : "text-blue-500"}`}
+                >
+                  {isLoading ? "Loading..." : "Allow Full Access"}
                 </Text>
               </Pressable>
               <Animated.View style={animatedStyle}>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { router } from "expo-router";
+import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
@@ -21,12 +22,24 @@ export default function PrioritiesScreen() {
   const [selectedPriority, setSelectedPriority] = useState<Priority | null>(
     null,
   );
+  const [isLoading, setIsLoading] = useState(false);
   const setUserPriority = useAppStore((state) => state.setUserPriority);
 
-  const handlePrioritySelect = (priority: Priority) => {
-    setSelectedPriority(priority);
-    setUserPriority(`${priority.text} ${priority.emoji}`);
-    router.push("/onboarding/07-we-got-you");
+  const handlePrioritySelect = async (priority: Priority) => {
+    if (isLoading) return;
+    setIsLoading(true);
+
+    try {
+      setSelectedPriority(priority);
+      setUserPriority(`${priority.text} ${priority.emoji}`);
+      router.push("/onboarding/07-we-got-you");
+    } catch (error) {
+      toast.error("Something went wrong", {
+        description: "Please try again",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -46,6 +59,7 @@ export default function PrioritiesScreen() {
             rightIcon={priority.emoji}
             onPress={() => handlePrioritySelect(priority)}
             isSelected={selectedPriority === priority}
+            disabled={isLoading}
           />
         ))}
       </View>

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -19,6 +19,7 @@ import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 export default function NotificationsScreen() {
   const { registerForPushNotifications } = useNotification();
   const translateY = useSharedValue(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     translateY.value = withRepeat(
@@ -43,39 +44,52 @@ export default function NotificationsScreen() {
   });
 
   const handleNotificationPermission = async () => {
-    const { status, canAskAgain } = await Notifications.getPermissionsAsync();
+    if (isLoading) return;
+    setIsLoading(true);
 
-    if (status === Notifications.PermissionStatus.GRANTED) {
-      toast.success("Notifications already enabled", {
-        action: {
-          label: "Continue",
-          onClick: () => {
-            router.push("/onboarding/02-age");
-            toast.dismiss();
+    try {
+      const { status, canAskAgain } = await Notifications.getPermissionsAsync();
+
+      if (status === Notifications.PermissionStatus.GRANTED) {
+        toast.success("Notifications already enabled", {
+          action: {
+            label: "Continue",
+            onClick: () => {
+              router.push("/onboarding/02-age");
+              toast.dismiss();
+            },
           },
-        },
-      });
-      return;
-    }
+        });
+        setIsLoading(false);
+        return;
+      }
 
-    if (!canAskAgain) {
-      toast.error("Notification permission required", {
-        description: "Please enable notifications in your device settings.",
-        action: {
-          label: "Settings",
-          onClick: () => {
-            void Linking.openSettings();
-            toast.dismiss();
+      if (!canAskAgain) {
+        toast.error("Notification permission required", {
+          description: "Please enable notifications in your device settings.",
+          action: {
+            label: "Settings",
+            onClick: () => {
+              void Linking.openSettings();
+              toast.dismiss();
+            },
           },
-        },
-        duration: Infinity,
-      });
-      return;
-    }
+          duration: Infinity,
+        });
+        setIsLoading(false);
+        return;
+      }
 
-    await registerForPushNotifications();
-    await Notifications.requestPermissionsAsync();
-    router.push("/onboarding/02-age");
+      await registerForPushNotifications();
+      await Notifications.requestPermissionsAsync();
+      router.push("/onboarding/02-age");
+    } catch (error) {
+      toast.error("Something went wrong", {
+        description: "Please try again",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -107,9 +121,12 @@ export default function NotificationsScreen() {
                   className="w-full border-l border-[#3c3c43]/30 py-3"
                   onPress={handleNotificationPermission}
                   hitSlop={40}
+                  disabled={isLoading}
                 >
-                  <Text className="text-center text-lg font-bold text-blue-500">
-                    Allow
+                  <Text
+                    className={`text-center text-lg font-bold ${isLoading ? "text-blue-500/50" : "text-blue-500"}`}
+                  >
+                    {isLoading ? "Loading..." : "Allow"}
                   </Text>
                 </Pressable>
                 <Animated.View style={animatedStyle}>
