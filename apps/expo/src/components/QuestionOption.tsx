@@ -32,6 +32,9 @@ export function QuestionOption({
         disabled && "opacity-50",
         className,
       )}
+      accessibilityRole="button"
+      accessibilityState={{ disabled, selected: isSelected }}
+      accessibilityLabel={label}
     >
       <Text
         className={cn(
