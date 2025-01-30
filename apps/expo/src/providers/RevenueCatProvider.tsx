@@ -1,6 +1,12 @@
 import type { PropsWithChildren } from "react";
 import type { CustomerInfo } from "react-native-purchases";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { useAuth } from "@clerk/clerk-expo";
@@ -24,6 +30,23 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const { userId } = useAuth();
 
+  const login = useCallback(
+    async (userId: string) => {
+      if (!isInitialized) {
+        console.warn("RevenueCat is not initialized yet");
+        return;
+      }
+      try {
+        const { customerInfo } = await Purchases.logIn(userId);
+        setCustomerInfo(customerInfo);
+      } catch (error) {
+        console.error("Error logging in to RevenueCat:", error);
+        throw error;
+      }
+    },
+    [isInitialized],
+  );
+
   useEffect(() => {
     async function initialize() {
       try {
@@ -41,19 +64,13 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     }
 
     void initialize();
-  }, [userId]);
-
-  async function login(userId: string) {
-    try {
-      const { customerInfo } = await Purchases.logIn(userId);
-      setCustomerInfo(customerInfo);
-    } catch (error) {
-      console.error("Error logging in to RevenueCat:", error);
-      throw error;
-    }
-  }
+  }, [login, userId]);
 
   async function logout() {
+    if (!isInitialized) {
+      console.warn("RevenueCat is not initialized yet");
+      return;
+    }
     try {
       await Purchases.logOut();
       setCustomerInfo(null);
@@ -64,6 +81,10 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   }
 
   async function showProPaywallIfNeeded() {
+    if (!isInitialized) {
+      console.warn("RevenueCat is not initialized yet");
+      return;
+    }
     console.log("showProPaywallIfNeeded");
     try {
       const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({

@@ -22,7 +22,11 @@ const config: RevenueCatConfig = {
 };
 
 export async function initializeRevenueCat() {
-  await Purchases.setLogLevel(LOG_LEVEL.DEBUG); // Set to DEBUG in development
+  await Purchases.setLogLevel(
+    process.env.EXPO_PUBLIC_APP_ENV === "development"
+      ? LOG_LEVEL.DEBUG
+      : LOG_LEVEL.INFO,
+  );
 
   const apiKey = Platform.select({
     ios: config.apiKey.ios,
