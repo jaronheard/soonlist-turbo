@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { router } from "expo-router";
+import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
@@ -21,8 +22,11 @@ export default function DiscoveryScreen() {
   const [selectedMethods, setSelectedMethods] = useState<Set<DiscoveryMethod>>(
     new Set(),
   );
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleMethodSelect = (method: DiscoveryMethod) => {
+  const handleMethodSelect = async (method: DiscoveryMethod) => {
+    if (isLoading) return;
+
     const newSelected = new Set(selectedMethods);
 
     if (newSelected.has(method)) {
@@ -40,10 +44,17 @@ export default function DiscoveryScreen() {
 
     // If we have 2 selections, proceed to next screen
     if (newSelected.size === 2) {
-      // Store the methods in your app state here if needed
-      setTimeout(() => {
+      setIsLoading(true);
+      try {
+        // Store the methods in your app state here if needed
+        await new Promise((resolve) => setTimeout(resolve, 500)); // Small delay to show the selection
         router.push("/onboarding/05-screenshot");
-      }, 500); // Small delay to show the selection
+      } catch (error) {
+        toast.error("Something went wrong", {
+          description: "Please try again",
+        });
+        setIsLoading(false);
+      }
     }
   };
 
@@ -90,6 +101,7 @@ export default function DiscoveryScreen() {
             label={method}
             onPress={() => handleMethodSelect(method)}
             isSelected={selectedMethods.has(method)}
+            disabled={isLoading}
           />
         ))}
       </View>

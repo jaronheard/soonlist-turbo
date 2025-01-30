@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
+import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
@@ -20,11 +21,23 @@ type Source = (typeof sources)[number];
 
 export default function SourceScreen() {
   const [selectedSource, setSelectedSource] = useState<Source | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSourceSelect = (source: Source) => {
-    setSelectedSource(source);
-    // Store the source in your app state here if needed
-    router.push("/onboarding/04-discovery");
+  const handleSourceSelect = async (source: Source) => {
+    if (isLoading) return;
+    setIsLoading(true);
+
+    try {
+      setSelectedSource(source);
+      // Store the source in your app state here if needed
+      router.push("/onboarding/04-discovery");
+    } catch (error) {
+      toast.error("Something went wrong", {
+        description: "Please try again",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -41,6 +54,7 @@ export default function SourceScreen() {
               label={source}
               onPress={() => handleSourceSelect(source)}
               isSelected={selectedSource === source}
+              disabled={isLoading}
             />
           ))}
         </View>

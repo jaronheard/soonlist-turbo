@@ -9,6 +9,7 @@ interface QuestionOptionProps {
   isSelected?: boolean;
   rightIcon?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export function QuestionOption({
@@ -17,15 +18,18 @@ export function QuestionOption({
   isSelected = false,
   className,
   rightIcon,
+  disabled = false,
 }: QuestionOptionProps) {
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       className={cn(
         "mb-3 w-full flex-row items-center justify-between rounded-xl border-2 p-4",
         isSelected
           ? "border-interactive-1/30 bg-interactive-2"
           : "border-gray-200 bg-white",
+        disabled && "opacity-50",
         className,
       )}
     >
@@ -33,11 +37,16 @@ export function QuestionOption({
         className={cn(
           "text-lg",
           isSelected ? "font-medium text-interactive-1" : "text-gray-900",
+          disabled && "opacity-50",
         )}
       >
         {label}
       </Text>
-      {rightIcon && <Text className="text-xl">{rightIcon}</Text>}
+      {rightIcon && (
+        <Text className={cn("text-xl", disabled && "opacity-50")}>
+          {rightIcon}
+        </Text>
+      )}
     </Pressable>
   );
 }

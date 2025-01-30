@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
+import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
@@ -19,11 +20,23 @@ type AgeRange = (typeof ageRanges)[number];
 
 export default function AgeScreen() {
   const [selectedAge, setSelectedAge] = useState<AgeRange | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAgeSelect = (age: AgeRange) => {
-    setSelectedAge(age);
-    // Store the age in your app state here if needed
-    router.push("/onboarding/03-source");
+  const handleAgeSelect = async (age: AgeRange) => {
+    if (isLoading) return;
+    setIsLoading(true);
+
+    try {
+      setSelectedAge(age);
+      // Store the age in your app state here if needed
+      router.push("/onboarding/03-source");
+    } catch (error) {
+      toast.error("Something went wrong", {
+        description: "Please try again",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -39,6 +52,7 @@ export default function AgeScreen() {
             label={age}
             onPress={() => handleAgeSelect(age)}
             isSelected={selectedAge === age}
+            disabled={isLoading}
           />
         ))}
       </View>
