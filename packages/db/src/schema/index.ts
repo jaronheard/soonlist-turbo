@@ -237,6 +237,9 @@ export const users = mysqlTable(
     updatedAt: timestamp("updatedAt").onUpdateNow(),
     publicMetadata: json("publicMetadata"),
     emoji: varchar("emoji", { length: 256 }),
+    // Onboarding fields
+    onboardingData: json("onboardingData"),
+    onboardingCompletedAt: timestamp("onboardingCompletedAt"),
   },
   (table) => {
     return {
