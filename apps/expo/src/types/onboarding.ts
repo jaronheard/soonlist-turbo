@@ -1,12 +1,4 @@
-export interface OnboardingData {
-  notificationsEnabled: boolean;
-  ageRange: "Under 24" | "25-34" | "35-44" | "45-54" | "55-64" | "65+";
-  priority: {
-    text: string;
-    emoji: string;
-  };
-  completedAt: Date;
-}
+import type { OnboardingData } from "@soonlist/db/types";
 
 export type OnboardingStep =
   | "notifications"
@@ -16,3 +8,5 @@ export type OnboardingStep =
   | "screenshot"
   | "priorities"
   | "photos";
+
+export type { OnboardingData };

@@ -1,4 +1,8 @@
+import { eq } from "drizzle-orm";
 import { z } from "zod";
+
+import type { OnboardingData } from "@soonlist/db/types";
+import { users } from "@soonlist/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -26,18 +30,36 @@ export const userRouter = createTRPCRouter({
         throw new Error("User not found");
       }
 
+      // Get user from database
+      const dbUser = await ctx.db.query.users.findFirst({
+        where: eq(users.id, currentUser.id),
+      });
+
+      if (!dbUser) {
+        throw new Error("User not found in database");
+      }
+
+      // Get existing onboarding data
+      const existingData = (dbUser.onboardingData ?? {}) as OnboardingData;
+
+      // Merge existing data with new data
+      const mergedData = {
+        ...existingData,
+        ...input,
+      };
+
       // Update user profile with onboarding data
-      const updatedUser = await ctx.db.user.update({
-        where: { id: currentUser.id },
-        data: {
-          onboardingData: input,
+      await ctx.db
+        .update(users)
+        .set({
+          onboardingData: mergedData,
           ...(input.completedAt
             ? { onboardingCompletedAt: input.completedAt }
             : {}),
-        },
-      });
+        })
+        .where(eq(users.id, currentUser.id));
 
-      return updatedUser;
+      return mergedData;
     }),
 
   getOnboardingData: protectedProcedure.query(async ({ ctx }) => {
@@ -47,6 +69,15 @@ export const userRouter = createTRPCRouter({
       throw new Error("User not found");
     }
 
-    return currentUser.onboardingData;
+    // Get user from database
+    const dbUser = await ctx.db.query.users.findFirst({
+      where: eq(users.id, currentUser.id),
+    });
+
+    if (!dbUser) {
+      throw new Error("User not found in database");
+    }
+
+    return (dbUser.onboardingData ?? {}) as OnboardingData;
   }),
 });
