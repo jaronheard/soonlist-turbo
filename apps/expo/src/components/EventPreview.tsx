@@ -10,10 +10,11 @@ import {
 import { Image as ExpoImage } from "expo-image";
 import { Image, Link as LinkIcon, X } from "lucide-react-native";
 
+import type { ImageSource } from "~/components/demoData";
 import { cn } from "~/utils/cn";
 
 interface EventPreviewProps {
-  imagePreview: string | null;
+  imagePreview: string | ImageSource | null;
   linkPreview: string | null;
   input: string;
   handleTextChange: (text: string) => void;
@@ -56,7 +57,11 @@ export function EventPreview({
       {imagePreview && (
         <View className="relative h-full w-full">
           <ExpoImage
-            source={{ uri: imagePreview }}
+            source={
+              typeof imagePreview === "number"
+                ? imagePreview
+                : { uri: imagePreview }
+            }
             style={{ width: "100%", height: "100%" }}
             contentFit="contain"
             contentPosition="center"
