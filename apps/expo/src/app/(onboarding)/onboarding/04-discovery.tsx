@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Text, View } from "react-native";
-import { router } from "expo-router";
 import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
+import { useOnboarding } from "~/hooks/useOnboarding";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const discoveryMethods = [
@@ -23,6 +23,7 @@ export default function DiscoveryScreen() {
     new Set(),
   );
   const [isLoading, setIsLoading] = useState(false);
+  const { saveStep } = useOnboarding();
 
   const handleMethodSelect = async (method: DiscoveryMethod) => {
     if (isLoading) return;
@@ -46,9 +47,11 @@ export default function DiscoveryScreen() {
     if (newSelected.size === 2) {
       setIsLoading(true);
       try {
-        // Store the methods in your app state here if needed
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Small delay to show the selection
-        router.push("/onboarding/05-screenshot");
+        await saveStep(
+          "discovery",
+          { discoveryMethods: Array.from(newSelected) },
+          "/onboarding/05-screenshot",
+        );
       } catch (error) {
         toast.error("Something went wrong", {
           description: "Please try again",
@@ -91,7 +94,7 @@ export default function DiscoveryScreen() {
               ? "👇 Tap any two options to continue"
               : remainingSelections === 1
                 ? "👇 Tap one more option to continue"
-                : "✨ Great choices! Taking you to the next step..."}
+                : "✨ Thanks! Taking you to the next step..."}
           </Text>
         </View>
 
