@@ -1,3 +1,4 @@
+import type { Href } from "expo-router";
 import { useCallback } from "react";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -40,7 +41,7 @@ export function useOnboarding() {
 
         // Navigate to next step if provided
         if (nextStep) {
-          router.push(nextStep);
+          router.push(nextStep as Href);
         }
       } catch (error) {
         toast.error("Something went wrong", {
