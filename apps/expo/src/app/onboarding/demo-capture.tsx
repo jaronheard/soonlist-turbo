@@ -96,7 +96,7 @@ export default function DemoCaptureScreen() {
               headerStyle: { backgroundColor: "#5A32FB" },
               headerTintColor: "#fff",
               contentStyle: { backgroundColor: "#5A32FB" },
-              headerTitle: "Capture event (demo)",
+              headerTitle: "Add your first event (demo)",
             }}
           />
 
