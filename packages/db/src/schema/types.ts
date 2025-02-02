@@ -67,6 +67,14 @@ export interface UserPublicMetadata {
 export interface OnboardingData {
   notificationsEnabled?: boolean;
   ageRange?: "Under 24" | "25-34" | "35-44" | "45-54" | "55-64" | "65+";
+  source?:
+    | "Google Search"
+    | "TikTok"
+    | "Searched on App Store"
+    | "Instagram"
+    | "Facebook"
+    | "Through a friend"
+    | "Other";
   priority?: {
     text: string;
     emoji: string;
