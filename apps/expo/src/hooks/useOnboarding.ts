@@ -3,7 +3,6 @@ import { useCallback } from "react";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { usePostHog } from "posthog-react-native";
-import { toast } from "sonner-native";
 
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import { api } from "~/utils/api";
@@ -21,12 +20,18 @@ export function useOnboarding() {
     });
 
   const saveStep = useCallback(
-    async <T extends keyof OnboardingData>(
+    <T extends keyof OnboardingData>(
       step: OnboardingStep,
       data: Pick<OnboardingData, T>,
       nextStep?: string,
     ) => {
-      try {
+      // Navigate immediately if nextStep is provided
+      if (nextStep) {
+        router.push(nextStep as Href);
+      }
+
+      // Handle saving in the background
+      void (async () => {
         // Save to database
         await saveOnboardingData({
           ...data,
@@ -38,17 +43,7 @@ export function useOnboarding() {
           userId: user?.id,
           ...data,
         });
-
-        // Navigate to next step if provided
-        if (nextStep) {
-          router.push(nextStep as Href);
-        }
-      } catch (error) {
-        toast.error("Something went wrong", {
-          description: "Please try again",
-        });
-        throw error;
-      }
+      })();
     },
     [posthog, saveOnboardingData, user?.id],
   );

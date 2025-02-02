@@ -29,7 +29,7 @@ export function QuestionOption({
         isSelected
           ? "border-interactive-1/30 bg-interactive-2"
           : "border-gray-200 bg-white",
-        disabled && "opacity-50",
+        disabled && "opacity-100",
         className,
       )}
     >
@@ -37,13 +37,13 @@ export function QuestionOption({
         className={cn(
           "text-lg",
           isSelected ? "font-medium text-interactive-1" : "text-gray-900",
-          disabled && "opacity-50",
+          disabled && "opacity-100",
         )}
       >
         {label}
       </Text>
       {rightIcon && (
-        <Text className={cn("text-xl", disabled && "opacity-50")}>
+        <Text className={cn("text-xl", disabled && "opacity-100")}>
           {rightIcon}
         </Text>
       )}
