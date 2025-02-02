@@ -24,6 +24,7 @@ export function useInitializeInput({
     setLinkPreview,
     setActiveInput,
     setIsOptionSelected,
+    hasMediaPermission,
   } = useAppStore();
 
   const handleImagePreview = useCallback(
@@ -67,6 +68,8 @@ export function useInitializeInput({
   );
 
   useEffect(() => {
+    if (initialized) return;
+
     setInput("");
     setImagePreview(null);
     setLinkPreview(null);
@@ -95,13 +98,15 @@ export function useInitializeInput({
         setIsOptionSelected(false);
       }
     } else {
-      const mostRecentPhoto = recentPhotos[0];
-      if (mostRecentPhoto?.uri) {
+      if (hasMediaPermission) {
         setActiveInput("upload");
         setIsOptionSelected(true);
-        void handleImagePreview(mostRecentPhoto.uri);
+        const mostRecentPhoto = recentPhotos[0];
+        if (mostRecentPhoto?.uri) {
+          void handleImagePreview(mostRecentPhoto.uri);
+        }
       } else {
-        setActiveInput("describe");
+        // setActiveInput("describe");
         setIsOptionSelected(false);
       }
     }
@@ -119,6 +124,8 @@ export function useInitializeInput({
     setInput,
     setIsOptionSelected,
     setLinkPreview,
+    hasMediaPermission,
+    initialized,
   ]);
 
   return { initialized };
