@@ -91,7 +91,7 @@ export default function PhotosScreen() {
   return (
     <QuestionContainer
       question="Enable Photo Access"
-      currentStep={7}
+      currentStep={10}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <View className="-mt-16 flex-1 items-center justify-center px-12">
