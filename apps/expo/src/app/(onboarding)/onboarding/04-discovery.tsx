@@ -47,7 +47,7 @@ export default function DiscoveryScreen() {
     if (newSelected.size === 2) {
       setIsLoading(true);
       try {
-        await saveStep(
+        saveStep(
           "discovery",
           { discoveryMethods: Array.from(newSelected) },
           "/onboarding/05-screenshot",

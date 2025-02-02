@@ -85,7 +85,7 @@ export default function NotificationsScreen() {
       await registerForPushNotifications();
       const { status: permissionStatus } =
         await Notifications.requestPermissionsAsync();
-      await saveStep(
+      saveStep(
         "notifications",
         {
           notificationsEnabled:

@@ -30,7 +30,7 @@ export default function SourceScreen() {
 
     try {
       setSelectedSource(source);
-      await saveStep("source", { source }, "/onboarding/04-discovery");
+      saveStep("source", { source }, "/onboarding/04-discovery");
     } catch (error) {
       toast.error("Something went wrong", {
         description: "Please try again",

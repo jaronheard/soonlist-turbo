@@ -21,7 +21,7 @@ export default function ScreenshotScreen() {
 
     try {
       setSelectedOption(option);
-      await saveStep(
+      saveStep(
         "screenshot",
         { screenshotEvents: option },
         "/onboarding/06-priorities",

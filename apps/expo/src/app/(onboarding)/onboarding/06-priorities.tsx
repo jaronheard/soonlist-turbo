@@ -30,7 +30,7 @@ export default function PrioritiesScreen() {
 
     try {
       setSelectedPriority(priority);
-      await saveStep("priorities", { priority }, "/onboarding/07-we-got-you");
+      saveStep("priorities", { priority }, "/onboarding/07-we-got-you");
     } catch (error) {
       toast.error("Something went wrong", {
         description: "Please try again",
