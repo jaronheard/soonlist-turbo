@@ -14,6 +14,9 @@ import { router } from "expo-router";
 import { Camera, ChevronDown, List, Plus, Sparkles } from "lucide-react-native";
 import { toast } from "sonner-native";
 
+import { DemoProgressBar } from "~/components/DemoProgressBar";
+import { TOTAL_ONBOARDING_STEPS } from "../_layout";
+
 export default function DemoIntroScreen() {
   const translateY = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +58,11 @@ export default function DemoIntroScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-interactive-3" edges={["top"]}>
+      <DemoProgressBar
+        currentStep={8}
+        totalSteps={TOTAL_ONBOARDING_STEPS}
+        variant="light"
+      />
       <View className="flex-1 px-4 ">
         <Text className="my-6 text-center text-4xl font-bold text-black">
           How it works

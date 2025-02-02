@@ -29,7 +29,7 @@ export default function AgeScreen() {
 
     try {
       setSelectedAge(age);
-      await saveStep("age", { ageRange: age }, "/onboarding/03-source");
+      saveStep("age", { ageRange: age }, "/onboarding/03-source");
     } catch (error) {
       toast.error("Something went wrong", {
         description: "Please try again",
