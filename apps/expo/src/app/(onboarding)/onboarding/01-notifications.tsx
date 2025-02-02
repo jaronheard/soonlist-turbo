@@ -13,11 +13,13 @@ import { ChevronUp } from "lucide-react-native";
 import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
+import { useOnboarding } from "~/hooks/useOnboarding";
 import { useNotification } from "~/providers/NotificationProvider";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function NotificationsScreen() {
   const { registerForPushNotifications } = useNotification();
+  const { saveStep } = useOnboarding();
   const translateY = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -81,8 +83,16 @@ export default function NotificationsScreen() {
       }
 
       await registerForPushNotifications();
-      await Notifications.requestPermissionsAsync();
-      router.push("/onboarding/02-age");
+      const { status: permissionStatus } =
+        await Notifications.requestPermissionsAsync();
+      await saveStep(
+        "notifications",
+        {
+          notificationsEnabled:
+            permissionStatus === Notifications.PermissionStatus.GRANTED,
+        },
+        "/onboarding/02-age",
+      );
     } catch (error) {
       toast.error("Something went wrong", {
         description: "Please try again",

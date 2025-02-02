@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { router } from "expo-router";
 import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
+import { useOnboarding } from "~/hooks/useOnboarding";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const options = ["Yes", "Not yet"] as const;
@@ -13,6 +13,7 @@ type Option = (typeof options)[number];
 export default function ScreenshotScreen() {
   const [selectedOption, setSelectedOption] = useState<Option | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { saveStep } = useOnboarding();
 
   const handleOptionSelect = async (option: Option) => {
     if (isLoading) return;
@@ -20,8 +21,11 @@ export default function ScreenshotScreen() {
 
     try {
       setSelectedOption(option);
-      // Store the answer in your app state here if needed
-      router.push("/onboarding/06-priorities");
+      await saveStep(
+        "screenshot",
+        { screenshotEvents: option },
+        "/onboarding/06-priorities",
+      );
     } catch (error) {
       toast.error("Something went wrong", {
         description: "Please try again",

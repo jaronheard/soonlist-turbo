@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { router } from "expo-router";
 import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
+import { useOnboarding } from "~/hooks/useOnboarding";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const ageRanges = [
@@ -21,6 +21,7 @@ type AgeRange = (typeof ageRanges)[number];
 export default function AgeScreen() {
   const [selectedAge, setSelectedAge] = useState<AgeRange | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { saveStep } = useOnboarding();
 
   const handleAgeSelect = async (age: AgeRange) => {
     if (isLoading) return;
@@ -28,8 +29,7 @@ export default function AgeScreen() {
 
     try {
       setSelectedAge(age);
-      // Store the age in your app state here if needed
-      router.push("/onboarding/03-source");
+      await saveStep("age", { ageRange: age }, "/onboarding/03-source");
     } catch (error) {
       toast.error("Something went wrong", {
         description: "Please try again",

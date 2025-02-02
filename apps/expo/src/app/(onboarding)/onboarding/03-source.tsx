@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { router } from "expo-router";
 import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
+import { useOnboarding } from "~/hooks/useOnboarding";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const sources = [
@@ -22,6 +22,7 @@ type Source = (typeof sources)[number];
 export default function SourceScreen() {
   const [selectedSource, setSelectedSource] = useState<Source | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { saveStep } = useOnboarding();
 
   const handleSourceSelect = async (source: Source) => {
     if (isLoading) return;
@@ -29,8 +30,7 @@ export default function SourceScreen() {
 
     try {
       setSelectedSource(source);
-      // Store the source in your app state here if needed
-      router.push("/onboarding/04-discovery");
+      await saveStep("source", { source }, "/onboarding/04-discovery");
     } catch (error) {
       toast.error("Something went wrong", {
         description: "Please try again",
