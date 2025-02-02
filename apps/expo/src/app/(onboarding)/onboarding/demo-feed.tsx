@@ -134,6 +134,8 @@ export default function DemoFeedScreen() {
         publicInsta: null,
         publicWebsite: null,
         publicMetadata: null,
+        onboardingCompletedAt: null,
+        onboardingData: null,
       },
       eventFollows: [],
       comments: [],
