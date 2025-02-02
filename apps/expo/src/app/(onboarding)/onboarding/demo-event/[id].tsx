@@ -107,9 +107,14 @@ export default function DemoEventDetail() {
               {event.images?.[3] && (
                 <View className="mb-4">
                   <Image
-                    source={{
-                      uri: `${event.images[3]}?max-w=1284&fit=cover&f=webp&q=80`,
-                    }}
+                    source={
+                      typeof event.images[3] === "number"
+                        ? event.images[3]
+                        : {
+                            uri: `${event.images[3].uri}?max-w=1284&fit=cover&f=webp&q=80`,
+                            headers: { Accept: "image/webp,image/png,image/*" },
+                          }
+                    }
                     style={{
                       width: width - 32,
                       height: imageHeight || width - 32,

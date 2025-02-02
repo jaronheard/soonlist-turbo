@@ -1,3 +1,14 @@
+// Type for static image resources in React Native
+type ImageRequireSource = number;
+
+// Type for remote image source
+interface RemoteImageSource {
+  uri: string;
+}
+
+// Type for image source that can be either a remote URL or local require
+export type ImageSource = ImageRequireSource | RemoteImageSource;
+
 export interface DemoEvent {
   id: string;
   name: string;
@@ -6,8 +17,8 @@ export interface DemoEvent {
   startTime?: string;
   endTime?: string;
   timeZone?: string;
-  imageUri?: string;
-  images?: string[];
+  imageUri?: ImageSource;
+  images?: ImageSource[];
   description?: string;
 }
 
@@ -20,12 +31,13 @@ export const DEMO_CAPTURE_EVENTS: DemoEvent[] = [
     startDate: "2025-07-15",
     startTime: "20:00",
     timeZone: "America/Los_Angeles",
-    imageUri: "https://upcdn.io/12a1yek/raw/uploads/Soonlist/music.png",
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    imageUri: require("../assets/music.png"),
     images: [
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/music.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/music.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/music.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/music.png",
+      require("../assets/music.png"),
+      require("../assets/music.png"),
+      require("../assets/music.png"),
+      require("../assets/music.png"),
     ],
     description:
       "Local bands perform live in an outdoor setting. Food trucks on-site. Bring a blanket!",
@@ -37,12 +49,13 @@ export const DEMO_CAPTURE_EVENTS: DemoEvent[] = [
     startDate: "2025-10-13",
     startTime: "19:00",
     timeZone: "America/Los_Angeles",
-    imageUri: "https://upcdn.io/12a1yek/raw/uploads/Soonlist/art.png",
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    imageUri: require("../assets/art.png"),
     images: [
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/art.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/art.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/art.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/art.png",
+      require("../assets/art.png"),
+      require("../assets/art.png"),
+      require("../assets/art.png"),
+      require("../assets/art.png"),
     ],
     description:
       "Come see the latest creations from local painters, sculptors, and artisans.",
@@ -54,12 +67,13 @@ export const DEMO_CAPTURE_EVENTS: DemoEvent[] = [
     startDate: "2025-09-09",
     startTime: "11:00",
     timeZone: "America/Los_Angeles",
-    imageUri: "https://upcdn.io/12a1yek/raw/uploads/Soonlist/food.png",
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    imageUri: require("../assets/food.png"),
     images: [
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/food.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/food.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/food.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/food.png",
+      require("../assets/food.png"),
+      require("../assets/food.png"),
+      require("../assets/food.png"),
+      require("../assets/food.png"),
     ],
     description:
       "Sample cuisines from around the world. Live music, cooking demos, and more.",
@@ -71,12 +85,13 @@ export const DEMO_CAPTURE_EVENTS: DemoEvent[] = [
     startDate: "2025-08-08",
     startTime: "18:30",
     timeZone: "America/Los_Angeles",
-    imageUri: "https://upcdn.io/12a1yek/raw/uploads/Soonlist/design.png",
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    imageUri: require("../assets/design.png"),
     images: [
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/design.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/design.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/design.png",
-      "https://upcdn.io/12a1yek/raw/uploads/Soonlist/design.png",
+      require("../assets/design.png"),
+      require("../assets/design.png"),
+      require("../assets/design.png"),
+      require("../assets/design.png"),
     ],
     description:
       "Monthly meetup for local developers. Talks on React Native, AI, and more.",

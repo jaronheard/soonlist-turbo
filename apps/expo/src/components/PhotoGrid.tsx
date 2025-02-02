@@ -12,6 +12,7 @@ import { Image as ExpoImage } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { Camera, ChevronRight, ImagePlus } from "lucide-react-native";
 
+import type { ImageSource } from "~/components/demoData";
 import type { RecentPhoto } from "~/store";
 import { cn } from "~/utils/cn";
 
@@ -19,11 +20,37 @@ interface PhotoGridProps {
   hasMediaPermission: boolean;
   hasFullPhotoAccess: boolean;
   recentPhotos: RecentPhoto[];
-  onPhotoSelect: (uri: string) => void;
+  onPhotoSelect: (uri: string | ImageSource) => void;
   onCameraPress: () => void;
   onMorePhotos: () => void;
-  selectedUri: string | null;
+  selectedUri: string | ImageSource | null;
   containerClassName?: string;
+}
+
+// Helper function to compare image URIs
+function compareImageUris(
+  uri1: string | ImageSource | undefined | null,
+  uri2: string | ImageSource | undefined | null,
+): boolean {
+  if (!uri1 || !uri2) return false;
+
+  if (typeof uri1 === "number" && typeof uri2 === "number") {
+    return uri1 === uri2;
+  }
+
+  if (typeof uri1 === "string" && typeof uri2 === "object" && "uri" in uri2) {
+    return uri1 === uri2.uri;
+  }
+
+  if (typeof uri2 === "string" && typeof uri1 === "object" && "uri" in uri1) {
+    return uri2 === uri1.uri;
+  }
+
+  if (typeof uri1 === "string" && typeof uri2 === "string") {
+    return uri1 === uri2;
+  }
+
+  return false;
 }
 
 // Memoize the grid item component
@@ -39,8 +66,8 @@ const GridItem = React.memo(
   }: {
     item: RecentPhoto & { id: string };
     imageSize: number;
-    onPhotoSelect: (uri: string) => void;
-    selectedUri: string | null;
+    onPhotoSelect: (uri: string | ImageSource) => void;
+    selectedUri: string | ImageSource | null;
     hasMediaPermission: boolean;
     hasFullPhotoAccess: boolean;
     onMorePhotos: () => void;
@@ -83,7 +110,7 @@ const GridItem = React.memo(
         onPress={() => onPhotoSelect(item.uri)}
         className={cn(
           "aspect-square bg-muted/20",
-          selectedUri === item.uri && "opacity-50",
+          compareImageUris(selectedUri, item.uri) && "opacity-50",
         )}
         style={{
           width: imageSize,
@@ -91,7 +118,7 @@ const GridItem = React.memo(
         }}
       >
         <ExpoImage
-          source={{ uri: item.uri }}
+          source={typeof item.uri === "number" ? item.uri : { uri: item.uri }}
           style={{
             width: "100%",
             height: "100%",

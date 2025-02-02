@@ -2,12 +2,13 @@ import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { Sparkles } from "lucide-react-native";
 
+import type { ImageSource } from "~/components/demoData";
 import { cn } from "~/utils/cn";
 
 interface CaptureEventButtonProps {
   handleCreateEvent: () => void;
   input: string;
-  imagePreview: string | null;
+  imagePreview: string | ImageSource | null;
   linkPreview: string | null;
   containerClassName?: string;
 }
