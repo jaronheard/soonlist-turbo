@@ -1,20 +1,32 @@
+import type { ImageSourcePropType } from "react-native";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
+interface Testimonial {
+  body: string;
+  author: {
+    name: string;
+    bio: string;
+    handle: string;
+    imageUrl: ImageSourcePropType;
+  };
+}
+
 // For now, we'll use a static testimonial but this could be made dynamic
-const testimonial = {
+const testimonial: Testimonial = {
   body: "Soonlist has brought SO much more ease into organizing and prioritizing events I see!",
   author: {
     name: "Della Mueller",
     bio: "Designer, Portland, OR",
     handle: "delladella",
-    imageUrl:
-      "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yaEtlMGdrZVhSWm5KNEVheVBLZlpGdUxkSDIifQ",
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    imageUrl: require("~/assets/della.png"),
   },
 };
 
@@ -59,8 +71,13 @@ export default function WeGotYouScreen() {
           </Text>
           <View className="mt-2 flex-row items-center justify-start gap-2">
             <Image
-              source={{ uri: testimonial.author.imageUrl }}
-              className="h-14 w-14 rounded-full border-[6px] border-accent-orange"
+              source={testimonial.author.imageUrl}
+              style={styles.authorImage}
+              contentFit="cover"
+              contentPosition="center"
+              onError={(error) => {
+                console.error("Image loading error:", error);
+              }}
             />
             <View>
               <Text className="text-base font-semibold leading-none text-neutral-1">
@@ -107,5 +124,12 @@ const styles = StyleSheet.create({
     color: "#000",
     fontSize: 16,
     fontWeight: "500",
+  },
+  authorImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 6,
+    borderColor: "#FFD1BA", // accent-orange
   },
 });
