@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { Text, View } from "react-native";
-import { router } from "expo-router";
 import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
-import { useAppStore } from "~/store";
+import { useOnboarding } from "~/hooks/useOnboarding";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const priorities = [
@@ -23,7 +22,7 @@ export default function PrioritiesScreen() {
     null,
   );
   const [isLoading, setIsLoading] = useState(false);
-  const setUserPriority = useAppStore((state) => state.setUserPriority);
+  const { saveStep } = useOnboarding();
 
   const handlePrioritySelect = async (priority: Priority) => {
     if (isLoading) return;
@@ -31,8 +30,7 @@ export default function PrioritiesScreen() {
 
     try {
       setSelectedPriority(priority);
-      setUserPriority(`${priority.text} ${priority.emoji}`);
-      router.push("/onboarding/07-we-got-you");
+      await saveStep("priorities", { priority }, "/onboarding/07-we-got-you");
     } catch (error) {
       toast.error("Something went wrong", {
         description: "Please try again",
@@ -45,7 +43,7 @@ export default function PrioritiesScreen() {
   return (
     <QuestionContainer
       question="What's your main goal?"
-      currentStep={3}
+      currentStep={6}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <Text className="-mt-4 mb-4 text-center text-lg text-white">

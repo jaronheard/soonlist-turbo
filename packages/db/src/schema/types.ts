@@ -83,6 +83,7 @@ export interface OnboardingData {
     | "Walking around town"
     | "Facebook"
   )[];
+  screenshotEvents?: "Yes" | "Not yet";
   priority?: {
     text: string;
     emoji: string;
