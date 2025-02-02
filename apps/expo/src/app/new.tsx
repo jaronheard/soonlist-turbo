@@ -7,6 +7,7 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
+import type { ImageSource } from "~/components/demoData";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";
@@ -64,9 +65,19 @@ export default function NewEventModal() {
 
   // Handlers
   const handleImagePreview = useCallback(
-    (uri: string) => {
-      setImagePreview(uri);
-      setInput(uri.split("/").pop() || "");
+    (uri: string | ImageSource) => {
+      if (typeof uri === "string") {
+        setImagePreview(uri);
+        setInput(uri.split("/").pop() || "");
+      } else if (typeof uri === "number") {
+        // Handle ImageRequireSource (local image require)
+        setImagePreview(String(uri));
+        setInput(`local_image_${uri}`);
+      } else {
+        // Handle RemoteImageSource
+        setImagePreview(uri.uri);
+        setInput(uri.uri.split("/").pop() || "");
+      }
     },
     [setImagePreview, setInput],
   );
@@ -272,7 +283,9 @@ export default function NewEventModal() {
                     hasMediaPermission={hasMediaPermission}
                     hasFullPhotoAccess={hasFullPhotoAccess}
                     recentPhotos={recentPhotos}
-                    onPhotoSelect={(uri) => handleImagePreview(uri)}
+                    onPhotoSelect={(uri: string | ImageSource) =>
+                      handleImagePreview(uri)
+                    }
                     onCameraPress={() => void handleCameraCapture()}
                     onMorePhotos={() => void handleMorePhotosPress()}
                     selectedUri={imagePreview}

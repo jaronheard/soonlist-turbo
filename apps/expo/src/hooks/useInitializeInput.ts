@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import type { ImageSource } from "~/components/demoData";
 import type { RecentPhoto } from "~/store";
 import { useAppStore } from "~/store";
 
@@ -26,9 +27,19 @@ export function useInitializeInput({
   } = useAppStore();
 
   const handleImagePreview = useCallback(
-    (uri: string) => {
-      setImagePreview(uri);
-      setInput(uri.split("/").pop() || "");
+    (uri: string | ImageSource) => {
+      if (typeof uri === "string") {
+        setImagePreview(uri);
+        setInput(uri.split("/").pop() || "");
+      } else if (typeof uri === "number") {
+        // Handle ImageRequireSource (local image require)
+        setImagePreview(String(uri));
+        setInput(`local_image_${uri}`);
+      } else {
+        // Handle RemoteImageSource
+        setImagePreview(uri.uri);
+        setInput(uri.uri.split("/").pop() || "");
+      }
     },
     [setImagePreview, setInput],
   );
