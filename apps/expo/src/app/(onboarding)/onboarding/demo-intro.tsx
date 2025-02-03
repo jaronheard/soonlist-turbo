@@ -15,6 +15,7 @@ import { Camera, ChevronDown, List, Plus, Sparkles } from "lucide-react-native";
 import { toast } from "sonner-native";
 
 import { DemoProgressBar } from "~/components/DemoProgressBar";
+import { SkipDemoButton } from "~/components/SkipDemoButton";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function DemoIntroScreen() {
@@ -41,7 +42,7 @@ export default function DemoIntroScreen() {
     };
   });
 
-  const handlePress = async () => {
+  const handlePress = () => {
     if (isLoading) return;
     setIsLoading(true);
 
@@ -144,9 +145,13 @@ export default function DemoIntroScreen() {
           />
         </View>
 
-        <Text className="absolute bottom-48 left-1/2 w-min -translate-x-1/2 rounded-2xl bg-accent-yellow px-4 py-2 text-center text-2xl font-semibold text-neutral-1">
-          Try adding an event
-        </Text>
+        <View className="absolute bottom-48 left-1/2 flex -translate-x-1/2 flex-col items-center space-y-2">
+          <Text className="w-min rounded-2xl bg-accent-yellow px-4 py-2 text-center text-2xl font-semibold text-neutral-1">
+            Try adding an event
+          </Text>
+
+          <SkipDemoButton />
+        </View>
 
         <TouchableOpacity
           onPress={handlePress}
@@ -155,6 +160,7 @@ export default function DemoIntroScreen() {
         >
           <Plus size={28} color="#E0D9FF" />
         </TouchableOpacity>
+
         <Animated.View style={animatedStyle}>
           <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />
         </Animated.View>
