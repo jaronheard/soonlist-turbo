@@ -279,22 +279,11 @@ export function EventMenu({
   };
 
   const handleMenuSelect = (title: string) => {
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // Define actions that modify the database
-    const modifyingActions = new Set([
-      "Delete",
-      "Make not discoverable",
-      "Make discoverable",
-      "Edit",
-      "Add to My Feed",
-      "Remove from My Feed",
-    ]);
-    
-    if (demoMode && modifyingActions.has(title)) {
+    if (demoMode) {
       toast("Demo mode: action disabled");
       return;
     }
-    
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     switch (title) {
       case "Share":
         void handleShare();
