@@ -60,6 +60,7 @@ export function UserEventListItem(props: {
   showCreator: ShowCreatorOption;
   isSaved: boolean;
   similarEventsCount?: number;
+  demoMode: boolean;
 }) {
   const {
     event,
@@ -68,6 +69,7 @@ export function UserEventListItem(props: {
     showCreator,
     isSaved,
     similarEventsCount,
+    demoMode,
   } = props;
   const { fontScale } = useWindowDimensions();
   const id = event.id;
@@ -130,6 +132,7 @@ export function UserEventListItem(props: {
       isOwner={isOwner}
       isSaved={isSaved}
       menuType="context"
+      demoMode={demoMode}
     >
       <Pressable
         onPress={() => {
@@ -326,6 +329,7 @@ interface UserEventsListProps {
     allTimeEvents: number;
   };
   promoCard?: PromoCardProps;
+  demoMode: boolean;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -339,6 +343,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     isFetchingNextPage,
     stats,
     promoCard,
+    demoMode,
   } = props;
   const { user } = useUser();
   const queryClient = useQueryClient();
@@ -452,6 +457,7 @@ export default function UserEventsList(props: UserEventsListProps) {
               similarEventsCount={
                 similarEventsCount > 0 ? similarEventsCount : undefined
               }
+              demoMode
             />
           );
         }}

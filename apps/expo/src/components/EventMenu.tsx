@@ -55,6 +55,7 @@ interface EventMenuProps {
   isOwner: boolean;
   isSaved: boolean;
   menuType: "context" | "popup";
+  demoMode?: boolean;
   children?: React.ReactNode;
   onDelete?: () => Promise<void>;
 }
@@ -81,6 +82,7 @@ export function EventMenu({
   isOwner,
   isSaved,
   menuType,
+  demoMode = false,
   children,
   onDelete,
 }: EventMenuProps) {
@@ -278,6 +280,21 @@ export function EventMenu({
 
   const handleMenuSelect = (title: string) => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Define actions that modify the database
+    const modifyingActions = new Set([
+      "Delete",
+      "Make not discoverable",
+      "Make discoverable",
+      "Edit",
+      "Add to My Feed",
+      "Remove from My Feed",
+    ]);
+    
+    if (demoMode && modifyingActions.has(title)) {
+      toast("Demo mode: action disabled");
+      return;
+    }
+    
     switch (title) {
       case "Share":
         void handleShare();

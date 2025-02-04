@@ -174,6 +174,7 @@ export default function DemoFeedScreen() {
           onEndReached={() => null}
           isFetchingNextPage={false}
           stats={stats}
+          demoMode
         />
       </View>
 
