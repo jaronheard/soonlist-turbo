@@ -60,7 +60,7 @@ export function UserEventListItem(props: {
   showCreator: ShowCreatorOption;
   isSaved: boolean;
   similarEventsCount?: number;
-  demoMode: boolean;
+  demoMode?: boolean;
 }) {
   const {
     event,
@@ -329,7 +329,7 @@ interface UserEventsListProps {
     allTimeEvents: number;
   };
   promoCard?: PromoCardProps;
-  demoMode: boolean;
+  demoMode?: boolean;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -457,7 +457,7 @@ export default function UserEventsList(props: UserEventsListProps) {
               similarEventsCount={
                 similarEventsCount > 0 ? similarEventsCount : undefined
               }
-              demoMode
+              demoMode={demoMode}
             />
           );
         }}
