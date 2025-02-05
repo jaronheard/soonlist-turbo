@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import * as Notifications from "expo-notifications";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { toast } from "sonner-native";
@@ -160,6 +160,12 @@ export default function DemoFeedScreen() {
       />
 
       <View className="flex-1">
+        <View className="absolute right-4 top-16 z-10 ">
+          <Text className="rounded-xl bg-accent-yellow px-3 py-1.5 text-center text-base font-medium text-neutral-1">
+            Press and hold for options 👇
+          </Text>
+        </View>
+
         <UserEventsList
           events={feedEvents}
           showCreator="always"
@@ -168,6 +174,7 @@ export default function DemoFeedScreen() {
           onEndReached={() => null}
           isFetchingNextPage={false}
           stats={stats}
+          demoMode
         />
       </View>
 

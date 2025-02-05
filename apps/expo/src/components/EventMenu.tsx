@@ -55,6 +55,7 @@ interface EventMenuProps {
   isOwner: boolean;
   isSaved: boolean;
   menuType: "context" | "popup";
+  demoMode?: boolean;
   children?: React.ReactNode;
   onDelete?: () => Promise<void>;
 }
@@ -81,6 +82,7 @@ export function EventMenu({
   isOwner,
   isSaved,
   menuType,
+  demoMode = false,
   children,
   onDelete,
 }: EventMenuProps) {
@@ -277,6 +279,10 @@ export function EventMenu({
   };
 
   const handleMenuSelect = (title: string) => {
+    if (demoMode) {
+      toast("Demo mode: action disabled");
+      return;
+    }
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     switch (title) {
       case "Share":
