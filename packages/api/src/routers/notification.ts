@@ -506,4 +506,130 @@ export const notificationRouter = createTRPCRouter({
           })),
       };
     }),
+
+  sendTrialExpirationReminders: publicProcedure
+    .input(z.object({ cronSecret: z.string() }))
+    .mutation(async ({ input }) => {
+      // Check if the provided cronSecret matches the environment variable
+      if (input.cronSecret !== process.env.CRON_SECRET) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid CRON_SECRET",
+        });
+      }
+
+      // Calculate the date for users who started their trial 5 days ago
+      const fiveBusinessDaysAgo = new Date();
+      fiveBusinessDaysAgo.setDate(fiveBusinessDaysAgo.getDate() - 5);
+      const targetDate = fiveBusinessDaysAgo.toISOString().split("T")[0];
+
+      // Fetch users who started their trial 3 days ago and haven't cancelled
+      const usersWithTokens = await db
+        .select({
+          userId: pushTokens.userId,
+          expoPushToken: pushTokens.expoPushToken,
+        })
+        .from(pushTokens)
+        .innerJoin(
+          users,
+          sql`${users.id} COLLATE utf8mb4_unicode_ci = ${pushTokens.userId} COLLATE utf8mb4_unicode_ci`,
+        )
+        .where(
+          and(
+            sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
+            sql`JSON_EXTRACT(${users.publicMetadata}, '$.plan.status') = 'trialing'`,
+            sql`DATE(JSON_UNQUOTE(JSON_EXTRACT(${users.publicMetadata}, '$.plan.trialStartDate'))) = DATE(${targetDate})`,
+          ),
+        );
+
+      // Process notifications concurrently
+      const results = await Promise.all(
+        usersWithTokens.map(async (user) => {
+          const notificationId = generateNotificationId();
+          try {
+            if (!Expo.isExpoPushToken(user.expoPushToken)) {
+              return {
+                success: false,
+                error: "Invalid push token",
+                notificationId,
+                userId: user.userId,
+              };
+            }
+
+            const message: ExpoPushMessage = {
+              to: user.expoPushToken,
+              sound: "default",
+              title: "2 days left on your trial",
+              body: "Your subscription will change from trial to Soonlist Unlimited soon. Keep capturing your possibilities!",
+              data: {
+                url: "/settings/subscription",
+                notificationId,
+              },
+            };
+
+            const [ticket] = await expo.sendPushNotificationsAsync([message]);
+
+            posthog.capture({
+              distinctId: user.userId,
+              event: "notification_sent",
+              properties: {
+                success: true,
+                notificationId,
+                type: "trial_expiration",
+                source: "notification_router",
+                ticketId: getTicketId(ticket),
+              },
+            });
+
+            return {
+              success: true,
+              ticket,
+              notificationId,
+              userId: user.userId,
+            };
+          } catch (error) {
+            posthog.capture({
+              distinctId: user.userId,
+              event: "notification_sent",
+              properties: {
+                success: false,
+                notificationId,
+                type: "trial_expiration",
+                error: (error as Error).message,
+              },
+            });
+
+            return {
+              success: false,
+              error: (error as Error).message,
+              notificationId,
+              userId: user.userId,
+            };
+          }
+        }),
+      );
+
+      // Track batch results
+      posthog.capture({
+        distinctId: "system",
+        event: "trial_expiration_notifications_batch",
+        properties: {
+          totalProcessed: usersWithTokens.length,
+          successfulNotifications: results.filter((r) => r.success).length,
+          failedNotifications: results.filter((r) => !r.success).length,
+        },
+      });
+
+      return {
+        success: true,
+        totalProcessed: usersWithTokens.length,
+        successfulNotifications: results.filter((r) => r.success).length,
+        errors: results
+          .filter((r) => !r.success)
+          .map((result) => ({
+            userId: result.userId,
+            error: result.error ?? "Unknown error",
+          })),
+      };
+    }),
 });
