@@ -7,11 +7,15 @@ import {
   useEffect,
   useState,
 } from "react";
+import { Linking } from "react-native";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { useAuth } from "@clerk/clerk-expo";
+import { toast } from "sonner-native";
 
 import { initializeRevenueCat } from "~/lib/revenue-cat";
+import { api } from "~/utils/api";
+import { useNotification } from "./NotificationProvider";
 
 interface RevenueCatContextType {
   isInitialized: boolean;
@@ -29,6 +33,9 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const { userId } = useAuth();
+  const { expoPushToken, hasNotificationPermission } = useNotification();
+  const sendNotification =
+    api.notification.sendSingleNotification.useMutation();
 
   const login = useCallback(
     async (userId: string) => {
@@ -93,7 +100,27 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       switch (paywallResult) {
         case PAYWALL_RESULT.PURCHASED:
         case PAYWALL_RESULT.RESTORED:
-          // User now has Pro; update local customerInfo automatically via listener
+          // Send welcome notification if notifications are enabled
+          if (hasNotificationPermission && expoPushToken) {
+            void sendNotification.mutate({
+              expoPushToken,
+              title: "Welcome to Soonlist Unlimited! 🎉",
+              body: "Thanks for subscribing! Keep capturing your possibilities.",
+              data: { url: "/feed" },
+            });
+          } else {
+            toast.info(
+              "Welcome to Soonlist Unlimited! 🎉\n\n Enable notifications to get reminders before your trial ends",
+              {
+                action: {
+                  label: "Settings",
+                  onClick: () => {
+                    void Linking.openSettings();
+                  },
+                },
+              },
+            );
+          }
           break;
         default:
           // Not purchased, or user cancelled
