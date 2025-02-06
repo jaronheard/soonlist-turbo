@@ -1,5 +1,5 @@
 import React from "react";
-import { SafeAreaView, View } from "react-native";
+import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { router, Stack } from "expo-router";
 
@@ -10,7 +10,7 @@ import { EventPreview } from "~/components/EventPreview";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 
-const OFFSET_VALUE = 64;
+const OFFSET_VALUE = 32;
 
 // Ensure we have at least one event with an image
 const DEFAULT_EVENT = DEMO_CAPTURE_EVENTS.find((event) => event.imageUri);
@@ -83,23 +83,22 @@ export default function DemoCaptureScreen() {
   })).filter((photo) => photo.uri !== "");
 
   return (
-    <SafeAreaView className="flex-1 bg-[#5A32FB]">
+    <View className="h-full flex-1 bg-[#5A32FB]">
       {/* Wrap everything in a "card" that has rounded top corners, 
           hiding anything behind it so no black gap appears */}
-      <View className="flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
+      <Stack.Screen
+        options={{
+          title: "",
+          headerShown: true,
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: "#5A32FB" },
+          headerTintColor: "#fff",
+          contentStyle: { backgroundColor: "#5A32FB" },
+          headerTitle: "Add your first event (demo)",
+        }}
+      />
+      <View className="h-full flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
         <View className="flex-1">
-          <Stack.Screen
-            options={{
-              title: "",
-              headerShown: true,
-              headerShadowVisible: false,
-              headerStyle: { backgroundColor: "#5A32FB" },
-              headerTintColor: "#fff",
-              contentStyle: { backgroundColor: "#5A32FB" },
-              headerTitle: "Add your first event (demo)",
-            }}
-          />
-
           <View className="flex-1">
             {/* Event preview at top */}
             <View className="px-4 pt-2">
@@ -122,7 +121,7 @@ export default function DemoCaptureScreen() {
             </View>
 
             {/* Photo grid below preview */}
-            <View className="flex-1 px-4">
+            <View className="h-full flex-1 px-4">
               <PhotoGrid
                 hasMediaPermission={true}
                 hasFullPhotoAccess={true}
@@ -143,7 +142,7 @@ export default function DemoCaptureScreen() {
 
         {/* The capture button sits at the bottom, with optional animated margin 
             so it can float above the keyboard smoothly. */}
-        <Animated.View className="px-4 pb-4" style={keyboardStyle}>
+        <Animated.View className="px-4" style={keyboardStyle}>
           <CaptureEventButton
             handleCreateEvent={handleSubmit}
             input={selectedEvent.description ?? ""}
@@ -152,6 +151,6 @@ export default function DemoCaptureScreen() {
           />
         </Animated.View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
