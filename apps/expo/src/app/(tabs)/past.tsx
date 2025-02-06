@@ -17,6 +17,7 @@ export default function PastEvents() {
       limit: 20,
     },
     {
+      enabled: !!user,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   );

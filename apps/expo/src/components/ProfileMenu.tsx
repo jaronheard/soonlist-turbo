@@ -2,7 +2,7 @@ import React from "react";
 import { Share, View } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
-import { useAuth, useUser } from "@clerk/clerk-expo";
+import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import {
   HelpCircle,
@@ -13,8 +13,7 @@ import {
 } from "lucide-react-native";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
-import { deleteAuthData } from "~/hooks/useAuthSync";
-import { useAppStore } from "~/store";
+import { useSignOut } from "~/hooks/useSignOut";
 import Config from "~/utils/config";
 import { UserProfileFlair } from "./UserProfileFlair";
 
@@ -23,9 +22,8 @@ interface ProfileMenuProps {
 }
 
 export function ProfileMenu({ showShare }: ProfileMenuProps) {
-  const { signOut } = useAuth();
   const { user } = useUser();
-  const resetStore = useAppStore((state) => state.resetStore);
+  const signOut = useSignOut();
 
   const showOnboarding = () => {
     router.push("/onboarding");
@@ -33,13 +31,6 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
 
   const handleEditProfile = () => {
     router.push("/edit-profile");
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    await Intercom.logout();
-    await deleteAuthData();
-    resetStore();
   };
 
   const presentIntercom = async () => {
@@ -114,7 +105,7 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
           <DropdownMenu.ItemTitle>Support</DropdownMenu.ItemTitle>
         </DropdownMenu.Item>
 
-        <DropdownMenu.Item key="sign-out" onSelect={handleSignOut} destructive>
+        <DropdownMenu.Item key="sign-out" onSelect={signOut} destructive>
           <DropdownMenu.ItemIcon
             ios={{
               name: "rectangle.portrait.and.arrow.right",

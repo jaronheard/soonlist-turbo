@@ -29,11 +29,7 @@ export default function AuthAndTokenSync({ expoPushToken }: Props) {
       // Identify user in RevenueCat when they sign in
       void login(userId);
     } else {
-      // Log out from RevenueCat when user signs out
-      // prevent logout if anonymous user
-      if (customerInfo) {
-        void logout();
-      }
+      // Logout from RevenueCat handled in ProfileMenu
     }
   }, [isInitialized, isSignedIn, userId, login, logout, customerInfo]);
 
