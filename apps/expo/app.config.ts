@@ -45,7 +45,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: getAppName(),
   slug: "timetimecc",
   scheme: getScheme(),
-  version: "1.0.8",
+  version: "1.0.9",
   orientation: "portrait",
   icon: IS_DEV ? "./assets/icon-dev.png" : "./assets/icon.png",
   userInterfaceStyle: "light",
@@ -130,7 +130,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // ],
   ],
   ios: {
-    supportsTablet: true,
+    supportsTablet: false,
     bundleIdentifier: getUniqueIdentifier(),
     config: {
       usesNonExemptEncryption: false,
