@@ -2,7 +2,9 @@ import { useCallback } from "react";
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
+import { toast } from "sonner-native";
 
+import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 
@@ -24,6 +26,8 @@ interface CreateEventResult {
 
 export function useCreateEvent() {
   const { setIsImageLoading } = useAppStore();
+  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
+  const hasUnlimited = customerInfo?.entitlements.active.unlimited;
   const utils = api.useUtils();
   const eventFromUrl =
     api.ai.eventFromUrlThenCreateThenNotification.useMutation({
@@ -55,6 +59,16 @@ export function useCreateEvent() {
 
   const createEvent = useCallback(
     async (options: CreateEventOptions): Promise<string | undefined> => {
+      // Check for subscription before proceeding
+      if (!hasUnlimited) {
+        await showProPaywallIfNeeded();
+        // Re-check subscription status after paywall
+        if (!customerInfo?.entitlements.active.unlimited) {
+          toast.error("Pro subscription required to add events");
+          return undefined;
+        }
+      }
+
       const {
         rawText,
         linkPreview,
@@ -207,7 +221,14 @@ export function useCreateEvent() {
 
       return undefined;
     },
-    [eventFromUrl, setIsImageLoading, eventFromImage, eventFromRaw],
+    [
+      eventFromUrl,
+      setIsImageLoading,
+      eventFromImage,
+      eventFromRaw,
+      hasUnlimited,
+      showProPaywallIfNeeded,
+    ],
   );
 
   return { createEvent };
