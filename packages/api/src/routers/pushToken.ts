@@ -58,4 +58,21 @@ export const pushTokenRouter = createTRPCRouter({
           pushTokens.map((pushToken) => pushToken.expoPushToken),
         );
     }),
+  deleteToken: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        expoPushToken: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db
+        .delete(pushTokens)
+        .where(
+          and(
+            eq(pushTokens.userId, input.userId),
+            eq(pushTokens.expoPushToken, input.expoPushToken),
+          ),
+        );
+    }),
 });
