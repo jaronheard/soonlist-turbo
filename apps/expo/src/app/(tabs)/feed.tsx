@@ -47,6 +47,7 @@ function MyFeed() {
       limit: 20,
     },
     {
+      enabled: !!user,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   );
