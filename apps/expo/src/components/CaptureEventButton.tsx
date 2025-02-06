@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity } from "react-native";
 import { Sparkles } from "lucide-react-native";
 
 import type { ImageSource } from "~/components/demoData";
@@ -10,7 +10,6 @@ interface CaptureEventButtonProps {
   input: string;
   imagePreview: string | ImageSource | null;
   linkPreview: string | null;
-  containerClassName?: string;
 }
 
 export function CaptureEventButton({
@@ -18,30 +17,27 @@ export function CaptureEventButton({
   input,
   imagePreview,
   linkPreview,
-  containerClassName,
 }: CaptureEventButtonProps) {
   const isDisabled = !input.trim() && !imagePreview && !linkPreview;
 
   return (
-    <View className={containerClassName}>
-      <TouchableOpacity
-        onPress={handleCreateEvent}
-        disabled={isDisabled}
+    <TouchableOpacity
+      onPress={handleCreateEvent}
+      disabled={isDisabled}
+      className={cn(
+        "w-full flex-row items-center justify-center rounded-full px-3 py-3.5 shadow-lg",
+        isDisabled ? "bg-neutral-3" : "bg-white",
+      )}
+    >
+      <Sparkles size={20} color={isDisabled ? "#627496" : "#5A32FB"} />
+      <Text
         className={cn(
-          "w-full flex-row items-center justify-center rounded-full px-3 py-3.5 shadow-lg",
-          isDisabled ? "bg-neutral-3" : "bg-white",
+          "ml-2 text-2xl font-bold",
+          isDisabled ? "text-neutral-2" : "text-[#5A32FB]",
         )}
       >
-        <Sparkles size={20} color={isDisabled ? "#627496" : "#5A32FB"} />
-        <Text
-          className={cn(
-            "ml-2 text-2xl font-bold",
-            isDisabled ? "text-neutral-2" : "text-[#5A32FB]",
-          )}
-        >
-          Capture event
-        </Text>
-      </TouchableOpacity>
-    </View>
+        Capture event
+      </Text>
+    </TouchableOpacity>
   );
 }

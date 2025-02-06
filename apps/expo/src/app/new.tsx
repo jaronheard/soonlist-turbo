@@ -180,7 +180,7 @@ export default function NewEventModal() {
 
   const handleCreateEvent = async () => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
-    if (!user?.id || !user.username || !expoPushToken) return;
+    if (!user?.id || !user.username) return;
 
     router.canGoBack() ? router.back() : router.navigate("/feed");
 
@@ -195,7 +195,7 @@ export default function NewEventModal() {
         imageUri: imagePreview ?? undefined,
         userId: user.id,
         username: user.username,
-        expoPushToken,
+        expoPushToken: expoPushToken || "NOT_SET",
       });
 
       if (!hasNotificationPermission && eventId) {
