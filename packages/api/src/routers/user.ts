@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import type { OnboardingData } from "@soonlist/db/types";
@@ -261,5 +261,30 @@ export const userRouter = createTRPCRouter({
     }
 
     return (dbUser.onboardingData ?? {}) as OnboardingData;
+  }),
+
+  deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
+    const { userId } = ctx.auth;
+    if (!userId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User must be logged in to delete account",
+      });
+    }
+
+    // Delete user follows
+    await ctx.db
+      .delete(userFollows)
+      .where(
+        or(
+          eq(userFollows.followerId, userId),
+          eq(userFollows.followingId, userId),
+        ),
+      );
+
+    // Delete user record
+    await ctx.db.delete(users).where(eq(users.id, userId));
+
+    return { success: true };
   }),
 });

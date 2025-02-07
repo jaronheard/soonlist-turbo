@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -22,6 +23,7 @@ import { z } from "zod";
 
 import { Button } from "~/components/Button";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
+import { useSignOut } from "~/hooks/useSignOut";
 import { api } from "~/utils/api";
 
 const profileSchema = z.object({
@@ -88,6 +90,8 @@ export default function EditProfileScreen() {
     onSuccess: () =>
       router.canGoBack() ? router.back() : router.navigate("/feed"),
   });
+
+  const signOut = useSignOut();
 
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
@@ -189,6 +193,38 @@ export default function EditProfileScreen() {
       router.canGoBack() ? router.back() : router.navigate("/feed");
     }
   }, [isDirty, isValid, handleSubmit, onSubmit]);
+
+  const handleDeleteAccount = useCallback(() => {
+    Alert.alert(
+      "Delete Account",
+      "This will permanently delete your account and all associated data. This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete Account",
+          style: "destructive",
+          onPress: () => {
+            const loadingToastId = toast.loading("Deleting account...");
+            void (async () => {
+              try {
+                await signOut({ shouldDeleteAccount: true });
+                toast.dismiss(loadingToastId);
+              } catch (error) {
+                console.error("Error deleting account:", error);
+                toast.dismiss(loadingToastId);
+                toast.error(
+                  "Failed to delete account. Please try again or contact support.",
+                );
+              }
+            })();
+          },
+        },
+      ],
+    );
+  }, [signOut]);
 
   return (
     <KeyboardAvoidingView
@@ -433,6 +469,23 @@ export default function EditProfileScreen() {
           >
             {isDirty ? (isSubmitting ? "Saving..." : "Save Profile") : "Done"}
           </Button>
+
+          <View className="mt-12">
+            <Text className="mb-2 text-base font-semibold text-red-500">
+              Danger Zone
+            </Text>
+            <Button
+              onPress={handleDeleteAccount}
+              variant="destructive"
+              className="bg-red-500"
+              disabled={isSubmitting}
+            >
+              Delete Account
+            </Button>
+            <Text className="mt-2 text-xs text-neutral-500">
+              This will permanently delete your account and all associated data.
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
