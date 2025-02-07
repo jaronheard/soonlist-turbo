@@ -8,19 +8,20 @@ import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { deleteAuthData } from "./useAuthSync";
 
+interface SignOutOptions {
+  shouldDeleteAccount?: boolean;
+}
+
 export const useSignOut = () => {
   const utils = api.useUtils();
   const { signOut, userId } = useAuth();
   const resetStore = useAppStore((state) => state.resetStore);
   const { logout: revenueCatLogout } = useRevenueCat();
   const { expoPushToken } = useNotification();
-  const { mutateAsync: deleteToken } = api.pushToken.deleteToken.useMutation({
-    onError: (error) => {
-      console.error("Failed to delete push token:", error);
-    },
-  });
+  const { mutateAsync: deleteToken } = api.pushToken.deleteToken.useMutation();
+  const { mutateAsync: deleteAccount } = api.user.deleteAccount.useMutation();
 
-  return async () => {
+  return async (options?: SignOutOptions) => {
     if (!userId) return;
 
     // First cancel all ongoing queries and prevent refetching
@@ -35,6 +36,7 @@ export const useSignOut = () => {
       revenueCatLogout(),
       deleteAuthData(),
       deleteToken({ userId, expoPushToken }),
+      options?.shouldDeleteAccount ? deleteAccount() : undefined,
       signOut(),
     ]);
 
