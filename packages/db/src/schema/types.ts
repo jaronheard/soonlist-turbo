@@ -57,11 +57,12 @@ export interface UserPublicMetadata {
     customerId?: string;
   };
   plan?: {
-    name?: "free" | "personal" | "pro";
+    name?: string; // "free" | "personal" | "pro";
     productId?: string;
     status?: string;
     id?: string;
   };
+  showDiscover?: boolean;
 }
 
 export interface OnboardingData {

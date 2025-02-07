@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
 import { Check, ChevronDown } from "lucide-react-native";
 
+import { getPlanStatusFromUser } from "~/utils/plan";
 import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -18,7 +20,7 @@ interface NavigationMenuProps {
   active?: RouteType;
 }
 
-const routes = [
+const baseRoutes = [
   { label: "Upcoming", path: "/feed" },
   { label: "Past", path: "/past" },
   { label: "Discover", path: "/discover" },
@@ -31,6 +33,11 @@ function isRouteActive(routePath: string, active?: RouteType) {
 
 export function NavigationMenu({ active }: NavigationMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user } = useUser();
+
+  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
+  console.log("showDiscover", showDiscover);
+  const routes = showDiscover ? baseRoutes : baseRoutes.slice(0, 2);
 
   const currentRoute =
     routes.find((r) => isRouteActive(r.path, active))?.label ?? "Upcoming";

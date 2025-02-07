@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { View } from "react-native";
+import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
@@ -8,6 +9,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
+import { getPlanStatusFromUser } from "~/utils/plan";
 
 export default function Page() {
   const { user } = useUser();
@@ -33,8 +35,18 @@ export default function Page() {
 
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
+  if (!user) {
+    return <Redirect href="/sign-in" />;
+  }
+
+  const { showDiscover } = getPlanStatusFromUser(user);
+
+  if (!showDiscover) {
+    return <Redirect href="/feed" />;
+  }
+
   const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery({
-    userName: user?.username ?? "",
+    userName: user.username ?? "",
   });
 
   const savedEventIds = new Set(

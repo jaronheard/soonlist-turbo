@@ -1,7 +1,18 @@
-import type { User, UserPublicMetadata } from "@soonlist/db/types";
+import type { UserResource } from "@clerk/types";
 
-export const getPlanStatusFromUser = (user: User) => {
-  const publicMetadata = user.publicMetadata as UserPublicMetadata | null;
+export const getPlanStatusFromUser = (user: UserResource) => {
+  const publicMetadata = user.publicMetadata as {
+    stripe?: {
+      customerId?: string;
+    };
+    plan?: {
+      name?: string; //"free" | "personal" | "pro";
+      productId?: string;
+      status?: string;
+      id?: string;
+    };
+    showDiscover?: boolean;
+  } | null;
   const name = publicMetadata?.plan?.name || "";
   const currentPlanStatus = publicMetadata?.plan?.status || "";
   const active =
