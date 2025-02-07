@@ -45,7 +45,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: getAppName(),
   slug: "timetimecc",
   scheme: getScheme(),
-  version: "1.0.10",
+  version: "1.0.11",
   orientation: "portrait",
   icon: IS_DEV ? "./assets/icon-dev.png" : "./assets/icon.png",
   userInterfaceStyle: "light",
