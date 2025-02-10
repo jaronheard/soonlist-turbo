@@ -7,7 +7,7 @@
         ],
         "components": [
           {
-            "/": "*",
+            "/": "/event/*",
             "comment": "Matches all routes"
           }
         ]
