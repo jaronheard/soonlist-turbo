@@ -1,0 +1,27 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "GQ59Z4XZHZ.com.soonlist.app"
+        ],
+        "components": [
+          {
+            "/": "*",
+            "comment": "Matches all routes"
+          }
+        ]
+      }
+    ]
+  },
+  "activitycontinuation": {
+    "apps": [
+      "GQ59Z4XZHZ.com.soonlist.app"
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "GQ59Z4XZHZ.com.soonlist.app"
+    ]
+  }
+}
