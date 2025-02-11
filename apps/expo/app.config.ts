@@ -152,7 +152,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       ],
     },
-    associatedDomains: ["applinks:soonlist.com", "applinks:www.soonlist.com"],
+    associatedDomains: ["applinks:www.soonlist.com"],
   },
   android: {
     package: getUniqueIdentifier(),
