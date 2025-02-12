@@ -5,6 +5,7 @@ import { toast } from "sonner-native";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { useOnboarding } from "~/hooks/useOnboarding";
+import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const discoveryMethods = [
@@ -19,18 +20,15 @@ const discoveryMethods = [
 type DiscoveryMethod = (typeof discoveryMethods)[number];
 
 export default function DiscoveryScreen() {
-  const [selectedMethod, setSelectedMethod] = useState<DiscoveryMethod | null>(
-    null,
-  );
   const [isLoading, setIsLoading] = useState(false);
   const { saveStep } = useOnboarding();
+  const { onboardingData } = useAppStore();
 
   const handleMethodSelect = async (method: DiscoveryMethod) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
-      setSelectedMethod(method);
       saveStep(
         "discovery",
         { discoveryMethods: [method] },
@@ -58,7 +56,7 @@ export default function DiscoveryScreen() {
               key={method}
               label={method}
               onPress={() => handleMethodSelect(method)}
-              isSelected={selectedMethod === method}
+              isSelected={onboardingData.discoveryMethods?.includes(method)}
               disabled={isLoading}
             />
           ))}

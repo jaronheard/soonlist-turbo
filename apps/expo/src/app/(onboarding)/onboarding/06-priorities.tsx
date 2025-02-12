@@ -5,6 +5,7 @@ import { toast } from "sonner-native";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { useOnboarding } from "~/hooks/useOnboarding";
+import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const priorities = [
@@ -18,18 +19,15 @@ const priorities = [
 type Priority = (typeof priorities)[number];
 
 export default function PrioritiesScreen() {
-  const [selectedPriority, setSelectedPriority] = useState<Priority | null>(
-    null,
-  );
   const [isLoading, setIsLoading] = useState(false);
   const { saveStep } = useOnboarding();
+  const { onboardingData } = useAppStore();
 
   const handlePrioritySelect = async (priority: Priority) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
-      setSelectedPriority(priority);
       saveStep("priorities", { priority }, "/onboarding/07-we-got-you");
     } catch (error) {
       toast.error("Something went wrong", {
@@ -56,7 +54,10 @@ export default function PrioritiesScreen() {
             label={priority.text}
             rightIcon={priority.emoji}
             onPress={() => handlePrioritySelect(priority)}
-            isSelected={selectedPriority === priority}
+            isSelected={
+              onboardingData.priority?.text === priority.text &&
+              onboardingData.priority.emoji === priority.emoji
+            }
             disabled={isLoading}
           />
         ))}

@@ -5,6 +5,7 @@ import { toast } from "sonner-native";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { useOnboarding } from "~/hooks/useOnboarding";
+import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const ageRanges = [
@@ -19,16 +20,15 @@ const ageRanges = [
 type AgeRange = (typeof ageRanges)[number];
 
 export default function AgeScreen() {
-  const [selectedAge, setSelectedAge] = useState<AgeRange | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { saveStep } = useOnboarding();
+  const { onboardingData } = useAppStore();
 
   const handleAgeSelect = async (age: AgeRange) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
-      setSelectedAge(age);
       saveStep("age", { ageRange: age }, "/onboarding/03-source");
     } catch (error) {
       toast.error("Something went wrong", {
@@ -51,7 +51,7 @@ export default function AgeScreen() {
             key={age}
             label={age}
             onPress={() => handleAgeSelect(age)}
-            isSelected={selectedAge === age}
+            isSelected={onboardingData.ageRange === age}
             disabled={isLoading}
           />
         ))}

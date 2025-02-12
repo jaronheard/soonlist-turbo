@@ -5,12 +5,14 @@ import { useUser } from "@clerk/clerk-expo";
 import { usePostHog } from "posthog-react-native";
 
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
+import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 
 export function useOnboarding() {
   const { user } = useUser();
   const posthog = usePostHog();
   const utils = api.useContext();
+  const { setOnboardingData, setCurrentOnboardingStep } = useAppStore();
 
   const { mutateAsync: saveOnboardingData } =
     api.user.saveOnboardingData.useMutation({
@@ -25,6 +27,10 @@ export function useOnboarding() {
       data: Pick<OnboardingData, T>,
       nextStep?: string,
     ) => {
+      // Update store immediately
+      setOnboardingData(data);
+      setCurrentOnboardingStep(step);
+
       // Navigate immediately if nextStep is provided
       if (nextStep) {
         router.push(nextStep as Href);
@@ -45,7 +51,13 @@ export function useOnboarding() {
         });
       })();
     },
-    [posthog, saveOnboardingData, user?.id],
+    [
+      posthog,
+      saveOnboardingData,
+      user?.id,
+      setOnboardingData,
+      setCurrentOnboardingStep,
+    ],
   );
 
   return {
