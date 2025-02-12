@@ -15,7 +15,7 @@ export default function RedirectScreen() {
 
       try {
         const canOpen = await Linking.canOpenURL(url);
-        
+
         if (canOpen) {
           await Linking.openURL(url);
         } else {
@@ -36,4 +36,4 @@ export default function RedirectScreen() {
 
   // No need to render anything as we're immediately redirecting
   return null;
-} 
+}
