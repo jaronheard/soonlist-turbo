@@ -393,11 +393,10 @@ export default function UserEventsList(props: UserEventsListProps) {
           transition={100}
         />
         <Text className="mb-2 rounded-lg text-center text-2xl font-bold text-neutral-1">
-          Start capturing
+          Save events instantly
         </Text>
         <Text className="text-center text-base text-neutral-2">
-          Create your personal list of possibilities.{"\n"}
-          Tap the plus button to get started.
+          Tap the plus button to add your first event.
         </Text>
       </View>
     );
