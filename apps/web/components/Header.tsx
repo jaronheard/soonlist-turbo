@@ -11,13 +11,7 @@ import {
   useClerk,
   useUser,
 } from "@clerk/nextjs";
-import {
-  CalendarHeart,
-  CalendarPlus,
-  Globe2Icon,
-  Menu,
-  Ticket,
-} from "lucide-react";
+import { CalendarHeart, CalendarPlus, Globe2Icon, Menu } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
@@ -155,9 +149,8 @@ export function Nav() {
           <SignedOut>
             {!isJoinPage && (
               <Button asChild>
-                <Link href={"/join"} scroll={false}>
-                  <Ticket className="mr-2 size-4"></Ticket>
-                  <span className="inline">&nbsp;Join now</span>
+                <Link href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216">
+                  Get the app
                 </Link>
               </Button>
             )}
