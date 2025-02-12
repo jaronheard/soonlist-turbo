@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
 import {
   CalendarPlus,
   EyeOff,
@@ -46,6 +47,7 @@ import {
 import { useCalendar } from "~/hooks/useCalendar";
 import { api } from "~/utils/api";
 import Config from "~/utils/config";
+import { getPlanStatusFromUser } from "~/utils/plan";
 
 const screenWidth = Dimensions.get("window").width;
 const menuMinWidth = screenWidth * 0.6; // 60% of screen width
@@ -88,6 +90,8 @@ export function EventMenu({
 }: EventMenuProps) {
   const utils = api.useUtils();
   const { handleAddToCal: addToCalendar } = useCalendar();
+  const { user } = useUser();
+  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
 
   const deleteEventMutation = api.event.delete.useMutation({
     onSuccess: () => {
@@ -126,7 +130,7 @@ export function EventMenu({
         systemIcon: "qrcode",
       },
       {
-        title: "Directions",
+        title: "Get directions",
         lucideIcon: Map,
         systemIcon: "map",
       },
@@ -137,17 +141,21 @@ export function EventMenu({
       },
     ];
 
+    if (showDiscover) {
+      baseItems.push({
+        title:
+          event.visibility === "public"
+            ? "Make not discoverable"
+            : "Make discoverable",
+        lucideIcon: event.visibility === "public" ? EyeOff : Globe2,
+        systemIcon: event.visibility === "public" ? "eye.slash" : "globe",
+      });
+    }
+
     if (isOwner) {
       return [
         ...baseItems,
-        {
-          title:
-            event.visibility === "public"
-              ? "Make not discoverable"
-              : "Make discoverable",
-          lucideIcon: event.visibility === "public" ? EyeOff : Globe2,
-          systemIcon: event.visibility === "public" ? "eye.slash" : "globe",
-        },
+
         {
           title: "Edit",
           lucideIcon: PenSquare,
