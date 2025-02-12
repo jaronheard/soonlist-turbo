@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignedOut } from "@clerk/nextjs";
-import { Ticket } from "lucide-react";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
 

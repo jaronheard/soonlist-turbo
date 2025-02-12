@@ -11,13 +11,7 @@ import {
   useClerk,
   useUser,
 } from "@clerk/nextjs";
-import {
-  CalendarHeart,
-  CalendarPlus,
-  Globe2Icon,
-  Menu,
-  Ticket,
-} from "lucide-react";
+import { CalendarHeart, CalendarPlus, Globe2Icon, Menu } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
