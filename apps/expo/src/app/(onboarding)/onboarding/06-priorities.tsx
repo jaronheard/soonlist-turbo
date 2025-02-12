@@ -10,7 +10,7 @@ import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 const priorities = [
   { text: "Meet new people", emoji: "🤝" },
   { text: "Get out more", emoji: "💃" },
-  { text: "Choose intentionally", emoji: "🎯" },
+  { text: "No more FOMO", emoji: "😌" },
   { text: "Plan flexibly", emoji: "🤸‍♂️" },
   { text: "Build community", emoji: "🌱" },
 ] as const;
