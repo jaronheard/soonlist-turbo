@@ -81,7 +81,6 @@ export function Footer() {
                       width={246}
                       height={82}
                       className="h-[82px] w-[246px] object-contain align-middle"
-                      
                     />
                   </a>
                 </div>

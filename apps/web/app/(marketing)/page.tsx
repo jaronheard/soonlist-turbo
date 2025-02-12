@@ -1,8 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
 import { ChevronDownIcon } from "lucide-react";
-
-import { Button } from "@soonlist/ui/button";
 
 import { CarouselDemo } from "./components/CarouselDemo";
 
