@@ -261,65 +261,6 @@ function ConnectWithWhatMatters() {
         <div className="relative mx-auto mt-6 h-auto w-[18rem] rounded-lg md:px-6 lg:px-0">
           <CarouselDemo />
         </div>
-        <div className="mt-12 grid divide-y divide-neutral-200 md:grid-cols-3 md:divide-x md:divide-y-0">
-          <div className="flex flex-col items-center px-4 py-8 md:py-0">
-            <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-              Capture effortlessly
-            </h2>
-            <div className="py-2"></div>
-            <p className="mt-2 text-left text-lg leading-7 text-gray-500">
-              See an interesting event? Save it instantly, no matter where you
-              found it.
-            </p>
-            <div className="flex space-x-2 px-5 pt-14">
-              <Image
-                src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
-                height={316}
-                width={285}
-                alt=""
-                className="size-full"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col items-center px-4 py-8 md:py-0">
-            <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-              Organize automatically
-            </h2>
-            <div className="py-2"></div>
-            <p className="mt-2 text-left text-lg leading-7 text-gray-500">
-              We sort and categorize your saved events, so you always know
-              what's coming up.
-            </p>
-            <div className="flex space-x-2 px-5 pt-14">
-              <Image
-                src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/lists-v1.png"
-                height={316}
-                width={285}
-                alt=""
-                className="size-full"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col items-center px-4 py-8 md:py-0">
-            <h2 className="text-2.5xl font-bold leading-9 tracking-wide">
-              Show up confidently
-            </h2>
-            <div className="py-2"></div>
-            <p className="mt-2 text-left text-lg leading-7 text-gray-500">
-              Get gentle reminders and easy ways to share with friends, ensuring
-              you never miss out.
-            </p>
-            <div className="flex space-x-2 px-5 pt-14">
-              <Image
-                src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/sharing-v1.png"
-                height={316}
-                width={285}
-                alt=""
-                className="size-full"
-              />
-            </div>
-          </div>
-        </div>
       </div>
     </Section>
   );
