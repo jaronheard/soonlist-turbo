@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignedOut } from "@clerk/nextjs";
@@ -70,11 +71,19 @@ export function Footer() {
                   description="From screenshots to your list of possibilities."
                 />
                 <div className="mt-10 flex items-center justify-center gap-x-6">
-                  <Button asChild>
-                    <Link href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216">
-                      Download on the App Store
-                    </Link>
-                  </Button>
+                  <a
+                    href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216?itscg=30200&itsct=apps_box_badge&mttnsubad=6670222216"
+                    className="inline-block"
+                  >
+                    <Image
+                      src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1739059200"
+                      alt="Download on the App Store"
+                      width={246}
+                      height={82}
+                      className="h-[82px] w-[246px] object-contain align-middle"
+                      
+                    />
+                  </a>
                 </div>
               </div>
             </Section>

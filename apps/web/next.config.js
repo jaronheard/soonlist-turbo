@@ -28,6 +28,8 @@ const nextConfig = {
     },
   },
   images: {
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: "https",
@@ -44,6 +46,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "mirrors.creativecommons.org",
+      },
+      {
+        protocol: "https",
+        hostname: "toolbox.marketingtools.apple.com",
       },
     ],
   },
