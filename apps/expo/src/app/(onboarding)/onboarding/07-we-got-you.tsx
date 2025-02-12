@@ -31,22 +31,23 @@ const testimonial: Testimonial = {
 };
 
 export default function WeGotYouScreen() {
-  const userPriority = useAppStore((state) => state.userPriority);
+  const { onboardingData } = useAppStore();
 
   const getPriorityMessage = () => {
-    if (userPriority?.includes("Meet new people")) {
+    const priorityText = onboardingData.priority?.text;
+    if (priorityText === "Meet new people") {
       return "See all your possibilities in one place—never miss a chance to connect.";
     }
-    if (userPriority?.includes("Get out more")) {
+    if (priorityText === "Get out more") {
       return "See all your possibilities in one place—always have options ready.";
     }
-    if (userPriority?.includes("Choose intentionally")) {
-      return "See all your possibilities in one place—make choices that matter.";
+    if (priorityText === "No more FOMO") {
+      return "See all your possibilities in one place—be confident in your choices.";
     }
-    if (userPriority?.includes("Plan flexibly")) {
+    if (priorityText === "Plan flexibly") {
       return "See all your possibilities in one place—decide when you're ready.";
     }
-    if (userPriority?.includes("Build community")) {
+    if (priorityText === "Build community") {
       return "See all your possibilities in one place—bring people together.";
     }
     return "See all your possibilities in one place—do more of what matters.";
