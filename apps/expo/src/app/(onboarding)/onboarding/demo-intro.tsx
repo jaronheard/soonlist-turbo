@@ -77,9 +77,6 @@ export default function DemoIntroScreen() {
               <Text className="text-2xl font-bold text-black">
                 See & screenshot
               </Text>
-              <Text className="text-base text-neutral-2">
-                Capture every interesting event
-              </Text>
             </View>
           </View>
 
@@ -89,10 +86,7 @@ export default function DemoIntroScreen() {
             </View>
             <View>
               <Text className="text-2xl font-bold text-black">
-                Add to Soonlist
-              </Text>
-              <Text className="text-base text-neutral-2">
-                Details extracted automagically
+                Capture events to Soonlist
               </Text>
             </View>
           </View>
@@ -103,10 +97,7 @@ export default function DemoIntroScreen() {
             </View>
             <View>
               <Text className="text-2xl font-bold text-black">
-                See your possibilities
-              </Text>
-              <Text className="text-base text-neutral-2">
-                All your options in one place
+                See all your possibilities
               </Text>
             </View>
           </View>

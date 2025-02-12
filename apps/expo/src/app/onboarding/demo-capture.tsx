@@ -94,7 +94,7 @@ export default function DemoCaptureScreen() {
           headerStyle: { backgroundColor: "#5A32FB" },
           headerTintColor: "#fff",
           contentStyle: { backgroundColor: "#5A32FB" },
-          headerTitle: "Add your first event (demo)",
+          headerTitle: "Try adding an event",
         }}
       />
       <View className="h-full flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">

@@ -147,7 +147,7 @@ export default function DemoFeedScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerTitle: "Your list of possibilities",
+          headerTitle: "See all your possibilities",
           headerStyle: {
             backgroundColor: "#5A32FB",
           },

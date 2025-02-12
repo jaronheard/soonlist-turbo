@@ -39,7 +39,7 @@ export function FinishDemoButton() {
       className={`m-4 mb-8 rounded-full ${isLoading ? "bg-interactive-1/50" : "bg-interactive-1"} px-6 py-3`}
     >
       <Text className="text-center text-lg font-bold text-white">
-        {isLoading ? "Loading..." : "Finish Demo"}
+        {isLoading ? "Loading..." : "Finish demo"}
       </Text>
     </Pressable>
   );
