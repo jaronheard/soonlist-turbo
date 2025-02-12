@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { ImageSource } from "~/components/demoData";
+import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import type { RouterOutputs } from "~/utils/api";
 
 export interface RecentPhoto {
@@ -88,6 +89,12 @@ interface AppState {
   // User priority
   userPriority: string | null;
   setUserPriority: (priority: string) => void;
+
+  // Onboarding state
+  onboardingData: Partial<OnboardingData>;
+  setOnboardingData: (data: Partial<OnboardingData>) => void;
+  currentOnboardingStep: OnboardingStep | null;
+  setCurrentOnboardingStep: (step: OnboardingStep | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -188,6 +195,8 @@ export const useAppStore = create<AppState>()(
           isLoadingPhotos: false,
           photoLoadingError: null,
           userPriority: null,
+          onboardingData: {},
+          currentOnboardingStep: null,
         }),
       clearCalendarData: () =>
         set({
@@ -227,6 +236,18 @@ export const useAppStore = create<AppState>()(
 
       // User priority
       setUserPriority: (priority) => set({ userPriority: priority }),
+
+      // Onboarding state
+      onboardingData: {},
+      setOnboardingData: (data) =>
+        set((state) => ({
+          onboardingData: {
+            ...state.onboardingData,
+            ...data,
+          },
+        })),
+      currentOnboardingStep: null,
+      setCurrentOnboardingStep: (step) => set({ currentOnboardingStep: step }),
     }),
     {
       name: "app-storage",

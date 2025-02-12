@@ -15,11 +15,13 @@ import { toast } from "sonner-native";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useNotification } from "~/providers/NotificationProvider";
+import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function NotificationsScreen() {
   const { registerForPushNotifications } = useNotification();
   const { saveStep } = useOnboarding();
+  const { onboardingData } = useAppStore();
   const translateY = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,7 +48,7 @@ export default function NotificationsScreen() {
   });
 
   const handleNotificationPermission = async () => {
-    if (isLoading) return;
+    if (isLoading || onboardingData.notificationsEnabled === true) return;
     setIsLoading(true);
 
     try {
@@ -131,12 +133,22 @@ export default function NotificationsScreen() {
                   className="w-full border-l border-[#3c3c43]/30 py-3"
                   onPress={handleNotificationPermission}
                   hitSlop={40}
-                  disabled={isLoading}
+                  disabled={
+                    isLoading || onboardingData.notificationsEnabled === true
+                  }
                 >
                   <Text
-                    className={`text-center text-lg font-bold ${isLoading ? "text-blue-500/50" : "text-blue-500"}`}
+                    className={`text-center text-lg font-bold ${
+                      isLoading || onboardingData.notificationsEnabled === true
+                        ? "text-blue-500/50"
+                        : "text-blue-500"
+                    }`}
                   >
-                    {isLoading ? "Loading..." : "Allow"}
+                    {isLoading
+                      ? "Loading..."
+                      : onboardingData.notificationsEnabled === true
+                        ? "Allowed"
+                        : "Allow"}
                   </Text>
                 </Pressable>
                 <Animated.View style={animatedStyle}>

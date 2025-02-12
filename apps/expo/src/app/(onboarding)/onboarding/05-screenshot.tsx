@@ -5,22 +5,22 @@ import { toast } from "sonner-native";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { useOnboarding } from "~/hooks/useOnboarding";
+import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const options = ["Yes", "Not yet"] as const;
 type Option = (typeof options)[number];
 
 export default function ScreenshotScreen() {
-  const [selectedOption, setSelectedOption] = useState<Option | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { saveStep } = useOnboarding();
+  const { onboardingData } = useAppStore();
 
   const handleOptionSelect = async (option: Option) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
-      setSelectedOption(option);
       saveStep(
         "screenshot",
         { screenshotEvents: option },
@@ -47,7 +47,7 @@ export default function ScreenshotScreen() {
             key={option}
             label={option}
             onPress={() => handleOptionSelect(option)}
-            isSelected={selectedOption === option}
+            isSelected={onboardingData.screenshotEvents === option}
             disabled={isLoading}
           />
         ))}

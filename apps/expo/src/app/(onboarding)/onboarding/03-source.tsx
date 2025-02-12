@@ -5,6 +5,7 @@ import { toast } from "sonner-native";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { useOnboarding } from "~/hooks/useOnboarding";
+import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const sources = [
@@ -20,16 +21,15 @@ const sources = [
 type Source = (typeof sources)[number];
 
 export default function SourceScreen() {
-  const [selectedSource, setSelectedSource] = useState<Source | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { saveStep } = useOnboarding();
+  const { onboardingData } = useAppStore();
 
   const handleSourceSelect = async (source: Source) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
-      setSelectedSource(source);
       saveStep("source", { source }, "/onboarding/04-discovery");
     } catch (error) {
       toast.error("Something went wrong", {
@@ -53,7 +53,7 @@ export default function SourceScreen() {
               key={source}
               label={source}
               onPress={() => handleSourceSelect(source)}
-              isSelected={selectedSource === source}
+              isSelected={onboardingData.source === source}
               disabled={isLoading}
             />
           ))}
