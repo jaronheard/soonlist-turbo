@@ -121,7 +121,7 @@ export function UserEventListItem(props: {
     showCreator === "always" ||
     (showCreator === "otherUsers" && !isCurrentUser);
 
-  const isOwner = isCurrentUser;
+  const isOwner = demoMode || isCurrentUser;
 
   const iconSize = 16 * fontScale;
   const imageSize = 80 * fontScale;
