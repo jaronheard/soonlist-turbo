@@ -1,10 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ChevronDownIcon } from "lucide-react";
 
-import { Badge } from "@soonlist/ui/badge";
+import { Button } from "@soonlist/ui/button";
 
-import { CTAButtonMembership } from "~/components/CallToActions";
-import { FoundingMemberPricing } from "~/components/FoundingMemberPricing";
 import { CarouselDemo } from "./components/CarouselDemo";
 
 const testimonials = [
@@ -37,7 +36,7 @@ const testimonials = [
     },
   },
   // {
-  //   body: "I’m stoked that Soonlist helps me save and share music events, especially those in non-conventional venues.",
+  //   body: "I'm stoked that Soonlist helps me save and share music events, especially those in non-conventional venues.",
   //   author: {
   //     name: "Josh Carr",
   //     handle: "joshcarr",
@@ -108,28 +107,12 @@ const faqs = [
   {
     question: "Can I try Soonlist before committing to a year?",
     answer:
-      "While we don't offer a free trial, we have a 30-day satisfaction guarantee. If you don't feel more connected to your possibilities within the first month, we'll refund your membership fee, no questions asked.",
-  },
-  {
-    question: "Is the $29.99/year Founding Member price guaranteed for life?",
-    answer:
-      "The $29.99/year rate is a special offer for our first 100 subscribers, a 70% discount off our regular $99.99/year price. As a founding member, you'll lock in this discounted rate for as long as you maintain your subscription.",
-  },
-  {
-    question:
-      "What happens if I subscribe after the first 100 spots are filled?",
-    answer:
-      "Our founding membership is limited to 100 spots. The regular subscription price of $99/year will be available to everyone after the first 100. We encourage you to subscribe early to secure the best value and be part of our founding community.",
+      "Yes! When you download the app, you'll get a fully featured 7-day free trial.",
   },
   {
     question: "What if I can't afford the cost of subscription?",
     answer:
       "At Soonlist, we believe in making our service accessible to all. If the membership fee is a barrier, email us at support@soonlist.com with the subject \"NOTAFLOF\" (No One Turned Away For Lack Of Funds). We'll work with you to ensure you can access Soonlist's features. Paid subscriptions, by community members who can afford it, help support this inclusive policy.",
-  },
-  {
-    question: "What if I live outside the Portland, Oregon metro region?",
-    answer:
-      "Currently, Soonlist is available exclusively for users in the Portland, Oregon metro area. We're excited about expanding to other regions in the future. If you're interested in using Soonlist in your area, please <a href='https://soonlist.com/join' class='text-interactive-1 underline'>join our waitlist</a>. We'll notify you as soon as we launch in your location!",
   },
 ];
 
@@ -192,7 +175,7 @@ function HeroSection() {
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-8 md:grid-cols-1 md:gap-x-8">
           <div className="mx-auto text-center">
             <h1 className="font-heading text-5xl font-bold leading-tight tracking-tighterish text-gray-700 md:text-7xl md:leading-tight">
-              All your{" "}
+              Save events{" "}
               <span className="relative inline-block text-interactive-1">
                 <svg
                   width="492"
@@ -207,20 +190,18 @@ function HeroSection() {
                     fill="#FEEA9F"
                   />
                 </svg>
-                possibilities
+                instantly
               </span>
-              , organized
             </h1>
             <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
               See it, save it, show up. It's that easy with Soonlist.
             </p>
             <div className="mt-8 flex items-center justify-center gap-x-6">
-              <CTAButtonMembership>
-                Become a Founding Member
-              </CTAButtonMembership>
-            </div>
-            <div className="mt-4 flex justify-center">
-              <Badge variant="gray">Portland Metro Region only</Badge>
+              <Button asChild>
+                <Link href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216">
+                  Download on the App Store
+                </Link>
+              </Button>
             </div>
           </div>
           <div className="mx-auto max-w-2xl">
@@ -367,14 +348,6 @@ function ConnectWithWhatMatters() {
 //   );
 // }
 
-function MembershipSection() {
-  return (
-    <Section>
-      <FoundingMemberPricing />
-    </Section>
-  );
-}
-
 function TestimonialsSection() {
   return (
     <Section>
@@ -388,7 +361,7 @@ function TestimonialsSection() {
             >
               <figure className="rounded-[10px] border-[0.85px] border-neutral-3 bg-accent-yellow p-6 shadow-sm">
                 <blockquote className="text-center font-heading text-2xl font-bold text-neutral-1">
-                  <p>{`“${testimonial.body}”`}</p>
+                  <p>{`"${testimonial.body}"`}</p>
                 </blockquote>
                 <figcaption className="w-min-content mt-6 flex items-center justify-center gap-x-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -464,7 +437,6 @@ export default function Page() {
       </div>
       {/* <FeaturesHighlight /> */}
       <TestimonialsSection />
-      <MembershipSection />
       <FAQSection />
     </div>
   );

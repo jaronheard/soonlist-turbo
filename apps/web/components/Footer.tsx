@@ -7,8 +7,6 @@ import { Ticket } from "lucide-react";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
 
-import { CTAButtonMembership } from "./CallToActions";
-
 const excludedCTARoutes = [
   "/join",
   "/sign-in",
@@ -68,15 +66,16 @@ export function Footer() {
             <Section className="bg-interactive-3">
               <div className="text-center">
                 <SectionTitle
-                  title="All your possibilities, organized"
-                  subtitle="Join now"
-                  description="Shape the future of Soonlist and enjoy premium benefits. Be
-                    one of 💯 and get a signature emoji."
+                  title="Save events instantly"
+                  subtitle="Get the app"
+                  description="From screenshots to your list of possibilities."
                 />
                 <div className="mt-10 flex items-center justify-center gap-x-6">
-                  <CTAButtonMembership>
-                    Become a Founding Member
-                  </CTAButtonMembership>
+                  <Button asChild>
+                    <Link href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216">
+                      Download on the App Store
+                    </Link>
+                  </Button>
                 </div>
               </div>
             </Section>
@@ -90,9 +89,8 @@ export function Footer() {
             <h1 className="font-heading text-4xl font-bold">Soonlist</h1>
             <div className="mt-6 flex flex-col gap-4 sm:flex-row">
               <Button asChild size="sm">
-                <Link href={"/join"} scroll={false}>
-                  <Ticket className="mr-2 size-4"></Ticket>
-                  <span className="inline">&nbsp;Join now</span>
+                <Link href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216">
+                  <span className="inline">&nbsp;Get the app</span>
                 </Link>
               </Button>
               {/* Social Media Links */}
