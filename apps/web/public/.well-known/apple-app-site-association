@@ -5,12 +5,7 @@
         "appIDs": [
           "GQ59Z4XZHZ.com.soonlist.app"
         ],
-        "components": [
-          {
-            "/": "/event/*",
-            "comment": "Matches event routes"
-          }
-        ]
+        "components": []
       }
     ]
   },
