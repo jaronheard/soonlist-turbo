@@ -30,9 +30,9 @@ const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
 });
 
 const title = "Soonlist";
-const tagline = "All your possibilities, organized";
+const tagline = "Save events instantly";
 const description =
-  "Soonlist helps you capture, organize, share, and remember possibilities. All you have to do is show up.";
+  "See it, save it, show up. It's that easy with Soonlist. Now available on iOS.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.soonlist.com/"),
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   description: tagline,
   openGraph: {
     siteName: "Soonlist",
-    title: "All your possibilities, organized",
+    title: "Save events instantly",
     description,
     locale: "en_US",
     type: "website",
