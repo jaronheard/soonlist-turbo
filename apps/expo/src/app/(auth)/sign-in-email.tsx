@@ -1,13 +1,14 @@
 import * as React from "react";
 import { Linking, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { router, Stack } from "expo-router";
-import { useSignIn } from "@clerk/clerk-expo";
+import { Redirect, router, Stack } from "expo-router";
+import { useAuth, useSignIn } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
 
 const signInSchema = z.object({
@@ -18,11 +19,14 @@ const signInSchema = z.object({
 type SignInFormData = z.infer<typeof signInSchema>;
 
 export default function SignInScreen() {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [generalError, setGeneralError] = React.useState("");
   const { isLoaded, signIn, setActive } = useSignIn();
   const posthog = usePostHog();
-  const [generalError, setGeneralError] = React.useState("");
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-
+  const { isSignedIn } = useAuth();
+  const hasCompletedOnboarding = useAppStore(
+    (state) => state.hasCompletedOnboarding,
+  );
   const {
     control,
     handleSubmit,
@@ -35,6 +39,12 @@ export default function SignInScreen() {
     },
     mode: "onChange",
   });
+
+  if (isSignedIn && hasCompletedOnboarding) {
+    return <Redirect href="/feed" />;
+  } else if (isSignedIn && !hasCompletedOnboarding) {
+    return <Redirect href="/onboarding" />;
+  }
 
   const onSignInPress = async (data: SignInFormData) => {
     if (!isLoaded || isSubmitting) return;

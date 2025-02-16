@@ -5,6 +5,10 @@ import { HeaderLogo } from "~/components/HeaderLogo";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
 
+export const unstable_settings = {
+  initialRouteName: "feed",
+};
+
 export default function TabsLayout() {
   return (
     <Tabs

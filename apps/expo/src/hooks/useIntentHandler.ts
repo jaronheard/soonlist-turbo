@@ -43,6 +43,7 @@ export function useIntentHandler() {
   const handleDeepLink = useCallback(
     (url: string) => {
       try {
+        console.log("[UseIntentHandler] Handling deep link:", url);
         // 1. Fix scheme if necessary
         if (
           url.startsWith(`${APP_SCHEME}://`) &&
@@ -63,16 +64,25 @@ export function useIntentHandler() {
         const route = parsedUrl.pathname.replace(/^\/+/, "");
         const params = parsedUrl.searchParams;
 
+        console.log("[UseIntentHandler] Route:", route);
+        console.log("[UseIntentHandler] Params:", params);
+
         // 3. Switch on the route
         switch (route) {
           case "new": {
             const textParam = params.get("text");
             const imageUriParam = params.get("imageUri");
+            console.log("[UseIntentHandler] Text param:", textParam);
+            console.log("[UseIntentHandler] Image URI param:", imageUriParam);
 
             if (textParam) {
               try {
                 const decoded = decodeURIComponent(textParam);
                 setIntentParams({ text: decoded });
+                console.log(
+                  "[UseIntentHandler] Pushing to new with text:",
+                  decoded,
+                );
                 router.push(`/new?text=${encodeURIComponent(decoded)}`);
                 return;
               } catch (error) {
@@ -96,6 +106,10 @@ export function useIntentHandler() {
                   return;
                 }
                 setIntentParams({ imageUri: decoded });
+                console.log(
+                  "[UseIntentHandler] Pushing to new with imageUri:",
+                  decoded,
+                );
                 router.push(`/new?imageUri=${encodeURIComponent(decoded)}`);
                 return;
               } catch (error) {
@@ -106,7 +120,7 @@ export function useIntentHandler() {
                 return;
               }
             }
-
+            console.log("[UseIntentHandler] Pushing to new");
             router.push("/new");
             return;
           }
@@ -123,7 +137,9 @@ export function useIntentHandler() {
   );
 
   useEffect(() => {
+    console.log("[UseIntentHandler] Incoming URL:", incomingUrl);
     if (!incomingUrl || incomingUrl === prevUrl) return;
+    console.log("[UseIntentHandler] Setting incoming URL:", incomingUrl);
     prevUrl = incomingUrl;
     handleDeepLink(incomingUrl);
   }, [incomingUrl, handleDeepLink]);

@@ -1,13 +1,14 @@
 import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { Stack } from "expo-router";
-import { useSignUp } from "@clerk/clerk-expo";
+import { Redirect, Stack } from "expo-router";
+import { useAuth, useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
 
 const verifyEmailSchema = z.object({
@@ -24,7 +25,10 @@ const VerifyEmail = () => {
   const [generalError, setGeneralError] = React.useState("");
   const { signUp, setActive } = useSignUp();
   const posthog = usePostHog();
-
+  const { isSignedIn } = useAuth();
+  const hasCompletedOnboarding = useAppStore(
+    (state) => state.hasCompletedOnboarding,
+  );
   const {
     control,
     handleSubmit,
@@ -35,6 +39,12 @@ const VerifyEmail = () => {
       code: "",
     },
   });
+
+  if (isSignedIn && hasCompletedOnboarding) {
+    return <Redirect href="/feed" />;
+  } else if (isSignedIn && !hasCompletedOnboarding) {
+    return <Redirect href="/onboarding" />;
+  }
 
   const handleVerification = async (data: VerifyEmailFormData) => {
     if (!signUp) return;

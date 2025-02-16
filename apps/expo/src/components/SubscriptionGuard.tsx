@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Redirect } from "expo-router";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
@@ -25,14 +24,6 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
     isShowingPaywall,
     showProPaywallIfNeeded,
   ]);
-
-  if (!hasUnlimited && !hasCompletedOnboarding) {
-    return <Redirect href="/onboarding" />;
-  }
-
-  if (!hasUnlimited) {
-    return null;
-  }
 
   return <>{children}</>;
 }
