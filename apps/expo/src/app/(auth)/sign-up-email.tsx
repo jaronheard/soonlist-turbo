@@ -1,12 +1,13 @@
 import * as React from "react";
 import { Linking, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { router, Stack } from "expo-router";
-import { useSignUp } from "@clerk/clerk-expo";
+import { Redirect, router, Stack } from "expo-router";
+import { useAuth, useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
 
 const signUpSchema = z.object({
@@ -20,9 +21,12 @@ const signUpSchema = z.object({
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpScreen() {
-  const { isLoaded, signUp } = useSignUp();
   const [generalError, setGeneralError] = React.useState("");
-
+  const { isLoaded, signUp } = useSignUp();
+  const { isSignedIn } = useAuth();
+  const hasCompletedOnboarding = useAppStore(
+    (state) => state.hasCompletedOnboarding,
+  );
   const {
     control,
     handleSubmit,
@@ -37,6 +41,12 @@ export default function SignUpScreen() {
       password: "",
     },
   });
+
+  if (isSignedIn && hasCompletedOnboarding) {
+    return <Redirect href="/feed" />;
+  } else if (isSignedIn && !hasCompletedOnboarding) {
+    return <Redirect href="/onboarding" />;
+  }
 
   const onSignUpPress = async (data: SignUpFormData) => {
     if (!isLoaded) return;

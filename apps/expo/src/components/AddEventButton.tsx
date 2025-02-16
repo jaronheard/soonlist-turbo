@@ -38,7 +38,7 @@ export default function AddEventButton() {
       console.error("Error requesting media permissions:", error);
       router.push("/new");
     }
-  }, [router, hasMediaPermission, hasUnlimited, showProPaywallIfNeeded]);
+  }, [hasMediaPermission, hasUnlimited, showProPaywallIfNeeded]);
 
   return (
     <View className="absolute bottom-0 left-0 right-0">

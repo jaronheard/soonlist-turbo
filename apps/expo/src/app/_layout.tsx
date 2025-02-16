@@ -58,8 +58,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 }
 
 export const unstable_settings = {
-  // Ensure any route can link back to `/`
-  initialRouteName: "(tabs)/feed",
+  initialRouteName: "(tabs)",
 };
 
 const tokenCache = {

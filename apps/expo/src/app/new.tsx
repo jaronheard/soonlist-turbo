@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { Linking, View } from "react-native";
 import Animated from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
@@ -12,13 +12,11 @@ import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";
 import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
 import { PhotoGrid } from "~/components/PhotoGrid";
-import { SubscriptionGuard } from "~/components/SubscriptionGuard";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInitializeInput } from "~/hooks/useInitializeInput";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { useMediaLibrary } from "~/hooks/useMediaLibrary";
 import { useNotification } from "~/providers/NotificationProvider";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 
 const OFFSET_VALUE = 32;
@@ -28,8 +26,6 @@ export default function NewEventModal() {
   const { expoPushToken, hasNotificationPermission } = useNotification();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
-  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
-  const hasUnlimited = customerInfo?.entitlements.active.unlimited;
   useMediaLibrary();
 
   const {
@@ -65,21 +61,6 @@ export default function NewEventModal() {
   });
 
   const isFromIntent = Boolean(finalText || finalImageUri);
-
-  // If user doesn't have pro, show paywall and go back
-  useEffect(() => {
-    if (!hasUnlimited) {
-      void showProPaywallIfNeeded().then(() => {
-        if (!customerInfo?.entitlements.active.unlimited) {
-          router.back();
-        }
-      });
-    }
-  }, [
-    hasUnlimited,
-    showProPaywallIfNeeded,
-    customerInfo?.entitlements.active.unlimited,
-  ]);
 
   // Handlers
   const handleImagePreview = useCallback(
@@ -238,95 +219,93 @@ export default function NewEventModal() {
   }
 
   return (
-    <SubscriptionGuard>
-      <View className="h-full flex-1 bg-[#5A32FB]">
-        {/* Wrap everything in a "card" that has rounded top corners, 
+    <View className="h-full flex-1 bg-[#5A32FB]">
+      {/* Wrap everything in a "card" that has rounded top corners, 
             hiding anything behind it so no black gap appears */}
-        {/* Screen header */}
-        <Stack.Screen
-          options={{
-            title: "",
-            headerShown: true,
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: "#5A32FB" },
-            headerTintColor: "#fff",
-            contentStyle: { backgroundColor: "#5A32FB" },
-            headerTitle: () => (
-              <NewEventHeader
-                containerClassName="mt-2"
-                isFromIntent={isFromIntent}
-                linkPreview={linkPreview}
-                imagePreview={imagePreview}
-                activeInput={activeInput}
-                handleDescribePress={handleDescribePress}
-              />
-            ),
-          }}
-        />
+      {/* Screen header */}
+      <Stack.Screen
+        options={{
+          title: "",
+          headerShown: true,
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: "#5A32FB" },
+          headerTintColor: "#fff",
+          contentStyle: { backgroundColor: "#5A32FB" },
+          headerTitle: () => (
+            <NewEventHeader
+              containerClassName="mt-2"
+              isFromIntent={isFromIntent}
+              linkPreview={linkPreview}
+              imagePreview={imagePreview}
+              activeInput={activeInput}
+              handleDescribePress={handleDescribePress}
+            />
+          ),
+        }}
+      />
 
-        <View className="h-full flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
-          <View className="flex-1">
-            {!hasMediaPermission &&
-            !isFromIntent &&
-            activeInput !== "describe" ? (
-              <PhotoAccessPrompt />
-            ) : (
-              <View className="flex-1">
-                {/* Event preview at top */}
-                <View className="px-4 pt-2">
-                  <EventPreview
-                    containerClassName="rounded-xl overflow-hidden"
-                    imagePreview={imagePreview}
-                    linkPreview={linkPreview}
-                    input={input}
-                    handleTextChange={handleTextChange}
-                    clearPreview={handleClearPreview}
-                    clearText={handleClearText}
-                    activeInput={activeInput}
-                    isImageLoading={isImageLoading}
-                    handleMorePhotos={handleMorePhotosPress}
-                    previewContainerStyle={
-                      activeInput === "describe"
-                        ? "compact"
-                        : isFromIntent
-                          ? "full"
-                          : "square"
+      <View className="h-full flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
+        <View className="flex-1">
+          {!hasMediaPermission &&
+          !isFromIntent &&
+          activeInput !== "describe" ? (
+            <PhotoAccessPrompt />
+          ) : (
+            <View className="flex-1">
+              {/* Event preview at top */}
+              <View className="px-4 pt-2">
+                <EventPreview
+                  containerClassName="rounded-xl overflow-hidden"
+                  imagePreview={imagePreview}
+                  linkPreview={linkPreview}
+                  input={input}
+                  handleTextChange={handleTextChange}
+                  clearPreview={handleClearPreview}
+                  clearText={handleClearText}
+                  activeInput={activeInput}
+                  isImageLoading={isImageLoading}
+                  handleMorePhotos={handleMorePhotosPress}
+                  previewContainerStyle={
+                    activeInput === "describe"
+                      ? "compact"
+                      : isFromIntent
+                        ? "full"
+                        : "square"
+                  }
+                />
+              </View>
+
+              {/* Photo grid below preview (only if not describing) */}
+              {!isFromIntent && activeInput !== "describe" && (
+                <View className="h-full flex-1 px-4">
+                  <PhotoGrid
+                    hasMediaPermission={hasMediaPermission}
+                    hasFullPhotoAccess={hasFullPhotoAccess}
+                    recentPhotos={recentPhotos}
+                    onPhotoSelect={(uri: string | ImageSource) =>
+                      handleImagePreview(uri)
                     }
+                    onCameraPress={() => void handleCameraCapture()}
+                    onMorePhotos={() => void handleMorePhotosPress()}
+                    selectedUri={imagePreview}
                   />
                 </View>
-
-                {/* Photo grid below preview (only if not describing) */}
-                {!isFromIntent && activeInput !== "describe" && (
-                  <View className="h-full flex-1 px-4">
-                    <PhotoGrid
-                      hasMediaPermission={hasMediaPermission}
-                      hasFullPhotoAccess={hasFullPhotoAccess}
-                      recentPhotos={recentPhotos}
-                      onPhotoSelect={(uri: string | ImageSource) =>
-                        handleImagePreview(uri)
-                      }
-                      onCameraPress={() => void handleCameraCapture()}
-                      onMorePhotos={() => void handleMorePhotosPress()}
-                      selectedUri={imagePreview}
-                    />
-                  </View>
-                )}
-              </View>
-            )}
-          </View>
-
-          {/* The capture button sits at the bottom, with optional animated margin 
-              so it can float above the keyboard smoothly. */}
-          <Animated.View className="px-4" style={keyboardStyle}>
-            <CaptureEventButton
-              handleCreateEvent={handleCreateEvent}
-              input={input}
-              imagePreview={imagePreview}
-              linkPreview={linkPreview}
-            />
-          </Animated.View>
+              )}
+            </View>
+          )}
         </View>
+
+        {/* The capture button sits at the bottom, with optional animated margin 
+              so it can float above the keyboard smoothly. */}
+        <Animated.View className="px-4" style={keyboardStyle}>
+          <CaptureEventButton
+            handleCreateEvent={handleCreateEvent}
+            input={input}
+            imagePreview={imagePreview}
+            linkPreview={linkPreview}
+          />
+        </Animated.View>
       </View>
-    </SubscriptionGuard>
+    </View>
   );
 }
