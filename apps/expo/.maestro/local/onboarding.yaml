@@ -1,0 +1,19 @@
+appId: com.soonlist.app.dev
+name: Onboarding Test (Local)
+tags:
+  - onboarding
+  - smoke
+  - local
+
+onFlowStart:
+  - runFlow:
+      file: "../clear_state.yaml"
+  - runFlow:
+      file: "./setup/launch.yaml"
+---
+# Sign in first
+- runFlow:
+    file: "../flows/sign_in_email.yaml"
+
+- runFlow:
+    file: "../flows/onboarding.yaml"

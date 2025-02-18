@@ -1,0 +1,15 @@
+appId: com.soonlist.app.dev
+name: Authentication Flow Test (Local)
+tags:
+  - auth
+  - smoke
+  - local
+
+onFlowStart:
+  - runFlow:
+      file: "../clear_state.yaml"
+  - runFlow:
+      file: "./setup/launch.yaml"
+---
+- runFlow:
+    file: "../flows/sign_in_email.yaml"

@@ -1,0 +1,10 @@
+appId: com.soonlist.app.dev
+name: Local Launch Configuration
+---
+- launchApp
+- assertVisible: "http.*"
+- tapOn: "http.*"
+- assertVisible: "Continue"
+- tapOn: "Continue"
+- tapOn:
+    point: 94%,43%

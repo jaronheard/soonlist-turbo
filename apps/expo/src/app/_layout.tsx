@@ -179,6 +179,12 @@ const InitialLayout = () => {
       }}
     >
       <Stack.Screen
+        name="index"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="(tabs)"
         options={{
           headerShown: false,
@@ -242,7 +248,7 @@ function RootLayoutContent() {
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
-  useIntentHandler();
+  // useIntentHandler();
 
   return (
     <View style={{ flex: 1 }}>

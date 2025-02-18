@@ -1,0 +1,7 @@
+appId: com.soonlist.app.dev
+name: Unlimited Flow
+---
+- assertVisible: "Upcoming"
+- tapOn:
+    point: 50%,93%
+- assertVisible: "Capture event"

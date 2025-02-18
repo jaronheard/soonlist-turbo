@@ -1,0 +1,14 @@
+# Base configuration for Maestro tests
+# Use this in development mode
+appId: com.soonlist.app.dev
+
+# Reusable configuration values
+configuration:
+  # Timeouts
+  defaultAnimationTimeout: &defaultAnimationTimeout 5000
+  
+  # App IDs for different environments
+  appIds:
+    dev: &devAppId "com.soonlist.app.dev"
+    preview: &previewAppId "com.soonlist.app.preview"
+    prod: &prodAppId "com.soonlist.app" 
