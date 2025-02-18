@@ -61,6 +61,13 @@ name: Deep Links
     - "../assets/design.png"
 
 - tapOn:
+    text: wait2seconds # Any random text that does not exist in the UI
+    optional: true # This should be true so that the test won't fail
+    repeat: 2
+    delay: 2000
+    label: "wait for media refresh"
+
+- tapOn:
     point: 50%,93%
 
 - assertVisible: "Select image"
