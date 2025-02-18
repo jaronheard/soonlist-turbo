@@ -21,6 +21,9 @@ export default function AddEventButton() {
       return;
     }
 
+    // Trigger a media library refresh before navigating
+    useAppStore.setState({ shouldRefreshMediaLibrary: true });
+
     // If we already have any level of permission (full or partial), just navigate
     if (hasMediaPermission) {
       router.push("/new");
