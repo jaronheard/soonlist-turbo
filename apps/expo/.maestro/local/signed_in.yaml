@@ -25,4 +25,7 @@ onFlowStart:
     file: "../flows/deep_links.yaml"
 
 - runFlow:
+    file: "../flows/intent_handler.yaml"
+
+- runFlow:
     file: "../flows/sign_out.yaml"
