@@ -70,9 +70,3 @@ name: Deep Links
 - assertVisible: "Upcoming"
 
 - assertVisible: .*design.*
-
-
-
-
-
-

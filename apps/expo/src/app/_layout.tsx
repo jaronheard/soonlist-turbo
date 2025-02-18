@@ -29,7 +29,7 @@ import { Toaster } from "sonner-native";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
 import { useCalendar } from "~/hooks/useCalendar";
-import { useIntentHandler } from "~/hooks/useIntentHandler";
+// import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
