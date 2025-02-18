@@ -237,9 +237,6 @@ export const userRouter = createTRPCRouter({
         .update(users)
         .set({
           onboardingData: mergedData,
-          ...(input.completedAt
-            ? { onboardingCompletedAt: input.completedAt }
-            : {}),
         })
         .where(eq(users.id, currentUser.id));
 
