@@ -1,0 +1,23 @@
+appId: com.soonlist.app.dev
+name: Sign In Email Flow
+---
+- assertVisible: "Other Options"
+- tapOn: "Other Options"
+
+- assertVisible: "Continue with Email"
+- tapOn: "Continue with Email"
+- inputText: "test@example.com"
+
+- assertVisible: "Already have an account? Sign in"
+- tapOn: "Already have an account? Sign in"
+
+- assertVisible: "Email"
+- tapOn: "Email"
+- inputText: ${MAESTRO_TEST_EMAIL}
+
+- assertVisible: "Password"
+- tapOn: "Password"
+- inputText: ${MAESTRO_TEST_PASSWORD}
+
+- assertVisible: "Sign in"
+- tapOn: "done"

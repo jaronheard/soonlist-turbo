@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { Linking, Pressable, View } from "react-native";
+import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutationState } from "@tanstack/react-query";
 import { MapPinned } from "lucide-react-native";
@@ -38,7 +39,7 @@ function GoButton({
 }
 
 function MyFeed() {
-  const { user } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -47,7 +48,7 @@ function MyFeed() {
       limit: 20,
     },
     {
-      enabled: !!user,
+      enabled: isLoaded && !!user && isSignedIn,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   );
@@ -77,6 +78,18 @@ function MyFeed() {
   });
 
   const isAddingEvent = pendingAIMutations.length > 0;
+
+  if (!isLoaded) {
+    return (
+      <View className="flex-1 bg-white">
+        <LoadingSpinner />
+      </View>
+    );
+  }
+
+  if (!isSignedIn) {
+    return <Redirect href="/sign-in" />;
+  }
 
   return (
     <View className="flex-1 bg-white">

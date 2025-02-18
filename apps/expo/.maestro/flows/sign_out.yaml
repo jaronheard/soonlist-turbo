@@ -1,0 +1,8 @@
+appId: com.soonlist.app.dev
+name: Sign Out Flow
+---
+- assertVisible: "Upcoming"
+- tapOn:
+    point: 91%,9%
+- tapOn: "Sign out"
+- assertVisible: "Other Options"

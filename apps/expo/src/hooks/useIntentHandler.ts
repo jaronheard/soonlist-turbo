@@ -44,12 +44,11 @@ export function useIntentHandler() {
     (url: string) => {
       try {
         console.log("[UseIntentHandler] Handling deep link:", url);
-        // 1. Fix scheme if necessary
-        if (
-          url.startsWith(`${APP_SCHEME}://`) &&
-          !url.startsWith(`${APP_SCHEME}:///`)
-        ) {
-          url = url.replace(`${APP_SCHEME}://`, `${APP_SCHEME}:///`);
+
+        // 1. Check for valid scheme
+        if (!url.startsWith(`${APP_SCHEME}://`)) {
+          console.error("[useIntentHandler] Invalid scheme:", url);
+          return;
         }
 
         // 2. Parse the URL

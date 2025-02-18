@@ -1,0 +1,28 @@
+appId: com.soonlist.app.dev
+name: Unlimited Test (Local)
+tags:
+  - onboarding
+  - smoke
+  - local
+
+onFlowStart:
+  - runFlow:
+      file: "../clear_state.yaml"
+  - runFlow:
+      file: "./setup/launch.yaml"
+---
+# Sign in first
+- runFlow:
+    file: "../flows/sign_in_email_unlimited.yaml"
+
+- runFlow:
+    file: "../flows/onboarding.yaml"
+
+- runFlow:
+    file: "../flows/unlimited.yaml"
+
+- runFlow:
+    file: "../flows/deep_links.yaml"
+
+- runFlow:
+    file: "../flows/sign_out.yaml"

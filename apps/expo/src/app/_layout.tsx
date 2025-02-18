@@ -29,7 +29,7 @@ import { Toaster } from "sonner-native";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
 import { useCalendar } from "~/hooks/useCalendar";
-import { useIntentHandler } from "~/hooks/useIntentHandler";
+// import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
@@ -179,6 +179,12 @@ const InitialLayout = () => {
       }}
     >
       <Stack.Screen
+        name="index"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="(tabs)"
         options={{
           headerShown: false,
@@ -242,7 +248,7 @@ function RootLayoutContent() {
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
-  useIntentHandler();
+  // useIntentHandler();
 
   return (
     <View style={{ flex: 1 }}>
