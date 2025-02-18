@@ -58,7 +58,7 @@ name: Deep Links
 
 # Add event media
 - addMedia:
-    - "../assets/design.png"
+    - "assets/design.png"
 
 - tapOn:
     point: 50%,93%

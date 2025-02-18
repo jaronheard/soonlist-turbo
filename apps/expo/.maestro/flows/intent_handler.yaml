@@ -16,7 +16,7 @@ name: Intent Handler
 
 # Add event media
 - addMedia:
-    - "../assets/food.png"
+    - "assets/food.png"
 
 - tapOn:
     point: 50%,93%
@@ -31,7 +31,7 @@ name: Intent Handler
 
 # Add event media
 - addMedia:
-    - "../assets/music.png"
+    - "assets/music.png"
 
 - tapOn:
     point: 50%,93%
