@@ -28,3 +28,18 @@ name: Intent Handler
 - assertVisible: "Upcoming"
 
 - assertVisible: .*food.*
+
+# Add event media
+- addMedia:
+    - "../assets/music.png"
+
+- tapOn:
+    point: 50%,93%
+
+- assertVisible: "Select image"
+
+- tapOn: "Capture event"
+
+- assertVisible: "Upcoming"
+
+- assertVisible: .*music.*
