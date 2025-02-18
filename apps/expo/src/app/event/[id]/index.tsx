@@ -1,14 +1,15 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   Pressable,
   RefreshControl,
+  Image as RNImage,
   ScrollView,
   Text,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image } from "expo-image";
+import { Image as ExpoImage } from "expo-image";
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { EyeOff, Globe2, MapPin, User } from "lucide-react-native";
@@ -25,27 +26,40 @@ import { formatEventDateRange } from "~/utils/dates";
 
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const utils = api.useUtils();
   const { width } = Dimensions.get("window");
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [imageHeight, setImageHeight] = useState(0);
+  // Store the aspect ratio for the main event image
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
+  // Track whether the image is fully loaded (for a fade-in)
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   const username = currentUser?.username || "";
-  const eventQuery = api.event.get.useQuery({ eventId: id });
+
+  // Load the event data
+  const eventQuery = api.event.get.useQuery(
+    { eventId: id || "" },
+    {
+      // Only run this query if 'id' is defined
+      enabled: Boolean(id),
+    },
+  );
+  // Check saved events
   const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
     userName: username,
   });
 
+  // Mutations
   const deleteEventMutation = api.event.delete.useMutation({
     onSuccess: () => {
-      void utils.event.invalidate();
+      void api.useUtils().event.invalidate();
       router.replace("/");
     },
   });
 
+  // Handlers
   const handleDelete = useCallback(async () => {
     if (id && typeof id === "string") {
       await deleteEventMutation.mutateAsync({ id });
@@ -57,20 +71,42 @@ export default function Page() {
     void eventQuery.refetch().then(() => setRefreshing(false));
   }, [eventQuery]);
 
+  // Pre-calculate the aspect ratio of the event image, if it exists
+  useEffect(() => {
+    const eventData = eventQuery.data?.event as
+      | AddToCalendarButtonPropsRestricted
+      | undefined;
+    const eventImage = eventData?.images?.[3];
+    if (!eventImage) {
+      return;
+    }
+    const imageUri = `${eventImage}?max-w=1284&fit=cover&f=webp&q=80`;
+
+    // Use RNImage to get actual width/height of the remote image
+    RNImage.getSize(
+      imageUri,
+      (naturalWidth, naturalHeight) => {
+        setImageAspectRatio(naturalWidth / naturalHeight);
+      },
+      (err) => {
+        console.error("Failed to get image size:", err);
+      },
+    );
+  }, [eventQuery.data?.event]);
+
+  // Build the header-right UI if we have data
   const HeaderRight = useCallback(() => {
-    if (!eventQuery.data) return null;
+    const data = eventQuery.data;
+    if (!data) return null;
+    const isSaved = savedIdsQuery.data?.some(
+      (savedEvent) => savedEvent.id === data.id,
+    );
     return (
       <View className="flex-row items-center gap-2">
         <EventMenu
-          event={
-            eventQuery.data as RouterOutputs["event"]["getUpcomingForUser"][number]
-          }
-          isOwner={eventQuery.data.userId === currentUser?.id}
-          isSaved={
-            savedIdsQuery.data?.some(
-              (savedEvent) => savedEvent.id === eventQuery.data?.id,
-            ) ?? false
-          }
+          event={data as RouterOutputs["event"]["getUpcomingForUser"][number]}
+          isOwner={data.userId === currentUser?.id}
+          isSaved={Boolean(isSaved)}
           menuType="popup"
           onDelete={handleDelete}
         />
@@ -79,6 +115,7 @@ export default function Page() {
     );
   }, [eventQuery.data, savedIdsQuery.data, currentUser?.id, id, handleDelete]);
 
+  // Early return if the 'id' is missing or invalid
   if (!id || typeof id !== "string") {
     return (
       <>
@@ -90,6 +127,7 @@ export default function Page() {
     );
   }
 
+  // Loading state
   if (eventQuery.isLoading) {
     return (
       <>
@@ -101,6 +139,7 @@ export default function Page() {
     );
   }
 
+  // Not found or error
   if (!eventQuery.data) {
     return (
       <>
@@ -112,10 +151,12 @@ export default function Page() {
     );
   }
 
+  // Normal render
   const event = eventQuery.data;
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const isCurrentUserEvent = currentUser?.id === event.userId;
 
+  // Compute event date/time strings
   const { date, time } = formatEventDateRange(
     eventData.startDate || "",
     eventData.startTime,
@@ -125,11 +166,7 @@ export default function Page() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerRight: HeaderRight,
-        }}
-      />
+      <Stack.Screen options={{ headerRight: HeaderRight }} />
       <ScrollView
         className="flex-1 bg-white"
         contentContainerStyle={{
@@ -149,9 +186,13 @@ export default function Page() {
             <Text className="font-heading text-4xl font-bold text-neutral-1">
               {eventData.name}
             </Text>
+
+            {/* Location link */}
             {eventData.location && (
               <Link
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(eventData.location)}`}
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  eventData.location,
+                )}`}
                 asChild
               >
                 <Pressable>
@@ -164,6 +205,8 @@ export default function Page() {
                 </Pressable>
               </Link>
             )}
+
+            {/* Visibility or user info */}
             {isCurrentUserEvent ? (
               <View className="flex-row items-center gap-2">
                 {event.visibility === "public" ? (
@@ -181,7 +224,7 @@ export default function Page() {
               <View className="flex-row items-center gap-2">
                 <UserProfileFlair username={event.user.username} size="xs">
                   {event.user.userImage ? (
-                    <Image
+                    <ExpoImage
                       source={{ uri: event.user.userImage }}
                       style={{ width: 20, height: 20, borderRadius: 10 }}
                       contentFit="cover"
@@ -199,27 +242,33 @@ export default function Page() {
               </View>
             )}
           </View>
+
+          {/* Description */}
           <View className="my-8">
             <Text className="text-neutral-1">{eventData.description}</Text>
           </View>
-          {eventData.images?.[3] && (
-            <View className="mb-4">
-              <Image
+
+          {/* Main Event Image if it exists and aspect ratio is known */}
+          {eventData.images?.[3] && imageAspectRatio && (
+            <View
+              className="mb-4 overflow-hidden bg-muted/10"
+              style={{
+                width: width - 32,
+                // Maintain the original aspect ratio at the full width
+                aspectRatio: imageAspectRatio,
+              }}
+            >
+              <ExpoImage
                 source={{
-                  uri: `${eventData.images[3]}?max-w=1284&fit=cover&f=webp&q=80`,
+                  uri: `${eventData.images[3]}?max-w=1284&fit=contain&f=webp&q=80`,
                 }}
-                style={{ width: width - 32, height: imageHeight || width - 32 }}
+                style={{ width: "100%", height: "100%" }}
                 contentFit="contain"
                 contentPosition="center"
                 transition={200}
                 cachePolicy="memory-disk"
-                className="bg-muted/10"
-                onLoad={(e) => {
-                  const { width: naturalWidth, height: naturalHeight } =
-                    e.source;
-                  const aspectRatio = naturalHeight / naturalWidth;
-                  setImageHeight((width - 32) * aspectRatio);
-                }}
+                onLoadEnd={() => setIsImageLoaded(true)}
+                className={isImageLoaded ? "opacity-100" : "opacity-0"}
               />
             </View>
           )}
