@@ -1,37 +1,37 @@
 appId: com.soonlist.app.dev
 name: Deep Links
 ---
-# # Close the app
-# - stopApp:
-#     appId: com.soonlist.app.dev
+# Close the app
+- stopApp:
+    appId: com.soonlist.app.dev
 
-# # Open the app with a deep link
-# - openLink: "soonlist.dev://"
+# Open the app with a deep link
+- openLink: "soonlist.dev://"
 
-# # Deeplink through dev client
-# - waitForAnimationToEnd:
-#     timeout: 5000
-# - tapOn:
-#     point: 87%,50%
+# Deeplink through dev client
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    point: 87%,50%
 
-# # Assert that the app is open
-# - assertVisible: "Upcoming"
+# Assert that the app is open
+- assertVisible: "Upcoming"
 
-# # Close the app
-# - stopApp:
-#     appId: com.soonlist.app.dev
+# Close the app
+- stopApp:
+    appId: com.soonlist.app.dev
 
-# # Open the app with a deep link
-# - openLink: "soonlist.dev://event/id"
+# Open the app with a deep link
+- openLink: "soonlist.dev://event/id"
 
-# # Deeplink through dev client
-# - waitForAnimationToEnd:
-#     timeout: 5000
-# - tapOn:
-#     point: 87%,50%
+# Deeplink through dev client
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    point: 87%,50%
 
-# # Assert that the app is open to the correct screen
-# - assertVisible: "Event Details"
+# Assert that the app is open to the correct screen
+- assertVisible: "Event Details"
 
 # Close the app
 - stopApp:

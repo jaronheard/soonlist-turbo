@@ -1,0 +1,45 @@
+appId: com.soonlist.app.dev
+name: Intent Handler
+---
+# Close the app
+- stopApp:
+    appId: com.soonlist.app.dev
+
+- openLink: "soonlist.dev://"
+
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    point: 87%,50%
+
+- assertVisible: "Upcoming"
+
+# Add event media
+- addMedia:
+    - "../assets/food.png"
+
+- tapOn:
+    point: 50%,93%
+
+- assertVisible: "Select image"
+
+- tapOn: "Capture event"
+
+- assertVisible: "Upcoming"
+
+- assertVisible: .*food.*
+
+# Add event media
+- addMedia:
+    - "../assets/music.png"
+
+- tapOn:
+    point: 50%,93%
+
+- assertVisible: "Select image"
+
+- tapOn: "Capture event"
+
+- assertVisible: "Upcoming"
+
+- assertVisible: .*music.*
