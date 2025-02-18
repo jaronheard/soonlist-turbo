@@ -26,6 +26,9 @@ const onboardingDataSchema = z.object({
   ageRange: z
     .enum(["Under 24", "25-34", "35-44", "45-54", "55-64", "65+"])
     .optional(),
+  source: z.string().optional(),
+  discoveryMethod: z.string().optional(),
+  screenshotEvents: z.string().optional(),
   priority: prioritySchema.optional(),
   completedAt: z.date().optional(),
 });
