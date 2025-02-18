@@ -26,8 +26,10 @@ const onboardingDataSchema = z.object({
   ageRange: z
     .enum(["Under 24", "25-34", "35-44", "45-54", "55-64", "65+"])
     .optional(),
+  source: z.string().optional(),
+  discoveryMethod: z.string().optional(),
+  screenshotEvents: z.string().optional(),
   priority: prioritySchema.optional(),
-  completedAt: z.date().optional(),
 });
 
 export const userRouter = createTRPCRouter({
@@ -235,9 +237,6 @@ export const userRouter = createTRPCRouter({
         .update(users)
         .set({
           onboardingData: mergedData,
-          ...(input.completedAt
-            ? { onboardingCompletedAt: input.completedAt }
-            : {}),
         })
         .where(eq(users.id, currentUser.id));
 
@@ -287,4 +286,28 @@ export const userRouter = createTRPCRouter({
 
     return { success: true };
   }),
+
+  setOnboardingCompletedAt: protectedProcedure
+    .input(z.object({ completedAt: z.date() }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx.auth;
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User must be logged in to complete onboarding",
+        });
+      }
+
+      return ctx.db
+        .update(users)
+        .set({
+          onboardingCompletedAt: input.completedAt,
+          onboardingData: sql`JSON_SET(
+            COALESCE(onboardingData, '{}'),
+            '$.completedAt',
+            ${input.completedAt}
+          )`,
+        })
+        .where(eq(users.id, userId));
+    }),
 });

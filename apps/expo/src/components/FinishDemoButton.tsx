@@ -3,15 +3,13 @@ import { Pressable, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { toast } from "sonner-native";
 
+import { useOnboarding } from "~/hooks/useOnboarding";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore } from "~/store";
 
 export function FinishDemoButton() {
   const router = useRouter();
   const { showProPaywallIfNeeded } = useRevenueCat();
-  const setHasCompletedOnboarding = useAppStore(
-    (state) => state.setHasCompletedOnboarding,
-  );
+  const { completeOnboarding } = useOnboarding();
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePress = async () => {
@@ -19,7 +17,7 @@ export function FinishDemoButton() {
     setIsLoading(true);
 
     try {
-      setHasCompletedOnboarding(true);
+      await completeOnboarding();
       await showProPaywallIfNeeded();
       // Navigate to feed after paywall is handled
       router.push("/feed");

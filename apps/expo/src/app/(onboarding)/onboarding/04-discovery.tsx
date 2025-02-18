@@ -31,7 +31,7 @@ export default function DiscoveryScreen() {
     try {
       saveStep(
         "discovery",
-        { discoveryMethods: [method] },
+        { discoveryMethod: method },
         "/onboarding/05-screenshot",
       );
     } catch (error) {
@@ -56,7 +56,7 @@ export default function DiscoveryScreen() {
               key={method}
               label={method}
               onPress={() => handleMethodSelect(method)}
-              isSelected={onboardingData.discoveryMethods?.includes(method)}
+              isSelected={onboardingData.discoveryMethod === method}
               disabled={isLoading}
             />
           ))}

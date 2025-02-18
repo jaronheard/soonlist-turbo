@@ -16,9 +16,6 @@ onFlowStart:
     file: "../flows/sign_in_email_unlimited.yaml"
 
 - runFlow:
-    file: "../flows/onboarding.yaml"
-
-- runFlow:
     file: "../flows/unlimited.yaml"
 
 - runFlow:

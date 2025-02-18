@@ -58,7 +58,13 @@ name: Deep Links
 
 # Add event media
 - addMedia:
-    - "../assets/design.png"
+    - "assets/design.png"
+
+- tapOn:
+    text: randText # Any random text that does not exist in the UI
+    optional: true # This should be true so that the test won't fail
+    repeat: 2
+    delay: 1000
 
 - tapOn:
     point: 50%,93%

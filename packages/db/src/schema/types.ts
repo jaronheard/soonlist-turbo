@@ -76,14 +76,13 @@ export interface OnboardingData {
     | "Facebook"
     | "Through a friend"
     | "Other";
-  discoveryMethods?: (
+  discoveryMethod?:
     | "Instagram"
     | "TikTok"
     | "Friends' recommendations"
     | "Local websites/newsletters"
     | "Walking around town"
-    | "Facebook"
-  )[];
+    | "Facebook";
   screenshotEvents?: "Yes" | "Not yet";
   priority?: {
     text: string;
