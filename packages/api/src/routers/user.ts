@@ -290,4 +290,28 @@ export const userRouter = createTRPCRouter({
 
     return { success: true };
   }),
+
+  setOnboardingCompletedAt: protectedProcedure
+    .input(z.object({ completedAt: z.date() }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx.auth;
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User must be logged in to complete onboarding",
+        });
+      }
+
+      return ctx.db
+        .update(users)
+        .set({
+          onboardingCompletedAt: input.completedAt,
+          onboardingData: sql`JSON_SET(
+            COALESCE(onboardingData, '{}'),
+            '$.completedAt',
+            ${input.completedAt}
+          )`,
+        })
+        .where(eq(users.id, userId));
+    }),
 });
