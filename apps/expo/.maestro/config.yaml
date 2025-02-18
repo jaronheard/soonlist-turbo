@@ -6,9 +6,9 @@ appId: com.soonlist.app.dev
 configuration:
   # Timeouts
   defaultAnimationTimeout: &defaultAnimationTimeout 5000
-  
+
   # App IDs for different environments
   appIds:
     dev: &devAppId "com.soonlist.app.dev"
     preview: &previewAppId "com.soonlist.app.preview"
-    prod: &prodAppId "com.soonlist.app" 
+    prod: &prodAppId "com.soonlist.app"

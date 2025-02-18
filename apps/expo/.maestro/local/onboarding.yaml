@@ -17,4 +17,3 @@ onFlowStart:
 
 - runFlow:
     file: "../flows/onboarding.yaml"
-    

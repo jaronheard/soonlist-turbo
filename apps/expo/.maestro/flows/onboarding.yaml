@@ -3,7 +3,7 @@ name: Onboarding Flow
 ---
 - assertVisible: Turn on Push Notifications to capture and remember.
 - tapOn: "Allow"
-- assertVisible: "How old are you?"    
+- assertVisible: "How old are you?"
 - tapOn: "25-34"
 - assertVisible: "Where did you hear about us?"
 - tapOn: "TikTok"
