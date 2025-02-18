@@ -25,6 +25,7 @@ export function useInitializeInput({
     setActiveInput,
     setIsOptionSelected,
     hasMediaPermission,
+    activeInput,
   } = useAppStore();
 
   const handleImagePreview = useCallback(
@@ -126,6 +127,23 @@ export function useInitializeInput({
     setLinkPreview,
     hasMediaPermission,
     initialized,
+  ]);
+
+  // Add a new effect to handle recentPhotos changes
+  useEffect(() => {
+    if (!initialized) return;
+    if (activeInput === "upload" && hasMediaPermission) {
+      const mostRecentPhoto = recentPhotos[0];
+      if (mostRecentPhoto?.uri) {
+        void handleImagePreview(mostRecentPhoto.uri);
+      }
+    }
+  }, [
+    recentPhotos,
+    activeInput,
+    hasMediaPermission,
+    initialized,
+    handleImagePreview,
   ]);
 
   return { initialized };
