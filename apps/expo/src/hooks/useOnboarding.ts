@@ -36,11 +36,8 @@ export function useOnboarding() {
     const completedAt = new Date();
     setHasCompletedOnboarding(true);
 
-    // Save both the onboarding data and completion timestamp
+    // setOnboardingCompletedAt also saves it in onboardingData
     await Promise.all([
-      saveOnboardingData({
-        completedAt,
-      }),
       setOnboardingCompletedAt({
         completedAt,
       }),
@@ -50,13 +47,7 @@ export function useOnboarding() {
       userId: user?.id,
       completedAt,
     });
-  }, [
-    posthog,
-    saveOnboardingData,
-    setOnboardingCompletedAt,
-    user?.id,
-    setHasCompletedOnboarding,
-  ]);
+  }, [posthog, setOnboardingCompletedAt, user?.id, setHasCompletedOnboarding]);
 
   const saveStep = useCallback(
     <T extends keyof OnboardingData>(

@@ -1,30 +1,39 @@
-import { Redirect } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
+import { Redirect, useLocalSearchParams } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
 
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 
 export default function OnboardingIndex() {
   const { hasCompletedOnboarding, setHasCompletedOnboarding } = useAppStore();
+  const { user: clerkUser, isLoaded } = useUser();
+  const searchParams = useLocalSearchParams();
 
-  // Get onboarding data to check if they've completed onboarding before
-  const { data: onboardingData, isLoading } =
-    api.user.getOnboardingData.useQuery();
+  // Get user data from our database
+  const { data: user, isLoading: isLoadingUser } = api.user.getById.useQuery(
+    { id: clerkUser?.id ?? "" },
+    { enabled: !!clerkUser?.id },
+  );
 
-  // If we're still loading, don't redirect yet
-  if (isLoading) {
-    return null;
+  // If we're still loading, show a spinner
+  if (!isLoaded || isLoadingUser) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (searchParams.demo) {
+    return <Redirect href="/onboarding/demo-intro" />;
   }
 
   // If they've completed onboarding before (either in DB or local state), go to feed
-  if (onboardingData?.completedAt || hasCompletedOnboarding) {
+  if (user?.onboardingCompletedAt || hasCompletedOnboarding) {
     // Make sure local state is in sync
     setHasCompletedOnboarding(true);
     return <Redirect href="/feed" />;
-  }
-
-  // If they've completed onboarding before, skip directly to demo
-  if (hasCompletedOnboarding) {
-    return <Redirect href="/onboarding/demo-intro" />;
   }
 
   // Otherwise, start from the beginning

@@ -30,7 +30,6 @@ const onboardingDataSchema = z.object({
   discoveryMethod: z.string().optional(),
   screenshotEvents: z.string().optional(),
   priority: prioritySchema.optional(),
-  completedAt: z.date().optional(),
 });
 
 export const userRouter = createTRPCRouter({

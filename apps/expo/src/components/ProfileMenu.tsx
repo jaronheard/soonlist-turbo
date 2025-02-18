@@ -27,7 +27,7 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
   const signOut = useSignOut();
 
   const showOnboarding = () => {
-    router.push("/onboarding");
+    router.push("/onboarding?demo=true");
   };
 
   const handleEditProfile = () => {
