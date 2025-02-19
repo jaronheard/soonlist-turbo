@@ -14,23 +14,47 @@ export function useMediaLibrary() {
 
   // Reusable function to load the most recent photos
   const loadRecentPhotos = useCallback(async () => {
+    const startTime = Date.now();
+    console.log("[loadRecentPhotos] Starting to load recent photos");
     try {
+      console.log("[loadRecentPhotos] Getting assets");
       const { assets } = await MediaLibrary.getAssetsAsync({
         first: 15,
         sortBy: MediaLibrary.SortBy.creationTime,
         mediaType: [MediaLibrary.MediaType.photo],
+        // createdAfter: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
       });
+      const assetsTime = Date.now();
+      console.log(
+        `[loadRecentPhotos] Got assets in ${assetsTime - startTime}ms`,
+      );
+
       const photos = assets.map((asset) => ({
         id: asset.id,
         uri: asset.uri,
       }));
+      const photosTime = Date.now();
+      console.log(
+        `[loadRecentPhotos] Got photos in ${photosTime - assetsTime}ms`,
+      );
 
       // Prefetch all photos in parallel
       await Promise.all(photos.map((photo) => Image.prefetch(photo.uri)));
-
+      const prefetchTime = Date.now();
+      console.log(
+        `[loadRecentPhotos] Prefetched photos in ${prefetchTime - photosTime}ms`,
+      );
       setRecentPhotos(photos);
+      const totalTime = Date.now() - startTime;
+      console.log(
+        `[loadRecentPhotos] Finished loading ${photos.length} photos in ${totalTime}ms total`,
+      );
     } catch (error) {
-      console.error("Error loading recent photos:", error);
+      const duration = Date.now() - startTime;
+      console.error(
+        `[loadRecentPhotos] Error loading recent photos after ${duration}ms total:`,
+        error,
+      );
     }
   }, [setRecentPhotos]);
 

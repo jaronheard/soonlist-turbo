@@ -248,7 +248,7 @@ function RootLayoutContent() {
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
-  useIntentHandler();
+  // useIntentHandler();
 
   return (
     <View style={{ flex: 1 }}>
