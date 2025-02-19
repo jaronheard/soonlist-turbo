@@ -1,90 +1,71 @@
-import { useCallback, useEffect } from "react";
 import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
-import { useFocusEffect } from "expo-router";
 
 import { useAppStore } from "~/store";
 
-export function useMediaLibrary() {
-  const {
-    setRecentPhotos,
-    shouldRefreshMediaLibrary,
-    setShouldRefreshMediaLibrary,
-  } = useAppStore();
+export async function fetchRecentPhotos() {
+  const startTime = Date.now();
+  console.log("[fetchRecentPhotos] Starting to load recent photos");
+  try {
+    // First check permissions
+    const { status, accessPrivileges } =
+      await MediaLibrary.getPermissionsAsync();
+    const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+    const hasFullAccess = accessPrivileges === "all";
 
-  // Reusable function to load the most recent photos
-  const loadRecentPhotos = useCallback(async () => {
-    try {
-      const { assets } = await MediaLibrary.getAssetsAsync({
-        first: 15,
-        sortBy: MediaLibrary.SortBy.creationTime,
-        mediaType: [MediaLibrary.MediaType.photo],
-      });
-      const photos = assets.map((asset) => ({
-        id: asset.id,
-        uri: asset.uri,
-      }));
+    // Update permission state
+    useAppStore.setState({
+      hasMediaPermission: isGranted,
+      hasFullPhotoAccess: hasFullAccess,
+    });
 
-      // Prefetch all photos in parallel
-      await Promise.all(photos.map((photo) => Image.prefetch(photo.uri)));
-
-      setRecentPhotos(photos);
-    } catch (error) {
-      console.error("Error loading recent photos:", error);
+    if (!isGranted) {
+      console.log("[fetchRecentPhotos] No permission to access media library");
+      return null;
     }
-  }, [setRecentPhotos]);
 
-  // Use focus effect to check permissions and add a subscription listener
-  useFocusEffect(
-    useCallback(() => {
-      let subscription: MediaLibrary.Subscription | undefined;
+    console.log("[fetchRecentPhotos] Getting assets");
+    const { assets } = await MediaLibrary.getAssetsAsync({
+      first: 15,
+      sortBy: MediaLibrary.SortBy.creationTime,
+      mediaType: [MediaLibrary.MediaType.photo],
+    });
+    const assetsTime = Date.now();
+    console.log(
+      `[fetchRecentPhotos] Got assets in ${assetsTime - startTime}ms`,
+    );
 
-      async function checkPermissionsAndLoadPhotos() {
-        const { status, accessPrivileges } =
-          await MediaLibrary.getPermissionsAsync();
-        const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
-        const hasFullAccess = accessPrivileges === "all";
+    const photos = assets.map((asset) => ({
+      id: asset.id,
+      uri: asset.uri,
+    }));
+    const photosTime = Date.now();
+    console.log(
+      `[fetchRecentPhotos] Got photos in ${photosTime - assetsTime}ms`,
+    );
 
-        useAppStore.setState({
-          hasMediaPermission: isGranted,
-          hasFullPhotoAccess: hasFullAccess,
-        });
+    // Prefetch all photos in parallel
+    await Promise.all(photos.map((photo) => Image.prefetch(photo.uri)));
+    const prefetchTime = Date.now();
+    console.log(
+      `[fetchRecentPhotos] Prefetched photos in ${prefetchTime - photosTime}ms`,
+    );
 
-        if (isGranted) {
-          try {
-            await loadRecentPhotos();
+    // Save in store
+    useAppStore.setState({ recentPhotos: photos });
 
-            // Listen for changes in the photo library
-            subscription = MediaLibrary.addListener(() => {
-              useAppStore.setState({ shouldRefreshMediaLibrary: true });
-            });
-          } catch (error) {
-            console.error("Error loading recent photos:", error);
-          }
-        }
-      }
+    const totalTime = Date.now() - startTime;
+    console.log(
+      `[fetchRecentPhotos] Finished loading ${photos.length} photos in ${totalTime}ms total`,
+    );
 
-      void checkPermissionsAndLoadPhotos();
-
-      return () => {
-        if (subscription) {
-          subscription.remove();
-        }
-      };
-    }, [loadRecentPhotos]),
-  );
-
-  // Whenever shouldRefreshMediaLibrary is set, load photos and reset the flag
-  useEffect(() => {
-    if (shouldRefreshMediaLibrary) {
-      void loadRecentPhotos();
-      setShouldRefreshMediaLibrary(false);
-    }
-  }, [
-    shouldRefreshMediaLibrary,
-    setShouldRefreshMediaLibrary,
-    loadRecentPhotos,
-  ]);
-
-  return { loadRecentPhotos };
+    return photos;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(
+      `[fetchRecentPhotos] Error loading recent photos after ${duration}ms total:`,
+      error,
+    );
+    return null;
+  }
 }

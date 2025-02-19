@@ -10,12 +10,14 @@ interface UseInitializeInputParams {
   text?: string;
   imageUri?: string;
   recentPhotos: RecentPhoto[];
+  route: "add" | "new";
 }
 
 export function useInitializeInput({
   text,
   imageUri,
   recentPhotos,
+  route,
 }: UseInitializeInputParams) {
   const [initialized, setInitialized] = useState(false);
   const {
@@ -25,90 +27,102 @@ export function useInitializeInput({
     setActiveInput,
     setIsOptionSelected,
     hasMediaPermission,
-    activeInput,
   } = useAppStore();
 
   const handleImagePreview = useCallback(
     (uri: string | ImageSource) => {
       if (typeof uri === "string") {
-        setImagePreview(uri);
-        setInput(uri.split("/").pop() || "");
+        setImagePreview(uri, route);
+        setInput(uri.split("/").pop() || "", route);
       } else if (typeof uri === "number") {
         // Handle ImageRequireSource (local image require)
-        setImagePreview(String(uri));
-        setInput(`local_image_${uri}`);
+        setImagePreview(String(uri), route);
+        setInput(`local_image_${uri}`, route);
       } else {
         // Handle RemoteImageSource
-        setImagePreview(uri.uri);
-        setInput(uri.uri.split("/").pop() || "");
+        setImagePreview(uri.uri, route);
+        setInput(uri.uri.split("/").pop() || "", route);
       }
     },
-    [setImagePreview, setInput],
+    [setImagePreview, setInput, route],
   );
 
   const handleLinkPreview = useCallback(
     (url: string) => {
-      setLinkPreview(url);
-      setInput(url);
+      setLinkPreview(url, route);
+      setInput(url, route);
     },
-    [setLinkPreview, setInput],
+    [setLinkPreview, setInput, route],
   );
 
   const handleTextChange = useCallback(
     (text: string) => {
-      setInput(text);
+      setInput(text, route);
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       const urls = text.match(urlRegex);
       if (urls && urls.length > 0) {
         handleLinkPreview(urls[0]);
       } else {
-        setLinkPreview(null);
+        setLinkPreview(null, route);
       }
     },
-    [handleLinkPreview, setInput, setLinkPreview],
+    [handleLinkPreview, setInput, setLinkPreview, route],
   );
 
   useEffect(() => {
     if (initialized) return;
 
-    setInput("");
-    setImagePreview(null);
-    setLinkPreview(null);
+    setInput("", route);
+    setImagePreview(null, route);
+    setLinkPreview(null, route);
 
     if (text) {
       handleTextChange(text);
-      setActiveInput("describe");
-      setIsOptionSelected(true);
+      if (route === "add") {
+        setActiveInput("describe");
+        setIsOptionSelected(true);
+      }
     } else if (imageUri) {
       if (VALID_IMAGE_REGEX.test(imageUri)) {
         const [uri, width, height] = imageUri.split("|");
         if (uri) {
           if (uri.startsWith("http")) {
             handleLinkPreview(uri);
-            setActiveInput("url");
+            if (route === "add") {
+              setActiveInput("url");
+            }
           } else {
             void handleImagePreview(uri);
-            setActiveInput("upload");
+            if (route === "add") {
+              setActiveInput("upload");
+            }
           }
         }
-        setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`);
-        setIsOptionSelected(true);
+        setInput(`Image: ${width ?? "unknown"}x${height ?? "unknown"}`, route);
+        if (route === "add") {
+          setIsOptionSelected(true);
+        }
       } else {
         console.warn("Invalid image URI format:", imageUri);
-        setActiveInput("describe");
-        setIsOptionSelected(false);
+        if (route === "add") {
+          setActiveInput("describe");
+          setIsOptionSelected(false);
+        }
       }
     } else {
       if (hasMediaPermission) {
-        setActiveInput("upload");
-        setIsOptionSelected(true);
-        const mostRecentPhoto = recentPhotos[0];
-        if (mostRecentPhoto?.uri) {
-          void handleImagePreview(mostRecentPhoto.uri);
+        if (route === "add") {
+          setActiveInput("upload");
+          setIsOptionSelected(true);
+          const mostRecentPhoto = recentPhotos[0];
+          if (mostRecentPhoto?.uri) {
+            void handleImagePreview(mostRecentPhoto.uri);
+          }
         }
       } else {
-        // setActiveInput("describe");
-        setIsOptionSelected(false);
+        if (route === "add") {
+          setIsOptionSelected(false);
+        }
       }
     }
 
@@ -127,24 +141,12 @@ export function useInitializeInput({
     setLinkPreview,
     hasMediaPermission,
     initialized,
+    route,
   ]);
 
-  // Add a new effect to handle recentPhotos changes
   useEffect(() => {
     if (!initialized) return;
-    if (activeInput === "upload" && hasMediaPermission) {
-      const mostRecentPhoto = recentPhotos[0];
-      if (mostRecentPhoto?.uri) {
-        void handleImagePreview(mostRecentPhoto.uri);
-      }
-    }
-  }, [
-    recentPhotos,
-    activeInput,
-    hasMediaPermission,
-    initialized,
-    handleImagePreview,
-  ]);
+  }, [initialized]);
 
   return { initialized };
 }

@@ -94,9 +94,11 @@ export function useCreateEvent() {
 
       // Image flow
       if (imageUri) {
-        try {
-          setIsImageLoading(true);
+        // Set loading state for both routes since we don't know which one is active
+        setIsImageLoading(true, "add");
+        setIsImageLoading(true, "new");
 
+        try {
           // Convert photo library URI to file URI if needed
           let fileUri = imageUri;
           if (imageUri.startsWith("ph://")) {
@@ -198,15 +200,17 @@ export function useCreateEvent() {
 
           return result.eventId;
         } catch (error) {
-          console.error("[useCreateEvent] Image upload failed:", error);
+          console.error("Error processing image:", error);
           throw error;
         } finally {
-          setIsImageLoading(false);
+          // Reset loading state for both routes
+          setIsImageLoading(false, "add");
+          setIsImageLoading(false, "new");
         }
       }
 
       // Raw text flow
-      if (rawText?.trim()) {
+      if (rawText) {
         const result = (await eventFromRaw.mutateAsync({
           rawText,
           userId,
@@ -222,12 +226,13 @@ export function useCreateEvent() {
       return undefined;
     },
     [
-      eventFromUrl,
-      setIsImageLoading,
-      eventFromImage,
-      eventFromRaw,
       hasUnlimited,
       showProPaywallIfNeeded,
+      customerInfo?.entitlements.active.unlimited,
+      eventFromUrl,
+      eventFromImage,
+      eventFromRaw,
+      setIsImageLoading,
     ],
   );
 

@@ -1,170 +1,96 @@
-import React, { useCallback } from "react";
-import { Linking, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { View } from "react-native";
 import Animated from "react-native-reanimated";
-import * as ImagePicker from "expo-image-picker";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
-import type { ImageSource } from "~/components/demoData";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";
-import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
-import { PhotoGrid } from "~/components/PhotoGrid";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInitializeInput } from "~/hooks/useInitializeInput";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
-import { useMediaLibrary } from "~/hooks/useMediaLibrary";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 
+/**
+ * This screen is specifically for share-extension usage:
+ * - It's simpler than add.tsx
+ * - No photo grid.
+ * - Takes `text` or `imageUri` from the deep link or store's `intentParams`.
+ */
+
 const OFFSET_VALUE = 32;
 
-export default function NewEventModal() {
+export default function NewShareScreen() {
   const { style: keyboardStyle } = useKeyboardHeight(OFFSET_VALUE);
   const { expoPushToken, hasNotificationPermission } = useNotification();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
-  useMediaLibrary();
+  const [activeInput, setActiveInput] = useState<string | null>(null);
 
   const {
-    input,
-    imagePreview,
-    linkPreview,
-    isImageLoading,
+    newEventState: { input, imagePreview, linkPreview, isImageLoading },
     setInput,
     setImagePreview,
     setLinkPreview,
-    resetAddEventState,
-    activeInput,
-    setIsOptionSelected,
-    setActiveInput,
-    recentPhotos,
-    hasMediaPermission,
-    hasFullPhotoAccess,
+    resetNewEventState,
   } = useAppStore();
 
+  // Grab "text" or "imageUri" from the share extension
   const { text, imageUri } = useLocalSearchParams<{
     text?: string;
     imageUri?: string;
   }>();
 
-  const finalText = text;
-  const finalImageUri = imageUri;
-
-  // 1. Initialize the input
+  /**
+   * Use same initialization logic from old new.tsx
+   */
   const { initialized } = useInitializeInput({
-    text: finalText,
-    imageUri: finalImageUri,
-    recentPhotos,
+    text,
+    imageUri,
+    recentPhotos: [], // we do not auto-fetch photos here
+    route: "new",
   });
 
-  const isFromIntent = Boolean(finalText || finalImageUri);
-
-  // Handlers
-  const handleImagePreview = useCallback(
-    (uri: string | ImageSource) => {
-      if (typeof uri === "string") {
-        setImagePreview(uri);
-        setInput(uri.split("/").pop() || "");
-      } else if (typeof uri === "number") {
-        // Handle ImageRequireSource (local image require)
-        setImagePreview(String(uri));
-        setInput(`local_image_${uri}`);
-      } else {
-        // Handle RemoteImageSource
-        setImagePreview(uri.uri);
-        setInput(uri.uri.split("/").pop() || "");
-      }
-    },
-    [setImagePreview, setInput],
-  );
-
-  const handleLinkPreview = useCallback(
-    (url: string) => {
-      setLinkPreview(url);
-      setInput(url);
-    },
-    [setLinkPreview, setInput],
-  );
-
+  /**
+   * Link detection from typed input (if user modifies text).
+   */
   const handleTextChange = useCallback(
-    (text: string) => {
-      setInput(text);
+    (newText: string) => {
+      setInput(newText, "new");
+
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const urls = text.match(urlRegex);
+      const urls = newText.match(urlRegex);
       if (urls && urls.length > 0) {
-        handleLinkPreview(urls[0]);
+        setLinkPreview(urls[0], "new");
       } else {
-        setLinkPreview(null);
+        setLinkPreview(null, "new");
       }
     },
-    [handleLinkPreview, setInput, setLinkPreview],
+    [setInput, setLinkPreview],
   );
 
-  const handleMorePhotosPress = useCallback(async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        handleImagePreview(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error("Error picking image:", error);
-      toast.error("Failed to pick image");
-    }
-  }, [handleImagePreview]);
-
-  const handleCameraCapture = useCallback(async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== ImagePicker.PermissionStatus.GRANTED) {
-      toast.error("Camera permission required", {
-        action: {
-          label: "Settings",
-          onClick: () => {
-            void Linking.openSettings();
-          },
-        },
-      });
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      const imageUri = result.assets[0].uri;
-      setInput(imageUri.split("/").pop() || "");
-      handleImagePreview(imageUri);
-    }
-  }, [handleImagePreview, setInput]);
-
+  /**
+   * Clear the preview state
+   */
   const handleClearPreview = useCallback(() => {
-    setImagePreview(null);
-    setLinkPreview(null);
-    setInput("");
-    setIsOptionSelected(false);
-    resetAddEventState();
-  }, [
-    setImagePreview,
-    setLinkPreview,
-    setInput,
-    setIsOptionSelected,
-    resetAddEventState,
-  ]);
+    setImagePreview(null, "new");
+    setLinkPreview(null, "new");
+    setInput("", "new");
+    resetNewEventState();
+  }, [setImagePreview, setLinkPreview, setInput, resetNewEventState]);
 
+  /**
+   * Actually create the event
+   */
   const handleCreateEvent = async () => {
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username) return;
 
-    router.canGoBack() ? router.back() : router.navigate("/feed");
-
+    // Immediately navigate away
+    router.canGoBack() ? router.back() : router.push("/feed");
     toast.info("Processing details. Add another?", {
       duration: 5000,
     });
@@ -194,25 +120,16 @@ export default function NewEventModal() {
       console.error("Error creating event:", error);
       toast.error("Failed to create event. Please try again.");
     } finally {
-      resetAddEventState();
+      resetNewEventState();
     }
   };
 
-  const handleDescribePress = useCallback(() => {
-    if (activeInput === "describe") {
-      handleClearPreview();
-      setActiveInput("upload");
-      setIsOptionSelected(true);
-    } else {
-      handleClearPreview();
+  // Set activeInput to "describe" when text is passed
+  useEffect(() => {
+    if (text) {
       setActiveInput("describe");
-      setIsOptionSelected(true);
     }
-  }, [handleClearPreview, setActiveInput, setIsOptionSelected, activeInput]);
-
-  const handleClearText = useCallback(() => {
-    setInput("");
-  }, [setInput]);
+  }, [text]);
 
   if (!initialized) {
     return null;
@@ -220,9 +137,6 @@ export default function NewEventModal() {
 
   return (
     <View className="h-full flex-1 bg-[#5A32FB]">
-      {/* Wrap everything in a "card" that has rounded top corners, 
-            hiding anything behind it so no black gap appears */}
-      {/* Screen header */}
       <Stack.Screen
         options={{
           title: "",
@@ -234,69 +148,34 @@ export default function NewEventModal() {
           headerTitle: () => (
             <NewEventHeader
               containerClassName="mt-2"
-              isFromIntent={isFromIntent}
+              isFromIntent={true}
               linkPreview={linkPreview}
               imagePreview={imagePreview}
               activeInput={activeInput}
-              handleDescribePress={handleDescribePress}
+              handleDescribePress={() => setActiveInput("describe")}
             />
           ),
         }}
       />
 
       <View className="h-full flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
-        <View className="flex-1">
-          {!hasMediaPermission &&
-          !isFromIntent &&
-          activeInput !== "describe" ? (
-            <PhotoAccessPrompt />
-          ) : (
-            <View className="flex-1">
-              {/* Event preview at top */}
-              <View className="px-4 pt-2">
-                <EventPreview
-                  containerClassName="rounded-xl overflow-hidden"
-                  imagePreview={imagePreview}
-                  linkPreview={linkPreview}
-                  input={input}
-                  handleTextChange={handleTextChange}
-                  clearPreview={handleClearPreview}
-                  clearText={handleClearText}
-                  activeInput={activeInput}
-                  isImageLoading={isImageLoading}
-                  handleMorePhotos={handleMorePhotosPress}
-                  previewContainerStyle={
-                    activeInput === "describe"
-                      ? "compact"
-                      : isFromIntent
-                        ? "full"
-                        : "square"
-                  }
-                />
-              </View>
-
-              {/* Photo grid below preview (only if not describing) */}
-              {!isFromIntent && activeInput !== "describe" && (
-                <View className="h-full flex-1 px-4">
-                  <PhotoGrid
-                    hasMediaPermission={hasMediaPermission}
-                    hasFullPhotoAccess={hasFullPhotoAccess}
-                    recentPhotos={recentPhotos}
-                    onPhotoSelect={(uri: string | ImageSource) =>
-                      handleImagePreview(uri)
-                    }
-                    onCameraPress={() => void handleCameraCapture()}
-                    onMorePhotos={() => void handleMorePhotosPress()}
-                    selectedUri={imagePreview}
-                  />
-                </View>
-              )}
-            </View>
-          )}
+        <View className="flex-1 px-4 pt-2">
+          <EventPreview
+            containerClassName="rounded-xl overflow-hidden"
+            imagePreview={imagePreview}
+            linkPreview={linkPreview}
+            input={input}
+            handleTextChange={handleTextChange}
+            clearPreview={handleClearPreview}
+            clearText={() => setInput("", "new")}
+            activeInput={activeInput}
+            isImageLoading={isImageLoading}
+            handleMorePhotos={() => null}
+            previewContainerStyle="full"
+          />
         </View>
 
-        {/* The capture button sits at the bottom, with optional animated margin 
-              so it can float above the keyboard smoothly. */}
+        {/* Capture button at bottom */}
         <Animated.View className="px-4" style={keyboardStyle}>
           <CaptureEventButton
             handleCreateEvent={handleCreateEvent}
