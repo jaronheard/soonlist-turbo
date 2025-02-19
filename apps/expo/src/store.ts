@@ -9,7 +9,7 @@ import type { RouterOutputs } from "~/utils/api";
 
 export interface RecentPhoto {
   id: string;
-  uri: string | ImageSource;
+  uri: string;
 }
 
 // Common event input state shared between add and new routes
@@ -60,7 +60,6 @@ interface AppState {
   setUploadedImageUrl: (url: string | null, route: "add" | "new") => void;
   resetAddEventState: () => void;
   resetNewEventState: () => void;
-  resetEventStateOnNewSelection: (route: "add" | "new") => void;
 
   // Add-specific actions
   setIsOptionSelected: (isSelected: boolean) => void;
@@ -94,17 +93,6 @@ interface AppState {
   setRecentPhotos: (photos: RecentPhoto[]) => void;
   setHasMediaPermission: (hasPermission: boolean) => void;
 
-  shouldRefreshMediaLibrary: boolean;
-  setShouldRefreshMediaLibrary: (value: boolean) => void;
-
-  // Add these new state properties
-  isLoadingPhotos: boolean;
-  photoLoadingError: string | null;
-
-  // Add explicit types for these actions
-  setIsLoadingPhotos: (isLoading: boolean) => void;
-  setPhotoLoadingError: (error: string | null) => void;
-
   // User priority
   userPriority: string | null;
   setUserPriority: (priority: string) => void;
@@ -123,8 +111,6 @@ export const useAppStore = create<AppState>()(
       intentParams: null,
       isCalendarModalVisible: false,
       showAllCalendars: false,
-      isLoadingPhotos: false,
-      photoLoadingError: null,
       userPriority: null,
 
       setFilter: (filter) => set({ filter }),
@@ -234,19 +220,6 @@ export const useAppStore = create<AppState>()(
             uploadedImageUrl: null,
           },
         }),
-      resetEventStateOnNewSelection: (route) =>
-        set((state: AppState) => ({
-          [route === "add" ? "addEventState" : "newEventState"]: {
-            ...(route === "add" ? state.addEventState : state.newEventState),
-            input: "",
-            imagePreview: null,
-            linkPreview: null,
-            isPublic: false,
-            isImageLoading: false,
-            isImageUploading: false,
-            uploadedImageUrl: null,
-          },
-        })),
 
       // Add-specific actions
       setIsOptionSelected: (isSelected) =>
@@ -276,10 +249,42 @@ export const useAppStore = create<AppState>()(
         set({ availableCalendars: calendars }),
       setSelectedEvent: (event) => set({ selectedEvent: event }),
       setCalendarUsage: (usage) => set({ calendarUsage: usage }),
+      clearCalendarData: () =>
+        set({
+          defaultCalendarId: null,
+          availableCalendars: [],
+          selectedEvent: null,
+          calendarUsage: {},
+        }),
 
+      // Media-related state
+      recentPhotos: [],
+      hasMediaPermission: false,
+      hasFullPhotoAccess: false,
+
+      // Media-related actions
+      setRecentPhotos: (photos) => set({ recentPhotos: photos }),
+      setHasMediaPermission: (hasPermission) =>
+        set({ hasMediaPermission: hasPermission }),
+
+      // User priority
+      setUserPriority: (priority) => set({ userPriority: priority }),
+
+      // Onboarding state
       hasCompletedOnboarding: false,
+      onboardingData: {},
+      currentOnboardingStep: null,
+
+      // Onboarding actions
       setHasCompletedOnboarding: (status) =>
         set({ hasCompletedOnboarding: status }),
+      setOnboardingData: (data) =>
+        set((state) => ({
+          onboardingData: { ...state.onboardingData, ...data },
+        })),
+      setCurrentOnboardingStep: (step) => set({ currentOnboardingStep: step }),
+
+      // Global reset
       resetStore: () =>
         set({
           filter: "upcoming",
@@ -310,59 +315,13 @@ export const useAppStore = create<AppState>()(
           availableCalendars: [],
           selectedEvent: null,
           calendarUsage: {},
-          hasCompletedOnboarding: false,
           recentPhotos: [],
           hasMediaPermission: false,
-          shouldRefreshMediaLibrary: false,
-          isLoadingPhotos: false,
-          photoLoadingError: null,
+          hasFullPhotoAccess: false,
           userPriority: null,
           onboardingData: {},
           currentOnboardingStep: null,
         }),
-      clearCalendarData: () =>
-        set({
-          defaultCalendarId: null,
-          calendarUsage: {},
-        }),
-
-      // Media-related state & actions
-      recentPhotos: [],
-      hasMediaPermission: false,
-      hasFullPhotoAccess: false,
-      setRecentPhotos: (photos) =>
-        set((state) => {
-          // Only update if the photos are different
-          if (JSON.stringify(state.recentPhotos) === JSON.stringify(photos)) {
-            return state;
-          }
-          return { recentPhotos: photos };
-        }),
-      setHasMediaPermission: (hasPermission) =>
-        set({ hasMediaPermission: hasPermission }),
-
-      shouldRefreshMediaLibrary: false,
-      setShouldRefreshMediaLibrary: (value) =>
-        set({ shouldRefreshMediaLibrary: value }),
-
-      // Add these new actions
-      setIsLoadingPhotos: (isLoading) => set({ isLoadingPhotos: isLoading }),
-      setPhotoLoadingError: (error) => set({ photoLoadingError: error }),
-
-      // User priority
-      setUserPriority: (priority) => set({ userPriority: priority }),
-
-      // Onboarding state
-      onboardingData: {},
-      setOnboardingData: (data) =>
-        set((state) => ({
-          onboardingData: {
-            ...state.onboardingData,
-            ...data,
-          },
-        })),
-      currentOnboardingStep: null,
-      setCurrentOnboardingStep: (step) => set({ currentOnboardingStep: step }),
     }),
     {
       name: "app-storage",
@@ -371,7 +330,7 @@ export const useAppStore = create<AppState>()(
   ),
 );
 
-// Add a new selector to optimize recentPhotos access
+// Selector hooks for commonly used state
 export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
 export const useHasMediaPermission = () =>
   useAppStore((state) => state.hasMediaPermission);

@@ -6,13 +6,14 @@ import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { Plus } from "lucide-react-native";
 
+import { fetchRecentPhotos } from "~/hooks/useMediaLibrary";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 
 export default function AddEventButton() {
-  const { hasMediaPermission, resetAddEventState } = useAppStore();
+  const { resetAddEventState, setImagePreview, setInput } = useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
-  const hasUnlimited = customerInfo?.entitlements.active.unlimited;
+  const hasUnlimited = customerInfo?.entitlements.active.unlimited ?? false;
 
   const handlePress = useCallback(async () => {
     // If user doesn't have pro, show paywall
@@ -21,34 +22,41 @@ export default function AddEventButton() {
       return;
     }
 
-    // Reset state before navigating to ensure fresh start
+    // Reset state before we begin
     resetAddEventState();
 
-    // Refresh media library before navigating
-    useAppStore.setState({ shouldRefreshMediaLibrary: true });
-
-    // If any level of permission is available, just navigate
-    if (hasMediaPermission) {
-      router.push("/add");
-      return;
-    }
-
-    // Otherwise request permissions
+    // Request permissions if needed and fetch photos
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
-      useAppStore.setState({
-        hasMediaPermission: status === MediaLibrary.PermissionStatus.GRANTED,
-      });
+      if (status !== MediaLibrary.PermissionStatus.GRANTED) {
+        // User denied permission, but we'll still navigate to /add
+        router.push("/add");
+        return;
+      }
+
+      // Permission granted, fetch photos
+      const photos = await fetchRecentPhotos();
+
+      // Auto-select first photo if available
+      if (photos && photos.length > 0) {
+        const firstUri = photos[0].uri;
+        setImagePreview(firstUri, "add");
+        const filename = firstUri.split("/").pop() || "";
+        setInput(filename, "add");
+      }
+
+      // Navigate to /add with store already set up
       router.push("/add");
     } catch (error) {
-      console.error("Error requesting media permissions:", error);
+      console.error("Error in AddEventButton:", error);
       router.push("/add");
     }
   }, [
-    hasMediaPermission,
     hasUnlimited,
     showProPaywallIfNeeded,
     resetAddEventState,
+    setImagePreview,
+    setInput,
   ]);
 
   return (
