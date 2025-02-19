@@ -10,7 +10,7 @@ import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 
 export default function AddEventButton() {
-  const { hasMediaPermission } = useAppStore();
+  const { hasMediaPermission, resetAddEventState } = useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const hasUnlimited = customerInfo?.entitlements.active.unlimited;
 
@@ -20,6 +20,9 @@ export default function AddEventButton() {
       await showProPaywallIfNeeded();
       return;
     }
+
+    // Reset state before navigating to ensure fresh start
+    resetAddEventState();
 
     // Refresh media library before navigating
     useAppStore.setState({ shouldRefreshMediaLibrary: true });
@@ -41,7 +44,12 @@ export default function AddEventButton() {
       console.error("Error requesting media permissions:", error);
       router.push("/add");
     }
-  }, [hasMediaPermission, hasUnlimited, showProPaywallIfNeeded]);
+  }, [
+    hasMediaPermission,
+    hasUnlimited,
+    showProPaywallIfNeeded,
+    resetAddEventState,
+  ]);
 
   return (
     <View className="absolute bottom-0 left-0 right-0">

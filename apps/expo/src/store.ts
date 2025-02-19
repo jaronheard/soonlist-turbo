@@ -12,6 +12,26 @@ export interface RecentPhoto {
   uri: string | ImageSource;
 }
 
+// Common event input state shared between add and new routes
+interface CommonEventInputState {
+  input: string;
+  imagePreview: string | null;
+  linkPreview: string | null;
+  isPublic: boolean;
+  isImageLoading: boolean;
+  isImageUploading: boolean;
+  uploadedImageUrl: string | null;
+}
+
+// State specific to the /add route
+interface AddEventInputState extends CommonEventInputState {
+  isOptionSelected: boolean;
+  activeInput: "camera" | "upload" | "url" | "describe" | null;
+}
+
+// State specific to the /new route (share extension)
+type NewEventInputState = CommonEventInputState;
+
 interface AppState {
   filter: "upcoming" | "past";
   intentParams: { text?: string; imageUri?: string } | null;
@@ -24,22 +44,29 @@ interface AppState {
   setIsCalendarModalVisible: (isVisible: boolean) => void;
   setShowAllCalendars: (show: boolean) => void;
   resetIntentParams: () => void;
-  input: string;
-  imagePreview: string | null;
-  linkPreview: string | null;
-  isPublic: boolean;
-  isImageLoading: boolean;
-  isImageUploading: boolean;
-  uploadedImageUrl: string | null;
-  setInput: (input: string) => void;
-  setImagePreview: (preview: string | null) => void;
-  setLinkPreview: (preview: string | null) => void;
-  setIsPublic: (isPublic: boolean) => void;
-  setIsImageLoading: (isLoading: boolean) => void;
-  setIsImageUploading: (isUploading: boolean) => void;
-  setUploadedImageUrl: (url: string | null) => void;
+
+  // Event input state for /add route
+  addEventState: AddEventInputState;
+  // Event input state for /new route (share extension)
+  newEventState: NewEventInputState;
+
+  // Event input actions
+  setInput: (input: string, route: "add" | "new") => void;
+  setImagePreview: (preview: string | null, route: "add" | "new") => void;
+  setLinkPreview: (preview: string | null, route: "add" | "new") => void;
+  setIsPublic: (isPublic: boolean, route: "add" | "new") => void;
+  setIsImageLoading: (isLoading: boolean, route: "add" | "new") => void;
+  setIsImageUploading: (isUploading: boolean, route: "add" | "new") => void;
+  setUploadedImageUrl: (url: string | null, route: "add" | "new") => void;
   resetAddEventState: () => void;
-  resetEventStateOnNewSelection: () => void;
+  resetNewEventState: () => void;
+  resetEventStateOnNewSelection: (route: "add" | "new") => void;
+
+  // Add-specific actions
+  setIsOptionSelected: (isSelected: boolean) => void;
+  setActiveInput: (
+    input: "camera" | "upload" | "url" | "describe" | null,
+  ) => void;
 
   // Calendar-related state
   defaultCalendarId: string | null;
@@ -59,14 +86,6 @@ interface AppState {
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (status: boolean) => void;
   resetStore: () => void;
-
-  // New event state & actions
-  isOptionSelected: boolean;
-  activeInput: "camera" | "upload" | "url" | "describe" | null;
-  setIsOptionSelected: (isSelected: boolean) => void;
-  setActiveInput: (
-    input: "camera" | "upload" | "url" | "describe" | null,
-  ) => void;
 
   // Media-related state & actions
   recentPhotos: RecentPhoto[];
@@ -114,44 +133,136 @@ export const useAppStore = create<AppState>()(
         set({ isCalendarModalVisible: isVisible }),
       setShowAllCalendars: (show) => set({ showAllCalendars: show }),
       resetIntentParams: () => set({ intentParams: null }),
-      input: "",
-      imagePreview: null,
-      linkPreview: null,
-      isPublic: false,
-      isImageLoading: false,
-      isImageUploading: false,
-      uploadedImageUrl: null,
-      setInput: (input) => set({ input }),
-      setImagePreview: (preview) => set({ imagePreview: preview }),
-      setLinkPreview: (preview) => set({ linkPreview: preview }),
-      setIsPublic: (isPublic) => set({ isPublic }),
-      setIsImageLoading: (isLoading) => set({ isImageLoading: isLoading }),
-      setIsImageUploading: (isUploading) =>
-        set({ isImageUploading: isUploading }),
-      setUploadedImageUrl: (url) => set({ uploadedImageUrl: url }),
+
+      // Initialize event input state for both routes
+      addEventState: {
+        input: "",
+        imagePreview: null,
+        linkPreview: null,
+        isPublic: false,
+        isImageLoading: false,
+        isImageUploading: false,
+        uploadedImageUrl: null,
+        isOptionSelected: false,
+        activeInput: null,
+      },
+      newEventState: {
+        input: "",
+        imagePreview: null,
+        linkPreview: null,
+        isPublic: false,
+        isImageLoading: false,
+        isImageUploading: false,
+        uploadedImageUrl: null,
+      },
+
+      // Event input actions
+      setInput: (input, route) =>
+        set((state) => ({
+          [route === "add" ? "addEventState" : "newEventState"]: {
+            ...(route === "add" ? state.addEventState : state.newEventState),
+            input,
+          },
+        })),
+      setImagePreview: (preview, route) =>
+        set((state) => ({
+          [route === "add" ? "addEventState" : "newEventState"]: {
+            ...(route === "add" ? state.addEventState : state.newEventState),
+            imagePreview: preview,
+          },
+        })),
+      setLinkPreview: (preview, route) =>
+        set((state) => ({
+          [route === "add" ? "addEventState" : "newEventState"]: {
+            ...(route === "add" ? state.addEventState : state.newEventState),
+            linkPreview: preview,
+          },
+        })),
+      setIsPublic: (isPublic, route) =>
+        set((state) => ({
+          [route === "add" ? "addEventState" : "newEventState"]: {
+            ...(route === "add" ? state.addEventState : state.newEventState),
+            isPublic,
+          },
+        })),
+      setIsImageLoading: (isLoading, route) =>
+        set((state) => ({
+          [route === "add" ? "addEventState" : "newEventState"]: {
+            ...(route === "add" ? state.addEventState : state.newEventState),
+            isImageLoading: isLoading,
+          },
+        })),
+      setIsImageUploading: (isUploading, route) =>
+        set((state) => ({
+          [route === "add" ? "addEventState" : "newEventState"]: {
+            ...(route === "add" ? state.addEventState : state.newEventState),
+            isImageUploading: isUploading,
+          },
+        })),
+      setUploadedImageUrl: (url, route) =>
+        set((state) => ({
+          [route === "add" ? "addEventState" : "newEventState"]: {
+            ...(route === "add" ? state.addEventState : state.newEventState),
+            uploadedImageUrl: url,
+          },
+        })),
+
+      // Reset functions
       resetAddEventState: () =>
         set({
-          input: "",
-          imagePreview: null,
-          linkPreview: null,
-          isPublic: false,
-          isImageLoading: false,
-          isImageUploading: false,
-          uploadedImageUrl: null,
-          isOptionSelected: false,
-          activeInput: null,
+          addEventState: {
+            input: "",
+            imagePreview: null,
+            linkPreview: null,
+            isPublic: false,
+            isImageLoading: false,
+            isImageUploading: false,
+            uploadedImageUrl: null,
+            isOptionSelected: false,
+            activeInput: null,
+          },
         }),
-      resetEventStateOnNewSelection: () =>
+      resetNewEventState: () =>
         set({
-          input: "",
-          imagePreview: null,
-          linkPreview: null,
-          isPublic: false,
-          isImageLoading: false,
-          isImageUploading: false,
-          uploadedImageUrl: null,
-          // Keep isOptionSelected and activeInput unchanged
+          newEventState: {
+            input: "",
+            imagePreview: null,
+            linkPreview: null,
+            isPublic: false,
+            isImageLoading: false,
+            isImageUploading: false,
+            uploadedImageUrl: null,
+          },
         }),
+      resetEventStateOnNewSelection: (route) =>
+        set((state: AppState) => ({
+          [route === "add" ? "addEventState" : "newEventState"]: {
+            ...(route === "add" ? state.addEventState : state.newEventState),
+            input: "",
+            imagePreview: null,
+            linkPreview: null,
+            isPublic: false,
+            isImageLoading: false,
+            isImageUploading: false,
+            uploadedImageUrl: null,
+          },
+        })),
+
+      // Add-specific actions
+      setIsOptionSelected: (isSelected) =>
+        set((state) => ({
+          addEventState: {
+            ...state.addEventState,
+            isOptionSelected: isSelected,
+          },
+        })),
+      setActiveInput: (input) =>
+        set((state) => ({
+          addEventState: {
+            ...state.addEventState,
+            activeInput: input,
+          },
+        })),
 
       // Calendar-related state
       defaultCalendarId: null,
@@ -175,20 +286,31 @@ export const useAppStore = create<AppState>()(
           intentParams: null,
           isCalendarModalVisible: false,
           showAllCalendars: false,
-          input: "",
-          imagePreview: null,
-          linkPreview: null,
-          isPublic: false,
-          isImageLoading: false,
-          isImageUploading: false,
-          uploadedImageUrl: null,
+          addEventState: {
+            input: "",
+            imagePreview: null,
+            linkPreview: null,
+            isPublic: false,
+            isImageLoading: false,
+            isImageUploading: false,
+            uploadedImageUrl: null,
+            isOptionSelected: false,
+            activeInput: null,
+          },
+          newEventState: {
+            input: "",
+            imagePreview: null,
+            linkPreview: null,
+            isPublic: false,
+            isImageLoading: false,
+            isImageUploading: false,
+            uploadedImageUrl: null,
+          },
           defaultCalendarId: null,
           availableCalendars: [],
           selectedEvent: null,
           calendarUsage: {},
           hasCompletedOnboarding: false,
-          isOptionSelected: false,
-          activeInput: null,
           recentPhotos: [],
           hasMediaPermission: false,
           shouldRefreshMediaLibrary: false,
@@ -203,13 +325,6 @@ export const useAppStore = create<AppState>()(
           defaultCalendarId: null,
           calendarUsage: {},
         }),
-
-      // New event state & actions
-      isOptionSelected: false,
-      activeInput: null,
-      setIsOptionSelected: (isSelected) =>
-        set({ isOptionSelected: isSelected }),
-      setActiveInput: (input) => set({ activeInput: input }),
 
       // Media-related state & actions
       recentPhotos: [],

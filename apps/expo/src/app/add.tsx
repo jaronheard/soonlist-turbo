@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Linking, View } from "react-native";
 import Animated from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
@@ -32,21 +32,30 @@ export default function AddEventModal() {
 
   // All store-based states and actions
   const {
-    input,
-    imagePreview,
-    linkPreview,
-    isImageLoading,
+    addEventState: {
+      input,
+      imagePreview,
+      linkPreview,
+      isImageLoading,
+      activeInput,
+    },
     setInput,
     setImagePreview,
     setLinkPreview,
     resetAddEventState,
-    activeInput,
     setIsOptionSelected,
     setActiveInput,
     recentPhotos,
     hasMediaPermission,
     hasFullPhotoAccess,
   } = useAppStore();
+
+  // Reset state when modal is closed
+  useEffect(() => {
+    return () => {
+      resetAddEventState();
+    };
+  }, [resetAddEventState]);
 
   // Refresh media library on mount
   useMediaLibrary();
@@ -56,14 +65,14 @@ export default function AddEventModal() {
    */
   const handleTextChange = useCallback(
     (text: string) => {
-      setInput(text);
+      setInput(text, "add");
 
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       const urls = text.match(urlRegex);
       if (urls && urls.length > 0) {
-        setLinkPreview(urls[0]);
+        setLinkPreview(urls[0], "add");
       } else {
-        setLinkPreview(null);
+        setLinkPreview(null, "add");
       }
     },
     [setInput, setLinkPreview],
@@ -74,8 +83,8 @@ export default function AddEventModal() {
    */
   const handleImagePreview = useCallback(
     (uri: string) => {
-      setImagePreview(uri);
-      setInput(uri.split("/").pop() || "");
+      setImagePreview(uri, "add");
+      setInput(uri.split("/").pop() || "", "add");
     },
     [setImagePreview, setInput],
   );
@@ -123,27 +132,27 @@ export default function AddEventModal() {
 
     if (!result.canceled && result.assets[0]) {
       const imageUri = result.assets[0].uri;
-      setInput(imageUri.split("/").pop() || "");
-      setImagePreview(imageUri);
+      setInput(imageUri.split("/").pop() || "", "add");
+      setImagePreview(imageUri, "add");
     }
   }, [setImagePreview, setInput]);
 
   /**
-   * Clear preview if user wants a fresh start
+   * Clear the preview state
    */
   const handleClearPreview = useCallback(() => {
-    setImagePreview(null);
-    setLinkPreview(null);
-    setInput("");
-    setIsOptionSelected(false);
+    setImagePreview(null, "add");
+    setLinkPreview(null, "add");
+    setInput("", "add");
     resetAddEventState();
-  }, [
-    setImagePreview,
-    setLinkPreview,
-    setInput,
-    setIsOptionSelected,
-    resetAddEventState,
-  ]);
+  }, [setImagePreview, setLinkPreview, setInput, resetAddEventState]);
+
+  /**
+   * Clear text in the preview
+   */
+  const handleClearText = useCallback(() => {
+    setInput("", "add");
+  }, [setInput]);
 
   /**
    * Actually create the event
@@ -200,13 +209,6 @@ export default function AddEventModal() {
       setIsOptionSelected(true);
     }
   }, [activeInput, handleClearPreview, setActiveInput, setIsOptionSelected]);
-
-  /**
-   * Clear text in the preview
-   */
-  const handleClearText = useCallback(() => {
-    setInput("");
-  }, [setInput]);
 
   return (
     <View className="h-full flex-1 bg-[#5A32FB]">

@@ -7,6 +7,7 @@ import { toast } from "sonner-native";
 
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
+import { NewEventHeader } from "~/components/NewEventHeader";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInitializeInput } from "~/hooks/useInitializeInput";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
@@ -29,14 +30,11 @@ export default function NewShareScreen() {
   const { createEvent } = useCreateEvent();
 
   const {
-    input,
-    imagePreview,
-    linkPreview,
-    isImageLoading,
+    newEventState: { input, imagePreview, linkPreview, isImageLoading },
     setInput,
     setImagePreview,
     setLinkPreview,
-    resetAddEventState,
+    resetNewEventState,
   } = useAppStore();
 
   // Grab "text" or "imageUri" from the share extension
@@ -52,6 +50,7 @@ export default function NewShareScreen() {
     text,
     imageUri,
     recentPhotos: [], // we do not auto-fetch photos here
+    route: "new",
   });
 
   /**
@@ -59,14 +58,14 @@ export default function NewShareScreen() {
    */
   const handleTextChange = useCallback(
     (newText: string) => {
-      setInput(newText);
+      setInput(newText, "new");
 
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       const urls = newText.match(urlRegex);
       if (urls && urls.length > 0) {
-        setLinkPreview(urls[0]);
+        setLinkPreview(urls[0], "new");
       } else {
-        setLinkPreview(null);
+        setLinkPreview(null, "new");
       }
     },
     [setInput, setLinkPreview],
@@ -76,11 +75,11 @@ export default function NewShareScreen() {
    * Clear the preview state
    */
   const handleClearPreview = useCallback(() => {
-    setImagePreview(null);
-    setLinkPreview(null);
-    setInput("");
-    resetAddEventState();
-  }, [setImagePreview, setLinkPreview, setInput, resetAddEventState]);
+    setImagePreview(null, "new");
+    setLinkPreview(null, "new");
+    setInput("", "new");
+    resetNewEventState();
+  }, [setImagePreview, setLinkPreview, setInput, resetNewEventState]);
 
   /**
    * Actually create the event
@@ -120,7 +119,7 @@ export default function NewShareScreen() {
       console.error("Error creating event:", error);
       toast.error("Failed to create event. Please try again.");
     } finally {
-      resetAddEventState();
+      resetNewEventState();
     }
   };
 
@@ -146,7 +145,16 @@ export default function NewShareScreen() {
           headerStyle: { backgroundColor: "#5A32FB" },
           headerTintColor: "#fff",
           contentStyle: { backgroundColor: "#5A32FB" },
-          headerTitle: "Share Extension",
+          headerTitle: () => (
+            <NewEventHeader
+              containerClassName="mt-2"
+              isFromIntent={true}
+              linkPreview={linkPreview}
+              imagePreview={imagePreview}
+              activeInput={null}
+              handleDescribePress={() => null}
+            />
+          ),
         }}
       />
 
@@ -159,7 +167,7 @@ export default function NewShareScreen() {
             input={input}
             handleTextChange={handleTextChange}
             clearPreview={handleClearPreview}
-            clearText={() => setInput("")}
+            clearText={() => setInput("", "new")}
             activeInput={null} // Not using advanced input states here
             isImageLoading={isImageLoading}
             handleMorePhotos={() => null} // share extension does not show a grid
