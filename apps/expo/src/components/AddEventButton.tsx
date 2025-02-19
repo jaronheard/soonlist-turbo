@@ -21,25 +21,25 @@ export default function AddEventButton() {
       return;
     }
 
-    // Trigger a media library refresh before navigating
+    // Refresh media library before navigating
     useAppStore.setState({ shouldRefreshMediaLibrary: true });
 
-    // If we already have any level of permission (full or partial), just navigate
+    // If any level of permission is available, just navigate
     if (hasMediaPermission) {
-      router.push("/new");
+      router.push("/add");
       return;
     }
 
-    // Only request permissions if we don't have any access yet
+    // Otherwise request permissions
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
       useAppStore.setState({
         hasMediaPermission: status === MediaLibrary.PermissionStatus.GRANTED,
       });
-      router.push("/new");
+      router.push("/add");
     } catch (error) {
       console.error("Error requesting media permissions:", error);
-      router.push("/new");
+      router.push("/add");
     }
   }, [hasMediaPermission, hasUnlimited, showProPaywallIfNeeded]);
 
