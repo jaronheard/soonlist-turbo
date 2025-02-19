@@ -3,7 +3,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import type { ImageSource } from "~/components/demoData";
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import type { RouterOutputs } from "~/utils/api";
 

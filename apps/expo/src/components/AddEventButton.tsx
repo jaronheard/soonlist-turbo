@@ -38,7 +38,7 @@ export default function AddEventButton() {
       const photos = await fetchRecentPhotos();
 
       // Auto-select first photo if available
-      if (photos && photos.length > 0) {
+      if (photos?.[0]?.uri) {
         const firstUri = photos[0].uri;
         setImagePreview(firstUri, "add");
         const filename = firstUri.split("/").pop() || "";
