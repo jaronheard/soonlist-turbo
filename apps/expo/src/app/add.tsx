@@ -1,5 +1,5 @@
 // src/app/add.tsx
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { Linking, View } from "react-native";
 import Animated from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
@@ -26,7 +26,6 @@ export default function AddEventModal() {
   const { expoPushToken, hasNotificationPermission } = useNotification();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
-
   const {
     addEventState,
     setInput,
@@ -38,12 +37,14 @@ export default function AddEventModal() {
     recentPhotos,
     hasMediaPermission,
     hasFullPhotoAccess,
+    isLoadingPhotos, // From store
   } = useAppStore();
 
+  // Loads photos, sets them in store. (Should set isLoadingPhotos while in progress.)
   useMediaLibrary();
 
   /**
-   * 1) Reset the state whenever this modal unmounts (on close).
+   * 1) Reset the entire addEventState whenever this modal unmounts
    */
   useEffect(() => {
     return () => {
@@ -52,16 +53,22 @@ export default function AddEventModal() {
   }, [resetAddEventState]);
 
   /**
-   * 2) Whenever the /add screen is focused, pick the most recent photo
-   *    if we have permission, photos, and no image selected yet.
+   * 2) On first focus, once photos have loaded, pick the most recent photo.
+   *    After that first auto‐selection, don't overwrite user's selection again.
    */
+  const hasSelectedInitialPhotoRef = useRef(false);
+
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
+      // If we're not done loading photos, or we've already selected once, do nothing
+      if (isLoadingPhotos || hasSelectedInitialPhotoRef.current) return;
+
+      const { imagePreview, activeInput } = addEventState;
       if (
         hasMediaPermission &&
-        !addEventState.imagePreview &&
+        !imagePreview &&
         recentPhotos.length > 0 &&
-        addEventState.activeInput === "upload"
+        activeInput !== "describe"
       ) {
         const mostRecent = recentPhotos[0];
         if (mostRecent) {
@@ -71,15 +78,18 @@ export default function AddEventModal() {
               : typeof mostRecent.uri === "number"
                 ? String(mostRecent.uri)
                 : mostRecent.uri.uri;
+
+          // auto‐set input from filename
           setImagePreview(uri, "add");
           const filename = uri.split("/").pop();
           setInput(filename || "", "add");
+          hasSelectedInitialPhotoRef.current = true;
         }
       }
     }, [
+      addEventState,
       hasMediaPermission,
-      addEventState.imagePreview,
-      addEventState.activeInput,
+      isLoadingPhotos,
       recentPhotos,
       setImagePreview,
       setInput,
@@ -87,12 +97,11 @@ export default function AddEventModal() {
   );
 
   /**
-   * Detect URLs in typed text and set a linkPreview if found.
+   * Detect URLs in typed text and set a linkPreview
    */
   const handleTextChange = useCallback(
     (text: string) => {
       setInput(text, "add");
-
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       const urls = text.match(urlRegex);
       if (urls && urls.length > 0) {
@@ -104,6 +113,9 @@ export default function AddEventModal() {
     [setInput, setLinkPreview],
   );
 
+  /**
+   * Helper for setting an image preview + auto-filling text from filename
+   */
   const handleImagePreview = useCallback(
     (uri: string | ImageSource) => {
       const imageUri =
@@ -120,7 +132,7 @@ export default function AddEventModal() {
   );
 
   /**
-   * Handle picking images or taking a photo.
+   * Pick images from library
    */
   const handleMorePhotosPress = useCallback(async () => {
     try {
@@ -128,7 +140,6 @@ export default function AddEventModal() {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.8,
       });
-
       if (!result.canceled && result.assets[0]) {
         handleImagePreview(result.assets[0]);
       }
@@ -138,6 +149,9 @@ export default function AddEventModal() {
     }
   }, [handleImagePreview]);
 
+  /**
+   * Use device camera
+   */
   const handleCameraCapture = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== ImagePicker.PermissionStatus.GRANTED) {
@@ -163,21 +177,20 @@ export default function AddEventModal() {
   }, [handleImagePreview]);
 
   /**
-   * Clear all event input state (image, text, link).
+   * Clear entire addEventState
    */
   const handleClearPreview = useCallback(() => {
     resetAddEventState();
+    // Set flag to true to prevent auto-selecting a new photo when in upload mode
+    hasSelectedInitialPhotoRef.current = true;
   }, [resetAddEventState]);
 
-  /**
-   * Clear just the text in the input
-   */
   const handleClearText = useCallback(() => {
     setInput("", "add");
   }, [setInput]);
 
   /**
-   * Actually create the event, then reset state and close.
+   * Actually create the event, then reset state
    */
   const handleCreateEvent = async () => {
     const { input, imagePreview, linkPreview } = addEventState;
@@ -186,9 +199,7 @@ export default function AddEventModal() {
 
     // Immediately close the modal
     router.canGoBack() ? router.back() : router.replace("/feed");
-    toast.info("Processing details. Add another?", {
-      duration: 5000,
-    });
+    toast.info("Processing details. Add another?", { duration: 5000 });
 
     try {
       const eventId = await createEvent({
@@ -199,7 +210,6 @@ export default function AddEventModal() {
         username: user.username,
         expoPushToken: expoPushToken || "NOT_SET",
       });
-
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {
           action: {
@@ -220,18 +230,17 @@ export default function AddEventModal() {
   };
 
   /**
-   * Toggle the "describe" vs. "upload" mode.
+   * Toggle between 'describe' mode & picking photos
    */
   const handleDescribePress = useCallback(() => {
     if (addEventState.activeInput === "describe") {
-      // Switching from describe to upload mode
       setActiveInput("upload");
       setIsOptionSelected(true);
-      // Keep the image preview if there is one
+      // Keep existing imagePreview if any
     } else {
-      // Switching to describe mode - clear image preview
       setActiveInput("describe");
       setIsOptionSelected(true);
+      // Wipe out the image if toggling away
       setImagePreview(null, "add");
       setInput("", "add");
     }
@@ -268,7 +277,6 @@ export default function AddEventModal() {
           ),
         }}
       />
-
       <View className="h-full flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
         <View className="flex-1">
           {!hasMediaPermission && activeInput !== "describe" ? (

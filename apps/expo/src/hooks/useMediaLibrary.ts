@@ -101,6 +101,7 @@ export function useMediaLibrary() {
   // Whenever shouldRefreshMediaLibrary is set, load photos and reset the flag
   useEffect(() => {
     if (shouldRefreshMediaLibrary) {
+      console.log("[useMediaLibrary] shouldRefreshMediaLibrary is true");
       void loadRecentPhotos();
       setShouldRefreshMediaLibrary(false);
     }

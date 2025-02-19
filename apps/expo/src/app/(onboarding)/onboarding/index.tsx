@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -16,6 +17,17 @@ export default function OnboardingIndex() {
     { enabled: !!clerkUser?.id },
   );
 
+  // Use useEffect to handle state updates
+  useEffect(() => {
+    if (user?.onboardingCompletedAt || hasCompletedOnboarding) {
+      setHasCompletedOnboarding(true);
+    }
+  }, [
+    user?.onboardingCompletedAt,
+    hasCompletedOnboarding,
+    setHasCompletedOnboarding,
+  ]);
+
   // If we're still loading, show a spinner
   if (!isLoaded || isLoadingUser) {
     return (
@@ -31,8 +43,6 @@ export default function OnboardingIndex() {
 
   // If they've completed onboarding before (either in DB or local state), go to feed
   if (user?.onboardingCompletedAt || hasCompletedOnboarding) {
-    // Make sure local state is in sync
-    setHasCompletedOnboarding(true);
     return <Redirect href="/feed" />;
   }
 
