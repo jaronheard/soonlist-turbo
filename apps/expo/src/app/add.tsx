@@ -1,11 +1,13 @@
+// src/app/add.tsx
 import React, { useCallback, useEffect } from "react";
 import { Linking, View } from "react-native";
 import Animated from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
-import { router, Stack } from "expo-router";
+import { router, Stack, useFocusEffect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
+import type { ImageSource } from "~/components/demoData";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";
@@ -17,11 +19,6 @@ import { useMediaLibrary } from "~/hooks/useMediaLibrary";
 import { useNotification } from "~/providers/NotificationProvider";
 import { useAppStore } from "~/store";
 
-/**
- * This screen is used for manually adding an event from inside the app.
- * It includes the photo grid, "describe" toggles, camera usage, etc.
- */
-
 const OFFSET_VALUE = 32;
 
 export default function AddEventModal() {
@@ -30,15 +27,8 @@ export default function AddEventModal() {
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
 
-  // All store-based states and actions
   const {
-    addEventState: {
-      input,
-      imagePreview,
-      linkPreview,
-      isImageLoading,
-      activeInput,
-    },
+    addEventState,
     setInput,
     setImagePreview,
     setLinkPreview,
@@ -50,18 +40,54 @@ export default function AddEventModal() {
     hasFullPhotoAccess,
   } = useAppStore();
 
-  // Reset state when modal is closed
+  useMediaLibrary();
+
+  /**
+   * 1) Reset the state whenever this modal unmounts (on close).
+   */
   useEffect(() => {
     return () => {
       resetAddEventState();
     };
   }, [resetAddEventState]);
 
-  // Refresh media library on mount
-  useMediaLibrary();
+  /**
+   * 2) Whenever the /add screen is focused, pick the most recent photo
+   *    if we have permission, photos, and no image selected yet.
+   */
+  useFocusEffect(
+    React.useCallback(() => {
+      if (
+        hasMediaPermission &&
+        !addEventState.imagePreview &&
+        recentPhotos.length > 0 &&
+        addEventState.activeInput === "upload"
+      ) {
+        const mostRecent = recentPhotos[0];
+        if (mostRecent) {
+          const uri =
+            typeof mostRecent.uri === "string"
+              ? mostRecent.uri
+              : typeof mostRecent.uri === "number"
+                ? String(mostRecent.uri)
+                : mostRecent.uri.uri;
+          setImagePreview(uri, "add");
+          const filename = uri.split("/").pop();
+          setInput(filename || "", "add");
+        }
+      }
+    }, [
+      hasMediaPermission,
+      addEventState.imagePreview,
+      addEventState.activeInput,
+      recentPhotos,
+      setImagePreview,
+      setInput,
+    ]),
+  );
 
   /**
-   * Link detection from typed input
+   * Detect URLs in typed text and set a linkPreview if found.
    */
   const handleTextChange = useCallback(
     (text: string) => {
@@ -78,19 +104,23 @@ export default function AddEventModal() {
     [setInput, setLinkPreview],
   );
 
-  /**
-   * Preview an image in the store so user can confirm
-   */
   const handleImagePreview = useCallback(
-    (uri: string) => {
-      setImagePreview(uri, "add");
-      setInput(uri.split("/").pop() || "", "add");
+    (uri: string | ImageSource) => {
+      const imageUri =
+        typeof uri === "string"
+          ? uri
+          : typeof uri === "number"
+            ? String(uri)
+            : uri.uri;
+      setImagePreview(imageUri, "add");
+      const filename = imageUri.split("/").pop();
+      setInput(filename || "", "add");
     },
     [setImagePreview, setInput],
   );
 
   /**
-   * Handle picking an image from the device library
+   * Handle picking images or taking a photo.
    */
   const handleMorePhotosPress = useCallback(async () => {
     try {
@@ -100,7 +130,7 @@ export default function AddEventModal() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        handleImagePreview(result.assets[0].uri);
+        handleImagePreview(result.assets[0]);
       }
     } catch (error) {
       console.error("Error picking image:", error);
@@ -108,9 +138,6 @@ export default function AddEventModal() {
     }
   }, [handleImagePreview]);
 
-  /**
-   * Handle camera capture
-   */
   const handleCameraCapture = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== ImagePicker.PermissionStatus.GRANTED) {
@@ -131,37 +158,34 @@ export default function AddEventModal() {
     });
 
     if (!result.canceled && result.assets[0]) {
-      const imageUri = result.assets[0].uri;
-      setInput(imageUri.split("/").pop() || "", "add");
-      setImagePreview(imageUri, "add");
+      handleImagePreview(result.assets[0]);
     }
-  }, [setImagePreview, setInput]);
+  }, [handleImagePreview]);
 
   /**
-   * Clear the preview state
+   * Clear all event input state (image, text, link).
    */
   const handleClearPreview = useCallback(() => {
-    setImagePreview(null, "add");
-    setLinkPreview(null, "add");
-    setInput("", "add");
     resetAddEventState();
-  }, [setImagePreview, setLinkPreview, setInput, resetAddEventState]);
+  }, [resetAddEventState]);
 
   /**
-   * Clear text in the preview
+   * Clear just the text in the input
    */
   const handleClearText = useCallback(() => {
     setInput("", "add");
   }, [setInput]);
 
   /**
-   * Actually create the event
+   * Actually create the event, then reset state and close.
    */
   const handleCreateEvent = async () => {
+    const { input, imagePreview, linkPreview } = addEventState;
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username) return;
 
-    router.canGoBack() ? router.back() : router.navigate("/feed");
+    // Immediately close the modal
+    router.canGoBack() ? router.back() : router.replace("/feed");
     toast.info("Processing details. Add another?", {
       duration: 5000,
     });
@@ -196,19 +220,31 @@ export default function AddEventModal() {
   };
 
   /**
-   * Show or hide the "describe" input
+   * Toggle the "describe" vs. "upload" mode.
    */
   const handleDescribePress = useCallback(() => {
-    if (activeInput === "describe") {
-      handleClearPreview();
+    if (addEventState.activeInput === "describe") {
+      // Switching from describe to upload mode
       setActiveInput("upload");
       setIsOptionSelected(true);
+      // Keep the image preview if there is one
     } else {
-      handleClearPreview();
+      // Switching to describe mode - clear image preview
       setActiveInput("describe");
       setIsOptionSelected(true);
+      setImagePreview(null, "add");
+      setInput("", "add");
     }
-  }, [activeInput, handleClearPreview, setActiveInput, setIsOptionSelected]);
+  }, [
+    addEventState.activeInput,
+    setActiveInput,
+    setIsOptionSelected,
+    setImagePreview,
+    setInput,
+  ]);
+
+  const { input, imagePreview, linkPreview, activeInput, isImageLoading } =
+    addEventState;
 
   return (
     <View className="h-full flex-1 bg-[#5A32FB]">
@@ -223,8 +259,7 @@ export default function AddEventModal() {
           headerTitle: () => (
             <NewEventHeader
               containerClassName="mt-2"
-              // The user toggles "describe" vs default
-              isFromIntent={false} // Not a share-intent
+              isFromIntent={false}
               linkPreview={linkPreview}
               imagePreview={imagePreview}
               activeInput={activeInput}
@@ -240,7 +275,6 @@ export default function AddEventModal() {
             <PhotoAccessPrompt />
           ) : (
             <View className="flex-1">
-              {/* Event preview at top */}
               <View className="px-4 pt-2">
                 <EventPreview
                   containerClassName="rounded-xl overflow-hidden"
@@ -258,17 +292,15 @@ export default function AddEventModal() {
                   }
                 />
               </View>
-
-              {/* Photo grid below preview (only if not describing) */}
               {activeInput !== "describe" && (
                 <View className="h-full flex-1 px-4">
                   <PhotoGrid
                     hasMediaPermission={hasMediaPermission}
                     hasFullPhotoAccess={hasFullPhotoAccess}
                     recentPhotos={recentPhotos}
-                    onPhotoSelect={(uri) => handleImagePreview(uri as string)}
-                    onCameraPress={() => void handleCameraCapture()}
-                    onMorePhotos={() => void handleMorePhotosPress()}
+                    onPhotoSelect={handleImagePreview}
+                    onCameraPress={handleCameraCapture}
+                    onMorePhotos={handleMorePhotosPress}
                     selectedUri={imagePreview}
                   />
                 </View>
@@ -276,8 +308,6 @@ export default function AddEventModal() {
             </View>
           )}
         </View>
-
-        {/* Capture button at bottom */}
         <Animated.View className="px-4" style={keyboardStyle}>
           <CaptureEventButton
             handleCreateEvent={handleCreateEvent}

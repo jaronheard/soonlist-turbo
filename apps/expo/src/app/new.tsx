@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { router, Stack, useLocalSearchParams } from "expo-router";
@@ -28,6 +28,7 @@ export default function NewShareScreen() {
   const { expoPushToken, hasNotificationPermission } = useNotification();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
+  const [activeInput, setActiveInput] = useState<string | null>(null);
 
   const {
     newEventState: { input, imagePreview, linkPreview, isImageLoading },
@@ -123,13 +124,12 @@ export default function NewShareScreen() {
     }
   };
 
+  // Set activeInput to "describe" when text is passed
   useEffect(() => {
-    // If user modifies text (like removing or editing), keep store in sync
-    // This is just for clarity. Usually you'd do this in a text input's onChange
-    if (typeof text === "string") {
-      handleTextChange(text);
+    if (text) {
+      setActiveInput("describe");
     }
-  }, [handleTextChange, text]);
+  }, [text]);
 
   if (!initialized) {
     return null;
@@ -151,8 +151,8 @@ export default function NewShareScreen() {
               isFromIntent={true}
               linkPreview={linkPreview}
               imagePreview={imagePreview}
-              activeInput={null}
-              handleDescribePress={() => null}
+              activeInput={activeInput}
+              handleDescribePress={() => setActiveInput("describe")}
             />
           ),
         }}
@@ -168,9 +168,9 @@ export default function NewShareScreen() {
             handleTextChange={handleTextChange}
             clearPreview={handleClearPreview}
             clearText={() => setInput("", "new")}
-            activeInput={null} // Not using advanced input states here
+            activeInput={activeInput}
             isImageLoading={isImageLoading}
-            handleMorePhotos={() => null} // share extension does not show a grid
+            handleMorePhotos={() => null}
             previewContainerStyle="full"
           />
         </View>
