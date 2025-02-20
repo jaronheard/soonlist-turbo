@@ -209,17 +209,19 @@ export default function AddEventModal() {
           )}
         </View>
 
-        <View className="h-full flex-1 px-4">
-          <PhotoGrid
-            hasMediaPermission={hasMediaPermission}
-            hasFullPhotoAccess={hasFullPhotoAccess}
-            recentPhotos={recentPhotos}
-            onPhotoSelect={handleImagePreview}
-            onCameraPress={handleCameraCapture}
-            onMorePhotos={handleMorePhotosPress}
-            selectedUri={imagePreview}
-          />
-        </View>
+        {hasMediaPermission && activeInput !== "describe" && (
+          <View className="h-full flex-1 px-4">
+            <PhotoGrid
+              hasMediaPermission={hasMediaPermission}
+              hasFullPhotoAccess={hasFullPhotoAccess}
+              recentPhotos={recentPhotos}
+              onPhotoSelect={handleImagePreview}
+              onCameraPress={handleCameraCapture}
+              onMorePhotos={handleMorePhotosPress}
+              selectedUri={imagePreview}
+            />
+          </View>
+        )}
 
         <Animated.View className="px-4" style={keyboardStyle}>
           <CaptureEventButton
