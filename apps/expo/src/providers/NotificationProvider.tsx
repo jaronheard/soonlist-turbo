@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
@@ -97,6 +97,17 @@ async function registerForPushNotificationsAsync() {
   }
 }
 
+/**
+ * Safely checks the current notification permission on every app focus
+ * to see if the user has changed it in Settings.
+ */
+async function checkAndUpdateNotificationPermission(
+  setPermissionFn: (value: boolean) => void,
+) {
+  const { status } = await Notifications.getPermissionsAsync();
+  setPermissionFn(status === Notifications.PermissionStatus.GRANTED);
+}
+
 interface NotificationData {
   url?: string;
   notificationId: string;
@@ -109,6 +120,11 @@ export function NotificationProvider({
   children: React.ReactNode;
 }) {
   const [expoPushToken, setExpoPushToken] = useState("");
+  /**
+   * We track hasNotificationPermission separately. We do NOT rely on the
+   * one-time outcome of registerForPushNotifications alone. The user might
+   * later revoke or grant notification permission in device settings.
+   */
   const [hasNotificationPermission, setHasNotificationPermission] =
     useState(false);
   const [, setNotification] = useState<Notifications.Notification | undefined>(
@@ -122,23 +138,19 @@ export function NotificationProvider({
     try {
       const token = await registerForPushNotificationsAsync();
       setExpoPushToken(token ?? "");
+      // After we possibly ask for permission, do one final check
+      if (token) {
+        await checkAndUpdateNotificationPermission(
+          setHasNotificationPermission,
+        );
+      }
     } catch (error: unknown) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       setExpoPushToken(`${error}`);
-    } finally {
-      /*
-       * After trying to register for push notifications,
-       * confirm the final permission status:
-       */
-      const { status } = await Notifications.getPermissionsAsync();
-      setHasNotificationPermission(
-        status === ("granted" as Notifications.PermissionStatus),
-      );
     }
   };
 
   useEffect(() => {
-    // Only set up listeners, don't request permissions yet
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         setNotification(notification);
@@ -231,6 +243,27 @@ export function NotificationProvider({
       subscription.remove();
     };
   }, [posthog]);
+
+  useEffect(() => {
+    let isMounted = true;
+    void (async () => {
+      if (isMounted) {
+        await checkAndUpdateNotificationPermission(
+          setHasNotificationPermission,
+        );
+      }
+    })();
+
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        void checkAndUpdateNotificationPermission(setHasNotificationPermission);
+      }
+    });
+    return () => {
+      isMounted = false;
+      subscription.remove();
+    };
+  }, []);
 
   return (
     <NotificationContext.Provider
