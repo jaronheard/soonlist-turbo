@@ -11,6 +11,7 @@
     "clean:ws": "turbo clean",
     "db:push": "pnpm -F db push",
     "db:studio": "pnpm -F db studio",
+    "db:studio:prod": "pnpm -F db studio:prod",
     "dev": "turbo dev --parallel",
     "dev:expo": "pnpm -F @soonlist/expo dev",
     "dev:no-expo": "turbo dev --filter=!@soonlist/expo",

@@ -5,7 +5,6 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import {
-  CreditCard,
   HelpCircle,
   LogOut,
   MessageCircle,
@@ -31,11 +30,7 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
   };
 
   const handleEditProfile = () => {
-    router.push("/settings/profile");
-  };
-
-  const handleSubscription = () => {
-    router.push("/settings/subscription");
+    router.push("/settings/account");
   };
 
   const presentIntercom = async () => {
@@ -93,14 +88,7 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
           <DropdownMenu.ItemIcon ios={{ name: "person.circle" }}>
             <User />
           </DropdownMenu.ItemIcon>
-          <DropdownMenu.ItemTitle>Profile</DropdownMenu.ItemTitle>
-        </DropdownMenu.Item>
-
-        <DropdownMenu.Item key="subscription" onSelect={handleSubscription}>
-          <DropdownMenu.ItemIcon ios={{ name: "creditcard" }}>
-            <CreditCard />
-          </DropdownMenu.ItemIcon>
-          <DropdownMenu.ItemTitle>Subscription</DropdownMenu.ItemTitle>
+          <DropdownMenu.ItemTitle>Account</DropdownMenu.ItemTitle>
         </DropdownMenu.Item>
 
         <DropdownMenu.Item key="how-to-use" onSelect={showOnboarding}>
