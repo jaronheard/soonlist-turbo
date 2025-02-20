@@ -50,6 +50,7 @@ import { api } from "~/trpc/react";
 import { CalendarButton } from "./CalendarButton";
 import { DeleteButton } from "./DeleteButton";
 import { EditButton } from "./EditButton";
+import EventCard from "./EventCard";
 import { FollowEventButton, FollowUserButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
 import { ListCard } from "./ListCard";
@@ -1062,6 +1063,7 @@ export function EventPage(props: EventPageProps) {
     endTime,
     timeZone: timezone,
     location,
+    description,
   } = event;
 
   const { timezone: userTimezone } = useContext(TimezoneContext);
@@ -1088,91 +1090,112 @@ export function EventPage(props: EventPageProps) {
   }
 
   return (
-    <div className="">
-      <div className="grid grid-cols-1 gap-1 ">
-        <div>
-          <div className="flex flex-col gap-2">
-            <DateAndTimeDisplay
-              endDateInfo={endDateInfo}
-              endTime={endTime}
-              isClient={isClient}
-              startDateInfo={startDateInfo}
-              startTime={startTime}
-            />
-            <h1 className="text-xl font-bold text-neutral-1">{event.name}</h1>
-            <div className="flex-start text-md flex gap-2 pr-12 leading-tight">
-              {location && (
-                <Link
-                  href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-                  className="line-clamp-1 flex shrink items-center gap-0.5 break-all text-neutral-2"
-                >
-                  <MapPin className="size-4 flex-shrink-0" />
-                  <span className="line-clamp-1">{location}</span>
-                </Link>
-              )}
-            </div>
-            <PersonalNote text={comment?.content} />
-
-            <div className="flex items-center gap-1 text-neutral-2">
-              {visibility === "public" ? (
-                <>
-                  <Globe2Icon className="size-4" />
-                  <span className="text-sm">Discoverable</span>
-                </>
-              ) : (
-                <>
-                  <EyeOffIcon className="size-4" />
-                  <span className="text-sm">Not discoverable</span>
-                </>
-              )}
-            </div>
-            {image && (
-              <Image
-                src={image}
-                className="mx-auto h-auto max-h-96 w-full object-contain"
-                alt=""
-                width={640}
-                height={480}
-              />
-            )}
-          </div>
-
-          <div className="flex flex-col gap-8 pt-8">
-            <EventDescription
-              description={event.description || ""}
-              singleEvent={singleEvent}
-            />
-            {eventMetadata && (
-              <div className="w-full">
-                <EventMetadataDisplay metadata={eventMetadata} />
-              </div>
-            )}
-            {!children && (
-              <div className="flex flex-wrap gap-2">
-                <ShareButton type="button" event={event} id={id} />
-                <CalendarButton
-                  type="button"
-                  event={event as ATCBActionEventConfig}
-                  id={id}
-                  username={user?.username}
-                />
-
-                {user && !isSelf && (
-                  <FollowEventButton eventId={id} following={isFollowing} />
-                )}
-                {user && isOwner && (
-                  <EditButton type="icon" userId={user.id} id={id} />
-                )}
-                {user && isOwner && (
-                  <DeleteButton type="icon" userId={user.id} id={id} />
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {children}
-      </div>
-    </div>
+    <EventCard
+      userName={user?.username || ""}
+      userAvatar={user?.userImage || ""}
+      userEmoji={user?.emoji || ""}
+      eventName={event.name || ""}
+      eventDate={
+        startDateInfo.dayOfWeek.substring(0, 3) +
+        " " +
+        startDateInfo.monthName.substring(0, 3) +
+        " " +
+        startDateInfo.day
+      }
+      eventTime={formatCompactTimeRange(startDateInfo, endDateInfo)}
+      eventLocation={location || ""}
+      eventDescription={description || ""}
+      eventImage={image || ""}
+    />
   );
+
+  // COMMENTED OUT BECAUSE IT'S NOT USED
+  // return (
+  //   <div className="">
+  //     <div className="grid grid-cols-1 gap-1 ">
+  //       <div>
+  //         <div className="flex flex-col gap-2">
+  //           <DateAndTimeDisplay
+  //             endDateInfo={endDateInfo}
+  //             endTime={endTime}
+  //             isClient={isClient}
+  //             startDateInfo={startDateInfo}
+  //             startTime={startTime}
+  //           />
+  //           <h1 className="text-xl font-bold text-neutral-1">{event.name}</h1>
+  //           <div className="flex-start text-md flex gap-2 pr-12 leading-tight">
+  //             {location && (
+  //               <Link
+  //                 href={`https://www.google.com/maps/search/?api=1&query=${location}`}
+  //                 className="line-clamp-1 flex shrink items-center gap-0.5 break-all text-neutral-2"
+  //               >
+  //                 <MapPin className="size-4 flex-shrink-0" />
+  //                 <span className="line-clamp-1">{location}</span>
+  //               </Link>
+  //             )}
+  //           </div>
+  //           <PersonalNote text={comment?.content} />
+
+  //           <div className="flex items-center gap-1 text-neutral-2">
+  //             {visibility === "public" ? (
+  //               <>
+  //                 <Globe2Icon className="size-4" />
+  //                 <span className="text-sm">Discoverable</span>
+  //               </>
+  //             ) : (
+  //               <>
+  //                 <EyeOffIcon className="size-4" />
+  //                 <span className="text-sm">Not discoverable</span>
+  //               </>
+  //             )}
+  //           </div>
+  //           {image && (
+  //             <Image
+  //               src={image}
+  //               className="mx-auto h-auto max-h-96 w-full object-contain"
+  //               alt=""
+  //               width={640}
+  //               height={480}
+  //             />
+  //           )}
+  //         </div>
+
+  //         <div className="flex flex-col gap-8 pt-8">
+  //           <EventDescription
+  //             description={event.description || ""}
+  //             singleEvent={singleEvent}
+  //           />
+  //           {eventMetadata && (
+  //             <div className="w-full">
+  //               <EventMetadataDisplay metadata={eventMetadata} />
+  //             </div>
+  //           )}
+  //           {!children && (
+  //             <div className="flex flex-wrap gap-2">
+  //               <ShareButton type="button" event={event} id={id} />
+  //               <CalendarButton
+  //                 type="button"
+  //                 event={event as ATCBActionEventConfig}
+  //                 id={id}
+  //                 username={user?.username}
+  //               />
+
+  //               {user && !isSelf && (
+  //                 <FollowEventButton eventId={id} following={isFollowing} />
+  //               )}
+  //               {user && isOwner && (
+  //                 <EditButton type="icon" userId={user.id} id={id} />
+  //               )}
+  //               {user && isOwner && (
+  //                 <DeleteButton type="icon" userId={user.id} id={id} />
+  //               )}
+  //             </div>
+  //           )}
+  //         </div>
+  //       </div>
+
+  //       {children}
+  //     </div>
+  //   </div>
+  // );
 }
