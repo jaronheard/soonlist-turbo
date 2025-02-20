@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { X } from "lucide-react-native";
 import { toast } from "sonner-native";
 
 import { CaptureEventButton } from "~/components/CaptureEventButton";
@@ -33,7 +34,6 @@ export default function NewShareScreen() {
   const {
     newEventState: { input, imagePreview, linkPreview, isImageLoading },
     setInput,
-    setImagePreview,
     setLinkPreview,
     resetNewEventState,
   } = useAppStore();
@@ -71,16 +71,6 @@ export default function NewShareScreen() {
     },
     [setInput, setLinkPreview],
   );
-
-  /**
-   * Clear the preview state
-   */
-  const handleClearPreview = useCallback(() => {
-    setImagePreview(null, "new");
-    setLinkPreview(null, "new");
-    setInput("", "new");
-    resetNewEventState();
-  }, [setImagePreview, setLinkPreview, setInput, resetNewEventState]);
 
   /**
    * Actually create the event
@@ -155,6 +145,14 @@ export default function NewShareScreen() {
               handleDescribePress={() => setActiveInput("describe")}
             />
           ),
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.back()}
+              className="rounded-full bg-transparent py-4"
+            >
+              <X size={24} color="#fff" />
+            </Pressable>
+          ),
         }}
       />
 
@@ -166,8 +164,6 @@ export default function NewShareScreen() {
             linkPreview={linkPreview}
             input={input}
             handleTextChange={handleTextChange}
-            clearPreview={handleClearPreview}
-            clearText={() => setInput("", "new")}
             activeInput={activeInput}
             isImageLoading={isImageLoading}
             handleMorePhotos={() => null}

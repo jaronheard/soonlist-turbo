@@ -18,8 +18,8 @@ interface EventPreviewProps {
   linkPreview: string | null;
   input: string;
   handleTextChange: (text: string) => void;
-  clearPreview: () => void;
-  clearText: () => void;
+  clearPreview?: () => void;
+  clearText?: () => void;
   activeInput: string | null;
   isImageLoading: boolean;
   handleMorePhotos: () => void;
@@ -71,12 +71,14 @@ export function EventPreview({
             placeholderContentFit="contain"
             className="bg-muted/10"
           />
-          <Pressable
-            onPress={clearPreview}
-            className="absolute right-2 top-2 rounded-full bg-interactive-3 p-1"
-          >
-            <X size={20} color="#5A32FB" />
-          </Pressable>
+          {clearPreview && (
+            <Pressable
+              onPress={clearPreview}
+              className="absolute right-2 top-2 rounded-full bg-interactive-3 p-1"
+            >
+              <X size={20} color="#5A32FB" />
+            </Pressable>
+          )}
           {isImageLoading && (
             <View className="absolute bottom-2 right-2">
               <ActivityIndicator size="small" color="#DCE0E8" />
@@ -97,12 +99,14 @@ export function EventPreview({
               {linkPreview}
             </Text>
           </View>
-          <Pressable
-            onPress={clearPreview}
-            className="absolute right-2 top-2 rounded-full bg-white p-1"
-          >
-            <X size={16} color="black" />
-          </Pressable>
+          {clearPreview && (
+            <Pressable
+              onPress={clearPreview}
+              className="absolute right-2 top-2 rounded-full bg-white p-1"
+            >
+              <X size={16} color="black" />
+            </Pressable>
+          )}
         </View>
       )}
 
@@ -124,7 +128,7 @@ export function EventPreview({
             className="h-full text-lg"
           />
 
-          {input.length > 0 && (
+          {input.length > 0 && clearText && (
             <Pressable
               onPress={clearText}
               className="absolute right-2 top-2 rounded-full bg-neutral-200 p-2"
