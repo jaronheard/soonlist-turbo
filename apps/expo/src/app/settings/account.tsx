@@ -25,7 +25,6 @@ import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { api } from "~/utils/api";
-import { getPlanStatusFromUser } from "~/utils/plan";
 
 const profileSchema = z.object({
   username: z
