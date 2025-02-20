@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 
@@ -39,8 +38,5 @@ export const useSignOut = () => {
       options?.shouldDeleteAccount ? deleteAccount() : undefined,
       signOut(),
     ]);
-
-    // Finally navigate away
-    router.replace("/sign-in");
   };
 };
