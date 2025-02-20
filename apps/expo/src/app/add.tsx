@@ -188,40 +188,45 @@ export default function AddEventModal() {
           ),
         }}
       />
+
       <View className="h-full flex-1 overflow-hidden rounded-t-3xl bg-interactive-1">
-        <View className="flex-1 px-4 pt-2">
+        <View className="flex-1">
           {!hasMediaPermission ? (
             <PhotoAccessPrompt />
           ) : (
-            <EventPreview
-              containerClassName="rounded-xl overflow-hidden"
-              imagePreview={imagePreview}
-              linkPreview={linkPreview}
-              input={input}
-              handleTextChange={handleTextChange}
-              clearPreview={handleClearPreview}
-              clearText={() => setInput("", "add")}
-              activeInput={activeInput}
-              isImageLoading={isImageLoading}
-              handleMorePhotos={handleMorePhotosPress}
-              previewContainerStyle="square"
-            />
+            <View className="flex-1">
+              <View className="px-4 pt-2">
+                <EventPreview
+                  containerClassName="rounded-xl overflow-hidden"
+                  imagePreview={imagePreview}
+                  linkPreview={linkPreview}
+                  input={input}
+                  handleTextChange={handleTextChange}
+                  clearPreview={handleClearPreview}
+                  clearText={() => setInput("", "add")}
+                  activeInput={activeInput}
+                  isImageLoading={isImageLoading}
+                  handleMorePhotos={handleMorePhotosPress}
+                  previewContainerStyle="square"
+                />
+              </View>
+
+              {activeInput !== "describe" && (
+                <View className="h-full flex-1 px-4">
+                  <PhotoGrid
+                    hasMediaPermission={hasMediaPermission}
+                    hasFullPhotoAccess={hasFullPhotoAccess}
+                    recentPhotos={recentPhotos}
+                    onPhotoSelect={handleImagePreview}
+                    onCameraPress={handleCameraCapture}
+                    onMorePhotos={handleMorePhotosPress}
+                    selectedUri={imagePreview}
+                  />
+                </View>
+              )}
+            </View>
           )}
         </View>
-
-        {hasMediaPermission && activeInput !== "describe" && (
-          <View className="h-full flex-1 px-4">
-            <PhotoGrid
-              hasMediaPermission={hasMediaPermission}
-              hasFullPhotoAccess={hasFullPhotoAccess}
-              recentPhotos={recentPhotos}
-              onPhotoSelect={handleImagePreview}
-              onCameraPress={handleCameraCapture}
-              onMorePhotos={handleMorePhotosPress}
-              selectedUri={imagePreview}
-            />
-          </View>
-        )}
 
         <Animated.View className="px-4" style={keyboardStyle}>
           <CaptureEventButton
