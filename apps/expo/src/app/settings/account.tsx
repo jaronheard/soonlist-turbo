@@ -49,7 +49,7 @@ export default function EditProfileScreen() {
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.imageUrl ?? null,
   );
-
+  const { showProPaywallIfNeeded } = useRevenueCat();
   const { data: userData } = api.user.getByUsername.useQuery(
     { userName: user?.username ?? "" },
     { enabled: !!user?.username },
@@ -334,46 +334,6 @@ export default function EditProfileScreen() {
               )}
             />
 
-            <View>
-              <Text className="text-lg font-semibold">Subscription</Text>
-              {(() => {
-                if (!user) return null;
-                const { name, active } = getPlanStatusFromUser(user);
-                const hasUnlimited =
-                  customerInfo?.entitlements.active.unlimited;
-
-                if (hasUnlimited) {
-                  return (
-                    <TouchableOpacity
-                      onPress={() => {
-                        void Linking.openURL(
-                          "itms-apps://apps.apple.com/account/subscriptions",
-                        );
-                      }}
-                      className="mt-2 rounded-md bg-neutral-100 p-4"
-                    >
-                      <Text className="text-base">
-                        View subscription in  Settings
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }
-
-                return (
-                  <TouchableOpacity
-                    onPress={() => {
-                      void router.push("/settings/subscription");
-                    }}
-                    className="mt-2 rounded-md bg-neutral-100 p-4"
-                  >
-                    <Text className="text-base">
-                      View subscription information
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })()}
-            </View>
-
             <View className="flex-col gap-4 space-y-4">
               <View>
                 <Text className="text-lg font-semibold">How to connect</Text>
@@ -507,13 +467,72 @@ export default function EditProfileScreen() {
               />
             </View>
 
-            <Button
-              onPress={handleSaveOrBack}
-              disabled={isSubmitting}
-              className="mt-4"
-            >
-              {isDirty ? (isSubmitting ? "Saving..." : "Save Profile") : "Done"}
-            </Button>
+            {isDirty && (
+              <Button
+                onPress={handleSaveOrBack}
+                disabled={isSubmitting}
+                className="mt-4"
+              >
+                {isSubmitting ? "Saving..." : "Save Profile"}
+              </Button>
+            )}
+
+            <View className="mt-12">
+              <Text className="text-lg font-semibold">Subscription</Text>
+              {(() => {
+                if (!user) return null;
+                const hasUnlimited =
+                  customerInfo?.entitlements.active.unlimited;
+
+                const stripeSubscription =
+                  customerInfo?.originalPurchaseDate &&
+                  new Date(customerInfo.originalPurchaseDate) <=
+                    new Date(2025, 2, 7);
+
+                if (hasUnlimited && !stripeSubscription) {
+                  return (
+                    <TouchableOpacity
+                      onPress={() => {
+                        void Linking.openURL(
+                          "itms-apps://apps.apple.com/account/subscriptions",
+                        );
+                      }}
+                      className="mt-2 rounded-md bg-neutral-100 p-4"
+                    >
+                      <Text className="text-base">
+                        View subscription in  Settings
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                }
+
+                if (hasUnlimited && stripeSubscription) {
+                  return (
+                    <TouchableOpacity
+                      onPress={() => {
+                        void Linking.openURL(
+                          "https://www.soonlist.com/account/plans",
+                        );
+                      }}
+                      className="mt-2 rounded-md bg-neutral-100 p-4"
+                    >
+                      <Text className="text-base">
+                        Manage subscription on web
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                }
+
+                return (
+                  <TouchableOpacity
+                    onPress={showProPaywallIfNeeded}
+                    className="mt-2 rounded-md bg-neutral-100 p-4"
+                  >
+                    <Text className="text-base">Upgrade to Pro</Text>
+                  </TouchableOpacity>
+                );
+              })()}
+            </View>
 
             <View className="mt-12">
               <Text className="mb-2 text-base font-semibold text-red-500">
