@@ -19,7 +19,7 @@ import { cn } from "~/utils/cn";
 interface PhotoGridProps {
   hasMediaPermission: boolean;
   hasFullPhotoAccess: boolean;
-  recentPhotos: RecentPhoto[];
+  recentPhotos: (RecentPhoto | { id: string; uri: ImageSource })[];
   onPhotoSelect: (uri: string | ImageSource) => void;
   onCameraPress: () => void;
   onMorePhotos: () => void;
@@ -64,7 +64,7 @@ const GridItem = React.memo(
     hasFullPhotoAccess,
     onMorePhotos,
   }: {
-    item: RecentPhoto & { id: string };
+    item: RecentPhoto | { id: string; uri: ImageSource };
     imageSize: number;
     onPhotoSelect: (uri: string | ImageSource) => void;
     selectedUri: string | ImageSource | null;
@@ -173,7 +173,10 @@ export const PhotoGrid = React.memo(
     const getItemLayout = useMemo(
       () =>
         (
-          _data: ArrayLike<RecentPhoto & { id: string }> | null | undefined,
+          _data:
+            | ArrayLike<RecentPhoto | { id: string; uri: ImageSource }>
+            | null
+            | undefined,
           index: number,
         ) => ({
           length: imageSize,
@@ -185,7 +188,11 @@ export const PhotoGrid = React.memo(
 
     const renderItem = useMemo(
       () =>
-        ({ item }: { item: RecentPhoto & { id: string } }) => (
+        ({
+          item,
+        }: {
+          item: RecentPhoto | { id: string; uri: ImageSource };
+        }) => (
           <GridItem
             item={item}
             imageSize={imageSize}
