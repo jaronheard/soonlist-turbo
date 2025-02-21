@@ -1,50 +1,59 @@
-import { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { Linking } from "react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 import { toast } from "sonner-native";
-
-// Prevent splash screen from auto-hiding
-void SplashScreen.preventAutoHideAsync();
 
 export default function RedirectScreen() {
   const { url } = useLocalSearchParams<{ url: string }>();
+  const router = useRouter();
 
-  useEffect(() => {
-    async function handleRedirect() {
-      if (!url) {
-        toast.error("No URL provided");
-        return;
-      }
+  useFocusEffect(
+    useCallback(() => {
+      async function handleRedirect() {
+        if (!url) {
+          toast.error("No URL provided");
+          return;
+        }
 
-      try {
-        const canOpen = await Linking.canOpenURL(url);
+        try {
+          const canOpen = await Linking.canOpenURL(url);
 
-        if (canOpen) {
-          await Linking.openURL(url);
-          // Hide splash screen after redirect
-          await SplashScreen.hideAsync();
-        } else {
-          toast.error("Cannot open URL", {
-            description: "The URL provided is not valid or cannot be opened",
+          if (canOpen) {
+            await Linking.openURL(url);
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/");
+            }
+          } else {
+            toast.error("Cannot open URL", {
+              description: "The URL provided is not valid or cannot be opened",
+            });
+          }
+        } catch (error) {
+          console.error("Error opening URL:", error);
+          toast.error("Error opening URL", {
+            description: "Please try again later",
           });
         }
-      } catch (error) {
-        console.error("Error opening URL:", error);
-        toast.error("Error opening URL", {
-          description: "Please try again later",
-        });
       }
-    }
 
-    void handleRedirect();
-  }, [url]);
+      void handleRedirect();
+    }, [url, router]),
+  );
 
   return (
-    <Stack.Screen
-      options={{
-        headerShown: false,
-      }}
-    />
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#5A32FB" />
+      </View>
+    </>
   );
 }
