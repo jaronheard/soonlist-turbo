@@ -571,7 +571,7 @@ export default function EditProfileScreen() {
               <Text className="mb-2 text-base font-semibold text-red-500">
                 Danger Zone
               </Text>
-              <View className="space-y-4">
+              <View>
                 <Button
                   onPress={handleRestartOnboarding}
                   variant="destructive"
@@ -580,6 +580,7 @@ export default function EditProfileScreen() {
                 >
                   Restart Onboarding
                 </Button>
+                <View className="h-4" />
                 <Button
                   onPress={handleDeleteAccount}
                   variant="destructive"
