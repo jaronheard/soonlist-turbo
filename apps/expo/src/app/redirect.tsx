@@ -21,11 +21,6 @@ export default function RedirectScreen() {
 
           if (canOpen) {
             await Linking.openURL(url);
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace("/");
-            }
           } else {
             toast.error("Cannot open URL", {
               description: "The URL provided is not valid or cannot be opened",
@@ -36,6 +31,13 @@ export default function RedirectScreen() {
           toast.error("Error opening URL", {
             description: "Please try again later",
           });
+        }
+
+        // Always navigate back or to home, regardless of success or error
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace("/");
         }
       }
 
