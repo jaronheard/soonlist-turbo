@@ -333,3 +333,14 @@ export const useAppStore = create<AppState>()(
 export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
 export const useHasMediaPermission = () =>
   useAppStore((state) => state.hasMediaPermission);
+
+// Function to clear persisted store data
+export const clearPersistedStore = async () => {
+  try {
+    await AsyncStorage.removeItem("app-storage");
+    // Reset the store to initial state
+    useAppStore.getState().resetStore();
+  } catch (error) {
+    console.error("Error clearing persisted store:", error);
+  }
+};
