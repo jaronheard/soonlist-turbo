@@ -11,11 +11,6 @@ export default function RedirectScreen() {
   useFocusEffect(
     useCallback(() => {
       async function handleRedirect() {
-        if (!url) {
-          toast.error("No URL provided");
-          return;
-        }
-
         try {
           const canOpen = await Linking.canOpenURL(url);
 
