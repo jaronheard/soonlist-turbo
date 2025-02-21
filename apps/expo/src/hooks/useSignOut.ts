@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
+import { toast } from "sonner-native";
 
 import { useNotification } from "~/providers/NotificationProvider";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -16,7 +17,7 @@ export const useSignOut = () => {
   const { signOut, userId } = useAuth();
   const resetStore = useAppStore((state) => state.resetStore);
   const { logout: revenueCatLogout } = useRevenueCat();
-  const { expoPushToken } = useNotification();
+  const { expoPushToken, cleanup: cleanupNotifications } = useNotification();
   const { mutateAsync: deleteToken } = api.pushToken.deleteToken.useMutation();
   const { mutateAsync: deleteAccount } = api.user.deleteAccount.useMutation();
 
@@ -30,13 +31,32 @@ export const useSignOut = () => {
     resetStore();
 
     // Then clear all auth and third-party services
-    await Promise.all([
-      Intercom.logout(),
-      revenueCatLogout(),
-      deleteAuthData(),
-      deleteToken({ userId, expoPushToken }),
-      options?.shouldDeleteAccount ? deleteAccount() : undefined,
-      signOut(),
-    ]);
+    try {
+      await Promise.all([
+        Intercom.logout(),
+        revenueCatLogout(),
+        deleteAuthData(),
+        // Only attempt to delete token if it exists
+        expoPushToken
+          ? deleteToken({ userId, expoPushToken }).catch((error) => {
+              console.error("Error deleting push token:", error);
+              // Don't throw here, we want to continue with sign out
+            })
+          : Promise.resolve(),
+        options?.shouldDeleteAccount ? deleteAccount() : Promise.resolve(),
+        signOut(),
+      ]);
+
+      // Clean up notification state after successful sign out
+      cleanupNotifications();
+    } catch (error) {
+      console.error("Error during sign out:", error);
+      toast.error(
+        "Error during sign out. Some data may not have been cleared.",
+      );
+      // Still attempt to clean up notification state
+      cleanupNotifications();
+      throw error;
+    }
   };
 };
