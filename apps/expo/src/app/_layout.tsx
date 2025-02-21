@@ -227,7 +227,7 @@ const InitialLayout = () => {
         name="redirect"
         options={{
           headerShown: false,
-          presentation: 'containedModal',
+          presentation: "containedModal",
         }}
       />
       <Stack.Screen

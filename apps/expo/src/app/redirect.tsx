@@ -41,7 +41,7 @@ export default function RedirectScreen() {
   }, [url]);
 
   return (
-    <Stack.Screen 
+    <Stack.Screen
       options={{
         headerShown: false,
       }}
