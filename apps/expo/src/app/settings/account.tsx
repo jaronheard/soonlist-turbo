@@ -92,6 +92,8 @@ export default function EditProfileScreen() {
       router.canGoBack() ? router.back() : router.navigate("/feed"),
   });
 
+  const resetOnboarding = api.user.resetOnboarding.useMutation();
+
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
       const loadingToastId = toast.loading("Updating profile...");
@@ -224,6 +226,38 @@ export default function EditProfileScreen() {
       ],
     );
   }, [signOut]);
+
+  const handleRestartOnboarding = useCallback(() => {
+    Alert.alert(
+      "Restart Onboarding",
+      "This will reset your onboarding progress. You'll need to go through the onboarding process again.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Restart",
+          style: "destructive",
+          onPress: () => {
+            const loadingToastId = toast.loading("Restarting onboarding...");
+            void (async () => {
+              try {
+                await resetOnboarding.mutateAsync();
+                toast.dismiss(loadingToastId);
+                toast.success("Onboarding reset successfully");
+                router.replace("/onboarding");
+              } catch (error) {
+                console.error("Error restarting onboarding:", error);
+                toast.dismiss(loadingToastId);
+                toast.error("Failed to restart onboarding. Please try again.");
+              }
+            })();
+          },
+        },
+      ],
+    );
+  }, [resetOnboarding]);
 
   return (
     <KeyboardAvoidingView
@@ -537,18 +571,29 @@ export default function EditProfileScreen() {
               <Text className="mb-2 text-base font-semibold text-red-500">
                 Danger Zone
               </Text>
-              <Button
-                onPress={handleDeleteAccount}
-                variant="destructive"
-                className="bg-red-500"
-                disabled={isSubmitting}
-              >
-                Delete Account
-              </Button>
-              <Text className="mt-2 text-xs text-neutral-500">
-                This will permanently delete your account and all associated
-                data.
-              </Text>
+              <View>
+                <Button
+                  onPress={handleRestartOnboarding}
+                  variant="destructive"
+                  className="bg-red-500"
+                  disabled={isSubmitting}
+                >
+                  Restart Onboarding
+                </Button>
+                <View className="h-4" />
+                <Button
+                  onPress={handleDeleteAccount}
+                  variant="destructive"
+                  className="bg-red-500"
+                  disabled={isSubmitting}
+                >
+                  Delete Account
+                </Button>
+                <Text className="mt-2 text-xs text-neutral-500">
+                  This will permanently delete your account and all associated
+                  data.
+                </Text>
+              </View>
             </View>
           </View>
         </View>

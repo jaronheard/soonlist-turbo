@@ -287,6 +287,24 @@ export const userRouter = createTRPCRouter({
     return { success: true };
   }),
 
+  resetOnboarding: protectedProcedure.mutation(async ({ ctx }) => {
+    const { userId } = ctx.auth;
+    if (!userId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User must be logged in to reset onboarding",
+      });
+    }
+
+    return ctx.db
+      .update(users)
+      .set({
+        onboardingCompletedAt: null,
+        onboardingData: null,
+      })
+      .where(eq(users.id, userId));
+  }),
+
   setOnboardingCompletedAt: protectedProcedure
     .input(z.object({ completedAt: z.date() }))
     .mutation(async ({ ctx, input }) => {
