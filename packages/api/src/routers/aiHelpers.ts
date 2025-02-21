@@ -300,7 +300,7 @@ export interface CreateEventParams {
   ctx: Context;
   input: {
     timezone: string;
-    expoPushToken: string;
+    expoPushToken?: string;
     comment?: string;
     lists: { value: string }[];
     visibility?: "public" | "private";
@@ -442,7 +442,6 @@ export async function createEventAndNotify(
   );
 
   const notificationResult = await sendNotification({
-    expoPushToken: input.expoPushToken,
     title,
     subtitle,
     body,

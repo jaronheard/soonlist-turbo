@@ -1,6 +1,3 @@
-import type { ExpoPushMessage } from "expo-server-sdk";
-import Expo from "expo-server-sdk";
-import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -13,7 +10,8 @@ import type {
   ProcessedEventResponse,
 } from "./aiHelpers";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { generateNotificationId } from "../utils/notification";
+import { getDayBounds } from "../utils/date";
+import { sendNotificationToAllUserTokens } from "../utils/notification";
 import {
   createEventAndNotify,
   fetchAndProcessEvent,
@@ -22,7 +20,7 @@ import {
 
 const prototypeEventCreateBaseSchema = z.object({
   timezone: z.string(),
-  expoPushToken: z.string(),
+  expoPushToken: z.string().optional(),
   comment: z.string().optional(),
   lists: z.array(z.object({ value: z.string() })),
   visibility: z.enum(["public", "private"]).optional(),
@@ -44,20 +42,6 @@ const prototypeEventCreateFromUrlSchema = prototypeEventCreateBaseSchema.extend(
     url: z.string(),
   },
 );
-
-// Create a single Expo SDK client to be reused
-const expo = new Expo();
-
-function getDayBounds(timezone: string) {
-  const now = Temporal.Now.zonedDateTimeISO(timezone);
-  const startOfDay = now.startOfDay();
-  const endOfDay = now.add({ days: 1 }).startOfDay();
-
-  return {
-    start: new Date(startOfDay.epochMilliseconds),
-    end: new Date(endOfDay.epochMilliseconds),
-  };
-}
 
 export const aiRouter = createTRPCRouter({
   eventFromRawText: protectedProcedure
@@ -142,40 +126,19 @@ export const aiRouter = createTRPCRouter({
             throw error;
           }
 
-          const { expoPushToken } = input;
-
-          if (!Expo.isExpoPushToken(expoPushToken)) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: `Invalid Expo push token: ${String(expoPushToken)}`,
-            });
-          }
-
-          const notificationId = generateNotificationId();
-          const message: ExpoPushMessage = {
-            to: expoPushToken,
-            sound: "default",
+          // Send error notification to all user tokens
+          const result = await sendNotificationToAllUserTokens({
+            userId: input.userId,
             title: "Soonlist",
+            subtitle: "",
             body: "There was an error creating your event.",
-            data: {
-              url: "/feed",
-              notificationId,
-            },
-          };
+            url: "/feed",
+          });
 
-          try {
-            const [ticket] = await expo.sendPushNotificationsAsync([message]);
-            return {
-              success: true,
-              ticket,
-            };
-          } catch (notifError) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to send error notification",
-              cause: notifError,
-            });
-          }
+          return {
+            success: true,
+            ticket: result.tickets?.[0],
+          };
         }
       },
     ),
@@ -219,40 +182,19 @@ export const aiRouter = createTRPCRouter({
             throw error;
           }
 
-          const { expoPushToken } = input;
-
-          if (!Expo.isExpoPushToken(expoPushToken)) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: `Invalid Expo push token: ${String(expoPushToken)}`,
-            });
-          }
-
-          const notificationId = generateNotificationId();
-          const message: ExpoPushMessage = {
-            to: expoPushToken,
-            sound: "default",
+          // Send error notification to all user tokens
+          const result = await sendNotificationToAllUserTokens({
+            userId: input.userId,
             title: "Soonlist",
+            subtitle: "",
             body: "There was an error creating your event.",
-            data: {
-              url: "/feed",
-              notificationId,
-            },
-          };
+            url: "/feed",
+          });
 
-          try {
-            const [ticket] = await expo.sendPushNotificationsAsync([message]);
-            return {
-              success: true,
-              ticket,
-            };
-          } catch (notifError) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to send error notification",
-              cause: notifError,
-            });
-          }
+          return {
+            success: true,
+            ticket: result.tickets?.[0],
+          };
         }
       },
     ),
@@ -296,40 +238,19 @@ export const aiRouter = createTRPCRouter({
             throw error;
           }
 
-          const { expoPushToken } = input;
-
-          if (!Expo.isExpoPushToken(expoPushToken)) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: `Invalid Expo push token: ${String(expoPushToken)}`,
-            });
-          }
-
-          const notificationId = generateNotificationId();
-          const message: ExpoPushMessage = {
-            to: expoPushToken,
-            sound: "default",
+          // Send error notification to all user tokens
+          const result = await sendNotificationToAllUserTokens({
+            userId: input.userId,
             title: "Soonlist",
+            subtitle: "",
             body: "There was an error creating your event.",
-            data: {
-              url: "/feed",
-              notificationId,
-            },
-          };
+            url: "/feed",
+          });
 
-          try {
-            const [ticket] = await expo.sendPushNotificationsAsync([message]);
-            return {
-              success: true,
-              ticket,
-            };
-          } catch (notifError) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to send error notification",
-              cause: notifError,
-            });
-          }
+          return {
+            success: true,
+            ticket: result.tickets?.[0],
+          };
         }
       },
     ),
