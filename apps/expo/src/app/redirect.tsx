@@ -1,8 +1,7 @@
-import { ActivityIndicator, View } from "react-native";
-import { Linking } from "react-native";
-import { Stack, useRouter, useLocalSearchParams } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
+import { ActivityIndicator, Linking, View } from "react-native";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { toast } from "sonner-native";
 
 export default function RedirectScreen() {
