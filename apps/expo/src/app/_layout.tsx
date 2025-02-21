@@ -224,6 +224,13 @@ const InitialLayout = () => {
         }}
       />
       <Stack.Screen
+        name="redirect"
+        options={{
+          headerShown: false,
+          presentation: 'containedModal',
+        }}
+      />
+      <Stack.Screen
         name="onboarding/demo-capture"
         options={{
           presentation: "modal",
