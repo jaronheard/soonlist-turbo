@@ -2,10 +2,10 @@ import { useEffect } from "react";
 import { Linking } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { toast } from "sonner-native";
-import * as SplashScreen from 'expo-splash-screen';
+import * as SplashScreen from "expo-splash-screen";
 
 // Prevent splash screen from auto-hiding
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
 export default function RedirectScreen() {
   const { url } = useLocalSearchParams<{ url: string }>();
