@@ -22,13 +22,13 @@ export default function RedirectScreen() {
           if (canOpen) {
             await Linking.openURL(url);
           } else {
-            toast.error("Cannot open URL", {
+            toast.error("Cannot redirect to URL", {
               description: "The URL provided is not valid or cannot be opened",
             });
           }
         } catch (error) {
-          console.error("Error opening URL:", error);
-          toast.error("Error opening URL", {
+          console.error("Error redirecting to URL:", error);
+          toast.error("Error redirecting to URL", {
             description: "Please try again later",
           });
         }
