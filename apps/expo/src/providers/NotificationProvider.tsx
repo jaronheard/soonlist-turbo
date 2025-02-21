@@ -11,7 +11,10 @@ import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
+import { useAuth } from "@clerk/clerk-expo";
 import { usePostHog } from "posthog-react-native";
+
+import { api } from "~/utils/api";
 
 interface NotificationContextType {
   expoPushToken: string;
@@ -133,16 +136,23 @@ export function NotificationProvider({
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
   const posthog = usePostHog();
+  const { userId } = useAuth();
+  const { mutateAsync: createPushToken } = api.pushToken.create.useMutation();
 
   const registerForPushNotifications = async () => {
     try {
       const token = await registerForPushNotificationsAsync();
       setExpoPushToken(token ?? "");
       // After we possibly ask for permission, do one final check
-      if (token) {
+      if (token && userId) {
         await checkAndUpdateNotificationPermission(
           setHasNotificationPermission,
         );
+        // Save the token to the database
+        await createPushToken({
+          userId,
+          expoPushToken: token,
+        });
       }
     } catch (error: unknown) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
