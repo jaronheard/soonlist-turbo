@@ -1,7 +1,6 @@
 import type { Href } from "expo-router";
 import React, {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -18,7 +17,6 @@ interface NotificationContextType {
   expoPushToken: string;
   hasNotificationPermission: boolean;
   registerForPushNotifications: () => Promise<void>;
-  cleanup: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -267,18 +265,12 @@ export function NotificationProvider({
     };
   }, []);
 
-  const cleanup = useCallback(() => {
-    setExpoPushToken("");
-    setHasNotificationPermission(false);
-  }, []);
-
   return (
     <NotificationContext.Provider
       value={{
         expoPushToken,
         hasNotificationPermission,
         registerForPushNotifications,
-        cleanup,
       }}
     >
       {children}
