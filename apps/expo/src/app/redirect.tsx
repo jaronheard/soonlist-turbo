@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { Linking } from "react-native";
-import { useLocalSearchParams, Stack } from "expo-router";
-import { toast } from "sonner-native";
+import { Stack, useLocalSearchParams } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { toast } from "sonner-native";
 
 // Prevent splash screen from auto-hiding
 void SplashScreen.preventAutoHideAsync();
