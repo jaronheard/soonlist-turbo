@@ -3,7 +3,7 @@ import Intercom from "@intercom/intercom-react-native";
 
 import { useNotification } from "~/providers/NotificationProvider";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { clearPersistedStore } from "~/store";
+import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { deleteAuthData } from "./useAuthSync";
 
@@ -14,6 +14,7 @@ interface SignOutOptions {
 export const useSignOut = () => {
   const utils = api.useUtils();
   const { signOut, userId } = useAuth();
+  const resetStore = useAppStore((state) => state.resetStore);
   const { logout: revenueCatLogout } = useRevenueCat();
   const { expoPushToken } = useNotification();
   const { mutateAsync: deleteToken } = api.pushToken.deleteToken.useMutation();
@@ -25,8 +26,8 @@ export const useSignOut = () => {
     // First cancel all ongoing queries and prevent refetching
     await utils.invalidate();
 
-    // Reset local state and clear persisted data
-    await clearPersistedStore();
+    // Reset local state
+    resetStore();
 
     // Then clear all auth and third-party services
     await Promise.all([
