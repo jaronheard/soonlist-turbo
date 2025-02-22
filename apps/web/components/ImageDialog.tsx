@@ -28,13 +28,7 @@ export function ImageDialog({ src, alt }: ImageDialogProps) {
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] max-w-[90vw] p-0 sm:max-w-[85vw]">
         <div className="relative aspect-[4/3] w-full">
-          <Image
-            src={src}
-            alt={alt}
-            fill
-            className="object-contain"
-            priority
-          />
+          <Image src={src} alt={alt} fill className="object-contain" priority />
         </div>
       </DialogContent>
     </Dialog>

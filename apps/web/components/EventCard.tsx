@@ -78,10 +78,7 @@ export default function EventCard(props: {
 
           {/* Event Image */}
           <div className="mb-4">
-            <ImageDialog
-              src={eventImage}
-              alt="Event screenshot"
-            />
+            <ImageDialog src={eventImage} alt="Event screenshot" />
           </div>
 
           {/* Event Details */}
