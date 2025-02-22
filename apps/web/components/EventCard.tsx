@@ -81,7 +81,7 @@ export default function EventCard(props: {
               src={`${eventImage}`}
               alt="Event screenshot"
               fill
-              className="object-cover"
+              className="object-contain"
             />
           </div>
 
