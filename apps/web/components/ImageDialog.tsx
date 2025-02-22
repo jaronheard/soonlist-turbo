@@ -29,9 +29,9 @@ export function ImageDialog({ src, alt }: ImageDialogProps) {
           />
         </div>
       </DialogTrigger>
-      <DialogContent className="fixed inset-0 z-[100] bg-black/95 p-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 sm:p-0">
+      <DialogContent className="fixed inset-0 z-[100] bg-black/95 p-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
         <div className="relative flex h-screen w-screen items-center justify-center">
-          <div className="max-w-screen relative h-[90vh] max-h-screen w-[90vw]">
+          <div className="relative h-[80vh] w-full max-w-[90vw] sm:max-w-[85vw]">
             <Image
               src={src}
               alt={alt}
