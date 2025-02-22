@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
+import { X } from "lucide-react";
 
 import {
   Dialog,
@@ -9,7 +10,6 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@soonlist/ui/dialog";
-import { X } from "lucide-react";
 
 interface ImageDialogProps {
   src: string;
@@ -31,7 +31,7 @@ export function ImageDialog({ src, alt }: ImageDialogProps) {
       </DialogTrigger>
       <DialogContent className="fixed inset-0 z-[100] bg-black/95 p-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 sm:p-0">
         <div className="relative flex h-screen w-screen items-center justify-center">
-          <div className="relative h-[90vh] max-h-screen w-[90vw] max-w-screen">
+          <div className="max-w-screen relative h-[90vh] max-h-screen w-[90vw]">
             <Image
               src={src}
               alt={alt}
