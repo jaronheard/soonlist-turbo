@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 
+import { ImageDialog } from "./ImageDialog";
 import { Card } from "@soonlist/ui/card";
 
 export default function EventCard(props: {
@@ -76,12 +77,10 @@ export default function EventCard(props: {
           </div>
 
           {/* Event Image */}
-          <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-md">
-            <Image
-              src={`${eventImage}`}
+          <div className="mb-4">
+            <ImageDialog
+              src={eventImage}
               alt="Event screenshot"
-              fill
-              className="object-contain"
             />
           </div>
 
