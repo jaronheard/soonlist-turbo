@@ -29,19 +29,20 @@ export function ImageDialog({ src, alt }: ImageDialogProps) {
           />
         </div>
       </DialogTrigger>
-      <DialogContent className="fixed inset-0 z-50 bg-black/90 p-0">
+      <DialogContent className="fixed inset-0 z-50 bg-black/90 p-6 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
         <div className="relative flex h-full w-full items-center justify-center">
-          <div className="relative h-[90vh] w-[90vw]">
+          <div className="relative aspect-[4/3] max-h-[85vh] w-auto">
             <Image
               src={src}
               alt={alt}
               fill
-              className="object-contain"
+              className="rounded-lg object-contain"
               priority
-              sizes="90vw"
+              sizes="(max-width: 768px) 100vw, 85vw"
+              quality={95}
             />
           </div>
-          <DialogClose className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white hover:bg-black/70">
+          <DialogClose className="absolute right-6 top-6 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70">
             <X className="size-6" />
             <span className="sr-only">Close</span>
           </DialogClose>
