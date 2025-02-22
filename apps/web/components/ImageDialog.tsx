@@ -7,7 +7,7 @@ import { X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogPrimitive,
+  DialogClose,
   DialogTrigger,
 } from "../../../packages/ui/src/dialog";
 
@@ -39,10 +39,10 @@ export function ImageDialog({ src, alt }: ImageDialogProps) {
             priority
             sizes="95vw"
           />
-          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white hover:bg-black/70">
+          <DialogClose className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white hover:bg-black/70">
             <X className="size-6" />
             <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
+          </DialogClose>
         </div>
       </DialogContent>
     </Dialog>
