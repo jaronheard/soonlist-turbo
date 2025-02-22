@@ -16,6 +16,9 @@ export default function EventCard(props: {
   userEmoji: string;
   calendarButton: React.ReactNode;
   shareButton: React.ReactNode;
+  followButton: React.ReactNode;
+  editButton: React.ReactNode;
+  deleteButton: React.ReactNode;
 }) {
   const {
     userName,
@@ -29,6 +32,9 @@ export default function EventCard(props: {
     userEmoji,
     calendarButton,
     shareButton,
+    followButton,
+    editButton,
+    deleteButton,
   } = props;
 
   return (
@@ -100,7 +106,12 @@ export default function EventCard(props: {
                 <p className="text-[#627496]">{eventDescription}</p>
               </div>
 
-              <div className="flex gap-4 pt-2">{calendarButton}</div>
+              <div className="flex gap-4 pt-2">
+                {calendarButton}
+                {followButton}
+                {editButton}
+                {deleteButton}
+              </div>
             </div>
           </div>
         </Card>

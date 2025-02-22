@@ -10,8 +10,6 @@ import {
   Ear,
   Earth,
   EyeOff,
-  EyeOffIcon,
-  Globe2Icon,
   GlobeIcon,
   MapPin,
   MessageSquareIcon,
@@ -54,7 +52,6 @@ import EventCard from "./EventCard";
 import { FollowEventButton, FollowUserButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
 import { ListCard } from "./ListCard";
-import { PersonalNote } from "./PersonalNote";
 import { ShareButton } from "./ShareButton";
 import { UserProfileFlair } from "./UserProfileFlair";
 
@@ -564,28 +561,29 @@ function HappeningSoonBadge({ startDateInfo }: { startDateInfo: DateInfo }) {
   );
 }
 
-function EventDescription({
-  description,
-  truncate,
-}: {
-  description: string;
-  singleEvent?: boolean;
-  truncate?: boolean;
-}) {
-  return (
-    <div
-      className={cn("text-lg leading-7 text-neutral-1", {
-        "line-clamp-3": truncate,
-      })}
-    >
-      <span
-        dangerouslySetInnerHTML={{
-          __html: translateToHtml(description),
-        }}
-      ></span>
-    </div>
-  );
-}
+// TODO: Remove this
+// function EventDescription({
+//   description,
+//   truncate,
+// }: {
+//   description: string;
+//   singleEvent?: boolean;
+//   truncate?: boolean;
+// }) {
+//   return (
+//     <div
+//       className={cn("text-lg leading-7 text-neutral-1", {
+//         "line-clamp-3": truncate,
+//       })}
+//     >
+//       <span
+//         dangerouslySetInnerHTML={{
+//           __html: translateToHtml(description),
+//         }}
+//       ></span>
+//     </div>
+//   );
+// }
 
 function EventActionButtons({
   user,
@@ -1029,32 +1027,14 @@ function DateAndTimeDisplay({
 
 export function EventPage(props: EventPageProps) {
   const { user: clerkUser } = useUser();
-  const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const {
-    user,
-    eventFollows,
-    id,
-    event,
-    image,
-    singleEvent,
-    children,
-    eventMetadata,
-    visibility,
-  } = props;
+  const { user, eventFollows, id, event, image } = props;
   const roles = clerkUser?.unsafeMetadata.roles as string[] | undefined;
   const isSelf = clerkUser?.id === user?.id;
   const isOwner = isSelf || roles?.includes("admin");
   const isFollowing = !!eventFollows.find(
     (item) => clerkUser?.id === item.userId,
   );
-  const comment = props.comments
-    .filter((item) => user?.id === item.userId)
-    .pop();
 
   const {
     startDate,
@@ -1115,96 +1095,27 @@ export function EventPage(props: EventPageProps) {
         />
       }
       shareButton={<ShareButton type="icon" event={event} id={id} />}
+      followButton={
+        <div>
+          {user && !isSelf && (
+            <FollowEventButton eventId={id} following={isFollowing} />
+          )}
+        </div>
+      }
+      editButton={
+        <div>
+          {user && isOwner && (
+            <EditButton type="icon" userId={user.id} id={id} />
+          )}
+        </div>
+      }
+      deleteButton={
+        <div>
+          {user && isOwner && (
+            <DeleteButton type="icon" userId={user.id} id={id} />
+          )}
+        </div>
+      }
     />
   );
-
-  // COMMENTED OUT BECAUSE IT'S NOT USED
-  // return (
-  //   <div className="">
-  //     <div className="grid grid-cols-1 gap-1 ">
-  //       <div>
-  //         <div className="flex flex-col gap-2">
-  //           <DateAndTimeDisplay
-  //             endDateInfo={endDateInfo}
-  //             endTime={endTime}
-  //             isClient={isClient}
-  //             startDateInfo={startDateInfo}
-  //             startTime={startTime}
-  //           />
-  //           <h1 className="text-xl font-bold text-neutral-1">{event.name}</h1>
-  //           <div className="flex-start text-md flex gap-2 pr-12 leading-tight">
-  //             {location && (
-  //               <Link
-  //                 href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-  //                 className="line-clamp-1 flex shrink items-center gap-0.5 break-all text-neutral-2"
-  //               >
-  //                 <MapPin className="size-4 flex-shrink-0" />
-  //                 <span className="line-clamp-1">{location}</span>
-  //               </Link>
-  //             )}
-  //           </div>
-  //           <PersonalNote text={comment?.content} />
-
-  //           <div className="flex items-center gap-1 text-neutral-2">
-  //             {visibility === "public" ? (
-  //               <>
-  //                 <Globe2Icon className="size-4" />
-  //                 <span className="text-sm">Discoverable</span>
-  //               </>
-  //             ) : (
-  //               <>
-  //                 <EyeOffIcon className="size-4" />
-  //                 <span className="text-sm">Not discoverable</span>
-  //               </>
-  //             )}
-  //           </div>
-  //           {image && (
-  //             <Image
-  //               src={image}
-  //               className="mx-auto h-auto max-h-96 w-full object-contain"
-  //               alt=""
-  //               width={640}
-  //               height={480}
-  //             />
-  //           )}
-  //         </div>
-
-  //         <div className="flex flex-col gap-8 pt-8">
-  //           <EventDescription
-  //             description={event.description || ""}
-  //             singleEvent={singleEvent}
-  //           />
-  //           {eventMetadata && (
-  //             <div className="w-full">
-  //               <EventMetadataDisplay metadata={eventMetadata} />
-  //             </div>
-  //           )}
-  //           {!children && (
-  //             <div className="flex flex-wrap gap-2">
-  //               <ShareButton type="button" event={event} id={id} />
-  //               <CalendarButton
-  //                 type="button"
-  //                 event={event as ATCBActionEventConfig}
-  //                 id={id}
-  //                 username={user?.username}
-  //               />
-
-  //               {user && !isSelf && (
-  //                 <FollowEventButton eventId={id} following={isFollowing} />
-  //               )}
-  //               {user && isOwner && (
-  //                 <EditButton type="icon" userId={user.id} id={id} />
-  //               )}
-  //               {user && isOwner && (
-  //                 <DeleteButton type="icon" userId={user.id} id={id} />
-  //               )}
-  //             </div>
-  //           )}
-  //         </div>
-  //       </div>
-
-  //       {children}
-  //     </div>
-  //   </div>
-  // );
 }
