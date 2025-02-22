@@ -1,32 +1,8 @@
 "use client";
 
 import Image from "next/image";
-// import { motion } from "framer-motion";
-import { Calendar, ExternalLink, Share2 } from "lucide-react";
 
-import { Button } from "@soonlist/ui/button";
 import { Card } from "@soonlist/ui/card";
-
-// interface EventPageProps {
-//   user?: User;
-//   eventFollows: EventFollow[];
-//   comments: Comment[];
-//   id: string;
-//   createdAt?: Date;
-//   event: AddToCalendarButtonPropsRestricted;
-//   image?: string;
-//   visibility: "public" | "private";
-//   singleEvent?: boolean;
-//   hideCurator?: boolean;
-//   showOtherCurators?: boolean;
-//   similarEvents?: {
-//     event: EventWithUser;
-//     similarityDetails: SimilarityDetails;
-//   }[];
-//   lists?: List[];
-//   children?: React.ReactNode;
-//   eventMetadata?: EventMetadataDisplay;
-// }
 
 export default function EventCard(props: {
   userName: string;
@@ -38,6 +14,8 @@ export default function EventCard(props: {
   eventImage: string;
   userAvatar: string;
   userEmoji: string;
+  calendarButton: React.ReactNode;
+  shareButton: React.ReactNode;
 }) {
   const {
     userName,
@@ -49,6 +27,8 @@ export default function EventCard(props: {
     eventImage,
     userAvatar,
     userEmoji,
+    calendarButton,
+    shareButton,
   } = props;
 
   return (
@@ -81,13 +61,7 @@ export default function EventCard(props: {
                 <p className="text-sm text-[#627496]">with soonlist</p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-[#627496] hover:bg-[#e0d9ff] hover:text-[#34435f]"
-            >
-              <Share2 className="h-5 w-5" />
-            </Button>
+            {shareButton}
           </div>
 
           {/* Event Encapsulation */}
@@ -97,7 +71,7 @@ export default function EventCard(props: {
             </div>
 
             {/* Event Image */}
-            <div className="relative mb-4 h-48 w-full overflow-hidden rounded-md md:h-56">
+            <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-md">
               <Image
                 src={`${eventImage}`}
                 alt="Event screenshot"
@@ -126,22 +100,7 @@ export default function EventCard(props: {
                 <p className="text-[#627496]">{eventDescription}</p>
               </div>
 
-              <div className="flex gap-4 pt-2">
-                <Button
-                  variant="secondary"
-                  className="flex-1 border-0 bg-[#e0d9ff] text-[#34435f] hover:bg-[#5a32fb] hover:text-white"
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Add to calendar
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="flex-1 border-0 bg-[#e0d9ff] text-[#34435f] hover:bg-[#5a32fb] hover:text-white"
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  View event
-                </Button>
-              </div>
+              <div className="flex gap-4 pt-2">{calendarButton}</div>
             </div>
           </div>
         </Card>

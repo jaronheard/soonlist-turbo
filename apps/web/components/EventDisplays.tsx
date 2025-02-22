@@ -1106,6 +1106,15 @@ export function EventPage(props: EventPageProps) {
       eventLocation={location || ""}
       eventDescription={description || ""}
       eventImage={image || ""}
+      calendarButton={
+        <CalendarButton
+          event={event as ATCBActionEventConfig}
+          id={id}
+          username={user?.username}
+          type="button"
+        />
+      }
+      shareButton={<ShareButton type="icon" event={event} id={id} />}
     />
   );
 
