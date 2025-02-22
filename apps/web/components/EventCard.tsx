@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 
-import { ImageDialog } from "./ImageDialog";
 import { Card } from "@soonlist/ui/card";
+
+import { ImageDialog } from "./ImageDialog";
 
 export default function EventCard(props: {
   userName: string;
