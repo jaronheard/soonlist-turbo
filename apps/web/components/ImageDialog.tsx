@@ -7,8 +7,8 @@ import { X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogTrigger,
   DialogPrimitive,
+  DialogTrigger,
 } from "../../../packages/ui/src/dialog";
 
 interface ImageDialogProps {
@@ -31,12 +31,12 @@ export function ImageDialog({ src, alt }: ImageDialogProps) {
       </DialogTrigger>
       <DialogContent className="fixed inset-0 flex items-center justify-center bg-black/90 p-0">
         <div className="relative max-h-[95vh] max-w-[95vw]">
-          <Image 
-            src={src} 
-            alt={alt} 
-            fill 
-            className="object-contain" 
-            priority 
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            className="object-contain"
+            priority
             sizes="95vw"
           />
           <DialogPrimitive.Close className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white hover:bg-black/70">
