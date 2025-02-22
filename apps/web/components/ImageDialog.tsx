@@ -3,7 +3,12 @@
 import * as React from "react";
 import Image from "next/image";
 
-import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@soonlist/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTrigger,
+} from "@soonlist/ui/dialog";
 import { X } from "lucide-react";
 
 interface ImageDialogProps {
