@@ -2,14 +2,9 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { X } from "lucide-react";
 
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogTrigger,
-} from "../../../packages/ui/src/dialog";
+import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@soonlist/ui/dialog";
+import { X } from "lucide-react";
 
 interface ImageDialogProps {
   src: string;
