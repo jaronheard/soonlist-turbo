@@ -43,7 +43,7 @@ import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { feedback } from "~/lib/intercom/intercom";
-import { cn, translateToHtml } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 import { CalendarButton } from "./CalendarButton";
 import { DeleteButton } from "./DeleteButton";
