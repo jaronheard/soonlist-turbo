@@ -6,8 +6,8 @@ import { X } from "lucide-react";
 
 import {
   Dialog,
-  DialogContent,
   DialogClose,
+  DialogContent,
   DialogTrigger,
 } from "../../../packages/ui/src/dialog";
 
