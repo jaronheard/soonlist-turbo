@@ -249,32 +249,6 @@ export const users = mysqlTable(
   },
 );
 
-// Table to store push tokens
-export const pushTokens = mysqlTable(
-  "PushTokens",
-  {
-    id: int("id").primaryKey().autoincrement(),
-    userId: varchar("userId", { length: 191 }).notNull(),
-    expoPushToken: varchar("expoPushToken", { length: 191 }).notNull(),
-    createdAt: timestamp("created_at")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updatedAt").onUpdateNow(),
-  },
-  (table) => {
-    return {
-      userIdExpoPushTokenIdx: unique("PushTokens_userId_expoPushToken_idx").on(
-        table.userId,
-        table.expoPushToken,
-      ),
-    };
-  },
-);
-
-export const pushTokensRelations = relations(pushTokens, ({ one }) => ({
-  user: one(users, { fields: [pushTokens.userId], references: [users.id] }),
-}));
-
 export const usersRelations = relations(users, ({ many }) => ({
   events: many(events),
   eventFollows: many(eventFollows),
@@ -283,7 +257,6 @@ export const usersRelations = relations(users, ({ many }) => ({
   followers: many(userFollows, { relationName: "following" }),
   following: many(userFollows, { relationName: "follower" }),
   lists: many(lists),
-  pushTokens: many(pushTokens), // Add this line
 }));
 
 export const waitlistSubmissions = mysqlTable(
