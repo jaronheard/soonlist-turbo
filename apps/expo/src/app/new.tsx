@@ -12,7 +12,7 @@ import { NewEventHeader } from "~/components/NewEventHeader";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInitializeInput } from "~/hooks/useInitializeInput";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
-import { useNotification } from "~/providers/NotificationProvider";
+import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore } from "~/store";
 
 /**
@@ -26,7 +26,7 @@ const OFFSET_VALUE = 32;
 
 export default function NewShareScreen() {
   const { style: keyboardStyle } = useKeyboardHeight(OFFSET_VALUE);
-  const { expoPushToken, hasNotificationPermission } = useNotification();
+  const { hasNotificationPermission } = useOneSignal();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
   const [activeInput, setActiveInput] = useState<string | null>(null);
@@ -50,8 +50,18 @@ export default function NewShareScreen() {
   const { initialized } = useInitializeInput({
     text,
     imageUri,
-    recentPhotos: [], // we do not auto-fetch photos here
-    route: "new",
+    onTextExtracted: useCallback(
+      (extractedText: string) => {
+        setInput(extractedText);
+      },
+      [setInput],
+    ),
+    onLinkPreviewExtracted: useCallback(
+      (preview) => {
+        setLinkPreview(preview);
+      },
+      [setLinkPreview],
+    ),
   });
 
   /**
@@ -92,7 +102,6 @@ export default function NewShareScreen() {
         imageUri: imagePreview ?? undefined,
         userId: user.id,
         username: user.username,
-        expoPushToken: expoPushToken || "NOT_SET",
       });
 
       if (!hasNotificationPermission && eventId) {

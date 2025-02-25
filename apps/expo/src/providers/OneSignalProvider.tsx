@@ -1,32 +1,89 @@
-import React, { createContext, useContext, useEffect } from "react";
-import { Platform } from "react-native";
-import { LogLevel, OneSignal } from "react-native-onesignal";
+import type {
+  NotificationClickEvent,
+  NotificationWillDisplayEvent,
+} from "react-native-onesignal";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Linking, Platform } from "react-native";
+import {
+  LogLevel,
+  OneSignal,
+  OSNotificationPermission,
+} from "react-native-onesignal";
 import Constants from "expo-constants";
 import { useAuth } from "@clerk/clerk-expo";
+import { usePostHog } from "posthog-react-native";
 
 interface OneSignalContextType {
   hasNotificationPermission: boolean;
+  registerForPushNotifications: () => Promise<void>;
 }
 
-const OneSignalContext = createContext<OneSignalContextType>({
-  hasNotificationPermission: false,
-});
+const OneSignalContext = createContext<OneSignalContextType | undefined>(
+  undefined,
+);
 
 export const useOneSignal = () => {
-  return useContext(OneSignalContext);
+  const context = useContext(OneSignalContext);
+  if (!context) {
+    throw new Error("useOneSignal must be used within a OneSignalProvider");
+  }
+  return context;
 };
 
 interface OneSignalProviderProps {
   children: React.ReactNode;
 }
 
+// Type for notification additional data
+interface NotificationData {
+  url?: string;
+  [key: string]: unknown;
+}
+
+// Helper function to safely handle navigation
+const handleNavigation = (url: string) => {
+  try {
+    // Get the app scheme from Constants
+    const appScheme = Constants.expoConfig?.scheme;
+
+    if (!appScheme) {
+      console.error("App scheme not configured in app.config.ts");
+      return;
+    }
+
+    // Handle different URL types
+    if (url.startsWith("/")) {
+      // For internal routes, create a proper deep link URL with the app scheme
+      // This approach works with Expo Router's deep linking system
+      const deepLink = Array.isArray(appScheme)
+        ? `${appScheme[0]}:${url}`
+        : `${appScheme}:${url}`;
+
+      // Use Linking to open the URL
+      void Linking.openURL(deepLink).catch((error) => {
+        console.error("Failed to open internal URL:", error, deepLink);
+      });
+    } else if (url.startsWith("http")) {
+      // For external URLs, use Linking directly
+      void Linking.openURL(url).catch((error) => {
+        console.error("Failed to open external URL:", error, url);
+      });
+    } else {
+      console.warn("Unrecognized URL format:", url);
+    }
+  } catch (error) {
+    console.error("Failed to navigate to URL:", error);
+  }
+};
+
 export function OneSignalProvider({ children }: OneSignalProviderProps) {
   const { userId, isSignedIn } = useAuth();
   const [hasNotificationPermission, setHasNotificationPermission] =
-    React.useState(false);
+    useState(false);
+  const posthog = usePostHog();
 
+  // Initialize OneSignal
   useEffect(() => {
-    // Initialize OneSignal
     const oneSignalAppId = Constants.expoConfig?.extra
       ?.oneSignalAppId as string;
 
@@ -36,23 +93,46 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
     }
 
     // Enable logging for debugging (remove in production)
-    OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+    if (__DEV__) {
+      OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+    }
 
     // Initialize the OneSignal SDK
     OneSignal.initialize(oneSignalAppId);
 
-    // Prompt for push notifications and update permission state
-    OneSignal.Notifications.requestPermission(true).then((permission) => {
-      setHasNotificationPermission(permission);
-    });
+    // Check permission status
+    void OneSignal.Notifications.permissionNative()
+      .then((permission) => {
+        // Check if permission is granted
+        setHasNotificationPermission(
+          permission === OSNotificationPermission.Authorized ||
+            permission === OSNotificationPermission.Provisional ||
+            permission === OSNotificationPermission.Ephemeral,
+        );
+      })
+      .catch((error) => {
+        console.error("Error checking notification permission:", error);
+      });
 
-    // Set up event listeners using a type assertion to avoid TypeScript errors
+    // Set up notification handlers
     const setupNotificationListeners = () => {
       // Handle foreground notifications
       OneSignal.Notifications.addEventListener(
         "foregroundWillDisplay",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (event: any) => {
+        (event: NotificationWillDisplayEvent) => {
+          // Capture analytics
+          try {
+            posthog.capture("notification_received", {
+              title: event.notification.title || "",
+              body: event.notification.body || "",
+              notificationId: event.notification.notificationId || "",
+              data: event.notification.additionalData || {},
+            });
+          } catch (error) {
+            console.error("Failed to capture notification event:", error);
+          }
+
+          // Display the notification
           event.notification.display();
         },
       );
@@ -60,20 +140,49 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
       // Handle notification clicks
       OneSignal.Notifications.addEventListener(
         "click",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (event: any) => {
-          console.log("OneSignal: notification clicked:", event);
+        (event: NotificationClickEvent) => {
+          try {
+            posthog.capture("notification_opened", {
+              title: event.notification.title || "",
+              body: event.notification.body || "",
+              notificationId: event.notification.notificationId || "",
+              data: event.notification.additionalData || {},
+            });
+          } catch (error) {
+            console.error("Failed to capture notification event:", error);
+          }
 
-          // Handle deep linking if needed
-          if (event.notification.additionalData?.url) {
-            // Handle navigation here
+          // Handle deep linking
+          const data = event.notification.additionalData as
+            | NotificationData
+            | undefined;
+          if (data?.url && typeof data.url === "string") {
+            try {
+              posthog.capture("notification_deep_link", {
+                title: event.notification.title || "",
+                body: event.notification.body || "",
+                notificationId: event.notification.notificationId || "",
+                data: event.notification.additionalData || {},
+                url: data.url,
+              });
+            } catch (error) {
+              console.error("Failed to capture notification event:", error);
+            }
+
+            // Use our helper function to handle navigation
+            handleNavigation(data.url);
           }
         },
       );
     };
 
     setupNotificationListeners();
-  }, []);
+
+    // Cleanup
+    return () => {
+      OneSignal.Notifications.clearAll();
+    };
+  }, [posthog]);
 
   // Set external user ID when user signs in
   useEffect(() => {
@@ -92,8 +201,24 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
     }
   }, [userId, isSignedIn]);
 
+  // Function to request notification permissions
+  const registerForPushNotifications = async () => {
+    try {
+      const permission = await OneSignal.Notifications.requestPermission(true);
+      setHasNotificationPermission(Boolean(permission));
+    } catch (error) {
+      console.error("Error requesting notification permission:", error);
+    }
+  };
+
+  // Provide context values
+  const contextValue: OneSignalContextType = {
+    hasNotificationPermission,
+    registerForPushNotifications,
+  };
+
   return (
-    <OneSignalContext.Provider value={{ hasNotificationPermission }}>
+    <OneSignalContext.Provider value={contextValue}>
       {children}
     </OneSignalContext.Provider>
   );

@@ -14,8 +14,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
 import { initializeRevenueCat } from "~/lib/revenue-cat";
-import { api } from "~/utils/api";
-import { useNotification } from "./NotificationProvider";
+import { useOneSignal } from "./OneSignalProvider";
 
 interface RevenueCatContextType {
   isInitialized: boolean;
@@ -33,9 +32,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const { userId } = useAuth();
-  const { expoPushToken, hasNotificationPermission } = useNotification();
-  const sendNotification =
-    api.notification.sendSingleNotification.useMutation();
+  const { hasNotificationPermission } = useOneSignal();
 
   const login = useCallback(
     async (userId: string) => {
@@ -101,13 +98,15 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
         case PAYWALL_RESULT.PURCHASED:
         case PAYWALL_RESULT.RESTORED:
           // Send welcome notification if notifications are enabled
-          if (hasNotificationPermission && expoPushToken) {
-            void sendNotification.mutate({
-              expoPushToken,
-              title: "Welcome to Soonlist Unlimited! 🎉",
-              body: "Thanks for subscribing! Keep capturing your possibilities.",
-              data: { url: "/feed" },
-            });
+          if (hasNotificationPermission) {
+            // Using OneSignal for notifications
+            // The server will handle sending to all of the user's devices
+            toast.success(
+              "Welcome to Soonlist Unlimited! 🎉\n\nThanks for subscribing!",
+              {
+                duration: 5000,
+              },
+            );
           } else {
             toast.info(
               "Welcome to Soonlist Unlimited! 🎉\n\n Enable notifications to get reminders before your trial ends",

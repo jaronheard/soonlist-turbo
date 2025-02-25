@@ -11,10 +11,6 @@ import * as Sentry from "@sentry/react-native";
 import { PostHogProvider } from "posthog-react-native";
 
 import { useAppStateRefresh } from "~/hooks/useAppStateRefresh";
-import {
-  NotificationProvider,
-  useNotification,
-} from "~/providers/NotificationProvider";
 import { OneSignalProvider } from "~/providers/OneSignalProvider";
 import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import { TRPCProvider } from "~/utils/api";
@@ -136,13 +132,11 @@ function RootLayout() {
                     },
                   }}
                 >
-                  <NotificationProvider>
-                    <OneSignalProvider>
-                      <RevenueCatProvider>
-                        <RootLayoutContent />
-                      </RevenueCatProvider>
-                    </OneSignalProvider>
-                  </NotificationProvider>
+                  <OneSignalProvider>
+                    <RevenueCatProvider>
+                      <RootLayoutContent />
+                    </RevenueCatProvider>
+                  </OneSignalProvider>
                 </PostHogProvider>
               </SafeAreaProvider>
             </TRPCProvider>
@@ -245,7 +239,6 @@ const InitialLayout = () => {
 };
 
 function RootLayoutContent() {
-  const { expoPushToken } = useNotification();
   const { handleCalendarSelect, INITIAL_CALENDAR_LIMIT } = useCalendar();
   const { setIsCalendarModalVisible } = useAppStore();
   useAppStateRefresh();
@@ -261,7 +254,7 @@ function RootLayoutContent() {
 
   return (
     <View style={{ flex: 1 }}>
-      <AuthAndTokenSync expoPushToken={expoPushToken} />
+      <AuthAndTokenSync />
       <InitialLayout />
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
       <CalendarSelectionModal
