@@ -8,7 +8,6 @@ import { Button } from "@soonlist/ui/button";
 import { Stepper, StepStatus } from "@soonlist/ui/stepper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 
-
 import { Logo } from "~/components/Logo";
 import { PublicSaveButton } from "~/components/PublicSaveButton";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
@@ -233,8 +232,7 @@ function ProgressStagesFooter({ children }: { children: React.ReactNode }) {
 }
 
 function AddEvent() {
-  const { uploadOption, setUploadOption } =
-    useNewEventProgressContext();
+  const { uploadOption, setUploadOption } = useNewEventProgressContext();
 
   return (
     <div className="min-h-[60vh]">
