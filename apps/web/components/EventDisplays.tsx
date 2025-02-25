@@ -1071,7 +1071,7 @@ export function EventPage(props: EventPageProps) {
 
   return (
     <EventCard
-      userName={user?.username || ""}
+      userName={user?.displayName || user?.username || ""}
       userAvatar={user?.userImage || ""}
       userEmoji={user?.emoji || ""}
       eventName={event.name || ""}

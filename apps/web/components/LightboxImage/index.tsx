@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
+
 import "yet-another-react-lightbox/styles.css";
 
 interface LightboxImageProps {
@@ -32,7 +33,7 @@ export default function LightboxImage({
   return (
     <>
       <div
-        className={`cursor-pointer ${fill ? "relative w-full h-full" : ""}`}
+        className={`cursor-pointer ${fill ? "relative h-full w-full" : ""}`}
         onClick={() => setOpen(true)}
         role="button"
         tabIndex={0}
