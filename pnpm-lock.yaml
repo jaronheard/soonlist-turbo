@@ -205,6 +205,9 @@ importers:
       react-native-keyboard-controller:
         specifier: ^1.15.2
         version: 1.15.2(react-native-reanimated@3.16.6(@babel/core@7.26.0)(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+      react-native-onesignal:
+        specifier: ^5.2.8
+        version: 5.2.8
       react-native-purchases:
         specifier: ^8.5.0
         version: 8.5.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
@@ -8559,6 +8562,9 @@ packages:
       react: '*'
       react-native: '*'
       react-native-reanimated: '>=3.0.0'
+
+  react-native-onesignal@5.2.8:
+    resolution: {integrity: sha512-NZ0bq/z7Cjzb+mb/YJSC4atJ6S2yOGANkwzTQwUBAaMvhNuGzWJfWsj/gfhyS0AFTQScJV6Tsj1cR5nz2SEd3A==}
 
   react-native-purchases-ui@8.5.0:
     resolution: {integrity: sha512-KgVLcs4E58lKtTO6elstpmtSCAgpFPEQyUYKzzPbY5sxIjYwXYZJwd5xUPJ09vW5PO/vmdHxyDCAOm/bhyNxZg==}
@@ -19196,6 +19202,10 @@ snapshots:
       react-native: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)
       react-native-is-edge-to-edge: 1.1.6(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       react-native-reanimated: 3.16.6(@babel/core@7.26.0)(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+
+  react-native-onesignal@5.2.8:
+    dependencies:
+      invariant: 2.2.4
 
   react-native-purchases-ui@8.5.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
     dependencies:
