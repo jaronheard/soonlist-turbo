@@ -67,9 +67,7 @@ export default function EventCard(props: {
               <p className="text-sm text-neutral-2">with Soonlist</p>
             </div>
           </div>
-          <div>
-            {shareButton}
-          </div>
+          <div>{shareButton}</div>
         </div>
 
         {/* Event Encapsulation */}
