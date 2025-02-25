@@ -183,5 +183,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "a8acc202-ed8c-48ed-9e5a-2570f510fe8a",
     },
+    oneSignalAppId: "370b0888-ed76-4337-b13e-fe2606f17f0a",
   },
 });
