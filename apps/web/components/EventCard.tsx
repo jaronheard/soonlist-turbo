@@ -1,25 +1,25 @@
-"use client"
+"use client";
 
-import Image from "next/image"
+import Image from "next/image";
 
-import { Card } from "@soonlist/ui/card"
-import LightboxImage from "./LightboxImage"
+import { Card } from "@soonlist/ui/card";
+import LightboxImage from "./LightboxImage";
 
 export default function EventCard(props: {
-  userName: string
-  eventName: string
-  eventDate: string
-  eventTime: string
-  eventLocation: string
-  eventDescription: string
-  eventImage: string
-  userAvatar: string
-  userEmoji: string
-  calendarButton: React.ReactNode
-  shareButton: React.ReactNode
-  followButton: React.ReactNode
-  editButton: React.ReactNode
-  deleteButton: React.ReactNode
+  userName: string;
+  eventName: string;
+  eventDate: string;
+  eventTime: string;
+  eventLocation: string;
+  eventDescription: string;
+  eventImage: string;
+  userAvatar: string;
+  userEmoji: string;
+  calendarButton: React.ReactNode;
+  shareButton: React.ReactNode;
+  followButton: React.ReactNode;
+  editButton: React.ReactNode;
+  deleteButton: React.ReactNode;
 }) {
   const {
     userName,
@@ -36,7 +36,7 @@ export default function EventCard(props: {
     followButton,
     editButton,
     deleteButton,
-  } = props
+  } = props;
 
   return (
     <div className="w-full max-w-2xl">
@@ -116,5 +116,5 @@ export default function EventCard(props: {
         </div>
       </Card>
     </div>
-  )
+  );
 }
