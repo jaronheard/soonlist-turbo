@@ -48,7 +48,7 @@ export default function NotificationsScreen() {
   });
 
   const handleNotificationPermission = async () => {
-    if (isLoading || onboardingData.notificationsEnabled === true) return;
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
@@ -66,13 +66,14 @@ export default function NotificationsScreen() {
         return;
       }
 
-      await registerForPushNotifications();
+      // Request permissions and get the result
+      const isPermissionGranted = await registerForPushNotifications();
 
-      // After requesting permissions, check if they were granted
+      // Save the step with the permission result
       saveStep(
         "notifications",
         {
-          notificationsEnabled: hasNotificationPermission,
+          notificationsEnabled: isPermissionGranted,
         },
         "/onboarding/02-age",
       );
@@ -114,22 +115,14 @@ export default function NotificationsScreen() {
                   className="w-full border-l border-[#3c3c43]/30 py-3"
                   onPress={handleNotificationPermission}
                   hitSlop={40}
-                  disabled={
-                    isLoading || onboardingData.notificationsEnabled === true
-                  }
+                  disabled={isLoading}
                 >
                   <Text
                     className={`text-center text-lg font-bold ${
-                      isLoading || onboardingData.notificationsEnabled === true
-                        ? "text-blue-500/50"
-                        : "text-blue-500"
+                      isLoading ? "text-blue-500/50" : "text-blue-500"
                     }`}
                   >
-                    {isLoading
-                      ? "Loading..."
-                      : onboardingData.notificationsEnabled === true
-                        ? "Allowed"
-                        : "Allow"}
+                    {isLoading ? "Loading..." : "Allow"}
                   </Text>
                 </Pressable>
                 <Animated.View style={animatedStyle}>

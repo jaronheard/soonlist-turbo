@@ -15,7 +15,8 @@ import { usePostHog } from "posthog-react-native";
 
 interface OneSignalContextType {
   hasNotificationPermission: boolean;
-  registerForPushNotifications: () => Promise<void>;
+  registerForPushNotifications: () => Promise<boolean>;
+  checkPermissionStatus: () => Promise<boolean>;
 }
 
 const OneSignalContext = createContext<OneSignalContextType | undefined>(
@@ -201,15 +202,35 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
     }
   }, [userId, isSignedIn]);
 
+  // Function to check notification permission status
+  const checkPermissionStatus = async (): Promise<boolean> => {
+    try {
+      const permission = await OneSignal.Notifications.permissionNative();
+      const isPermissionGranted =
+        permission === OSNotificationPermission.Authorized ||
+        permission === OSNotificationPermission.Provisional ||
+        permission === OSNotificationPermission.Ephemeral;
+
+      setHasNotificationPermission(isPermissionGranted);
+      return isPermissionGranted;
+    } catch (error) {
+      console.error("Error checking notification permission:", error);
+      return false;
+    }
+  };
+
   // Function to request notification permissions
-  const registerForPushNotifications = async () => {
+  const registerForPushNotifications = async (): Promise<boolean> => {
     try {
       // The 'true' parameter forces the permission dialog to show
       // This should only be called during onboarding when the user explicitly agrees
-      const permission = await OneSignal.Notifications.requestPermission(true);
-      setHasNotificationPermission(Boolean(permission));
+      await OneSignal.Notifications.requestPermission(true);
+
+      // Check the permission status after requesting
+      return await checkPermissionStatus();
     } catch (error) {
       console.error("Error requesting notification permission:", error);
+      return false;
     }
   };
 
@@ -217,6 +238,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
   const contextValue: OneSignalContextType = {
     hasNotificationPermission,
     registerForPushNotifications,
+    checkPermissionStatus,
   };
 
   return (

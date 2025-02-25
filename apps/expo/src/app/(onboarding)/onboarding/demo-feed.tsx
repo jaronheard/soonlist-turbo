@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Text, View } from "react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
+import * as Notifications from "expo-notifications";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
 
 import type { DemoEvent } from "~/components/demoData";
@@ -8,8 +9,16 @@ import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
 import { FinishDemoButton } from "~/components/FinishDemoButton";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import UserEventsList from "~/components/UserEventsList"; // Reuse your existing feed list
+import { useOneSignal } from "~/providers/OneSignalProvider";
 
-const NOTIFICATION_DELAY = 1000; // 4 seconds
+// Set up notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 // Sort events by date (earliest first)
 const sortEventsByDate = (events: DemoEvent[]) => {
@@ -20,32 +29,13 @@ const sortEventsByDate = (events: DemoEvent[]) => {
   });
 };
 
-// Handle showing the notification
-const showNotification = async (eventId: string, eventName: string) => {
-  try {
-    // For demo purposes, we'll use a toast notification instead
-    // since OneSignal is primarily for remote notifications
-    toast.success("Event Captured! 🎉", {
-      description: `"${eventName}" has been added to your feed`,
-      duration: 4000,
-      action: {
-        label: "View",
-        onClick: () => {
-          // Navigate to the event if needed
-        },
-      },
-    });
-  } catch (error) {
-    console.error("Failed to show notification:", error);
-    toast(`New event added: ${eventName}`);
-  }
-};
-
 export default function DemoFeedScreen() {
+  const router = useRouter();
   const { eventId, eventName } = useLocalSearchParams<{
     eventId?: string;
     eventName?: string;
   }>();
+  const { hasNotificationPermission, checkPermissionStatus } = useOneSignal();
 
   // The newly captured event from user selection
   const [newEvent, setNewEvent] = useState<DemoEvent | null>(null);
@@ -60,6 +50,41 @@ export default function DemoFeedScreen() {
 
   // The local feed
   const [demoFeed, setDemoFeed] = useState<DemoEvent[]>(initialFeed);
+
+  // Handle showing the notification
+  const showNotification = async (eventId: string, eventName: string) => {
+    try {
+      // Check if notification permissions are granted using OneSignal
+      const startTime = performance.now();
+      const hasPermission = await checkPermissionStatus();
+      const endTime = performance.now();
+      console.log(`Permission check took ${endTime - startTime}ms`);
+
+      if (hasPermission) {
+        // Use Expo's local notifications with optimized settings for immediate display
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Event Captured! 🎉",
+            body: `"${eventName}" has been added to your feed`,
+            data: { eventId },
+            sound: true, // Play sound to make it more noticeable
+            priority: "high", // Set high priority
+          },
+          trigger: null, // Show immediately
+        });
+      } else {
+        // Use toast if notifications are not enabled
+        toast.success("Event Captured! 🎉", {
+          description: `"${eventName}" has been added to your feed`,
+          duration: 4000,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to show notification:", error);
+      // Fallback to toast if notification fails
+      toast.success(`New event added: ${eventName}`);
+    }
+  };
 
   // Calculate stats based on feed events
   const stats = useMemo(() => {
@@ -78,20 +103,14 @@ export default function DemoFeedScreen() {
     setNewEvent(found ?? null);
   }, [eventId]);
 
-  // Add the new event and show notification after delay
+  // Add the new event and show notification immediately
   useEffect(() => {
-    let timer: NodeJS.Timeout;
     if (newEvent && eventName) {
-      timer = setTimeout(() => {
-        // Add event to feed and sort by date
-        setDemoFeed((prev) => sortEventsByDate([newEvent, ...prev]));
-        // Show notification
-        void showNotification(eventId!, eventName);
-      }, NOTIFICATION_DELAY);
+      // Add event to feed and sort by date
+      setDemoFeed((prev) => sortEventsByDate([newEvent, ...prev]));
+      // Show notification immediately
+      void showNotification(eventId!, eventName);
     }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
   }, [newEvent, eventId, eventName]);
 
   // We can reuse the <UserEventsList> with minimal props
