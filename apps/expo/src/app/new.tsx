@@ -36,6 +36,7 @@ export default function NewShareScreen() {
     setInput,
     setLinkPreview,
     resetNewEventState,
+    recentPhotos,
   } = useAppStore();
 
   // Grab "text" or "imageUri" from the share extension
@@ -50,18 +51,8 @@ export default function NewShareScreen() {
   const { initialized } = useInitializeInput({
     text,
     imageUri,
-    onTextExtracted: useCallback(
-      (extractedText: string) => {
-        setInput(extractedText);
-      },
-      [setInput],
-    ),
-    onLinkPreviewExtracted: useCallback(
-      (preview) => {
-        setLinkPreview(preview);
-      },
-      [setLinkPreview],
-    ),
+    recentPhotos,
+    route: "new",
   });
 
   /**
