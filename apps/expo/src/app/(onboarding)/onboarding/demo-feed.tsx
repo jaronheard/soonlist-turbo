@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Text, View } from "react-native";
-import * as Notifications from "expo-notifications";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { toast } from "sonner-native";
 
@@ -24,23 +23,18 @@ const sortEventsByDate = (events: DemoEvent[]) => {
 // Handle showing the notification
 const showNotification = async (eventId: string, eventName: string) => {
   try {
-    const { status } = await Notifications.getPermissionsAsync();
-    if (status === Notifications.PermissionStatus.GRANTED) {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Event Captured! 🎉",
-          body: `"${eventName}" has been added to your feed`,
-          data: {
-            url: `/onboarding/demo-feed?eventId=${eventId}`,
-            notificationId: "demo-capture-notification",
-          },
+    // For demo purposes, we'll use a toast notification instead
+    // since OneSignal is primarily for remote notifications
+    toast.success("Event Captured! 🎉", {
+      description: `"${eventName}" has been added to your feed`,
+      duration: 4000,
+      action: {
+        label: "View",
+        onClick: () => {
+          // Navigate to the event if needed
         },
-        trigger: null, // Show immediately since we're already delayed
-      });
-    } else {
-      // Fallback to toast if no notification permissions
-      toast(`New event added: ${eventName}`);
-    }
+      },
+    });
   } catch (error) {
     console.error("Failed to show notification:", error);
     toast(`New event added: ${eventName}`);

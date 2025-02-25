@@ -15,12 +15,12 @@ import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
-import { useNotification } from "~/providers/NotificationProvider";
+import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore } from "~/store";
 
 export default function AddEventModal() {
   const { style: keyboardStyle } = useKeyboardHeight(32);
-  const { expoPushToken, hasNotificationPermission } = useNotification();
+  const { hasNotificationPermission } = useOneSignal();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
   const {
@@ -124,7 +124,6 @@ export default function AddEventModal() {
         imageUri: imagePreview ?? undefined,
         userId: user.id,
         username: user.username,
-        expoPushToken: expoPushToken || "NOT_SET",
       });
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {

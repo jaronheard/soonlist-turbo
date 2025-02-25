@@ -204,6 +204,8 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
   // Function to request notification permissions
   const registerForPushNotifications = async () => {
     try {
+      // The 'true' parameter forces the permission dialog to show
+      // This should only be called during onboarding when the user explicitly agrees
       const permission = await OneSignal.Notifications.requestPermission(true);
       setHasNotificationPermission(Boolean(permission));
     } catch (error) {

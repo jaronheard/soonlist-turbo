@@ -24,7 +24,6 @@ import {
   eventToLists,
 } from "@soonlist/db/schema";
 
-import type { RouterOutputs } from "..";
 import type { Context } from "../trpc";
 import { generatePublicId } from "../utils";
 import {
