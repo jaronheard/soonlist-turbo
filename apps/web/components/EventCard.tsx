@@ -62,7 +62,7 @@ export default function EventCard(props: {
             </div>
             <div>
               <p className="text-lg font-semibold text-neutral-1">
-                @{userName} saved
+                {userName} saved
               </p>
               <p className="text-sm text-neutral-2">with Soonlist</p>
             </div>
