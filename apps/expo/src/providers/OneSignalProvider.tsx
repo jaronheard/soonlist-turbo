@@ -1,8 +1,20 @@
-import React, { useEffect } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { Platform } from "react-native";
 import { LogLevel, OneSignal } from "react-native-onesignal";
 import Constants from "expo-constants";
 import { useAuth } from "@clerk/clerk-expo";
+
+interface OneSignalContextType {
+  hasNotificationPermission: boolean;
+}
+
+const OneSignalContext = createContext<OneSignalContextType>({
+  hasNotificationPermission: false,
+});
+
+export const useOneSignal = () => {
+  return useContext(OneSignalContext);
+};
 
 interface OneSignalProviderProps {
   children: React.ReactNode;
@@ -10,6 +22,8 @@ interface OneSignalProviderProps {
 
 export function OneSignalProvider({ children }: OneSignalProviderProps) {
   const { userId, isSignedIn } = useAuth();
+  const [hasNotificationPermission, setHasNotificationPermission] =
+    React.useState(false);
 
   useEffect(() => {
     // Initialize OneSignal
@@ -27,8 +41,10 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
     // Initialize the OneSignal SDK
     OneSignal.initialize(oneSignalAppId);
 
-    // Prompt for push notifications
-    OneSignal.Notifications.requestPermission(true);
+    // Prompt for push notifications and update permission state
+    OneSignal.Notifications.requestPermission(true).then((permission) => {
+      setHasNotificationPermission(permission);
+    });
 
     // Set up event listeners using a type assertion to avoid TypeScript errors
     const setupNotificationListeners = () => {
@@ -47,6 +63,11 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (event: any) => {
           console.log("OneSignal: notification clicked:", event);
+
+          // Handle deep linking if needed
+          if (event.notification.additionalData?.url) {
+            // Handle navigation here
+          }
         },
       );
     };
@@ -71,5 +92,9 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
     }
   }, [userId, isSignedIn]);
 
-  return <>{children}</>;
+  return (
+    <OneSignalContext.Provider value={{ hasNotificationPermission }}>
+      {children}
+    </OneSignalContext.Provider>
+  );
 }
