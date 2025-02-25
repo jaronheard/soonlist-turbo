@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { ZoomIn } from "lucide-react";
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
@@ -53,6 +54,12 @@ export default function LightboxImage({
           priority={priority}
           sizes={sizes}
         />
+        {/* Gradient fade-out overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none"></div>
+        {/* Magnifying glass icon */}
+        <div className="absolute bottom-2 right-2 bg-black/30 rounded-full p-1">
+          <ZoomIn className="h-5 w-5 text-white" />
+        </div>
       </div>
 
       <Lightbox
