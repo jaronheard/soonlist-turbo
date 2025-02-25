@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import { Card } from "@soonlist/ui/card";
+import LightboxImage from "./LightboxImage";
 
 export default function EventCard(props: {
   userName: string;
@@ -75,11 +76,11 @@ export default function EventCard(props: {
             Saved Event
           </div>
 
-          {/* Event Image */}
+          {/* Event Image - Lightbox */}
           <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-md">
-            <Image
+            <LightboxImage
               src={`${eventImage}`}
-              alt="Event screenshot"
+              alt="Event flyer"
               fill
               className="object-contain"
             />

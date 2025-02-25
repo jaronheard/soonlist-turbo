@@ -57,6 +57,7 @@
     "svix": "^1.15.0",
     "timezone-soft": "^1.5.2",
     "uuid": "^9.0.1",
+    "yet-another-react-lightbox": "^3.21.7",
     "zod": "^3.23.0"
   },
   "devDependencies": {
