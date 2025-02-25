@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import Image from "next/image";
-import { ZoomIn } from "lucide-react";
-import Lightbox from "yet-another-react-lightbox";
-import Zoom from "yet-another-react-lightbox/plugins/zoom";
-import "yet-another-react-lightbox/styles.css";
+import React, { useState } from "react"
+import Image from "next/image"
+import { ZoomIn } from "lucide-react"
+import Lightbox from "yet-another-react-lightbox"
+import Zoom from "yet-another-react-lightbox/plugins/zoom"
+import "yet-another-react-lightbox/styles.css"
 
 interface LightboxImageProps {
-  src: string;
-  alt: string;
-  width?: number;
-  height?: number;
-  fill?: boolean;
-  className?: string;
-  priority?: boolean;
-  sizes?: string;
+  src: string
+  alt: string
+  width?: number
+  height?: number
+  fill?: boolean
+  className?: string
+  priority?: boolean
+  sizes?: string
 }
 
 export default function LightboxImage({
@@ -28,7 +28,7 @@ export default function LightboxImage({
   priority = false,
   sizes,
 }: LightboxImageProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   return (
     <>
@@ -40,7 +40,7 @@ export default function LightboxImage({
         aria-label={`Open ${alt} in fullscreen mode`}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
-            setOpen(true);
+            setOpen(true)
           }
         }}
       >
@@ -91,5 +91,5 @@ export default function LightboxImage({
         }}
       />
     </>
-  );
+  )
 }
