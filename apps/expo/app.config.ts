@@ -122,6 +122,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         imageWidth: 200,
       },
     ],
+    [
+      "onesignal-expo-plugin",
+      {
+        mode: "development",
+      },
+    ],
     // [
     //   "expo-background-fetch",
     //   {

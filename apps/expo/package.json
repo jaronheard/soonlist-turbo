@@ -77,6 +77,7 @@
     "expo-web-browser": "~14.0.1",
     "lucide-react-native": "^0.424.0",
     "nativewind": "~4.1.23",
+    "onesignal-expo-plugin": "^2.0.3",
     "posthog-react-native": "^3.6.2",
     "posthog-react-native-session-replay": "^0.1.9",
     "react": "18.3.1",
