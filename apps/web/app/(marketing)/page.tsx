@@ -199,7 +199,7 @@ function HeroSection() {
                 className="inline-block"
               >
                 <Image
-                  src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1739059200"
+                  src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us"
                   alt="Download on the App Store"
                   width={246}
                   height={82}
