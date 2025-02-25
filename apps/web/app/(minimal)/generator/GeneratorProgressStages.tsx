@@ -1,15 +1,14 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Camera, Globe2 } from "lucide-react";
+import { Camera } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
 import { Stepper, StepStatus } from "@soonlist/ui/stepper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 
-import { ImageUpload } from "~/components/ImageUpload";
+
 import { Logo } from "~/components/Logo";
 import { PublicSaveButton } from "~/components/PublicSaveButton";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
@@ -234,10 +233,8 @@ function ProgressStagesFooter({ children }: { children: React.ReactNode }) {
 }
 
 function AddEvent() {
-  const router = useRouter();
-  const { goToNextStatus, uploadOption, setUploadOption } =
+  const { uploadOption, setUploadOption } =
     useNewEventProgressContext();
-  const { timezone } = useContext(TimezoneContext);
 
   return (
     <div className="min-h-[60vh]">

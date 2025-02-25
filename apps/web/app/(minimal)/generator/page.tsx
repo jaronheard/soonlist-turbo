@@ -1,4 +1,3 @@
-import { api } from "~/trpc/server";
 import { EventsFromImage } from "../new/EventsFromImage";
 import { GeneratorProgressStages } from "./GeneratorProgressStages";
 
