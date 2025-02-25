@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { Camera } from "lucide-react";
 
@@ -17,7 +17,7 @@ import {
   UploadOptionsSchema,
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
-import { TimezoneContext } from "~/context/TimezoneContext";
+
 import {
   UploadImageForProcessingButton,
   UploadImageForProcessingDropzone,
