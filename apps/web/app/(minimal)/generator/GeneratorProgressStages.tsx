@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Camera } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
 import { Stepper, StepStatus } from "@soonlist/ui/stepper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
+import { toast } from "sonner";
 
 import { Logo } from "~/components/Logo";
 import { PublicSaveButton } from "~/components/PublicSaveButton";
@@ -17,11 +19,13 @@ import {
   UploadOptionsSchema,
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
+import { api } from "~/trpc/react";
 
+import { BenefitsHighlights } from "./BenefitsHighlights";
 import {
-  UploadImageForProcessingButton,
-  UploadImageForProcessingDropzone,
-} from "../new/uploadImages";
+  GeneratorUploadImageButton,
+  GeneratorUploadImageDropzone,
+} from "./uploadImages";
 
 function ProgressStagesStepper({ status }: { status: Status }) {
   const { goToStatus } = useNewEventProgressContext();
@@ -122,7 +126,52 @@ export function GeneratorProgressStages({
       setIsShortcut(true);
       setStatus(Status.Publish);
     }
-  }, [showUpload, setIsShortcut, setStatus, isShortcut]);
+
+    // Auto-publish when event data is available
+    if (
+      eventData &&
+      status === Status.Publish &&
+      !updateEventTriggered.current
+    ) {
+      updateEventTriggered.current = true;
+      // Small delay to ensure UI updates first
+      setTimeout(() => {
+        handleAutoPublish();
+      }, 500);
+    }
+  }, [showUpload, setIsShortcut, setStatus, isShortcut, eventData, status]);
+
+  // Reference to track if we've triggered the auto-publish
+  const updateEventTriggered = useRef(false);
+
+  // Create mutation for auto-publishing
+  const router = useRouter();
+  const updateEvent = api.publicEvent.create.useMutation({
+    onError: () => {
+      toast.error("Your event was not saved. Please try again.");
+    },
+    onSuccess: ({ id }) => {
+      toast.success("Event saved.");
+      router.push(`/event/${id}`);
+    },
+  });
+  
+  // Function to handle auto-publishing
+  const handleAutoPublish = () => {
+    if (eventData) {
+      // Use the PublicSaveButton's functionality but trigger it programmatically
+      const environment =
+        process.env.NODE_ENV === "development" ? "development" : "production";
+      updateEvent.mutate({
+        event: { ...eventData, images },
+        eventMetadata: eventData.eventMetadata,
+        comment: organizeData.notes,
+        visibility: "public",
+        lists: organizeData.lists || [],
+        environment,
+      });
+    }
+  };
 
   const hasFilePath = croppedImagesUrls.filePath;
   const hasAllAspectRatios =
@@ -236,27 +285,30 @@ function AddEvent() {
 
   return (
     <div className="min-h-[60vh]">
-      <Tabs
-        value={uploadOption}
-        onValueChange={(value: string) => {
-          const parsedValue = UploadOptionsSchema.parse(value);
-          setUploadOption(parsedValue);
-        }}
-        className="w-80 sm:w-96"
-      >
-        <TabsList className="grid w-full grid-cols-1">
-          <TabsTrigger value="image">
-            <Camera className="mr-3 size-6" />
-            Image
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="image" className="mt-11">
-          <UploadImageForProcessingDropzone />
-          <ProgressStagesFooter>
-            <UploadImageForProcessingButton />
-          </ProgressStagesFooter>
-        </TabsContent>
-      </Tabs>
+      <BenefitsHighlights />
+      <div className="mt-8">
+        <Tabs
+          value={uploadOption}
+          onValueChange={(value: string) => {
+            const parsedValue = UploadOptionsSchema.parse(value);
+            setUploadOption(parsedValue);
+          }}
+          className="w-80 sm:w-96"
+        >
+          <TabsList className="grid w-full grid-cols-1">
+            <TabsTrigger value="image">
+              <Camera className="mr-3 size-6" />
+              Image
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="image" className="mt-11">
+            <GeneratorUploadImageDropzone />
+            <ProgressStagesFooter>
+              <GeneratorUploadImageButton />
+            </ProgressStagesFooter>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

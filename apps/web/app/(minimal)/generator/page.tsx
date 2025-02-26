@@ -1,4 +1,5 @@
 import { EventsFromImage } from "../new/EventsFromImage";
+import { GeneratorLoadingSpinner } from "./GeneratorLoadingSpinner";
 import { GeneratorProgressStages } from "./GeneratorProgressStages";
 
 export const maxDuration = 60;
@@ -22,6 +23,7 @@ export default async function Page({ searchParams }: Props) {
           <EventsFromImage
             timezone={timezone}
             filePath={searchParams.filePath}
+            LoadingComponent={GeneratorLoadingSpinner}
           />
         }
       />

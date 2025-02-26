@@ -24,9 +24,11 @@ const queryOptions = {
 export function EventsFromImage({
   filePath,
   timezone,
+  LoadingComponent = EventPreviewLoadingSpinner,
 }: {
   filePath: string;
   timezone: string;
+  LoadingComponent?: React.ComponentType<{ className?: string }>;
 }) {
   const fromImage = api.ai.eventFromImage.useQuery(
     {
@@ -39,7 +41,7 @@ export function EventsFromImage({
   const { events, response } = fromImage.data ?? {};
 
   if (fromImage.isPending) {
-    return <EventPreviewLoadingSpinner className="h-64" />;
+    return <LoadingComponent className="h-64" />;
   }
 
   if (!events || events.length === 0) {
