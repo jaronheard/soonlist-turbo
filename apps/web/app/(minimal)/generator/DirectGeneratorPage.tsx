@@ -47,11 +47,11 @@ function PageWrapper({ children }: { children: React.ReactNode }) {
 export function DirectGeneratorPage({
   showUpload,
   filePath,
-  Preview,
+  LoadingComponent,
 }: {
   showUpload?: boolean;
   filePath?: string;
-  Preview?: JSX.Element;
+  LoadingComponent?: React.ComponentType<{ className?: string }>;
 }) {
   const { organizeData, eventData } = useNewEventContext();
   const { croppedImagesUrls } = useCroppedImageContext();
@@ -136,7 +136,7 @@ export function DirectGeneratorPage({
             Your event is being created...
           </p>
         </div>
-        {Preview || <></>}
+        {LoadingComponent ? <LoadingComponent className="h-64" /> : null}
       </PageWrapper>
     );
   }
@@ -173,4 +173,3 @@ export function DirectGeneratorPage({
     </PageWrapper>
   );
 }
-

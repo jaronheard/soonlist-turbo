@@ -19,17 +19,10 @@ export default async function Page({ searchParams }: Props) {
     return (
       <DirectGeneratorPage
         filePath={searchParams.filePath}
-        Preview={
-          <EventsFromImage
-            timezone={timezone}
-            filePath={searchParams.filePath}
-            LoadingComponent={GeneratorLoadingSpinner}
-          />
-        }
+        LoadingComponent={GeneratorLoadingSpinner}
       />
     );
   }
 
   return <DirectGeneratorPage showUpload={true} />;
 }
-
