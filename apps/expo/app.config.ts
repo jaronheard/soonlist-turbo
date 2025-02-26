@@ -157,6 +157,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           CFBundleURLSchemes: [getUniqueIdentifier()],
         },
       ],
+      NSSupportsLiveActivities: true,
+      NSSupportsLiveActivitiesFrequentUpdates: true,
     },
     associatedDomains: ["applinks:www.soonlist.com"],
   },
