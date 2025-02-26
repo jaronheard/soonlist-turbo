@@ -1,6 +1,6 @@
 /** @type {import('@bacons/apple-targets').Config} */
 module.exports = {
-  type: "widget",
+  type: "live-activity",
   name: "Live Activity",
   frameworks: ["SwiftUI", "ActivityKit"],
 };
