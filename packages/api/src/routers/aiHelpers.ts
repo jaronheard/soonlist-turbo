@@ -61,8 +61,8 @@ function createLoggedObjectGenerator({
   ): Promise<ReturnType<typeof generateObject<T>>> => {
     const trace = langfuse.trace({
       name: loggingOptions.name,
-      sessionId: ctx.auth?.sessionId || 'anonymous',
-      userId: ctx.auth?.userId || 'anonymous',
+      sessionId: ctx.auth?.sessionId || "anonymous",
+      userId: ctx.auth?.userId || "anonymous",
       input: input.rawText || input.imageUrl,
       version: promptVersion,
     });
