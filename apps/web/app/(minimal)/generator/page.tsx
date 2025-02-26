@@ -32,3 +32,4 @@ export default async function Page({ searchParams }: Props) {
 
   return <DirectGeneratorPage showUpload={true} />;
 }
+
