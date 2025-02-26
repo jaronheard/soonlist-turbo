@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ZoomIn } from "lucide-react";
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
+
 import "yet-another-react-lightbox/styles.css";
 
 interface LightboxImageProps {
@@ -33,7 +34,7 @@ export default function LightboxImage({
   return (
     <>
       <div
-        className={`cursor-pointer ${fill ? "relative w-full h-full" : ""}`}
+        className={`cursor-pointer ${fill ? "relative h-full w-full" : ""}`}
         onClick={() => setOpen(true)}
         role="button"
         tabIndex={0}
@@ -55,10 +56,10 @@ export default function LightboxImage({
           sizes={sizes}
         />
         {/* Gradient fade-out overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/0 to-bg-interactive-3/100 pointer-events-none"></div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-b from-transparent to-interactive-3"></div>
         {/* Magnifying glass icon */}
-        <div className="absolute bottom-2 right-2 bg-white rounded-full p-1">
-          <ZoomIn className="h-5 w-5 text-interactive-1" />
+        <div className="absolute bottom-2 right-2 rounded-full bg-interactive-2 p-2">
+          <ZoomIn className="h-6 w-6 text-interactive-1" />
         </div>
       </div>
 

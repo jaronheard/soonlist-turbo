@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import { Card } from "@soonlist/ui/card";
+
 import LightboxImage from "./LightboxImage";
 
 export default function EventCard(props: {
