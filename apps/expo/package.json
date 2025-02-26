@@ -32,7 +32,7 @@
     "with-env:production": "dotenv -e ../../.env.production --"
   },
   "dependencies": {
-    "@bacons/apple-targets": "^0.0.5",
+    "@bacons/apple-targets": "^0.2.1",
     "@bytescale/sdk": "^3.34.0",
     "@clerk/clerk-expo": "^1.1.0",
     "@intercom/intercom-react-native": "^7.2.1",
