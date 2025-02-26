@@ -155,7 +155,7 @@ export function GeneratorProgressStages({
       router.push(`/event/${id}`);
     },
   });
-  
+
   // Function to handle auto-publishing
   const handleAutoPublish = () => {
     if (eventData) {
