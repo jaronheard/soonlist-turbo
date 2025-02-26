@@ -8,6 +8,7 @@
 import ActivityKit
 import SwiftUI
 import WidgetKit
+import OneSignalLiveActivities
 
 struct FizlActivityView: View {
     let context: ActivityViewContext<FizlAttributes>
@@ -113,6 +114,54 @@ struct FizlWidget: Widget {
                     .frame(width: 16)
             }
             .widgetURL(URL(string: context.state.widgetUrl))
+        }
+    }
+}
+
+// Add a new widget that supports OneSignal DefaultLiveActivityAttributes
+struct OneSignalLiveActivityWidget: Widget {
+    var body: some WidgetConfiguration {
+        ActivityConfiguration(for: DefaultLiveActivityAttributes.self) { context in
+            // Lock screen/banner UI goes here
+            VStack {
+                Spacer()
+                Text("Title: " + (context.attributes.data["title"]?.asString() ?? "")).font(.headline)
+                Spacer()
+                HStack {
+                    Spacer()
+                    Text(context.state.data["message"]?.asDict()?["en"]?.asString() ?? "Default Message")
+                    Spacer()
+                }
+                Text("INT: " + String(context.state.data["intValue"]?.asInt() ?? 0))
+                Text("DBL: " + String(context.state.data["doubleValue"]?.asDouble() ?? 0.0))
+                Text("BOL: " + String(context.state.data["boolValue"]?.asBool() ?? false))
+                Spacer()
+            }
+            .activitySystemActionForegroundColor(.black)
+            .activityBackgroundTint(.white)
+        } dynamicIsland: { context in
+            DynamicIsland {
+                // Expanded UI goes here.  Compose the expanded UI through
+                // various regions, like leading/trailing/center/bottom
+                DynamicIslandExpandedRegion(.leading) {
+                    Text("Leading")
+                }
+                DynamicIslandExpandedRegion(.trailing) {
+                    Text("Trailing")
+                }
+                DynamicIslandExpandedRegion(.bottom) {
+                    Text("Bottom")
+                    // more content
+                }
+            } compactLeading: {
+                Text("L")
+            } compactTrailing: {
+                Text("T")
+            } minimal: {
+                Text("Min")
+            }
+            .widgetURL(URL(string: "http://www.apple.com"))
+            .keylineTint(Color.red)
         }
     }
 }
