@@ -6,7 +6,7 @@ public class LiveActivityControlModule: Module {
         Name("LiveActivityControl")
         
         Function("areActivitiesEnabled") { () -> Bool in
-            let logger = Logger()
+            let logger = Logger(logHandlers: <#[any LogHandler]#>)
             logger.info("areActivitiesEnabled()")
             
             if #available(iOS 16.2, *) {
@@ -17,7 +17,7 @@ public class LiveActivityControlModule: Module {
         }
         
         Function("startActivity") { (startTimeUnix: UInt64, endTimeUnix: UInt64, title: String, headline: String, widgetUrl: String) -> Bool in
-            let logger = Logger()
+            let logger = Logger(logHandlers: <#[any LogHandler]#>)
             logger.info("startActivity()")
 
             let startTime =  Date(timeIntervalSince1970: TimeInterval(startTimeUnix))
@@ -44,7 +44,7 @@ public class LiveActivityControlModule: Module {
         }
 
         Function("endActivity") { (title: String, headline: String, widgetUrl: String) -> Void in
-            let logger = Logger()
+            let logger = Logger(logHandlers: <#[any LogHandler]#>)
             logger.info("endActivity()")
             
             if #available(iOS 16.2, *) {
