@@ -6,8 +6,7 @@ public class LiveActivityControlModule: Module {
         Name("LiveActivityControl")
         
         Function("areActivitiesEnabled") { () -> Bool in
-            let logger = Logger(logHandlers: <#[any LogHandler]#>)
-            logger.info("areActivitiesEnabled()")
+            NSLog("LiveActivityControl: areActivitiesEnabled()")
             
             if #available(iOS 16.2, *) {
                 return ActivityAuthorizationInfo().areActivitiesEnabled
@@ -17,8 +16,7 @@ public class LiveActivityControlModule: Module {
         }
         
         Function("startActivity") { (startTimeUnix: UInt64, endTimeUnix: UInt64, title: String, headline: String, widgetUrl: String) -> Bool in
-            let logger = Logger(logHandlers: <#[any LogHandler]#>)
-            logger.info("startActivity()")
+            NSLog("LiveActivityControl: startActivity()")
 
             let startTime =  Date(timeIntervalSince1970: TimeInterval(startTimeUnix))
             let endTime =  Date(timeIntervalSince1970: TimeInterval(endTimeUnix))
@@ -31,21 +29,20 @@ public class LiveActivityControlModule: Module {
                 
                 do {
                     let activity = try Activity.request(attributes: attributes, content: activityContent)
-                    logger.info("Requested a Live Activity \(String(describing: activity.id)).")
+                    NSLog("LiveActivityControl: Requested a Live Activity \(String(describing: activity.id)).")
                     return true
                 } catch (let error) {
-                    logger.info("Error requesting Live Activity \(error.localizedDescription).")
+                    NSLog("LiveActivityControl: Error requesting Live Activity \(error.localizedDescription).")
                     return false
                 }
             } else {
-                logger.info("iOS version is lower than 16.2. Live Activity is not available.")
+                NSLog("LiveActivityControl: iOS version is lower than 16.2. Live Activity is not available.")
                 return false
             }
         }
 
         Function("endActivity") { (title: String, headline: String, widgetUrl: String) -> Void in
-            let logger = Logger(logHandlers: <#[any LogHandler]#>)
-            logger.info("endActivity()")
+            NSLog("LiveActivityControl: endActivity()")
             
             if #available(iOS 16.2, *) {
                 let contentState = FizlAttributes.ContentState(startTime: .now, endTime: .now, title: title, headline: headline, widgetUrl: widgetUrl)
@@ -54,7 +51,7 @@ public class LiveActivityControlModule: Module {
                 Task {
                     for activity in Activity<FizlAttributes>.activities {
                         await activity.end(finalContent, dismissalPolicy: .immediate)
-                        logger.info("Ending the Live Activity: \(activity.id)")
+                        NSLog("LiveActivityControl: Ending the Live Activity: \(activity.id)")
                     }
                 }
             }
