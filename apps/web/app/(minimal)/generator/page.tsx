@@ -1,6 +1,6 @@
 import { EventsFromImage } from "../new/EventsFromImage";
 import { GeneratorLoadingSpinner } from "./GeneratorLoadingSpinner";
-import { GeneratorProgressStages } from "./GeneratorProgressStages";
+import { DirectGeneratorPage } from "./DirectGeneratorPage";
 
 export const maxDuration = 60;
 
@@ -17,7 +17,7 @@ export default async function Page({ searchParams }: Props) {
   // image only
   if (searchParams.filePath) {
     return (
-      <GeneratorProgressStages
+      <DirectGeneratorPage
         filePath={searchParams.filePath}
         Preview={
           <EventsFromImage
@@ -30,5 +30,5 @@ export default async function Page({ searchParams }: Props) {
     );
   }
 
-  return <GeneratorProgressStages showUpload={true} />;
+  return <DirectGeneratorPage showUpload={true} />;
 }
