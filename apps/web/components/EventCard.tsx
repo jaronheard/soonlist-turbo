@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import { Card } from "@soonlist/ui/card";
+
 import LightboxImage from "./LightboxImage";
 
 export default function EventCard(props: {
@@ -42,7 +43,7 @@ export default function EventCard(props: {
     <div className="w-full max-w-2xl">
       <Card className="overflow-hidden border-interactive-3 bg-white p-6 shadow-sm">
         {/* User Saved Header */}
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex w-full items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-interactive-1">
@@ -62,12 +63,12 @@ export default function EventCard(props: {
             </div>
             <div>
               <p className="text-lg font-semibold text-neutral-1">
-                @{userName} saved this
+                {userName} saved
               </p>
               <p className="text-sm text-neutral-2">with Soonlist</p>
             </div>
           </div>
-          {shareButton}
+          <div>{shareButton}</div>
         </div>
 
         {/* Event Encapsulation */}
