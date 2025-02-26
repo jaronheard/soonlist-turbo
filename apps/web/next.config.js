@@ -51,10 +51,6 @@ const nextConfig = {
         protocol: "https",
         hostname: "toolbox.marketingtools.apple.com",
       },
-      {
-        protocol: "https",
-        hostname: "tools.applemediaservices.com",
-      },
     ],
   },
   async rewrites() {
