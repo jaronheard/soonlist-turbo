@@ -1,6 +1,7 @@
 import { EventsFromImage } from "../new/EventsFromImage";
 import { GeneratorLoadingSpinner } from "./GeneratorLoadingSpinner";
 import { DirectGeneratorPage } from "./DirectGeneratorPage";
+import { NewEventProvider } from "~/context/NewEventContext";
 
 export const maxDuration = 60;
 
@@ -17,12 +18,21 @@ export default async function Page({ searchParams }: Props) {
   // image only
   if (searchParams.filePath) {
     return (
-      <DirectGeneratorPage
-        filePath={searchParams.filePath}
-        LoadingComponent={GeneratorLoadingSpinner}
-      />
+      <NewEventProvider>
+        <DirectGeneratorPage
+          filePath={searchParams.filePath}
+          LoadingComponent={GeneratorLoadingSpinner}
+        />
+        <div className="hidden">
+          <EventsFromImage
+            timezone={timezone}
+            filePath={searchParams.filePath}
+            processOnly={true}
+          />
+        </div>
+      </NewEventProvider>
     );
   }
 
-  return <DirectGeneratorPage showUpload={true} />;
+  return <NewEventProvider><DirectGeneratorPage showUpload={true} /></NewEventProvider>;
 }
