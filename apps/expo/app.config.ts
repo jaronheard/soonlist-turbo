@@ -55,7 +55,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-build-properties",
       {
         ios: {
-          deploymentTarget: "15.1",
+          deploymentTarget: "16.2",
           infoPlist: {
             PHPhotoLibraryPreventAutomaticLimitedAccessAlert: true,
           },

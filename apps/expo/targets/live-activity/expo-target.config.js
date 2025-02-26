@@ -4,7 +4,7 @@ module.exports = {
   name: "LiveActivity",
   frameworks: ["SwiftUI", "ActivityKit"],
   icon: "../../assets/icon.png",
-  deploymentTarget: "15.1",
+  deploymentTarget: "16.2",
   entitlements: {
     "com.apple.security.application-groups": [
       process.env.APP_VARIANT === "development"
