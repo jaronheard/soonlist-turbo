@@ -1,56 +1,79 @@
-//
-//  Fizl_ActivityLiveActivity.swift
-//  Fizl Activity
-//
-//  Created by Dominic on 2023-12-27.
-//
-
 import ActivityKit
 import SwiftUI
 import WidgetKit
 import OneSignalLiveActivities
 
+// Add Soonlist brand colors
+extension Color {
+    static let soonlistPurple = Color(hex: "#5A32FB") // Primary background/accent
+    static let soonlistLightPurple = Color(hex: "#E0D9FF") // Secondary/accent
+}
+
+// Add hex color initializer
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue: Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
 struct FizlActivityView: View {
     let context: ActivityViewContext<FizlAttributes>
     @Environment(\.colorScheme) var colorScheme
+    @State private var isPulsing = false
 
     var body: some View {
-        HStack {
-            VStack(spacing: 10) {
-                HStack {
-                    Image(colorScheme == .dark ? "FizlIconWhite" : "FizlIcon")
+        VStack(spacing: 10) {
+            HStack {
+                // Group logo and text together
+                HStack(spacing: 8) {
+                    Image(colorScheme == .dark ? "SoonlistIcon" : "SoonlistIcon")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 32, height: 32)
+                    
                     Text(context.state.headline)
                         .font(.headline)
-                    Spacer()
+                        .foregroundColor(.soonlistPurple)
+                        .fontWeight(.bold)
                 }
-                .padding(.top)
-
-                HStack {
-                    Text(context.state.title)
-                        .font(.title2)
-                        .padding(.top, 5)
-                    Spacer()
-                }
-
-                Spacer()
-
-                ProgressView(timerInterval: context.state.startTime...context.state.endTime, countsDown: false)
-                    .progressViewStyle(LinearProgressViewStyle())
-
-                Spacer()
+                
+                Spacer() // Maximum space between logo+text and pulsing circle
+                
+                // Pulsing circle
+                Circle()
+                .fill(Color.soonlistPurple)
+                    .frame(width: 12, height: 12)
+                    .scaleEffect(isPulsing ? 1.2 : 0.8)
+                    .opacity(isPulsing ? 0.6 : 1.0)
+                    .animation(Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isPulsing)
+                    .onAppear {
+                        isPulsing = true
+                    }
             }
-            .padding(.horizontal)
-
-            Image("SmallListing")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .cornerRadius(10)
-                .frame(width: 100)
-                .padding()
+            .padding(.vertical)
         }
+        .padding(.horizontal)
+        .background(Color.soonlistLightPurple.opacity(1))
     }
 }
 
@@ -60,30 +83,23 @@ struct FizlIslandBottom: View {
     var body: some View {
         VStack {
             HStack {
-                VStack(spacing: 10) {
+                VStack(spacing: 8) {
                     Spacer()
 
                     Text(context.state.title)
-                        .font(.title3)
-
-                    ProgressView(timerInterval: context.state.startTime...context.state.endTime, countsDown: false)
-                        .progressViewStyle(LinearProgressViewStyle())
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .fontWeight(.bold)
 
                     Spacer()
                 }
-                .padding(.horizontal)
-
-                Image("SmallListing")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .cornerRadius(10)
-                    .frame(width: 100)
             }
         }
     }
 }
 
 struct FizlWidget: Widget {
+    @State private var isPulsing = false
     let kind: String = "Fizl_Widget"
 
     var body: some WidgetConfiguration {
@@ -92,28 +108,60 @@ struct FizlWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Image("FizlIconWhite")
+                    Image("SoonlistIcon")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 36)
                         .padding(.leading)
+                        .frame(maxHeight: .infinity)
                 }
-                DynamicIslandExpandedRegion(.trailing) {}
+                DynamicIslandExpandedRegion(.trailing) {
+                  Circle()
+                    .fill(Color.soonlistPurple)
+                        .frame(width: 36)
+                        .scaleEffect(isPulsing ? 1.2 : 0.8)
+                        .opacity(isPulsing ? 0.6 : 1.0)
+                        .animation(Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isPulsing)
+                        .onAppear {
+                            isPulsing = true
+                        }
+                        .frame(maxHeight: .infinity)
+                        .padding(.trailing)
+                }
                 DynamicIslandExpandedRegion(.bottom) {
                     FizlIslandBottom(context: context)
                 }
             } compactLeading: {
-                Image("FizlIconWhite")
+                Image("SoonlistIcon")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 16)
-            } compactTrailing: {} minimal: {
-                Image("FizlIconWhite")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .frame(maxHeight: .infinity)
+            } compactTrailing: {
+              Circle()
+                .fill(Color.soonlistPurple)
                     .frame(width: 16)
+                    .scaleEffect(isPulsing ? 1.2 : 0.8)
+                    .opacity(isPulsing ? 0.6 : 1.0)
+                    .animation(Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isPulsing)
+                    .onAppear {
+                        isPulsing = true
+                    }
+                    .frame(maxHeight: .infinity)
+            } minimal: {
+              Circle()
+                .fill(Color.soonlistPurple)
+                    .frame(width: 16)
+                    .scaleEffect(isPulsing ? 1.2 : 0.8)
+                    .opacity(isPulsing ? 0.6 : 1.0)
+                    .animation(Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isPulsing)
+                    .onAppear {
+                        isPulsing = true
+                    }
+                    .frame(maxHeight: .infinity)
             }
             .widgetURL(URL(string: context.state.widgetUrl))
+            .keylineTint(.soonlistPurple)
         }
     }
 }
@@ -174,7 +222,7 @@ private extension FizlAttributes {
 
 private extension FizlAttributes.ContentState {
     static var state: FizlAttributes.ContentState {
-        FizlAttributes.ContentState(startTime: Date(timeIntervalSince1970: TimeInterval(1704300710)), endTime: Date(timeIntervalSince1970: TimeInterval(1704304310)), title: "Started at 11:54AM", headline: "Fizl in Progress", widgetUrl: "https://www.apple.com")
+        FizlAttributes.ContentState(startTime: Date(timeIntervalSince1970: TimeInterval(1704300710)), endTime: Date(timeIntervalSince1970: TimeInterval(1704304310)), title: "Capturing event...", headline: "Capturing event...", widgetUrl: "https://www.apple.com")
     }
 }
 
