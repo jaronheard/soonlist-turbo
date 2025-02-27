@@ -36,8 +36,9 @@ extension Color {
     }
 }
 
-struct FizlActivityView: View {
-    let context: ActivityViewContext<FizlAttributes>
+// Capture Activity View for lock screen/banner UI
+struct CaptureActivityView: View {
+    let context: ActivityViewContext<DefaultLiveActivityAttributes>
     @Environment(\.colorScheme) var colorScheme
     @State private var isPulsing = false
 
@@ -51,7 +52,7 @@ struct FizlActivityView: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 32, height: 32)
                     
-                    Text(context.state.headline)
+                    Text(context.state.data["headline"]?.asString() ?? "Capturing event...")
                         .font(.headline)
                         .foregroundColor(.soonlistPurple)
                         .fontWeight(.bold)
@@ -77,8 +78,9 @@ struct FizlActivityView: View {
     }
 }
 
-struct FizlIslandBottom: View {
-    let context: ActivityViewContext<FizlAttributes>
+// Bottom region of Dynamic Island expanded view
+struct CaptureIslandBottom: View {
+    let context: ActivityViewContext<DefaultLiveActivityAttributes>
 
     var body: some View {
         VStack {
@@ -86,7 +88,7 @@ struct FizlIslandBottom: View {
                 VStack(spacing: 8) {
                     Spacer()
 
-                    Text(context.state.title)
+                    Text(context.state.data["headline"]?.asString() ?? "Capturing event...")
                     .font(.headline)
                     .foregroundColor(.white)
                     .fontWeight(.bold)
@@ -98,13 +100,14 @@ struct FizlIslandBottom: View {
     }
 }
 
-struct FizlWidget: Widget {
+// OneSignal Live Activity Capture Widget
+struct OneSignalLiveActivityCaptureWidget: Widget {
     @State private var isPulsing = false
-    let kind: String = "Fizl_Widget"
+    let kind: String = "capture"
 
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: FizlAttributes.self) { context in
-            FizlActivityView(context: context)
+        ActivityConfiguration(for: DefaultLiveActivityAttributes.self) { context in
+            CaptureActivityView(context: context)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -129,7 +132,7 @@ struct FizlWidget: Widget {
                         .padding(.trailing)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    FizlIslandBottom(context: context)
+                    CaptureIslandBottom(context: context)
                 }
             } compactLeading: {
                 Image("SoonlistIcon")
@@ -160,90 +163,9 @@ struct FizlWidget: Widget {
                     }
                     .frame(maxHeight: .infinity)
             }
-            .widgetURL(URL(string: context.state.widgetUrl))
+            .widgetURL(URL(string: context.state.data["widgetUrl"]?.asString() ?? "soonlist://feed"))
             .keylineTint(.soonlistPurple)
         }
     }
 }
 
-// Add a new widget that supports OneSignal DefaultLiveActivityAttributes
-struct OneSignalLiveActivityWidget: Widget {
-    var body: some WidgetConfiguration {
-        ActivityConfiguration(for: DefaultLiveActivityAttributes.self) { context in
-            // Lock screen/banner UI goes here
-            VStack {
-                Spacer()
-                Text("Title: " + (context.attributes.data["title"]?.asString() ?? "")).font(.headline)
-                Spacer()
-                HStack {
-                    Spacer()
-                    Text(context.state.data["message"]?.asDict()?["en"]?.asString() ?? "Default Message")
-                    Spacer()
-                }
-                Text("INT: " + String(context.state.data["intValue"]?.asInt() ?? 0))
-                Text("DBL: " + String(context.state.data["doubleValue"]?.asDouble() ?? 0.0))
-                Text("BOL: " + String(context.state.data["boolValue"]?.asBool() ?? false))
-                Spacer()
-            }
-            .activitySystemActionForegroundColor(.black)
-            .activityBackgroundTint(.white)
-        } dynamicIsland: { context in
-            DynamicIsland {
-                // Expanded UI goes here.  Compose the expanded UI through
-                // various regions, like leading/trailing/center/bottom
-                DynamicIslandExpandedRegion(.leading) {
-                    Text("Leading")
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    Text("Trailing")
-                }
-                DynamicIslandExpandedRegion(.bottom) {
-                    Text("Bottom")
-                    // more content
-                }
-            } compactLeading: {
-                Text("L")
-            } compactTrailing: {
-                Text("T")
-            } minimal: {
-                Text("Min")
-            }
-            .widgetURL(URL(string: "http://www.apple.com"))
-            .keylineTint(Color.red)
-        }
-    }
-}
-
-private extension FizlAttributes {
-    static var preview: FizlAttributes {
-        FizlAttributes()
-    }
-}
-
-private extension FizlAttributes.ContentState {
-    static var state: FizlAttributes.ContentState {
-        FizlAttributes.ContentState(startTime: Date(timeIntervalSince1970: TimeInterval(1704300710)), endTime: Date(timeIntervalSince1970: TimeInterval(1704304310)), title: "Capturing event...", headline: "Capturing event...", widgetUrl: "https://www.apple.com")
-    }
-}
-
-struct FizlActivityView_Previews: PreviewProvider {
-    static var previews: some View {
-        Group {
-            FizlAttributes.preview
-                .previewContext(FizlAttributes.ContentState.state, viewKind: .content)
-                .previewDisplayName("Content View")
-
-            FizlAttributes.preview
-                .previewContext(FizlAttributes.ContentState.state, viewKind: .dynamicIsland(.compact))
-                .previewDisplayName("Dynamic Island Compact")
-
-            FizlAttributes.preview
-                .previewContext(FizlAttributes.ContentState.state, viewKind: .dynamicIsland(.expanded))
-                .previewDisplayName("Dynamic Island Expanded")
-
-            FizlAttributes.preview
-                .previewContext(FizlAttributes.ContentState.state, viewKind: .dynamicIsland(.minimal))
-                .previewDisplayName("Dynamic Island Minimal")
-        }
-    }
-}
