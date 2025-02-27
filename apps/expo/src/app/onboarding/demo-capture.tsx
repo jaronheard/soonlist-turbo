@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
+import * as Notifications from "expo-notifications";
 import { router, Stack } from "expo-router";
 
 import type { DemoEvent, ImageSource } from "~/components/demoData";
@@ -9,6 +10,10 @@ import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
 import { EventPreview } from "~/components/EventPreview";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
+import {
+  startOneSignalLiveActivity,
+  updateOneSignalLiveActivity,
+} from "~/utils/oneSignalLiveActivity";
 
 const OFFSET_VALUE = 32;
 
@@ -56,6 +61,52 @@ export default function DemoCaptureScreen() {
   };
 
   const handleSubmit = async () => {
+    // Start live activity immediately
+    const liveActivityId = "capture_" + Date.now();
+
+    // Calculate stale date - 5 seconds from now (in milliseconds since epoch)
+    const staleDate = Math.floor(Date.now()) + 5000;
+
+    const attributes = {
+      title: selectedEvent.name,
+      activityType: "capture",
+    };
+    const content = {
+      message: { en: "Capturing event..." },
+      stale_date: staleDate, // Add stale_date so the live activity automatically ends
+    };
+
+    const activityStarted = startOneSignalLiveActivity(
+      liveActivityId,
+      attributes,
+      content,
+    );
+    if (!activityStarted) {
+      console.error("Failed to start live activity");
+    }
+
+    // Schedule finishing the live activity and a notification after 5 seconds
+    setTimeout(() => {
+      void (async () => {
+        const finishedContent = { message: { en: "Event capture finished." } };
+        updateOneSignalLiveActivity(liveActivityId, finishedContent);
+        try {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Event Capture Complete",
+              body: `"${selectedEvent.name}" has been captured.`,
+              sound: true,
+              priority: "high",
+            },
+            trigger: null,
+          });
+        } catch (error) {
+          console.error("Failed to schedule notification:", error);
+        }
+      })();
+    }, 5000);
+
+    // Continue with navigation
     router.dismissTo(
       `/onboarding/demo-feed?eventId=${selectedEvent.id}&eventName=${encodeURIComponent(selectedEvent.name)}`,
     );
