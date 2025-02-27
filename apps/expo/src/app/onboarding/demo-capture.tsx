@@ -11,11 +11,12 @@ import { EventPreview } from "~/components/EventPreview";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import {
+  endOneSignalLiveActivity,
   startOneSignalLiveActivity,
-  updateOneSignalLiveActivity,
 } from "~/utils/oneSignalLiveActivity";
 
 const OFFSET_VALUE = 32;
+const NOTIFICATION_DELAY = 2000;
 
 // Ensure we have at least one event with an image
 const DEFAULT_EVENT = DEMO_CAPTURE_EVENTS.find((event) => event.imageUri);
@@ -60,12 +61,11 @@ export default function DemoCaptureScreen() {
     setSelectedEvent(event);
   };
 
-  const handleSubmit = async () => {
-    // Start live activity immediately
-    const liveActivityId = "capture_" + Date.now();
+  const handleSubmit = () => {
+    // Generate a unique ID using crypto.randomUUID() to match web app pattern
+    const liveActivityId = "capture_" + crypto.randomUUID();
 
-    // Calculate stale date - 5 seconds from now (in milliseconds since epoch)
-    const staleDate = Math.floor(Date.now()) + 5000;
+    const staleDate = Math.floor(Date.now()) + 4000;
 
     const attributes = {
       title: selectedEvent.name,
@@ -88,23 +88,40 @@ export default function DemoCaptureScreen() {
     // Schedule finishing the live activity and a notification after 5 seconds
     setTimeout(() => {
       void (async () => {
-        const finishedContent = { message: { en: "Event capture finished." } };
-        updateOneSignalLiveActivity(liveActivityId, finishedContent);
-        try {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: "Event Capture Complete",
-              body: `"${selectedEvent.name}" has been captured.`,
-              sound: true,
-              priority: "high",
-            },
-            trigger: null,
-          });
-        } catch (error) {
-          console.error("Failed to schedule notification:", error);
-        }
+        // Run the Live Activity ending and notification scheduling in parallel
+        await Promise.all([
+          // End the Live Activity
+          (async () => {
+            try {
+              const activityEnded =
+                await endOneSignalLiveActivity(liveActivityId);
+              if (!activityEnded) {
+                console.error("Failed to end live activity");
+              }
+            } catch (error) {
+              console.error("Failed to end live activity:", error);
+            }
+          })(),
+
+          // Schedule the notification
+          (async () => {
+            try {
+              await Notifications.scheduleNotificationAsync({
+                content: {
+                  title: "Event Capture Complete",
+                  body: `"${selectedEvent.name}" has been captured.`,
+                  sound: true,
+                  priority: "high",
+                },
+                trigger: null,
+              });
+            } catch (error) {
+              console.error("Failed to schedule notification:", error);
+            }
+          })(),
+        ]);
       })();
-    }, 5000);
+    }, NOTIFICATION_DELAY);
 
     // Continue with navigation
     router.dismissTo(

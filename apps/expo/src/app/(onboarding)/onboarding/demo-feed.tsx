@@ -8,6 +8,8 @@ import { FinishDemoButton } from "~/components/FinishDemoButton";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import UserEventsList from "~/components/UserEventsList"; // Reuse your existing feed list
 
+const ADD_EVENT_DELAY = 2000;
+
 // Sort events by date (earliest first)
 const sortEventsByDate = (events: DemoEvent[]) => {
   return [...events].sort((a, b) => {
@@ -56,13 +58,22 @@ export default function DemoFeedScreen() {
     setNewEvent(found ?? null);
   }, [eventId]);
 
-  // Add the new event and show notification immediately
+  // Add the new event and show notification after delay
   useEffect(() => {
-    if (newEvent && eventName) {
-      // Add event to feed and sort by date
-      setDemoFeed((prev) => sortEventsByDate([newEvent, ...prev]));
-      // No notification here - it's handled in demo-capture.tsx
+    let timer: NodeJS.Timeout;
+
+    if (newEvent && eventName && eventId) {
+      // Set a timer to add the event after a delay
+      timer = setTimeout(() => {
+        // Add event to feed and sort by date
+        setDemoFeed((prev) => sortEventsByDate([newEvent, ...prev]));
+      }, ADD_EVENT_DELAY);
     }
+
+    // Clean up the timer if component unmounts
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [newEvent, eventId, eventName]);
 
   // We can reuse the <UserEventsList> with minimal props

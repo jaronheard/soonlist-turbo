@@ -1,5 +1,11 @@
 import { Platform } from "react-native";
 import { OneSignal } from "react-native-onesignal";
+import Constants from "expo-constants";
+
+// Get the API URL from environment variables or Constants
+const API_BASE_URL =
+  (Constants.expoConfig?.extra?.apiBaseUrl as string) ||
+  "https://your-api-url.com";
 
 /**
  * Sets up the OneSignal Live Activity integration
@@ -33,6 +39,7 @@ export function startOneSignalLiveActivity(
 ): boolean {
   if (Platform.OS === "ios") {
     try {
+      // Use the SDK method for starting the activity locally
       OneSignal.LiveActivities.startDefault(activityId, attributes, content);
       return true;
     } catch (error) {
@@ -44,53 +51,78 @@ export function startOneSignalLiveActivity(
 }
 
 /**
- * Updates an existing Live Activity
- * Note: If updateDefault is not available, it falls back to startDefault which
- * can also update existing activities
+ * Updates an existing Live Activity using our secure backend API
  *
  * @param activityId - The ID of the Live Activity to update
  * @param content - New content for the Live Activity
- * @returns boolean indicating success or failure
+ * @returns Promise<boolean> indicating success or failure
  */
-export function updateOneSignalLiveActivity(
+export async function updateOneSignalLiveActivity(
   activityId: string,
   content: { message: Record<string, string> },
-): boolean {
-  if (Platform.OS === "ios") {
-    try {
-      // Try to use startDefault to update (it will update if the activity exists)
-      OneSignal.LiveActivities.startDefault(activityId, {}, content);
-      return true;
-    } catch (error) {
-      console.error("Failed to update OneSignal Live Activity:", error);
+): Promise<boolean> {
+  if (Platform.OS !== "ios") return false;
+
+  try {
+    // Call our secure backend API
+    const response = await fetch(`${API_BASE_URL}/api/live-activities`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "update",
+        activityId,
+        content,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json()) as Record<string, unknown>;
+      console.error("Live Activity update API error:", errorData);
       return false;
     }
+
+    return true;
+  } catch (error) {
+    console.error("Failed to update OneSignal Live Activity:", error);
+    return false;
   }
-  return false;
 }
 
 /**
- * Ends an existing Live Activity
- * Note: If endDefault is not available in the API, you may need to
- * implement a custom mechanism to end activities
+ * Ends an existing Live Activity using our secure backend API
  *
  * @param activityId - The ID of the Live Activity to end
- * @returns boolean indicating success or failure
+ * @returns Promise<boolean> indicating success or failure
  */
-export function endOneSignalLiveActivity(_activityId: string): boolean {
-  if (Platform.OS === "ios") {
-    try {
-      // There's no direct endDefault method in OneSignal's public API
-      // To end an activity, you may need to implement a custom solution
-      // or check OneSignal's documentation for the latest API
-      console.warn(
-        "endOneSignalLiveActivity: Direct method not available in API. Consider updating this implementation.",
-      );
-      return false;
-    } catch (error) {
-      console.error("Failed to end OneSignal Live Activity:", error);
+export async function endOneSignalLiveActivity(
+  activityId: string,
+): Promise<boolean> {
+  if (Platform.OS !== "ios") return false;
+
+  try {
+    // Call our secure backend API
+    const response = await fetch(`${API_BASE_URL}/api/live-activities`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "end",
+        activityId,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json()) as Record<string, unknown>;
+      console.error("Live Activity end API error:", errorData);
       return false;
     }
+
+    return true;
+  } catch (error) {
+    console.error("Failed to end OneSignal Live Activity:", error);
+    return false;
   }
-  return false;
 }
