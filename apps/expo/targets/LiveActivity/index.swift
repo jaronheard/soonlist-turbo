@@ -3,7 +3,7 @@ import SwiftUI
 import OneSignalLiveActivities
 
 @main
-struct exportWidgets: WidgetBundle {
+struct ExportWidgets: WidgetBundle {
     init() {
         // Start the activity monitor when the extension initializes
         _ = LiveActivityMonitor.shared
