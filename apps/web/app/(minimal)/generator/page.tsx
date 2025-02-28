@@ -34,5 +34,9 @@ export default async function Page({ searchParams }: Props) {
     );
   }
 
-  return <NewEventProvider><DirectGeneratorPage showUpload={true} /></NewEventProvider>;
+  return (
+    <NewEventProvider>
+      <DirectGeneratorPage _showUpload={true} />
+    </NewEventProvider>
+  );
 }
