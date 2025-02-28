@@ -83,7 +83,7 @@ export function LiveActivityTester() {
     }
   };
 
-  const handleUpdateActivity = () => {
+  const handleUpdateActivity = async () => {
     try {
       if (!activityActive) {
         Alert.alert(
@@ -96,7 +96,7 @@ export function LiveActivityTester() {
       // Update with OneSignal
       const content = { message: { en: headline } };
 
-      const success = updateOneSignalLiveActivity(activityId, content);
+      const success = await updateOneSignalLiveActivity(activityId, content);
 
       if (success) {
         Alert.alert("Success", "OneSignal Live Activity updated");

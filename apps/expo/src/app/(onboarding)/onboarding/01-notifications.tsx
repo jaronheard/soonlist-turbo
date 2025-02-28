@@ -14,14 +14,12 @@ import { toast } from "sonner-native";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useOneSignal } from "~/providers/OneSignalProvider";
-import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function NotificationsScreen() {
   const { registerForPushNotifications, hasNotificationPermission } =
     useOneSignal();
   const { saveStep } = useOnboarding();
-  const { onboardingData } = useAppStore();
   const translateY = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
 
