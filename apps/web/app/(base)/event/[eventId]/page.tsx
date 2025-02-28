@@ -58,7 +58,6 @@ export default async function Page({ params }: Props) {
   if (!event) {
     return <p className="text-lg text-gray-500">No event found.</p>;
   }
-
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const eventMetadata = event.eventMetadata as EventMetadata;
   const fullImageUrl = eventData.images?.[3];
