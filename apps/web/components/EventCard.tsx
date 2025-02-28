@@ -118,4 +118,3 @@ export default function EventCard(props: {
     </div>
   );
 }
-// Trigger CI check
