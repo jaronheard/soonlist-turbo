@@ -82,7 +82,7 @@ export default function NewShareScreen() {
 
     // Immediately navigate away
     router.canGoBack() ? router.back() : router.push("/feed");
-    toast.info("Processing details. Add another?", {
+    toast.info("Capturing in background. Add another?", {
       duration: 5000,
     });
 

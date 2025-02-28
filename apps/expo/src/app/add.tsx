@@ -115,7 +115,7 @@ export default function AddEventModal() {
     if (!user?.id || !user.username) return;
 
     router.canGoBack() ? router.back() : router.replace("/feed");
-    toast.info("Processing details. Add another?", { duration: 5000 });
+    toast.info("Capturing in background. Add another?", { duration: 5000 });
 
     try {
       const eventId = await createEvent({

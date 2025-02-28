@@ -12,7 +12,7 @@ import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 
 const OFFSET_VALUE = 32;
-const NOTIFICATION_DELAY = 2000;
+const NOTIFICATION_DELAY = 4000;
 
 // Ensure we have at least one event with an image
 const DEFAULT_EVENT = DEMO_CAPTURE_EVENTS.find((event) => event.imageUri);

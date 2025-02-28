@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Text, View } from "react-native";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 
 import type { DemoEvent } from "~/components/demoData";
 import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
@@ -8,7 +8,7 @@ import { FinishDemoButton } from "~/components/FinishDemoButton";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import UserEventsList from "~/components/UserEventsList"; // Reuse your existing feed list
 
-const ADD_EVENT_DELAY = 2000;
+const ADD_EVENT_DELAY = 4000;
 
 // Sort events by date (earliest first)
 const sortEventsByDate = (events: DemoEvent[]) => {
@@ -20,8 +20,6 @@ const sortEventsByDate = (events: DemoEvent[]) => {
 };
 
 export default function DemoFeedScreen() {
-  // Keep router for potential future use but mark as unused
-  const _router = useRouter();
   const { eventId, eventName } = useLocalSearchParams<{
     eventId?: string;
     eventName?: string;
