@@ -208,17 +208,3 @@ class LiveActivityMonitor {
     }
 }
 
-// MARK: - App Extension Lifecycle
-// Called when the extension is initialized
-@main
-struct OneSignalLiveActivitiesBundle: WidgetBundle {
-    init() {
-        // Start the activity monitor when the extension initializes
-        _ = LiveActivityMonitor.shared
-    }
-    
-    var body: some Widget {
-        OneSignalLiveActivityCaptureWidget()
-    }
-}
-
