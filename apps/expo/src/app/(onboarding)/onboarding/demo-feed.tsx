@@ -8,7 +8,7 @@ import { FinishDemoButton } from "~/components/FinishDemoButton";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import UserEventsList from "~/components/UserEventsList"; // Reuse your existing feed list
 
-const ADD_EVENT_DELAY = 4000;
+const ADD_EVENT_DELAY = 3000;
 
 // Sort events by date (earliest first)
 const sortEventsByDate = (events: DemoEvent[]) => {
