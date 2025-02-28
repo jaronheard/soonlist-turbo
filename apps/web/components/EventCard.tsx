@@ -47,9 +47,7 @@ export default function EventCard(props: {
   return (
     <div className="w-full max-w-2xl">
       <Card className="overflow-hidden border border-interactive-3 bg-white p-6 shadow-md">
-        {/* Event Content */}
         <div className="space-y-6">
-          {/* Curator Banner - Shows who discovered this event */}
           <div className="mb-2 flex w-full items-center justify-between rounded-lg bg-neutral-6 px-4 py-2">
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -80,7 +78,6 @@ export default function EventCard(props: {
             <div>{shareButton}</div>
           </div>
 
-          {/* Event Image - Lightbox */}
           <div className="relative aspect-square w-full overflow-hidden rounded-lg">
             <LightboxImage
               src={`${eventImage}`}
@@ -91,7 +88,6 @@ export default function EventCard(props: {
             />
           </div>
 
-          {/* Event Details */}
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-neutral-1">
               {eventTitle || eventName}
