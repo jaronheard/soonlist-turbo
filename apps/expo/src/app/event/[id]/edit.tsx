@@ -11,11 +11,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import { zodResolver } from "@hookform/resolvers/zod";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Clock, Image as ImageIcon } from "lucide-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
@@ -680,7 +680,7 @@ export default function EditEventScreen() {
                       <Button
                         onPress={pickImage}
                         variant="secondary"
-                        className="flex-1 mr-2"
+                        className="mr-2 flex-1"
                       >
                         Replace
                       </Button>
