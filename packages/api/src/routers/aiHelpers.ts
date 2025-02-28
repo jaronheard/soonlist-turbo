@@ -24,6 +24,7 @@ import {
   eventToLists,
 } from "@soonlist/db/schema";
 
+import type { RouterOutputs } from "..";
 import type { Context } from "../trpc";
 import { generatePublicId } from "../utils";
 import {
@@ -178,7 +179,7 @@ export interface AIEventResponse {
   ticket?: unknown;
   id?: string;
   eventId?: string;
-  event?: unknown;
+  event?: RouterOutputs["event"]["get"];
   error?: string;
 }
 
