@@ -169,3 +169,54 @@ struct OneSignalLiveActivityCaptureWidget: Widget {
     }
 }
 
+// MARK: - Global Activity State Monitor
+// This automatically attaches observers to all live activities
+class LiveActivityMonitor {
+    static let shared = LiveActivityMonitor()
+    
+    private init() {
+        startMonitoring()
+    }
+    
+    func startMonitoring() {
+        Task {
+            // Monitor all activities of this type
+            for await activity in Activity<DefaultLiveActivityAttributes>.activityUpdates {
+                // For each new or updated activity, start observing its state
+                observeActivity(activity)
+            }
+        }
+    }
+    
+    private func observeActivity(_ activity: Activity<DefaultLiveActivityAttributes>) {
+        Task {
+            print("Monitoring activity with ID: \(activity.id)")
+            for await state in activity.activityStateUpdates {
+                print("Activity \(activity.id) state update: \(state)")
+                if state != .active {
+                    do {
+                        try await activity.end(dismissalPolicy: .immediate)
+                        print("Activity \(activity.id) ended with immediate dismissal")
+                    } catch {
+                        print("Failed to end activity \(activity.id): \(error)")
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - App Extension Lifecycle
+// Called when the extension is initialized
+@main
+struct OneSignalLiveActivitiesBundle: WidgetBundle {
+    init() {
+        // Start the activity monitor when the extension initializes
+        _ = LiveActivityMonitor.shared
+    }
+    
+    var body: some Widget {
+        OneSignalLiveActivityCaptureWidget()
+    }
+}
+
