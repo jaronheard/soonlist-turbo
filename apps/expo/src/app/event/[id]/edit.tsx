@@ -13,9 +13,8 @@ import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Clock, Image as ImageIcon, Plus } from "lucide-react-native";
+import { Calendar, Clock, Image as ImageIcon } from "lucide-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
@@ -63,9 +62,15 @@ type FormData = z.infer<typeof formSchema>;
 export default function EditEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { user: currentUser } = useUser();
+  // We need the user for authorization checks in the future
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // State for date and time pickers
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
   // Fetch the event data
   const eventQuery = api.event.get.useQuery(
@@ -104,7 +109,32 @@ export default function EditEventScreen() {
   useEffect(() => {
     if (eventQuery.data) {
       const event = eventQuery.data;
-      const eventData = event.event as {
+      // Define the event data with proper types
+      const eventData = event.event || {
+        name: "",
+        description: "",
+        startDate: "",
+        endDate: "",
+        startTime: "",
+        endTime: "",
+        timeZone: "",
+        location: "",
+        images: [] as string[],
+      };
+
+      // Define the event metadata with proper types
+      const eventMetadata = event.eventMetadata || {
+        eventType: "",
+        eventCategory: "",
+        priceType: "",
+        price: "",
+        ageRestriction: "",
+        performers: "",
+        accessibility: [] as string[],
+      };
+
+      // Type assertion to help TypeScript understand the structure
+      const typedEventData = eventData as {
         name?: string;
         description?: string;
         startDate?: string;
@@ -116,38 +146,37 @@ export default function EditEventScreen() {
         images?: string[];
       };
 
-      const eventMetadata =
-        (event.eventMetadata as {
-          eventType?: string;
-          eventCategory?: string;
-          priceType?: string;
-          price?: string;
-          ageRestriction?: string;
-          performers?: string;
-          accessibility?: string[];
-        }) || {};
+      const typedEventMetadata = eventMetadata as {
+        eventType?: string;
+        eventCategory?: string;
+        priceType?: string;
+        price?: string;
+        ageRestriction?: string;
+        performers?: string;
+        accessibility?: string[];
+      };
 
       reset({
         event: {
-          name: eventData.name || "",
-          description: eventData.description || "",
-          startDate: eventData.startDate || "",
-          endDate: eventData.endDate || "",
-          startTime: eventData.startTime || "",
-          endTime: eventData.endTime || "",
-          timeZone: eventData.timeZone || "",
-          location: eventData.location || "",
-          images: eventData.images || [],
+          name: typedEventData.name || "",
+          description: typedEventData.description || "",
+          startDate: typedEventData.startDate || "",
+          endDate: typedEventData.endDate || "",
+          startTime: typedEventData.startTime || "",
+          endTime: typedEventData.endTime || "",
+          timeZone: typedEventData.timeZone || "",
+          location: typedEventData.location || "",
+          images: typedEventData.images || [],
         },
         eventMetadata: {
-          eventType: eventMetadata.eventType || "",
-          eventCategory: eventMetadata.eventCategory || "",
-          priceType: eventMetadata.priceType || "",
-          price: eventMetadata.price || "",
-          ageRestriction: eventMetadata.ageRestriction || "",
-          performers: eventMetadata.performers || "",
-          accessibility: Array.isArray(eventMetadata.accessibility)
-            ? eventMetadata.accessibility.join(", ")
+          eventType: typedEventMetadata.eventType || "",
+          eventCategory: typedEventMetadata.eventCategory || "",
+          priceType: typedEventMetadata.priceType || "",
+          price: typedEventMetadata.price || "",
+          ageRestriction: typedEventMetadata.ageRestriction || "",
+          performers: typedEventMetadata.performers || "",
+          accessibility: Array.isArray(typedEventMetadata.accessibility)
+            ? typedEventMetadata.accessibility.join(", ")
             : "",
         },
         comment: "",
@@ -157,11 +186,11 @@ export default function EditEventScreen() {
 
       // Set the selected image if there are images
       if (
-        eventData.images &&
-        eventData.images.length > 0 &&
-        eventData.images[0]
+        typedEventData.images &&
+        typedEventData.images.length > 0 &&
+        typedEventData.images[0]
       ) {
-        setSelectedImage(eventData.images[0]);
+        setSelectedImage(typedEventData.images[0]);
       }
     }
   }, [eventQuery.data, reset, setSelectedImage]);
@@ -173,7 +202,7 @@ export default function EditEventScreen() {
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-      if (status !== "granted") {
+      if (status !== ImagePicker.PermissionStatus.GRANTED) {
         toast.error("Permission to access media library is required");
         return;
       }
@@ -232,11 +261,13 @@ export default function EditEventScreen() {
             performers: performersArray,
           },
           comment: data.comment || "",
-          lists: [{}] as Record<string, string>[],
+          lists: [{}],
           visibility:
-            data.visibility === "public" || data.visibility === "private"
-              ? (data.visibility as "public" | "private")
-              : ("public" as const),
+            data.visibility === "public"
+              ? ("public" as const)
+              : data.visibility === "private"
+                ? ("private" as const)
+                : ("public" as const),
         };
 
         await updateEventMutation.mutateAsync(updatedData);
@@ -401,7 +432,6 @@ export default function EditEventScreen() {
               control={control}
               name="event.startDate"
               render={({ field: { onChange, value } }) => {
-                const [showDatePicker, setShowDatePicker] = useState(false);
                 const date = value ? new Date(value) : new Date();
 
                 return (
@@ -410,7 +440,7 @@ export default function EditEventScreen() {
                       Start Date
                     </Text>
                     <TouchableOpacity
-                      onPress={() => setShowDatePicker(true)}
+                      onPress={() => setShowStartDatePicker(true)}
                       className="flex-row items-center justify-between rounded-md border border-neutral-300 px-3 py-2"
                     >
                       <Text>{value || "Select start date"}</Text>
@@ -421,13 +451,13 @@ export default function EditEventScreen() {
                         {errors.event.startDate.message}
                       </Text>
                     )}
-                    {showDatePicker && (
+                    {showStartDatePicker && (
                       <DateTimePicker
                         value={date}
                         mode="date"
                         display="default"
                         onChange={(event, selectedDate) => {
-                          setShowDatePicker(false);
+                          setShowStartDatePicker(false);
                           if (selectedDate) {
                             const formattedDate = selectedDate
                               .toISOString()
@@ -447,7 +477,6 @@ export default function EditEventScreen() {
               control={control}
               name="event.endDate"
               render={({ field: { onChange, value } }) => {
-                const [showDatePicker, setShowDatePicker] = useState(false);
                 const date = value ? new Date(value) : new Date();
 
                 return (
@@ -456,7 +485,7 @@ export default function EditEventScreen() {
                       End Date
                     </Text>
                     <TouchableOpacity
-                      onPress={() => setShowDatePicker(true)}
+                      onPress={() => setShowEndDatePicker(true)}
                       className="flex-row items-center justify-between rounded-md border border-neutral-300 px-3 py-2"
                     >
                       <Text>{value || "Select end date"}</Text>
@@ -467,13 +496,13 @@ export default function EditEventScreen() {
                         {errors.event.endDate.message}
                       </Text>
                     )}
-                    {showDatePicker && (
+                    {showEndDatePicker && (
                       <DateTimePicker
                         value={date}
                         mode="date"
                         display="default"
                         onChange={(event, selectedDate) => {
-                          setShowDatePicker(false);
+                          setShowEndDatePicker(false);
                           if (selectedDate) {
                             const formattedDate = selectedDate
                               .toISOString()
@@ -493,7 +522,6 @@ export default function EditEventScreen() {
               control={control}
               name="event.startTime"
               render={({ field: { onChange, value } }) => {
-                const [showTimePicker, setShowTimePicker] = useState(false);
                 const time = value
                   ? new Date(`2000-01-01T${value}:00`)
                   : new Date();
@@ -504,7 +532,7 @@ export default function EditEventScreen() {
                       Start Time
                     </Text>
                     <TouchableOpacity
-                      onPress={() => setShowTimePicker(true)}
+                      onPress={() => setShowStartTimePicker(true)}
                       className="flex-row items-center justify-between rounded-md border border-neutral-300 px-3 py-2"
                     >
                       <Text>{value || "Select start time"}</Text>
@@ -515,13 +543,13 @@ export default function EditEventScreen() {
                         {errors.event.startTime.message}
                       </Text>
                     )}
-                    {showTimePicker && (
+                    {showStartTimePicker && (
                       <DateTimePicker
                         value={time}
                         mode="time"
                         display="default"
                         onChange={(event, selectedTime) => {
-                          setShowTimePicker(false);
+                          setShowStartTimePicker(false);
                           if (selectedTime) {
                             const hours = selectedTime
                               .getHours()
@@ -546,7 +574,6 @@ export default function EditEventScreen() {
               control={control}
               name="event.endTime"
               render={({ field: { onChange, value } }) => {
-                const [showTimePicker, setShowTimePicker] = useState(false);
                 const time = value
                   ? new Date(`2000-01-01T${value}:00`)
                   : new Date();
@@ -557,7 +584,7 @@ export default function EditEventScreen() {
                       End Time
                     </Text>
                     <TouchableOpacity
-                      onPress={() => setShowTimePicker(true)}
+                      onPress={() => setShowEndTimePicker(true)}
                       className="flex-row items-center justify-between rounded-md border border-neutral-300 px-3 py-2"
                     >
                       <Text>{value || "Select end time"}</Text>
@@ -568,13 +595,13 @@ export default function EditEventScreen() {
                         {errors.event.endTime.message}
                       </Text>
                     )}
-                    {showTimePicker && (
+                    {showEndTimePicker && (
                       <DateTimePicker
                         value={time}
                         mode="time"
                         display="default"
                         onChange={(event, selectedTime) => {
-                          setShowTimePicker(false);
+                          setShowEndTimePicker(false);
                           if (selectedTime) {
                             const hours = selectedTime
                               .getHours()
