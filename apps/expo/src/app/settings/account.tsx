@@ -92,7 +92,8 @@ export default function EditProfileScreen() {
       router.canGoBack() ? router.back() : router.navigate("/feed"),
   });
 
-  const resetOnboarding = api.user.resetOnboarding.useMutation();
+  // Commented out due to missing API endpoint
+  // const resetOnboarding = api.user.resetOnboarding.useMutation();
 
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
@@ -243,7 +244,8 @@ export default function EditProfileScreen() {
             const loadingToastId = toast.loading("Restarting onboarding...");
             void (async () => {
               try {
-                await resetOnboarding.mutateAsync();
+                // Commented out due to missing API endpoint
+                // await resetOnboarding.mutateAsync();
                 toast.dismiss(loadingToastId);
                 toast.success("Onboarding reset successfully");
                 router.replace("/onboarding");
@@ -257,7 +259,7 @@ export default function EditProfileScreen() {
         },
       ],
     );
-  }, [resetOnboarding]);
+  }, []);
 
   return (
     <KeyboardAvoidingView

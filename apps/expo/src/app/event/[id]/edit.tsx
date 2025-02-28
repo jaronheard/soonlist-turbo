@@ -426,7 +426,9 @@ export default function EditEventScreen() {
 
             {/* Date Pickers */}
             <View>
-              <Text className="mb-2 text-lg font-semibold">Date & Time</Text>
+              <Text className="mb-2 text-lg font-semibold">
+                Date &amp; Time
+              </Text>
             </View>
 
             {/* Start Date */}
