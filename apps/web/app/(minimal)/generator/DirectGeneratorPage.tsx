@@ -5,17 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Camera } from "lucide-react";
 
-import { Button } from "@soonlist/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 import { toast } from "sonner";
 
 import { Logo } from "~/components/Logo";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
-import {
-  UploadOptionsSchema,
-  useNewEventProgressContext,
-} from "~/context/NewEventProgressContext";
 import { api } from "~/trpc/react";
 
 import { BenefitsHighlights } from "./BenefitsHighlights";
@@ -45,11 +40,11 @@ function PageWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function DirectGeneratorPage({
-  showUpload,
+  _showUpload,
   filePath,
   LoadingComponent,
 }: {
-  showUpload?: boolean;
+  _showUpload?: boolean;
   filePath?: string;
   LoadingComponent?: React.ComponentType<{ className?: string }>;
 }) {
@@ -87,7 +82,7 @@ export function DirectGeneratorPage({
     if (eventData) {
       const environment =
         process.env.NODE_ENV === "development" ? "development" : "production";
-      
+
       // The userId is set in the backend based on the environment
       updateEvent.mutate({
         event: { ...eventData, images },
