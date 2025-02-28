@@ -36,7 +36,6 @@ export default function NewShareScreen() {
     setInput,
     setLinkPreview,
     resetNewEventState,
-    recentPhotos,
   } = useAppStore();
 
   // Grab "text" or "imageUri" from the share extension
@@ -51,7 +50,7 @@ export default function NewShareScreen() {
   const { initialized } = useInitializeInput({
     text,
     imageUri,
-    recentPhotos,
+    recentPhotos: [], // We skip recent photos for share extension
     route: "new",
   });
 
