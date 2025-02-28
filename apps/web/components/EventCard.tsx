@@ -46,37 +46,40 @@ export default function EventCard(props: {
 
   return (
     <div className="w-full max-w-2xl">
+      {/* User Curator Caption - Positioned outside the card */}
+      <div className="mb-3 flex w-full items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-interactive-1">
+              <Image
+                src={`${userAvatar}`}
+                alt="User avatar"
+                width={40}
+                height={40}
+                className="object-cover"
+              />
+            </div>
+            {userEmoji && (
+              <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#5a32fb]">
+                <span className="text-sm">{userEmoji}</span>
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="text-sm font-medium text-neutral-1">
+              <span className="inline-flex items-center">
+                <EyeIcon className="mr-1 h-3.5 w-3.5 text-interactive-1" />
+                Saved by <span className="font-semibold">{userName}</span>
+              </span>
+            </p>
+          </div>
+        </div>
+        <div>{shareButton}</div>
+      </div>
+      
+      {/* Event Card - Self-contained with just event details */}
       <Card className="overflow-hidden border border-interactive-3 bg-white p-6 shadow-md">
         <div className="space-y-6">
-          <div className="mb-2 flex w-full items-center justify-between rounded-lg bg-neutral-6 px-4 py-2">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-interactive-1">
-                  <Image
-                    src={`${userAvatar}`}
-                    alt="User avatar"
-                    width={40}
-                    height={40}
-                    className="object-cover"
-                  />
-                </div>
-                {userEmoji && (
-                  <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#5a32fb]">
-                    <span className="text-sm">{userEmoji}</span>
-                  </div>
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-neutral-1">
-                  <span className="inline-flex items-center">
-                    <EyeIcon className="mr-1 h-3.5 w-3.5 text-interactive-1" />
-                    Saved by <span className="font-semibold">{userName}</span>
-                  </span>
-                </p>
-              </div>
-            </div>
-            <div>{shareButton}</div>
-          </div>
 
           <div className="relative aspect-square w-full overflow-hidden rounded-lg">
             <LightboxImage
@@ -127,4 +130,3 @@ export default function EventCard(props: {
     </div>
   );
 }
-
