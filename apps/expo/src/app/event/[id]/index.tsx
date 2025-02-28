@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { EyeOff, Globe2, MapPin, User } from "lucide-react-native";
+import { EyeOff, Globe2, MapPin, Pencil, User } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -101,11 +101,21 @@ export default function Page() {
     const isSaved = savedIdsQuery.data?.some(
       (savedEvent) => savedEvent.id === data.id,
     );
+    const isOwner = data.userId === currentUser?.id;
+
     return (
       <View className="flex-row items-center gap-2">
+        {isOwner && (
+          <Pressable
+            onPress={() => router.push(`/event/${id}/edit`)}
+            className="p-2"
+          >
+            <Pencil size={20} color="#000" />
+          </Pressable>
+        )}
         <EventMenu
           event={data as RouterOutputs["event"]["getUpcomingForUser"][number]}
-          isOwner={data.userId === currentUser?.id}
+          isOwner={isOwner}
           isSaved={Boolean(isSaved)}
           menuType="popup"
           onDelete={handleDelete}
