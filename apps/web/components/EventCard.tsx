@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { EyeIcon } from "lucide-react";
 
 import { Card } from "@soonlist/ui/card";
 
@@ -66,11 +65,11 @@ export default function EventCard(props: {
             )}
           </div>
           <div>
-            <p className="text-sm font-medium text-neutral-1">
-              <span className="inline-flex items-center">
-                <EyeIcon className="mr-1 h-3.5 w-3.5 text-interactive-1" />
-                Saved by <span className="font-semibold">{userName}</span>
-              </span>
+            <p className="text-sm font-medium text-neutral-2">
+              Saved by
+            </p>
+            <p className="text-sm font-semibold text-neutral-1">
+              {userName}
             </p>
           </div>
         </div>
