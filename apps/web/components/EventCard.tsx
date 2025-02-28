@@ -41,9 +41,9 @@ export default function EventCard(props: {
 
   return (
     <div className="w-full max-w-2xl">
-      <Card className="overflow-hidden border-interactive-3 bg-white p-6 shadow-sm">
-        {/* User Saved Header */}
-        <div className="mb-4 flex w-full items-center justify-between">
+      <Card className="overflow-hidden border border-interactive-3 bg-white p-6 shadow-md">
+        {/* User Info Header */}
+        <div className="mb-6 flex w-full items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-interactive-1">
@@ -62,23 +62,17 @@ export default function EventCard(props: {
               )}
             </div>
             <div>
-              <p className="text-lg font-semibold text-neutral-1">
-                {userName} saved
-              </p>
+              <p className="text-lg font-semibold text-neutral-1">{userName}</p>
               <p className="text-sm text-neutral-2">with Soonlist</p>
             </div>
           </div>
           <div>{shareButton}</div>
         </div>
 
-        {/* Event Encapsulation */}
-        <div className="relative rounded-lg border-2 border-interactive-2 bg-interactive-3 p-4">
-          <div className="absolute -top-3 left-4 rounded bg-interactive-1 px-2 py-1 text-xs text-white">
-            Saved Event
-          </div>
-
+        {/* Event Content */}
+        <div className="space-y-6">
           {/* Event Image - Lightbox */}
-          <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-md">
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg">
             <LightboxImage
               src={`${eventImage}`}
               alt="Event flyer"
