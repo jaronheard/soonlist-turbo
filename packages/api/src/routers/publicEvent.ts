@@ -23,10 +23,14 @@ export const publicEventRouter = createTRPCRouter({
     .input(eventCreateSchema)
     .mutation(async ({ ctx, input }) => {
       // Use the Soonlist event generator user ID based on environment
-      const userId =
-        input.environment === "development"
-          ? "user_2s7b2Ek9fVHtCPRy4h4D2ynDZDE"
-          : "user_2ZpagQAYjGEBe7JiRlfI99Ph92y";
+      // Always use development ID for preview environments (Vercel previews use development database)
+      const isProduction = 
+        input.environment === "production" && 
+        process.env.VERCEL_ENV === "production";
+      
+      const userId = isProduction
+        ? "user_2ZpagQAYjGEBe7JiRlfI99Ph92y"  // Production ID
+        : "user_2s7b2Ek9fVHtCPRy4h4D2ynDZDE"; // Development ID (also used for preview)
       const username = "soonlist";
 
       const { event, eventMetadata } = input;
