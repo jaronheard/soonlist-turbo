@@ -5,39 +5,31 @@ import { EyeIcon } from "lucide-react";
 
 import { Card } from "@soonlist/ui/card";
 
-import LightboxImage from "./LightboxImage";
+import { LightboxImage } from "./LightboxImage";
 
 export default function EventCard(props: {
-  userName: string;
-  eventName: string;
+  eventImage: string;
+  eventTitle: string;
   eventDate: string;
-  eventTime: string;
   eventLocation: string;
   eventDescription: string;
-  eventImage: string;
+  eventLink: string;
   userAvatar: string;
-  userEmoji: string;
-  calendarButton: React.ReactNode;
+  userName: string;
+  userEmoji?: string;
   shareButton: React.ReactNode;
-  followButton: React.ReactNode;
-  editButton: React.ReactNode;
-  deleteButton: React.ReactNode;
 }) {
   const {
-    userName,
-    eventName,
+    eventImage,
+    eventTitle,
     eventDate,
-    eventTime,
     eventLocation,
     eventDescription,
-    eventImage,
+    eventLink,
     userAvatar,
+    userName,
     userEmoji,
-    calendarButton,
     shareButton,
-    followButton,
-    editButton,
-    deleteButton,
   } = props;
 
   return (
@@ -81,37 +73,30 @@ export default function EventCard(props: {
             <LightboxImage
               src={`${eventImage}`}
               alt="Event flyer"
-              fill
-              className="object-contain"
+              width={600}
+              height={600}
+              className="h-full w-full object-cover"
             />
           </div>
 
           {/* Event Details */}
           <div className="space-y-4">
-            <div>
-              <h2 className="mb-1 text-2xl font-bold leading-tight text-neutral-1">
-                {eventName}
-              </h2>
-              <p className="text-lg text-neutral-2">{eventDate}</p>
-            </div>
-
-            <div>
-              <p className="text-md font-semibold text-neutral-1">
-                {eventTime}
+            <h2 className="text-2xl font-bold text-neutral-1">{eventTitle}</h2>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-neutral-2">{eventDate}</p>
+              <p className="text-sm font-medium text-neutral-2">
+                {eventLocation}
               </p>
-              <p className="text-neutral-2">{eventLocation}</p>
             </div>
-
-            <div className="prose prose-sm">
-              <p className="text-neutral-2">{eventDescription}</p>
-            </div>
-
-            <div className="flex flex-wrap gap-2 pt-2">
-              {calendarButton}
-              {followButton}
-              {editButton}
-              {deleteButton}
-            </div>
+            <p className="text-neutral-1">{eventDescription}</p>
+            <a
+              href={eventLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block rounded-md bg-interactive-1 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-interactive-2"
+            >
+              View Event
+            </a>
           </div>
         </div>
       </Card>
