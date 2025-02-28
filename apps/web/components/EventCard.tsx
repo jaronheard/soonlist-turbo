@@ -93,11 +93,15 @@ export default function EventCard(props: {
 
           {/* Event Details */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-neutral-1">{eventTitle || eventName}</h2>
+            <h2 className="text-2xl font-bold text-neutral-1">
+              {eventTitle || eventName}
+            </h2>
             <div className="space-y-2">
               <p className="text-sm font-medium text-neutral-2">{eventDate}</p>
               {eventTime && (
-                <p className="text-sm font-medium text-neutral-2">{eventTime}</p>
+                <p className="text-sm font-medium text-neutral-2">
+                  {eventTime}
+                </p>
               )}
               <p className="text-sm font-medium text-neutral-2">
                 {eventLocation}
