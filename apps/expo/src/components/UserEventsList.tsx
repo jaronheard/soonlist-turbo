@@ -39,7 +39,6 @@ import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventListItemSkeleton } from "./EventListItemSkeleton";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
-import { LiveActivityTester } from "./LiveActivityTester";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
@@ -399,11 +398,6 @@ export default function UserEventsList(props: UserEventsListProps) {
         <Text className="text-center text-base text-neutral-2">
           Tap the plus button to add your first event.
         </Text>
-
-        {/* Add a button to test live activity here */}
-        <View className="mt-8 w-full">
-          <LiveActivityTester />
-        </View>
       </View>
     );
   };

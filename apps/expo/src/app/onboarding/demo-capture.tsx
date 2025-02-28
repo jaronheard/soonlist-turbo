@@ -10,10 +10,6 @@ import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
 import { EventPreview } from "~/components/EventPreview";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
-import {
-  endOneSignalLiveActivity,
-  startOneSignalLiveActivity,
-} from "~/utils/oneSignalLiveActivity";
 
 const OFFSET_VALUE = 32;
 const NOTIFICATION_DELAY = 2000;
@@ -62,64 +58,22 @@ export default function DemoCaptureScreen() {
   };
 
   const handleSubmit = () => {
-    // Generate a unique ID using crypto.randomUUID() to match web app pattern
-    const liveActivityId = "capture_" + crypto.randomUUID();
-
-    const staleDate = Math.floor(Date.now()) + 4000;
-
-    const attributes = {
-      title: selectedEvent.name,
-      activityType: "capture",
-    };
-    const content = {
-      message: { en: "Capturing event..." },
-      stale_date: staleDate, // Add stale_date so the live activity automatically ends
-    };
-
-    const activityStarted = startOneSignalLiveActivity(
-      liveActivityId,
-      attributes,
-      content,
-    );
-    if (!activityStarted) {
-      console.error("Failed to start live activity");
-    }
-
-    // Schedule finishing the live activity and a notification after 5 seconds
+    // Schedule a notification after the delay
     setTimeout(() => {
       void (async () => {
-        // Run the Live Activity ending and notification scheduling in parallel
-        await Promise.all([
-          // End the Live Activity
-          (async () => {
-            try {
-              const activityEnded =
-                await endOneSignalLiveActivity(liveActivityId);
-              if (!activityEnded) {
-                console.error("Failed to end live activity");
-              }
-            } catch (error) {
-              console.error("Failed to end live activity:", error);
-            }
-          })(),
-
-          // Schedule the notification
-          (async () => {
-            try {
-              await Notifications.scheduleNotificationAsync({
-                content: {
-                  title: "Event Capture Complete",
-                  body: `"${selectedEvent.name}" has been captured.`,
-                  sound: true,
-                  priority: "high",
-                },
-                trigger: null,
-              });
-            } catch (error) {
-              console.error("Failed to schedule notification:", error);
-            }
-          })(),
-        ]);
+        try {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Event Capture Complete",
+              body: `"${selectedEvent.name}" has been captured.`,
+              sound: true,
+              priority: "high",
+            },
+            trigger: null,
+          });
+        } catch (error) {
+          console.error("Failed to schedule notification:", error);
+        }
       })();
     }, NOTIFICATION_DELAY);
 
