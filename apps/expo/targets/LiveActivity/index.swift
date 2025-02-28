@@ -4,6 +4,11 @@ import OneSignalLiveActivities
 
 @main
 struct exportWidgets: WidgetBundle {
+    init() {
+        // Start the activity monitor when the extension initializes
+        _ = LiveActivityMonitor.shared
+    }
+    
     var body: some Widget {
         OneSignalLiveActivityCaptureWidget()
     }

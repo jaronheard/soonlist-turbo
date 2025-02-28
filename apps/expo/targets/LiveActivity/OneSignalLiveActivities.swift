@@ -195,7 +195,9 @@ class LiveActivityMonitor {
                 print("Activity \(activity.id) state update: \(state)")
                 if state != .active {
                     do {
-                        try await activity.end(dismissalPolicy: .immediate)
+                        // Create ActivityContent with the current state and immediate stale date
+                        let content = ActivityContent(state: activity.content.state, staleDate: .now)
+                        try await activity.end(content, dismissalPolicy: .immediate)
                         print("Activity \(activity.id) ended with immediate dismissal")
                     } catch {
                         print("Failed to end activity \(activity.id): \(error)")
