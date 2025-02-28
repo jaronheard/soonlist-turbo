@@ -65,12 +65,8 @@ export default function EventCard(props: {
             )}
           </div>
           <div>
-            <p className="text-sm font-medium text-neutral-2">
-              Saved by
-            </p>
-            <p className="text-sm font-semibold text-neutral-1">
-              {userName}
-            </p>
+            <p className="text-sm font-medium text-neutral-2">Saved by</p>
+            <p className="text-sm font-semibold text-neutral-1">{userName}</p>
           </div>
         </div>
         <div>{shareButton}</div>
