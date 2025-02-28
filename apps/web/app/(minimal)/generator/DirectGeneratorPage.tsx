@@ -83,9 +83,16 @@ export function DirectGeneratorPage({
       const environment =
         process.env.NODE_ENV === "development" ? "development" : "production";
 
+      // Log the images array and event data for debugging
+      console.log("Images array:", images);
+      console.log("Event data with images:", { ...eventData, images: images });
+
       // The userId is set in the backend based on the environment
       updateEvent.mutate({
-        event: { ...eventData, images },
+        event: {
+          ...eventData,
+          images: images, // Fix: Explicitly set images as a property of eventData
+        },
         eventMetadata: eventData.eventMetadata,
         comment: organizeData.notes,
         visibility: "public",
