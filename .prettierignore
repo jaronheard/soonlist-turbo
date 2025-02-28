@@ -1,0 +1,5 @@
+apps/web/app/(minimal)/generator/DirectGeneratorPage.tsx
+apps/web/app/(minimal)/generator/GeneratorProgressStages.tsx
+apps/web/app/(minimal)/generator/page.tsx
+apps/web/app/(minimal)/new/EventsFromImage.tsx
+apps/web/components/PublicSaveButton.tsx
