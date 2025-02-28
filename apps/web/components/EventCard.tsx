@@ -1,29 +1,29 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import { EyeIcon } from "lucide-react";
+import Image from "next/image"
+import { EyeIcon } from "lucide-react"
 
-import { Card } from "@soonlist/ui/card";
+import { Card } from "@soonlist/ui/card"
 
-import LightboxImage from "./LightboxImage";
+import LightboxImage from "./LightboxImage"
 
 export default function EventCard(props: {
-  eventImage: string;
-  eventTitle?: string;
-  eventName?: string;
-  eventDate: string;
-  eventTime?: string;
-  eventLocation: string;
-  eventDescription: string;
-  eventLink?: string;
-  userAvatar: string;
-  userName: string;
-  userEmoji?: string;
-  shareButton: React.ReactNode;
-  calendarButton?: React.ReactNode;
-  followButton?: React.ReactNode;
-  editButton?: React.ReactNode;
-  deleteButton?: React.ReactNode;
+  eventImage: string
+  eventTitle?: string
+  eventName?: string
+  eventDate: string
+  eventTime?: string
+  eventLocation: string
+  eventDescription: string
+  eventLink?: string
+  userAvatar: string
+  userName: string
+  userEmoji?: string
+  shareButton: React.ReactNode
+  calendarButton?: React.ReactNode
+  followButton?: React.ReactNode
+  editButton?: React.ReactNode
+  deleteButton?: React.ReactNode
 }) {
   const {
     eventImage,
@@ -42,7 +42,7 @@ export default function EventCard(props: {
     followButton,
     editButton,
     deleteButton,
-  } = props;
+  } = props
 
   return (
     <div className="w-full max-w-2xl">
@@ -129,5 +129,5 @@ export default function EventCard(props: {
         </div>
       </Card>
     </div>
-  );
+  )
 }
