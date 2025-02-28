@@ -456,7 +456,7 @@ export default function EditEventScreen() {
                         value={date}
                         mode="date"
                         display="default"
-                        onChange={(event, selectedDate) => {
+                        onChange={(event: Event, selectedDate?: Date) => {
                           setShowStartDatePicker(false);
                           if (selectedDate) {
                             const formattedDate = selectedDate
@@ -501,7 +501,7 @@ export default function EditEventScreen() {
                         value={date}
                         mode="date"
                         display="default"
-                        onChange={(event, selectedDate) => {
+                        onChange={(event: Event, selectedDate?: Date) => {
                           setShowEndDatePicker(false);
                           if (selectedDate) {
                             const formattedDate = selectedDate
@@ -548,7 +548,7 @@ export default function EditEventScreen() {
                         value={time}
                         mode="time"
                         display="default"
-                        onChange={(event, selectedTime) => {
+                        onChange={(event: Event, selectedTime?: Date) => {
                           setShowStartTimePicker(false);
                           if (selectedTime) {
                             const hours = selectedTime
@@ -600,7 +600,7 @@ export default function EditEventScreen() {
                         value={time}
                         mode="time"
                         display="default"
-                        onChange={(event, selectedTime) => {
+                        onChange={(event: Event, selectedTime?: Date) => {
                           setShowEndTimePicker(false);
                           if (selectedTime) {
                             const hours = selectedTime
