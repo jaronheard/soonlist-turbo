@@ -5,24 +5,32 @@ import { EyeIcon } from "lucide-react";
 
 import { Card } from "@soonlist/ui/card";
 
-import { LightboxImage } from "./LightboxImage";
+import LightboxImage from "./LightboxImage";
 
 export default function EventCard(props: {
   eventImage: string;
-  eventTitle: string;
+  eventTitle?: string;
+  eventName?: string;
   eventDate: string;
+  eventTime?: string;
   eventLocation: string;
   eventDescription: string;
-  eventLink: string;
+  eventLink?: string;
   userAvatar: string;
   userName: string;
   userEmoji?: string;
   shareButton: React.ReactNode;
+  calendarButton?: React.ReactNode;
+  followButton?: React.ReactNode;
+  editButton?: React.ReactNode;
+  deleteButton?: React.ReactNode;
 }) {
   const {
     eventImage,
     eventTitle,
+    eventName,
     eventDate,
+    eventTime,
     eventLocation,
     eventDescription,
     eventLink,
@@ -30,6 +38,10 @@ export default function EventCard(props: {
     userName,
     userEmoji,
     shareButton,
+    calendarButton,
+    followButton,
+    editButton,
+    deleteButton,
   } = props;
 
   return (
@@ -81,22 +93,34 @@ export default function EventCard(props: {
 
           {/* Event Details */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-neutral-1">{eventTitle}</h2>
+            <h2 className="text-2xl font-bold text-neutral-1">{eventTitle || eventName}</h2>
             <div className="space-y-2">
               <p className="text-sm font-medium text-neutral-2">{eventDate}</p>
+              {eventTime && (
+                <p className="text-sm font-medium text-neutral-2">{eventTime}</p>
+              )}
               <p className="text-sm font-medium text-neutral-2">
                 {eventLocation}
               </p>
             </div>
             <p className="text-neutral-1">{eventDescription}</p>
-            <a
-              href={eventLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block rounded-md bg-interactive-1 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-interactive-2"
-            >
-              View Event
-            </a>
+            {eventLink ? (
+              <a
+                href={eventLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block rounded-md bg-interactive-1 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-interactive-2"
+              >
+                View Event
+              </a>
+            ) : (
+              <div className="flex flex-wrap gap-2 pt-2">
+                {calendarButton}
+                {followButton}
+                {editButton}
+                {deleteButton}
+              </div>
+            )}
           </div>
         </div>
       </Card>
