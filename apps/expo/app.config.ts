@@ -39,6 +39,12 @@ const getSchemes = () => {
   return ["soonlist"];
 };
 
+// Get OneSignal mode based on environment
+const getOneSignalMode = () => {
+  if (IS_DEV || IS_PREVIEW) return "development";
+  return "production";
+};
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   owner: "soonlist",
@@ -125,7 +131,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "onesignal-expo-plugin",
       {
-        mode: "development",
+        mode: getOneSignalMode(),
       },
     ],
     // [
