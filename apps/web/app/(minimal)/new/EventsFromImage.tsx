@@ -44,7 +44,7 @@ export function EventsFromImage({
   );
 
   const { events, response } = fromImage.data ?? {};
-  
+
   // Set eventData when events are available
   React.useEffect(() => {
     if (events && events.length > 0) {
@@ -52,7 +52,7 @@ export function EventsFromImage({
       setEventData(events[0]);
     }
   }, [events, setEventData]);
-  
+
   // Log when component mounts and unmounts
   React.useEffect(() => {
     console.log("EventsFromImage mounted with filePath:", filePath);
