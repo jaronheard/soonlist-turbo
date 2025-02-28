@@ -88,14 +88,9 @@ export function DirectGeneratorPage({
       const environment =
         process.env.NODE_ENV === "development" ? "development" : "production";
       
-      // Use the Soonlist event generator userId
-      // These IDs should be stored in environment variables in production
-      const generatorUserId = process.env.NODE_ENV === "development" 
-        ? process.env.NEXT_PUBLIC_GENERATOR_USER_ID_DEV 
-        : process.env.NEXT_PUBLIC_GENERATOR_USER_ID_PROD;
-      
+      // The userId is set in the backend based on the environment
       updateEvent.mutate({
-        event: { ...eventData, images, userId: generatorUserId },
+        event: { ...eventData, images },
         eventMetadata: eventData.eventMetadata,
         comment: organizeData.notes,
         visibility: "public",
