@@ -11,7 +11,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Clock, Image as ImageIcon } from "lucide-react-native";
@@ -456,7 +456,7 @@ export default function EditEventScreen() {
                         value={date}
                         mode="date"
                         display="default"
-                        onChange={(event: Event, selectedDate?: Date) => {
+                        onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
                           setShowStartDatePicker(false);
                           if (selectedDate) {
                             const formattedDate = selectedDate
@@ -501,7 +501,7 @@ export default function EditEventScreen() {
                         value={date}
                         mode="date"
                         display="default"
-                        onChange={(event: Event, selectedDate?: Date) => {
+                        onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
                           setShowEndDatePicker(false);
                           if (selectedDate) {
                             const formattedDate = selectedDate
@@ -548,7 +548,7 @@ export default function EditEventScreen() {
                         value={time}
                         mode="time"
                         display="default"
-                        onChange={(event: Event, selectedTime?: Date) => {
+                        onChange={(event: DateTimePickerEvent, selectedTime?: Date) => {
                           setShowStartTimePicker(false);
                           if (selectedTime) {
                             const hours = selectedTime
@@ -600,7 +600,7 @@ export default function EditEventScreen() {
                         value={time}
                         mode="time"
                         display="default"
-                        onChange={(event: Event, selectedTime?: Date) => {
+                        onChange={(event: DateTimePickerEvent, selectedTime?: Date) => {
                           setShowEndTimePicker(false);
                           if (selectedTime) {
                             const hours = selectedTime
