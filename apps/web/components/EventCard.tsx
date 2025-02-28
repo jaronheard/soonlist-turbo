@@ -76,11 +76,10 @@ export default function EventCard(props: {
         </div>
         <div>{shareButton}</div>
       </div>
-      
+
       {/* Event Card - Self-contained with just event details */}
       <Card className="overflow-hidden border border-interactive-3 bg-white p-6 shadow-md">
         <div className="space-y-6">
-
           <div className="relative aspect-square w-full overflow-hidden rounded-lg">
             <LightboxImage
               src={`${eventImage}`}
