@@ -50,7 +50,7 @@ export default function EventCard(props: {
         {/* Event Content */}
         <div className="space-y-6">
           {/* Curator Banner - Shows who discovered this event */}
-          <div className="mb-2 flex w-full items-center justify-between rounded-lg bg-neutral-6 px-4 py-2">
+          <div className="bg-neutral-6 mb-2 flex w-full items-center justify-between rounded-lg px-4 py-2">
             <div className="flex items-center gap-3">
               <div className="relative">
                 <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-interactive-1">
