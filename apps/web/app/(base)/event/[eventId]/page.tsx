@@ -10,7 +10,6 @@ import { collapseSimilarEvents } from "@soonlist/cal";
 
 import type { EventWithUser } from "~/components/EventList";
 import { EventPage } from "~/components/EventDisplays";
-
 import { env } from "~/env";
 import { api } from "~/trpc/server";
 
@@ -95,4 +94,3 @@ export default async function Page({ params }: Props) {
     </>
   );
 }
-
