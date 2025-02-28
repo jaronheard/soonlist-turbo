@@ -61,7 +61,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-build-properties",
       {
         ios: {
-          deploymentTarget: "16.2",
+          deploymentTarget: "15.1",
           infoPlist: {
             PHPhotoLibraryPreventAutomaticLimitedAccessAlert: true,
           },
@@ -163,8 +163,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           CFBundleURLSchemes: [getUniqueIdentifier()],
         },
       ],
-      NSSupportsLiveActivities: true,
-      NSSupportsLiveActivitiesFrequentUpdates: true,
     },
     associatedDomains: ["applinks:www.soonlist.com"],
   },
