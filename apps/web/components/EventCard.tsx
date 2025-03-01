@@ -91,28 +91,31 @@ export default function EventCard(props: {
             </h2>
 
             {/* Date, location, and action buttons moved directly below title */}
-            <div className="flex flex-col space-y-3">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium text-neutral-2">
-                  {eventDate}
-                </p>
-                {eventTime && (
-                  <p className="text-sm font-medium text-neutral-2">
-                    {eventTime}
-                  </p>
-                )}
-                <p className="text-sm font-medium text-neutral-2">
-                  {eventLocation}
-                </p>
-              </div>
-
-              {/* Action buttons */}
+            <div className="flex flex-col space-y-4">
+              {/* Date/time with larger, bold font */}
+              <p className="text-base font-bold text-neutral-1">
+                {eventDate}
+                {eventTime && `, ${eventTime}`}
+              </p>
+              
+              {/* Location with regular font */}
+              <p className="text-sm text-neutral-2">
+                {eventLocation}
+              </p>
+              
+              {/* Faint horizontal divider */}
+              <hr className="border-t border-neutral-3/30" />
+              
+              {/* Action buttons side by side */}
               {!eventLink && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-3">
                   {calendarButton}
-                  {followButton}
-                  {editButton}
-                  {deleteButton}
+                  {/* Only show other buttons if they exist */}
+                  <div className="flex gap-2">
+                    {followButton}
+                    {editButton}
+                    {deleteButton}
+                  </div>
                 </div>
               )}
             </div>
