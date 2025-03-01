@@ -4,39 +4,53 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 const IS_DEV = process.env.APP_VARIANT === "development";
 const IS_PREVIEW = process.env.APP_VARIANT === "preview";
 
+// Throw error if preview environment is detected
+if (IS_PREVIEW) {
+  throw new Error(
+    "Preview environment is not fully configured. Please use development or production environment.",
+  );
+}
+
 // Get unique identifier based on environment
 const getUniqueIdentifier = () => {
   if (IS_DEV) return "com.soonlist.app.dev";
-  if (IS_PREVIEW) return "com.soonlist.app.preview";
   return "com.soonlist.app";
 };
 
 // Get app name based on environment
 const getAppName = () => {
   if (IS_DEV) return "Soonlist (Dev)";
-  if (IS_PREVIEW) return "Soonlist (Preview)";
   return "Soonlist";
 };
 
 // Get scheme based on environment
 const getScheme = () => {
   if (IS_DEV) return "soonlist.dev";
-  if (IS_PREVIEW) return "soonlist.preview";
   return "soonlist";
 };
 
 // Get app group based on environment
 const getAppGroup = () => {
   if (IS_DEV) return "group.com.soonlist.dev";
-  if (IS_PREVIEW) return "group.com.soonlist.preview";
   return "group.com.soonlist";
 };
 
 // Get schemes for current environment only
 const getSchemes = () => {
   if (IS_DEV) return ["soonlist.dev"];
-  if (IS_PREVIEW) return ["soonlist.preview"];
   return ["soonlist"];
+};
+
+// Get OneSignal mode based on environment
+const getOneSignalMode = () => {
+  if (IS_DEV) return "development";
+  return "production";
+};
+
+// Get OneSignal App ID based on environment
+const getOneSignalAppId = (): string => {
+  if (IS_DEV) return (process.env.ONE_SIGNAL_APP_ID_DEV as string) || "";
+  return (process.env.ONE_SIGNAL_APP_ID_PROD as string) || "";
 };
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
@@ -122,6 +136,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         imageWidth: 200,
       },
     ],
+    [
+      "onesignal-expo-plugin",
+      {
+        mode: getOneSignalMode(),
+      },
+    ],
     // [
     //   "expo-background-fetch",
     //   {
@@ -177,5 +197,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "a8acc202-ed8c-48ed-9e5a-2570f510fe8a",
     },
+    oneSignalAppId: getOneSignalAppId(),
   },
 });

@@ -2,6 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { router, Stack } from "expo-router";
+import { useAuth } from "@clerk/clerk-expo";
 
 import type { DemoEvent, ImageSource } from "~/components/demoData";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
@@ -9,8 +10,10 @@ import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
 import { EventPreview } from "~/components/EventPreview";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
+import { api } from "~/utils/api";
 
 const OFFSET_VALUE = 32;
+const NOTIFICATION_DELAY = 3000;
 
 // Ensure we have at least one event with an image
 const DEFAULT_EVENT = DEMO_CAPTURE_EVENTS.find((event) => event.imageUri);
@@ -50,12 +53,40 @@ export default function DemoCaptureScreen() {
   const { style: keyboardStyle } = useKeyboardHeight(OFFSET_VALUE);
   const [selectedEvent, setSelectedEvent] =
     React.useState<DemoEvent>(initialEvent);
+  const { userId } = useAuth();
+  const sendNotification =
+    api.notification.sendSingleNotification.useMutation();
 
   const handleEventSelect = (event: DemoEvent) => {
     setSelectedEvent(event);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
+    // Schedule a notification after the delay
+    setTimeout(() => {
+      void (async () => {
+        try {
+          if (userId) {
+            // Use the server API to send a notification
+            await sendNotification.mutateAsync({
+              userId,
+              title: "Event Capture Complete",
+              body: `"${selectedEvent.name}" has been captured.`,
+              url: `/onboarding/demo-feed?eventId=${selectedEvent.id}&eventName=${encodeURIComponent(selectedEvent.name)}`,
+              data: {
+                eventId: selectedEvent.id,
+                eventName: selectedEvent.name,
+                type: "event_creation" as const,
+              },
+            });
+          }
+        } catch (error) {
+          // Error handling without console logging
+        }
+      })();
+    }, NOTIFICATION_DELAY);
+
+    // Continue with navigation
     router.dismissTo(
       `/onboarding/demo-feed?eventId=${selectedEvent.id}&eventName=${encodeURIComponent(selectedEvent.name)}`,
     );

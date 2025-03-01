@@ -1,12 +1,5 @@
-import type { ExpoPushMessage, ExpoPushTicket } from "expo-server-sdk";
-import Expo from "expo-server-sdk";
-
-import { getTicketId } from "./expo";
 import { generateNotificationId } from "./notification";
-import { posthog } from "./posthog";
-
-// Create a single Expo SDK client to be reused
-const expo = new Expo();
+import { sendNotification as sendOneSignalNotification } from "./oneSignal";
 
 interface NotificationContent {
   title: string;
@@ -46,69 +39,39 @@ export function getNotificationContent(
 }
 
 export async function sendNotification({
-  expoPushToken,
+  userId,
   title,
   subtitle,
   body,
   url,
-  userId,
   eventId,
   source,
   method,
 }: {
-  expoPushToken: string;
+  userId: string;
   title: string;
   subtitle: string;
   body: string;
   url: string;
-  userId: string;
   eventId?: string;
   source?: string;
   method?: string;
 }): Promise<{
   success: boolean;
-  ticket?: ExpoPushTicket;
+  id?: string;
   error?: string;
 }> {
   const notificationId = generateNotificationId();
-  const message: ExpoPushMessage = {
-    to: expoPushToken,
-    sound: "default",
+
+  return sendOneSignalNotification({
+    userId,
     title,
     subtitle,
     body,
-    data: {
-      url,
-      notificationId,
-    },
-  };
-
-  try {
-    const [ticket] = await expo.sendPushNotificationsAsync([message]);
-    posthog.capture({
-      distinctId: userId,
-      event: "notification_sent",
-      properties: {
-        success: true,
-        notificationId,
-        type: "event_creation",
-        eventId,
-        title,
-        source,
-        method,
-        ticketId: getTicketId(ticket),
-      },
-    });
-
-    return {
-      success: true,
-      ticket,
-    };
-  } catch (error) {
-    console.error("Error sending notification:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-    };
-  }
+    url,
+    notificationId,
+    eventId,
+    source,
+    method,
+  });
 }

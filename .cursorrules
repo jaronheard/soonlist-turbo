@@ -56,7 +56,7 @@ Key Conventions:
 - Implement error tracking with Sentry in both apps
 - Use Tanstack Query (React Query) for data fetching and caching
 - Implement Expo Router for navigation in the mobile app
-- Use Expo notifications for push notifications in the mobile app
+- Use OneSignal for push notifications in the Expo app
 
 Performance Optimization:
 
@@ -72,11 +72,11 @@ Next.js Specific:
 
 Expo Specific:
 
-- Use Expo SDK features like expo-secure-store, expo-notifications, etc.
+- Use Expo SDK features like expo-secure-store, etc.
 - Implement expo-router for navigation
 - Use react-native specific components and APIs
 - Optimize performance using React Native best practices
-- Use Zustand for client-side state management with a single global store\
+- Use Zustand for client-side state management with a single global store
 
 Expo Animations:
 

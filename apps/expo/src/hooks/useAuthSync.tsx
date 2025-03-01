@@ -9,7 +9,6 @@ import Config from "~/utils/config";
 const saveAuthData = async (authData: {
   username: string | null;
   authToken: string | null;
-  expoPushToken: string | null;
   email: string | null;
 }) => {
   try {
@@ -41,7 +40,7 @@ export const deleteAuthData = async () => {
   }
 };
 
-const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
+const useAuthSync = () => {
   const { getToken } = useAuth();
   const { user } = useUser();
   const posthog = usePostHog();
@@ -57,11 +56,10 @@ const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
         userId: userId,
         username: username,
         email: email,
-        expoPushToken,
       };
     }
     return null;
-  }, [hasUserInfo, userId, username, email, expoPushToken]);
+  }, [hasUserInfo, userId, username, email]);
 
   const syncAuthData = useCallback(async () => {
     if (authData?.username && authData.userId) {
@@ -69,7 +67,6 @@ const useAuthSync = ({ expoPushToken }: { expoPushToken: string }) => {
       await saveAuthData({
         username: authData.username,
         authToken,
-        expoPushToken: authData.expoPushToken,
         email: authData.email ?? null,
       });
 

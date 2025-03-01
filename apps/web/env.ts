@@ -28,6 +28,10 @@ export const env = createEnv({
     STRIPE_PRICE_ID_PRO_MONTHLY: z.string(),
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
+    ONE_SIGNAL_APP_ID_DEV: z.string(),
+    ONE_SIGNAL_APP_ID_PROD: z.string(),
+    ONE_SIGNAL_REST_API_KEY_DEV: z.string(),
+    ONE_SIGNAL_REST_API_KEY_PROD: z.string(),
   },
 
   /**

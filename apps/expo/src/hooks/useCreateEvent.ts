@@ -14,7 +14,6 @@ interface CreateEventOptions {
   imageUri?: string;
   userId: string;
   username: string;
-  expoPushToken: string;
 }
 
 interface CreateEventResult {
@@ -69,14 +68,7 @@ export function useCreateEvent() {
         }
       }
 
-      const {
-        rawText,
-        linkPreview,
-        imageUri,
-        userId,
-        username,
-        expoPushToken,
-      } = options;
+      const { rawText, linkPreview, imageUri, userId, username } = options;
 
       // URL flow
       if (linkPreview) {
@@ -84,7 +76,6 @@ export function useCreateEvent() {
           url: linkPreview,
           userId,
           username,
-          expoPushToken,
           lists: [],
           timezone: "America/Los_Angeles",
           visibility: "private",
@@ -188,7 +179,6 @@ export function useCreateEvent() {
             imageUrl: fileUrl,
             userId,
             username,
-            expoPushToken,
             lists: [],
             timezone: "America/Los_Angeles",
             visibility: "private",
@@ -215,7 +205,6 @@ export function useCreateEvent() {
           rawText,
           userId,
           username,
-          expoPushToken,
           lists: [],
           timezone: "America/Los_Angeles",
           visibility: "private",

@@ -11,10 +11,8 @@ import * as Sentry from "@sentry/react-native";
 import { PostHogProvider } from "posthog-react-native";
 
 import { useAppStateRefresh } from "~/hooks/useAppStateRefresh";
-import {
-  NotificationProvider,
-  useNotification,
-} from "~/providers/NotificationProvider";
+import { OneSignalProvider } from "~/providers/OneSignalProvider";
+import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
@@ -32,7 +30,6 @@ import { useCalendar } from "~/hooks/useCalendar";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
-import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
@@ -135,11 +132,11 @@ function RootLayout() {
                     },
                   }}
                 >
-                  <NotificationProvider>
+                  <OneSignalProvider>
                     <RevenueCatProvider>
                       <RootLayoutContent />
                     </RevenueCatProvider>
-                  </NotificationProvider>
+                  </OneSignalProvider>
                 </PostHogProvider>
               </SafeAreaProvider>
             </TRPCProvider>
@@ -242,7 +239,6 @@ const InitialLayout = () => {
 };
 
 function RootLayoutContent() {
-  const { expoPushToken } = useNotification();
   const { handleCalendarSelect, INITIAL_CALENDAR_LIMIT } = useCalendar();
   const { setIsCalendarModalVisible } = useAppStore();
   useAppStateRefresh();
@@ -258,7 +254,7 @@ function RootLayoutContent() {
 
   return (
     <View style={{ flex: 1 }}>
-      <AuthAndTokenSync expoPushToken={expoPushToken} />
+      <AuthAndTokenSync />
       <InitialLayout />
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
       <CalendarSelectionModal

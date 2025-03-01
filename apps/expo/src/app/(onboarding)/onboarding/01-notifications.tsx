@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -7,21 +7,19 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import { ChevronUp } from "lucide-react-native";
 import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
-import { useNotification } from "~/providers/NotificationProvider";
-import { useAppStore } from "~/store";
+import { useOneSignal } from "~/providers/OneSignalProvider";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function NotificationsScreen() {
-  const { registerForPushNotifications } = useNotification();
+  const { registerForPushNotifications, hasNotificationPermission } =
+    useOneSignal();
   const { saveStep } = useOnboarding();
-  const { onboardingData } = useAppStore();
   const translateY = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,13 +46,11 @@ export default function NotificationsScreen() {
   });
 
   const handleNotificationPermission = async () => {
-    if (isLoading || onboardingData.notificationsEnabled === true) return;
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
-      const { status, canAskAgain } = await Notifications.getPermissionsAsync();
-
-      if (status === Notifications.PermissionStatus.GRANTED) {
+      if (hasNotificationPermission) {
         toast.success("Notifications already enabled", {
           action: {
             label: "Continue",
@@ -68,30 +64,14 @@ export default function NotificationsScreen() {
         return;
       }
 
-      if (!canAskAgain) {
-        toast.error("Notification permission required", {
-          description: "Please enable notifications in your device settings.",
-          action: {
-            label: "Settings",
-            onClick: () => {
-              void Linking.openSettings();
-              toast.dismiss();
-            },
-          },
-          duration: Infinity,
-        });
-        setIsLoading(false);
-        return;
-      }
+      // Request permissions and get the result
+      const isPermissionGranted = await registerForPushNotifications();
 
-      await registerForPushNotifications();
-      const { status: permissionStatus } =
-        await Notifications.requestPermissionsAsync();
+      // Save the step with the permission result
       saveStep(
         "notifications",
         {
-          notificationsEnabled:
-            permissionStatus === Notifications.PermissionStatus.GRANTED,
+          notificationsEnabled: isPermissionGranted,
         },
         "/onboarding/02-age",
       );
@@ -133,22 +113,14 @@ export default function NotificationsScreen() {
                   className="w-full border-l border-[#3c3c43]/30 py-3"
                   onPress={handleNotificationPermission}
                   hitSlop={40}
-                  disabled={
-                    isLoading || onboardingData.notificationsEnabled === true
-                  }
+                  disabled={isLoading}
                 >
                   <Text
                     className={`text-center text-lg font-bold ${
-                      isLoading || onboardingData.notificationsEnabled === true
-                        ? "text-blue-500/50"
-                        : "text-blue-500"
+                      isLoading ? "text-blue-500/50" : "text-blue-500"
                     }`}
                   >
-                    {isLoading
-                      ? "Loading..."
-                      : onboardingData.notificationsEnabled === true
-                        ? "Allowed"
-                        : "Allow"}
+                    {isLoading ? "Loading..." : "Allow"}
                   </Text>
                 </Pressable>
                 <Animated.View style={animatedStyle}>

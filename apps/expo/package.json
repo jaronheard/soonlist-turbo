@@ -32,7 +32,7 @@
     "with-env:production": "dotenv -e ../../.env.production --"
   },
   "dependencies": {
-    "@bacons/apple-targets": "^0.0.5",
+    "@bacons/apple-targets": "^0.2.1",
     "@bytescale/sdk": "^3.34.0",
     "@clerk/clerk-expo": "^1.1.0",
     "@intercom/intercom-react-native": "^7.2.1",
@@ -77,6 +77,7 @@
     "expo-web-browser": "~14.0.1",
     "lucide-react-native": "^0.424.0",
     "nativewind": "~4.1.23",
+    "onesignal-expo-plugin": "^2.0.3",
     "posthog-react-native": "^3.6.2",
     "posthog-react-native-session-replay": "^0.1.9",
     "react": "18.3.1",
@@ -86,6 +87,7 @@
     "react-native-ios-context-menu": "^3.1.0",
     "react-native-ios-utilities": "^5.1.0",
     "react-native-keyboard-controller": "^1.15.2",
+    "react-native-onesignal": "^5.2.8",
     "react-native-purchases": "^8.5.0",
     "react-native-purchases-ui": "^8.5.0",
     "react-native-qrcode-svg": "^6.3.0",
