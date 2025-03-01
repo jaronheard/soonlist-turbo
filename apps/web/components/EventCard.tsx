@@ -97,15 +97,13 @@ export default function EventCard(props: {
                 {eventDate}
                 {eventTime && `, ${eventTime}`}
               </p>
-              
+
               {/* Location with regular font */}
-              <p className="text-sm text-neutral-2">
-                {eventLocation}
-              </p>
-              
+              <p className="text-sm text-neutral-2">{eventLocation}</p>
+
               {/* Faint horizontal divider */}
               <hr className="border-t border-neutral-3/30" />
-              
+
               {/* Action buttons side by side */}
               {!eventLink && (
                 <div className="flex gap-3">
