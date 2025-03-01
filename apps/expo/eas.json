@@ -39,7 +39,9 @@
     },
     "production": {
       "extends": "base",
-      "env": {},
+      "env": {
+        "APP_VARIANT": "production"
+      },
       "ios": {
         "buildArtifactPaths": ["ios/build/*"]
       },
