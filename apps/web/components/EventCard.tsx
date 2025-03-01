@@ -89,19 +89,39 @@ export default function EventCard(props: {
             <h2 className="text-2xl font-bold text-neutral-1">
               {eventTitle || eventName}
             </h2>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-neutral-2">{eventDate}</p>
-              {eventTime && (
+
+            {/* Date, location, and action buttons moved directly below title */}
+            <div className="flex flex-col space-y-3">
+              <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium text-neutral-2">
-                  {eventTime}
+                  {eventDate}
                 </p>
+                {eventTime && (
+                  <p className="text-sm font-medium text-neutral-2">
+                    {eventTime}
+                  </p>
+                )}
+                <p className="text-sm font-medium text-neutral-2">
+                  {eventLocation}
+                </p>
+              </div>
+
+              {/* Action buttons */}
+              {!eventLink && (
+                <div className="flex flex-wrap gap-2">
+                  {calendarButton}
+                  {followButton}
+                  {editButton}
+                  {deleteButton}
+                </div>
               )}
-              <p className="text-sm font-medium text-neutral-2">
-                {eventLocation}
-              </p>
             </div>
+
+            {/* Description moved below the date, location, and action buttons */}
             <p className="text-neutral-1">{eventDescription}</p>
-            {eventLink ? (
+
+            {/* External link button if provided */}
+            {eventLink && (
               <a
                 href={eventLink}
                 target="_blank"
@@ -110,13 +130,6 @@ export default function EventCard(props: {
               >
                 View Event
               </a>
-            ) : (
-              <div className="flex flex-wrap gap-2 pt-2">
-                {calendarButton}
-                {followButton}
-                {editButton}
-                {deleteButton}
-              </div>
             )}
           </div>
         </div>
