@@ -66,42 +66,6 @@ export function DirectGeneratorPage({
     },
   });
 
-  useEffect(() => {
-    // Auto-publish when event data is available
-    if (eventData && !updateEventTriggered.current) {
-      updateEventTriggered.current = true;
-      // Small delay to ensure UI updates first
-      setTimeout(() => {
-        handleAutoPublish();
-      }, 500);
-    }
-  }, [eventData]);
-
-  // Function to handle auto-publishing
-  const handleAutoPublish = () => {
-    if (eventData) {
-      const environment =
-        process.env.NODE_ENV === "development" ? "development" : "production";
-
-      // Log the images array and event data for debugging
-      console.log("Images array:", images);
-      console.log("Event data with images:", { ...eventData, images: images });
-
-      // The userId is set in the backend based on the environment
-      updateEvent.mutate({
-        event: {
-          ...eventData,
-          images: images, // Fix: Explicitly set images as a property of eventData
-        },
-        eventMetadata: eventData.eventMetadata,
-        comment: organizeData.notes,
-        visibility: "public",
-        lists: organizeData.lists || [],
-        environment,
-      });
-    }
-  };
-
   const hasFilePath = croppedImagesUrls.filePath;
   const hasAllAspectRatios =
     croppedImagesUrls.cropped &&
@@ -126,8 +90,57 @@ export function DirectGeneratorPage({
     : imagesFromContext ||
       (typeof eventData?.images === "string"
         ? [eventData.images]
-        : eventData?.images) ||
+        : Array.isArray(eventData?.images)
+          ? eventData.images
+          : []) ||
       [];
+
+  useEffect(() => {
+    // Auto-publish when event data is available and images are ready
+    if (eventData && !updateEventTriggered.current && images.length > 0) {
+      console.log("Auto-publishing with images:", images);
+      updateEventTriggered.current = true;
+      // Small delay to ensure UI updates first
+      setTimeout(() => {
+        handleAutoPublish();
+      }, 1000); // Increased delay to ensure images are fully processed
+    } else if (eventData && !updateEventTriggered.current) {
+      console.log("Event data available but no images yet:", eventData);
+    }
+  }, [eventData, images]);
+
+  // Function to handle auto-publishing
+  const handleAutoPublish = () => {
+    if (eventData) {
+      const environment =
+        process.env.NODE_ENV === "development" ? "development" : "production";
+
+      // Ensure images array is properly formatted
+      const formattedImages = images && images.length > 0 ? images : undefined;
+
+      // Create a clean event object with images properly set
+      const eventWithImages = {
+        ...eventData,
+        images: formattedImages,
+      };
+
+      // Log for debugging
+      console.log("Images array:", formattedImages);
+      console.log("Event data with images:", eventWithImages);
+
+      // The userId is set in the backend based on the environment
+      updateEvent.mutate({
+        event: eventWithImages,
+        eventMetadata: eventData.eventMetadata,
+        comment: organizeData.notes,
+        visibility: "public",
+        lists: organizeData.lists || [],
+        environment,
+      });
+    }
+  };
+
+  // Images are already filtered in the useEffect hook
 
   if (filePath) {
     return (

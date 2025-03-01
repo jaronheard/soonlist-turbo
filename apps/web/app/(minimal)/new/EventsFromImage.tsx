@@ -48,10 +48,18 @@ export function EventsFromImage({
   // Set eventData when events are available
   React.useEffect(() => {
     if (events && events.length > 0) {
-      console.log("Setting event data:", events[0]);
-      setEventData(events[0]);
+      // Ensure the event has the image URL set
+      const eventWithImage = {
+        ...events[0],
+        // Safely add images property
+        images: events[0] && 'images' in events[0] 
+          ? (events[0] as any).images 
+          : [buildDefaultUrl(filePath)],
+      };
+      console.log("Setting event data with image:", eventWithImage);
+      setEventData(eventWithImage);
     }
-  }, [events, setEventData]);
+  }, [events, setEventData, filePath]);
 
   // Log when component mounts and unmounts
   React.useEffect(() => {
