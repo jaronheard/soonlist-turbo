@@ -116,22 +116,20 @@ export function DirectGeneratorPage({
         process.env.NODE_ENV === "development" ? "development" : "production";
 
       // Ensure images array is properly formatted and duplicated 4 times
-      let formattedImages;
+      let formattedImages: string[] = [];
       if (images && images.length > 0) {
         // If we have a single image, duplicate it 4 times
-        if (images.length === 1) {
+        if (images.length === 1 && images[0]) {
           formattedImages = [images[0], images[0], images[0], images[0]];
         } 
         // If we have multiple images, ensure we have at least 4
         else {
           // Use existing images and duplicate as needed to reach 4
-          formattedImages = [...images];
-          while (formattedImages.length < 4) {
+          formattedImages = images.filter(Boolean) as string[];
+          while (formattedImages.length < 4 && formattedImages.length > 0) {
             formattedImages.push(formattedImages[0]);
           }
         }
-      } else {
-        formattedImages = undefined;
       }
 
       // Create a clean event object with images properly set
