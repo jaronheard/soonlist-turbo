@@ -117,25 +117,25 @@ export function DirectGeneratorPage({
 
       // Initialize with empty array as requested by Jaron
       let formattedImages: string[] = [];
-      
+
       // Filter out any undefined values and ensure we have only strings
       const validImages = images.filter(
-        (img): img is string => typeof img === "string" && img.length > 0
+        (img): img is string => typeof img === "string" && img.length > 0,
       );
-      
+
       // Only proceed if we have valid images
       if (validImages.length > 0) {
         // Get the first valid image - we know it exists because array length > 0
         // Use non-null assertion since we've already checked length > 0
         const firstImage = validImages[0]!;
-        
+
         // If we have only one valid image, duplicate it 4 times
         if (validImages.length === 1) {
           formattedImages = [firstImage, firstImage, firstImage, firstImage];
         } else {
           // Start with all valid images
           formattedImages = [...validImages];
-          
+
           // Duplicate the first image until we have 4
           while (formattedImages.length < 4) {
             formattedImages.push(firstImage);
