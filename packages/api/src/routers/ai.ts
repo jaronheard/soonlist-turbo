@@ -88,7 +88,7 @@ export const aiRouter = createTRPCRouter({
         fnName: "eventFromUrl",
       });
     }),
-  eventFromImage: protectedProcedure
+  eventFromImage: publicProcedure
     .input(
       z.object({
         imageUrl: z.string(),
