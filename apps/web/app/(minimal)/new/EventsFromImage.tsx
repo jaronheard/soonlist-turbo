@@ -54,7 +54,7 @@ export function EventsFromImage({
         // Safely add images property
         images:
           events[0] && "images" in events[0]
-            ? (events[0] as any).images
+            ? (events[0] as { images?: string | string[] }).images
             : [buildDefaultUrl(filePath)],
       };
       console.log("Setting event data with image:", eventWithImage);
