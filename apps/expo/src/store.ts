@@ -42,7 +42,6 @@ interface AppState {
   ) => void;
   setIsCalendarModalVisible: (isVisible: boolean) => void;
   setShowAllCalendars: (show: boolean) => void;
-  resetIntentParams: () => void;
 
   // Event input state for /add route
   addEventState: AddEventInputState;
@@ -57,6 +56,9 @@ interface AppState {
   setIsImageLoading: (isLoading: boolean, route: "add" | "new") => void;
   setIsImageUploading: (isUploading: boolean, route: "add" | "new") => void;
   setUploadedImageUrl: (url: string | null, route: "add" | "new") => void;
+
+  resetIntentParams: () => void;
+  resetOnboarding: () => void;
   resetAddEventState: () => void;
   resetNewEventState: () => void;
 
@@ -117,7 +119,6 @@ export const useAppStore = create<AppState>()(
       setIsCalendarModalVisible: (isVisible) =>
         set({ isCalendarModalVisible: isVisible }),
       setShowAllCalendars: (show) => set({ showAllCalendars: show }),
-      resetIntentParams: () => set({ intentParams: null }),
 
       // Initialize event input state for both routes
       addEventState: {
@@ -193,6 +194,13 @@ export const useAppStore = create<AppState>()(
         })),
 
       // Reset functions
+      resetIntentParams: () => set({ intentParams: null }),
+      resetOnboarding: () =>
+        set({
+          hasCompletedOnboarding: false,
+          onboardingData: {},
+          currentOnboardingStep: null,
+        }),
       resetAddEventState: () =>
         set({
           addEventState: {

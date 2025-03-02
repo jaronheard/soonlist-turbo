@@ -296,13 +296,23 @@ export const userRouter = createTRPCRouter({
       });
     }
 
-    return ctx.db
-      .update(users)
-      .set({
-        onboardingCompletedAt: null,
-        onboardingData: null,
-      })
-      .where(eq(users.id, userId));
+    try {
+      await ctx.db
+        .update(users)
+        .set({
+          onboardingCompletedAt: null,
+          onboardingData: null,
+        })
+        .where(eq(users.id, userId));
+
+      return { success: true, message: "Onboarding reset successfully" };
+    } catch (error) {
+      console.error("Error resetting onboarding:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to reset onboarding",
+      });
+    }
   }),
 
   setOnboardingCompletedAt: protectedProcedure
