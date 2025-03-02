@@ -14,6 +14,7 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 import { generateNotificationId } from "../utils/notification";
 import { sendBatchNotifications, sendNotification } from "../utils/oneSignal";
 import { posthog } from "../utils/posthog";
+import { createDeepLink } from "../utils/urlScheme";
 
 const langfuse = new Langfuse({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
@@ -430,7 +431,7 @@ export const notificationRouter = createTRPCRouter({
         userIds,
         title: "2 days left on your trial",
         body: "Your subscription will change from trial to Soonlist Unlimited soon. Keep capturing your possibilities!",
-        url: "/settings/subscription",
+        url: createDeepLink("settings/subscription"),
         data: {
           type: "trial_expiration",
         },

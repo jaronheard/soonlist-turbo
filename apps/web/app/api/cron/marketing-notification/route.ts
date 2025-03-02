@@ -5,6 +5,20 @@ import { getHTTPStatusCodeFromError } from "@trpc/server/http";
 import { appRouter } from "@soonlist/api";
 import { createTRPCContext } from "@soonlist/api/trpc";
 
+// Need to create this function directly since we can't import from the API
+// to avoid circular dependencies
+function createDeepLink(path: string): string {
+  // Check if we're in development environment
+  const isDev = process.env.NODE_ENV !== "production";
+
+  // Get appropriate scheme
+  const scheme = isDev ? "soonlist.dev" : "soonlist";
+
+  // Ensure path doesn't start with a slash
+  const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+  return `${scheme}://${cleanPath}`;
+}
+
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
@@ -30,7 +44,7 @@ export async function GET(request: Request) {
       title: "📸 Soonlist Just Got Better!",
       body: "Tap to explore our streamlined capture flow, event stats & more. Not seeing it? Update in TestFlight.",
       data: {
-        url: "/feed",
+        url: createDeepLink("feed"),
       },
     });
 

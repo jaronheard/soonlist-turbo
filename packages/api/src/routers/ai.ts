@@ -12,6 +12,7 @@ import type {
 } from "./aiHelpers";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { sendNotification } from "../utils/oneSignal";
+import { createDeepLink } from "../utils/urlScheme";
 import {
   createEventAndNotify,
   fetchAndProcessEvent,
@@ -144,7 +145,7 @@ export const aiRouter = createTRPCRouter({
             userId,
             title: "Soonlist",
             body: "There was an error creating your event.",
-            url: "/feed",
+            url: createDeepLink("feed"),
             data: {
               notificationId,
             },
@@ -208,7 +209,7 @@ export const aiRouter = createTRPCRouter({
             userId,
             title: "Soonlist",
             body: "There was an error creating your event.",
-            url: "/feed",
+            url: createDeepLink("feed"),
             data: {
               notificationId,
             },
@@ -272,7 +273,7 @@ export const aiRouter = createTRPCRouter({
             userId,
             title: "Soonlist",
             body: "There was an error creating your event.",
-            url: "/feed",
+            url: createDeepLink("feed"),
             data: {
               notificationId,
             },

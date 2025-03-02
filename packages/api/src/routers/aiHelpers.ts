@@ -31,6 +31,7 @@ import {
   getNotificationContent,
   sendNotification,
 } from "../utils/notificationHelpers";
+import { createDeepLink } from "../utils/urlScheme";
 
 const langfuse = new Langfuse({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
@@ -448,7 +449,7 @@ export async function createEventAndNotify(
     title,
     subtitle,
     body,
-    url: `/event/${eventid}`,
+    url: createDeepLink(`event/${eventid}`),
     eventId: eventid,
     source: "ai_router",
     method: source,
