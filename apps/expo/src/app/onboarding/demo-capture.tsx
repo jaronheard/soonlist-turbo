@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
+import Constants from "expo-constants";
 import { router, Stack } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
 
@@ -67,12 +68,15 @@ export default function DemoCaptureScreen() {
       void (async () => {
         try {
           if (userId) {
+            // Get app scheme from Expo config
+            const scheme = Constants.expoConfig?.scheme as string;
+
             // Use the server API to send a notification
             await sendNotification.mutateAsync({
               userId,
               title: "Event Capture Complete",
               body: `"${selectedEvent.name}" has been captured.`,
-              url: `/onboarding/demo-feed?eventId=${selectedEvent.id}&eventName=${encodeURIComponent(selectedEvent.name)}`,
+              url: `${scheme}://onboarding/demo-feed?eventId=${selectedEvent.id}&eventName=${encodeURIComponent(selectedEvent.name)}`,
               data: {
                 eventId: selectedEvent.id,
                 eventName: selectedEvent.name,
