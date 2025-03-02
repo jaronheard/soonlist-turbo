@@ -38,6 +38,9 @@ export default function Page() {
 
   const username = currentUser?.username || "";
 
+  // Get the utils at the top level of the component
+  const utils = api.useUtils();
+
   // Load the event data
   const eventQuery = api.event.get.useQuery(
     { eventId: id || "" },
@@ -54,7 +57,8 @@ export default function Page() {
   // Mutations
   const deleteEventMutation = api.event.delete.useMutation({
     onSuccess: () => {
-      void api.useUtils().event.invalidate();
+      // Use the utils reference from above instead of calling useUtils() here
+      void utils.event.invalidate();
       router.replace("/");
     },
   });
