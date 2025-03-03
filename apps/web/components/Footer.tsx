@@ -77,7 +77,7 @@ export function Footer() {
                     className="inline-block"
                   >
                     <Image
-                      src="/images/app-store-badge.svg"
+                      src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1739059200"
                       alt="Download on the App Store"
                       width={246}
                       height={82}
