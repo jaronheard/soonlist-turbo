@@ -161,6 +161,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     usesAppleSignIn: true,
     infoPlist: {
       UIBackgroundModes: ["fetch"],
+      NSLocationWhenInUseUsageDescription:
+        "Soonlist uses your location for notifications and locating events.",
       CFBundleURLTypes: [
         {
           CFBundleURLName: "Soonlist Schemes",
