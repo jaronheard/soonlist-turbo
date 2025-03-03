@@ -227,4 +227,3 @@ const navigation = {
     // },
   ],
 };
-// Add a comment to trigger formatting
