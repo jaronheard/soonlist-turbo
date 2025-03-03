@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { SignedOut } from "@clerk/nextjs";
 
 import { buttonVariants } from "@soonlist/ui/button";
+import { Logo } from "./Logo";
 
 const excludedCTARoutes = [
   "/join",
@@ -93,7 +94,7 @@ export function Footer() {
       <footer className="w-full bg-interactive-3 p-8 text-neutral-2 sm:p-16">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-center">
           {/* Logo and Social Section */}
-          <h1 className="font-heading text-3xl font-bold">Soonlist</h1>
+          <Logo variant="hidePreview" className="mx-auto" />
 
           {/* Social Media Links */}
           <div className="mt-6 flex gap-4">
