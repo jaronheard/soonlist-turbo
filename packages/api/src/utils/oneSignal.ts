@@ -4,14 +4,15 @@ import { posthog } from "./posthog";
 const ONE_SIGNAL_API_URL = "https://onesignal.com/api/v1";
 
 // OneSignal API key from environment variables
-const ONE_SIGNAL_REST_API_KEY =
-  process.env.NODE_ENV === "production"
-    ? process.env.ONE_SIGNAL_REST_API_KEY_PROD
-    : process.env.ONE_SIGNAL_REST_API_KEY_DEV;
-const ONE_SIGNAL_APP_ID =
-  process.env.NODE_ENV === "production"
-    ? process.env.ONE_SIGNAL_APP_ID_PROD
-    : process.env.ONE_SIGNAL_APP_ID_DEV;
+const IS_DEV = process.env.APP_VARIANT === "development";
+
+const ONE_SIGNAL_REST_API_KEY = IS_DEV
+  ? process.env.ONE_SIGNAL_REST_API_KEY_DEV
+  : process.env.ONE_SIGNAL_REST_API_KEY_PROD;
+
+const ONE_SIGNAL_APP_ID = IS_DEV
+  ? process.env.ONE_SIGNAL_APP_ID_DEV
+  : process.env.ONE_SIGNAL_APP_ID_PROD;
 
 // Check if OneSignal is properly configured
 if (!ONE_SIGNAL_REST_API_KEY || !ONE_SIGNAL_APP_ID) {
