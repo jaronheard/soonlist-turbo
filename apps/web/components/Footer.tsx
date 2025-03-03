@@ -18,7 +18,7 @@ export function Footer() {
   return (
     <div className="">
       {/* "Get the app" section removed as per requirements */}
-      <footer className="w-full bg-interactive-3 p-8 text-background sm:p-16">
+      <footer className="w-full bg-interactive-3 p-8 text-neutral-2 sm:p-16">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-center">
           {/* Logo and Social Section */}
           <h1 className="font-heading text-3xl font-bold">Soonlist</h1>
@@ -46,7 +46,7 @@ export function Footer() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-background hover:underline"
+                className="text-neutral-2 hover:underline"
               >
                 {item.name}
               </Link>
@@ -55,7 +55,7 @@ export function Footer() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-background hover:underline"
+                className="text-neutral-2 hover:underline"
               >
                 {item.name}
               </Link>
@@ -64,7 +64,7 @@ export function Footer() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-background hover:underline"
+                className="text-neutral-2 hover:underline"
               >
                 {item.name}
               </Link>
