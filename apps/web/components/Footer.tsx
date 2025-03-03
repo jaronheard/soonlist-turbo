@@ -72,11 +72,11 @@ export function Footer() {
                 />
                 <div className="mt-10 flex items-center justify-center gap-x-6">
                   <a
-                    href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216?itscg=30200&itsct=apps_box_badge&mttnsubad=6670222216"
+                    href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216"
                     className="inline-block"
                   >
                     <Image
-                      src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1739059200"
+                      src="/images/app-store-badge.svg"
                       alt="Download on the App Store"
                       width={246}
                       height={82}
