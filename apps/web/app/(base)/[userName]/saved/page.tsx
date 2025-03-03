@@ -64,7 +64,7 @@ export default async function Page({ params }: Props) {
   return (
     <>
       <div className="flex place-items-center gap-2">
-        <div className="font-medium">Events saved by</div>
+        <div className="font-medium">Events captured by</div>
         <Suspense>
           <UserInfo userName={params.userName} />
         </Suspense>

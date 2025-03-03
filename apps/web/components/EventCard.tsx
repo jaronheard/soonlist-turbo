@@ -65,11 +65,14 @@ export default function EventCard(props: {
             )}
           </div>
           <div>
-            <p className="text-sm font-medium text-neutral-2">Saved by</p>
+            <p className="text-sm font-medium text-neutral-2">Captured by</p>
             <p className="text-sm font-semibold text-neutral-1">{userName}</p>
           </div>
         </div>
-        <div>{shareButton}</div>
+        <div className="flex items-center gap-2">
+          {calendarButton}
+          {shareButton}
+        </div>
       </div>
 
       {/* Event Card - Self-contained with just event details */}
@@ -112,7 +115,6 @@ export default function EventCard(props: {
               </a>
             ) : (
               <div className="flex flex-wrap gap-2 pt-2">
-                {calendarButton}
                 {followButton}
                 {editButton}
                 {deleteButton}
