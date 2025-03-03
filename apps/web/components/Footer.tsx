@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { SignedOut } from "@clerk/nextjs";
 
 import { buttonVariants } from "@soonlist/ui/button";
+
 import { Logo } from "./Logo";
 
 const excludedCTARoutes = [
