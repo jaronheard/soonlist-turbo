@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignedOut } from "@clerk/nextjs";
 
-import { Button, buttonVariants } from "@soonlist/ui/button";
+import { buttonVariants } from "@soonlist/ui/button";
 
 const excludedCTARoutes = [
   "/join",
