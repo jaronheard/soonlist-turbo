@@ -60,35 +60,7 @@ export function Footer() {
 
   return (
     <div className="">
-      <SignedOut>
-        {!excludedCTARoutes.includes(pathname) && (
-          <>
-            <Section className="bg-interactive-3">
-              <div className="text-center">
-                <SectionTitle
-                  title="Save events instantly"
-                  subtitle="Get the app"
-                  description="From screenshots to your list of possibilities."
-                />
-                <div className="mt-10 flex items-center justify-center gap-x-6">
-                  <a
-                    href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216"
-                    className="inline-block"
-                  >
-                    <Image
-                      src="/images/app-store-badge.svg"
-                      alt="Download on the App Store"
-                      width={246}
-                      height={82}
-                      className="h-[82px] w-[246px] object-contain align-middle"
-                    />
-                  </a>
-                </div>
-              </div>
-            </Section>
-          </>
-        )}
-      </SignedOut>
+      {/* "Get the app" section removed as per requirements */}
       <footer className="w-full bg-interactive-3 p-8 text-background sm:p-16">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-center">
           {/* Logo and Social Section */}
