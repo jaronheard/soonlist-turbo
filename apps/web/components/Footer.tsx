@@ -1,62 +1,19 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SignedOut } from "@clerk/nextjs";
 
 import { buttonVariants } from "@soonlist/ui/button";
 
-const excludedCTARoutes = [
-  "/join",
-  "/sign-in",
-  "/sign-up",
-  "/install",
-  "/get-started",
-];
+// Routes array removed as it's no longer needed after removing the "Get the app" section
 
-function Section({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={`py-16 ${className}`}>
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">{children}</div>
-    </section>
-  );
-}
+// Section component removed as it's no longer needed after removing the "Get the app" section
 
-function SectionTitle({
-  subtitle,
-  title,
-  description,
-}: {
-  subtitle?: string;
-  title: string;
-  description?: string | React.ReactNode;
-}) {
-  return (
-    <div className="mx-auto max-w-2xl text-center">
-      {subtitle && (
-        <h2 className="text-2xl font-bold text-interactive-1">{subtitle}</h2>
-      )}
-      <p className="mt-5 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
-        {title}
-      </p>
-      {description && (
-        <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
-          {description}
-        </p>
-      )}
-    </div>
-  );
-}
+// SectionTitle component removed as it's no longer needed after removing the "Get the app" section
 
 export function Footer() {
-  const pathname = usePathname();
+  // Pathname no longer needed after removing "Get the app" section
+  const _pathname = usePathname();
 
   return (
     <div className="">
