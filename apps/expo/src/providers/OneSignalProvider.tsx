@@ -94,9 +94,9 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
     }
 
     // Enable logging for debugging (remove in production)
-    if (__DEV__) {
-      OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-    }
+    // if (__DEV__) {
+    OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+    // }
 
     // Initialize the OneSignal SDK
     OneSignal.initialize(oneSignalAppId);
