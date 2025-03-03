@@ -203,7 +203,7 @@ export function EventMenu({
   };
 
   const handleEdit = () => {
-    void Linking.openURL(`${Config.apiBaseUrl}/event/${event.id}/edit`);
+    router.push(`/event/${event.id}/edit`);
   };
 
   const handleDelete = async () => {
