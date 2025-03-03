@@ -1,23 +1,95 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SignedOut } from "@clerk/nextjs";
 
 import { buttonVariants } from "@soonlist/ui/button";
 
-// Routes array removed as it's no longer needed after removing the "Get the app" section
+const excludedCTARoutes = [
+  "/join",
+  "/sign-in",
+  "/sign-up",
+  "/install",
+  "/get-started",
+];
 
-// Section component removed as it's no longer needed after removing the "Get the app" section
+function Section({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`py-16 ${className}`}>
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">{children}</div>
+    </section>
+  );
+}
 
-// SectionTitle component removed as it's no longer needed after removing the "Get the app" section
+function SectionTitle({
+  subtitle,
+  title,
+  description,
+}: {
+  subtitle?: string;
+  title: string;
+  description?: string | React.ReactNode;
+}) {
+  return (
+    <div className="mx-auto max-w-2xl text-center">
+      {subtitle && (
+        <h2 className="text-2xl font-bold text-interactive-1">{subtitle}</h2>
+      )}
+      <p className="mt-5 font-heading text-4xl font-bold leading-[1.08333] tracking-tight text-gray-800 md:text-5xl">
+        {title}
+      </p>
+      {description && (
+        <p className="mt-6 text-xl leading-7.5 text-gray-400 md:text-2xl md:leading-9">
+          {description}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export function Footer() {
-  // Pathname no longer needed after removing "Get the app" section
-  const _pathname = usePathname();
+  // Pathname needed for the "Get the app" section
+  const pathname = usePathname();
 
   return (
     <div className="">
-      {/* "Get the app" section removed as per requirements */}
+      <SignedOut>
+        {!excludedCTARoutes.includes(pathname) && (
+          <>
+            <Section className="bg-interactive-3">
+              <div className="text-center">
+                <SectionTitle
+                  title="Save events instantly"
+                  subtitle="Get the app"
+                  description="From screenshots to your list of possibilities."
+                />
+                <div className="mt-10 flex items-center justify-center gap-x-6">
+                  <a
+                    href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216?itscg=30200&itsct=apps_box_badge&mttnsubad=6670222216"
+                    className="inline-block"
+                  >
+                    <Image
+                      src="/images/app-store-badge.svg"
+                      alt="Download on the App Store"
+                      width={246}
+                      height={82}
+                      className="h-[82px] w-[246px] object-contain align-middle"
+                    />
+                  </a>
+                </div>
+              </div>
+            </Section>
+          </>
+        )}
+      </SignedOut>
       <footer className="w-full bg-interactive-3 p-8 text-neutral-2 sm:p-16">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-center">
           {/* Logo and Social Section */}
