@@ -105,6 +105,8 @@ function RootLayout() {
     );
   }
 
+  const isDev = Constants.expoConfig?.scheme === "soonlist.dev";
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
@@ -119,9 +121,8 @@ function RootLayout() {
                   apiKey={Config.posthogApiKey}
                   options={{
                     host: "https://us.i.posthog.com",
-                    disabled: process.env.APP_VARIANT === "development",
-                    enableSessionReplay:
-                      process.env.APP_VARIANT !== "development",
+                    disabled: isDev,
+                    enableSessionReplay: !isDev,
                     sessionReplayConfig: {
                       maskAllTextInputs: false,
                       maskAllImages: false,

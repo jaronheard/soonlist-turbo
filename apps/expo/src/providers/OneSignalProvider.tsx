@@ -117,7 +117,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
 
     logOneSignal("Config", "OneSignal configuration", {
       appId: oneSignalAppId,
-      appVariant: Constants.expoConfig?.extra?.appVariant || "unknown",
+      appScheme: Constants.expoConfig?.scheme,
       platform: Platform.OS,
     });
 
