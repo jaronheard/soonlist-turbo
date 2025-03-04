@@ -8,6 +8,7 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "production", "test"])
       .default("development"),
+    APP_VARIANT: z.enum(["development", "production"]).default("development"),
   },
   /**
    * Specify your server-side environment variables schema here.
@@ -55,7 +56,7 @@ export const env = createEnv({
    */
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-
+    APP_VARIANT: process.env.APP_VARIANT,
     NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL:
       process.env.NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL,
     NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL:
