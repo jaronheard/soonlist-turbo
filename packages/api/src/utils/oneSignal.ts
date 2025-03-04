@@ -173,6 +173,7 @@ export async function sendNotification({
       id: "id" in result ? result.id : undefined,
       hasErrors: "errors" in result,
       errors: "errors" in result ? result.errors : undefined,
+      result,
     });
 
     if (!response.ok) {
@@ -355,6 +356,7 @@ export async function sendBatchNotifications({
       id: "id" in result ? result.id : undefined,
       hasErrors: "errors" in result,
       errors: "errors" in result ? result.errors : undefined,
+      result,
     });
 
     if (!response.ok) {
