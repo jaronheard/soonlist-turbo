@@ -4,7 +4,11 @@ import type {
 } from "react-native-onesignal";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Linking, Platform } from "react-native";
-import { OneSignal, OSNotificationPermission } from "react-native-onesignal";
+import {
+  LogLevel,
+  OneSignal,
+  OSNotificationPermission,
+} from "react-native-onesignal";
 import Constants from "expo-constants";
 import { useAuth } from "@clerk/clerk-expo";
 import { usePostHog } from "posthog-react-native";
@@ -79,8 +83,24 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
     useState(false);
   const posthog = usePostHog();
 
-  // Check permission and set up notification handlers
+  // Initialize OneSignal
   useEffect(() => {
+    const oneSignalAppId = Constants.expoConfig?.extra
+      ?.oneSignalAppId as string;
+
+    if (!oneSignalAppId) {
+      console.error("OneSignal App ID is not defined in app.config.ts");
+      return;
+    }
+
+    // Enable logging for debugging (remove in production)
+    // if (__DEV__) {
+    OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+    // }
+
+    // Initialize the OneSignal SDK
+    OneSignal.initialize(oneSignalAppId);
+
     // Check permission status
     void OneSignal.Notifications.permissionNative()
       .then((permission) => {

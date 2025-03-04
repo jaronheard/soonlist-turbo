@@ -1,10 +1,8 @@
 import { Platform, Text, View } from "react-native";
-import { LogLevel, OneSignal } from "react-native-onesignal";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import Constants from "expo-constants";
 import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
@@ -23,7 +21,7 @@ import type { ErrorBoundaryProps } from "expo-router";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
-import { AppOwnership } from "expo-constants";
+import Constants, { AppOwnership } from "expo-constants";
 import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
@@ -95,15 +93,6 @@ Sentry.init({
     replaysOnErrorSampleRate: 1.0,
   },
 });
-
-// Initialize OneSignal before component rendering
-const oneSignalAppId = Constants.expoConfig?.extra?.oneSignalAppId as string;
-if (oneSignalAppId) {
-  OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-  OneSignal.initialize(oneSignalAppId);
-} else {
-  console.error("OneSignal App ID is not defined in app.config.ts");
-}
 
 function RootLayout() {
   const clerkPublishableKey = Config.clerkPublishableKey;
