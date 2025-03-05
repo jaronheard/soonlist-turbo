@@ -77,25 +77,6 @@ const handleNavigation = (url: string) => {
   }
 };
 
-// Create a custom logger for OneSignal operations
-const logOneSignal = (
-  operation: string,
-  message: string,
-  data?: Record<string, unknown>,
-) => {
-  const logData = {
-    operation,
-    message,
-    timestamp: new Date().toISOString(),
-    ...(data || {}),
-  };
-
-  console.log(`[OneSignal] ${operation}: ${message}`, logData);
-
-  // In a production app, you might want to send these logs to a service like Sentry
-  // if available in the app context
-};
-
 export function OneSignalProvider({ children }: OneSignalProviderProps) {
   const { userId, isSignedIn } = useAuth();
   const [hasNotificationPermission, setHasNotificationPermission] =
@@ -104,74 +85,42 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
 
   // Initialize OneSignal
   useEffect(() => {
-    logOneSignal("Initialization", "Starting OneSignal initialization");
-
     const oneSignalAppId = Constants.expoConfig?.extra
       ?.oneSignalAppId as string;
 
     if (!oneSignalAppId) {
-      logOneSignal("Error", "OneSignal App ID is not defined in app.config.ts");
       console.error("OneSignal App ID is not defined in app.config.ts");
       return;
     }
 
-    logOneSignal("Config", "OneSignal configuration", {
-      appId: oneSignalAppId,
-      appScheme: Constants.expoConfig?.scheme,
-      platform: Platform.OS,
-    });
-
     // Enable logging for debugging (remove in production)
     // if (__DEV__) {
     OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-    logOneSignal("Debug", "Set log level to Verbose");
     // }
 
     // Initialize the OneSignal SDK
     OneSignal.initialize(oneSignalAppId);
-    logOneSignal("Initialization", "OneSignal SDK initialized", {
-      oneSignalAppId,
-    });
 
     // Check permission status
     void OneSignal.Notifications.permissionNative()
       .then((permission) => {
         // Check if permission is granted
-        const isPermissionGranted =
+        setHasNotificationPermission(
           permission === OSNotificationPermission.Authorized ||
-          permission === OSNotificationPermission.Provisional ||
-          permission === OSNotificationPermission.Ephemeral;
-
-        setHasNotificationPermission(isPermissionGranted);
-
-        logOneSignal("Permissions", "Notification permission status checked", {
-          permission,
-          permissionStatus: String(permission),
-          isPermissionGranted,
-        });
+            permission === OSNotificationPermission.Provisional ||
+            permission === OSNotificationPermission.Ephemeral,
+        );
       })
       .catch((error) => {
-        logOneSignal("Error", "Error checking notification permission", {
-          error: error instanceof Error ? error.message : String(error),
-        });
         console.error("Error checking notification permission:", error);
       });
 
     // Set up notification handlers
     const setupNotificationListeners = () => {
-      logOneSignal("Listeners", "Setting up notification listeners");
-
       // Handle foreground notifications
       OneSignal.Notifications.addEventListener(
         "foregroundWillDisplay",
         (event: NotificationWillDisplayEvent) => {
-          logOneSignal("Notification", "Received foreground notification", {
-            notificationId: event.notification.notificationId,
-            title: event.notification.title,
-            body: event.notification.body,
-            data: event.notification.additionalData,
-          });
-
           // Capture analytics
           try {
             posthog.capture("notification_received", {
@@ -181,20 +130,10 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
               data: event.notification.additionalData || {},
             });
           } catch (error) {
-            logOneSignal(
-              "Error",
-              "Failed to capture notification event in PostHog",
-              {
-                error: error instanceof Error ? error.message : String(error),
-              },
-            );
             console.error("Failed to capture notification event:", error);
           }
 
           // Display the notification
-          logOneSignal("Notification", "Displaying notification", {
-            notificationId: event.notification.notificationId,
-          });
           event.notification.display();
         },
       );
@@ -203,13 +142,6 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
       OneSignal.Notifications.addEventListener(
         "click",
         (event: NotificationClickEvent) => {
-          logOneSignal("Notification", "Notification clicked", {
-            notificationId: event.notification.notificationId,
-            title: event.notification.title,
-            body: event.notification.body,
-            data: event.notification.additionalData,
-          });
-
           try {
             posthog.capture("notification_opened", {
               title: event.notification.title || "",
@@ -218,13 +150,6 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
               data: event.notification.additionalData || {},
             });
           } catch (error) {
-            logOneSignal(
-              "Error",
-              "Failed to capture notification click event in PostHog",
-              {
-                error: error instanceof Error ? error.message : String(error),
-              },
-            );
             console.error("Failed to capture notification event:", error);
           }
 
@@ -233,11 +158,6 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
             | NotificationData
             | undefined;
           if (data?.url && typeof data.url === "string") {
-            logOneSignal("DeepLink", "Processing deep link from notification", {
-              url: data.url,
-              notificationId: event.notification.notificationId,
-            });
-
             try {
               posthog.capture("notification_deep_link", {
                 title: event.notification.title || "",
@@ -247,13 +167,6 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
                 url: data.url,
               });
             } catch (error) {
-              logOneSignal(
-                "Error",
-                "Failed to capture deep link event in PostHog",
-                {
-                  error: error instanceof Error ? error.message : String(error),
-                },
-              );
               console.error("Failed to capture notification event:", error);
             }
 
@@ -268,7 +181,6 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
 
     // Cleanup
     return () => {
-      logOneSignal("Cleanup", "Clearing all notifications");
       OneSignal.Notifications.clearAll();
     };
   }, [posthog]);
@@ -276,30 +188,22 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
   // Set external user ID when user signs in
   useEffect(() => {
     if (isSignedIn && userId) {
-      logOneSignal("User", "Setting external user ID", { userId });
-
       // Set the external user ID
       OneSignal.login(userId);
 
       // Set user tags
-      const tags = {
+      OneSignal.User.addTags({
         userId: userId,
         platform: Platform.OS,
-      };
-
-      logOneSignal("User", "Adding user tags", tags);
-      OneSignal.User.addTags(tags);
+      });
     } else {
       // Logout when user signs out
-      logOneSignal("User", "User logged out, removing OneSignal association");
       OneSignal.logout();
     }
   }, [userId, isSignedIn]);
 
   // Function to check notification permission status
   const checkPermissionStatus = async (): Promise<boolean> => {
-    logOneSignal("Permissions", "Checking notification permission status");
-
     try {
       const permission = await OneSignal.Notifications.permissionNative();
       const isPermissionGranted =
@@ -308,18 +212,8 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
         permission === OSNotificationPermission.Ephemeral;
 
       setHasNotificationPermission(isPermissionGranted);
-
-      logOneSignal("Permissions", "Permission status check completed", {
-        permission,
-        permissionStatus: String(permission),
-        isPermissionGranted,
-      });
-
       return isPermissionGranted;
     } catch (error) {
-      logOneSignal("Error", "Error checking notification permission", {
-        error: error instanceof Error ? error.message : String(error),
-      });
       console.error("Error checking notification permission:", error);
       return false;
     }
@@ -327,24 +221,14 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
 
   // Function to request notification permissions
   const registerForPushNotifications = async (): Promise<boolean> => {
-    logOneSignal("Permissions", "Requesting push notification permissions");
-
     try {
       // The 'true' parameter forces the permission dialog to show
       // This should only be called during onboarding when the user explicitly agrees
       await OneSignal.Notifications.requestPermission(true);
-      logOneSignal("Permissions", "Permission request dialog shown");
 
       // Check the permission status after requesting
-      const result = await checkPermissionStatus();
-      logOneSignal("Permissions", "Permission request result", {
-        granted: result,
-      });
-      return result;
+      return await checkPermissionStatus();
     } catch (error) {
-      logOneSignal("Error", "Error requesting notification permission", {
-        error: error instanceof Error ? error.message : String(error),
-      });
       console.error("Error requesting notification permission:", error);
       return false;
     }
