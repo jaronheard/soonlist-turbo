@@ -546,7 +546,7 @@ export default function EditProfileScreen() {
                       className="mt-2 rounded-md bg-neutral-100 p-4"
                     >
                       <Text className="text-base">
-                        View subscription in Settings
+                        View subscription in  Settings
                       </Text>
                     </TouchableOpacity>
                   );
