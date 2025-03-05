@@ -1,5 +1,5 @@
 import React from "react";
-import { Linking, View } from "react-native";
+import { Share, View } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -8,7 +8,7 @@ import {
   HelpCircle,
   LogOut,
   MessageCircle,
-  Download,
+  ShareIcon,
   User,
 } from "lucide-react-native";
 import * as DropdownMenu from "zeego/dropdown-menu";
@@ -36,9 +36,13 @@ export function ProfileMenu() {
     }
   };
 
-  const handleAppStoreLink = async () => {
-    const url = "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216";
-    await Linking.openURL(url);
+  const handleShareApp = async () => {
+    const url =
+      "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216";
+    await Share.share({
+      message: "Check out Soonlist on the App Store!",
+      url: url,
+    });
   };
 
   return (
@@ -69,9 +73,9 @@ export function ProfileMenu() {
       </DropdownMenu.Trigger>
 
       <DropdownMenu.Content>
-        <DropdownMenu.Item key="app-store" onSelect={handleAppStoreLink}>
-          <DropdownMenu.ItemIcon ios={{ name: "square.and.arrow.down" }}>
-            <Download />
+        <DropdownMenu.Item key="share-app" onSelect={handleShareApp}>
+          <DropdownMenu.ItemIcon ios={{ name: "square.and.arrow.up" }}>
+            <ShareIcon />
           </DropdownMenu.ItemIcon>
           <DropdownMenu.ItemTitle>Share App</DropdownMenu.ItemTitle>
         </DropdownMenu.Item>
