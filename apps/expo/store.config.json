@@ -1,0 +1,59 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "version": "1.0.24",
+    "copyright": "2025 Soonlist Company",
+    "release": {
+      "automaticRelease": false
+    },
+    "info": {
+      "en-US": {
+        "description": "That concert you wanted to see? It was last week. Don’t miss out again. Capture every event you see with a screenshot. Save them all in one list. Share with friends—no app needed.\n\nSoonlist summarizes your screenshots into one clean list like a friend who always knows what’s happening. No typing. No copy/paste. Just possibilities.\n\nOne tap adds it to your calendar. Share a single event or your whole list. Friends don't need the app to see what you share.\n\nKey Features:\n• Save every event you see\n• Capture events in seconds\n• See all your possibilities in one place\n• Share links with friends\n• Add to calendar in one tap\n\nTurn \"I meant to go\" into \"glad I went.\"\n\nFor more information, please review our Terms of Service (https://www.soonlist.com/terms-ios) and Privacy Policy (https://www.soonlist.com/privacy).",
+        "keywords": [
+          "events",
+          "screenshots",
+          "ai",
+          "calendar",
+          "instagram",
+          "fomo"
+        ],
+        "releaseNotes": "Improved notifications help you keep track of events you captured",
+        "marketingUrl": "https://www.soonlist.com",
+        "supportUrl": "https://www.soonlist.com",
+        "title": "Soonlist Save Events Instantly",
+        "subtitle": "Screenshots -> possibilities",
+        "privacyPolicyUrl": "https://www.soonlist.com/privacy"
+      }
+    },
+    "categories": ["PRODUCTIVITY", "LIFESTYLE"],
+    "advisory": {
+      "ageRatingOverride": "NONE",
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "contests": "NONE",
+      "gambling": false,
+      "gamblingSimulated": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "kidsAgeBand": null,
+      "koreaAgeRatingOverride": "NONE",
+      "lootBox": false,
+      "matureOrSuggestiveThemes": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "unrestrictedWebAccess": false,
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE"
+    },
+    "review": {
+      "firstName": "Jaron",
+      "lastName": "Heard",
+      "email": "jaronheard@gmail.com",
+      "phone": "5034448415",
+      "demoUsername": "yogebik199@bsomek.com",
+      "demoPassword": "yogebik199",
+      "demoRequired": true
+    }
+  }
+}
