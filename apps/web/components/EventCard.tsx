@@ -93,25 +93,27 @@ export default function EventCard(props: {
             <h2 className="text-2xl font-bold text-neutral-1">
               {eventTitle || eventName}
             </h2>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="flex flex-col items-center justify-center bg-accent-yellow/10 rounded-lg p-2 min-w-16">
+            <div className="mb-2 flex items-center gap-3">
+              <div className="flex min-w-16 flex-col items-center justify-center rounded-lg bg-accent-yellow/10 p-2">
                 <span className="text-2xl font-bold text-neutral-1">
                   {eventDate.split(" ")[2]}
                 </span>
-                <span className="text-xs uppercase font-medium text-neutral-2">{`${eventDate.split(" ")[0]} ${eventDate.split(" ")[1]}`}</span>
+                <span className="text-xs font-medium uppercase text-neutral-2">{`${
+                  eventDate.split(" ")[0]
+                } ${eventDate.split(" ")[1]}`}</span>
               </div>
               <div className="flex flex-col">
                 {eventTime && (
                   <div className="flex items-center">
-                    <CalendarIcon className="h-4 w-4 mr-1.5 text-neutral-2" />
+                    <CalendarIcon className="mr-1.5 h-4 w-4 text-neutral-2" />
                     <span className="text-sm font-medium text-neutral-2">
                       {eventTime}
                     </span>
                   </div>
                 )}
                 {eventLocation && (
-                  <div className="flex items-center mt-1">
-                    <MapPin className="h-4 w-4 mr-1.5 text-neutral-2" />
+                  <div className="mt-1 flex items-center">
+                    <MapPin className="mr-1.5 h-4 w-4 text-neutral-2" />
                     <span className="text-sm font-medium text-neutral-2">
                       {eventLocation}
                     </span>
