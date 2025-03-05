@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { View } from "react-native";
+import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import AddEventButton from "~/components/AddEventButton";
@@ -8,7 +9,7 @@ import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
 
 export default function PastEvents() {
-  const { user } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -33,6 +34,18 @@ export default function PastEvents() {
   }, [eventsQuery]);
 
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
+
+  if (!isLoaded) {
+    return (
+      <View className="flex-1 bg-white">
+        <LoadingSpinner />
+      </View>
+    );
+  }
+
+  if (!isSignedIn) {
+    return <Redirect href="/sign-in" />;
+  }
 
   return (
     <View className="flex-1 bg-white">
