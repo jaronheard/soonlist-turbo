@@ -12,7 +12,7 @@ import { api } from "~/utils/api";
 import { getPlanStatusFromUser } from "~/utils/plan";
 
 export default function Page() {
-  const { user } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
 
   const eventsQuery = api.event.getDiscoverInfinite.useInfiniteQuery(
     {
@@ -22,6 +22,14 @@ export default function Page() {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   );
+
+  // Move this hook up before any conditional returns
+  const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery({
+    userName: user?.username ?? "",
+  }, {
+    // Add enabled option in the second parameter to prevent query when user is not signed in
+    enabled: isLoaded && isSignedIn && !!user && !!user.username,
+  });
 
   const onRefresh = useCallback(async () => {
     await eventsQuery.refetch();
@@ -35,6 +43,18 @@ export default function Page() {
 
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
+  if (!isLoaded) {
+    return (
+      <View className="flex-1 bg-white">
+        <LoadingSpinner />
+      </View>
+    );
+  }
+
+  if (!isSignedIn) {
+    return <Redirect href="/sign-in" />;
+  }
+
   if (!user) {
     return <Redirect href="/sign-in" />;
   }
@@ -44,10 +64,6 @@ export default function Page() {
   if (!showDiscover) {
     return <Redirect href="/feed" />;
   }
-
-  const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery({
-    userName: user.username ?? "",
-  });
 
   const savedEventIds = new Set(
     savedEventIdsQuery.data?.map((event) => event.id),
