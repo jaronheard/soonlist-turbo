@@ -96,7 +96,7 @@ export default function EditProfileScreen() {
       router.canGoBack() ? router.back() : router.navigate("/feed"),
   });
 
-  const resetOnboarding = api.user.resetOnboarding.useMutation();
+  const resetOnboardingMutation = api.user.resetOnboarding.useMutation();
 
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
@@ -248,7 +248,7 @@ export default function EditProfileScreen() {
             void (async () => {
               try {
                 // Execute the mutation
-                await resetOnboarding.mutateAsync();
+                await resetOnboardingMutation.mutateAsync();
 
                 // Invalidate all user-related queries at once
                 await queryClient.invalidateQueries({ queryKey: ["user"] });
@@ -270,7 +270,7 @@ export default function EditProfileScreen() {
         },
       ],
     );
-  }, [resetOnboarding, queryClient, resetOnboardingStore]);
+  }, [resetOnboardingMutation, queryClient, resetOnboardingStore]);
 
   return (
     <KeyboardAvoidingView
