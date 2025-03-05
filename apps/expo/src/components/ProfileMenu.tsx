@@ -1,5 +1,5 @@
 import React from "react";
-import { Share, View } from "react-native";
+import { Linking, View } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -8,20 +8,15 @@ import {
   HelpCircle,
   LogOut,
   MessageCircle,
-  ShareIcon,
+  Download,
   User,
 } from "lucide-react-native";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
 import { useSignOut } from "~/hooks/useSignOut";
-import Config from "~/utils/config";
 import { UserProfileFlair } from "./UserProfileFlair";
 
-interface ProfileMenuProps {
-  showShare?: boolean;
-}
-
-export function ProfileMenu({ showShare }: ProfileMenuProps) {
+export function ProfileMenu() {
   const { user } = useUser();
   const signOut = useSignOut();
 
@@ -41,10 +36,10 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
     }
   };
 
-  const handleShare = async () => {
-    if (!user?.username) return;
-    const url = `${Config.apiBaseUrl}/${user.username}/upcoming`;
-    await Share.share({ url });
+  const handleAppStoreLink = async () => {
+    const url =
+      "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216";
+    await Linking.openURL(url);
   };
 
   return (
@@ -75,14 +70,12 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
       </DropdownMenu.Trigger>
 
       <DropdownMenu.Content>
-        {showShare && (
-          <DropdownMenu.Item key="share" onSelect={handleShare}>
-            <DropdownMenu.ItemIcon ios={{ name: "square.and.arrow.up" }}>
-              <ShareIcon />
-            </DropdownMenu.ItemIcon>
-            <DropdownMenu.ItemTitle>Share</DropdownMenu.ItemTitle>
-          </DropdownMenu.Item>
-        )}
+        <DropdownMenu.Item key="app-store" onSelect={handleAppStoreLink}>
+          <DropdownMenu.ItemIcon ios={{ name: "square.and.arrow.down" }}>
+            <Download />
+          </DropdownMenu.ItemIcon>
+          <DropdownMenu.ItemTitle>Share App</DropdownMenu.ItemTitle>
+        </DropdownMenu.Item>
 
         <DropdownMenu.Item key="profile" onSelect={handleEditProfile}>
           <DropdownMenu.ItemIcon ios={{ name: "person.circle" }}>
