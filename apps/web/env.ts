@@ -28,8 +28,6 @@ export const env = createEnv({
     STRIPE_PRICE_ID_PRO_MONTHLY: z.string(),
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
-    ONE_SIGNAL_APP_ID_DEV: z.string(),
-    ONE_SIGNAL_APP_ID_PROD: z.string(),
     ONE_SIGNAL_REST_API_KEY_DEV: z.string(),
     ONE_SIGNAL_REST_API_KEY_PROD: z.string(),
   },
@@ -55,7 +53,6 @@ export const env = createEnv({
    */
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-
     NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL:
       process.env.NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL,
     NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL:

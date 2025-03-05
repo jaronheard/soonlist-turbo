@@ -3,19 +3,19 @@ import { posthog } from "./posthog";
 // OneSignal REST API base URL
 const ONE_SIGNAL_API_URL = "https://onesignal.com/api/v1";
 
-// OneSignal API key from environment variables
-const IS_DEV = process.env.APP_VARIANT === "development";
+const IS_DEV = process.env.NODE_ENV === "development";
 
+// OneSignal API key from environment variables
 const ONE_SIGNAL_REST_API_KEY = IS_DEV
   ? process.env.ONE_SIGNAL_REST_API_KEY_DEV
   : process.env.ONE_SIGNAL_REST_API_KEY_PROD;
 
-const ONE_SIGNAL_APP_ID = IS_DEV
-  ? process.env.ONE_SIGNAL_APP_ID_DEV
-  : process.env.ONE_SIGNAL_APP_ID_PROD;
+const EXPO_PUBLIC_ONE_SIGNAL_APP_ID = IS_DEV
+  ? process.env.EXPO_PUBLIC_ONE_SIGNAL_APP_ID_DEV
+  : process.env.EXPO_PUBLIC_ONE_SIGNAL_APP_ID_PROD;
 
 // Check if OneSignal is properly configured
-if (!ONE_SIGNAL_REST_API_KEY || !ONE_SIGNAL_APP_ID) {
+if (!ONE_SIGNAL_REST_API_KEY || !EXPO_PUBLIC_ONE_SIGNAL_APP_ID) {
   console.warn(
     "OneSignal API key or App ID not configured. Notifications will not be sent.",
   );
@@ -70,7 +70,7 @@ export async function sendNotification({
   error?: string;
 }> {
   // If OneSignal is not configured, log and return early
-  if (!ONE_SIGNAL_REST_API_KEY || !ONE_SIGNAL_APP_ID) {
+  if (!ONE_SIGNAL_REST_API_KEY || !EXPO_PUBLIC_ONE_SIGNAL_APP_ID) {
     console.error("OneSignal API key or App ID not configured");
     return {
       success: false,
@@ -84,7 +84,7 @@ export async function sendNotification({
   try {
     // Prepare the notification payload
     const payload = {
-      app_id: ONE_SIGNAL_APP_ID,
+      app_id: EXPO_PUBLIC_ONE_SIGNAL_APP_ID,
       include_external_user_ids: [userId],
       channel_for_external_user_ids: "push",
       headings: { en: title },
@@ -188,7 +188,7 @@ export async function sendBatchNotifications({
   recipients?: number;
 }> {
   // If OneSignal is not configured, log and return early
-  if (!ONE_SIGNAL_REST_API_KEY || !ONE_SIGNAL_APP_ID) {
+  if (!ONE_SIGNAL_REST_API_KEY || !EXPO_PUBLIC_ONE_SIGNAL_APP_ID) {
     console.error("OneSignal API key or App ID not configured");
     return {
       success: false,
@@ -199,7 +199,7 @@ export async function sendBatchNotifications({
   try {
     // Prepare the notification payload
     const payload = {
-      app_id: ONE_SIGNAL_APP_ID,
+      app_id: EXPO_PUBLIC_ONE_SIGNAL_APP_ID,
       include_external_user_ids: userIds,
       channel_for_external_user_ids: "push",
       headings: { en: title },
