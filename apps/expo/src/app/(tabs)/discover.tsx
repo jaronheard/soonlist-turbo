@@ -24,12 +24,15 @@ export default function Page() {
   );
 
   // Move this hook up before any conditional returns
-  const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery({
-    userName: user?.username ?? "",
-  }, {
-    // Add enabled option in the second parameter to prevent query when user is not signed in
-    enabled: isLoaded && isSignedIn && !!user && !!user.username,
-  });
+  const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery(
+    {
+      userName: user?.username ?? "",
+    },
+    {
+      // Add enabled option in the second parameter to prevent query when user is not signed in
+      enabled: isLoaded && isSignedIn && !!user && !!user.username,
+    },
+  );
 
   const onRefresh = useCallback(async () => {
     await eventsQuery.refetch();
