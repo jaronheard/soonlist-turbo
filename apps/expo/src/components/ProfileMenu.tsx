@@ -14,14 +14,9 @@ import {
 import * as DropdownMenu from "zeego/dropdown-menu";
 
 import { useSignOut } from "~/hooks/useSignOut";
-import Config from "~/utils/config";
 import { UserProfileFlair } from "./UserProfileFlair";
 
-interface ProfileMenuProps {
-  showShare?: boolean;
-}
-
-export function ProfileMenu({ showShare }: ProfileMenuProps) {
+export function ProfileMenu() {
   const { user } = useUser();
   const signOut = useSignOut();
 
@@ -41,10 +36,13 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
     }
   };
 
-  const handleShare = async () => {
-    if (!user?.username) return;
-    const url = `${Config.apiBaseUrl}/${user.username}/upcoming`;
-    await Share.share({ url });
+  const handleShareApp = async () => {
+    const url =
+      "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216";
+    await Share.share({
+      message: "Check out Soonlist on the App Store!",
+      url: url,
+    });
   };
 
   return (
@@ -75,14 +73,12 @@ export function ProfileMenu({ showShare }: ProfileMenuProps) {
       </DropdownMenu.Trigger>
 
       <DropdownMenu.Content>
-        {showShare && (
-          <DropdownMenu.Item key="share" onSelect={handleShare}>
-            <DropdownMenu.ItemIcon ios={{ name: "square.and.arrow.up" }}>
-              <ShareIcon />
-            </DropdownMenu.ItemIcon>
-            <DropdownMenu.ItemTitle>Share</DropdownMenu.ItemTitle>
-          </DropdownMenu.Item>
-        )}
+        <DropdownMenu.Item key="share-app" onSelect={handleShareApp}>
+          <DropdownMenu.ItemIcon ios={{ name: "square.and.arrow.up" }}>
+            <ShareIcon />
+          </DropdownMenu.ItemIcon>
+          <DropdownMenu.ItemTitle>Share App</DropdownMenu.ItemTitle>
+        </DropdownMenu.Item>
 
         <DropdownMenu.Item key="profile" onSelect={handleEditProfile}>
           <DropdownMenu.ItemIcon ios={{ name: "person.circle" }}>

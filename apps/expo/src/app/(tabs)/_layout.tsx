@@ -38,7 +38,7 @@ export default function TabsLayout() {
           ),
           headerTitleAlign: "center",
           headerLeft: () => <HeaderLogo />,
-          headerRight: () => <ProfileMenu showShare />,
+          headerRight: () => <ProfileMenu />,
         }}
       />
       <Tabs.Screen
