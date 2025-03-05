@@ -36,11 +36,8 @@ export function ProfileMenu() {
     }
   };
 
-  // Function to open the App Store link
   const handleAppStoreLink = async () => {
-    // App Store URL for Soonlist
-    const url =
-      "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216";
+    const url = "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216";
     await Linking.openURL(url);
   };
 
