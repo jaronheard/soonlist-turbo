@@ -11,6 +11,7 @@ import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
+import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 
 function GoButton({
@@ -40,6 +41,13 @@ function GoButton({
 
 function MyFeed() {
   const { user, isLoaded, isSignedIn } = useUser();
+  const { hasCompletedOnboarding } = useAppStore();
+
+  // Fetch user data from database to check onboarding status
+  const userQuery = api.user.getById.useQuery(
+    { id: user?.id ?? "" },
+    { enabled: isLoaded && isSignedIn && !!user.id },
+  );
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -89,6 +97,12 @@ function MyFeed() {
 
   if (!isSignedIn) {
     return <Redirect href="/sign-in" />;
+  }
+
+  // Check if onboarding is completed in either app state OR database
+  const dbHasCompletedOnboarding = !!userQuery.data?.onboardingCompletedAt;
+  if (!hasCompletedOnboarding && !dbHasCompletedOnboarding) {
+    return <Redirect href="/(onboarding)/onboarding" />;
   }
 
   return (
