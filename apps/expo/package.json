@@ -22,6 +22,8 @@
     "eas:build.prod.ios": "pnpm with-env:production eas build --profile production --platform ios",
     "eas:install.sim.latest.android": "pnpm with-env:production eas build:run -p android --latest",
     "eas:install.sim.latest.ios": "pnpm with-env:production eas build:run -p ios --latest",
+    "eas:metadata:pull": "pnpm with-env:production eas metadata:pull",
+    "eas:metadata:push": "pnpm with-env:production eas metadata:push",
     "eas:submit.prod.ios": "pnpm with-env:production eas submit --platform ios",
     "eas:update.prod.ios": "pnpm with-env:production eas update --platform ios --branch production --clear-cache",
     "format": "prettier --check . --ignore-path ../../.gitignore",
