@@ -112,71 +112,84 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
 
     // Set up notification handlers
     const setupNotificationListeners = () => {
-      // Handle foreground notifications
-      OneSignal.Notifications.addEventListener(
-        "foregroundWillDisplay",
-        (event: NotificationWillDisplayEvent) => {
-          // Capture analytics
-          try {
-            posthog.capture("notification_received", {
-              title: event.notification.title || "",
-              body: event.notification.body || "",
-              notificationId: event.notification.notificationId || "",
-              data: event.notification.additionalData || {},
-            });
-          } catch (error) {
-            console.error("Failed to capture notification event:", error);
-          }
+      // Define handlers as named functions so we can remove them later
+      const foregroundHandler = (event: NotificationWillDisplayEvent) => {
+        // Capture analytics
+        try {
+          posthog.capture("notification_received", {
+            title: event.notification.title || "",
+            body: event.notification.body || "",
+            notificationId: event.notification.notificationId || "",
+            data: event.notification.additionalData || {},
+          });
+        } catch (error) {
+          console.error("Failed to capture notification event:", error);
+        }
 
-          // Display the notification
-          event.notification.display();
-        },
-      );
+        // Display the notification
+        event.notification.display();
+      };
 
       // Handle notification clicks
-      OneSignal.Notifications.addEventListener(
-        "click",
-        (event: NotificationClickEvent) => {
+      const clickHandler = (event: NotificationClickEvent) => {
+        try {
+          posthog.capture("notification_opened", {
+            title: event.notification.title || "",
+            body: event.notification.body || "",
+            notificationId: event.notification.notificationId || "",
+            data: event.notification.additionalData || {},
+          });
+        } catch (error) {
+          console.error("Failed to capture notification event:", error);
+        }
+
+        // Handle deep linking
+        const data = event.notification.additionalData as
+          | NotificationData
+          | undefined;
+        if (data?.url && typeof data.url === "string") {
           try {
-            posthog.capture("notification_opened", {
+            posthog.capture("notification_deep_link", {
               title: event.notification.title || "",
               body: event.notification.body || "",
               notificationId: event.notification.notificationId || "",
               data: event.notification.additionalData || {},
+              url: data.url,
             });
           } catch (error) {
             console.error("Failed to capture notification event:", error);
           }
 
-          // Handle deep linking
-          const data = event.notification.additionalData as
-            | NotificationData
-            | undefined;
-          if (data?.url && typeof data.url === "string") {
-            try {
-              posthog.capture("notification_deep_link", {
-                title: event.notification.title || "",
-                body: event.notification.body || "",
-                notificationId: event.notification.notificationId || "",
-                data: event.notification.additionalData || {},
-                url: data.url,
-              });
-            } catch (error) {
-              console.error("Failed to capture notification event:", error);
-            }
+          // Use our helper function to handle navigation
+          handleNavigation(data.url);
+        }
+      };
 
-            // Use our helper function to handle navigation
-            handleNavigation(data.url);
-          }
-        },
+      // Add event listeners
+      OneSignal.Notifications.addEventListener(
+        "foregroundWillDisplay",
+        foregroundHandler,
       );
+      OneSignal.Notifications.addEventListener("click", clickHandler);
+
+      // Return the handlers so they can be used in cleanup
+      return { foregroundHandler, clickHandler };
     };
 
-    setupNotificationListeners();
+    // Store handlers returned from setup
+    const handlers = setupNotificationListeners();
 
     // Cleanup
     return () => {
       OneSignal.Notifications.clearAll();
+      OneSignal.Notifications.removeEventListener(
+        "foregroundWillDisplay",
+        handlers.foregroundHandler,
+      );
+      OneSignal.Notifications.removeEventListener(
+        "click",
+        handlers.clickHandler,
+      );
     };
   }, [posthog]);
 
