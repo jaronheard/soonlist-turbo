@@ -45,7 +45,6 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       try {
         const { customerInfo } = await Purchases.logIn(userId);
         setCustomerInfo(customerInfo);
-
         // Set PostHog user ID as a RevenueCat attribute
         const distinctId = posthog.getDistinctId();
         if (distinctId) {
