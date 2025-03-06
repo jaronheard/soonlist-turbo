@@ -11,8 +11,8 @@ import { Linking } from "react-native";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { useAuth } from "@clerk/clerk-expo";
-import { toast } from "sonner-native";
 import { usePostHog } from "posthog-react-native";
+import { toast } from "sonner-native";
 
 import { initializeRevenueCat, setPostHogUserId } from "~/lib/revenue-cat";
 import { useOneSignal } from "./OneSignalProvider";
