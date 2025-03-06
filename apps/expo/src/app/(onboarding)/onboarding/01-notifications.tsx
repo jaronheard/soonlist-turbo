@@ -17,11 +17,8 @@ import { useOneSignal } from "~/providers/OneSignalProvider";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function NotificationsScreen() {
-  const {
-    registerForPushNotifications,
-    hasNotificationPermission,
-    isSubscribedToOneSignal,
-  } = useOneSignal();
+  const { registerForPushNotifications, hasNotificationPermission } =
+    useOneSignal();
   const { saveStep } = useOnboarding();
   const translateY = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +50,7 @@ export default function NotificationsScreen() {
     setIsLoading(true);
 
     try {
-      if (hasNotificationPermission && isSubscribedToOneSignal) {
+      if (hasNotificationPermission) {
         toast.success("Notifications already enabled", {
           action: {
             label: "Continue",
