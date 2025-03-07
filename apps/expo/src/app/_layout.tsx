@@ -105,10 +105,10 @@ appsFlyer.initSdk(
     timeToWaitForATTUserAuthorization: 10,
   },
   (result) => {
-    console.log(result);
+    if (__DEV__) console.log(result);
   },
   (error) => {
-    console.error(error);
+    Sentry.captureException(error);
   },
 );
 
