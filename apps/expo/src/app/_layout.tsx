@@ -1,4 +1,5 @@
 import { Platform, Text, View } from "react-native";
+import appsFlyer from "react-native-appsflyer";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -93,6 +94,23 @@ Sentry.init({
     replaysOnErrorSampleRate: 1.0,
   },
 });
+
+appsFlyer.initSdk(
+  {
+    devKey: "iFvNVjfmj4DyJ6itc3KTkf",
+    isDebug: __DEV__,
+    appId: "6670222216",
+    onInstallConversionDataListener: true, //Optional
+    onDeepLinkListener: true, //Optional
+    timeToWaitForATTUserAuthorization: 10,
+  },
+  (result) => {
+    if (__DEV__) console.log(result);
+  },
+  (error) => {
+    Sentry.captureException(error);
+  },
+);
 
 function RootLayout() {
   const clerkPublishableKey = Config.clerkPublishableKey;

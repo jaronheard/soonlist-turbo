@@ -143,6 +143,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         mode: getOneSignalMode(),
       },
     ],
+    ["react-native-appsflyer", {}],
     // [
     //   "expo-background-fetch",
     //   {
