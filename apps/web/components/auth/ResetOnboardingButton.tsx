@@ -43,8 +43,7 @@ export function ResetOnboardingButton() {
               Reset Onboarding
             </DialogTitle>
             <DialogDescription>
-              This will reset your onboarding progress and sign you out. You'll
-              need to sign in again.
+              This will reset your onboarding progress and sign you out. You'll need to sign in again.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
