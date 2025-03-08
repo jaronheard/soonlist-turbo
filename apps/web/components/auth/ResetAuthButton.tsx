@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
+import { Button } from "@soonlist/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@soonlist/ui/dialog";
-import { Button } from "@soonlist/ui/button";
 
 export function ResetAuthButton() {
   const [open, setOpen] = React.useState(false);
@@ -34,7 +34,7 @@ export function ResetAuthButton() {
   };
 
   return (
-    <div className="absolute bottom-4 w-full flex justify-center">
+    <div className="absolute bottom-4 flex w-full justify-center">
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button variant="ghost" size="sm" className="text-sm text-gray-500">

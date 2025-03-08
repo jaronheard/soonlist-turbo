@@ -3,8 +3,8 @@ import { Pressable, StyleSheet, Text } from "react-native";
 import { router } from "expo-router";
 import { AlertTriangle, RefreshCw } from "lucide-react-native";
 
-import { useSignOut } from "~/hooks/useSignOut";
 import { Dialog } from "~/components/Dialog";
+import { useSignOut } from "~/hooks/useSignOut";
 
 interface ResetAuthButtonProps {
   style?: object;

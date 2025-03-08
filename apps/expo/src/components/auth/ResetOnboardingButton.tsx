@@ -3,9 +3,9 @@ import { Pressable, StyleSheet, Text } from "react-native";
 import { router } from "expo-router";
 import { AlertTriangle, RefreshCw } from "lucide-react-native";
 
+import { Dialog } from "~/components/Dialog";
 import { useSignOut } from "~/hooks/useSignOut";
 import { useAppStore } from "~/store";
-import { Dialog } from "~/components/Dialog";
 
 interface ResetOnboardingButtonProps {
   style?: object;
