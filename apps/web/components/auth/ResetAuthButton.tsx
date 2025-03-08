@@ -49,7 +49,8 @@ export function ResetAuthButton() {
               Reset Authentication
             </DialogTitle>
             <DialogDescription>
-              This will clear your current authentication progress and return you to the sign-in screen.
+              This will clear your current authentication progress and return
+              you to the sign-in screen.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

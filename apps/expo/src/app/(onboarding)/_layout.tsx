@@ -14,10 +14,16 @@ export default function OnboardingLayout() {
           animation: "ios_from_right",
         }}
       />
-      <View style={{ position: "absolute", bottom: 16, width: "100%", alignItems: "center" }}>
+      <View
+        style={{
+          position: "absolute",
+          bottom: 16,
+          width: "100%",
+          alignItems: "center",
+        }}
+      >
         <ResetOnboardingButton />
       </View>
     </View>
   );
 }
-

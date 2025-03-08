@@ -22,7 +22,10 @@ export function ResetAuthButton({ style }: ResetAuthButtonProps) {
 
   return (
     <>
-      <Pressable onPress={() => setShowConfirmation(true)} style={[styles.button, style]}>
+      <Pressable
+        onPress={() => setShowConfirmation(true)}
+        style={[styles.button, style]}
+      >
         <RefreshCw size={16} color="#6B7280" />
         <Text style={styles.buttonText}>Stuck? Return to sign-in</Text>
       </Pressable>
@@ -37,7 +40,8 @@ export function ResetAuthButton({ style }: ResetAuthButtonProps) {
         icon={<AlertTriangle size={24} color="#F59E0B" />}
       >
         <Text style={styles.dialogText}>
-          This will clear your current authentication progress and return you to the sign-in screen.
+          This will clear your current authentication progress and return you to
+          the sign-in screen.
         </Text>
       </Dialog>
     </>
@@ -62,4 +66,3 @@ const styles = StyleSheet.create({
     color: "#4B5563",
   },
 });
-
