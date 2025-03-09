@@ -134,8 +134,8 @@ export default function DemoFeedScreen() {
       />
 
       <View className="flex-1">
-        <View className="absolute right-4 top-16 z-10 ">
-          <Text className="rounded-xl bg-accent-yellow px-3 py-1.5 text-center text-base font-medium text-neutral-1">
+        <View className="absolute right-2 top-16 z-10">
+          <Text className="rounded-2xl bg-accent-yellow px-3 py-1.5 text-center text-base font-medium text-neutral-1">
             Press and hold for options 👇
           </Text>
         </View>
