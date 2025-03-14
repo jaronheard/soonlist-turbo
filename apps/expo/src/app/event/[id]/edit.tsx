@@ -90,34 +90,6 @@ export default function EditEventScreen() {
   const [tempStartTime, setTempStartTime] = useState<Date>(new Date());
   const [tempEndTime, setTempEndTime] = useState<Date>(new Date());
 
-  // Platform-specific display mode for date/time pickers
-  const displayMode = Platform.OS === "ios" ? "spinner" : "default";
-
-  // Function to create an iOS picker with confirm/cancel buttons
-  const renderIOSPicker = (
-    picker: React.ReactNode,
-    onConfirm: () => void,
-    onCancel: () => void,
-  ) => {
-    if (Platform.OS !== "ios") return picker;
-
-    return (
-      <View className="bg-white">
-        <View className="flex-row justify-between border-b border-neutral-200 bg-neutral-100 px-4 py-2">
-          <TouchableOpacity onPress={onCancel}>
-            <Text className="text-base text-indigo-600">Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onConfirm}>
-            <Text className="text-base font-semibold text-indigo-600">
-              Done
-            </Text>
-          </TouchableOpacity>
-        </View>
-        {picker}
-      </View>
-    );
-  };
-
   // Fetch the event data
   const eventQuery = api.event.get.useQuery(
     { eventId: id || "" },
@@ -133,13 +105,7 @@ export default function EditEventScreen() {
   const updateEventMutation = api.event.update.useMutation({
     onMutate: () => setIsSubmitting(true),
     onSettled: () => setIsSubmitting(false),
-    onSuccess: (data) => {
-      // Log the returned data to check if the image was updated
-      console.log("🎉 Server response after update:", data);
-
-      // Just log the entire response - we'll check the console for image data
-      console.log("Update completed successfully, refreshing data");
-
+    onSuccess: () => {
       toast.success("Event updated successfully");
       // Invalidate relevant queries to ensure all event data is refreshed
       void Promise.all([
@@ -215,7 +181,12 @@ export default function EditEventScreen() {
     if (!timeString) return "";
 
     try {
-      const [hoursStr, minutesStr] = timeString.split(":");
+      const parts = timeString.split(":");
+      if (parts.length !== 2) return timeString;
+
+      // Use type assertion to tell TypeScript these are definitely strings
+      const hoursStr = parts[0]!;
+      const minutesStr = parts[1]!;
       const hours = parseInt(hoursStr, 10);
       const minutes = parseInt(minutesStr, 10);
 
@@ -242,7 +213,12 @@ export default function EditEventScreen() {
     if (!timeString) return date;
 
     try {
-      const [hoursStr, minutesStr] = timeString.split(":");
+      const parts = timeString.split(":");
+      if (parts.length !== 2) return date;
+
+      // Use type assertion to tell TypeScript these are definitely strings
+      const hoursStr = parts[0]!;
+      const minutesStr = parts[1]!;
       const hours = parseInt(hoursStr, 10);
       const minutes = parseInt(minutesStr, 10);
 
@@ -276,18 +252,6 @@ export default function EditEventScreen() {
   useEffect(() => {
     if (eventQuery.data) {
       const event = eventQuery.data;
-
-      // Log detailed data about images array structure
-      if (event.event?.images && event.event.images.length > 0) {
-        console.log("📸 ORIGINAL IMAGES STRUCTURE:", {
-          imageArray: event.event.images,
-          arrayLength: event.event.images.length,
-          isAllSameUrl: event.event.images.every(
-            (url) => url === event.event.images[0],
-          ),
-          sampleImageUrl: event.event.images[0],
-        });
-      }
 
       // Define the event data with proper types
       const eventData = event.event || {
@@ -335,18 +299,6 @@ export default function EditEventScreen() {
         performers?: string;
         accessibility?: string[];
       };
-
-      // Log detailed data about images array structure
-      if (typedEventData.images && typedEventData.images.length > 0) {
-        console.log("📸 ORIGINAL IMAGES STRUCTURE:", {
-          imageArray: typedEventData.images,
-          arrayLength: typedEventData.images.length,
-          isAllSameUrl: typedEventData.images.every(
-            (url: string) => url === typedEventData.images?.[0],
-          ),
-          sampleImageUrl: typedEventData.images[0],
-        });
-      }
 
       reset({
         event: {
@@ -416,10 +368,7 @@ export default function EditEventScreen() {
   // Function to upload an image to Bytescale server
   const uploadImage = async (localUri: string): Promise<string> => {
     setIsUploadingImage(true);
-    console.log("Starting image upload for URI:", localUri);
-
     try {
-      // Convert photo library URI to file URI if needed
       let fileUri = localUri;
       if (localUri.startsWith("ph://")) {
         const assetId = localUri.replace("ph://", "").split("/")[0];
@@ -431,15 +380,12 @@ export default function EditEventScreen() {
           throw new Error("Could not get local URI for photo library asset");
         }
         fileUri = asset.localUri;
-        console.log("Converted photo library URI to file URI:", fileUri);
       }
 
-      // Validate image URI
       if (!fileUri.startsWith("file://")) {
         throw new Error("Invalid image URI format");
       }
 
-      // 1. Manipulate image for optimal upload
       let manipulatedImage;
       try {
         manipulatedImage = await ImageManipulator.manipulateAsync(
@@ -453,12 +399,10 @@ export default function EditEventScreen() {
         );
       }
 
-      // Validate manipulated image
       if (!manipulatedImage.uri) {
         throw new Error("Image manipulation failed - no URI returned");
       }
 
-      // 2. Upload image to Bytescale
       let response;
       try {
         response = await FileSystem.uploadAsync(
@@ -485,7 +429,6 @@ export default function EditEventScreen() {
         );
       }
 
-      // 3. Parse response
       let fileUrl: string;
       try {
         if (!response.body) {
@@ -502,8 +445,6 @@ export default function EditEventScreen() {
         );
       }
 
-      // Log success with the returned URL
-      console.log("Image uploaded successfully, remote URL:", fileUrl);
       return fileUrl;
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -540,7 +481,6 @@ export default function EditEventScreen() {
       ) {
         // Set the selected image to show in the UI immediately
         const localUri = result.assets[0].uri;
-        console.log("Selected image from picker:", localUri);
         setSelectedImage(localUri);
 
         try {
@@ -551,7 +491,6 @@ export default function EditEventScreen() {
           const remoteUrl = await uploadImage(localUri);
 
           // Update the state with the remote URL
-          console.log("Setting uploaded image URL:", remoteUrl);
           setUploadedImageUrl(remoteUrl);
 
           // Dismiss the loading toast and show success
@@ -581,22 +520,9 @@ export default function EditEventScreen() {
     async (data: FormData) => {
       if (!id) return;
 
-      console.log("⭐ Starting form submission");
-      console.log("Form isDirty:", isDirty);
-      console.log("Image state:", {
-        originalImage,
-        selectedImage,
-        uploadedImageUrl,
-        different: selectedImage !== originalImage,
-      });
-
-      // Skip submission if there are no changes (both form and image)
-      // Consider changes in form data or a different image (either local or remote)
       const hasImageChanges =
         uploadedImageUrl !== null ||
         (selectedImage !== originalImage && selectedImage !== null);
-
-      console.log("Has image changes:", hasImageChanges);
 
       if (!isDirty && !hasImageChanges) {
         toast.error("No changes detected");
@@ -607,92 +533,43 @@ export default function EditEventScreen() {
         setIsSubmitting(true);
         const loadingToastId = toast.loading("Updating event...");
 
-        // Format accessibility as an array if it's a string
         const accessibilityArray = data.eventMetadata.accessibility
           ? data.eventMetadata.accessibility
               .split(",")
               .map((item) => item.trim())
           : [];
 
-        // Format performers as an array if it's a string
         const performersArray = data.eventMetadata.performers
           ? data.eventMetadata.performers.split(",").map((item) => item.trim())
           : [];
 
-        // Determine which image URL to use
-        // If a new image was uploaded, use the remote URL
-        // Otherwise, use the original image from the event data if available
         let imageToUse = null;
 
         if (uploadedImageUrl) {
-          // If we have an uploaded image URL, use that
           imageToUse = uploadedImageUrl;
-          console.log("Using uploaded image URL:", uploadedImageUrl);
         } else if (selectedImage === originalImage && originalImage) {
-          // If selected image is the same as original and exists, keep it
           imageToUse = originalImage;
-          console.log("Keeping original image:", originalImage);
         } else if (selectedImage === null) {
-          // If selected image is null, the user removed the image
           imageToUse = null;
-          console.log("Image was removed, sending empty images array");
         }
 
-        console.log("🖼️ Final image decision:", {
-          originalImage,
-          selectedImage,
-          uploadedImageUrl,
-          imageToUse,
-          isRemoteURL: imageToUse?.startsWith("http"),
-        });
-
-        // CRITICAL CHECK: Never send a local file URI to the server
-        if (
-          imageToUse &&
-          (imageToUse.startsWith("file://") || imageToUse.startsWith("ph://"))
-        ) {
-          console.error(
-            "⚠️ CRITICAL ERROR: Attempted to send local file URI to server:",
-            imageToUse,
-          );
-          toast.error("Image upload failed", {
-            description:
-              "Cannot save with a local image reference. Please try uploading the image again.",
-          });
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Prepare the event data in the format expected by the API
-
-        // Get the original image count from the form
         const originalImagesCount = data.event.images?.length || 0;
 
-        // If we're using a new image, check if we need to duplicate it (match original count)
         let imagesArray: string[] = [];
         if (imageToUse) {
-          // If the original event had the same image repeated in the array, we'll do the same
-          // This is a workaround for potential server expectations about image array structure
           if (originalImagesCount > 1) {
-            console.log(
-              `Original event had ${originalImagesCount} duplicate images, replicating pattern`,
-            );
             imagesArray = Array(originalImagesCount).fill(
               imageToUse,
             ) as string[];
           } else {
-            // Just use a single image in the array (default case)
             imagesArray = [imageToUse];
           }
         }
-
-        console.log("Final images array:", imagesArray);
 
         const updatedData = {
           id,
           event: {
             ...data.event,
-            // Use our calculated images array
             images: imagesArray,
           },
           eventMetadata: {
@@ -707,13 +584,7 @@ export default function EditEventScreen() {
           visibility: data.visibility,
         };
 
-        console.log(
-          "🔄 Submitting update with images:",
-          updatedData.event.images,
-        );
-
         await updateEventMutation.mutateAsync(updatedData);
-        console.log("✅ Event updated successfully with image:", imageToUse);
 
         toast.dismiss(loadingToastId);
       } catch (error) {
@@ -1453,20 +1324,9 @@ export default function EditEventScreen() {
                       </Button>
                       <Button
                         onPress={() => {
-                          console.log("Removing image - before:", {
-                            selectedImage,
-                            uploadedImageUrl,
-                            originalImage,
-                          });
                           setSelectedImage(null);
                           setUploadedImageUrl(null);
-                          // Display a toast to confirm removal
                           toast.success("Image removed");
-                          console.log("Image removed - after:", {
-                            selectedImage: null,
-                            uploadedImageUrl: null,
-                            originalImage,
-                          });
                         }}
                         variant="destructive"
                         className="flex-1"
@@ -1515,109 +1375,6 @@ export default function EditEventScreen() {
                   </TouchableOpacity>
                 )}
               </View>
-            </View>
-
-            {/* Visibility */}
-            <Controller
-              control={control}
-              name="visibility"
-              render={({ field: { onChange, value } }) => {
-                const visibilityOptions = [
-                  { label: "Public", value: "public" },
-                  { label: "Private", value: "private" },
-                ];
-
-                return (
-                  <View>
-                    <Text className="mb-2 text-base font-semibold">
-                      Visibility <Text className="text-red-500">*</Text>
-                    </Text>
-                    <View
-                      className={`flex-row flex-wrap gap-2 ${errors.visibility ? "rounded-md border border-red-500 p-2" : ""}`}
-                    >
-                      {visibilityOptions.map((option) => (
-                        <TouchableOpacity
-                          key={option.value}
-                          onPress={() => onChange(option.value)}
-                          className={`rounded-full border px-4 py-2 ${
-                            value === option.value
-                              ? "border-indigo-500 bg-indigo-50"
-                              : "border-neutral-300"
-                          }`}
-                        >
-                          <Text
-                            className={`text-sm ${
-                              value === option.value
-                                ? "text-indigo-700"
-                                : "text-neutral-700"
-                            }`}
-                          >
-                            {option.label}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                    {errors.visibility && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.visibility.message ||
-                          "Please select a visibility option"}
-                      </Text>
-                    )}
-                  </View>
-                );
-              }}
-            />
-
-            {/* Check Required Fields Button */}
-            {!isValid && (
-              <TouchableOpacity
-                onPress={() => {
-                  // Trigger validation on all fields
-                  void handleSubmit(() => {
-                    // This is just to trigger validation
-                    console.log("Validating all fields");
-                  })();
-
-                  // Scroll to the first error
-                  if (Object.keys(errors).length > 0) {
-                    toast.error("Please complete all required fields", {
-                      description:
-                        "Look for fields marked with a red asterisk (*)",
-                    });
-                  }
-                }}
-                className="mt-3 items-center"
-              >
-                <Text className="text-indigo-600 underline">
-                  Check Required Fields
-                </Text>
-              </TouchableOpacity>
-            )}
-
-            {/* Debug status of button */}
-            <View className="mt-2">
-              {!isValid && (
-                <Text className="text-xs text-red-500">
-                  Button disabled: Form is invalid
-                </Text>
-              )}
-              {!isDirty &&
-                !uploadedImageUrl &&
-                selectedImage === originalImage && (
-                  <Text className="text-xs text-red-500">
-                    Button disabled: No changes made
-                  </Text>
-                )}
-              {isSubmitting && (
-                <Text className="text-xs text-neutral-500">
-                  Button disabled: Currently submitting
-                </Text>
-              )}
-              {isUploadingImage && (
-                <Text className="text-xs text-neutral-500">
-                  Button disabled: Currently uploading image
-                </Text>
-              )}
             </View>
           </View>
         </ScrollView>
