@@ -977,47 +977,48 @@ export default function EditEventScreen() {
                           style={{ flex: 1 }}
                           onPress={() => setShowStartDatePicker(false)}
                         >
-                          <View
-                            className="flex-1 justify-end"
-                            onStartShouldSetResponder={() => true}
-                          >
-                            <View className="rounded-t-xl bg-white">
-                              <View className="flex-row justify-between border-b border-neutral-200 px-4 py-3">
-                                <TouchableOpacity
-                                  onPress={() => setShowStartDatePicker(false)}
-                                >
-                                  <Text className="text-base text-indigo-600">
-                                    Cancel
-                                  </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                  onPress={() => {
-                                    const formattedDate = tempStartDate
-                                      .toISOString()
-                                      .split("T")[0];
-                                    onChange(formattedDate);
-                                    setShowStartDatePicker(false);
+                          <View className="flex-1 justify-end">
+                            <Pressable>
+                              <View className="rounded-t-xl bg-white">
+                                <View className="flex-row justify-between border-b border-neutral-200 px-4 py-3">
+                                  <TouchableOpacity
+                                    onPress={() =>
+                                      setShowStartDatePicker(false)
+                                    }
+                                  >
+                                    <Text className="text-base text-indigo-600">
+                                      Cancel
+                                    </Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      const formattedDate = tempStartDate
+                                        .toISOString()
+                                        .split("T")[0];
+                                      onChange(formattedDate);
+                                      setShowStartDatePicker(false);
+                                    }}
+                                  >
+                                    <Text className="text-base font-semibold text-indigo-600">
+                                      Done
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
+                                <DateTimePicker
+                                  testID="startDatePicker"
+                                  value={tempStartDate}
+                                  mode="date"
+                                  display="spinner"
+                                  onChange={(_, selectedDate) => {
+                                    if (selectedDate) {
+                                      setTempStartDate(selectedDate);
+                                    }
                                   }}
-                                >
-                                  <Text className="text-base font-semibold text-indigo-600">
-                                    Done
-                                  </Text>
-                                </TouchableOpacity>
+                                  style={{ height: 200 }}
+                                />
+                                <View style={{ height: insets.bottom }} />
                               </View>
-                              <DateTimePicker
-                                testID="startDatePicker"
-                                value={tempStartDate}
-                                mode="date"
-                                display="spinner"
-                                onChange={(_, selectedDate) => {
-                                  if (selectedDate) {
-                                    setTempStartDate(selectedDate);
-                                  }
-                                }}
-                                style={{ height: 200 }}
-                              />
-                              <View style={{ height: insets.bottom }} />
-                            </View>
+                            </Pressable>
                           </View>
                         </Pressable>
                       </Modal>
@@ -1092,47 +1093,46 @@ export default function EditEventScreen() {
                           style={{ flex: 1 }}
                           onPress={() => setShowEndDatePicker(false)}
                         >
-                          <View
-                            className="flex-1 justify-end"
-                            onStartShouldSetResponder={() => true}
-                          >
-                            <View className="rounded-t-xl bg-white">
-                              <View className="flex-row justify-between border-b border-neutral-200 px-4 py-3">
-                                <TouchableOpacity
-                                  onPress={() => setShowEndDatePicker(false)}
-                                >
-                                  <Text className="text-base text-indigo-600">
-                                    Cancel
-                                  </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                  onPress={() => {
-                                    const formattedDate = tempEndDate
-                                      .toISOString()
-                                      .split("T")[0];
-                                    onChange(formattedDate);
-                                    setShowEndDatePicker(false);
+                          <View className="flex-1 justify-end">
+                            <Pressable>
+                              <View className="rounded-t-xl bg-white">
+                                <View className="flex-row justify-between border-b border-neutral-200 px-4 py-3">
+                                  <TouchableOpacity
+                                    onPress={() => setShowEndDatePicker(false)}
+                                  >
+                                    <Text className="text-base text-indigo-600">
+                                      Cancel
+                                    </Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      const formattedDate = tempEndDate
+                                        .toISOString()
+                                        .split("T")[0];
+                                      onChange(formattedDate);
+                                      setShowEndDatePicker(false);
+                                    }}
+                                  >
+                                    <Text className="text-base font-semibold text-indigo-600">
+                                      Done
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
+                                <DateTimePicker
+                                  testID="endDatePicker"
+                                  value={tempEndDate}
+                                  mode="date"
+                                  display="spinner"
+                                  onChange={(_, selectedDate) => {
+                                    if (selectedDate) {
+                                      setTempEndDate(selectedDate);
+                                    }
                                   }}
-                                >
-                                  <Text className="text-base font-semibold text-indigo-600">
-                                    Done
-                                  </Text>
-                                </TouchableOpacity>
+                                  style={{ height: 200 }}
+                                />
+                                <View style={{ height: insets.bottom }} />
                               </View>
-                              <DateTimePicker
-                                testID="endDatePicker"
-                                value={tempEndDate}
-                                mode="date"
-                                display="spinner"
-                                onChange={(_, selectedDate) => {
-                                  if (selectedDate) {
-                                    setTempEndDate(selectedDate);
-                                  }
-                                }}
-                                style={{ height: 200 }}
-                              />
-                              <View style={{ height: insets.bottom }} />
-                            </View>
+                            </Pressable>
                           </View>
                         </Pressable>
                       </Modal>
@@ -1203,52 +1203,53 @@ export default function EditEventScreen() {
                           style={{ flex: 1 }}
                           onPress={() => setShowStartTimePicker(false)}
                         >
-                          <View
-                            className="flex-1 justify-end"
-                            onStartShouldSetResponder={() => true}
-                          >
-                            <View className="rounded-t-xl bg-white">
-                              <View className="flex-row justify-between border-b border-neutral-200 px-4 py-3">
-                                <TouchableOpacity
-                                  onPress={() => setShowStartTimePicker(false)}
-                                >
-                                  <Text className="text-base text-indigo-600">
-                                    Cancel
-                                  </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                  onPress={() => {
-                                    const hours = tempStartTime
-                                      .getHours()
-                                      .toString()
-                                      .padStart(2, "0");
-                                    const minutes = tempStartTime
-                                      .getMinutes()
-                                      .toString()
-                                      .padStart(2, "0");
-                                    onChange(`${hours}:${minutes}`);
-                                    setShowStartTimePicker(false);
+                          <View className="flex-1 justify-end">
+                            <Pressable>
+                              <View className="rounded-t-xl bg-white">
+                                <View className="flex-row justify-between border-b border-neutral-200 px-4 py-3">
+                                  <TouchableOpacity
+                                    onPress={() =>
+                                      setShowStartTimePicker(false)
+                                    }
+                                  >
+                                    <Text className="text-base text-indigo-600">
+                                      Cancel
+                                    </Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      const hours = tempStartTime
+                                        .getHours()
+                                        .toString()
+                                        .padStart(2, "0");
+                                      const minutes = tempStartTime
+                                        .getMinutes()
+                                        .toString()
+                                        .padStart(2, "0");
+                                      onChange(`${hours}:${minutes}`);
+                                      setShowStartTimePicker(false);
+                                    }}
+                                  >
+                                    <Text className="text-base font-semibold text-indigo-600">
+                                      Done
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
+                                <DateTimePicker
+                                  testID="startTimePicker"
+                                  value={tempStartTime}
+                                  mode="time"
+                                  display="spinner"
+                                  onChange={(_, selectedTime) => {
+                                    if (selectedTime) {
+                                      setTempStartTime(selectedTime);
+                                    }
                                   }}
-                                >
-                                  <Text className="text-base font-semibold text-indigo-600">
-                                    Done
-                                  </Text>
-                                </TouchableOpacity>
+                                  style={{ height: 200 }}
+                                />
+                                <View style={{ height: insets.bottom }} />
                               </View>
-                              <DateTimePicker
-                                testID="startTimePicker"
-                                value={tempStartTime}
-                                mode="time"
-                                display="spinner"
-                                onChange={(_, selectedTime) => {
-                                  if (selectedTime) {
-                                    setTempStartTime(selectedTime);
-                                  }
-                                }}
-                                style={{ height: 200 }}
-                              />
-                              <View style={{ height: insets.bottom }} />
-                            </View>
+                            </Pressable>
                           </View>
                         </Pressable>
                       </Modal>
@@ -1324,52 +1325,51 @@ export default function EditEventScreen() {
                           style={{ flex: 1 }}
                           onPress={() => setShowEndTimePicker(false)}
                         >
-                          <View
-                            className="flex-1 justify-end"
-                            onStartShouldSetResponder={() => true}
-                          >
-                            <View className="rounded-t-xl bg-white">
-                              <View className="flex-row justify-between border-b border-neutral-200 px-4 py-3">
-                                <TouchableOpacity
-                                  onPress={() => setShowEndTimePicker(false)}
-                                >
-                                  <Text className="text-base text-indigo-600">
-                                    Cancel
-                                  </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                  onPress={() => {
-                                    const hours = tempEndTime
-                                      .getHours()
-                                      .toString()
-                                      .padStart(2, "0");
-                                    const minutes = tempEndTime
-                                      .getMinutes()
-                                      .toString()
-                                      .padStart(2, "0");
-                                    onChange(`${hours}:${minutes}`);
-                                    setShowEndTimePicker(false);
+                          <View className="flex-1 justify-end">
+                            <Pressable>
+                              <View className="rounded-t-xl bg-white">
+                                <View className="flex-row justify-between border-b border-neutral-200 px-4 py-3">
+                                  <TouchableOpacity
+                                    onPress={() => setShowEndTimePicker(false)}
+                                  >
+                                    <Text className="text-base text-indigo-600">
+                                      Cancel
+                                    </Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      const hours = tempEndTime
+                                        .getHours()
+                                        .toString()
+                                        .padStart(2, "0");
+                                      const minutes = tempEndTime
+                                        .getMinutes()
+                                        .toString()
+                                        .padStart(2, "0");
+                                      onChange(`${hours}:${minutes}`);
+                                      setShowEndTimePicker(false);
+                                    }}
+                                  >
+                                    <Text className="text-base font-semibold text-indigo-600">
+                                      Done
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
+                                <DateTimePicker
+                                  testID="endTimePicker"
+                                  value={tempEndTime}
+                                  mode="time"
+                                  display="spinner"
+                                  onChange={(_, selectedTime) => {
+                                    if (selectedTime) {
+                                      setTempEndTime(selectedTime);
+                                    }
                                   }}
-                                >
-                                  <Text className="text-base font-semibold text-indigo-600">
-                                    Done
-                                  </Text>
-                                </TouchableOpacity>
+                                  style={{ height: 200 }}
+                                />
+                                <View style={{ height: insets.bottom }} />
                               </View>
-                              <DateTimePicker
-                                testID="endTimePicker"
-                                value={tempEndTime}
-                                mode="time"
-                                display="spinner"
-                                onChange={(_, selectedTime) => {
-                                  if (selectedTime) {
-                                    setTempEndTime(selectedTime);
-                                  }
-                                }}
-                                style={{ height: 200 }}
-                              />
-                              <View style={{ height: insets.bottom }} />
-                            </View>
+                            </Pressable>
                           </View>
                         </Pressable>
                       </Modal>
