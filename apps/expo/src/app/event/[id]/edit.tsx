@@ -1,4 +1,3 @@
-import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -82,6 +81,34 @@ export default function EditEventScreen() {
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+
+  // Platform-specific display mode for date/time pickers
+  const displayMode = Platform.OS === "ios" ? "spinner" : "default";
+
+  // Function to create an iOS picker with confirm/cancel buttons
+  const renderIOSPicker = (
+    picker: React.ReactNode,
+    onConfirm: () => void,
+    onCancel: () => void,
+  ) => {
+    if (Platform.OS !== "ios") return picker;
+
+    return (
+      <View className="bg-white">
+        <View className="flex-row justify-between border-b border-neutral-200 bg-neutral-100 px-4 py-2">
+          <TouchableOpacity onPress={onCancel}>
+            <Text className="text-base text-indigo-600">Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onConfirm}>
+            <Text className="text-base font-semibold text-indigo-600">
+              Done
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {picker}
+      </View>
+    );
+  };
 
   // Fetch the event data
   const eventQuery = api.event.get.useQuery(
@@ -749,7 +776,15 @@ export default function EditEventScreen() {
               control={control}
               name="event.startDate"
               render={({ field: { onChange, value } }) => {
-                const date = value ? new Date(value) : new Date();
+                // Use the event's date or default to first day of current month
+                let date;
+                if (value) {
+                  date = new Date(value);
+                } else {
+                  // No date selected - use first day of current month
+                  date = new Date();
+                  date.setDate(1); // First day of the month
+                }
 
                 return (
                   <View>
@@ -772,25 +807,54 @@ export default function EditEventScreen() {
                         {errors.event.startDate.message}
                       </Text>
                     )}
-                    {showStartDatePicker && (
-                      <DateTimePicker
-                        value={date}
-                        mode="date"
-                        display="default"
-                        onChange={(
-                          event: DateTimePickerEvent,
-                          selectedDate?: Date,
-                        ) => {
-                          setShowStartDatePicker(false);
-                          if (selectedDate) {
-                            const formattedDate = selectedDate
-                              .toISOString()
-                              .split("T")[0];
-                            onChange(formattedDate);
-                          }
-                        }}
-                      />
-                    )}
+                    {showStartDatePicker &&
+                      (Platform.OS === "ios" ? (
+                        renderIOSPicker(
+                          <DateTimePicker
+                            testID="startDatePicker"
+                            value={date}
+                            mode="date"
+                            display={displayMode}
+                            onChange={(event, selectedDate) => {
+                              if (event.type !== "dismissed" && selectedDate) {
+                                // Just update local state without closing
+                                const formattedDate = selectedDate
+                                  .toISOString()
+                                  .split("T")[0];
+                                onChange(formattedDate);
+                              }
+                            }}
+                          />,
+                          // Confirm button handler
+                          () => setShowStartDatePicker(false),
+                          // Cancel button handler
+                          () => setShowStartDatePicker(false),
+                        )
+                      ) : (
+                        <DateTimePicker
+                          testID="startDatePicker"
+                          value={date}
+                          mode="date"
+                          display={displayMode}
+                          onChange={(event, selectedDate) => {
+                            setShowStartDatePicker(Platform.OS === "ios");
+                            if (event.type !== "dismissed" && selectedDate) {
+                              const formattedDate = selectedDate
+                                .toISOString()
+                                .split("T")[0];
+                              onChange(formattedDate);
+
+                              // On Android, we need to hide the picker explicitly
+                              if (Platform.OS === "android") {
+                                setShowStartDatePicker(false);
+                              }
+                            } else {
+                              // If dismissed, close the picker
+                              setShowStartDatePicker(false);
+                            }
+                          }}
+                        />
+                      ))}
                   </View>
                 );
               }}
@@ -801,7 +865,15 @@ export default function EditEventScreen() {
               control={control}
               name="event.endDate"
               render={({ field: { onChange, value } }) => {
-                const date = value ? new Date(value) : new Date();
+                // Use the event's date or default to first day of current month
+                let date;
+                if (value) {
+                  date = new Date(value);
+                } else {
+                  // No date selected - use first day of current month
+                  date = new Date();
+                  date.setDate(1); // First day of the month
+                }
 
                 return (
                   <View>
@@ -824,25 +896,54 @@ export default function EditEventScreen() {
                         {errors.event.endDate.message}
                       </Text>
                     )}
-                    {showEndDatePicker && (
-                      <DateTimePicker
-                        value={date}
-                        mode="date"
-                        display="default"
-                        onChange={(
-                          event: DateTimePickerEvent,
-                          selectedDate?: Date,
-                        ) => {
-                          setShowEndDatePicker(false);
-                          if (selectedDate) {
-                            const formattedDate = selectedDate
-                              .toISOString()
-                              .split("T")[0];
-                            onChange(formattedDate);
-                          }
-                        }}
-                      />
-                    )}
+                    {showEndDatePicker &&
+                      (Platform.OS === "ios" ? (
+                        renderIOSPicker(
+                          <DateTimePicker
+                            testID="endDatePicker"
+                            value={date}
+                            mode="date"
+                            display={displayMode}
+                            onChange={(event, selectedDate) => {
+                              if (event.type !== "dismissed" && selectedDate) {
+                                // Just update local state without closing
+                                const formattedDate = selectedDate
+                                  .toISOString()
+                                  .split("T")[0];
+                                onChange(formattedDate);
+                              }
+                            }}
+                          />,
+                          // Confirm button handler
+                          () => setShowEndDatePicker(false),
+                          // Cancel button handler
+                          () => setShowEndDatePicker(false),
+                        )
+                      ) : (
+                        <DateTimePicker
+                          testID="endDatePicker"
+                          value={date}
+                          mode="date"
+                          display={displayMode}
+                          onChange={(event, selectedDate) => {
+                            setShowEndDatePicker(Platform.OS === "ios");
+                            if (event.type !== "dismissed" && selectedDate) {
+                              const formattedDate = selectedDate
+                                .toISOString()
+                                .split("T")[0];
+                              onChange(formattedDate);
+
+                              // On Android, we need to hide the picker explicitly
+                              if (Platform.OS === "android") {
+                                setShowEndDatePicker(false);
+                              }
+                            } else {
+                              // If dismissed, close the picker
+                              setShowEndDatePicker(false);
+                            }
+                          }}
+                        />
+                      ))}
                   </View>
                 );
               }}
@@ -853,9 +954,43 @@ export default function EditEventScreen() {
               control={control}
               name="event.startTime"
               render={({ field: { onChange, value } }) => {
-                const time = value
-                  ? new Date(`2000-01-01T${value}:00`)
-                  : new Date();
+                // Only create a date from the event's value, with no fallback to current time
+                let time;
+
+                if (value) {
+                  try {
+                    // Create a new date object and set the time based on the event value
+                    time = new Date();
+                    // Split the time string and set hours and minutes properly
+                    const parts = value.split(":");
+                    if (parts.length === 2) {
+                      const hourStr = parts[0] || "";
+                      const minuteStr = parts[1] || "";
+                      const hours = parseInt(hourStr, 10);
+                      const minutes = parseInt(minuteStr, 10);
+                      if (!isNaN(hours) && !isNaN(minutes)) {
+                        // Use the time from the event
+                        time.setHours(hours);
+                        time.setMinutes(minutes);
+                        time.setSeconds(0);
+                      }
+                    }
+                  } catch (error) {
+                    console.log("Error parsing start time:", error);
+                    // If parsing fails, use a default date object
+                    time = new Date();
+                    // But reset hours/minutes to midnight to avoid current time
+                    time.setHours(0);
+                    time.setMinutes(0);
+                    time.setSeconds(0);
+                  }
+                } else {
+                  // If no value exists, use a default date with midnight time
+                  time = new Date();
+                  time.setHours(0);
+                  time.setMinutes(0);
+                  time.setSeconds(0);
+                }
 
                 return (
                   <View>
@@ -874,30 +1009,64 @@ export default function EditEventScreen() {
                         {errors.event.startTime.message}
                       </Text>
                     )}
-                    {showStartTimePicker && (
-                      <DateTimePicker
-                        value={time}
-                        mode="time"
-                        display="default"
-                        onChange={(
-                          event: DateTimePickerEvent,
-                          selectedTime?: Date,
-                        ) => {
-                          setShowStartTimePicker(false);
-                          if (selectedTime) {
-                            const hours = selectedTime
-                              .getHours()
-                              .toString()
-                              .padStart(2, "0");
-                            const minutes = selectedTime
-                              .getMinutes()
-                              .toString()
-                              .padStart(2, "0");
-                            onChange(`${hours}:${minutes}`);
-                          }
-                        }}
-                      />
-                    )}
+                    {showStartTimePicker &&
+                      (Platform.OS === "ios" ? (
+                        renderIOSPicker(
+                          <DateTimePicker
+                            testID="startTimePicker"
+                            value={time}
+                            mode="time"
+                            display={displayMode}
+                            onChange={(event, selectedTime) => {
+                              if (event.type !== "dismissed" && selectedTime) {
+                                // Just update local state without closing
+                                const hours = selectedTime
+                                  .getHours()
+                                  .toString()
+                                  .padStart(2, "0");
+                                const minutes = selectedTime
+                                  .getMinutes()
+                                  .toString()
+                                  .padStart(2, "0");
+                                onChange(`${hours}:${minutes}`);
+                              }
+                            }}
+                          />,
+                          // Confirm button handler
+                          () => setShowStartTimePicker(false),
+                          // Cancel button handler
+                          () => setShowStartTimePicker(false),
+                        )
+                      ) : (
+                        <DateTimePicker
+                          testID="startTimePicker"
+                          value={time}
+                          mode="time"
+                          display={displayMode}
+                          onChange={(event, selectedTime) => {
+                            setShowStartTimePicker(Platform.OS === "ios");
+                            if (event.type !== "dismissed" && selectedTime) {
+                              const hours = selectedTime
+                                .getHours()
+                                .toString()
+                                .padStart(2, "0");
+                              const minutes = selectedTime
+                                .getMinutes()
+                                .toString()
+                                .padStart(2, "0");
+                              onChange(`${hours}:${minutes}`);
+
+                              // On Android, we need to hide the picker explicitly
+                              if (Platform.OS === "android") {
+                                setShowStartTimePicker(false);
+                              }
+                            } else {
+                              // If dismissed, close the picker
+                              setShowStartTimePicker(false);
+                            }
+                          }}
+                        />
+                      ))}
                   </View>
                 );
               }}
@@ -908,9 +1077,43 @@ export default function EditEventScreen() {
               control={control}
               name="event.endTime"
               render={({ field: { onChange, value } }) => {
-                const time = value
-                  ? new Date(`2000-01-01T${value}:00`)
-                  : new Date();
+                // Only create a date from the event's value, with no fallback to current time
+                let time;
+
+                if (value) {
+                  try {
+                    // Create a new date object and set the time based on the event value
+                    time = new Date();
+                    // Split the time string and set hours and minutes properly
+                    const parts = value.split(":");
+                    if (parts.length === 2) {
+                      const hourStr = parts[0] || "";
+                      const minuteStr = parts[1] || "";
+                      const hours = parseInt(hourStr, 10);
+                      const minutes = parseInt(minuteStr, 10);
+                      if (!isNaN(hours) && !isNaN(minutes)) {
+                        // Use the time from the event
+                        time.setHours(hours);
+                        time.setMinutes(minutes);
+                        time.setSeconds(0);
+                      }
+                    }
+                  } catch (error) {
+                    console.log("Error parsing end time:", error);
+                    // If parsing fails, use a default date object
+                    time = new Date();
+                    // But reset hours/minutes to midnight to avoid current time
+                    time.setHours(0);
+                    time.setMinutes(0);
+                    time.setSeconds(0);
+                  }
+                } else {
+                  // If no value exists, use a default date with midnight time
+                  time = new Date();
+                  time.setHours(0);
+                  time.setMinutes(0);
+                  time.setSeconds(0);
+                }
 
                 return (
                   <View>
@@ -929,30 +1132,64 @@ export default function EditEventScreen() {
                         {errors.event.endTime.message}
                       </Text>
                     )}
-                    {showEndTimePicker && (
-                      <DateTimePicker
-                        value={time}
-                        mode="time"
-                        display="default"
-                        onChange={(
-                          event: DateTimePickerEvent,
-                          selectedTime?: Date,
-                        ) => {
-                          setShowEndTimePicker(false);
-                          if (selectedTime) {
-                            const hours = selectedTime
-                              .getHours()
-                              .toString()
-                              .padStart(2, "0");
-                            const minutes = selectedTime
-                              .getMinutes()
-                              .toString()
-                              .padStart(2, "0");
-                            onChange(`${hours}:${minutes}`);
-                          }
-                        }}
-                      />
-                    )}
+                    {showEndTimePicker &&
+                      (Platform.OS === "ios" ? (
+                        renderIOSPicker(
+                          <DateTimePicker
+                            testID="endTimePicker"
+                            value={time}
+                            mode="time"
+                            display={displayMode}
+                            onChange={(event, selectedTime) => {
+                              if (event.type !== "dismissed" && selectedTime) {
+                                // Just update local state without closing
+                                const hours = selectedTime
+                                  .getHours()
+                                  .toString()
+                                  .padStart(2, "0");
+                                const minutes = selectedTime
+                                  .getMinutes()
+                                  .toString()
+                                  .padStart(2, "0");
+                                onChange(`${hours}:${minutes}`);
+                              }
+                            }}
+                          />,
+                          // Confirm button handler
+                          () => setShowEndTimePicker(false),
+                          // Cancel button handler
+                          () => setShowEndTimePicker(false),
+                        )
+                      ) : (
+                        <DateTimePicker
+                          testID="endTimePicker"
+                          value={time}
+                          mode="time"
+                          display={displayMode}
+                          onChange={(event, selectedTime) => {
+                            setShowEndTimePicker(Platform.OS === "ios");
+                            if (event.type !== "dismissed" && selectedTime) {
+                              const hours = selectedTime
+                                .getHours()
+                                .toString()
+                                .padStart(2, "0");
+                              const minutes = selectedTime
+                                .getMinutes()
+                                .toString()
+                                .padStart(2, "0");
+                              onChange(`${hours}:${minutes}`);
+
+                              // On Android, we need to hide the picker explicitly
+                              if (Platform.OS === "android") {
+                                setShowEndTimePicker(false);
+                              }
+                            } else {
+                              // If dismissed, close the picker
+                              setShowEndTimePicker(false);
+                            }
+                          }}
+                        />
+                      ))}
                   </View>
                 );
               }}
