@@ -251,6 +251,18 @@ export default function EditEventScreen() {
         accessibility?: string[];
       };
 
+      // Log detailed data about images array structure
+      if (typedEventData.images && typedEventData.images.length > 0) {
+        console.log("📸 ORIGINAL IMAGES STRUCTURE:", {
+          imageArray: typedEventData.images,
+          arrayLength: typedEventData.images.length,
+          isAllSameUrl: typedEventData.images.every(
+            (url: string) => url === typedEventData.images?.[0],
+          ),
+          sampleImageUrl: typedEventData.images[0],
+        });
+      }
+
       reset({
         event: {
           name: typedEventData.name || "",
@@ -563,7 +575,9 @@ export default function EditEventScreen() {
             console.log(
               `Original event had ${originalImagesCount} duplicate images, replicating pattern`,
             );
-            imagesArray = Array(originalImagesCount).fill(imageToUse);
+            imagesArray = Array(originalImagesCount).fill(
+              imageToUse,
+            ) as string[];
           } else {
             // Just use a single image in the array (default case)
             imagesArray = [imageToUse];
@@ -622,7 +636,11 @@ export default function EditEventScreen() {
   if (!id || typeof id !== "string") {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            title: "Edit Event",
+          }}
+        />
         <View className="flex-1 bg-white">
           <Text>Invalid or missing event id</Text>
         </View>
@@ -634,7 +652,11 @@ export default function EditEventScreen() {
   if (eventQuery.isLoading) {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            title: "Edit Event",
+          }}
+        />
         <View className="flex-1 bg-white">
           <LoadingSpinner />
         </View>
@@ -646,7 +668,11 @@ export default function EditEventScreen() {
   if (!eventQuery.data) {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            title: "Edit Event",
+          }}
+        />
         <View className="flex-1 bg-white">
           <Text>Event not found</Text>
         </View>
@@ -659,7 +685,39 @@ export default function EditEventScreen() {
       <Stack.Screen
         options={{
           title: "Edit Event",
-          headerBackTitle: "Back",
+          headerBackTitle: "Cancel",
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => void handleSubmit(onSubmit)()}
+              disabled={
+                isSubmitting ||
+                isUploadingImage ||
+                (!isDirty &&
+                  !uploadedImageUrl &&
+                  selectedImage === originalImage) ||
+                !isValid
+              }
+              style={{ marginRight: 8 }}
+            >
+              <Text
+                style={{
+                  fontSize: 17,
+                  fontWeight: "600",
+                  color:
+                    isSubmitting ||
+                    isUploadingImage ||
+                    (!isDirty &&
+                      !uploadedImageUrl &&
+                      selectedImage === originalImage) ||
+                    !isValid
+                      ? "rgba(255, 255, 255, 0.5)"
+                      : "#FFFFFF",
+                }}
+              >
+                {isSubmitting ? "Saving..." : "Save"}
+              </Text>
+            </TouchableOpacity>
+          ),
         }}
       />
       <KeyboardAvoidingView
@@ -776,15 +834,7 @@ export default function EditEventScreen() {
               control={control}
               name="event.startDate"
               render={({ field: { onChange, value } }) => {
-                // Use the event's date or default to first day of current month
-                let date;
-                if (value) {
-                  date = new Date(value);
-                } else {
-                  // No date selected - use first day of current month
-                  date = new Date();
-                  date.setDate(1); // First day of the month
-                }
+                const date = value ? new Date(value) : new Date();
 
                 return (
                   <View>
@@ -1580,197 +1630,57 @@ export default function EditEventScreen() {
               }}
             />
 
-            {/* Debug Validation Section */}
-            <View className="mt-8 rounded-md bg-neutral-100 p-4">
-              <Text className="text-base font-semibold">Form Status:</Text>
-              <Text>Is Form Valid: {isValid ? "Yes" : "No"}</Text>
-              <Text>Is Form Dirty: {isDirty ? "Yes" : "No"}</Text>
-
+            {/* Check Required Fields Button */}
+            {!isValid && (
               <TouchableOpacity
                 onPress={() => {
-                  const values = control._formValues;
-                  console.log(
-                    "Current form values:",
-                    JSON.stringify(values, null, 2),
-                  );
+                  // Trigger validation on all fields
+                  void handleSubmit(() => {
+                    // This is just to trigger validation
+                    console.log("Validating all fields");
+                  })();
 
-                  // Log specific information about the performers field
-                  if (
-                    values.eventMetadata &&
-                    typeof values.eventMetadata === "object"
-                  ) {
-                    console.log(
-                      "Performers field:",
-                      values.eventMetadata.performers,
-                      "Type:",
-                      typeof values.eventMetadata.performers,
-                      "Is Array:",
-                      Array.isArray(values.eventMetadata.performers),
-                    );
-                  }
-
-                  // If we have data from the API, log that too for comparison
-                  const apiEventMetadata = eventQuery.data?.eventMetadata;
-                  if (
-                    apiEventMetadata &&
-                    typeof apiEventMetadata === "object" &&
-                    "performers" in apiEventMetadata
-                  ) {
-                    console.log(
-                      "API performers data:",
-                      apiEventMetadata.performers,
-                      "Type:",
-                      typeof apiEventMetadata.performers,
-                      "Is Array:",
-                      Array.isArray(apiEventMetadata.performers),
-                    );
+                  // Scroll to the first error
+                  if (Object.keys(errors).length > 0) {
+                    toast.error("Please complete all required fields", {
+                      description:
+                        "Look for fields marked with a red asterisk (*)",
+                    });
                   }
                 }}
-                className="my-2 rounded-md bg-gray-200 px-4 py-2"
+                className="mt-3 items-center"
               >
-                <Text>Log Current Form Values</Text>
+                <Text className="text-indigo-600 underline">
+                  Check Required Fields
+                </Text>
               </TouchableOpacity>
-
-              {Object.keys(errors).length > 0 && (
-                <View className="mt-2">
-                  <Text className="font-semibold text-red-500">
-                    Validation Errors:
-                  </Text>
-                  {Object.entries(errors).map(([key, error]) => {
-                    // Handle nested errors
-                    if (
-                      typeof error === "object" &&
-                      error !== null &&
-                      "message" in error
-                    ) {
-                      return (
-                        <Text key={key} className="text-xs text-red-500">
-                          - {key}: {error.message!}
-                        </Text>
-                      );
-                    } else if (typeof error === "object" && error !== null) {
-                      // For nested objects like errors.event or errors.eventMetadata
-                      return (
-                        <View key={key}>
-                          <Text className="text-xs font-medium text-red-500">
-                            {key}:
-                          </Text>
-                          {Object.entries(
-                            error as Record<string, { message?: string }>,
-                          ).map(([nestedKey, nestedError]) => (
-                            <Text
-                              key={`${key}-${nestedKey}`}
-                              className="ml-2 text-xs text-red-500"
-                            >
-                              - {nestedKey}: {nestedError.message || "Invalid"}
-                            </Text>
-                          ))}
-                        </View>
-                      );
-                    }
-                    return null;
-                  })}
-                </View>
-              )}
-
-              {/* Image Debug Info */}
-              <View className="mt-4">
-                <Text className="font-semibold">Image Status:</Text>
-                <Text className="text-xs">
-                  Original Image: {originalImage ? "✓" : "✗"}
-                </Text>
-                <Text className="text-xs">
-                  Selected Image: {selectedImage ? "✓" : "✗"}
-                </Text>
-                <Text className="text-xs">
-                  Uploaded Image URL: {uploadedImageUrl ? "✓" : "✗"}
-                </Text>
-                <Text className="text-xs">
-                  Is Uploading: {isUploadingImage ? "Yes" : "No"}
-                </Text>
-                <Text className="text-xs">
-                  Has Image Changes:{" "}
-                  {uploadedImageUrl !== null ||
-                  (selectedImage !== originalImage && selectedImage !== null)
-                    ? "Yes"
-                    : "No"}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Save Button */}
-          <Button
-            onPress={() => {
-              console.log("Save button clicked");
-              console.log("Form is valid:", isValid);
-              console.log("Form is dirty:", isDirty);
-              console.log("Form errors:", JSON.stringify(errors, null, 2));
-              void handleSubmit(onSubmit)();
-            }}
-            disabled={
-              isSubmitting ||
-              isUploadingImage ||
-              (!isDirty &&
-                !uploadedImageUrl &&
-                selectedImage === originalImage) ||
-              !isValid
-            }
-            className="mt-6"
-          >
-            {isSubmitting ? "Saving..." : "Save Event"}
-          </Button>
-
-          {/* Check Required Fields Button */}
-          {!isValid && (
-            <TouchableOpacity
-              onPress={() => {
-                // Trigger validation on all fields
-                void handleSubmit(() => {
-                  // This is just to trigger validation
-                  console.log("Validating all fields");
-                })();
-
-                // Scroll to the first error
-                if (Object.keys(errors).length > 0) {
-                  toast.error("Please complete all required fields", {
-                    description:
-                      "Look for fields marked with a red asterisk (*)",
-                  });
-                }
-              }}
-              className="mt-3 items-center"
-            >
-              <Text className="text-indigo-600 underline">
-                Check Required Fields
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Debug status of button */}
-          <View className="mt-2">
-            {!isValid && (
-              <Text className="text-xs text-red-500">
-                Button disabled: Form is invalid
-              </Text>
             )}
-            {!isDirty &&
-              !uploadedImageUrl &&
-              selectedImage === originalImage && (
+
+            {/* Debug status of button */}
+            <View className="mt-2">
+              {!isValid && (
                 <Text className="text-xs text-red-500">
-                  Button disabled: No changes made
+                  Button disabled: Form is invalid
                 </Text>
               )}
-            {isSubmitting && (
-              <Text className="text-xs text-neutral-500">
-                Button disabled: Currently submitting
-              </Text>
-            )}
-            {isUploadingImage && (
-              <Text className="text-xs text-neutral-500">
-                Button disabled: Currently uploading image
-              </Text>
-            )}
+              {!isDirty &&
+                !uploadedImageUrl &&
+                selectedImage === originalImage && (
+                  <Text className="text-xs text-red-500">
+                    Button disabled: No changes made
+                  </Text>
+                )}
+              {isSubmitting && (
+                <Text className="text-xs text-neutral-500">
+                  Button disabled: Currently submitting
+                </Text>
+              )}
+              {isUploadingImage && (
+                <Text className="text-xs text-neutral-500">
+                  Button disabled: Currently uploading image
+                </Text>
+              )}
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
