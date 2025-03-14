@@ -1,3 +1,4 @@
+import type { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -9,19 +10,21 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as FileSystem from "expo-file-system";
 import { Image as ExpoImage } from "expo-image";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { zodResolver } from "@hookform/resolvers/zod";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Calendar, Clock, Image as ImageIcon } from "lucide-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
 
 import { Button } from "~/components/Button";
+import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { api } from "~/utils/api";
 
@@ -56,7 +59,7 @@ const formSchema = z.object({
       }),
     )
     .optional(),
-  visibility: z.string().optional(),
+  visibility: z.enum(["public", "private"]).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -67,6 +70,12 @@ export default function EditEventScreen() {
   // We need the user for authorization checks in the future
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  // Track the original image to detect changes
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
+  // Track if an image is currently uploading
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  // Store the remote URL after an image is uploaded
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
 
   // State for date and time pickers
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -82,12 +91,28 @@ export default function EditEventScreen() {
     },
   );
 
+  // Get the api utils for cache invalidation
+  const utils = api.useUtils();
+
   // Update event mutation
   const updateEventMutation = api.event.update.useMutation({
     onMutate: () => setIsSubmitting(true),
     onSettled: () => setIsSubmitting(false),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Log the returned data to check if the image was updated
+      console.log("🎉 Server response after update:", data);
+
+      // Just log the entire response - we'll check the console for image data
+      console.log("Update completed successfully, refreshing data");
+
       toast.success("Event updated successfully");
+      // Invalidate relevant queries to ensure feed updates
+      void Promise.all([
+        utils.event.get.invalidate({ eventId: id || "" }),
+        utils.event.getEventsForUser.invalidate(),
+        utils.event.getSavedIdsForUser.invalidate(),
+        utils.event.getStats.invalidate(),
+      ]);
       router.back();
     },
     onError: (error) => {
@@ -104,13 +129,52 @@ export default function EditEventScreen() {
     reset,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    mode: "onBlur",
+    mode: "onTouched",
+    reValidateMode: "onChange",
+    defaultValues: {
+      event: {
+        name: "",
+        description: "",
+        startDate: "",
+        endDate: "",
+        startTime: "",
+        endTime: "",
+        timeZone: "",
+        location: "",
+        images: [],
+      },
+      eventMetadata: {
+        eventType: "",
+        eventCategory: "",
+        priceType: "",
+        price: "",
+        ageRestriction: "",
+        performers: "",
+        accessibility: "",
+      },
+      comment: "",
+      lists: [],
+      visibility: "private" as const,
+    },
   });
 
   // Initialize form with event data when it's loaded
   useEffect(() => {
     if (eventQuery.data) {
       const event = eventQuery.data;
+
+      // Log detailed data about images array structure
+      if (event.event?.images && event.event.images.length > 0) {
+        console.log("📸 ORIGINAL IMAGES STRUCTURE:", {
+          imageArray: event.event.images,
+          arrayLength: event.event.images.length,
+          isAllSameUrl: event.event.images.every(
+            (url) => url === event.event.images[0],
+          ),
+          sampleImageUrl: event.event.images[0],
+        });
+      }
+
       // Define the event data with proper types
       const eventData = event.event || {
         name: "",
@@ -176,14 +240,21 @@ export default function EditEventScreen() {
           priceType: typedEventMetadata.priceType || "",
           price: typedEventMetadata.price || "",
           ageRestriction: typedEventMetadata.ageRestriction || "",
-          performers: typedEventMetadata.performers || "",
+          performers: Array.isArray(typedEventMetadata.performers)
+            ? typedEventMetadata.performers.join(", ")
+            : typeof typedEventMetadata.performers === "string"
+              ? typedEventMetadata.performers
+              : "",
           accessibility: Array.isArray(typedEventMetadata.accessibility)
             ? typedEventMetadata.accessibility.join(", ")
             : "",
         },
         comment: "",
         lists: [],
-        visibility: event.visibility || "",
+        visibility:
+          event.visibility === "public" || event.visibility === "private"
+            ? event.visibility
+            : ("private" as const),
       });
 
       // Set the selected image if there are images
@@ -192,10 +263,112 @@ export default function EditEventScreen() {
         typedEventData.images.length > 0 &&
         typedEventData.images[0]
       ) {
-        setSelectedImage(typedEventData.images[0]);
+        const initialImage = typedEventData.images[0];
+        setSelectedImage(initialImage);
+        setOriginalImage(initialImage); // Store the original image
       }
     }
   }, [eventQuery.data, reset, setSelectedImage]);
+
+  // Function to upload an image to Bytescale server
+  const uploadImage = async (localUri: string): Promise<string> => {
+    setIsUploadingImage(true);
+    console.log("Starting image upload for URI:", localUri);
+
+    try {
+      // Convert photo library URI to file URI if needed
+      let fileUri = localUri;
+      if (localUri.startsWith("ph://")) {
+        const assetId = localUri.replace("ph://", "").split("/")[0];
+        if (!assetId) {
+          throw new Error("Invalid photo library asset ID");
+        }
+        const asset = await MediaLibrary.getAssetInfoAsync(assetId);
+        if (!asset.localUri) {
+          throw new Error("Could not get local URI for photo library asset");
+        }
+        fileUri = asset.localUri;
+        console.log("Converted photo library URI to file URI:", fileUri);
+      }
+
+      // Validate image URI
+      if (!fileUri.startsWith("file://")) {
+        throw new Error("Invalid image URI format");
+      }
+
+      // 1. Manipulate image for optimal upload
+      let manipulatedImage;
+      try {
+        manipulatedImage = await ImageManipulator.manipulateAsync(
+          fileUri,
+          [{ resize: { width: 1284 } }],
+          { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+        );
+      } catch (error) {
+        throw new Error(
+          `Failed to manipulate image: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+
+      // Validate manipulated image
+      if (!manipulatedImage.uri) {
+        throw new Error("Image manipulation failed - no URI returned");
+      }
+
+      // 2. Upload image to Bytescale
+      let response;
+      try {
+        response = await FileSystem.uploadAsync(
+          "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
+          manipulatedImage.uri,
+          {
+            uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+            httpMethod: "POST",
+            headers: {
+              "Content-Type": "image/jpeg",
+              Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
+            },
+          },
+        );
+      } catch (error) {
+        throw new Error(
+          `Failed to upload image: ${error instanceof Error ? error.message : "Network error"}`,
+        );
+      }
+
+      if (response.status !== 200) {
+        throw new Error(
+          `Upload failed with status ${response.status}: ${response.body}`,
+        );
+      }
+
+      // 3. Parse response
+      let fileUrl: string;
+      try {
+        if (!response.body) {
+          throw new Error("Empty response from upload server");
+        }
+        const parsed = JSON.parse(response.body) as { fileUrl?: string };
+        if (!parsed.fileUrl) {
+          throw new Error("No file URL in response");
+        }
+        fileUrl = parsed.fileUrl;
+      } catch (error) {
+        throw new Error(
+          `Failed to parse upload response: ${error instanceof Error ? error.message : "Invalid JSON"}`,
+        );
+      }
+
+      // Log success with the returned URL
+      console.log("Image uploaded successfully, remote URL:", fileUrl);
+      return fileUrl;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   // Handle image picking
   const pickImage = async () => {
@@ -223,7 +396,37 @@ export default function EditEventScreen() {
         result.assets.length > 0 &&
         result.assets[0]?.uri
       ) {
-        setSelectedImage(result.assets[0].uri);
+        // Set the selected image to show in the UI immediately
+        const localUri = result.assets[0].uri;
+        console.log("Selected image from picker:", localUri);
+        setSelectedImage(localUri);
+
+        try {
+          // Show toast while uploading
+          const loadingToastId = toast.loading("Uploading image...");
+
+          // Upload the image to get a remote URL
+          const remoteUrl = await uploadImage(localUri);
+
+          // Update the state with the remote URL
+          console.log("Setting uploaded image URL:", remoteUrl);
+          setUploadedImageUrl(remoteUrl);
+
+          // Dismiss the loading toast and show success
+          toast.dismiss(loadingToastId);
+          toast.success("Image uploaded successfully");
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          toast.error("Failed to upload image", {
+            description:
+              error instanceof Error ? error.message : "Unknown error",
+          });
+
+          // Reset selected image on upload failure if it's a new image (not the original)
+          if (selectedImage !== originalImage) {
+            setSelectedImage(originalImage);
+          }
+        }
       }
     } catch (error) {
       console.error("Error picking image:", error);
@@ -236,8 +439,32 @@ export default function EditEventScreen() {
     async (data: FormData) => {
       if (!id) return;
 
-      const loadingToastId = toast.loading("Updating event...");
+      console.log("⭐ Starting form submission");
+      console.log("Form isDirty:", isDirty);
+      console.log("Image state:", {
+        originalImage,
+        selectedImage,
+        uploadedImageUrl,
+        different: selectedImage !== originalImage,
+      });
+
+      // Skip submission if there are no changes (both form and image)
+      // Consider changes in form data or a different image (either local or remote)
+      const hasImageChanges =
+        uploadedImageUrl !== null ||
+        (selectedImage !== originalImage && selectedImage !== null);
+
+      console.log("Has image changes:", hasImageChanges);
+
+      if (!isDirty && !hasImageChanges) {
+        toast.error("No changes detected");
+        return;
+      }
+
       try {
+        setIsSubmitting(true);
+        const loadingToastId = toast.loading("Updating event...");
+
         // Format accessibility as an array if it's a string
         const accessibilityArray = data.eventMetadata.accessibility
           ? data.eventMetadata.accessibility
@@ -250,12 +477,79 @@ export default function EditEventScreen() {
           ? data.eventMetadata.performers.split(",").map((item) => item.trim())
           : [];
 
+        // Determine which image URL to use
+        // If a new image was uploaded, use the remote URL
+        // Otherwise, use the original image from the event data if available
+        let imageToUse = null;
+
+        if (uploadedImageUrl) {
+          // If we have an uploaded image URL, use that
+          imageToUse = uploadedImageUrl;
+          console.log("Using uploaded image URL:", uploadedImageUrl);
+        } else if (selectedImage === originalImage && originalImage) {
+          // If selected image is the same as original and exists, keep it
+          imageToUse = originalImage;
+          console.log("Keeping original image:", originalImage);
+        } else if (selectedImage === null) {
+          // If selected image is null, the user removed the image
+          imageToUse = null;
+          console.log("Image was removed, sending empty images array");
+        }
+
+        console.log("🖼️ Final image decision:", {
+          originalImage,
+          selectedImage,
+          uploadedImageUrl,
+          imageToUse,
+          isRemoteURL: imageToUse?.startsWith("http"),
+        });
+
+        // CRITICAL CHECK: Never send a local file URI to the server
+        if (
+          imageToUse &&
+          (imageToUse.startsWith("file://") || imageToUse.startsWith("ph://"))
+        ) {
+          console.error(
+            "⚠️ CRITICAL ERROR: Attempted to send local file URI to server:",
+            imageToUse,
+          );
+          toast.error("Image upload failed", {
+            description:
+              "Cannot save with a local image reference. Please try uploading the image again.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
         // Prepare the event data in the format expected by the API
+
+        // Get the original image count from the form
+        const originalImagesCount = data.event.images?.length || 0;
+
+        // If we're using a new image, check if we need to duplicate it (match original count)
+        let imagesArray: string[] = [];
+        if (imageToUse) {
+          // If the original event had the same image repeated in the array, we'll do the same
+          // This is a workaround for potential server expectations about image array structure
+          if (originalImagesCount > 1) {
+            console.log(
+              `Original event had ${originalImagesCount} duplicate images, replicating pattern`,
+            );
+            imagesArray = Array(originalImagesCount).fill(imageToUse);
+          } else {
+            // Just use a single image in the array (default case)
+            imagesArray = [imageToUse];
+          }
+        }
+
+        console.log("Final images array:", imagesArray);
+
         const updatedData = {
           id,
           event: {
             ...data.event,
-            images: selectedImage ? [selectedImage] : [],
+            // Use our calculated images array
+            images: imagesArray,
           },
           eventMetadata: {
             ...data.eventMetadata,
@@ -263,23 +557,37 @@ export default function EditEventScreen() {
             performers: performersArray,
           },
           comment: data.comment || "",
-          lists: [{}],
-          visibility:
-            data.visibility === "public"
-              ? ("public" as const)
-              : data.visibility === "private"
-                ? ("private" as const)
-                : ("public" as const),
+          lists: (data.lists || []).map((list) => ({
+            [list.value]: list.label,
+          })) as Record<string, string>[],
+          visibility: data.visibility,
         };
 
+        console.log(
+          "🔄 Submitting update with images:",
+          updatedData.event.images,
+        );
+
         await updateEventMutation.mutateAsync(updatedData);
+        console.log("✅ Event updated successfully with image:", imageToUse);
+
         toast.dismiss(loadingToastId);
       } catch (error) {
-        console.error("Error updating event:", error);
-        toast.dismiss(loadingToastId);
+        console.error("❌ Error updating event:", error);
+        toast.error("Failed to update event", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+        setIsSubmitting(false);
       }
     },
-    [id, updateEventMutation, selectedImage],
+    [
+      id,
+      updateEventMutation,
+      selectedImage,
+      originalImage,
+      uploadedImageUrl,
+      isDirty,
+    ],
   );
 
   // Early return if the 'id' is missing or invalid
@@ -351,16 +659,20 @@ export default function EditEventScreen() {
               render={({ field: { onChange, onBlur, value } }) => (
                 <View>
                   <Text className="mb-2 text-base font-semibold">
-                    Event Name
+                    Event Name <Text className="text-red-500">*</Text>
                   </Text>
                   <TextInput
                     autoComplete="off"
                     autoCorrect={false}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="Enter event name"
-                    className="h-10 rounded-md border border-neutral-300 px-3 py-2"
+                    className={`h-10 rounded-md border px-3 py-2 ${
+                      errors.event?.name
+                        ? "border-red-500"
+                        : "border-neutral-300"
+                    }`}
                   />
                   {errors.event?.name && (
                     <Text className="mt-1 text-xs text-red-500">
@@ -383,7 +695,7 @@ export default function EditEventScreen() {
                   <TextInput
                     autoComplete="off"
                     autoCorrect={false}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="Enter event description"
@@ -409,7 +721,7 @@ export default function EditEventScreen() {
                   <TextInput
                     autoComplete="off"
                     autoCorrect={false}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="Enter event location"
@@ -441,11 +753,15 @@ export default function EditEventScreen() {
                 return (
                   <View>
                     <Text className="mb-2 text-base font-semibold">
-                      Start Date
+                      Start Date <Text className="text-red-500">*</Text>
                     </Text>
                     <TouchableOpacity
                       onPress={() => setShowStartDatePicker(true)}
-                      className="flex-row items-center justify-between rounded-md border border-neutral-300 px-3 py-2"
+                      className={`flex-row items-center justify-between rounded-md border px-3 py-2 ${
+                        errors.event?.startDate
+                          ? "border-red-500"
+                          : "border-neutral-300"
+                      }`}
                     >
                       <Text>{value || "Select start date"}</Text>
                       <Calendar size={20} color="#000" />
@@ -489,11 +805,15 @@ export default function EditEventScreen() {
                 return (
                   <View>
                     <Text className="mb-2 text-base font-semibold">
-                      End Date
+                      End Date <Text className="text-red-500">*</Text>
                     </Text>
                     <TouchableOpacity
                       onPress={() => setShowEndDatePicker(true)}
-                      className="flex-row items-center justify-between rounded-md border border-neutral-300 px-3 py-2"
+                      className={`flex-row items-center justify-between rounded-md border px-3 py-2 ${
+                        errors.event?.endDate
+                          ? "border-red-500"
+                          : "border-neutral-300"
+                      }`}
                     >
                       <Text>{value || "Select end date"}</Text>
                       <Calendar size={20} color="#000" />
@@ -649,7 +969,7 @@ export default function EditEventScreen() {
                   <TextInput
                     autoComplete="off"
                     autoCorrect={false}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="e.g. America/Los_Angeles"
@@ -681,28 +1001,70 @@ export default function EditEventScreen() {
                         onPress={pickImage}
                         variant="secondary"
                         className="mr-2 flex-1"
+                        disabled={isUploadingImage}
                       >
-                        Replace
+                        {isUploadingImage ? "Uploading..." : "Replace"}
                       </Button>
                       <Button
-                        onPress={() => setSelectedImage(null)}
+                        onPress={() => {
+                          console.log("Removing image - before:", {
+                            selectedImage,
+                            uploadedImageUrl,
+                            originalImage,
+                          });
+                          setSelectedImage(null);
+                          setUploadedImageUrl(null);
+                          // Display a toast to confirm removal
+                          toast.success("Image removed");
+                          console.log("Image removed - after:", {
+                            selectedImage: null,
+                            uploadedImageUrl: null,
+                            originalImage,
+                          });
+                        }}
                         variant="destructive"
                         className="flex-1"
+                        disabled={isUploadingImage}
                       >
                         Remove
                       </Button>
                     </View>
+                    {isUploadingImage && (
+                      <View className="mt-2 items-center">
+                        <ImageUploadSpinner />
+                        <Text className="mt-1 text-xs text-neutral-500">
+                          Uploading image...
+                        </Text>
+                      </View>
+                    )}
+                    {uploadedImageUrl && (
+                      <Text className="mt-2 text-xs text-green-600">
+                        Image uploaded successfully
+                      </Text>
+                    )}
                   </View>
                 ) : (
                   <TouchableOpacity
                     onPress={pickImage}
                     className="flex-row items-center justify-center rounded-md border border-dashed border-neutral-300 p-6"
+                    disabled={isUploadingImage}
                   >
                     <View className="items-center">
-                      <ImageIcon size={32} color="#666" />
-                      <Text className="mt-2 text-center text-neutral-600">
-                        Tap to add an image
-                      </Text>
+                      {isUploadingImage ? (
+                        <>
+                          <ImageUploadSpinner />
+                          <Text className="mt-2 text-center text-neutral-600">
+                            Uploading image...
+                          </Text>
+                        </>
+                      ) : (
+                        <>
+                          <ImageIcon size={32} color="#666" />
+                          <Text className="mt-2 text-center text-neutral-600">
+                            Tap to add an image
+                          </Text>
+                        </>
+                      )}
                     </View>
                   </TouchableOpacity>
                 )}
@@ -726,7 +1088,7 @@ export default function EditEventScreen() {
                   <TextInput
                     autoComplete="off"
                     autoCorrect={false}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="e.g. Concert, Workshop, Conference"
@@ -751,7 +1113,7 @@ export default function EditEventScreen() {
                   <TextInput
                     autoComplete="off"
                     autoCorrect={false}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="e.g. Music, Art, Technology"
@@ -778,7 +1140,7 @@ export default function EditEventScreen() {
                   <TextInput
                     autoComplete="off"
                     autoCorrect={false}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="e.g. Free, Paid, Donation"
@@ -803,7 +1165,7 @@ export default function EditEventScreen() {
                   <TextInput
                     autoComplete="off"
                     autoCorrect={false}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="e.g. $10, $5-$20"
@@ -831,7 +1193,7 @@ export default function EditEventScreen() {
                   <TextInput
                     autoComplete="off"
                     autoCorrect={false}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="e.g. All Ages, 18+, 21+"
@@ -858,12 +1220,15 @@ export default function EditEventScreen() {
                   <TextInput
                     autoComplete="off"
                     autoCorrect={false}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    placeholder="e.g. Band names, speakers, artists"
+                    placeholder="Enter comma-separated performers (e.g. 'Band Name, Speaker, Artist')"
                     className="h-10 rounded-md border border-neutral-300 px-3 py-2"
                   />
+                  <Text className="mt-1 text-xs text-neutral-500">
+                    Separate multiple performers with commas
+                  </Text>
                   {errors.eventMetadata?.performers && (
                     <Text className="mt-1 text-xs text-red-500">
                       {errors.eventMetadata.performers.message}
@@ -885,7 +1250,7 @@ export default function EditEventScreen() {
                   <TextInput
                     autoComplete="off"
                     autoCorrect={false}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="e.g. Wheelchair accessible, ASL interpreter"
@@ -910,7 +1275,7 @@ export default function EditEventScreen() {
                   <TextInput
                     autoComplete="off"
                     autoCorrect={true}
-                    defaultValue={value}
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     placeholder="Add a comment about this event"
@@ -934,15 +1299,16 @@ export default function EditEventScreen() {
                 const visibilityOptions = [
                   { label: "Public", value: "public" },
                   { label: "Private", value: "private" },
-                  { label: "Unlisted", value: "unlisted" },
                 ];
 
                 return (
                   <View>
                     <Text className="mb-2 text-base font-semibold">
-                      Visibility
+                      Visibility <Text className="text-red-500">*</Text>
                     </Text>
-                    <View className="flex-row flex-wrap gap-2">
+                    <View
+                      className={`flex-row flex-wrap gap-2 ${errors.visibility ? "rounded-md border border-red-500 p-2" : ""}`}
+                    >
                       {visibilityOptions.map((option) => (
                         <TouchableOpacity
                           key={option.value}
@@ -967,23 +1333,207 @@ export default function EditEventScreen() {
                     </View>
                     {errors.visibility && (
                       <Text className="mt-1 text-xs text-red-500">
-                        {errors.visibility.message}
+                        {errors.visibility.message ||
+                          "Please select a visibility option"}
                       </Text>
                     )}
                   </View>
                 );
               }}
             />
+
+            {/* Debug Validation Section */}
+            <View className="mt-8 rounded-md bg-neutral-100 p-4">
+              <Text className="text-base font-semibold">Form Status:</Text>
+              <Text>Is Form Valid: {isValid ? "Yes" : "No"}</Text>
+              <Text>Is Form Dirty: {isDirty ? "Yes" : "No"}</Text>
+
+              <TouchableOpacity
+                onPress={() => {
+                  const values = control._formValues;
+                  console.log(
+                    "Current form values:",
+                    JSON.stringify(values, null, 2),
+                  );
+
+                  // Log specific information about the performers field
+                  if (
+                    values.eventMetadata &&
+                    typeof values.eventMetadata === "object"
+                  ) {
+                    console.log(
+                      "Performers field:",
+                      values.eventMetadata.performers,
+                      "Type:",
+                      typeof values.eventMetadata.performers,
+                      "Is Array:",
+                      Array.isArray(values.eventMetadata.performers),
+                    );
+                  }
+
+                  // If we have data from the API, log that too for comparison
+                  const apiEventMetadata = eventQuery.data?.eventMetadata;
+                  if (
+                    apiEventMetadata &&
+                    typeof apiEventMetadata === "object" &&
+                    "performers" in apiEventMetadata
+                  ) {
+                    console.log(
+                      "API performers data:",
+                      apiEventMetadata.performers,
+                      "Type:",
+                      typeof apiEventMetadata.performers,
+                      "Is Array:",
+                      Array.isArray(apiEventMetadata.performers),
+                    );
+                  }
+                }}
+                className="my-2 rounded-md bg-gray-200 px-4 py-2"
+              >
+                <Text>Log Current Form Values</Text>
+              </TouchableOpacity>
+
+              {Object.keys(errors).length > 0 && (
+                <View className="mt-2">
+                  <Text className="font-semibold text-red-500">
+                    Validation Errors:
+                  </Text>
+                  {Object.entries(errors).map(([key, error]) => {
+                    // Handle nested errors
+                    if (
+                      typeof error === "object" &&
+                      error !== null &&
+                      "message" in error
+                    ) {
+                      return (
+                        <Text key={key} className="text-xs text-red-500">
+                          - {key}: {error.message!}
+                        </Text>
+                      );
+                    } else if (typeof error === "object" && error !== null) {
+                      // For nested objects like errors.event or errors.eventMetadata
+                      return (
+                        <View key={key}>
+                          <Text className="text-xs font-medium text-red-500">
+                            {key}:
+                          </Text>
+                          {Object.entries(
+                            error as Record<string, { message?: string }>,
+                          ).map(([nestedKey, nestedError]) => (
+                            <Text
+                              key={`${key}-${nestedKey}`}
+                              className="ml-2 text-xs text-red-500"
+                            >
+                              - {nestedKey}: {nestedError.message || "Invalid"}
+                            </Text>
+                          ))}
+                        </View>
+                      );
+                    }
+                    return null;
+                  })}
+                </View>
+              )}
+
+              {/* Image Debug Info */}
+              <View className="mt-4">
+                <Text className="font-semibold">Image Status:</Text>
+                <Text className="text-xs">
+                  Original Image: {originalImage ? "✓" : "✗"}
+                </Text>
+                <Text className="text-xs">
+                  Selected Image: {selectedImage ? "✓" : "✗"}
+                </Text>
+                <Text className="text-xs">
+                  Uploaded Image URL: {uploadedImageUrl ? "✓" : "✗"}
+                </Text>
+                <Text className="text-xs">
+                  Is Uploading: {isUploadingImage ? "Yes" : "No"}
+                </Text>
+                <Text className="text-xs">
+                  Has Image Changes:{" "}
+                  {uploadedImageUrl !== null ||
+                  (selectedImage !== originalImage && selectedImage !== null)
+                    ? "Yes"
+                    : "No"}
+                </Text>
+              </View>
+            </View>
           </View>
 
           {/* Save Button */}
           <Button
-            onPress={handleSubmit(onSubmit)}
-            disabled={isSubmitting || !isDirty || !isValid}
+            onPress={() => {
+              console.log("Save button clicked");
+              console.log("Form is valid:", isValid);
+              console.log("Form is dirty:", isDirty);
+              console.log("Form errors:", JSON.stringify(errors, null, 2));
+              void handleSubmit(onSubmit)();
+            }}
+            disabled={
+              isSubmitting ||
+              isUploadingImage ||
+              (!isDirty &&
+                !uploadedImageUrl &&
+                selectedImage === originalImage) ||
+              !isValid
+            }
             className="mt-6"
           >
             {isSubmitting ? "Saving..." : "Save Event"}
           </Button>
+
+          {/* Check Required Fields Button */}
+          {!isValid && (
+            <TouchableOpacity
+              onPress={() => {
+                // Trigger validation on all fields
+                void handleSubmit(() => {
+                  // This is just to trigger validation
+                  console.log("Validating all fields");
+                })();
+
+                // Scroll to the first error
+                if (Object.keys(errors).length > 0) {
+                  toast.error("Please complete all required fields", {
+                    description:
+                      "Look for fields marked with a red asterisk (*)",
+                  });
+                }
+              }}
+              className="mt-3 items-center"
+            >
+              <Text className="text-indigo-600 underline">
+                Check Required Fields
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Debug status of button */}
+          <View className="mt-2">
+            {!isValid && (
+              <Text className="text-xs text-red-500">
+                Button disabled: Form is invalid
+              </Text>
+            )}
+            {!isDirty &&
+              !uploadedImageUrl &&
+              selectedImage === originalImage && (
+                <Text className="text-xs text-red-500">
+                  Button disabled: No changes made
+                </Text>
+              )}
+            {isSubmitting && (
+              <Text className="text-xs text-neutral-500">
+                Button disabled: Currently submitting
+              </Text>
+            )}
+            {isUploadingImage && (
+              <Text className="text-xs text-neutral-500">
+                Button disabled: Currently uploading image
+              </Text>
+            )}
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </>
