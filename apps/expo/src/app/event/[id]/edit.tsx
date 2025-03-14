@@ -106,12 +106,14 @@ export default function EditEventScreen() {
       console.log("Update completed successfully, refreshing data");
 
       toast.success("Event updated successfully");
-      // Invalidate relevant queries to ensure feed updates
+      // Invalidate relevant queries to ensure all event data is refreshed
       void Promise.all([
         utils.event.get.invalidate({ eventId: id || "" }),
         utils.event.getEventsForUser.invalidate(),
         utils.event.getSavedIdsForUser.invalidate(),
         utils.event.getStats.invalidate(),
+        // Invalidate any other event-related queries that might be active
+        utils.event.invalidate(),
       ]);
       router.back();
     },
