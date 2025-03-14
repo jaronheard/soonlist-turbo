@@ -11,9 +11,10 @@ import { Linking } from "react-native";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { useAuth } from "@clerk/clerk-expo";
+import { usePostHog } from "posthog-react-native";
 import { toast } from "sonner-native";
 
-import { initializeRevenueCat } from "~/lib/revenue-cat";
+import { initializeRevenueCat, setPostHogUserId } from "~/lib/revenue-cat";
 import { useOneSignal } from "./OneSignalProvider";
 
 interface RevenueCatContextType {
@@ -33,6 +34,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const { userId } = useAuth();
   const { hasNotificationPermission } = useOneSignal();
+  const posthog = usePostHog();
 
   const login = useCallback(
     async (userId: string) => {
@@ -43,12 +45,18 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       try {
         const { customerInfo } = await Purchases.logIn(userId);
         setCustomerInfo(customerInfo);
+
+        // Set PostHog user ID as a RevenueCat attribute
+        const distinctId = posthog.getDistinctId();
+        if (distinctId) {
+          await setPostHogUserId(distinctId);
+        }
       } catch (error) {
         console.error("Error logging in to RevenueCat:", error);
         throw error;
       }
     },
-    [isInitialized],
+    [isInitialized, posthog],
   );
 
   useEffect(() => {
@@ -57,6 +65,12 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
         // Initialize with anonymous ID first
         await initializeRevenueCat();
         setIsInitialized(true);
+
+        // Set PostHog user ID as a RevenueCat attribute for anonymous users
+        const distinctId = posthog.getDistinctId();
+        if (distinctId) {
+          await setPostHogUserId(distinctId);
+        }
 
         // If user is already logged in, identify them
         if (userId) {
@@ -68,7 +82,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     }
 
     void initialize();
-  }, [login, userId]);
+  }, [login, userId, posthog]);
 
   async function logout() {
     if (!isInitialized) {
