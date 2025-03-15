@@ -228,7 +228,6 @@ const InitialLayout = () => {
         options={{
           presentation: "modal",
           title: "Edit Event",
-
         }}
       />
       {/* SHARE EXTENSION ROUTE */}
