@@ -16,7 +16,6 @@ import {
 } from "react-native";
 import { Check, ChevronDown, Search, X } from "lucide-react-native";
 import moment from "moment-timezone";
-import { toast } from "sonner-native";
 
 // Type for timezone data
 interface TimeZoneItem {
@@ -283,17 +282,8 @@ export function TimezoneSelectNative({
     (tz: string) => {
       onValueChange(tz);
       closeModal();
-      // Show confirmation toast
-      const selectedTz = processedTimezones.find((item) => item.value === tz);
-      if (selectedTz) {
-        // Extract the location name without the offset and abbreviation for a cleaner toast
-        const locationDisplay = selectedTz.locationName;
-        toast.success(`Timezone set to ${locationDisplay}`, {
-          duration: 2000,
-        });
-      }
     },
-    [onValueChange, closeModal, processedTimezones],
+    [onValueChange, closeModal],
   );
 
   const renderItem = ({ item }: { item: TimeZoneItem }) => {
