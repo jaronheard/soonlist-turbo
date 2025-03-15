@@ -1,7 +1,7 @@
+import { OneSignal } from "react-native-onesignal";
 import { useAuth } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 
-import { useNotification } from "~/providers/NotificationProvider";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
@@ -16,8 +16,6 @@ export const useSignOut = () => {
   const { signOut, userId } = useAuth();
   const resetStore = useAppStore((state) => state.resetStore);
   const { logout: revenueCatLogout } = useRevenueCat();
-  const { expoPushToken } = useNotification();
-  const { mutateAsync: deleteToken } = api.pushToken.deleteToken.useMutation();
   const { mutateAsync: deleteAccount } = api.user.deleteAccount.useMutation();
 
   return async (options?: SignOutOptions) => {
@@ -34,7 +32,7 @@ export const useSignOut = () => {
       Intercom.logout(),
       revenueCatLogout(),
       deleteAuthData(),
-      deleteToken({ userId, expoPushToken }),
+      OneSignal.logout(),
       options?.shouldDeleteAccount ? deleteAccount() : undefined,
       signOut(),
     ]);

@@ -15,6 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Globe, Instagram, Mail, Phone } from "lucide-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
@@ -24,6 +25,7 @@ import { Button } from "~/components/Button";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
+import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 
 const profileSchema = z.object({
@@ -53,6 +55,8 @@ export default function EditProfileScreen() {
     { userName: user?.username ?? "" },
     { enabled: !!user?.username },
   );
+  const queryClient = useQueryClient();
+  const { resetOnboarding: resetOnboardingStore } = useAppStore();
 
   const {
     control,
@@ -92,8 +96,7 @@ export default function EditProfileScreen() {
       router.canGoBack() ? router.back() : router.navigate("/feed"),
   });
 
-  // Commented out due to missing API endpoint
-  // const resetOnboarding = api.user.resetOnboarding.useMutation();
+  const resetOnboardingMutation = api.user.resetOnboarding.useMutation();
 
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
@@ -246,8 +249,18 @@ export default function EditProfileScreen() {
               try {
                 // Commented out due to missing API endpoint
                 // await resetOnboarding.mutateAsync();
+                // Execute the mutation
+                await resetOnboardingMutation.mutateAsync();
+
+                // Invalidate all user-related queries at once
+                await queryClient.invalidateQueries({ queryKey: ["user"] });
+
+                // Reset client-side onboarding state in Zustand store
+                resetOnboardingStore();
+
                 toast.dismiss(loadingToastId);
                 toast.success("Onboarding reset successfully");
+
                 router.replace("/onboarding");
               } catch (error) {
                 console.error("Error restarting onboarding:", error);
@@ -259,7 +272,7 @@ export default function EditProfileScreen() {
         },
       ],
     );
-  }, []);
+  }, [resetOnboardingMutation, queryClient, resetOnboardingStore]);
 
   return (
     <KeyboardAvoidingView

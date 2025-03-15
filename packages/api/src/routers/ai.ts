@@ -1,5 +1,3 @@
-import type { ExpoPushMessage } from "expo-server-sdk";
-import Expo from "expo-server-sdk";
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -13,7 +11,8 @@ import type {
   ProcessedEventResponse,
 } from "./aiHelpers";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { generateNotificationId } from "../utils/notification";
+import { sendNotification } from "../utils/oneSignal";
+import { createDeepLink } from "../utils/urlScheme";
 import {
   createEventAndNotify,
   fetchAndProcessEvent,
@@ -22,7 +21,6 @@ import {
 
 const prototypeEventCreateBaseSchema = z.object({
   timezone: z.string(),
-  expoPushToken: z.string(),
   comment: z.string().optional(),
   lists: z.array(z.object({ value: z.string() })),
   visibility: z.enum(["public", "private"]).optional(),
@@ -44,9 +42,6 @@ const prototypeEventCreateFromUrlSchema = prototypeEventCreateBaseSchema.extend(
     url: z.string(),
   },
 );
-
-// Create a single Expo SDK client to be reused
-const expo = new Expo();
 
 function getDayBounds(timezone: string) {
   const now = Temporal.Now.zonedDateTimeISO(timezone);
@@ -142,40 +137,27 @@ export const aiRouter = createTRPCRouter({
             throw error;
           }
 
-          const { expoPushToken } = input;
+          const { userId } = input;
 
-          if (!Expo.isExpoPushToken(expoPushToken)) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: `Invalid Expo push token: ${String(expoPushToken)}`,
-            });
-          }
-
-          const notificationId = generateNotificationId();
-          const message: ExpoPushMessage = {
-            to: expoPushToken,
-            sound: "default",
+          // Send error notification using OneSignal
+          const notificationId = crypto.randomUUID();
+          const notificationResult = await sendNotification({
+            userId,
             title: "Soonlist",
             body: "There was an error creating your event.",
+            url: createDeepLink("feed"),
             data: {
-              url: "/feed",
               notificationId,
             },
-          };
+            source: "ai_router",
+            method: "rawText",
+          });
 
-          try {
-            const [ticket] = await expo.sendPushNotificationsAsync([message]);
-            return {
-              success: true,
-              ticket,
-            };
-          } catch (notifError) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to send error notification",
-              cause: notifError,
-            });
-          }
+          return {
+            success: notificationResult.success,
+            id: notificationResult.id,
+            error: notificationResult.error,
+          };
         }
       },
     ),
@@ -219,40 +201,27 @@ export const aiRouter = createTRPCRouter({
             throw error;
           }
 
-          const { expoPushToken } = input;
+          const { userId } = input;
 
-          if (!Expo.isExpoPushToken(expoPushToken)) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: `Invalid Expo push token: ${String(expoPushToken)}`,
-            });
-          }
-
-          const notificationId = generateNotificationId();
-          const message: ExpoPushMessage = {
-            to: expoPushToken,
-            sound: "default",
+          // Send error notification using OneSignal
+          const notificationId = crypto.randomUUID();
+          const notificationResult = await sendNotification({
+            userId,
             title: "Soonlist",
             body: "There was an error creating your event.",
+            url: createDeepLink("feed"),
             data: {
-              url: "/feed",
               notificationId,
             },
-          };
+            source: "ai_router",
+            method: "url",
+          });
 
-          try {
-            const [ticket] = await expo.sendPushNotificationsAsync([message]);
-            return {
-              success: true,
-              ticket,
-            };
-          } catch (notifError) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to send error notification",
-              cause: notifError,
-            });
-          }
+          return {
+            success: notificationResult.success,
+            id: notificationResult.id,
+            error: notificationResult.error,
+          };
         }
       },
     ),
@@ -296,40 +265,27 @@ export const aiRouter = createTRPCRouter({
             throw error;
           }
 
-          const { expoPushToken } = input;
+          const { userId } = input;
 
-          if (!Expo.isExpoPushToken(expoPushToken)) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: `Invalid Expo push token: ${String(expoPushToken)}`,
-            });
-          }
-
-          const notificationId = generateNotificationId();
-          const message: ExpoPushMessage = {
-            to: expoPushToken,
-            sound: "default",
+          // Send error notification using OneSignal
+          const notificationId = crypto.randomUUID();
+          const notificationResult = await sendNotification({
+            userId,
             title: "Soonlist",
             body: "There was an error creating your event.",
+            url: createDeepLink("feed"),
             data: {
-              url: "/feed",
               notificationId,
             },
-          };
+            source: "ai_router",
+            method: "image",
+          });
 
-          try {
-            const [ticket] = await expo.sendPushNotificationsAsync([message]);
-            return {
-              success: true,
-              ticket,
-            };
-          } catch (notifError) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to send error notification",
-              cause: notifError,
-            });
-          }
+          return {
+            success: notificationResult.success,
+            id: notificationResult.id,
+            error: notificationResult.error,
+          };
         }
       },
     ),

@@ -11,11 +11,11 @@ import { Linking } from "react-native";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { useAuth } from "@clerk/clerk-expo";
+import { usePostHog } from "posthog-react-native";
 import { toast } from "sonner-native";
 
-import { initializeRevenueCat } from "~/lib/revenue-cat";
-import { api } from "~/utils/api";
-import { useNotification } from "./NotificationProvider";
+import { initializeRevenueCat, setPostHogUserId } from "~/lib/revenue-cat";
+import { useOneSignal } from "./OneSignalProvider";
 
 interface RevenueCatContextType {
   isInitialized: boolean;
@@ -33,9 +33,8 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const { userId } = useAuth();
-  const { expoPushToken, hasNotificationPermission } = useNotification();
-  const sendNotification =
-    api.notification.sendSingleNotification.useMutation();
+  const { hasNotificationPermission } = useOneSignal();
+  const posthog = usePostHog();
 
   const login = useCallback(
     async (userId: string) => {
@@ -46,12 +45,18 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       try {
         const { customerInfo } = await Purchases.logIn(userId);
         setCustomerInfo(customerInfo);
+
+        // Set PostHog user ID as a RevenueCat attribute
+        const distinctId = posthog.getDistinctId();
+        if (distinctId) {
+          await setPostHogUserId(distinctId);
+        }
       } catch (error) {
         console.error("Error logging in to RevenueCat:", error);
         throw error;
       }
     },
-    [isInitialized],
+    [isInitialized, posthog],
   );
 
   useEffect(() => {
@@ -60,6 +65,12 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
         // Initialize with anonymous ID first
         await initializeRevenueCat();
         setIsInitialized(true);
+
+        // Set PostHog user ID as a RevenueCat attribute for anonymous users
+        const distinctId = posthog.getDistinctId();
+        if (distinctId) {
+          await setPostHogUserId(distinctId);
+        }
 
         // If user is already logged in, identify them
         if (userId) {
@@ -71,7 +82,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     }
 
     void initialize();
-  }, [login, userId]);
+  }, [login, userId, posthog]);
 
   async function logout() {
     if (!isInitialized) {
@@ -101,13 +112,15 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
         case PAYWALL_RESULT.PURCHASED:
         case PAYWALL_RESULT.RESTORED:
           // Send welcome notification if notifications are enabled
-          if (hasNotificationPermission && expoPushToken) {
-            void sendNotification.mutate({
-              expoPushToken,
-              title: "Welcome to Soonlist Unlimited! 🎉",
-              body: "Thanks for subscribing! Keep capturing your possibilities.",
-              data: { url: "/feed" },
-            });
+          if (hasNotificationPermission) {
+            // Using OneSignal for notifications
+            // The server will handle sending to all of the user's devices
+            toast.success(
+              "Welcome to Soonlist Unlimited! 🎉\n\nThanks for subscribing!",
+              {
+                duration: 5000,
+              },
+            );
           } else {
             toast.info(
               "Welcome to Soonlist Unlimited! 🎉\n\n Enable notifications to get reminders before your trial ends",

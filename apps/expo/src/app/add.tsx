@@ -15,12 +15,12 @@ import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
-import { useNotification } from "~/providers/NotificationProvider";
+import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore } from "~/store";
 
 export default function AddEventModal() {
   const { style: keyboardStyle } = useKeyboardHeight(32);
-  const { expoPushToken, hasNotificationPermission } = useNotification();
+  const { hasNotificationPermission } = useOneSignal();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
   const {
@@ -115,7 +115,7 @@ export default function AddEventModal() {
     if (!user?.id || !user.username) return;
 
     router.canGoBack() ? router.back() : router.replace("/feed");
-    toast.info("Processing details. Add another?", { duration: 5000 });
+    toast.info("Capturing in background. Add another?", { duration: 5000 });
 
     try {
       const eventId = await createEvent({
@@ -124,7 +124,6 @@ export default function AddEventModal() {
         imageUri: imagePreview ?? undefined,
         userId: user.id,
         username: user.username,
-        expoPushToken: expoPushToken || "NOT_SET",
       });
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {

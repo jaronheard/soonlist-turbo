@@ -10,8 +10,6 @@ import { collapseSimilarEvents } from "@soonlist/cal";
 
 import type { EventWithUser } from "~/components/EventList";
 import { EventPage } from "~/components/EventDisplays";
-import { EventList } from "~/components/EventList";
-import { UserInfo } from "~/components/UserInfo";
 import { env } from "~/env";
 import { api } from "~/trpc/server";
 
@@ -59,15 +57,6 @@ export default async function Page({ params }: Props) {
   if (!event) {
     return <p className="text-lg text-gray-500">No event found.</p>;
   }
-  const otherEvents = await api.event.getCreatedForUser({
-    userName: event.user.username,
-  });
-
-  const futureEvents = otherEvents
-    .filter((item) => item.startDateTime >= new Date())
-    .filter((item) => item.id !== event.id)
-    .slice(0, 3);
-
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const eventMetadata = event.eventMetadata as EventMetadata;
   const fullImageUrl = eventData.images?.[3];
@@ -102,19 +91,6 @@ export default async function Page({ params }: Props) {
         hideCurator
         lists={lists}
       />
-      <div className="w-full border-b border-neutral-3 pt-16 sm:pt-24"></div>
-      <div className="w-full pt-16 sm:pt-24"></div>
-      <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
-        <UserInfo userId={event.userId} variant="description" />
-        <EventList
-          currentEvents={[]}
-          pastEvents={[]}
-          futureEvents={futureEvents}
-          hideCurator
-          variant="future-minimal"
-          showOtherCurators={true}
-        ></EventList>
-      </div>
     </>
   );
 }

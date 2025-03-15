@@ -1,4 +1,5 @@
 import { Platform, Text, View } from "react-native";
+import appsFlyer from "react-native-appsflyer";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -11,10 +12,8 @@ import * as Sentry from "@sentry/react-native";
 import { PostHogProvider } from "posthog-react-native";
 
 import { useAppStateRefresh } from "~/hooks/useAppStateRefresh";
-import {
-  NotificationProvider,
-  useNotification,
-} from "~/providers/NotificationProvider";
+import { OneSignalProvider } from "~/providers/OneSignalProvider";
+import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
@@ -32,7 +31,6 @@ import { useCalendar } from "~/hooks/useCalendar";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
-import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
@@ -97,6 +95,23 @@ Sentry.init({
   },
 });
 
+appsFlyer.initSdk(
+  {
+    devKey: "iFvNVjfmj4DyJ6itc3KTkf",
+    isDebug: __DEV__,
+    appId: "6670222216",
+    onInstallConversionDataListener: true, //Optional
+    onDeepLinkListener: true, //Optional
+    timeToWaitForATTUserAuthorization: 10,
+  },
+  (result) => {
+    if (__DEV__) console.log(result);
+  },
+  (error) => {
+    Sentry.captureException(error);
+  },
+);
+
 function RootLayout() {
   const clerkPublishableKey = Config.clerkPublishableKey;
 
@@ -107,6 +122,8 @@ function RootLayout() {
       </Text>
     );
   }
+
+  const isDev = Constants.expoConfig?.scheme === "soonlist.dev";
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -122,9 +139,8 @@ function RootLayout() {
                   apiKey={Config.posthogApiKey}
                   options={{
                     host: "https://us.i.posthog.com",
-                    disabled: process.env.APP_VARIANT === "development",
-                    enableSessionReplay:
-                      process.env.APP_VARIANT !== "development",
+                    disabled: isDev,
+                    enableSessionReplay: !isDev,
                     sessionReplayConfig: {
                       maskAllTextInputs: false,
                       maskAllImages: false,
@@ -135,11 +151,11 @@ function RootLayout() {
                     },
                   }}
                 >
-                  <NotificationProvider>
+                  <OneSignalProvider>
                     <RevenueCatProvider>
                       <RootLayoutContent />
                     </RevenueCatProvider>
-                  </NotificationProvider>
+                  </OneSignalProvider>
                 </PostHogProvider>
               </SafeAreaProvider>
             </TRPCProvider>
@@ -250,7 +266,6 @@ const InitialLayout = () => {
 };
 
 function RootLayoutContent() {
-  const { expoPushToken } = useNotification();
   const { handleCalendarSelect, INITIAL_CALENDAR_LIMIT } = useCalendar();
   const { setIsCalendarModalVisible } = useAppStore();
   useAppStateRefresh();
@@ -266,7 +281,7 @@ function RootLayoutContent() {
 
   return (
     <View style={{ flex: 1 }}>
-      <AuthAndTokenSync expoPushToken={expoPushToken} />
+      <AuthAndTokenSync />
       <InitialLayout />
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
       <CalendarSelectionModal

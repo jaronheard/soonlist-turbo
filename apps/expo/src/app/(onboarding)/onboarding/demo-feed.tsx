@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Text, View } from "react-native";
-import * as Notifications from "expo-notifications";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { toast } from "sonner-native";
 
 import type { DemoEvent } from "~/components/demoData";
 import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
@@ -10,7 +8,7 @@ import { FinishDemoButton } from "~/components/FinishDemoButton";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import UserEventsList from "~/components/UserEventsList"; // Reuse your existing feed list
 
-const NOTIFICATION_DELAY = 1000; // 4 seconds
+const ADD_EVENT_DELAY = 3000;
 
 // Sort events by date (earliest first)
 const sortEventsByDate = (events: DemoEvent[]) => {
@@ -19,32 +17,6 @@ const sortEventsByDate = (events: DemoEvent[]) => {
     const dateB = new Date(`${b.startDate}T${b.startTime ?? "00:00"}`);
     return dateA.getTime() - dateB.getTime();
   });
-};
-
-// Handle showing the notification
-const showNotification = async (eventId: string, eventName: string) => {
-  try {
-    const { status } = await Notifications.getPermissionsAsync();
-    if (status === Notifications.PermissionStatus.GRANTED) {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Event Captured! 🎉",
-          body: `"${eventName}" has been added to your feed`,
-          data: {
-            url: `/onboarding/demo-feed?eventId=${eventId}`,
-            notificationId: "demo-capture-notification",
-          },
-        },
-        trigger: null, // Show immediately since we're already delayed
-      });
-    } else {
-      // Fallback to toast if no notification permissions
-      toast(`New event added: ${eventName}`);
-    }
-  } catch (error) {
-    console.error("Failed to show notification:", error);
-    toast(`New event added: ${eventName}`);
-  }
 };
 
 export default function DemoFeedScreen() {
@@ -87,14 +59,16 @@ export default function DemoFeedScreen() {
   // Add the new event and show notification after delay
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (newEvent && eventName) {
+
+    if (newEvent && eventName && eventId) {
+      // Set a timer to add the event after a delay
       timer = setTimeout(() => {
         // Add event to feed and sort by date
         setDemoFeed((prev) => sortEventsByDate([newEvent, ...prev]));
-        // Show notification
-        void showNotification(eventId!, eventName);
-      }, NOTIFICATION_DELAY);
+      }, ADD_EVENT_DELAY);
     }
+
+    // Clean up the timer if component unmounts
     return () => {
       if (timer) clearTimeout(timer);
     };
@@ -160,8 +134,8 @@ export default function DemoFeedScreen() {
       />
 
       <View className="flex-1">
-        <View className="absolute right-4 top-16 z-10 ">
-          <Text className="rounded-xl bg-accent-yellow px-3 py-1.5 text-center text-base font-medium text-neutral-1">
+        <View className="absolute right-2 top-16 z-10">
+          <Text className="rounded-2xl bg-accent-yellow px-3 py-1.5 text-center text-base font-medium text-neutral-1">
             Press and hold for options 👇
           </Text>
         </View>

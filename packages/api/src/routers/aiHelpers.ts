@@ -31,6 +31,7 @@ import {
   getNotificationContent,
   sendNotification,
 } from "../utils/notificationHelpers";
+import { createDeepLink } from "../utils/urlScheme";
 
 const langfuse = new Langfuse({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
@@ -177,14 +178,17 @@ function constructMessagesImage({
 export interface AIEventResponse {
   success: boolean;
   ticket?: unknown;
-  eventId: string;
-  event: RouterOutputs["event"]["get"];
+  id?: string;
+  eventId?: string;
+  event?: RouterOutputs["event"]["get"];
   error?: string;
 }
 
 export interface AIErrorResponse {
   success: boolean;
   ticket?: unknown;
+  id?: string;
+  error?: string;
 }
 
 export interface ProcessedEventResponse {
@@ -300,7 +304,6 @@ export interface CreateEventParams {
   ctx: Context;
   input: {
     timezone: string;
-    expoPushToken: string;
     comment?: string;
     lists: { value: string }[];
     visibility?: "public" | "private";
@@ -442,12 +445,11 @@ export async function createEventAndNotify(
   );
 
   const notificationResult = await sendNotification({
-    expoPushToken: input.expoPushToken,
+    userId,
     title,
     subtitle,
     body,
-    url: `/event/${eventid}`,
-    userId,
+    url: createDeepLink(`event/${eventid}`),
     eventId: eventid,
     source: "ai_router",
     method: source,
@@ -455,7 +457,7 @@ export async function createEventAndNotify(
 
   return {
     success: notificationResult.success,
-    ticket: notificationResult.ticket,
+    id: notificationResult.id,
     eventId: eventid,
     event: createdEvent,
     ...(notificationResult.error && { error: notificationResult.error }),

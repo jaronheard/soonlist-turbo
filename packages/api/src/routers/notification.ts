@@ -1,9 +1,3 @@
-import type {
-  ExpoPushMessage,
-  ExpoPushTicket,
-  ExpoPushToken,
-} from "expo-server-sdk";
-import { Expo } from "expo-server-sdk";
 import { anthropic } from "@ai-sdk/anthropic";
 import { TRPCError } from "@trpc/server";
 import { waitUntil } from "@vercel/functions";
@@ -14,33 +8,18 @@ import { z } from "zod";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 import { db, inArray, or } from "@soonlist/db";
-import { eventFollows, events, pushTokens, users } from "@soonlist/db/schema";
+import { eventFollows, events, users } from "@soonlist/db/schema";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import { getTicketId } from "../utils/expo";
 import { generateNotificationId } from "../utils/notification";
+import { sendBatchNotifications, sendNotification } from "../utils/oneSignal";
 import { posthog } from "../utils/posthog";
-
-// Create a single Expo SDK client to be reused
-const expo = new Expo();
+import { createDeepLink } from "../utils/urlScheme";
 
 const langfuse = new Langfuse({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
   secretKey: process.env.LANGFUSE_SECRET_KEY || "",
   baseUrl: process.env.LANGFUSE_BASE_URL || "",
-});
-
-// Define the input schema for the sendNotification procedure
-const sendNotificationInputSchema = z.object({
-  expoPushToken: z
-    .string()
-    .refine(
-      (token): token is ExpoPushToken => Expo.isExpoPushToken(token),
-      "Invalid Expo push token",
-    ),
-  title: z.string(),
-  body: z.string(),
-  data: z.record(z.unknown()).optional(),
 });
 
 /**
@@ -76,12 +55,9 @@ Example output:
 
 Remember to vary your output for different weeks, maintaining the exciting and unique elements that make each week special.`;
 
-async function processUserNotification(user: {
-  userId: string;
-  expoPushToken: string;
-}): Promise<{
+async function processUserNotification(user: { userId: string }): Promise<{
   success: boolean;
-  ticket?: ExpoPushTicket;
+  id?: string;
   error?: string;
   notificationId: string;
   userId: string;
@@ -183,24 +159,24 @@ async function processUserNotification(user: {
     }
 
     const message = `${prefix}${summary}`;
+    const notificationId = generateNotificationId();
 
-    if (Expo.isExpoPushToken(user.expoPushToken)) {
-      const notificationId = generateNotificationId();
-      const [ticket] = await expo.sendPushNotificationsAsync([
-        {
-          to: user.expoPushToken,
-          sound: "default",
-          title,
-          body: message,
-          data: { url: link, notificationId },
-        },
-      ]);
-      return { success: true, ticket, notificationId, userId: user.userId };
-    }
+    // Send notification using OneSignal
+    const result = await sendNotification({
+      userId: user.userId,
+      title,
+      body: message,
+      url: link,
+      data: { notificationId },
+      source: "notification_router",
+      method: "weekly",
+    });
+
     return {
-      success: false,
-      error: "Invalid push token",
-      notificationId: generateNotificationId(),
+      success: result.success,
+      id: result.id,
+      error: result.error,
+      notificationId,
       userId: user.userId,
     };
   } catch (error) {
@@ -225,6 +201,7 @@ export const notificationRouter = createTRPCRouter({
         title: z.string(),
         body: z.string(),
         data: z.record(z.unknown()).optional(),
+        url: z.string().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -236,178 +213,86 @@ export const notificationRouter = createTRPCRouter({
         });
       }
 
-      // Fetch all users with valid push tokens
-      const usersWithTokens = await db
+      // Fetch all users
+      const allUsers = await db
         .select({
-          userId: pushTokens.userId,
-          expoPushToken: pushTokens.expoPushToken,
+          userId: users.id,
         })
-        .from(pushTokens)
-        .innerJoin(
-          users,
-          sql`${users.id} COLLATE utf8mb4_unicode_ci = ${pushTokens.userId} COLLATE utf8mb4_unicode_ci`,
-        )
-        .where(
-          sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
-        );
+        .from(users);
 
-      // Process notifications concurrently
-      const results = await Promise.all(
-        usersWithTokens.map(async (user) => {
-          const notificationId = generateNotificationId();
-          try {
-            if (!Expo.isExpoPushToken(user.expoPushToken)) {
-              return {
-                success: false,
-                error: "Invalid push token",
-                notificationId,
-                userId: user.userId,
-              };
-            }
+      const userIds = allUsers.map((user) => user.userId);
 
-            const message: ExpoPushMessage = {
-              to: user.expoPushToken,
-              sound: "default",
-              title: input.title,
-              body: input.body,
-              data: {
-                ...input.data,
-                notificationId,
-              },
-            };
-
-            const [ticket] = await expo.sendPushNotificationsAsync([message]);
-
-            posthog.capture({
-              distinctId: user.userId,
-              event: "notification_sent",
-              properties: {
-                success: true,
-                notificationId,
-                type: "marketing",
-                source: "notification_router",
-                title: input.title,
-                hasData: !!input.data,
-                ticketId: getTicketId(ticket),
-              },
-            });
-
-            return {
-              success: true,
-              ticket,
-              notificationId,
-              userId: user.userId,
-            };
-          } catch (error) {
-            posthog.capture({
-              distinctId: user.userId,
-              event: "notification_sent",
-              properties: {
-                success: false,
-                notificationId,
-                type: "marketing",
-                error: (error as Error).message,
-                title: input.title,
-                hasData: !!input.data,
-              },
-            });
-
-            return {
-              success: false,
-              error: (error as Error).message,
-              notificationId,
-              userId: user.userId,
-            };
-          }
-        }),
-      );
+      // Send batch notification using OneSignal
+      const result = await sendBatchNotifications({
+        userIds,
+        title: input.title,
+        body: input.body,
+        url: input.url,
+        data: input.data,
+      });
 
       // Track batch results
       posthog.capture({
         distinctId: "system",
         event: "marketing_notifications_batch",
         properties: {
-          totalProcessed: usersWithTokens.length,
-          successfulNotifications: results.filter((r) => r.success).length,
-          failedNotifications: results.filter((r) => !r.success).length,
+          totalProcessed: userIds.length,
+          successfulNotifications: result.success ? result.recipients || 0 : 0,
+          failedNotifications: result.success ? 0 : userIds.length,
+          oneSignalId: result.id,
         },
       });
 
       return {
-        success: true,
-        totalProcessed: usersWithTokens.length,
-        successfulNotifications: results.filter((r) => r.success).length,
-        errors: results
-          .filter((r) => !r.success)
-          .map((result) => ({
-            userId: result.userId,
-            error: result.error ?? "Unknown error",
-          })),
+        success: result.success,
+        totalProcessed: userIds.length,
+        successfulNotifications: result.success ? result.recipients || 0 : 0,
+        errors: result.success
+          ? []
+          : [{ error: result.error || "Unknown error" }],
       };
     }),
-  sendSingleNotification: publicProcedure
-    .input(sendNotificationInputSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { expoPushToken, title, body, data } = input;
 
-      if (!Expo.isExpoPushToken(expoPushToken)) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid Expo push token",
-        });
-      }
+  sendSingleNotification: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        title: z.string(),
+        body: z.string(),
+        url: z.string().optional(),
+        data: z.record(z.unknown()).optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { userId, title, body, url, data } = input;
 
       const notificationId = generateNotificationId();
-      const message: ExpoPushMessage = {
-        to: expoPushToken,
-        sound: "default",
-        title,
-        body,
-        data: {
-          ...data,
-          notificationId,
-        },
-      };
 
       try {
-        const [ticket] = await expo.sendPushNotificationsAsync([message]);
-
-        posthog.capture({
-          distinctId: ctx.auth.userId || "anonymous",
-          event: "notification_sent",
-          properties: {
-            success: true,
+        const result = await sendNotification({
+          userId,
+          title,
+          body,
+          url,
+          data: {
+            ...data,
             notificationId,
-            type: "single",
-            source: "notification_router",
-            title,
-            hasData: !!data,
-            ticketId: getTicketId(ticket),
           },
+          source: "notification_router",
+          method: "single",
         });
 
         return {
-          success: true,
-          ticket,
+          success: result.success,
+          id: result.id,
+          error: result.error,
         };
       } catch (error) {
-        posthog.capture({
-          distinctId: ctx.auth.userId || "anonymous",
-          event: "notification_sent",
-          properties: {
-            success: false,
-            notificationId,
-            type: "single",
-            error: (error as Error).message,
-            title,
-            hasData: !!data,
-          },
-        });
-
         console.error("Error sending notification:", error);
         return {
           success: false,
-          error: (error as Error).message,
+          error:
+            error instanceof Error ? error.message : "Unknown error occurred",
         };
       }
     }),
@@ -423,24 +308,16 @@ export const notificationRouter = createTRPCRouter({
         });
       }
 
-      // Fetch all users with valid push tokens
-      const usersWithTokens = await db
+      // Fetch all users
+      const allUsers = await db
         .select({
-          userId: pushTokens.userId,
-          expoPushToken: pushTokens.expoPushToken,
+          userId: users.id,
         })
-        .from(pushTokens)
-        .innerJoin(
-          users,
-          sql`${users.id} COLLATE utf8mb4_unicode_ci = ${pushTokens.userId} COLLATE utf8mb4_unicode_ci`,
-        )
-        .where(
-          sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
-        );
+        .from(users);
 
       // Process notifications concurrently
       const results = await Promise.all(
-        usersWithTokens.map(async (user) => {
+        allUsers.map(async (user) => {
           try {
             const result = await processUserNotification(user);
 
@@ -452,9 +329,7 @@ export const notificationRouter = createTRPCRouter({
                 notificationId: result.notificationId,
                 type: "weekly",
                 source: "notification_router",
-                ticketId: result.ticket
-                  ? getTicketId(result.ticket)
-                  : undefined,
+                oneSignalId: result.id,
                 error: result.error,
               },
             });
@@ -463,7 +338,10 @@ export const notificationRouter = createTRPCRouter({
           } catch (error) {
             const errorResult = {
               success: false,
-              error: (error as Error).message,
+              error:
+                error instanceof Error
+                  ? error.message
+                  : "Unknown error occurred",
               notificationId: generateNotificationId(),
               userId: user.userId,
             };
@@ -488,7 +366,7 @@ export const notificationRouter = createTRPCRouter({
         distinctId: "system",
         event: "weekly_notifications_batch",
         properties: {
-          totalProcessed: usersWithTokens.length,
+          totalProcessed: allUsers.length,
           successfulNotifications: results.filter((r) => r.success).length,
           failedNotifications: results.filter((r) => !r.success).length,
         },
@@ -496,7 +374,7 @@ export const notificationRouter = createTRPCRouter({
 
       return {
         success: true,
-        totalProcessed: usersWithTokens.length,
+        totalProcessed: allUsers.length,
         successfulNotifications: results.filter((r) => r.success).length,
         errors: results
           .filter((r) => !r.success)
@@ -523,113 +401,61 @@ export const notificationRouter = createTRPCRouter({
       fiveBusinessDaysAgo.setDate(fiveBusinessDaysAgo.getDate() - 5);
       const targetDate = fiveBusinessDaysAgo.toISOString().split("T")[0];
 
-      // Fetch users who started their trial 3 days ago and haven't cancelled
-      const usersWithTokens = await db
+      // Fetch users who started their trial 5 days ago and haven't cancelled
+      const trialUsers = await db
         .select({
-          userId: pushTokens.userId,
-          expoPushToken: pushTokens.expoPushToken,
+          userId: users.id,
         })
-        .from(pushTokens)
-        .innerJoin(
-          users,
-          sql`${users.id} COLLATE utf8mb4_unicode_ci = ${pushTokens.userId} COLLATE utf8mb4_unicode_ci`,
-        )
+        .from(users)
         .where(
           and(
-            sql`${pushTokens.expoPushToken} != 'Error: Must use physical device for push notifications'`,
             sql`JSON_EXTRACT(${users.publicMetadata}, '$.plan.status') = 'trialing'`,
             sql`DATE(JSON_UNQUOTE(JSON_EXTRACT(${users.publicMetadata}, '$.plan.trialStartDate'))) = DATE(${targetDate})`,
           ),
         );
 
-      // Process notifications concurrently
-      const results = await Promise.all(
-        usersWithTokens.map(async (user) => {
-          const notificationId = generateNotificationId();
-          try {
-            if (!Expo.isExpoPushToken(user.expoPushToken)) {
-              return {
-                success: false,
-                error: "Invalid push token",
-                notificationId,
-                userId: user.userId,
-              };
-            }
+      if (trialUsers.length === 0) {
+        return {
+          success: true,
+          totalProcessed: 0,
+          successfulNotifications: 0,
+          errors: [],
+        };
+      }
 
-            const message: ExpoPushMessage = {
-              to: user.expoPushToken,
-              sound: "default",
-              title: "2 days left on your trial",
-              body: "Your subscription will change from trial to Soonlist Unlimited soon. Keep capturing your possibilities!",
-              data: {
-                url: "/settings/subscription",
-                notificationId,
-              },
-            };
+      // Extract user IDs
+      const userIds = trialUsers.map((user) => user.userId);
 
-            const [ticket] = await expo.sendPushNotificationsAsync([message]);
-
-            posthog.capture({
-              distinctId: user.userId,
-              event: "notification_sent",
-              properties: {
-                success: true,
-                notificationId,
-                type: "trial_expiration",
-                source: "notification_router",
-                ticketId: getTicketId(ticket),
-              },
-            });
-
-            return {
-              success: true,
-              ticket,
-              notificationId,
-              userId: user.userId,
-            };
-          } catch (error) {
-            posthog.capture({
-              distinctId: user.userId,
-              event: "notification_sent",
-              properties: {
-                success: false,
-                notificationId,
-                type: "trial_expiration",
-                error: (error as Error).message,
-              },
-            });
-
-            return {
-              success: false,
-              error: (error as Error).message,
-              notificationId,
-              userId: user.userId,
-            };
-          }
-        }),
-      );
+      // Send batch notification using OneSignal
+      const result = await sendBatchNotifications({
+        userIds,
+        title: "2 days left on your trial",
+        body: "Your subscription will change from trial to Soonlist Unlimited soon. Keep capturing your possibilities!",
+        url: createDeepLink("settings/subscription"),
+        data: {
+          type: "trial_expiration",
+        },
+      });
 
       // Track batch results
       posthog.capture({
         distinctId: "system",
         event: "trial_expiration_notifications_batch",
         properties: {
-          totalProcessed: usersWithTokens.length,
-          successfulNotifications: results.filter((r) => r.success).length,
-          failedNotifications: results.filter((r) => !r.success).length,
+          totalProcessed: userIds.length,
+          successfulNotifications: result.success ? result.recipients || 0 : 0,
+          failedNotifications: result.success ? 0 : userIds.length,
+          oneSignalId: result.id,
         },
       });
 
       return {
-        success: true,
-        totalProcessed: usersWithTokens.length,
-        successfulNotifications: results.filter((r) => r.success).length,
-        errors: results
-          .filter((r) => !r.success)
-          .map((result) => ({
-            userId: result.userId,
-            error: result.error ?? "Unknown error",
-          })),
+        success: result.success,
+        totalProcessed: userIds.length,
+        successfulNotifications: result.success ? result.recipients || 0 : 0,
+        errors: result.success
+          ? []
+          : [{ error: result.error || "Unknown error" }],
       };
     }),
 });
