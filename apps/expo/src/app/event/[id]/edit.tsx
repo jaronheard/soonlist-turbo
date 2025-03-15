@@ -616,48 +616,27 @@ export default function EditEventScreen() {
   // Early return if the 'id' is missing or invalid
   if (!id || typeof id !== "string") {
     return (
-      <>
-        <Stack.Screen
-          options={{
-            title: "Edit Event",
-          }}
-        />
-        <View className="flex-1 bg-white">
-          <Text>Invalid or missing event id</Text>
-        </View>
-      </>
+      <View className="flex-1 bg-white">
+        <Text>Invalid or missing event id</Text>
+      </View>
     );
   }
 
   // Loading state
   if (eventQuery.isLoading) {
     return (
-      <>
-        <Stack.Screen
-          options={{
-            title: "Edit Event",
-          }}
-        />
-        <View className="flex-1 bg-white">
-          <LoadingSpinner />
-        </View>
-      </>
+      <View className="flex-1 bg-white">
+        <LoadingSpinner />
+      </View>
     );
   }
 
   // Not found or error
   if (!eventQuery.data) {
     return (
-      <>
-        <Stack.Screen
-          options={{
-            title: "Edit Event",
-          }}
-        />
-        <View className="flex-1 bg-white">
-          <Text>Event not found</Text>
-        </View>
-      </>
+      <View className="flex-1 bg-white">
+        <Text>Event not found</Text>
+      </View>
     );
   }
 
@@ -665,8 +644,6 @@ export default function EditEventScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "Edit Event",
-          headerBackTitle: "Cancel",
           headerRight: () => (
             <TouchableOpacity
               onPress={() => void handleSubmit(onSubmit)()}
@@ -696,6 +673,22 @@ export default function EditEventScreen() {
                 }}
               >
                 {isSubmitting ? "Saving..." : "Save"}
+              </Text>
+            </TouchableOpacity>
+          ),
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ marginLeft: 8 }}
+            >
+              <Text
+                style={{
+                  fontSize: 17,
+                  fontWeight: "600",
+                  color: "#FFFFFF",
+                }}
+              >
+                Cancel
               </Text>
             </TouchableOpacity>
           ),
