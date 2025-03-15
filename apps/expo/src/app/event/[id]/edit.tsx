@@ -27,6 +27,7 @@ import { z } from "zod";
 import { Button } from "~/components/Button";
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { api } from "~/utils/api";
 
 // Define the form schema based on the event update schema
@@ -1278,27 +1279,28 @@ export default function EditEventScreen() {
             <Controller
               control={control}
               name="event.timeZone"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View>
-                  <Text className="mb-2 text-base font-semibold">
-                    Time Zone
-                  </Text>
-                  <TextInput
-                    autoComplete="off"
-                    autoCorrect={false}
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholder="e.g. America/Los_Angeles"
-                    className="h-10 rounded-md border border-neutral-300 px-3 py-2"
-                  />
-                  {errors.event?.timeZone && (
-                    <Text className="mt-1 text-xs text-red-500">
-                      {errors.event.timeZone.message}
+              render={({ field: { onChange, onBlur, value } }) => {
+                // Get the actual value to display, defaulting to current timezone if empty
+                const displayValue =
+                  value || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+                return (
+                  <View>
+                    <Text className="mb-2 text-base font-semibold">
+                      Time Zone
                     </Text>
-                  )}
-                </View>
-              )}
+                    <TimezoneSelectNative
+                      value={displayValue}
+                      onValueChange={(newValue) => {
+                        onChange(newValue);
+                        onBlur();
+                      }}
+                      placeholder="Select a timezone"
+                      error={errors.event?.timeZone?.message}
+                    />
+                  </View>
+                );
+              }}
             />
 
             {/* Image Upload */}
