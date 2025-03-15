@@ -168,8 +168,13 @@ export default function EditEventScreen() {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
 
-      // Format as MM/DD/YYYY (or locale-appropriate)
-      return date.toLocaleDateString();
+      // Format as MMM DD, YYYY (e.g., Mar 14, 2025)
+      const options: Intl.DateTimeFormatOptions = {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      };
+      return date.toLocaleDateString("en-US", options);
     } catch (error) {
       return dateString;
     }
@@ -180,8 +185,9 @@ export default function EditEventScreen() {
     if (!timeString) return "";
 
     try {
+      // Handle both HH:MM and HH:MM:SS formats
       const parts = timeString.split(":");
-      if (parts.length !== 2) return timeString;
+      if (parts.length < 2) return timeString;
 
       // Use type assertion to tell TypeScript these are definitely strings
       const hoursStr = parts[0]!;
@@ -195,13 +201,16 @@ export default function EditEventScreen() {
       const date = new Date();
       date.setHours(hours);
       date.setMinutes(minutes);
+      date.setSeconds(0);
 
-      // Format as locale time string (12-hour with AM/PM)
-      return date.toLocaleTimeString([], {
+      // Format time as h:mm A (e.g., 8:00 PM)
+      return date.toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
+        hour12: true,
       });
     } catch (error) {
+      console.error("Error formatting time:", error);
       return timeString;
     }
   };
@@ -706,10 +715,6 @@ export default function EditEventScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="flex-col gap-4 space-y-6">
-            <View>
-              <Text className="text-lg font-semibold">Event Details</Text>
-            </View>
-
             {/* Event Name */}
             <Controller
               control={control}
@@ -717,7 +722,7 @@ export default function EditEventScreen() {
               render={({ field: { onChange, onBlur, value } }) => (
                 <View>
                   <Text className="mb-2 text-base font-semibold">
-                    Event Name <Text className="text-red-500">*</Text>
+                    Event Name
                   </Text>
                   <TextInput
                     autoComplete="off"
@@ -735,6 +740,31 @@ export default function EditEventScreen() {
                   {errors.event?.name && (
                     <Text className="mt-1 text-xs text-red-500">
                       {errors.event.name.message}
+                    </Text>
+                  )}
+                </View>
+              )}
+            />
+
+            {/* Event Location */}
+            <Controller
+              control={control}
+              name="event.location"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View>
+                  <Text className="mb-2 text-base font-semibold">Location</Text>
+                  <TextInput
+                    autoComplete="off"
+                    autoCorrect={false}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholder="Enter event location"
+                    className="h-10 rounded-md border border-neutral-300 px-3 py-2"
+                  />
+                  {errors.event?.location && (
+                    <Text className="mt-1 text-xs text-red-500">
+                      {errors.event.location.message}
                     </Text>
                   )}
                 </View>
@@ -768,38 +798,6 @@ export default function EditEventScreen() {
                 </View>
               )}
             />
-
-            {/* Event Location */}
-            <Controller
-              control={control}
-              name="event.location"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View>
-                  <Text className="mb-2 text-base font-semibold">Location</Text>
-                  <TextInput
-                    autoComplete="off"
-                    autoCorrect={false}
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholder="Enter event location"
-                    className="h-10 rounded-md border border-neutral-300 px-3 py-2"
-                  />
-                  {errors.event?.location && (
-                    <Text className="mt-1 text-xs text-red-500">
-                      {errors.event.location.message}
-                    </Text>
-                  )}
-                </View>
-              )}
-            />
-
-            {/* Date Pickers */}
-            <View>
-              <Text className="mb-2 text-lg font-semibold">
-                Date &amp; Time
-              </Text>
-            </View>
 
             {/* Start Date and Time Row */}
             <View>
