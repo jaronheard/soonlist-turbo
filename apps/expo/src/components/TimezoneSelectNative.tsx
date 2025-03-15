@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   FlatList,
   Modal,
@@ -11,6 +17,141 @@ import {
 import { Check, ChevronDown, Search, X } from "lucide-react-native";
 import { toast } from "sonner-native";
 
+// Define timezone interface
+type ICustomTimezone = Record<string, string>;
+
+// Define timezone data with more user-friendly names
+const allTimezones: ICustomTimezone = {
+  "Pacific/Midway": "Midway Island, Samoa",
+  "Pacific/Honolulu": "Hawaii",
+  "America/Juneau": "Alaska",
+  "America/Boise": "Mountain Time",
+  "America/Dawson": "Dawson, Yukon",
+  "America/Chihuahua": "Chihuahua, La Paz, Mazatlan",
+  "America/Phoenix": "Arizona",
+  "America/Chicago": "Central Time",
+  "America/Regina": "Saskatchewan",
+  "America/Mexico_City": "Guadalajara, Mexico City, Monterrey",
+  "America/Belize": "Central America",
+  "America/Detroit": "Eastern Time",
+  "America/Bogota": "Bogota, Lima, Quito",
+  "America/Caracas": "Caracas, La Paz",
+  "America/Santiago": "Santiago",
+  "America/St_Johns": "Newfoundland and Labrador",
+  "America/Sao_Paulo": "Brasilia",
+  "America/Tijuana": "Tijuana",
+  "America/Montevideo": "Montevideo",
+  "America/Argentina/Buenos_Aires": "Buenos Aires, Georgetown",
+  "America/Godthab": "Greenland",
+  "America/Los_Angeles": "Pacific Time",
+  "Atlantic/Azores": "Azores",
+  "Atlantic/Cape_Verde": "Cape Verde Islands",
+  GMT: "UTC",
+  "Europe/London": "Edinburgh, London",
+  "Europe/Dublin": "Dublin",
+  "Europe/Lisbon": "Lisbon",
+  "Africa/Casablanca": "Casablanca, Monrovia",
+  "Atlantic/Canary": "Canary Islands",
+  "Europe/Belgrade": "Belgrade, Bratislava, Budapest, Ljubljana, Prague",
+  "Europe/Sarajevo": "Sarajevo, Skopje, Warsaw, Zagreb",
+  "Europe/Brussels": "Brussels, Copenhagen, Madrid, Paris",
+  "Europe/Amsterdam": "Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+  "Africa/Algiers": "West Central Africa",
+  "Europe/Bucharest": "Bucharest",
+  "Africa/Cairo": "Cairo",
+  "Europe/Helsinki": "Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius",
+  "Europe/Athens": "Athens",
+  "Asia/Jerusalem": "Jerusalem",
+  "Africa/Harare": "Harare, Pretoria",
+  "Europe/Moscow": "Istanbul, Minsk, Moscow, St. Petersburg, Volgograd",
+  "Asia/Kuwait": "Kuwait, Riyadh",
+  "Africa/Nairobi": "Nairobi",
+  "Asia/Baghdad": "Baghdad",
+  "Asia/Tehran": "Tehran",
+  "Asia/Dubai": "Abu Dhabi, Muscat",
+  "Asia/Baku": "Baku, Tbilisi, Yerevan",
+  "Asia/Kabul": "Kabul",
+  "Asia/Yekaterinburg": "Ekaterinburg",
+  "Asia/Karachi": "Islamabad, Karachi, Tashkent",
+  "Asia/Kolkata": "Chennai, Kolkata, Mumbai, New Delhi",
+  "Asia/Kathmandu": "Kathmandu",
+  "Asia/Dhaka": "Astana, Dhaka",
+  "Asia/Colombo": "Sri Jayawardenepura",
+  "Asia/Almaty": "Almaty, Novosibirsk",
+  "Asia/Rangoon": "Yangon Rangoon",
+  "Asia/Bangkok": "Bangkok, Hanoi, Jakarta",
+  "Asia/Krasnoyarsk": "Krasnoyarsk",
+  "Asia/Shanghai": "Beijing, Chongqing, Hong Kong SAR, Urumqi",
+  "Asia/Kuala_Lumpur": "Kuala Lumpur, Singapore",
+  "Asia/Taipei": "Taipei",
+  "Australia/Perth": "Perth",
+  "Asia/Irkutsk": "Irkutsk, Ulaanbaatar",
+  "Asia/Seoul": "Seoul",
+  "Asia/Tokyo": "Osaka, Sapporo, Tokyo",
+  "Asia/Yakutsk": "Yakutsk",
+  "Australia/Darwin": "Darwin",
+  "Australia/Adelaide": "Adelaide",
+  "Australia/Sydney": "Canberra, Melbourne, Sydney",
+  "Australia/Brisbane": "Brisbane",
+  "Australia/Hobart": "Hobart",
+  "Asia/Vladivostok": "Vladivostok",
+  "Pacific/Guam": "Guam, Port Moresby",
+  "Asia/Magadan": "Magadan, Solomon Islands, New Caledonia",
+  "Asia/Kamchatka": "Kamchatka, Marshall Islands",
+  "Pacific/Fiji": "Fiji Islands",
+  "Pacific/Auckland": "Auckland, Wellington",
+  "Pacific/Tongatapu": "Nuku'alofa",
+};
+
+// Helper function to calculate timezone offset in minutes
+const getTimezoneOffset = (timezone: string): number => {
+  try {
+    // Use a more reliable approach for getting timezone offsets
+    const date = new Date();
+
+    // Create formatter for this timezone
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      timeZoneName: "longOffset",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+    });
+
+    // Format the date and extract the GMT offset
+    const formattedDate = formatter.format(date);
+    const match = formattedDate.match(/GMT([+-])(\d{1,2}):?(\d{2})?/);
+
+    if (match) {
+      const sign = match[1] === "-" ? -1 : 1;
+      const hours = parseInt(match[2] || "0", 10);
+      const minutes = parseInt(match[3] || "0", 10);
+      return sign * (hours * 60 + minutes);
+    }
+
+    return 0;
+  } catch (error) {
+    console.error(`Error calculating offset for ${timezone}:`, error);
+    return 0;
+  }
+};
+
+// Format offset for display
+const formatOffset = (offsetMinutes: number): string => {
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const absMinutes = Math.abs(offsetMinutes);
+  const hours = Math.floor(absMinutes / 60);
+  const minutes = absMinutes % 60;
+
+  if (minutes === 0) {
+    return `UTC${sign}${hours}`;
+  } else {
+    return `UTC${sign}${hours}:${minutes.toString().padStart(2, "0")}`;
+  }
+};
+
 // Get the current timezone using the built-in JavaScript API
 const getCurrentTimezone = (): string => {
   try {
@@ -20,104 +161,6 @@ const getCurrentTimezone = (): string => {
     return "America/Los_Angeles"; // Fallback to a default
   }
 };
-
-// Define timezone data instead of importing from react-timezone-select
-// This provides a comprehensive list of common timezones with their labels
-const timezoneData = {
-  "Africa/Abidjan": "GMT+0 (Abidjan)",
-  "Africa/Accra": "GMT+0 (Accra)",
-  "Africa/Addis_Ababa": "EAT+3 (Addis Ababa)",
-  "Africa/Algiers": "CET+1 (Algiers)",
-  "Africa/Cairo": "EET+2 (Cairo)",
-  "Africa/Casablanca": "GMT+0 (Casablanca)",
-  "Africa/Johannesburg": "SAST+2 (Johannesburg)",
-  "Africa/Lagos": "WAT+1 (Lagos)",
-  "Africa/Nairobi": "EAT+3 (Nairobi)",
-  "Africa/Tunis": "CET+1 (Tunis)",
-  "America/Anchorage": "AKST-9 (Anchorage)",
-  "America/Bogota": "COT-5 (Bogota)",
-  "America/Buenos_Aires": "ART-3 (Buenos Aires)",
-  "America/Caracas": "VET-4 (Caracas)",
-  "America/Chicago": "CST-6 (Chicago)",
-  "America/Denver": "MST-7 (Denver)",
-  "America/Halifax": "AST-4 (Halifax)",
-  "America/Los_Angeles": "PST-8 (Los Angeles)",
-  "America/Mexico_City": "CST-6 (Mexico City)",
-  "America/New_York": "EST-5 (New York)",
-  "America/Phoenix": "MST-7 (Phoenix)",
-  "America/Regina": "CST-6 (Regina)",
-  "America/Santiago": "CLST-3 (Santiago)",
-  "America/Sao_Paulo": "BRT-3 (Sao Paulo)",
-  "America/St_Johns": "NST-3:30 (St. John's)",
-  "America/Toronto": "EST-5 (Toronto)",
-  "America/Vancouver": "PST-8 (Vancouver)",
-  "Asia/Bangkok": "ICT+7 (Bangkok)",
-  "Asia/Dubai": "GST+4 (Dubai)",
-  "Asia/Hong_Kong": "HKT+8 (Hong Kong)",
-  "Asia/Istanbul": "TRT+3 (Istanbul)",
-  "Asia/Jakarta": "WIB+7 (Jakarta)",
-  "Asia/Jerusalem": "IST+2 (Jerusalem)",
-  "Asia/Kolkata": "IST+5:30 (Kolkata)",
-  "Asia/Kuala_Lumpur": "MYT+8 (Kuala Lumpur)",
-  "Asia/Manila": "PHT+8 (Manila)",
-  "Asia/Seoul": "KST+9 (Seoul)",
-  "Asia/Shanghai": "CST+8 (Shanghai)",
-  "Asia/Singapore": "SGT+8 (Singapore)",
-  "Asia/Taipei": "CST+8 (Taipei)",
-  "Asia/Tehran": "IRST+3:30 (Tehran)",
-  "Asia/Tokyo": "JST+9 (Tokyo)",
-  "Atlantic/Azores": "AZOT-1 (Azores)",
-  "Atlantic/Reykjavik": "GMT+0 (Reykjavik)",
-  "Australia/Adelaide": "ACDT+10:30 (Adelaide)",
-  "Australia/Brisbane": "AEST+10 (Brisbane)",
-  "Australia/Darwin": "ACST+9:30 (Darwin)",
-  "Australia/Hobart": "AEDT+11 (Hobart)",
-  "Australia/Melbourne": "AEDT+11 (Melbourne)",
-  "Australia/Perth": "AWST+8 (Perth)",
-  "Australia/Sydney": "AEDT+11 (Sydney)",
-  "Europe/Amsterdam": "CET+1 (Amsterdam)",
-  "Europe/Athens": "EET+2 (Athens)",
-  "Europe/Belgrade": "CET+1 (Belgrade)",
-  "Europe/Berlin": "CET+1 (Berlin)",
-  "Europe/Brussels": "CET+1 (Brussels)",
-  "Europe/Bucharest": "EET+2 (Bucharest)",
-  "Europe/Copenhagen": "CET+1 (Copenhagen)",
-  "Europe/Dublin": "GMT+0 (Dublin)",
-  "Europe/Helsinki": "EET+2 (Helsinki)",
-  "Europe/Lisbon": "WET+0 (Lisbon)",
-  "Europe/London": "GMT+0 (London)",
-  "Europe/Madrid": "CET+1 (Madrid)",
-  "Europe/Moscow": "MSK+3 (Moscow)",
-  "Europe/Oslo": "CET+1 (Oslo)",
-  "Europe/Paris": "CET+1 (Paris)",
-  "Europe/Prague": "CET+1 (Prague)",
-  "Europe/Rome": "CET+1 (Rome)",
-  "Europe/Stockholm": "CET+1 (Stockholm)",
-  "Europe/Vienna": "CET+1 (Vienna)",
-  "Europe/Warsaw": "CET+1 (Warsaw)",
-  "Europe/Zurich": "CET+1 (Zurich)",
-  "Pacific/Auckland": "NZDT+13 (Auckland)",
-  "Pacific/Fiji": "FJST+13 (Fiji)",
-  "Pacific/Guam": "ChST+10 (Guam)",
-  "Pacific/Honolulu": "HST-10 (Honolulu)",
-  "Pacific/Midway": "SST-11 (Midway)",
-  "Pacific/Noumea": "NCT+11 (Noumea)",
-  "Pacific/Pago_Pago": "SST-11 (Pago Pago)",
-  "Pacific/Port_Moresby": "PGT+10 (Port Moresby)",
-  "Pacific/Tongatapu": "TOT+13 (Tongatapu)",
-};
-
-// Process timezones into a format that's easier to use
-const processedTimezones = Object.entries(timezoneData).map(
-  ([value, label]) => ({
-    value,
-    label,
-    search: `${value} ${label}`.toLowerCase(),
-  }),
-);
-
-// Sort timezones by label for better UX
-processedTimezones.sort((a, b) => a.label.localeCompare(b.label));
 
 interface TimezoneSelectNativeProps {
   value: string;
@@ -135,10 +178,28 @@ export function TimezoneSelectNative({
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTimezone, setCurrentTimezone] = useState<string | null>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   // Get current timezone when component mounts
   useEffect(() => {
     setCurrentTimezone(getCurrentTimezone());
+  }, []);
+
+  // Process timezones into a format that's easier to use with memoization
+  // to avoid recalculating offsets on each render
+  const processedTimezones = useMemo(() => {
+    return Object.entries(allTimezones)
+      .map(([value, label]) => {
+        const offset = getTimezoneOffset(value);
+        return {
+          value,
+          label: `${label} (${formatOffset(offset)})`,
+          search: `${value} ${label}`.toLowerCase(),
+          offset,
+          locationName: label, // Store the original location name without the offset
+        };
+      })
+      .sort((a, b) => a.offset - b.offset); // Sort by offset
   }, []);
 
   const selectedTimezone = useMemo(() => {
@@ -150,30 +211,24 @@ export function TimezoneSelectNative({
     );
   }, [value, placeholder]);
 
-  // Prepare the list of timezones, including a special "current" option
+  // Prepare the list of timezones, marking the device timezone
   const displayTimezones = useMemo(() => {
     // Create complete list of timezones
-    let timezones = [...processedTimezones];
+    const timezones = [...processedTimezones];
 
-    // If we have the current timezone and we're not searching, add it to the top
+    // Mark the current device timezone with an icon if we have it and we're not searching
     if (currentTimezone && !searchQuery) {
-      const currentTzInfo = processedTimezones.find(
-        (tz) => tz.value === currentTimezone,
-      );
-      if (currentTzInfo) {
-        // Move the current timezone to top with a special label
-        const currentTzEntry = {
-          ...currentTzInfo,
-          label: `📍 ${currentTzInfo.label} (Current)`,
-          isCurrentTimezone: true,
-        };
-
-        // Filter out the current tz from main list to avoid duplication
-        timezones = timezones.filter((tz) => tz.value !== currentTimezone);
-
-        // Add current timezone at the beginning
-        timezones.unshift(currentTzEntry);
-      }
+      return timezones.map((tz) => {
+        if (tz.value === currentTimezone) {
+          // Mark the current timezone with an icon but keep it in its sorted position
+          return {
+            ...tz,
+            label: `📍 ${tz.locationName} (${formatOffset(tz.offset)}) (Current)`,
+            isCurrentTimezone: true,
+          };
+        }
+        return tz;
+      });
     }
 
     return timezones;
@@ -189,10 +244,26 @@ export function TimezoneSelectNative({
     );
   }, [displayTimezones, searchQuery]);
 
+  // Find index of the currently selected timezone in the filtered list
+  const selectedIndex = useMemo(() => {
+    if (!value) return -1;
+    return filteredTimezones.findIndex((tz) => tz.value === value);
+  }, [filteredTimezones, value]);
+
   const openModal = useCallback(() => {
     setModalVisible(true);
-    // Add haptic feedback or other indicators here if needed
-  }, []);
+    // Pre-scroll to selected timezone after modal is opened
+    setTimeout(() => {
+      if (selectedIndex !== -1 && flatListRef.current) {
+        flatListRef.current.scrollToIndex({
+          index: selectedIndex,
+          animated: true,
+          viewOffset: 0,
+          viewPosition: 0, // 0 means top of the viewport
+        });
+      }
+    }, 100);
+  }, [selectedIndex]);
 
   const closeModal = useCallback(() => {
     setModalVisible(false);
@@ -239,6 +310,22 @@ export function TimezoneSelectNative({
         )}
       </Pressable>
     );
+  };
+
+  // Handle scroll to index error
+  const handleScrollToIndexFailed = (info: {
+    index: number;
+    highestMeasuredFrameIndex: number;
+    averageItemLength: number;
+  }) => {
+    const wait = new Promise((resolve) => setTimeout(resolve, 100));
+    void wait.then(() => {
+      flatListRef.current?.scrollToIndex({
+        index: info.index,
+        animated: true,
+        viewPosition: 0,
+      });
+    });
   };
 
   return (
@@ -305,6 +392,7 @@ export function TimezoneSelectNative({
 
                 {filteredTimezones.length > 0 ? (
                   <FlatList
+                    ref={flatListRef}
                     data={filteredTimezones}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.value}
@@ -314,6 +402,7 @@ export function TimezoneSelectNative({
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                     contentContainerClassName="pb-2"
+                    onScrollToIndexFailed={handleScrollToIndexFailed}
                   />
                 ) : (
                   <View className="flex-1 items-center justify-center p-5">
