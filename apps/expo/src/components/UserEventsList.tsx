@@ -8,7 +8,6 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
