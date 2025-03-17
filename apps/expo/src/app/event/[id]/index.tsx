@@ -105,11 +105,13 @@ export default function Page() {
     const isSaved = savedIdsQuery.data?.some(
       (savedEvent) => savedEvent.id === data.id,
     );
+    const isOwner = data.userId === currentUser?.id;
+
     return (
       <View className="flex-row items-center gap-2">
         <EventMenu
           event={data as RouterOutputs["event"]["getUpcomingForUser"][number]}
-          isOwner={data.userId === currentUser?.id}
+          isOwner={isOwner}
           isSaved={Boolean(isSaved)}
           menuType="popup"
           onDelete={handleDelete}

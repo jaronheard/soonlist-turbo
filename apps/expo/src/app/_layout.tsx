@@ -223,6 +223,13 @@ const InitialLayout = () => {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="event/[id]/edit"
+        options={{
+          presentation: "modal",
+          title: "Edit Event",
+        }}
+      />
       {/* SHARE EXTENSION ROUTE */}
       <Stack.Screen
         name="new"
