@@ -261,7 +261,7 @@ export function TimezoneSelectNative({
   const openModal = useCallback(() => {
     setModalVisible(true);
     // Pre-scroll to selected timezone after modal is opened
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       if (selectedIndex !== -1 && flatListRef.current) {
         flatListRef.current.scrollToIndex({
           index: selectedIndex,
@@ -271,6 +271,7 @@ export function TimezoneSelectNative({
         });
       }
     }, 100);
+    return () => clearTimeout(timeoutId);
   }, [selectedIndex]);
 
   const closeModal = useCallback(() => {
@@ -355,7 +356,6 @@ export function TimezoneSelectNative({
 
       {modalVisible && (
         <Modal
-          visible={true}
           transparent={true}
           animationType="slide"
           statusBarTranslucent

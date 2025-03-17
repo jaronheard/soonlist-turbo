@@ -247,8 +247,6 @@ export default function EditProfileScreen() {
             const loadingToastId = toast.loading("Restarting onboarding...");
             void (async () => {
               try {
-                // Commented out due to missing API endpoint
-                // await resetOnboarding.mutateAsync();
                 // Execute the mutation
                 await resetOnboardingMutation.mutateAsync();
 
