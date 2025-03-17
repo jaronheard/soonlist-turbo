@@ -93,7 +93,7 @@ const VerifyEmail = () => {
       />
       <View className="flex-1 bg-interactive-3 px-6">
         <View className="items-center pt-8">
-          <Logo className="h-12 w-48" />
+          <Logo className="h-12 w-48" variant="hidePreview" />
         </View>
         <View className="items-center justify-center py-8">
           <Text className="mb-4 text-center font-heading text-4xl font-bold text-gray-700">
