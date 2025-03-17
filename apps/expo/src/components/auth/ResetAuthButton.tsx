@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { AlertTriangle, RefreshCw } from "lucide-react-native";
 
 import { Dialog } from "~/components/Dialog";
@@ -13,6 +13,12 @@ interface ResetAuthButtonProps {
 export function ResetAuthButton({ style }: ResetAuthButtonProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const signOut = useSignOut();
+  const pathname = usePathname();
+
+  // Don't show on main sign-in page
+  if (pathname === "/sign-in") {
+    return null;
+  }
 
   const handleReset = async () => {
     setShowConfirmation(false);
