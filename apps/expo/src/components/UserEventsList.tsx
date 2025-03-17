@@ -13,6 +13,7 @@ import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { LegendList } from "@legendapp/list";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
   Copy,
@@ -434,8 +435,9 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   return (
     <>
-      <FlatList
+      <LegendList
         data={collapsedEvents}
+        estimatedItemSize={130}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
@@ -474,6 +476,7 @@ export default function UserEventsList(props: UserEventsListProps) {
           flexGrow: 1,
         }}
         ListFooterComponent={renderFooter()}
+        keyExtractor={(item) => item.event.id}
       />
     </>
   );
