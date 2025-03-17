@@ -38,6 +38,7 @@
     "@bytescale/sdk": "^3.34.0",
     "@clerk/clerk-expo": "^1.1.0",
     "@intercom/intercom-react-native": "^7.2.1",
+    "@legendapp/list": "1.0.0-beta.21",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-community/datetimepicker": "^8.3.0",
     "@sentry/react-native": "^6.3.0",
