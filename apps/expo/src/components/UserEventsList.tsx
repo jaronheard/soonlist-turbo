@@ -280,6 +280,9 @@ export function UserEventListItem(props: {
   );
 }
 
+// 1. Memoize the list item component
+const MemoizedUserEventListItem = React.memo(UserEventListItem);
+
 function PromoCard({ type }: PromoCardProps) {
   const { fontScale } = useWindowDimensions();
 
@@ -353,8 +356,11 @@ export default function UserEventsList(props: UserEventsListProps) {
     userName: username,
   });
 
-  // Collapse similar events
-  const collapsedEvents = collapseSimilarEvents(events, user?.id);
+  // Add memoization for collapseSimilarEvents
+  const collapsedEvents = React.useMemo(
+    () => collapseSimilarEvents(events, user?.id),
+    [events, user?.id],
+  );
 
   const pendingAIMutations = useMutationState(
     {
@@ -432,6 +438,12 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   const renderHeader = () => (stats ? <EventStats {...stats} /> : null);
 
+  // 3. Memoize expensive calculations outside of render
+  const savedEventIds = React.useMemo(
+    () => new Set(savedIdsQuery.data?.map((item) => item.id) || []),
+    [savedIdsQuery.data],
+  );
+
   return (
     <>
       <LegendList
@@ -440,15 +452,12 @@ export default function UserEventsList(props: UserEventsListProps) {
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
-          const isSaved =
-            savedIdsQuery.data?.some(
-              (savedEvent) => savedEvent.id === item.event.id,
-            ) ?? false;
-
+          // Use memoized values instead of calculating inside render
+          const isSaved = savedEventIds.has(item.event.id);
           const similarEventsCount = item.similarEvents.length;
 
           return (
-            <UserEventListItem
+            <MemoizedUserEventListItem
               event={item.event}
               ActionButton={ActionButton}
               isLastItem={index === collapsedEvents.length - 1}
