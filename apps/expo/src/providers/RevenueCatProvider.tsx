@@ -1,12 +1,6 @@
 import type { PropsWithChildren } from "react";
 import type { CustomerInfo } from "react-native-purchases";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import { Linking } from "react-native";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
@@ -14,6 +8,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import { usePostHog } from "posthog-react-native";
 import { toast } from "sonner-native";
 
+import { useMountEffect } from "~/hooks/useMountEffect";
 import { initializeRevenueCat, setPostHogUserId } from "~/lib/revenue-cat";
 import { useOneSignal } from "./OneSignalProvider";
 
@@ -36,55 +31,62 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   const { hasNotificationPermission } = useOneSignal();
   const posthog = usePostHog();
 
-  const login = useCallback(
-    async (userId: string) => {
-      if (!isInitialized) {
-        console.warn("RevenueCat is not initialized yet");
-        return;
-      }
-      try {
-        const { customerInfo } = await Purchases.logIn(userId);
-        setCustomerInfo(customerInfo);
+  // Initialize RevenueCat only once when the component mounts
+  useMountEffect(() => {
+    async function initializeRevenueCatOnce() {
+      if (isInitialized) return;
 
-        // Set PostHog user ID as a RevenueCat attribute
-        const distinctId = posthog.getDistinctId();
-        if (distinctId) {
-          await setPostHogUserId(distinctId);
-        }
-      } catch (error) {
-        console.error("Error logging in to RevenueCat:", error);
-        throw error;
-      }
-    },
-    [isInitialized, posthog],
-  );
-
-  useEffect(() => {
-    async function initialize() {
       try {
-        // Initialize with anonymous ID first
         await initializeRevenueCat();
         setIsInitialized(true);
 
-        // Set PostHog user ID as a RevenueCat attribute for anonymous users
-        const distinctId = posthog.getDistinctId();
-        if (distinctId) {
-          await setPostHogUserId(distinctId);
-        }
-
-        // If user is already logged in, identify them
+        // Only try to log in if there's a userId after initialization
         if (userId) {
-          await login(userId);
+          void loginInternal(userId);
         }
       } catch (error) {
         console.error("Failed to initialize RevenueCat:", error);
       }
     }
 
-    void initialize();
-  }, [login, userId, posthog]);
+    void initializeRevenueCatOnce();
+  });
 
-  async function logout() {
+  // Handle Clerk user ID changes, but only after initialization
+  useMountEffect(() => {
+    if (isInitialized && userId) {
+      void loginInternal(userId);
+    }
+  }, [isInitialized, userId]);
+
+  // Internal login function that doesn't depend on the PostHog context
+  const loginInternal = async (userIdToLogin: string) => {
+    if (!isInitialized) {
+      console.warn("RevenueCat is not initialized yet");
+      return;
+    }
+
+    try {
+      const { customerInfo } = await Purchases.logIn(userIdToLogin);
+      setCustomerInfo(customerInfo);
+
+      // After successful login, synchronize the PostHog ID once
+      const distinctId = posthog.getDistinctId();
+      if (distinctId) {
+        await setPostHogUserId(distinctId);
+      }
+    } catch (error) {
+      console.error("Error logging in to RevenueCat:", error);
+    }
+  };
+
+  // Public login function exposed in the context
+  const login = useCallback(async (userIdToLogin: string) => {
+    await loginInternal(userIdToLogin);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const logout = useCallback(async () => {
     if (!isInitialized) {
       console.warn("RevenueCat is not initialized yet");
       return;
@@ -96,14 +98,13 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       console.error("Error logging out from RevenueCat:", error);
       throw error;
     }
-  }
+  }, [isInitialized]);
 
-  async function showProPaywallIfNeeded() {
+  const showProPaywallIfNeeded = useCallback(async () => {
     if (!isInitialized) {
       console.warn("RevenueCat is not initialized yet");
       return;
     }
-    console.log("showProPaywallIfNeeded");
     try {
       const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
         requiredEntitlementIdentifier: "unlimited",
@@ -142,7 +143,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     } catch (err) {
       console.error("Error presenting paywall:", err);
     }
-  }
+  }, [isInitialized, hasNotificationPermission]);
 
   return (
     <RevenueCatContext.Provider

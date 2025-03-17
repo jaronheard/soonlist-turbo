@@ -69,5 +69,6 @@ export async function setPostHogUserId(userId: string) {
     console.log("PostHog user ID set in RevenueCat:", userId);
   } catch (error) {
     console.error("Error setting PostHog user ID in RevenueCat:", error);
+    throw error;
   }
 }
