@@ -447,6 +447,7 @@ export default function UserEventsList(props: UserEventsListProps) {
   return (
     <>
       <LegendList
+        recycleItems={false}
         data={collapsedEvents}
         estimatedItemSize={130}
         ListHeaderComponent={renderHeader}
