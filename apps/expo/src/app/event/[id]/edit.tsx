@@ -217,6 +217,8 @@ export default function EditEventScreen() {
 
   // Parse time string to Date object
   const parseTimeString = (timeString?: string): Date => {
+    // Create a copy of the current tempStartTime/tempEndTime to preserve the date
+    // This ensures we don't reset to the current date when editing
     const date = new Date();
     if (!timeString) return date;
 
@@ -231,6 +233,7 @@ export default function EditEventScreen() {
       const minutes = parseInt(minutesStr, 10);
 
       if (!isNaN(hours) && !isNaN(minutes)) {
+        // Only update the hours and minutes, preserving the date
         date.setHours(hours);
         date.setMinutes(minutes);
         date.setSeconds(0);
@@ -845,7 +848,10 @@ export default function EditEventScreen() {
                             setShowStartTimePicker(false);
                           } else {
                             // Otherwise open it and close others
-                            setTempStartTime(parseTimeString(value));
+                            // If we have a value, use it; otherwise use the current tempStartTime
+                            if (value) {
+                              setTempStartTime(parseTimeString(value));
+                            }
                             setShowStartTimePicker(true);
                             setShowStartDatePicker(false);
                             setShowEndDatePicker(false);
@@ -1050,7 +1056,10 @@ export default function EditEventScreen() {
                             setShowEndTimePicker(false);
                           } else {
                             // Otherwise open it and close others
-                            setTempEndTime(parseTimeString(value));
+                            // If we have a value, use it; otherwise use the current tempEndTime
+                            if (value) {
+                              setTempEndTime(parseTimeString(value));
+                            }
                             setShowEndTimePicker(true);
                             setShowEndDatePicker(false);
                             setShowStartDatePicker(false);
