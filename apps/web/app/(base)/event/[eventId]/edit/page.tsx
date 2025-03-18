@@ -8,6 +8,7 @@ import { ImageUpload } from "~/components/ImageUpload";
 import { UserInfo } from "~/components/UserInfo";
 import { YourDetails } from "~/components/YourDetails";
 import { api } from "~/trpc/server";
+import { getPlanStatusFromUser } from "~/lib/planUtils";
 
 export default async function Page({
   params,
@@ -31,6 +32,10 @@ export default async function Page({
     .filter((comment) => comment.content)
     .pop()?.content;
   const eventLists = event.eventToLists.map((eventToList) => eventToList.list);
+
+  // Check if user has permissions to see discover
+  const showDiscover = getPlanStatusFromUser(event.user).showDiscover;
+
   return (
     <div className="flex flex-col items-center">
       {event.event ? (
@@ -40,6 +45,7 @@ export default async function Page({
             eventLists={eventLists}
             comment={mostRecentComment}
             visibility={event.visibility}
+            showVisibilityToggle={showDiscover}
           />
           <div className="p-4"></div>
           <ImageUpload images={eventData.images as string[]} />

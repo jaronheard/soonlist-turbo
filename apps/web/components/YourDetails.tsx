@@ -51,11 +51,13 @@ export function YourDetails({
   comment,
   visibility,
   eventLists,
+  showVisibilityToggle = true,
 }: {
   lists?: List[];
   comment?: string;
   visibility?: "public" | "private";
   eventLists?: List[];
+  showVisibilityToggle?: boolean;
 }) {
   const listOptions = lists?.map((list) => ({
     label: list.name,
@@ -164,37 +166,39 @@ export function YourDetails({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="visibility"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Visibility</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Public" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="public">
-                          <Globe2 className="mr-2 inline size-4" />
-                          Discoverable
-                        </SelectItem>
-                        <SelectItem value="private">
-                          <EyeOff className="mr-2 inline size-4" />
-                          Not discoverable
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {showVisibilityToggle && (
+                <FormField
+                  control={form.control}
+                  name="visibility"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Visibility</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Public" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="public">
+                            <Globe2 className="mr-2 inline size-4" />
+                            Discoverable
+                          </SelectItem>
+                          <SelectItem value="private">
+                            <EyeOff className="mr-2 inline size-4" />
+                            Not discoverable
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </form>
           </Form>
         </CardContent>
