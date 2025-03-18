@@ -477,7 +477,7 @@ export default function EditEventScreen() {
       // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+        allowsEditing: false, // Disabled to prevent automatic square cropping
         quality: 0.8,
       });
 
