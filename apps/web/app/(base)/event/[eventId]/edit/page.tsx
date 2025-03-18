@@ -32,10 +32,10 @@ export default async function Page({
     .filter((comment) => comment.content)
     .pop()?.content;
   const eventLists = event.eventToLists.map((eventToList) => eventToList.list);
-
+  
   // Check if user has permissions to see discover
   const showDiscover = getPlanStatusFromUser(event.user).showDiscover;
-
+  
   return (
     <div className="flex flex-col items-center">
       {event.event ? (
