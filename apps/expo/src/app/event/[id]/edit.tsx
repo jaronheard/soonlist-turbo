@@ -898,7 +898,7 @@ export default function EditEventScreen() {
                                 }
                               }
                             }}
-                            style={{ height: 200, marginVertical: 8 }}
+                            style={{ height: 350, marginVertical: 8 }}
                           />
 
                           {Platform.OS === "ios" && (
@@ -959,7 +959,7 @@ export default function EditEventScreen() {
                                 }
                               }
                             }}
-                            style={{ height: 200, marginVertical: 8 }}
+                            style={{ height: 350, marginVertical: 8 }}
                           />
 
                           {Platform.OS === "ios" && (
@@ -1103,7 +1103,7 @@ export default function EditEventScreen() {
                                 }
                               }
                             }}
-                            style={{ height: 200, marginVertical: 8 }}
+                            style={{ height: 350, marginVertical: 8 }}
                           />
 
                           {Platform.OS === "ios" && (
@@ -1164,7 +1164,7 @@ export default function EditEventScreen() {
                                 }
                               }
                             }}
-                            style={{ height: 200, marginVertical: 8 }}
+                            style={{ height: 350, marginVertical: 8 }}
                           />
 
                           {Platform.OS === "ios" && (
