@@ -401,7 +401,7 @@ export default function EditEventScreen() {
       try {
         manipulatedImage = await ImageManipulator.manipulateAsync(
           fileUri,
-          [{ resize: { width: 1284 } }],
+          [{ resize: { width: 1284, height: undefined } }],
           { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
         );
       } catch (error) {
@@ -480,7 +480,7 @@ export default function EditEventScreen() {
       // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+        allowsEditing: false, // Disabled to prevent automatic square cropping
         quality: 0.8,
       });
 
@@ -1247,9 +1247,12 @@ export default function EditEventScreen() {
                   <View className="rounded-md border border-neutral-300 p-2">
                     <ExpoImage
                       source={{ uri: selectedImage }}
-                      style={{ width: "100%", height: 200 }}
-                      contentFit="cover"
-                      className="rounded-md"
+                      style={{
+                        width: "100%",
+                        height: 300,
+                        borderRadius: 6,
+                      }}
+                      contentFit="contain"
                     />
                     <View className="mt-2 flex-row justify-between">
                       <Button
@@ -1273,19 +1276,6 @@ export default function EditEventScreen() {
                         Remove
                       </Button>
                     </View>
-                    {isUploadingImage && (
-                      <View className="mt-2 items-center">
-                        <ImageUploadSpinner />
-                        <Text className="mt-1 text-xs text-neutral-500">
-                          Uploading image...
-                        </Text>
-                      </View>
-                    )}
-                    {uploadedImageUrl && (
-                      <Text className="mt-2 text-xs text-green-600">
-                        Image uploaded successfully
-                      </Text>
-                    )}
                   </View>
                 ) : (
                   <TouchableOpacity
