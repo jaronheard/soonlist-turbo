@@ -10,6 +10,7 @@ import { z } from "zod";
 
 import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
+import { logError } from "../../utils/errorLogging";
 
 const verifyEmailSchema = z.object({
   code: z
@@ -62,11 +63,14 @@ const VerifyEmail = () => {
           username: completeSignUp.username,
         });
       } else {
-        console.error(JSON.stringify(completeSignUp, null, 2));
+        logError(
+          "Verification failed",
+          new Error(JSON.stringify(completeSignUp, null, 2)),
+        );
         setGeneralError("Verification failed. Please try again.");
       }
     } catch (err: unknown) {
-      console.error("Error during verification:", err);
+      logError("Error during verification", err);
       setGeneralError(
         err instanceof Error
           ? err.message

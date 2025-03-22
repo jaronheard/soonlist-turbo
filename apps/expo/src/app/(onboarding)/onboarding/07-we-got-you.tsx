@@ -7,6 +7,7 @@ import { router } from "expo-router";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
+import { logError } from "../../../utils/errorLogging";
 
 interface Testimonial {
   body: string;
@@ -77,7 +78,7 @@ export default function WeGotYouScreen() {
               contentFit="cover"
               contentPosition="center"
               onError={(error) => {
-                console.error("Image loading error:", error);
+                logError("Image loading error", error);
               }}
             />
             <View>

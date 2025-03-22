@@ -13,7 +13,7 @@ import Constants from "expo-constants";
 import { useAuth } from "@clerk/clerk-expo";
 import { usePostHog } from "posthog-react-native";
 
-import { logError } from "~/utils/errorLogging";
+import { logError, logMessage } from "~/utils/errorLogging";
 
 interface OneSignalContextType {
   hasNotificationPermission: boolean;
@@ -75,7 +75,7 @@ const handleNavigation = (url: string) => {
         logError("Failed to open external URL", error, { url });
       });
     } else {
-      console.warn("Unrecognized URL format:", url);
+      logMessage("Unrecognized URL format", { url }, { type: "warning" });
     }
   } catch (error) {
     logError("Failed to navigate to URL", error, { url });
