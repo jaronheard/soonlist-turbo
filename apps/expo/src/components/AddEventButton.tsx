@@ -1,11 +1,9 @@
 import React, { useCallback } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { BlurView } from "expo-blur";
-import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
-import { setInput } from "@/hooks/useInitializeInput";
 import { PlusIcon } from "lucide-react-native";
 
 import { fetchRecentPhotos } from "~/hooks/useMediaLibrary";
