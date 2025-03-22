@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { Check, ChevronDown } from "lucide-react-native";
 
+import { logDebug } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import {
   DropdownMenuCheckboxItem,
@@ -36,7 +37,7 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
   const { user } = useUser();
 
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
-  console.log("showDiscover", showDiscover);
+  logDebug("showDiscover", showDiscover);
   const routes = showDiscover ? baseRoutes : baseRoutes.slice(0, 2);
 
   const currentRoute =

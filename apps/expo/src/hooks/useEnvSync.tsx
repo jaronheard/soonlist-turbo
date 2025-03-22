@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import * as SecureStore from "expo-secure-store";
 
 import Config from "~/utils/config";
+import { logError } from "~/utils/errorLogging";
 
 const getKeychainAccessGroup = () =>
   Config.env === "development"
@@ -21,7 +22,7 @@ const useEnvSync = () => {
         await SecureStore.deleteItemAsync(key, { keychainAccessGroup });
       }
     } catch (error) {
-      console.error(`Error syncing ${key}:`, error);
+      logError(`Error syncing ${key}`, error);
     }
   }, []);
 

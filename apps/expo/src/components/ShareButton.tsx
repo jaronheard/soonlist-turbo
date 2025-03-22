@@ -3,6 +3,7 @@ import { Share, TouchableOpacity } from "react-native";
 import { ShareIcon } from "lucide-react-native";
 
 import Config from "~/utils/config";
+import { logError } from "~/utils/errorLogging";
 
 interface ShareButtonProps {
   webPath: string;
@@ -16,7 +17,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ webPath }) => {
         url: shareUrl,
       });
     } catch (error) {
-      console.error("Error sharing:", error);
+      logError("Error sharing", error);
     }
   };
 
