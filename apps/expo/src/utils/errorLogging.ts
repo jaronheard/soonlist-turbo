@@ -43,12 +43,16 @@ export function logError(
   // Format error data
   let errorData: Error;
   if (error instanceof Error) {
-    // Preserve the original error object with its stack trace
-    errorData = error;
-    // Add the message to the error details if it doesn't match the error message
-    if (error.message !== message) {
-      errorData.message = `${message}: ${error.message}`;
-    }
+    // Create a new error object with the appropriate message
+    errorData = new Error(
+      error.message !== message
+        ? `${message}: ${error.message}`
+        : error.message,
+    );
+    // Preserve the original stack trace
+    errorData.stack = error.stack;
+    // Copy over any additional properties from the original error
+    Object.assign(errorData, error);
   } else if (typeof error === "string") {
     errorData = new Error(`${message}: ${error}`);
   } else {
@@ -132,6 +136,7 @@ export function logMessage(
   if (!__DEV__) {
     // Create an error to capture the original stack trace
     const errorWithStack = new Error(message);
+    errorWithStack.name = "Info";
 
     Sentry.withScope((scope) => {
       scope.setLevel("info");
