@@ -5,6 +5,7 @@ import { useURL } from "expo-linking";
 import { useRouter } from "expo-router";
 
 import { useAppStore } from "~/store";
+import { logDebug, logError, logMessage } from "~/utils/errorLogging";
 
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
@@ -43,11 +44,13 @@ export function useIntentHandler() {
   const handleDeepLink = useCallback(
     (url: string) => {
       try {
-        console.log("[UseIntentHandler] Handling deep link:", url);
+        logDebug("Handling deep link", url);
 
         // 1. Check for valid scheme
         if (!url.startsWith(`${APP_SCHEME}://`)) {
-          console.error("[useIntentHandler] Invalid scheme:", url);
+          logError("Invalid scheme", new Error(`Invalid scheme: ${url}`), {
+            url,
+          });
           return;
         }
 
@@ -56,39 +59,34 @@ export function useIntentHandler() {
         try {
           parsedUrl = new URL(url);
         } catch (error) {
-          console.error("[useIntentHandler] Invalid URL:", url, error);
+          logError("Invalid URL", error, { url });
           return;
         }
 
         const route = parsedUrl.pathname.replace(/^\/+/, "");
         const params = parsedUrl.searchParams;
 
-        console.log("[UseIntentHandler] Route:", route);
-        console.log("[UseIntentHandler] Params:", params);
+        logDebug("Route", {
+          route,
+          params: Object.fromEntries(params.entries()),
+        });
 
         // 3. Switch on the route
         switch (route) {
           case "new": {
             const textParam = params.get("text");
             const imageUriParam = params.get("imageUri");
-            console.log("[UseIntentHandler] Text param:", textParam);
-            console.log("[UseIntentHandler] Image URI param:", imageUriParam);
+            logDebug("New route params", { textParam, imageUriParam });
 
             if (textParam) {
               try {
                 const decoded = decodeURIComponent(textParam);
                 setIntentParams({ text: decoded });
-                console.log(
-                  "[UseIntentHandler] Pushing to new with text:",
-                  decoded,
-                );
+                logDebug("Pushing to new with text", { decoded });
                 router.push(`/new?text=${encodeURIComponent(decoded)}`);
                 return;
               } catch (error) {
-                console.error(
-                  "[useIntentHandler] Failed to decode text param:",
-                  error,
-                );
+                logError("Failed to decode text param", error, { textParam });
                 return;
               }
             }
@@ -98,47 +96,44 @@ export function useIntentHandler() {
                 const decoded = decodeURIComponent(imageUriParam);
                 // Validate image URI format
                 if (!VALID_IMAGE_REGEX.test(decoded)) {
-                  console.error(
-                    "[useIntentHandler] Invalid image URI format:",
-                    decoded,
+                  logError(
+                    "Invalid image URI format",
+                    new Error("Image URI doesn't match expected format"),
+                    { imageUri: decoded },
                   );
                   return;
                 }
                 setIntentParams({ imageUri: decoded });
-                console.log(
-                  "[UseIntentHandler] Pushing to new with imageUri:",
-                  decoded,
-                );
+                logDebug("Pushing to new with imageUri", { decoded });
                 router.push(`/new?imageUri=${encodeURIComponent(decoded)}`);
                 return;
               } catch (error) {
-                console.error(
-                  "[useIntentHandler] Failed to decode imageUri param:",
-                  error,
-                );
+                logError("Failed to decode imageUri param", error, {
+                  imageUriParam,
+                });
                 return;
               }
             }
-            console.log("[UseIntentHandler] Pushing to new");
+            logDebug("Pushing to new", undefined);
             router.push("/new");
             return;
           }
 
           default:
-            console.warn("[useIntentHandler] Unhandled route:", route);
+            logMessage("Unhandled route", { route }, { type: "warning" });
             break;
         }
       } catch (error) {
-        console.error("[useIntentHandler] Failed to handle deep link:", error);
+        logError("Failed to handle deep link", error, { url });
       }
     },
     [router, setIntentParams],
   );
 
   useEffect(() => {
-    console.log("[UseIntentHandler] Incoming URL:", incomingUrl);
+    logDebug("Incoming URL", incomingUrl);
     if (!incomingUrl || incomingUrl === prevUrl) return;
-    console.log("[UseIntentHandler] Setting incoming URL:", incomingUrl);
+    logDebug("Setting incoming URL", incomingUrl);
     prevUrl = incomingUrl;
     handleDeepLink(incomingUrl);
   }, [incomingUrl, handleDeepLink]);
