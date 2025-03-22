@@ -82,8 +82,8 @@ For cases where you need to log multiple errors as a group:
 ```typescript
 import { logErrorGroup } from "~/utils/errorLogging";
 
-logErrorGroup("Failed to sync multiple items", errors, {
-  batchId: batchId,
+logErrorGroup("Failed to sync multiple items", errors /* array of Error objects */, {
+  batchId: batchId, // unique identifier for the batch
 });
 ```
 
