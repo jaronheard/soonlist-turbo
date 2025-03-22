@@ -44,7 +44,7 @@ export function useIntentHandler() {
   const handleDeepLink = useCallback(
     (url: string) => {
       try {
-        logDebug("Handling deep link", url);
+        logMessage("Handling deep link", { url }, { type: "info" });
 
         // 1. Check for valid scheme
         if (!url.startsWith(`${APP_SCHEME}://`)) {

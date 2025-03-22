@@ -37,10 +37,7 @@ const getTimezoneAbbreviation = (timezone: string): string => {
     return moment().tz(timezone).zoneAbbr();
   } catch (error) {
     logError(`Error getting abbreviation for ${timezone}`, error);
-    return timezone.slice(
-      timezone.lastIndexOf("/") + 1,
-      timezone.lastIndexOf("/") + 4,
-    );
+    return "";
   }
 };
 

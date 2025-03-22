@@ -167,6 +167,7 @@ export default function EditProfileScreen() {
       toast.dismiss(loadingToastId);
       toast.success("Profile image updated successfully");
     } catch (error) {
+      toast.dismiss(loadingToastId);
       logError("Error in pickImage", error);
       toast.error("Failed to pick image");
       // Revert to the previous image if the update fails
