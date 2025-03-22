@@ -35,8 +35,8 @@ function GoButton({
           openGoogleMaps(location);
         } else {
           logError(
-            "No location provided for navigation",
-            new Error("No location"),
+            `No location provided for navigation for event ${event.id}`,
+            new Error(`No location for event ${event.id}`),
           );
         }
       }}

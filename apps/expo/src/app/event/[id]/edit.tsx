@@ -177,7 +177,7 @@ export default function EditEventScreen() {
       };
       return date.toLocaleDateString("en-US", options);
     } catch (error) {
-      logError("Error formatting time", error);
+      logError("Error formatting date", error);
       return dateString;
     }
   };
