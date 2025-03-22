@@ -27,6 +27,7 @@ import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { api } from "~/utils/api";
+import { logError } from "../../../utils/errorLogging";
 
 // Define the form schema based on the event update schema
 const formSchema = z.object({
@@ -176,6 +177,7 @@ export default function EditEventScreen() {
       };
       return date.toLocaleDateString("en-US", options);
     } catch (error) {
+      logError("Error formatting time", error);
       return dateString;
     }
   };
@@ -210,7 +212,7 @@ export default function EditEventScreen() {
         hour12: true,
       });
     } catch (error) {
-      console.error("Error formatting time:", error);
+      logError("Error formatting time", error);
       return timeString;
     }
   };
@@ -239,7 +241,7 @@ export default function EditEventScreen() {
         date.setSeconds(0);
       }
     } catch (error) {
-      console.log("Error parsing time:", error);
+      logError("Error parsing time", error);
     }
 
     return date;
@@ -253,7 +255,7 @@ export default function EditEventScreen() {
       const date = new Date(dateString);
       if (!isNaN(date.getTime())) return date;
     } catch (error) {
-      console.log("Error parsing date:", error);
+      logError("Error parsing date", error);
     }
 
     return new Date();
@@ -458,7 +460,7 @@ export default function EditEventScreen() {
 
       return fileUrl;
     } catch (error) {
-      console.error("Error uploading image:", error);
+      logError("Error uploading image", error);
       throw error;
     } finally {
       setIsUploadingImage(false);
@@ -508,7 +510,7 @@ export default function EditEventScreen() {
           toast.dismiss(loadingToastId);
           toast.success("Image uploaded successfully");
         } catch (error) {
-          console.error("Error uploading image:", error);
+          logError("Error uploading image", error);
           toast.error("Failed to upload image", {
             description:
               error instanceof Error ? error.message : "Unknown error",
@@ -521,7 +523,7 @@ export default function EditEventScreen() {
         }
       }
     } catch (error) {
-      console.error("Error picking image:", error);
+      logError("Error picking image", error);
       toast.error("Failed to pick image");
     }
   };
@@ -599,7 +601,7 @@ export default function EditEventScreen() {
 
         toast.dismiss(loadingToastId);
       } catch (error) {
-        console.error("❌ Error updating event:", error);
+        logError("Error updating event", error);
         toast.error("Failed to update event", {
           description: error instanceof Error ? error.message : "Unknown error",
         });

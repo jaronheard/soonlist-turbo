@@ -14,6 +14,7 @@ import {
 import * as DropdownMenu from "zeego/dropdown-menu";
 
 import { useSignOut } from "~/hooks/useSignOut";
+import { logError } from "../utils/errorLogging";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 export function ProfileMenu() {
@@ -32,7 +33,7 @@ export function ProfileMenu() {
     try {
       await Intercom.present();
     } catch (error) {
-      console.error("Error presenting Intercom:", error);
+      logError("Error presenting Intercom", error);
     }
   };
 

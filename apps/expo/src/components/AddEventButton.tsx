@@ -1,14 +1,17 @@
 import React, { useCallback } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { BlurView } from "expo-blur";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
-import { Plus } from "lucide-react-native";
+import { setInput } from "@/hooks/useInitializeInput";
+import { PlusIcon } from "lucide-react-native";
 
 import { fetchRecentPhotos } from "~/hooks/useMediaLibrary";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
+import { logError } from "../utils/errorLogging";
 
 export default function AddEventButton() {
   const { resetAddEventState, setImagePreview, setInput } = useAppStore();
@@ -48,7 +51,7 @@ export default function AddEventButton() {
       // Navigate to /add with store already set up
       router.push("/add");
     } catch (error) {
-      console.error("Error in AddEventButton:", error);
+      logError("Error in AddEventButton", error);
       router.push("/add");
     }
   }, [
@@ -97,7 +100,7 @@ export default function AddEventButton() {
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
       >
         <View className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-2 p-6 shadow-lg">
-          <Plus size={28} color="#5A32FB" />
+          <PlusIcon size={28} color="#5A32FB" />
           {!hasUnlimited && (
             <View className="absolute -right-2 -top-2 rounded-full bg-accent-yellow px-2 py-0.5">
               <Text className="text-xs font-semibold text-neutral-1">PRO</Text>
