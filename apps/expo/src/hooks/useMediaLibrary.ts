@@ -7,12 +7,15 @@ import { logDebug, logError } from "~/utils/errorLogging";
 export async function fetchRecentPhotos() {
   const startTime = Date.now();
   logDebug("[fetchRecentPhotos] Starting to load recent photos");
+  let isGranted = false;
+  let hasFullAccess = false;
+
   try {
     // First check permissions
     const { status, accessPrivileges } =
       await MediaLibrary.getPermissionsAsync();
-    const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
-    const hasFullAccess = accessPrivileges === "all";
+    isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+    hasFullAccess = accessPrivileges === "all";
 
     // Update permission state
     useAppStore.setState({
@@ -60,7 +63,7 @@ export async function fetchRecentPhotos() {
   } catch (error) {
     const duration = Date.now() - startTime;
     logError(
-      `[fetchRecentPhotos] Error loading recent photos after ${duration}ms total`,
+      `[fetchRecentPhotos] Error loading recent photos after ${duration}ms total. Permission state: isGranted=${isGranted}, hasFullAccess=${hasFullAccess}`,
       error,
     );
     return null;

@@ -1,6 +1,29 @@
 import * as Sentry from "@sentry/react-native";
 
 /**
+ * Safely stringifies an object, handling circular references
+ * @param obj The object to stringify
+ * @returns A string representation of the object or an error message
+ */
+function safeStringify(obj: unknown): string {
+  try {
+    // Use a replacer function to handle circular references
+    const seen = new WeakSet();
+    return JSON.stringify(obj, (key: string, value: unknown): unknown => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) {
+          return "[Circular Reference]";
+        }
+        seen.add(value);
+      }
+      return value;
+    });
+  } catch (err) {
+    return `[Error during serialization: ${err instanceof Error ? err.message : String(err)}]`;
+  }
+}
+
+/**
  * Logs an error to Sentry and optionally to the console in development.
  *
  * @param message A descriptive message about the error context
@@ -28,7 +51,7 @@ export function logError(
     // Add the original error as additional context
     additionalData = {
       ...additionalData,
-      originalError: JSON.stringify(error),
+      originalError: safeStringify(error),
     };
   }
 
@@ -72,7 +95,7 @@ export function logErrorGroup(
       });
     }
 
-    scope.setExtra("errors", JSON.stringify(errors));
+    scope.setExtra("errors", safeStringify(errors));
 
     Sentry.captureMessage(message, "error");
   });
