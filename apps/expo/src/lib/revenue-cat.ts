@@ -1,6 +1,8 @@
 import { Platform } from "react-native";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
 
+import { logError, logMessage } from "~/utils/errorLogging";
+
 interface RevenueCatConfig {
   apiKey: {
     ios: string;
@@ -46,7 +48,7 @@ export async function getCurrentSubscriptionStatus() {
     const customerInfo = await Purchases.getCustomerInfo();
     return customerInfo.entitlements.active;
   } catch (error) {
-    console.error("Error getting subscription status:", error);
+    logError("Error getting subscription status", error);
     return {};
   }
 }
@@ -56,8 +58,7 @@ export async function restorePurchases() {
     const customerInfo = await Purchases.restorePurchases();
     return customerInfo;
   } catch (error) {
-    console.error("Error restoring purchases:", error);
-    throw error;
+    logError("Error restoring purchases", error);
   }
 }
 
@@ -66,9 +67,8 @@ export async function setPostHogUserId(userId: string) {
     await Purchases.setAttributes({
       $posthogUserId: userId,
     });
-    console.log("PostHog user ID set in RevenueCat:", userId);
+    logMessage("PostHog user ID set in RevenueCat", { userId });
   } catch (error) {
-    console.error("Error setting PostHog user ID in RevenueCat:", error);
-    throw error;
+    logError("Error setting PostHog user ID in RevenueCat", error, { userId });
   }
 }

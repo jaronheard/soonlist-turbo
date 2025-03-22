@@ -14,6 +14,7 @@ import { useInitializeInput } from "~/hooks/useInitializeInput";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore } from "~/store";
+import { logError } from "../utils/errorLogging";
 
 /**
  * This screen is specifically for share-extension usage:
@@ -106,7 +107,7 @@ export default function NewShareScreen() {
         });
       }
     } catch (error) {
-      console.error("Error creating event:", error);
+      logError("Error creating event", error);
       toast.error("Failed to create event. Please try again.");
     } finally {
       resetNewEventState();

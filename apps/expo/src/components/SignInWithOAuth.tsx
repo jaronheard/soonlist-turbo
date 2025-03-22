@@ -12,6 +12,7 @@ import { X } from "lucide-react-native";
 import { usePostHog } from "posthog-react-native";
 
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
+import { logError } from "../utils/errorLogging";
 import { AppleSignInButton } from "./AppleSignInButton";
 import { EmailSignInButton } from "./EmailSignInButton"; // You'll need to create this component
 import { GoogleSignInButton } from "./GoogleSignInButton";
@@ -82,7 +83,7 @@ const SignInWithOAuth = () => {
       }
     } catch (err) {
       // Handle error
-      console.error("OAuth flow error:", err);
+      logError("OAuth flow error", err);
     }
   };
 
@@ -107,7 +108,7 @@ const SignInWithOAuth = () => {
       }
     } catch (err) {
       // Handle error
-      console.error("Username submission error:", err);
+      logError("Username submission error", err);
     }
   };
 

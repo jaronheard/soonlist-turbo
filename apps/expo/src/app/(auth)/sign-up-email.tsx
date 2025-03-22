@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
+import { logError } from "../../utils/errorLogging";
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -56,7 +57,7 @@ export default function SignUpScreen() {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       router.push("/verify-email");
     } catch (err: unknown) {
-      console.error("Error during sign up:", err);
+      logError("Error during sign up", err);
       setGeneralError(
         err instanceof Error ? err.message : "An error occurred during sign up",
       );

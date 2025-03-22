@@ -13,6 +13,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
+import { logError } from "../../utils/errorLogging";
 
 function GoButton({
   event,
@@ -29,9 +30,16 @@ function GoButton({
 
   return (
     <Pressable
-      onPress={() =>
-        location ? openGoogleMaps(location) : console.error("No location")
-      }
+      onPress={() => {
+        if (location) {
+          openGoogleMaps(location);
+        } else {
+          logError(
+            `No location provided for navigation for event ${event.id}`,
+            new Error(`No location for event ${event.id}`),
+          );
+        }
+      }}
       className="flex-row items-center rounded-full bg-interactive-2 p-1.5 shadow-sm"
     >
       <MapPinned color="#5A32FB" size={24} />

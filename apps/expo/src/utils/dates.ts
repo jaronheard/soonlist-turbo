@@ -2,6 +2,8 @@ import { Temporal } from "@js-temporal/polyfill";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 
+import { logError } from "./errorLogging";
+
 // Existing event defaults
 export const blankEvent = {
   options: [
@@ -105,7 +107,7 @@ export function getDateTimeInfo(
   // Validate input
   const datePattern = /^\d{4}-\d{2}-\d{2}$/;
   if (!datePattern.test(dateString)) {
-    console.error("Invalid date format. Use YYYY-MM-DD.");
+    logError("Invalid date format", new Error("Use YYYY-MM-DD."));
     return null;
   }
 
@@ -126,12 +128,18 @@ export function getDateTimeInfo(
 
     const dayOfWeek = daysOfWeekTemporal[localDateTime.dayOfWeek - 1];
     if (!dayOfWeek) {
-      console.error("Invalid dayOfWeek / date format. Use YYYY-MM-DD.");
+      logError(
+        "Invalid dayOfWeek / date format",
+        new Error("Invalid dayOfWeek / date format. Use YYYY-MM-DD."),
+      );
       return null;
     }
     const monthName = monthNames[localDateTime.month - 1];
     if (!monthName) {
-      console.error("Invalid monthName / date format. Use YYYY-MM-DD.");
+      logError(
+        "Invalid monthName / date format",
+        new Error("Invalid monthName / date format. Use YYYY-MM-DD."),
+      );
       return null;
     }
 
@@ -145,7 +153,7 @@ export function getDateTimeInfo(
       minute: localDateTime.minute,
     };
   } catch (error) {
-    console.error("Error parsing date/time:", error);
+    logError("Error parsing date/time", error);
     return null;
   }
 }

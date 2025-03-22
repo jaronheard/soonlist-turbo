@@ -10,6 +10,8 @@ import type {
   User,
 } from "@soonlist/db/types";
 
+import { logDebug } from "./errorLogging";
+
 type EventToListsWithList = EventToLists & {
   list: List;
 };
@@ -169,7 +171,7 @@ function collapseSimilarEvents(
     });
   });
 
-  // console.log("eventsWithSimilarity", eventsWithSimilarity);
+  logDebug("eventsWithSimilarity", eventsWithSimilarity);
 
   const uniqueEventsWithSimilarity: EventWithSimilarity[] = [];
 

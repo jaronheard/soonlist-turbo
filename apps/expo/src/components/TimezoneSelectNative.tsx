@@ -18,6 +18,8 @@ import { LegendList } from "@legendapp/list";
 import { Check, ChevronDown, Search, X } from "lucide-react-native";
 import moment from "moment-timezone";
 
+import { logError } from "../utils/errorLogging";
+
 // Type for timezone data
 interface TimeZoneItem {
   value: string; // IANA timezone identifier
@@ -34,7 +36,7 @@ const getTimezoneAbbreviation = (timezone: string): string => {
     // Use moment-timezone to get the abbreviation
     return moment().tz(timezone).zoneAbbr();
   } catch (error) {
-    console.error(`Error getting abbreviation for ${timezone}:`, error);
+    logError(`Error getting abbreviation for ${timezone}`, error);
     return "";
   }
 };
@@ -44,7 +46,7 @@ const getTimezoneOffset = (timezone: string): number => {
   try {
     return moment().tz(timezone).utcOffset();
   } catch (error) {
-    console.error(`Error calculating offset for ${timezone}:`, error);
+    logError(`Error calculating offset for ${timezone}`, error);
     return 0;
   }
 };
@@ -64,8 +66,8 @@ const getCurrentTimezone = (): string => {
   try {
     return moment.tz.guess();
   } catch (error) {
-    console.error("Error getting timezone:", error);
-    return "America/Los_Angeles"; // Fallback to a default
+    logError("Error getting timezone", error);
+    return "America/Los_Angeles"; // Default to US West Coast
   }
 };
 

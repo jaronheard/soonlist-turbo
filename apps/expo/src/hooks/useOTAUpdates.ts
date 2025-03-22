@@ -3,6 +3,8 @@ import { Alert, AppState, Platform } from "react-native";
 import * as Application from "expo-application";
 import * as Updates from "expo-updates";
 
+import { logDebug, logError } from "~/utils/errorLogging";
+
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3;
 const IS_TESTFLIGHT = Application.applicationId?.endsWith(".beta");
 const isIOS = Platform.OS === "ios";
@@ -37,18 +39,18 @@ export function useOTAUpdates() {
       try {
         await setExtraParams();
 
-        console.debug("Checking for update...");
+        logDebug("Checking for update");
         const res = await Updates.checkForUpdateAsync();
 
         if (res.isAvailable) {
-          console.debug("Attempting to fetch update...");
+          logDebug("Attempting to fetch update");
           await Updates.fetchUpdateAsync();
         } else {
-          console.debug("No update available.");
+          logDebug("No update available");
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
-        console.error("OTA Update Error", { error: `${e}` });
+        logError("OTA Update Error", e, { buildVersion: nativeBuildVersion });
       }
     }, 10e3);
   }, []);
@@ -82,7 +84,10 @@ export function useOTAUpdates() {
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      console.error("Internal OTA Update Error", { error: `${e}` });
+      logError("Internal OTA Update Error", e, {
+        isTestFlight: IS_TESTFLIGHT,
+        buildVersion: nativeBuildVersion,
+      });
     }
   }, []);
 

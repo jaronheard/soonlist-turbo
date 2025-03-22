@@ -4,6 +4,8 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { toast } from "sonner-native";
 
+import { logError } from "~/utils/errorLogging";
+
 export default function RedirectScreen() {
   const { url } = useLocalSearchParams<{ url: string }>();
   const router = useRouter();
@@ -22,7 +24,7 @@ export default function RedirectScreen() {
             });
           }
         } catch (error) {
-          console.error("Error redirecting to URL:", error);
+          logError("Error redirecting to URL", error);
           toast.error("Error redirecting to URL", {
             description: "Please try again later",
           });

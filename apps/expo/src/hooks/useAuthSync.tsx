@@ -5,6 +5,7 @@ import * as Sentry from "@sentry/react-native";
 import { usePostHog } from "posthog-react-native";
 
 import Config from "~/utils/config";
+import { logError } from "~/utils/errorLogging";
 
 const saveAuthData = async (authData: {
   username: string | null;
@@ -20,7 +21,7 @@ const saveAuthData = async (authData: {
           : "group.com.soonlist",
     });
   } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
+    logError("Error saving auth data", error);
   }
 };
 
@@ -33,10 +34,7 @@ export const deleteAuthData = async () => {
           : "group.com.soonlist",
     });
   } catch (error: unknown) {
-    console.error(
-      "Error deleting auth data:",
-      error instanceof Error ? error.message : String(error),
-    );
+    logError("Error deleting auth data", error);
   }
 };
 

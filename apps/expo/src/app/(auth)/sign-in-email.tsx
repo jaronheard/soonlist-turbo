@@ -9,6 +9,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useAppStore } from "~/store";
+import { logError } from "~/utils/errorLogging";
 import { Logo } from "../../components/Logo";
 
 const signInSchema = z.object({
@@ -67,11 +68,10 @@ export default function SignInScreen() {
         setGeneralError("Additional verification required");
       }
     } catch (err: unknown) {
-      console.error("Error during sign in:", {
+      logError("Error during sign in", err, {
         name: err instanceof Error ? err.name : "Unknown",
         message: err instanceof Error ? err.message : "Unknown error",
         stack: err instanceof Error ? err.stack : undefined,
-        fullError: JSON.stringify(err, null, 2),
       });
 
       if (err instanceof Error) {
@@ -80,7 +80,10 @@ export default function SignInScreen() {
         };
         if (clerkError.errors?.[0]) {
           const errorDetails = clerkError.errors[0];
-          console.error("Clerk error details:", errorDetails);
+          logError("Clerk error details", new Error(errorDetails.message), {
+            code: errorDetails.code,
+            message: errorDetails.message,
+          });
 
           switch (errorDetails.code) {
             case "form_identifier_not_found":

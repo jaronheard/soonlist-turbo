@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { ImageSource } from "~/components/demoData";
 import type { RecentPhoto } from "~/store";
 import { useAppStore } from "~/store";
+import { logMessage } from "../utils/errorLogging";
 
 const VALID_IMAGE_REGEX = /^[\w.:\-_/]+\|\d+(\.\d+)?\|\d+(\.\d+)?$/;
 
@@ -103,7 +104,11 @@ export function useInitializeInput({
           setIsOptionSelected(true);
         }
       } else {
-        console.warn("Invalid image URI format:", imageUri);
+        logMessage(
+          "Invalid image URI format",
+          { imageUri },
+          { type: "warning" },
+        );
         if (route === "add") {
           setActiveInput("describe");
           setIsOptionSelected(false);

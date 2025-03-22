@@ -8,6 +8,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { RouterOutputs } from "~/utils/api";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
+import { logError } from "~/utils/errorLogging";
 
 const INITIAL_CALENDAR_LIMIT = 5;
 
@@ -76,7 +77,7 @@ export function useCalendar() {
       setIsCalendarModalVisible(true);
       setShowAllCalendars(false);
     } catch (error) {
-      console.error("Error fetching calendars:", error);
+      logError("Error fetching calendars", error);
       Alert.alert("Error", "Failed to fetch calendars. Please try again.");
     }
   };
@@ -85,7 +86,7 @@ export function useCalendar() {
     setIsCalendarModalVisible(false);
 
     if (!selectedEvent) {
-      console.error("No event selected");
+      logError("No event selected", new Error("No event selected"));
       return;
     }
 
@@ -105,7 +106,11 @@ export function useCalendar() {
           );
           return new Date(eventDateTime.epochMilliseconds);
         } catch (error) {
-          console.error("Error parsing date:", error);
+          logError("Error parsing date", error, {
+            dateString,
+            timeString,
+            timezone,
+          });
           throw new Error("Invalid date or time format");
         }
       };
@@ -169,7 +174,7 @@ export function useCalendar() {
       newUsage[selectedCalendarId] = (newUsage[selectedCalendarId] ?? 0) + 1;
       setCalendarUsage(newUsage);
     } catch (error) {
-      console.error("Error adding event to calendar:", error);
+      logError("Error adding event to calendar", error);
       toast.error("Failed to add event to calendar. Please try again.");
     } finally {
       setSelectedEvent(null);

@@ -17,6 +17,7 @@ import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore } from "~/store";
+import { logError } from "../utils/errorLogging";
 
 export default function AddEventModal() {
   const { style: keyboardStyle } = useKeyboardHeight(32);
@@ -137,7 +138,7 @@ export default function AddEventModal() {
         });
       }
     } catch (error) {
-      console.error("Error creating event:", error);
+      logError("Error creating event", error);
       toast.error("Failed to create event. Please try again.");
     } finally {
       resetAddEventState();

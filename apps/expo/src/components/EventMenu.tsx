@@ -47,6 +47,7 @@ import {
 import { useCalendar } from "~/hooks/useCalendar";
 import { api } from "~/utils/api";
 import Config from "~/utils/config";
+import { logError } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
 
 const screenWidth = Dimensions.get("window").width;
@@ -198,7 +199,10 @@ export function EventMenu({
       )}`;
       void Linking.openURL(url);
     } else {
-      console.error("No location available for directions");
+      logError(
+        "No location available for directions",
+        new Error("No location data"),
+      );
     }
   };
 
@@ -252,7 +256,7 @@ export function EventMenu({
         url: `${Config.apiBaseUrl}/event/${event.id}`,
       });
     } catch (error) {
-      console.error("Error sharing event:", error);
+      logError("Error sharing event", error);
     }
   };
 

@@ -23,6 +23,7 @@ import ShareButton from "~/components/ShareButton";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { api } from "~/utils/api";
 import { formatEventDateRange } from "~/utils/dates";
+import { logError } from "../../../utils/errorLogging";
 
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -93,7 +94,7 @@ export default function Page() {
         setImageAspectRatio(naturalWidth / naturalHeight);
       },
       (err) => {
-        console.error("Failed to get image size:", err);
+        logError("Failed to get image size", err);
       },
     );
   }, [eventQuery.data?.event]);

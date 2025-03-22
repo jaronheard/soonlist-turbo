@@ -10,6 +10,7 @@ import { toast } from "sonner-native";
 
 import { useMountEffect } from "~/hooks/useMountEffect";
 import { initializeRevenueCat, setPostHogUserId } from "~/lib/revenue-cat";
+import { logError, logMessage } from "~/utils/errorLogging";
 import { useOneSignal } from "./OneSignalProvider";
 
 interface RevenueCatContextType {
@@ -45,7 +46,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
           void loginInternal(userId);
         }
       } catch (error) {
-        console.error("Failed to initialize RevenueCat:", error);
+        logError("Failed to initialize RevenueCat", error);
       }
     }
 
@@ -62,7 +63,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   // Internal login function that doesn't depend on the PostHog context
   const loginInternal = async (userIdToLogin: string) => {
     if (!isInitialized) {
-      console.warn("RevenueCat is not initialized yet");
+      logMessage("RevenueCat not initialized yet", { action: "login" });
       return;
     }
 
@@ -76,7 +77,9 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
         await setPostHogUserId(distinctId);
       }
     } catch (error) {
-      console.error("Error logging in to RevenueCat:", error);
+      logError("Error logging in to RevenueCat", error, {
+        userId: userIdToLogin,
+      });
     }
   };
 
@@ -88,21 +91,22 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
 
   const logout = useCallback(async () => {
     if (!isInitialized) {
-      console.warn("RevenueCat is not initialized yet");
+      logMessage("RevenueCat not initialized yet", { action: "logout" });
       return;
     }
     try {
       await Purchases.logOut();
       setCustomerInfo(null);
     } catch (error) {
-      console.error("Error logging out from RevenueCat:", error);
-      throw error;
+      logError("Error logging out from RevenueCat", error);
     }
   }, [isInitialized]);
 
   const showProPaywallIfNeeded = useCallback(async () => {
     if (!isInitialized) {
-      console.warn("RevenueCat is not initialized yet");
+      logMessage("RevenueCat not initialized yet", {
+        action: "showProPaywallIfNeeded",
+      });
       return;
     }
     try {
@@ -141,7 +145,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
           break;
       }
     } catch (err) {
-      console.error("Error presenting paywall:", err);
+      logError("Error presenting paywall", err);
     }
   }, [isInitialized, hasNotificationPermission]);
 

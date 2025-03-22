@@ -7,6 +7,7 @@ import { toast } from "sonner-native";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
+import { logError } from "~/utils/errorLogging";
 
 interface CreateEventOptions {
   rawText?: string;
@@ -190,8 +191,7 @@ export function useCreateEvent() {
 
           return result.eventId;
         } catch (error) {
-          console.error("Error processing image:", error);
-          throw error;
+          logError("Error processing image", error);
         } finally {
           // Reset loading state for both routes
           setIsImageLoading(false, "add");

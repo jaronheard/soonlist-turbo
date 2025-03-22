@@ -13,6 +13,8 @@ import Constants from "expo-constants";
 import { useAuth } from "@clerk/clerk-expo";
 import { usePostHog } from "posthog-react-native";
 
+import { logError, logMessage } from "~/utils/errorLogging";
+
 interface OneSignalContextType {
   hasNotificationPermission: boolean;
   registerForPushNotifications: () => Promise<boolean>;
@@ -48,7 +50,10 @@ const handleNavigation = (url: string) => {
     const appScheme = Constants.expoConfig?.scheme;
 
     if (!appScheme) {
-      console.error("App scheme not configured in app.config.ts");
+      logError(
+        "App scheme not configured",
+        new Error("App scheme not configured in app.config.ts"),
+      );
       return;
     }
 
@@ -62,18 +67,18 @@ const handleNavigation = (url: string) => {
 
       // Use Linking to open the URL
       void Linking.openURL(deepLink).catch((error) => {
-        console.error("Failed to open internal URL:", error, deepLink);
+        logError("Failed to open internal URL", error, { deepLink });
       });
     } else if (url.startsWith("http")) {
       // For external URLs, use Linking directly
       void Linking.openURL(url).catch((error) => {
-        console.error("Failed to open external URL:", error, url);
+        logError("Failed to open external URL", error, { url });
       });
     } else {
-      console.warn("Unrecognized URL format:", url);
+      logMessage("Unrecognized URL format", { url }, { type: "warning" });
     }
   } catch (error) {
-    console.error("Failed to navigate to URL:", error);
+    logError("Failed to navigate to URL", error, { url });
   }
 };
 
@@ -89,7 +94,10 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
       ?.oneSignalAppId as string;
 
     if (!oneSignalAppId) {
-      console.error("OneSignal App ID is not defined in app.config.ts");
+      logError(
+        "OneSignal App ID not defined",
+        new Error("OneSignal App ID is not defined in app.config.ts"),
+      );
       return;
     }
 
@@ -112,7 +120,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
         );
       })
       .catch((error) => {
-        console.error("Error checking notification permission:", error);
+        logError("Error checking notification permission", error);
       });
 
     // Set up notification handlers
@@ -130,7 +138,9 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
               data: event.notification.additionalData || {},
             });
           } catch (error) {
-            console.error("Failed to capture notification event:", error);
+            logError("Failed to capture notification event", error, {
+              event: "foregroundWillDisplay",
+            });
           }
 
           // Display the notification
@@ -150,7 +160,9 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
               data: event.notification.additionalData || {},
             });
           } catch (error) {
-            console.error("Failed to capture notification event:", error);
+            logError("Failed to capture notification event", error, {
+              event: "click",
+            });
           }
 
           // Handle deep linking
@@ -167,7 +179,9 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
                 url: data.url,
               });
             } catch (error) {
-              console.error("Failed to capture notification event:", error);
+              logError("Failed to capture notification event", error, {
+                event: "deep_link",
+              });
             }
 
             // Use our helper function to handle navigation
@@ -214,7 +228,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
       setHasNotificationPermission(isPermissionGranted);
       return isPermissionGranted;
     } catch (error) {
-      console.error("Error checking notification permission:", error);
+      logError("Error checking notification permission", error);
       return false;
     }
   };
@@ -229,7 +243,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
       // Check the permission status after requesting
       return await checkPermissionStatus();
     } catch (error) {
-      console.error("Error requesting notification permission:", error);
+      logError("Error requesting notification permission", error);
       return false;
     }
   };

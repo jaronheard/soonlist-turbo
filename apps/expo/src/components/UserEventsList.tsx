@@ -36,6 +36,7 @@ import {
   isOver,
 } from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
+import { logError } from "../utils/errorLogging";
 import { EventListItemSkeleton } from "./EventListItemSkeleton";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
@@ -293,7 +294,7 @@ function PromoCard({ type }: PromoCardProps) {
         hasMediaPermission: status === MediaLibrary.PermissionStatus.GRANTED,
       });
     } catch (error) {
-      console.error("Error requesting media permissions:", error);
+      logError("Error requesting media permissions", error);
     }
     router.push("/new");
   };

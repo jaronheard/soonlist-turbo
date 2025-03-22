@@ -27,6 +27,7 @@ import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
+import { logError } from "../../utils/errorLogging";
 
 const profileSchema = z.object({
   username: z
@@ -110,7 +111,7 @@ export default function EditProfileScreen() {
         toast.dismiss(loadingToastId);
         toast.success("Profile updated successfully");
       } catch (error) {
-        console.error("Error updating profile:", error);
+        logError("Error updating profile", error);
         toast.dismiss(loadingToastId);
         toast.error("An unexpected error occurred");
       } finally {
@@ -166,13 +167,9 @@ export default function EditProfileScreen() {
       toast.dismiss(loadingToastId);
       toast.success("Profile image updated successfully");
     } catch (error) {
-      console.error("Error in pickImage:", error);
       toast.dismiss(loadingToastId);
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("An unexpected error occurred");
-      }
+      logError("Error in pickImage", error);
+      toast.error("Failed to pick image");
       // Revert to the previous image if the update fails
       setProfileImage(user?.imageUrl ?? null);
     }
@@ -217,12 +214,11 @@ export default function EditProfileScreen() {
               try {
                 await signOut({ shouldDeleteAccount: true });
                 toast.dismiss(loadingToastId);
+                toast.success("Account deleted successfully");
               } catch (error) {
-                console.error("Error deleting account:", error);
+                logError("Error deleting account", error);
                 toast.dismiss(loadingToastId);
-                toast.error(
-                  "Failed to delete account. Please try again or contact support.",
-                );
+                toast.error("Failed to delete account");
               }
             })();
           },
@@ -261,9 +257,9 @@ export default function EditProfileScreen() {
 
                 router.replace("/onboarding");
               } catch (error) {
-                console.error("Error restarting onboarding:", error);
+                logError("Error restarting onboarding", error);
                 toast.dismiss(loadingToastId);
-                toast.error("Failed to restart onboarding. Please try again.");
+                toast.error("Failed to restart onboarding");
               }
             })();
           },
