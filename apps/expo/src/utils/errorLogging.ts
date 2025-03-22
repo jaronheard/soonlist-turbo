@@ -43,9 +43,18 @@ export function logError(
   // Format error data
   let errorData: Error;
   if (error instanceof Error) {
-    errorData = error;
+    // Create a new error object with the appropriate message
+    errorData = new Error(
+      error.message !== message
+        ? `${message}: ${error.message}`
+        : error.message,
+    );
+    // Preserve the original stack trace
+    errorData.stack = error.stack;
+    // Copy over any additional properties from the original error
+    Object.assign(errorData, error);
   } else if (typeof error === "string") {
-    errorData = new Error(error);
+    errorData = new Error(`${message}: ${error}`);
   } else {
     errorData = new Error(message);
     // Add the original error as additional context
@@ -85,6 +94,9 @@ export function logErrorGroup(
     console.error(`${message}:`, errors, additionalData);
   }
 
+  // Create an error to preserve stack trace
+  const groupError = new Error(`Group Error: ${message}`);
+
   Sentry.withScope((scope) => {
     scope.setTag("errorContext", message);
     scope.setTag("errorType", "group");
@@ -97,7 +109,8 @@ export function logErrorGroup(
 
     scope.setExtra("errors", safeStringify(errors));
 
-    Sentry.captureMessage(message, "error");
+    // Use captureException instead of captureMessage to preserve the stack trace
+    Sentry.captureException(groupError);
   });
 }
 
@@ -121,6 +134,10 @@ export function logMessage(
 
   // Only send to Sentry in production to avoid noise
   if (!__DEV__) {
+    // Create an error to capture the original stack trace
+    const errorWithStack = new Error(message);
+    errorWithStack.name = "Info";
+
     Sentry.withScope((scope) => {
       scope.setLevel("info");
 
@@ -136,7 +153,8 @@ export function logMessage(
         });
       }
 
-      Sentry.captureMessage(message);
+      // Use captureException instead of captureMessage to preserve the stack trace
+      Sentry.captureException(errorWithStack);
     });
   }
 }
