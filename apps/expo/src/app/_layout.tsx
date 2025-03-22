@@ -33,7 +33,7 @@ import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
-import { logDebug } from "~/utils/errorLogging";
+import { logDebug, logError } from "~/utils/errorLogging";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
@@ -106,10 +106,10 @@ appsFlyer.initSdk(
     timeToWaitForATTUserAuthorization: 10,
   },
   (result) => {
-    if (__DEV__) logDebug("AppsFlyerSDK initialization result", result);
+    logDebug("AppsFlyerSDK initialization result", result);
   },
   (error) => {
-    Sentry.captureException(error);
+    logError("AppsFlyerSDK initialization error", error);
   },
 );
 
