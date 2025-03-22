@@ -67,6 +67,7 @@ try {
   // Your code that might throw an error
 } catch (error) {
   logError("Error processing image", error, {
+    // Replace with your actual image object properties:
     imageId: image.id,
     imageSize: image.size,
     format: image.format,
