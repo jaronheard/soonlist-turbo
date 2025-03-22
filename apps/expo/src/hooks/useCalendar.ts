@@ -106,7 +106,11 @@ export function useCalendar() {
           );
           return new Date(eventDateTime.epochMilliseconds);
         } catch (error) {
-          logError("Error parsing date", error);
+          logError("Error parsing date", error, {
+            dateString,
+            timeString,
+            timezone,
+          });
           throw new Error("Invalid date or time format");
         }
       };
