@@ -461,7 +461,6 @@ export default function EditEventScreen() {
       return fileUrl;
     } catch (error) {
       logError("Error uploading image", error);
-      throw error;
     } finally {
       setIsUploadingImage(false);
     }

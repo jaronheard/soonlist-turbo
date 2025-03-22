@@ -63,10 +63,7 @@ const VerifyEmail = () => {
           username: completeSignUp.username,
         });
       } else {
-        logError(
-          "Verification failed",
-          new Error(JSON.stringify(completeSignUp, null, 2)),
-        );
+        logError("Verification failed", completeSignUp);
         setGeneralError("Verification failed. Please try again.");
       }
     } catch (err: unknown) {

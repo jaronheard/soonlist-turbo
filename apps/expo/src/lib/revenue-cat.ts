@@ -59,7 +59,6 @@ export async function restorePurchases() {
     return customerInfo;
   } catch (error) {
     logError("Error restoring purchases", error);
-    throw error;
   }
 }
 
@@ -71,6 +70,5 @@ export async function setPostHogUserId(userId: string) {
     logMessage("PostHog user ID set in RevenueCat", { userId });
   } catch (error) {
     logError("Error setting PostHog user ID in RevenueCat", error, { userId });
-    throw error;
   }
 }

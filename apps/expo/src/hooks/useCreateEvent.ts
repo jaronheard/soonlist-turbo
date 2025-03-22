@@ -192,7 +192,6 @@ export function useCreateEvent() {
           return result.eventId;
         } catch (error) {
           logError("Error processing image", error);
-          throw error;
         } finally {
           // Reset loading state for both routes
           setIsImageLoading(false, "add");

@@ -99,7 +99,6 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       setCustomerInfo(null);
     } catch (error) {
       logError("Error logging out from RevenueCat", error);
-      throw error;
     }
   }, [isInitialized]);
 
