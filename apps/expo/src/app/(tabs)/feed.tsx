@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -83,11 +83,7 @@ function MyFeed() {
     }
   }, [eventsQuery]);
 
-  // Memoize the events array to prevent unnecessary re-renders
-  const events = useMemo(
-    () => eventsQuery.data?.pages.flatMap((page) => page.events) ?? [],
-    [eventsQuery.data?.pages],
-  );
+  const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
   // Track any pending AI mutations
   const pendingAIMutations = useMutationState({
@@ -98,9 +94,6 @@ function MyFeed() {
   });
 
   const isAddingEvent = pendingAIMutations.length > 0;
-
-  // Memoize stats to prevent unnecessary re-renders
-  const stats = useMemo(() => statsQuery.data, [statsQuery.data]);
 
   if (!isLoaded) {
     return (
@@ -134,7 +127,7 @@ function MyFeed() {
             isFetchingNextPage={eventsQuery.isFetchingNextPage}
             ActionButton={GoButton}
             showCreator="otherUsers"
-            stats={stats}
+            stats={statsQuery.data}
             promoCard={{ type: "addEvents" }}
           />
           <AddEventButton />

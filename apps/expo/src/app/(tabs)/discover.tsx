@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -44,17 +44,7 @@ export default function Page() {
     }
   }, [eventsQuery]);
 
-  // Memoize the events array to prevent unnecessary re-renders
-  const events = useMemo(
-    () => eventsQuery.data?.pages.flatMap((page) => page.events) ?? [],
-    [eventsQuery.data?.pages],
-  );
-
-  // Memoize the saved event IDs
-  const savedEventIds = useMemo(
-    () => new Set(savedEventIdsQuery.data?.map((event) => event.id)),
-    [savedEventIdsQuery.data],
-  );
+  const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
   if (!isLoaded) {
     return (
@@ -77,6 +67,10 @@ export default function Page() {
   if (!showDiscover) {
     return <Redirect href="/feed" />;
   }
+
+  const savedEventIds = new Set(
+    savedEventIdsQuery.data?.map((event) => event.id),
+  );
 
   function SaveButtonWrapper({
     event,

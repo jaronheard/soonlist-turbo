@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -33,11 +33,7 @@ export default function PastEvents() {
     await eventsQuery.refetch();
   }, [eventsQuery]);
 
-  // Memoize the events array to prevent unnecessary re-renders
-  const events = useMemo(
-    () => eventsQuery.data?.pages.flatMap((page) => page.events) ?? [],
-    [eventsQuery.data?.pages],
-  );
+  const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
   if (!isLoaded) {
     return (
