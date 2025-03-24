@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Animated, Pressable } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 import { Heart } from "lucide-react-native";
@@ -12,12 +12,14 @@ interface SaveButtonProps {
 
 export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
   const { isLoaded, user } = useUser();
-  const username = user?.username || "";
+  const username = useMemo(() => user?.username || "", [user?.username]);
   const scaleAnim = new Animated.Value(1);
 
   const utils = api.useUtils();
   const saveEventMutation = api.event.follow.useMutation({
     async onMutate(newSavedEvent) {
+      if (!username) return { prevData: undefined };
+      
       await utils.event.getSavedIdsForUser.cancel();
       const prevData = utils.event.getSavedIdsForUser.getData({
         userName: username,
@@ -30,12 +32,16 @@ export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
       return { prevData };
     },
     onError(err, newSavedEvent, ctx) {
+      if (!username) return;
+      
       utils.event.getSavedIdsForUser.setData(
         { userName: username },
         ctx?.prevData,
       );
     },
     onSettled() {
+      if (!username) return;
+      
       void utils.event.getSavedIdsForUser.invalidate();
       void utils.event.getEventsForUser.invalidate();
       void utils.event.getStats.invalidate();
@@ -44,6 +50,8 @@ export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
 
   const unsaveEventMutation = api.event.unfollow.useMutation({
     async onMutate(unsavedEvent) {
+      if (!username) return { prevData: undefined };
+      
       await utils.event.getSavedIdsForUser.cancel();
       const prevData = utils.event.getSavedIdsForUser.getData({
         userName: username,
@@ -56,12 +64,16 @@ export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
       return { prevData };
     },
     onError(err, unsavedEvent, ctx) {
+      if (!username) return;
+      
       utils.event.getSavedIdsForUser.setData(
         { userName: username },
         ctx?.prevData,
       );
     },
     onSettled() {
+      if (!username) return;
+      
       void utils.event.getSavedIdsForUser.invalidate();
       void utils.event.getEventsForUser.invalidate();
       void utils.event.getStats.invalidate();
@@ -69,7 +81,7 @@ export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
   });
 
   const handlePress = () => {
-    if (!isLoaded) return;
+    if (!isLoaded || !username) return;
 
     if (isSaved) {
       unsaveEventMutation.mutate({ id: eventId });
@@ -94,10 +106,10 @@ export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
   return (
     <Pressable
       onPress={handlePress}
-      disabled={!isLoaded}
+      disabled={!isLoaded || !username}
       className={`flex-row items-center rounded-full p-1 ${
         isSaved ? "bg-interactive-2" : "bg-interactive-2"
-      } ${!isLoaded ? "opacity-50" : ""}`}
+      } ${!isLoaded || !username ? "opacity-50" : ""}`}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         {isSaved ? (
