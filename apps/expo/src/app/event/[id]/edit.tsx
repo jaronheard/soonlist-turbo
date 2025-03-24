@@ -70,6 +70,8 @@ type FormData = z.infer<typeof formSchema>;
 export default function EditEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const { user } = useUser();
+  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [originalImage, setOriginalImage] = useState<string | null>(null);
@@ -1237,50 +1239,41 @@ export default function EditEventScreen() {
             </View>
 
             {/* Discoverable Toggle */}
-            {(() => {
-              const { user } = useUser();
-              const showDiscover = user
-                ? getPlanStatusFromUser(user).showDiscover
-                : false;
-
-              if (!showDiscover) return null;
-
-              return (
-                <Controller
-                  control={control}
-                  name="visibility"
-                  render={({ field: { onChange, value } }) => (
-                    <View className="mt-4">
-                      <Text className="mb-2 text-base font-semibold">
-                        Discoverable
-                      </Text>
-                      <View className="flex-row items-center justify-between rounded-md border border-neutral-300 p-4">
-                        <View className="flex-row items-center">
-                          {value === "public" ? (
-                            <Globe2 size={20} color="#666" className="mr-2" />
-                          ) : (
-                            <EyeOff size={20} color="#666" className="mr-2" />
-                          )}
-                          <Text className="text-neutral-600">
-                            {value === "public"
-                              ? "Your event is discoverable by others"
-                              : "Your event is not discoverable by others"}
-                          </Text>
-                        </View>
-                        <Switch
-                          value={value === "public"}
-                          onValueChange={(isPublic) => {
-                            onChange(isPublic ? "public" : "private");
-                          }}
-                          trackColor={{ false: "#767577", true: "#4F46E5" }}
-                          thumbColor="#f4f3f4"
-                        />
+            {showDiscover && (
+              <Controller
+                control={control}
+                name="visibility"
+                render={({ field: { onChange, value } }) => (
+                  <View className="mt-4">
+                    <Text className="mb-2 text-base font-semibold">
+                      Discoverable
+                    </Text>
+                    <View className="flex-row items-center justify-between rounded-md border border-neutral-300 p-4">
+                      <View className="flex-row items-center">
+                        {value === "public" ? (
+                          <Globe2 size={20} color="#666" className="mr-2" />
+                        ) : (
+                          <EyeOff size={20} color="#666" className="mr-2" />
+                        )}
+                        <Text className="text-neutral-600">
+                          {value === "public"
+                            ? "Your event is discoverable by others"
+                            : "Your event is not discoverable by others"}
+                        </Text>
                       </View>
+                      <Switch
+                        value={value === "public"}
+                        onValueChange={(isPublic) => {
+                          onChange(isPublic ? "public" : "private");
+                        }}
+                        trackColor={{ false: "#767577", true: "#4F46E5" }}
+                        thumbColor="#f4f3f4"
+                      />
                     </View>
-                  )}
-                />
-              );
-            })()}
+                  </View>
+                )}
+              />
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
