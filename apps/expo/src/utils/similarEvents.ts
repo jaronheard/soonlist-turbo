@@ -142,14 +142,24 @@ function collapseSimilarEvents(
   const descriptionThreshold = 0.1; // 10% similarity for description
   const locationThreshold = 0.1; // 10% similarity for location
 
-  const eventsWithSimilarity: EventWithSimilarity[] = [];
+  // First, sort events by ID to ensure consistent processing order
+  const sortedEvents = [...events].sort((a, b) => a.id.localeCompare(b.id));
 
-  events.forEach((event, index) => {
+  const eventsWithSimilarity: EventWithSimilarity[] = [];
+  // Use a Set to track which events we've already processed
+  const processedEvents = new Set<string>();
+
+  sortedEvents.forEach((event, index) => {
+    // Skip if this event has already been processed as part of another group
+    if (processedEvents.has(event.id)) {
+      return;
+    }
+
     const similarityData: EventWithSimilarity["similarEvents"] = [];
 
-    events.forEach((otherEvent, otherIndex) => {
-      if (index !== otherIndex) {
-        // Avoid comparing an event with itself
+    sortedEvents.forEach((otherEvent, otherIndex) => {
+      if (index !== otherIndex && !processedEvents.has(otherEvent.id)) {
+        // Avoid comparing an event with itself or with already processed events
         const similarityDetails = isEventSimilar(
           event,
           otherEvent,
@@ -161,6 +171,7 @@ function collapseSimilarEvents(
         );
         if (similarityDetails.isSimilar) {
           similarityData.push({ event: otherEvent, similarityDetails });
+          processedEvents.add(otherEvent.id);
         }
       }
     });
@@ -169,59 +180,87 @@ function collapseSimilarEvents(
       event,
       similarEvents: similarityData,
     });
+    // Mark the current event as processed
+    processedEvents.add(event.id);
   });
 
   logDebug("eventsWithSimilarity", eventsWithSimilarity);
 
   const uniqueEventsWithSimilarity: EventWithSimilarity[] = [];
 
-  // Create a Set to track events that have already been considered
-  const seenEvents = new Set();
-
+  // Process each group to find the best event to display
   eventsWithSimilarity.forEach((item) => {
     const { event: currentEvent, similarEvents } = item;
-    if (seenEvents.has(currentEvent.id)) {
-      // Skip this event if it has already been seen
-      return;
-    }
 
+    // Find an event from the current user if available
     const firstEventWithCurrentUserId = similarEvents.find(
       ({ event }) => event.userId === currentUserId,
     );
     const similarEventsHasCurrentUserId =
-      firstEventWithCurrentUserId !== undefined;
+      firstEventWithCurrentUserId !== undefined ||
+      currentEvent.userId === currentUserId;
 
-    let earliestEvent = firstEventWithCurrentUserId?.event || currentEvent;
-    let earliestCreationDate = new Date(
-      firstEventWithCurrentUserId?.event.createdAt || currentEvent.createdAt,
-    );
+    // Start with either current user's event or the main event
+    let bestEvent =
+      similarEventsHasCurrentUserId && firstEventWithCurrentUserId
+        ? firstEventWithCurrentUserId.event
+        : currentEvent;
 
-    similarEvents.forEach(({ event: similarEvent }) => {
-      const similarEventCreationDate = new Date(similarEvent.createdAt);
+    // Set initial creation date
+    let bestCreationDate = new Date(bestEvent.createdAt);
+
+    // Include the current event in similarity check if needed
+    const emptySimilarityDetails: SimilarityDetails = {
+      isSimilar: false,
+      startTimeDifference: 0,
+      endTimeDifference: 0,
+      nameSimilarity: 0,
+      descriptionSimilarity: 0,
+      locationSimilarity: 0,
+    };
+
+    const allEvents = [
+      { event: currentEvent, similarityDetails: emptySimilarityDetails },
+      ...similarEvents,
+    ];
+
+    // Find the best event to display
+    allEvents.forEach(({ event: candidateEvent }) => {
+      const isCurrentUserEvent = candidateEvent.userId === currentUserId;
+      const candidateCreationDate = new Date(candidateEvent.createdAt);
+
+      // Prefer current user's events
       if (similarEventsHasCurrentUserId) {
-        // only set as earlies if it matches the current user
-        if (similarEvent.userId === currentUserId) {
-          if (similarEventCreationDate < earliestCreationDate) {
-            earliestEvent = similarEvent;
-            earliestCreationDate = similarEventCreationDate;
-          }
+        if (
+          isCurrentUserEvent &&
+          // Either bestEvent is not current user's event or this one is older
+          (bestEvent.userId !== currentUserId ||
+            candidateCreationDate < bestCreationDate)
+        ) {
+          bestEvent = candidateEvent;
+          bestCreationDate = candidateCreationDate;
         }
-      } else {
-        if (similarEventCreationDate < earliestCreationDate) {
-          earliestEvent = similarEvent;
-          earliestCreationDate = similarEventCreationDate;
-        }
+      } else if (candidateCreationDate < bestCreationDate) {
+        // If no current user events, just pick the oldest one
+        bestEvent = candidateEvent;
+        bestCreationDate = candidateCreationDate;
       }
-
-      // Mark this similar event as seen
-      seenEvents.add(similarEvent.id);
     });
 
-    // Add the earliest event to the filtered list
-    uniqueEventsWithSimilarity.push({ event: earliestEvent, similarEvents });
+    // Add the best event to the filtered list
+    uniqueEventsWithSimilarity.push({
+      event: bestEvent,
+      // Filter out the best event from similarEvents to avoid duplication
+      similarEvents: similarEvents.filter(
+        ({ event }) => event.id !== bestEvent.id,
+      ),
+    });
   });
 
-  return uniqueEventsWithSimilarity;
+  // Sort final list by start date for consistency
+  return uniqueEventsWithSimilarity.sort(
+    (a, b) => a.event.startDateTime.getTime() - b.event.startDateTime.getTime(),
+  );
 }
 
 export { isEventSimilar, collapseSimilarEvents };
