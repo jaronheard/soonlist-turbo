@@ -29,8 +29,8 @@ import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { api } from "~/utils/api";
-import { logError } from "../../../utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
+import { logError } from "../../../utils/errorLogging";
 
 const formSchema = z.object({
   event: z.object({
@@ -440,7 +440,8 @@ export default function EditEventScreen() {
 
   const pickImage = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== ImagePicker.PermissionStatus.GRANTED) {
         toast.error("Permission to access media library is required");
@@ -1238,17 +1239,21 @@ export default function EditEventScreen() {
             {/* Discoverable Toggle */}
             {(() => {
               const { user } = useUser();
-              const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
-              
+              const showDiscover = user
+                ? getPlanStatusFromUser(user).showDiscover
+                : false;
+
               if (!showDiscover) return null;
-              
+
               return (
                 <Controller
                   control={control}
                   name="visibility"
                   render={({ field: { onChange, value } }) => (
                     <View className="mt-4">
-                      <Text className="mb-2 text-base font-semibold">Discoverable</Text>
+                      <Text className="mb-2 text-base font-semibold">
+                        Discoverable
+                      </Text>
                       <View className="flex-row items-center justify-between rounded-md border border-neutral-300 p-4">
                         <View className="flex-row items-center">
                           {value === "public" ? (
@@ -1257,8 +1262,8 @@ export default function EditEventScreen() {
                             <EyeOff size={20} color="#666" className="mr-2" />
                           )}
                           <Text className="text-neutral-600">
-                            {value === "public" 
-                              ? "Your event is discoverable by others" 
+                            {value === "public"
+                              ? "Your event is discoverable by others"
                               : "Your event is not discoverable by others"}
                           </Text>
                         </View>
