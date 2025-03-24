@@ -1,4 +1,3 @@
-import type { LegendListRef } from "@legendapp/list";
 import React, {
   useCallback,
   useEffect,
@@ -7,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import {
+  FlatList,
   Modal,
   Pressable,
   Text,
@@ -14,7 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { LegendList } from "@legendapp/list";
 import { Check, ChevronDown, Search, X } from "lucide-react-native";
 import moment from "moment-timezone";
 
@@ -175,7 +174,7 @@ export function TimezoneSelectNative({
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTimezone, setCurrentTimezone] = useState<string | null>(null);
-  const flatListRef = useRef<LegendListRef>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   // Get current timezone when component mounts
   useEffect(() => {
@@ -317,6 +316,22 @@ export function TimezoneSelectNative({
     );
   };
 
+  // Handle scroll to index error
+  const handleScrollToIndexFailed = (info: {
+    index: number;
+    highestMeasuredFrameIndex: number;
+    averageItemLength: number;
+  }) => {
+    const wait = new Promise((resolve) => setTimeout(resolve, 100));
+    void wait.then(() => {
+      flatListRef.current?.scrollToIndex({
+        index: info.index,
+        animated: true,
+        viewPosition: 0,
+      });
+    });
+  };
+
   return (
     <View>
       <TouchableOpacity
@@ -379,17 +394,18 @@ export function TimezoneSelectNative({
                 </View>
 
                 {filteredTimezones.length > 0 ? (
-                  <LegendList
+                  <FlatList
                     ref={flatListRef}
                     data={filteredTimezones}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.value}
                     className="flex-1"
                     showsVerticalScrollIndicator={true}
+                    initialNumToRender={20}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                     contentContainerClassName="pb-2"
-                    estimatedItemSize={46}
+                    onScrollToIndexFailed={handleScrollToIndexFailed}
                   />
                 ) : (
                   <View className="flex-1 items-center justify-center p-5">

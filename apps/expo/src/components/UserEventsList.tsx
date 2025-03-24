@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -8,11 +8,11 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { LegendList } from "@legendapp/list";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
   Copy,
@@ -26,7 +26,6 @@ import {
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
-import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
@@ -282,9 +281,6 @@ export function UserEventListItem(props: {
   );
 }
 
-// 1. Memoize the list item component
-const MemoizedUserEventListItem = React.memo(UserEventListItem);
-
 function PromoCard({ type }: PromoCardProps) {
   const { fontScale } = useWindowDimensions();
 
@@ -358,17 +354,8 @@ export default function UserEventsList(props: UserEventsListProps) {
     userName: username,
   });
 
-  // Memoize the savedEventIds Set to ensure stable reference
-  const savedEventIds = React.useMemo(
-    () => new Set(savedIdsQuery.data?.map((item) => item.id) || []),
-    [savedIdsQuery.data],
-  );
-
-  // Add memoization for collapseSimilarEvents with all dependencies
-  const collapsedEvents = React.useMemo(
-    () => collapseSimilarEvents(events, user?.id),
-    [events, user?.id],
-  );
+  // Collapse similar events
+  const collapsedEvents = collapseSimilarEvents(events, user?.id);
 
   const pendingAIMutations = useMutationState(
     {
@@ -446,27 +433,22 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   const renderHeader = () => (stats ? <EventStats {...stats} /> : null);
 
-  // Create a stable keyExtractor function that won't change between renders
-  const keyExtractor = useCallback((item: EventWithSimilarity) => {
-    // Include the similarEvents IDs in the key to ensure it changes when similarity groups change
-    const similarIds = item.similarEvents.map((se) => se.event.id).join("-");
-    return `${item.event.id}${similarIds ? `-${similarIds}` : ""}`;
-  }, []);
-
   return (
     <>
-      <LegendList
-        recycleItems={false}
+      <FlatList
         data={collapsedEvents}
-        estimatedItemSize={130}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
-          const isSaved = savedEventIds.has(item.event.id);
+          const isSaved =
+            savedIdsQuery.data?.some(
+              (savedEvent) => savedEvent.id === item.event.id,
+            ) ?? false;
+
           const similarEventsCount = item.similarEvents.length;
 
           return (
-            <MemoizedUserEventListItem
+            <UserEventListItem
               event={item.event}
               ActionButton={ActionButton}
               isLastItem={index === collapsedEvents.length - 1}
@@ -493,7 +475,6 @@ export default function UserEventsList(props: UserEventsListProps) {
           flexGrow: 1,
         }}
         ListFooterComponent={renderFooter()}
-        keyExtractor={keyExtractor}
       />
     </>
   );

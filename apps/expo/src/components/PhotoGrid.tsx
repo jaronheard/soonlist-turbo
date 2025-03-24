@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import {
   ActionSheetIOS,
   Dimensions,
+  FlatList,
   Linking,
   Pressable,
   Text,
@@ -9,7 +10,6 @@ import {
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
-import { LegendList } from "@legendapp/list";
 import { Camera, ChevronRight, ImagePlus } from "lucide-react-native";
 
 import type { ImageSource } from "~/components/demoData";
@@ -169,6 +169,23 @@ export const PhotoGrid = React.memo(
       [hasMediaPermission, recentPhotos],
     );
 
+    // Memoize the getItemLayout function
+    const getItemLayout = useMemo(
+      () =>
+        (
+          _data:
+            | ArrayLike<RecentPhoto | { id: string; uri: ImageSource }>
+            | null
+            | undefined,
+          index: number,
+        ) => ({
+          length: imageSize,
+          offset: imageSize * Math.floor(index / columns),
+          index,
+        }),
+      [imageSize, columns],
+    );
+
     const renderItem = useMemo(
       () =>
         ({
@@ -235,13 +252,19 @@ export const PhotoGrid = React.memo(
         )}
 
         <View className="-mx-4 flex-1">
-          <LegendList
+          <FlatList
             data={gridData}
             renderItem={renderItem}
-            numColumns={columns}
-            estimatedItemSize={imageSize}
-            keyExtractor={(item) => item.id}
+            numColumns={4}
             showsVerticalScrollIndicator={false}
+            keyExtractor={(item) => item.id}
+            horizontal={false}
+            windowSize={5}
+            maxToRenderPerBatch={16}
+            updateCellsBatchingPeriod={50}
+            initialNumToRender={12}
+            removeClippedSubviews={true}
+            getItemLayout={getItemLayout}
             contentContainerStyle={{ paddingBottom: 140, gap: spacing }}
             columnWrapperStyle={{ gap: spacing }}
           />
