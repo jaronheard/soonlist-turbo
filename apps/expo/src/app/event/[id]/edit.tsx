@@ -3,6 +3,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -15,9 +16,10 @@ import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { router, Stack, useLocalSearchParams } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Image as ImageIcon } from "lucide-react-native";
+import { EyeOff, Globe2, Image as ImageIcon } from "lucide-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
@@ -28,8 +30,8 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { api } from "~/utils/api";
 import { logError } from "../../../utils/errorLogging";
+import { getPlanStatusFromUser } from "~/utils/plan";
 
-// Define the form schema based on the event update schema
 const formSchema = z.object({
   event: z.object({
     name: z.string().min(1, "Event name is required"),
@@ -68,29 +70,22 @@ type FormData = z.infer<typeof formSchema>;
 export default function EditEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  // We need the user for authorization checks in the future
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  // Track the original image to detect changes
   const [originalImage, setOriginalImage] = useState<string | null>(null);
-  // Track if an image is currently uploading
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  // Store the remote URL after an image is uploaded
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
 
-  // State for date and time pickers
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
-  // Temporary values for iOS pickers - these hold the values during editing
   const [tempStartDate, setTempStartDate] = useState<Date>(new Date());
   const [tempEndDate, setTempEndDate] = useState<Date>(new Date());
   const [tempStartTime, setTempStartTime] = useState<Date>(new Date());
   const [tempEndTime, setTempEndTime] = useState<Date>(new Date());
 
-  // Fetch the event data
   const eventQuery = api.event.get.useQuery(
     { eventId: id || "" },
     {
@@ -98,22 +93,18 @@ export default function EditEventScreen() {
     },
   );
 
-  // Get the api utils for cache invalidation
   const utils = api.useUtils();
 
-  // Update event mutation
   const updateEventMutation = api.event.update.useMutation({
     onMutate: () => setIsSubmitting(true),
     onSettled: () => setIsSubmitting(false),
     onSuccess: () => {
       toast.success("Event updated successfully");
-      // Invalidate relevant queries to ensure all event data is refreshed
       void Promise.all([
         utils.event.get.invalidate({ eventId: id || "" }),
         utils.event.getEventsForUser.invalidate(),
         utils.event.getSavedIdsForUser.invalidate(),
         utils.event.getStats.invalidate(),
-        // Invalidate any other event-related queries that might be active
         utils.event.invalidate(),
       ]);
       router.back();
@@ -161,7 +152,6 @@ export default function EditEventScreen() {
     },
   });
 
-  // Format dates for display in the form
   const formatDateForDisplay = (dateString?: string): string => {
     if (!dateString) return "";
 
@@ -169,7 +159,6 @@ export default function EditEventScreen() {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
 
-      // Format as MMM DD, YYYY (e.g., Mar 14, 2025)
       const options: Intl.DateTimeFormatOptions = {
         year: "numeric",
         month: "short",
@@ -182,16 +171,13 @@ export default function EditEventScreen() {
     }
   };
 
-  // Format times for display in the form
   const formatTimeForDisplay = (timeString?: string): string => {
     if (!timeString) return "";
 
     try {
-      // Handle both HH:MM and HH:MM:SS formats
       const parts = timeString.split(":");
       if (parts.length < 2) return timeString;
 
-      // Use type assertion to tell TypeScript these are definitely strings
       const hoursStr = parts[0]!;
       const minutesStr = parts[1]!;
       const hours = parseInt(hoursStr, 10);
@@ -199,13 +185,11 @@ export default function EditEventScreen() {
 
       if (isNaN(hours) || isNaN(minutes)) return timeString;
 
-      // Create a date object to format the time
       const date = new Date();
       date.setHours(hours);
       date.setMinutes(minutes);
       date.setSeconds(0);
 
-      // Format time as h:mm A (e.g., 8:00 PM)
       return date.toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
@@ -217,10 +201,7 @@ export default function EditEventScreen() {
     }
   };
 
-  // Parse time string to Date object
   const parseTimeString = (timeString?: string): Date => {
-    // Create a copy of the current tempStartTime/tempEndTime to preserve the date
-    // This ensures we don't reset to the current date when editing
     const date = new Date();
     if (!timeString) return date;
 
@@ -228,14 +209,12 @@ export default function EditEventScreen() {
       const parts = timeString.split(":");
       if (parts.length !== 2) return date;
 
-      // Use type assertion to tell TypeScript these are definitely strings
       const hoursStr = parts[0]!;
       const minutesStr = parts[1]!;
       const hours = parseInt(hoursStr, 10);
       const minutes = parseInt(minutesStr, 10);
 
       if (!isNaN(hours) && !isNaN(minutes)) {
-        // Only update the hours and minutes, preserving the date
         date.setHours(hours);
         date.setMinutes(minutes);
         date.setSeconds(0);
@@ -247,7 +226,6 @@ export default function EditEventScreen() {
     return date;
   };
 
-  // Parse ISO date string to Date object
   const parseDateString = (dateString?: string): Date => {
     if (!dateString) return new Date();
 
@@ -261,12 +239,10 @@ export default function EditEventScreen() {
     return new Date();
   };
 
-  // Initialize form with event data when it's loaded
   useEffect(() => {
     if (eventQuery.data) {
       const event = eventQuery.data;
 
-      // Define the event data with proper types
       const eventData = event.event || {
         name: "",
         description: "",
@@ -279,7 +255,6 @@ export default function EditEventScreen() {
         images: [] as string[],
       };
 
-      // Define the event metadata with proper types
       const eventMetadata = event.eventMetadata || {
         eventType: "",
         eventCategory: "",
@@ -290,7 +265,6 @@ export default function EditEventScreen() {
         accessibility: [] as string[],
       };
 
-      // Type assertion to help TypeScript understand the structure
       const typedEventData = eventData as {
         name?: string;
         description?: string;
@@ -348,7 +322,6 @@ export default function EditEventScreen() {
             : ("private" as const),
       });
 
-      // Set the selected image if there are images
       if (
         typedEventData.images &&
         typedEventData.images.length > 0 &&
@@ -356,10 +329,9 @@ export default function EditEventScreen() {
       ) {
         const initialImage = typedEventData.images[0];
         setSelectedImage(initialImage);
-        setOriginalImage(initialImage); // Store the original image
+        setOriginalImage(initialImage);
       }
 
-      // Initialize date picker states
       if (typedEventData.startDate) {
         setTempStartDate(parseDateString(typedEventData.startDate));
       }
@@ -378,7 +350,6 @@ export default function EditEventScreen() {
     }
   }, [eventQuery.data, reset, setSelectedImage]);
 
-  // Function to upload an image to Bytescale server
   const uploadImage = async (localUri: string): Promise<string> => {
     setIsUploadingImage(true);
     try {
@@ -467,23 +438,18 @@ export default function EditEventScreen() {
     }
   };
 
-  // Handle image picking
   const pickImage = async () => {
     try {
-      // Request permissions
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== ImagePicker.PermissionStatus.GRANTED) {
         toast.error("Permission to access media library is required");
         return;
       }
 
-      // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false, // Disabled to prevent automatic square cropping
-        quality: 0.8,
+        allowsEditing: false,
       });
 
       if (
@@ -492,21 +458,16 @@ export default function EditEventScreen() {
         result.assets.length > 0 &&
         result.assets[0]?.uri
       ) {
-        // Set the selected image to show in the UI immediately
         const localUri = result.assets[0].uri;
         setSelectedImage(localUri);
 
         try {
-          // Show toast while uploading
           const loadingToastId = toast.loading("Uploading image...");
 
-          // Upload the image to get a remote URL
           const remoteUrl = await uploadImage(localUri);
 
-          // Update the state with the remote URL
           setUploadedImageUrl(remoteUrl);
 
-          // Dismiss the loading toast and show success
           toast.dismiss(loadingToastId);
           toast.success("Image uploaded successfully");
         } catch (error) {
@@ -516,7 +477,6 @@ export default function EditEventScreen() {
               error instanceof Error ? error.message : "Unknown error",
           });
 
-          // Reset selected image on upload failure if it's a new image (not the original)
           if (selectedImage !== originalImage) {
             setSelectedImage(originalImage);
           }
@@ -528,7 +488,6 @@ export default function EditEventScreen() {
     }
   };
 
-  // Handle form submission
   const onSubmit = useCallback(
     async (data: FormData) => {
       if (!id) return;
@@ -618,7 +577,6 @@ export default function EditEventScreen() {
     ],
   );
 
-  // Early return if the 'id' is missing or invalid
   if (!id || typeof id !== "string") {
     return (
       <View className="flex-1 bg-white">
@@ -627,7 +585,6 @@ export default function EditEventScreen() {
     );
   }
 
-  // Loading state
   if (eventQuery.isLoading) {
     return (
       <View className="flex-1 bg-white">
@@ -636,7 +593,6 @@ export default function EditEventScreen() {
     );
   }
 
-  // Not found or error
   if (!eventQuery.data) {
     return (
       <View className="flex-1 bg-white">
@@ -713,7 +669,6 @@ export default function EditEventScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="flex-col gap-4 space-y-6">
-            {/* Event Name */}
             <Controller
               control={control}
               name="event.name"
@@ -744,7 +699,6 @@ export default function EditEventScreen() {
               )}
             />
 
-            {/* Event Location */}
             <Controller
               control={control}
               name="event.location"
@@ -769,7 +723,6 @@ export default function EditEventScreen() {
               )}
             />
 
-            {/* Event Description */}
             <Controller
               control={control}
               name="event.description"
@@ -797,12 +750,10 @@ export default function EditEventScreen() {
               )}
             />
 
-            {/* Start Date and Time Row */}
             <View>
               <Text className="mb-2 text-base font-semibold">Starts</Text>
               <View className="relative rounded-md border border-neutral-300">
                 <View className="flex-row">
-                  {/* Start Date Button */}
                   <Controller
                     control={control}
                     name="event.startDate"
@@ -810,10 +761,8 @@ export default function EditEventScreen() {
                       <TouchableOpacity
                         onPress={() => {
                           if (showStartDatePicker) {
-                            // If already open, close it
                             setShowStartDatePicker(false);
                           } else {
-                            // Otherwise open it and close others
                             setTempStartDate(parseDateString(value));
                             setShowStartDatePicker(true);
                             setShowStartTimePicker(false);
@@ -838,7 +787,6 @@ export default function EditEventScreen() {
                     )}
                   />
 
-                  {/* Start Time Button */}
                   <Controller
                     control={control}
                     name="event.startTime"
@@ -846,11 +794,8 @@ export default function EditEventScreen() {
                       <TouchableOpacity
                         onPress={() => {
                           if (showStartTimePicker) {
-                            // If already open, close it
                             setShowStartTimePicker(false);
                           } else {
-                            // Otherwise open it and close others
-                            // If we have a value, use it; otherwise use the current tempStartTime
                             if (value) {
                               setTempStartTime(parseTimeString(value));
                             }
@@ -878,7 +823,6 @@ export default function EditEventScreen() {
                   />
                 </View>
 
-                {/* Start Date Picker (Expanded below when active) */}
                 {showStartDatePicker && (
                   <View className="border-t border-neutral-100 bg-gray-50 px-2">
                     <Controller
@@ -931,7 +875,6 @@ export default function EditEventScreen() {
                   </View>
                 )}
 
-                {/* Start Time Picker (Expanded below when active) */}
                 {showStartTimePicker && (
                   <View className="border-t border-neutral-100 bg-gray-50 px-2">
                     <Controller
@@ -951,7 +894,6 @@ export default function EditEventScreen() {
                               if (selectedTime) {
                                 setTempStartTime(selectedTime);
 
-                                // Update the time immediately for both platforms
                                 const hours = selectedTime
                                   .getHours()
                                   .toString()
@@ -1005,12 +947,10 @@ export default function EditEventScreen() {
               )}
             </View>
 
-            {/* End Date and Time Row */}
             <View>
               <Text className="mb-2 text-base font-semibold">Ends</Text>
               <View className="relative rounded-md border border-neutral-300">
                 <View className="flex-row">
-                  {/* End Date Button */}
                   <Controller
                     control={control}
                     name="event.endDate"
@@ -1018,10 +958,8 @@ export default function EditEventScreen() {
                       <TouchableOpacity
                         onPress={() => {
                           if (showEndDatePicker) {
-                            // If already open, close it
                             setShowEndDatePicker(false);
                           } else {
-                            // Otherwise open it and close others
                             setTempEndDate(parseDateString(value));
                             setShowEndDatePicker(true);
                             setShowEndTimePicker(false);
@@ -1046,7 +984,6 @@ export default function EditEventScreen() {
                     )}
                   />
 
-                  {/* End Time Button */}
                   <Controller
                     control={control}
                     name="event.endTime"
@@ -1054,11 +991,8 @@ export default function EditEventScreen() {
                       <TouchableOpacity
                         onPress={() => {
                           if (showEndTimePicker) {
-                            // If already open, close it
                             setShowEndTimePicker(false);
                           } else {
-                            // Otherwise open it and close others
-                            // If we have a value, use it; otherwise use the current tempEndTime
                             if (value) {
                               setTempEndTime(parseTimeString(value));
                             }
@@ -1086,7 +1020,6 @@ export default function EditEventScreen() {
                   />
                 </View>
 
-                {/* End Date Picker (Expanded below when active) */}
                 {showEndDatePicker && (
                   <View className="border-t border-neutral-100 bg-gray-50 px-2">
                     <Controller
@@ -1139,7 +1072,6 @@ export default function EditEventScreen() {
                   </View>
                 )}
 
-                {/* End Time Picker (Expanded below when active) */}
                 {showEndTimePicker && (
                   <View className="border-t border-neutral-100 bg-gray-50 px-2">
                     <Controller
@@ -1159,7 +1091,6 @@ export default function EditEventScreen() {
                               if (selectedTime) {
                                 setTempEndTime(selectedTime);
 
-                                // Update the time immediately for both platforms
                                 const hours = selectedTime
                                   .getHours()
                                   .toString()
@@ -1213,12 +1144,10 @@ export default function EditEventScreen() {
               )}
             </View>
 
-            {/* Time Zone */}
             <Controller
               control={control}
               name="event.timeZone"
               render={({ field: { onChange, onBlur, value } }) => {
-                // Get the actual value to display, defaulting to current timezone if empty
                 const displayValue =
                   value || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -1241,7 +1170,6 @@ export default function EditEventScreen() {
               }}
             />
 
-            {/* Image Upload */}
             <View>
               <Text className="mb-2 text-lg font-semibold">Event Image</Text>
               <View className="mt-2">
@@ -1306,6 +1234,48 @@ export default function EditEventScreen() {
                 )}
               </View>
             </View>
+
+            {/* Discoverable Toggle */}
+            {(() => {
+              const { user } = useUser();
+              const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
+              
+              if (!showDiscover) return null;
+              
+              return (
+                <Controller
+                  control={control}
+                  name="visibility"
+                  render={({ field: { onChange, value } }) => (
+                    <View className="mt-4">
+                      <Text className="mb-2 text-base font-semibold">Discoverable</Text>
+                      <View className="flex-row items-center justify-between rounded-md border border-neutral-300 p-4">
+                        <View className="flex-row items-center">
+                          {value === "public" ? (
+                            <Globe2 size={20} color="#666" className="mr-2" />
+                          ) : (
+                            <EyeOff size={20} color="#666" className="mr-2" />
+                          )}
+                          <Text className="text-neutral-600">
+                            {value === "public" 
+                              ? "Your event is discoverable by others" 
+                              : "Your event is not discoverable by others"}
+                          </Text>
+                        </View>
+                        <Switch
+                          value={value === "public"}
+                          onValueChange={(isPublic) => {
+                            onChange(isPublic ? "public" : "private");
+                          }}
+                          trackColor={{ false: "#767577", true: "#4F46E5" }}
+                          thumbColor="#f4f3f4"
+                        />
+                      </View>
+                    </View>
+                  )}
+                />
+              );
+            })()}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
