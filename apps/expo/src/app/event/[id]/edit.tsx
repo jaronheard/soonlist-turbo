@@ -1251,14 +1251,14 @@ export default function EditEventScreen() {
                     <View className="flex-row items-center justify-between rounded-md border border-neutral-300 p-4">
                       <View className="flex-row items-center">
                         {value === "public" ? (
-                          <Globe2 size={20} color="#666" className="mr-2" />
+                          <Globe2 size={20} color="#34435F" className="mr-2" />
                         ) : (
-                          <EyeOff size={20} color="#666" className="mr-2" />
+                          <EyeOff size={20} color="#34435F" className="mr-2" />
                         )}
-                        <Text className="text-neutral-600">
+                        <Text className="ml-2 text-neutral-1">
                           {value === "public"
-                            ? "Your event is discoverable by others"
-                            : "Your event is not discoverable by others"}
+                            ? "Discoverable by others"
+                            : "Not discoverable by others"}
                         </Text>
                       </View>
                       <Switch
