@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -26,7 +26,6 @@ import {
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
-import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
@@ -358,13 +357,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     userName: username,
   });
 
-  // Memoize the savedEventIds Set to ensure stable reference
-  const savedEventIds = React.useMemo(
-    () => new Set(savedIdsQuery.data?.map((item) => item.id) || []),
-    [savedIdsQuery.data],
-  );
-
-  // Add memoization for collapseSimilarEvents with all dependencies
+  // Add memoization for collapseSimilarEvents
   const collapsedEvents = React.useMemo(
     () => collapseSimilarEvents(events, user?.id),
     [events, user?.id],
@@ -446,12 +439,11 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   const renderHeader = () => (stats ? <EventStats {...stats} /> : null);
 
-  // Create a stable keyExtractor function that won't change between renders
-  const keyExtractor = useCallback((item: EventWithSimilarity) => {
-    // Include the similarEvents IDs in the key to ensure it changes when similarity groups change
-    const similarIds = item.similarEvents.map((se) => se.event.id).join("-");
-    return `${item.event.id}${similarIds ? `-${similarIds}` : ""}`;
-  }, []);
+  // 3. Memoize expensive calculations outside of render
+  const savedEventIds = React.useMemo(
+    () => new Set(savedIdsQuery.data?.map((item) => item.id) || []),
+    [savedIdsQuery.data],
+  );
 
   return (
     <>
@@ -462,6 +454,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
+          // Use memoized values instead of calculating inside render
           const isSaved = savedEventIds.has(item.event.id);
           const similarEventsCount = item.similarEvents.length;
 
@@ -493,7 +486,7 @@ export default function UserEventsList(props: UserEventsListProps) {
           flexGrow: 1,
         }}
         ListFooterComponent={renderFooter()}
-        keyExtractor={keyExtractor}
+        keyExtractor={(item) => item.event.id}
       />
     </>
   );
