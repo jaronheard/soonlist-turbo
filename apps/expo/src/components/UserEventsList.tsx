@@ -8,11 +8,11 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { LegendList } from "@legendapp/list";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
   Copy,
@@ -281,9 +281,6 @@ export function UserEventListItem(props: {
   );
 }
 
-// 1. Memoize the list item component
-const MemoizedUserEventListItem = React.memo(UserEventListItem);
-
 function PromoCard({ type }: PromoCardProps) {
   const { fontScale } = useWindowDimensions();
 
@@ -357,11 +354,8 @@ export default function UserEventsList(props: UserEventsListProps) {
     userName: username,
   });
 
-  // Add memoization for collapseSimilarEvents
-  const collapsedEvents = React.useMemo(
-    () => collapseSimilarEvents(events, user?.id),
-    [events, user?.id],
-  );
+  // Collapse similar events
+  const collapsedEvents = collapseSimilarEvents(events, user?.id);
 
   const pendingAIMutations = useMutationState(
     {
@@ -439,26 +433,22 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   const renderHeader = () => (stats ? <EventStats {...stats} /> : null);
 
-  // 3. Memoize expensive calculations outside of render
-  const savedEventIds = React.useMemo(
-    () => new Set(savedIdsQuery.data?.map((item) => item.id) || []),
-    [savedIdsQuery.data],
-  );
-
   return (
     <>
-      <LegendList
+      <FlatList
         data={collapsedEvents}
-        estimatedItemSize={130}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
-          // Use memoized values instead of calculating inside render
-          const isSaved = savedEventIds.has(item.event.id);
+          const isSaved =
+            savedIdsQuery.data?.some(
+              (savedEvent) => savedEvent.id === item.event.id,
+            ) ?? false;
+
           const similarEventsCount = item.similarEvents.length;
 
           return (
-            <MemoizedUserEventListItem
+            <UserEventListItem
               event={item.event}
               ActionButton={ActionButton}
               isLastItem={index === collapsedEvents.length - 1}
@@ -485,7 +475,6 @@ export default function UserEventsList(props: UserEventsListProps) {
           flexGrow: 1,
         }}
         ListFooterComponent={renderFooter()}
-        keyExtractor={(item) => item.event.id}
       />
     </>
   );

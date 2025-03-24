@@ -1,7 +1,6 @@
 import type * as Calendar from "expo-calendar";
 import React from "react";
-import { Modal, Text, TouchableOpacity, View } from "react-native";
-import { LegendList } from "@legendapp/list";
+import { FlatList, Modal, Text, TouchableOpacity, View } from "react-native";
 
 import { useAppStore } from "~/store";
 import { cn } from "~/utils/cn";
@@ -77,11 +76,10 @@ export const CalendarSelectionModal: React.FC<CalendarSelectionModalProps> = ({
           <Text className="mb-3 text-lg font-bold">
             Select Calendar for Event
           </Text>
-          <LegendList
+          <FlatList
             data={displayedCalendars}
             renderItem={renderCalendarItem}
             keyExtractor={(item) => item.id}
-            estimatedItemSize={45}
           />
           {!showAllCalendars && availableCalendars.length > initialLimit && (
             <TouchableOpacity
