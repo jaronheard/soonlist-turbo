@@ -1,4 +1,4 @@
-import { Platform, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
 import {
   SafeAreaProvider,
@@ -33,8 +33,17 @@ import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
+import { getUserTimeZone } from "~/utils/dates";
 import { logDebug, logError } from "~/utils/errorLogging";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const insets = useSafeAreaInsets();
@@ -115,12 +124,18 @@ appsFlyer.initSdk(
 
 function RootLayout() {
   const clerkPublishableKey = Config.clerkPublishableKey;
+  const { setUserTimezone } = useAppStore();
+
+  useEffect(() => {
+    // Initialize user timezone on app start
+    setUserTimezone(getUserTimeZone());
+  }, [setUserTimezone]);
 
   if (!clerkPublishableKey) {
     return (
-      <Text>
-        No Clerk Publishable Key found. Please check your environment.
-      </Text>
+      <View style={styles.container}>
+        <Text>Missing Clerk Publishable Key</Text>
+      </View>
     );
   }
 
