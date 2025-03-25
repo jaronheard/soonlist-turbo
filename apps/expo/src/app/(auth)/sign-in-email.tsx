@@ -4,6 +4,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, router, Stack } from "expo-router";
 import { useAuth, useSignIn } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Intercom from "@intercom/intercom-react-native";
 import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -61,6 +62,9 @@ export default function SignInScreen() {
 
       if (completeSignIn.status === "complete") {
         posthog.identify(data.emailAddress, {
+          email: data.emailAddress,
+        });
+        void Intercom.loginUserWithUserAttributes({
           email: data.emailAddress,
         });
         await setActive({ session: completeSignIn.createdSessionId });

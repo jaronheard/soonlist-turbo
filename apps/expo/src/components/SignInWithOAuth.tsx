@@ -99,8 +99,22 @@ const SignInWithOAuth = () => {
 
       if (res.status === "complete") {
         await setActiveSignUp({ session: res.createdSessionId });
-        // Register user with Intercom
-        await Intercom.loginUnidentifiedUser();
+        // Register user with Intercom with proper identification
+        const email = res.emailAddress;
+        const userId = res.id;
+        if (email && userId) {
+          await Intercom.loginUserWithUserAttributes({
+            email,
+            userId,
+          });
+        }
+        if (!email || !userId) {
+          logError("Failed to identify user with Intercom", {
+            res,
+            email,
+            userId,
+          });
+        }
         setShowUsernameInput(false);
         setPendingSignUp(null);
       } else if (res.status === "missing_requirements") {
