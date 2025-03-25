@@ -58,7 +58,11 @@ export default function EditProfileScreen() {
     { enabled: !!user?.username },
   );
   const queryClient = useQueryClient();
-  const { resetOnboarding: resetOnboardingStore, userTimezone, setUserTimezone } = useAppStore();
+  const {
+    resetOnboarding: resetOnboardingStore,
+    userTimezone,
+    setUserTimezone,
+  } = useAppStore();
 
   const {
     control,
@@ -523,7 +527,9 @@ export default function EditProfileScreen() {
             <View className="mt-8">
               <Text className="text-lg font-semibold">Preferences</Text>
               <View className="mt-4">
-                <Text className="mb-2 text-base font-medium">Default Timezone</Text>
+                <Text className="mb-2 text-base font-medium">
+                  Default Timezone
+                </Text>
                 <Text className="mb-2 text-sm text-neutral-500">
                   This timezone will be used for all new events you create.
                 </Text>
@@ -558,7 +564,7 @@ export default function EditProfileScreen() {
                       className="mt-2 rounded-md bg-neutral-100 p-4"
                     >
                       <Text className="text-base">
-                        View subscription in  Settings
+                        View subscription in Settings
                       </Text>
                     </TouchableOpacity>
                   );

@@ -350,4 +350,3 @@ export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
 export const useHasMediaPermission = () =>
   useAppStore((state) => state.hasMediaPermission);
 export const useUserTimezone = () => useAppStore((state) => state.userTimezone);
-

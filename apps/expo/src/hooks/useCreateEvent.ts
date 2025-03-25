@@ -30,7 +30,7 @@ export function useCreateEvent() {
   const hasUnlimited = customerInfo?.entitlements.active.unlimited;
   const utils = api.useUtils();
   const userTimezone = useUserTimezone();
-  
+
   const eventFromUrl =
     api.ai.eventFromUrlThenCreateThenNotification.useMutation({
       onSuccess: () => {
