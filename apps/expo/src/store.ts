@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import type { RouterOutputs } from "~/utils/api";
+import { getUserTimeZone } from "./utils/dates";
 
 export interface RecentPhoto {
   id: string;
@@ -98,6 +99,10 @@ interface AppState {
   userPriority: string | null;
   setUserPriority: (priority: string) => void;
 
+  // Timezone preference
+  userTimezone: string;
+  setUserTimezone: (timezone: string) => void;
+
   // Onboarding state
   onboardingData: Partial<OnboardingData>;
   setOnboardingData: (data: Partial<OnboardingData>) => void;
@@ -113,12 +118,14 @@ export const useAppStore = create<AppState>()(
       isCalendarModalVisible: false,
       showAllCalendars: false,
       userPriority: null,
+      userTimezone: getUserTimeZone(),
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
       setIsCalendarModalVisible: (isVisible) =>
         set({ isCalendarModalVisible: isVisible }),
       setShowAllCalendars: (show) => set({ showAllCalendars: show }),
+      setUserTimezone: (timezone) => set({ userTimezone: timezone }),
 
       // Initialize event input state for both routes
       addEventState: {
@@ -326,6 +333,7 @@ export const useAppStore = create<AppState>()(
           hasMediaPermission: false,
           hasFullPhotoAccess: false,
           userPriority: null,
+          userTimezone: getUserTimeZone(),
           onboardingData: {},
           currentOnboardingStep: null,
         }),
@@ -341,3 +349,5 @@ export const useAppStore = create<AppState>()(
 export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
 export const useHasMediaPermission = () =>
   useAppStore((state) => state.hasMediaPermission);
+export const useUserTimezone = () => useAppStore((state) => state.userTimezone);
+

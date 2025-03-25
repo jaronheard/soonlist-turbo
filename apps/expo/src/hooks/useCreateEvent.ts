@@ -5,7 +5,7 @@ import * as MediaLibrary from "expo-media-library";
 import { toast } from "sonner-native";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore } from "~/store";
+import { useAppStore, useUserTimezone } from "~/store";
 import { api } from "~/utils/api";
 import { logError } from "~/utils/errorLogging";
 
@@ -29,6 +29,8 @@ export function useCreateEvent() {
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const hasUnlimited = customerInfo?.entitlements.active.unlimited;
   const utils = api.useUtils();
+  const userTimezone = useUserTimezone();
+  
   const eventFromUrl =
     api.ai.eventFromUrlThenCreateThenNotification.useMutation({
       onSuccess: () => {
@@ -78,7 +80,7 @@ export function useCreateEvent() {
           userId,
           username,
           lists: [],
-          timezone: "America/Los_Angeles",
+          timezone: userTimezone,
           visibility: "private",
         })) as CreateEventResult;
         return result.success && result.eventId ? result.eventId : undefined;
@@ -181,7 +183,7 @@ export function useCreateEvent() {
             userId,
             username,
             lists: [],
-            timezone: "America/Los_Angeles",
+            timezone: userTimezone,
             visibility: "private",
           })) as CreateEventResult;
 
@@ -206,7 +208,7 @@ export function useCreateEvent() {
           userId,
           username,
           lists: [],
-          timezone: "America/Los_Angeles",
+          timezone: userTimezone,
           visibility: "private",
         })) as CreateEventResult;
         return result.success && result.eventId ? result.eventId : undefined;
@@ -222,6 +224,7 @@ export function useCreateEvent() {
       eventFromImage,
       eventFromRaw,
       setIsImageLoading,
+      userTimezone,
     ],
   );
 
