@@ -1,0 +1,65 @@
+import type { AppStateStatus } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Alert, AppState } from "react-native";
+
+import { useAppStore, useUserTimezone } from "~/store";
+import { getUserTimeZone } from "~/utils/dates";
+
+export function useTimezoneAlert() {
+  const userTimezone = useUserTimezone();
+  const { setUserTimezone } = useAppStore();
+  const [hasShownAlert, setHasShownAlert] = useState(false);
+  const prevUserTimezoneRef = useRef(userTimezone);
+
+  // Reset alert state when user timezone changes
+  useEffect(() => {
+    if (prevUserTimezoneRef.current !== userTimezone) {
+      setHasShownAlert(false);
+      prevUserTimezoneRef.current = userTimezone;
+    }
+  }, [userTimezone]);
+
+  useEffect(() => {
+    const checkTimezone = () => {
+      const systemTimezone = getUserTimeZone();
+
+      if (userTimezone && systemTimezone !== userTimezone && !hasShownAlert) {
+        Alert.alert(
+          "Timezone Mismatch",
+          `Your device timezone (${systemTimezone}) is different from your selected timezone (${userTimezone}). Would you like to update to your device timezone?`,
+          [
+            {
+              text: "Keep Current",
+              style: "cancel",
+              onPress: () => setHasShownAlert(true),
+            },
+            {
+              text: "Update",
+              onPress: () => {
+                setUserTimezone(systemTimezone);
+                setHasShownAlert(true);
+              },
+            },
+          ],
+        );
+      }
+    };
+
+    // Check on mount and when app comes to foreground
+    checkTimezone();
+
+    // Re-check timezone when app becomes active
+    const subscription = AppState.addEventListener(
+      "change",
+      (nextAppState: AppStateStatus) => {
+        if (nextAppState === "active") {
+          checkTimezone();
+        }
+      },
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [userTimezone, setUserTimezone, hasShownAlert]);
+}

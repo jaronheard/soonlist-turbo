@@ -31,6 +31,7 @@ import { useCalendar } from "~/hooks/useCalendar";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
+import { useTimezoneAlert } from "~/hooks/useTimezoneAlert";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getUserTimeZone } from "~/utils/dates";
@@ -293,6 +294,7 @@ function RootLayoutContent() {
 
   // The share extension logic now specifically leads to /new
   useIntentHandler();
+  useTimezoneAlert();
 
   return (
     <View style={{ flex: 1 }}>
