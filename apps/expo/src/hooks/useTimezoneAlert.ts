@@ -1,5 +1,5 @@
 import type { AppStateStatus } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Alert, AppState } from "react-native";
 
 import { useAppStore, useUserTimezone } from "~/store";
@@ -7,23 +7,27 @@ import { getUserTimeZone } from "~/utils/dates";
 
 export function useTimezoneAlert() {
   const userTimezone = useUserTimezone();
-  const { setUserTimezone } = useAppStore();
-  const [hasShownAlert, setHasShownAlert] = useState(false);
+  const { setUserTimezone, hasShownTimezoneAlert, setHasShownTimezoneAlert } =
+    useAppStore();
   const prevUserTimezoneRef = useRef(userTimezone);
 
   // Reset alert state when user timezone changes
   useEffect(() => {
     if (prevUserTimezoneRef.current !== userTimezone) {
-      setHasShownAlert(false);
+      setHasShownTimezoneAlert(false);
       prevUserTimezoneRef.current = userTimezone;
     }
-  }, [userTimezone]);
+  }, [userTimezone, setHasShownTimezoneAlert]);
 
   useEffect(() => {
     const checkTimezone = () => {
       const systemTimezone = getUserTimeZone();
 
-      if (userTimezone && systemTimezone !== userTimezone && !hasShownAlert) {
+      if (
+        userTimezone &&
+        systemTimezone !== userTimezone &&
+        !hasShownTimezoneAlert
+      ) {
         Alert.alert(
           "Timezone Mismatch",
           `Your device timezone (${systemTimezone}) is different from your selected timezone (${userTimezone}). Would you like to update to your device timezone?`,
@@ -31,13 +35,13 @@ export function useTimezoneAlert() {
             {
               text: "Keep Current",
               style: "cancel",
-              onPress: () => setHasShownAlert(true),
+              onPress: () => setHasShownTimezoneAlert(true),
             },
             {
               text: "Update",
               onPress: () => {
                 setUserTimezone(systemTimezone);
-                setHasShownAlert(true);
+                setHasShownTimezoneAlert(true);
               },
             },
           ],
@@ -61,5 +65,10 @@ export function useTimezoneAlert() {
     return () => {
       subscription.remove();
     };
-  }, [userTimezone, setUserTimezone, hasShownAlert]);
+  }, [
+    userTimezone,
+    setUserTimezone,
+    hasShownTimezoneAlert,
+    setHasShownTimezoneAlert,
+  ]);
 }

@@ -44,6 +44,12 @@ interface AppState {
   setIsCalendarModalVisible: (isVisible: boolean) => void;
   setShowAllCalendars: (show: boolean) => void;
 
+  // Timezone-related state
+  userTimezone: string;
+  hasShownTimezoneAlert: boolean;
+  setUserTimezone: (timezone: string) => void;
+  setHasShownTimezoneAlert: (hasShown: boolean) => void;
+
   // Event input state for /add route
   addEventState: AddEventInputState;
   // Event input state for /new route (share extension)
@@ -99,10 +105,6 @@ interface AppState {
   userPriority: string | null;
   setUserPriority: (priority: string) => void;
 
-  // Timezone preference
-  userTimezone: string;
-  setUserTimezone: (timezone: string) => void;
-
   // Onboarding state
   onboardingData: Partial<OnboardingData>;
   setOnboardingData: (data: Partial<OnboardingData>) => void;
@@ -119,6 +121,7 @@ export const useAppStore = create<AppState>()(
       showAllCalendars: false,
       userPriority: null,
       userTimezone: getUserTimeZone(),
+      hasShownTimezoneAlert: false,
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
@@ -126,6 +129,8 @@ export const useAppStore = create<AppState>()(
         set({ isCalendarModalVisible: isVisible }),
       setShowAllCalendars: (show) => set({ showAllCalendars: show }),
       setUserTimezone: (timezone) => set({ userTimezone: timezone }),
+      setHasShownTimezoneAlert: (hasShown) =>
+        set({ hasShownTimezoneAlert: hasShown }),
 
       // Initialize event input state for both routes
       addEventState: {
@@ -305,6 +310,7 @@ export const useAppStore = create<AppState>()(
           intentParams: null,
           isCalendarModalVisible: false,
           showAllCalendars: false,
+          hasShownTimezoneAlert: false,
           addEventState: {
             input: "",
             imagePreview: null,
