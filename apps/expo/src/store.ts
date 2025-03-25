@@ -310,7 +310,6 @@ export const useAppStore = create<AppState>()(
           intentParams: null,
           isCalendarModalVisible: false,
           showAllCalendars: false,
-          hasShownTimezoneAlert: false,
           addEventState: {
             input: "",
             imagePreview: null,
@@ -340,6 +339,7 @@ export const useAppStore = create<AppState>()(
           hasFullPhotoAccess: false,
           userPriority: null,
           userTimezone: getUserTimeZone(),
+          hasShownTimezoneAlert: false,
           onboardingData: {},
           currentOnboardingStep: null,
         }),
