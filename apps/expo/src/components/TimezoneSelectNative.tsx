@@ -17,6 +17,7 @@ import {
 import { Check, ChevronDown, Search, X } from "lucide-react-native";
 import moment from "moment-timezone";
 
+import { getUserTimeZone } from "~/utils/dates";
 import { logError } from "../utils/errorLogging";
 
 // Type for timezone data
@@ -63,10 +64,10 @@ const formatGMTOffset = (offsetMinutes: number): string => {
 // Get the current timezone using moment-timezone
 const getCurrentTimezone = (): string => {
   try {
-    return moment.tz.guess();
+    return moment.tz.guess() || getUserTimeZone();
   } catch (error) {
     logError("Error getting timezone", error);
-    return "America/Los_Angeles"; // Default to US West Coast
+    return getUserTimeZone();
   }
 };
 

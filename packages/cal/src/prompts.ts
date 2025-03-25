@@ -296,10 +296,12 @@ Ensure that the generated metadata values are concise, relevant, and adhere to t
 
 const formatOffsetAsIANASoft = (offset: string) => {
   const timezone = soft(offset)[0];
-  return timezone?.iana || "America/Los_Angeles";
+  return timezone?.iana || Intl.DateTimeFormat().resolvedOptions().timeZone;
 };
 
-export const getPrompt = (timezone = "America/Los_Angeles") => {
+export const getPrompt = (
+  timezone = Intl.DateTimeFormat().resolvedOptions().timeZone,
+) => {
   const timezoneIANA = formatOffsetAsIANASoft(timezone);
   const now = Temporal.Now.instant().toZonedDateTimeISO(timezoneIANA);
   const date = now.toString();

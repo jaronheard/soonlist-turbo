@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import type { RouterOutputs } from "~/utils/api";
+import { getUserTimeZone } from "./utils/dates";
 
 export interface RecentPhoto {
   id: string;
@@ -42,6 +43,12 @@ interface AppState {
   ) => void;
   setIsCalendarModalVisible: (isVisible: boolean) => void;
   setShowAllCalendars: (show: boolean) => void;
+
+  // Timezone-related state
+  userTimezone: string;
+  hasShownTimezoneAlert: boolean;
+  setUserTimezone: (timezone: string) => void;
+  setHasShownTimezoneAlert: (hasShown: boolean) => void;
 
   // Event input state for /add route
   addEventState: AddEventInputState;
@@ -113,12 +120,17 @@ export const useAppStore = create<AppState>()(
       isCalendarModalVisible: false,
       showAllCalendars: false,
       userPriority: null,
+      userTimezone: getUserTimeZone(),
+      hasShownTimezoneAlert: false,
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
       setIsCalendarModalVisible: (isVisible) =>
         set({ isCalendarModalVisible: isVisible }),
       setShowAllCalendars: (show) => set({ showAllCalendars: show }),
+      setUserTimezone: (timezone) => set({ userTimezone: timezone }),
+      setHasShownTimezoneAlert: (hasShown) =>
+        set({ hasShownTimezoneAlert: hasShown }),
 
       // Initialize event input state for both routes
       addEventState: {
@@ -326,6 +338,8 @@ export const useAppStore = create<AppState>()(
           hasMediaPermission: false,
           hasFullPhotoAccess: false,
           userPriority: null,
+          userTimezone: getUserTimeZone(),
+          hasShownTimezoneAlert: false,
           onboardingData: {},
           currentOnboardingStep: null,
         }),
@@ -341,3 +355,4 @@ export const useAppStore = create<AppState>()(
 export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
 export const useHasMediaPermission = () =>
   useAppStore((state) => state.hasMediaPermission);
+export const useUserTimezone = () => useAppStore((state) => state.userTimezone);

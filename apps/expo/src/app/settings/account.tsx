@@ -22,6 +22,7 @@ import { toast } from "sonner-native";
 import { z } from "zod";
 
 import { Button } from "~/components/Button";
+import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -57,7 +58,11 @@ export default function EditProfileScreen() {
     { enabled: !!user?.username },
   );
   const queryClient = useQueryClient();
-  const { resetOnboarding: resetOnboardingStore } = useAppStore();
+  const {
+    resetOnboarding: resetOnboardingStore,
+    userTimezone,
+    setUserTimezone,
+  } = useAppStore();
 
   const {
     control,
@@ -518,6 +523,23 @@ export default function EditProfileScreen() {
                 {isSubmitting ? "Saving..." : "Save Profile"}
               </Button>
             )}
+
+            <View className="mt-8">
+              <Text className="text-lg font-semibold">Preferences</Text>
+              <View className="mt-4">
+                <Text className="mb-2 text-base font-medium">
+                  Default Timezone
+                </Text>
+                <Text className="mb-2 text-sm text-neutral-500">
+                  This timezone will be used for all new events you create.
+                </Text>
+                <TimezoneSelectNative
+                  value={userTimezone}
+                  onValueChange={setUserTimezone}
+                  placeholder="Select a timezone"
+                />
+              </View>
+            </View>
 
             <View className="mt-12">
               <Text className="text-lg font-semibold">Subscription</Text>

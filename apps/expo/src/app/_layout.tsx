@@ -1,4 +1,4 @@
-import { Platform, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
 import {
   SafeAreaProvider,
@@ -31,10 +31,20 @@ import { useCalendar } from "~/hooks/useCalendar";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
+import { useTimezoneAlert } from "~/hooks/useTimezoneAlert";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
+import { getUserTimeZone } from "~/utils/dates";
 import { logDebug, logError } from "~/utils/errorLogging";
 import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const insets = useSafeAreaInsets();
@@ -115,12 +125,18 @@ appsFlyer.initSdk(
 
 function RootLayout() {
   const clerkPublishableKey = Config.clerkPublishableKey;
+  const { setUserTimezone } = useAppStore();
+
+  useEffect(() => {
+    // Initialize user timezone on app start
+    setUserTimezone(getUserTimeZone());
+  }, [setUserTimezone]);
 
   if (!clerkPublishableKey) {
     return (
-      <Text>
-        No Clerk Publishable Key found. Please check your environment.
-      </Text>
+      <View style={styles.container}>
+        <Text>Missing Clerk Publishable Key</Text>
+      </View>
     );
   }
 
@@ -278,6 +294,7 @@ function RootLayoutContent() {
 
   // The share extension logic now specifically leads to /new
   useIntentHandler();
+  useTimezoneAlert();
 
   return (
     <View style={{ flex: 1 }}>

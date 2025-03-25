@@ -342,7 +342,7 @@ export async function createEventAndNotify(
 
   let { startTime, endTime, timeZone } = firstEvent;
   if (!timeZone) {
-    timeZone = "America/Los_Angeles";
+    timeZone = input.timezone;
   }
   if (!startTime) {
     startTime = "00:00";
