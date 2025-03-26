@@ -4,6 +4,7 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
 import { usePostHog } from "posthog-react-native";
 
+import { syncUserData } from "~/utils/userDataSync";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 
@@ -68,20 +69,20 @@ const useAuthSync = () => {
         email: authData.email ?? null,
       });
 
-      // Identify user for Sentry
-      Sentry.setUser({
-        id: authData.userId,
-        username: authData.username,
-        email: authData.email,
-      });
-
-      // Identify user for PostHog
-      posthog.identify(authData.userId, {
-        username: authData.username,
-        email: authData.email,
-      });
+      // Sync user data across all services
+      await syncUserData(
+        {
+          userId: authData.userId,
+          email: authData.email,
+          username: authData.username,
+          name: user?.fullName || user?.firstName || user?.lastName || undefined,
+          createdAt: user?.createdAt,
+          lastActive: new Date().toISOString(),
+        },
+        posthog
+      );
     }
-  }, [authData, getToken, posthog]);
+  }, [authData, getToken, posthog, user]);
 
   useEffect(() => {
     void syncAuthData();
