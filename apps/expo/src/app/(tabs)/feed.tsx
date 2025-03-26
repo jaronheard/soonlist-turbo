@@ -11,10 +11,10 @@ import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
+import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { logError } from "../../utils/errorLogging";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
 
 function GoButton({
   event,
@@ -129,7 +129,7 @@ function MyFeed() {
             showCreator="otherUsers"
             stats={statsQuery.data}
             promoCard={{ type: "addEvents" }}
-            hasUnlimited={hasUnlimited}
+            hasUnlimited={!!hasUnlimited}
           />
           <AddEventButton />
         </View>
