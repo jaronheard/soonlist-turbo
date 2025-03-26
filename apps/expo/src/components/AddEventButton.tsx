@@ -14,7 +14,8 @@ import { logError } from "../utils/errorLogging";
 export default function AddEventButton() {
   const { resetAddEventState, setImagePreview, setInput } = useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
-  const hasUnlimited = customerInfo?.entitlements.active.unlimited ?? false;
+  const hasUnlimited =
+    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const handlePress = useCallback(async () => {
     // If user doesn't have pro, show paywall

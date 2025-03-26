@@ -52,7 +52,8 @@ function MyFeed() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { hasCompletedOnboarding } = useAppStore();
   const { customerInfo } = useRevenueCat();
-  const hasUnlimited = customerInfo?.entitlements.active.unlimited ?? false;
+  const hasUnlimited =
+    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const userQuery = api.user.getById.useQuery(
     { id: user?.id ?? "" },
@@ -129,7 +130,7 @@ function MyFeed() {
             showCreator="otherUsers"
             stats={statsQuery.data}
             promoCard={{ type: "addEvents" }}
-            hasUnlimited={!!hasUnlimited}
+            hasUnlimited={hasUnlimited}
           />
           <AddEventButton />
         </View>

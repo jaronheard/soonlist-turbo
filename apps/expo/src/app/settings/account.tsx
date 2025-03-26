@@ -546,7 +546,8 @@ export default function EditProfileScreen() {
               {(() => {
                 if (!user) return null;
                 const hasUnlimited =
-                  customerInfo?.entitlements.active.unlimited;
+                  customerInfo?.entitlements.active.unlimited?.isActive ??
+                  false;
 
                 const stripeSubscription =
                   customerInfo?.originalPurchaseDate &&
