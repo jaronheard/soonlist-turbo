@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   View,
+  Linking,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
@@ -21,6 +22,7 @@ import {
   MapPin,
   PlusCircle,
   User,
+  MessageCircle,
 } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -331,6 +333,7 @@ interface UserEventsListProps {
   };
   promoCard?: PromoCardProps;
   demoMode?: boolean;
+  hasUnlimited?: boolean;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -345,6 +348,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     stats,
     promoCard,
     demoMode,
+    hasUnlimited = false,
   } = props;
   const { user } = useUser();
   const queryClient = useQueryClient();
@@ -374,6 +378,39 @@ export default function UserEventsList(props: UserEventsListProps) {
       return (
         <View className="flex-1">
           <EventListItemSkeleton />
+        </View>
+      );
+    }
+
+    if (!hasUnlimited) {
+      return (
+        <View className="flex-1 items-center justify-center px-6">
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            source={require("../assets/icon.png")}
+            style={{
+              width: 64,
+              height: 64,
+              marginBottom: 16,
+              borderRadius: 8,
+            }}
+            contentFit="contain"
+            cachePolicy="disk"
+            transition={100}
+          />
+          <Text className="mb-2 rounded-lg text-center text-2xl font-bold text-neutral-1">
+            Try free now
+          </Text>
+          <Text className="mb-4 text-center text-base text-neutral-2">
+            Found an issue? Message us
+          </Text>
+          <TouchableOpacity
+            onPress={() => Linking.openURL("https://intercom.help/soonlist")}
+            className="flex-row items-center gap-2 rounded-full bg-interactive-2 px-4 py-2"
+          >
+            <MessageCircle size={16} color="#5A32FB" />
+            <Text className="font-medium text-interactive-1">Message us</Text>
+          </TouchableOpacity>
         </View>
       );
     }

@@ -10,9 +10,12 @@ import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
 import { api } from "~/utils/api";
 import { getPlanStatusFromUser } from "~/utils/plan";
+import { useRevenueCat } from "~/providers/RevenueCatProvider";
 
 export default function Page() {
   const { user, isLoaded, isSignedIn } = useUser();
+  const { customerInfo } = useRevenueCat();
+  const hasUnlimited = customerInfo?.entitlements.active.unlimited ?? false;
 
   const eventsQuery = api.event.getDiscoverInfinite.useInfiniteQuery(
     {
@@ -23,13 +26,11 @@ export default function Page() {
     },
   );
 
-  // Move this hook up before any conditional returns
   const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery(
     {
       userName: user?.username ?? "",
     },
     {
-      // Add enabled option in the second parameter to prevent query when user is not signed in
       enabled: isLoaded && isSignedIn && !!user && !!user.username,
     },
   );
@@ -96,6 +97,7 @@ export default function Page() {
             isFetchingNextPage={eventsQuery.isFetchingNextPage}
             ActionButton={SaveButtonWrapper}
             showCreator="always"
+            hasUnlimited={hasUnlimited}
           />
           <AddEventButton />
         </View>
