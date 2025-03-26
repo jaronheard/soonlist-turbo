@@ -138,7 +138,7 @@ export default function AddEventButton({
           <View className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-3.5 shadow-lg">
             <Sparkles size={20} color="#FFF" />
             <Text className="ml-2 text-2xl font-bold text-white">
-              Start for free
+              Start your free trial
             </Text>
           </View>
         </TouchableOpacity>
