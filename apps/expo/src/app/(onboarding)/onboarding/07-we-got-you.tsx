@@ -93,7 +93,7 @@ export default function WeGotYouScreen() {
           </View>
         </View>
       </View>
-      <FinishDemoButton text="Start free trial" variant="light" />
+      <FinishDemoButton text="Start for free" variant="light" />
     </QuestionContainer>
   );
 }
