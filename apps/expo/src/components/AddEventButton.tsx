@@ -11,7 +11,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
-import { ChevronDown, PlusIcon } from "lucide-react-native";
+import { ChevronDown, PlusIcon, Sparkles } from "lucide-react-native";
 
 import { fetchRecentPhotos } from "~/hooks/useMediaLibrary";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -121,19 +121,28 @@ export default function AddEventButton({
         />
       </View>
 
-      <TouchableOpacity
-        onPress={handlePress}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
-      >
-        <View className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-2 p-6 shadow-lg">
-          <PlusIcon size={28} color="#5A32FB" />
-          {!hasUnlimited && (
-            <View className="absolute -right-2 -top-2 rounded-full bg-accent-yellow px-2 py-0.5">
-              <Text className="text-xs font-semibold text-neutral-1">PRO</Text>
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
+      {hasUnlimited ? (
+        <TouchableOpacity
+          onPress={handlePress}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        >
+          <View className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-2 p-6 shadow-lg">
+            <PlusIcon size={28} color="#5A32FB" />
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          onPress={handlePress}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        >
+          <View className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-3.5 shadow-lg">
+            <Sparkles size={20} color="#FFF" />
+            <Text className="ml-2 text-2xl font-bold text-white">
+              Start for free
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
 
       {showChevron && (
         <Animated.View style={animatedStyle}>
