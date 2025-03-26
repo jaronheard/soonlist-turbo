@@ -1,8 +1,7 @@
 import type { ImageSourcePropType } from "react-native";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
-import { router } from "expo-router";
 
 import { FinishDemoButton } from "~/components/FinishDemoButton";
 import { QuestionContainer } from "~/components/QuestionContainer";
