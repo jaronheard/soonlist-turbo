@@ -16,7 +16,6 @@ import { ChevronDown, PlusIcon, Sparkles } from "lucide-react-native";
 import { fetchRecentPhotos } from "~/hooks/useMediaLibrary";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
-import { cn } from "~/utils/cn";
 import { logError } from "../utils/errorLogging";
 
 interface AddEventButtonProps {
@@ -133,12 +132,12 @@ export default function AddEventButton({
       ) : (
         <TouchableOpacity
           onPress={handlePress}
-          className="absolute bottom-8 left-1/2 w-48 -translate-x-1/2"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
         >
-          <View className="w-full flex-row items-center justify-center rounded-full bg-white px-3 py-3.5 shadow-lg">
-            <Sparkles size={20} color="#5A32FB" />
-            <Text className="ml-2 text-2xl font-bold text-[#5A32FB]">
-              Start trial
+          <View className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-3.5 shadow-lg">
+            <Sparkles size={20} color="#FFF" />
+            <Text className="ml-2 text-2xl font-bold text-white">
+              Start for free
             </Text>
           </View>
         </TouchableOpacity>
