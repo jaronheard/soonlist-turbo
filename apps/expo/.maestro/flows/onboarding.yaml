@@ -15,11 +15,4 @@ name: Onboarding Flow
 - tapOn: "No more FOMO 😌"
 - assertVisible: "We got you"
 - tapOn: "Continue"
-- assertVisible: "Try adding an event"
-- tapOn:
-    point: 50%,93%
-- tapOn: "Capture event"
-- assertVisible: "Tue, Jul 15 • 8:00PM Electronic Music Night Downtown Music Hall @demoUser"
-- tapOn: "Tue, Jul 15 • 8:00PM Electronic Music Night Downtown Music Hall @demoUser"
-- tapOn: "See all your possibilities"
-- tapOn: "Finish demo"
+- assertVisible: "Unlimited"
