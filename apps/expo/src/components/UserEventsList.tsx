@@ -7,13 +7,13 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   View,
-  Linking,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import Intercom from "@intercom/intercom-react-native";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
   Copy,
@@ -22,7 +22,6 @@ import {
   MapPin,
   PlusCircle,
   User,
-  MessageCircle,
 } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -373,6 +372,14 @@ export default function UserEventsList(props: UserEventsListProps) {
   const isAddingEvent =
     pendingAIMutations.filter((mutation) => mutation === "pending").length > 0;
 
+  const presentIntercom = async () => {
+    try {
+      await Intercom.present();
+    } catch (error) {
+      logError("Error presenting Intercom", error);
+    }
+  };
+
   const renderEmptyState = () => {
     if ((isAddingEvent || isRefetching) && collapsedEvents.length === 0) {
       return (
@@ -401,16 +408,15 @@ export default function UserEventsList(props: UserEventsListProps) {
           <Text className="mb-2 rounded-lg text-center text-2xl font-bold text-neutral-1">
             Try free now
           </Text>
-          <Text className="mb-4 text-center text-base text-neutral-2">
-            Found an issue? Message us
-          </Text>
-          <TouchableOpacity
-            onPress={() => Linking.openURL("https://intercom.help/soonlist")}
-            className="flex-row items-center gap-2 rounded-full bg-interactive-2 px-4 py-2"
+          <Pressable
+            className="mb-4 text-center text-base text-neutral-2"
+            onPress={presentIntercom}
           >
-            <MessageCircle size={16} color="#5A32FB" />
-            <Text className="font-medium text-interactive-1">Message us</Text>
-          </TouchableOpacity>
+            <Text className="text-neutral-2">
+              Funds an issue?{" "}
+              <Text className="text-interactive-1">Message us</Text>
+            </Text>
+          </Pressable>
         </View>
       );
     }
