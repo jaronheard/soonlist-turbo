@@ -1,9 +1,9 @@
 import type { ImageSourcePropType } from "react-native";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
-import { router } from "expo-router";
 
+import { FinishDemoButton } from "~/components/FinishDemoButton";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useAppStore } from "~/store";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
@@ -92,14 +92,7 @@ export default function WeGotYouScreen() {
           </View>
         </View>
       </View>
-      <TouchableOpacity
-        onPress={() => router.push("/onboarding/demo-intro")}
-        style={styles.button}
-      >
-        <View style={styles.contentContainer}>
-          <Text style={styles.text}>Continue</Text>
-        </View>
-      </TouchableOpacity>
+      <FinishDemoButton text="Start for free" variant="light" />
     </QuestionContainer>
   );
 }
