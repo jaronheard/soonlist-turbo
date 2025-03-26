@@ -218,11 +218,11 @@ importers:
         specifier: ^5.2.8
         version: 5.2.8
       react-native-purchases:
-        specifier: ^8.5.0
-        version: 8.5.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+        specifier: ^8.9.1
+        version: 8.9.1(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       react-native-purchases-ui:
-        specifier: ^8.5.0
-        version: 8.5.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+        specifier: ^8.9.1
+        version: 8.9.1(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       react-native-qrcode-svg:
         specifier: ^6.3.0
         version: 6.3.12(react-native-svg@15.8.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
@@ -3939,8 +3939,8 @@ packages:
   '@remix-run/web-stream@1.1.0':
     resolution: {integrity: sha512-KRJtwrjRV5Bb+pM7zxcTJkhIqWWSy+MYsIxHK+0m5atcznsf15YwUBWHWulZerV2+vvHH1Lp1DD7pw6qKW8SgA==}
 
-  '@revenuecat/purchases-typescript-internal@13.14.0':
-    resolution: {integrity: sha512-PVB3mfqElRwewyufdd3WEbLj7fyGQ36fAGMC6nRdA86H9tZI8TwH3db1BBCX49SK5QrDaaOF7E3VHXXe0/zB5w==}
+  '@revenuecat/purchases-typescript-internal@13.26.0':
+    resolution: {integrity: sha512-oEXuHWsO0bXPnxhXCM/TjolopD4EEZwRV/f9YIlo8m6gpLdzaDBIXrhJ88VR9GIEwqsMBSzO92F1nvuVnuY5xA==}
 
   '@rollup/plugin-commonjs@26.0.1':
     resolution: {integrity: sha512-UnsKoZK6/aGIH6AdkptXhNvhaqftcjq3zZdT+LY5Ftms6JR06nADcDsYp5hTU9E2lbJUEOhdlY5J4DNTneM+jQ==}
@@ -8646,14 +8646,14 @@ packages:
   react-native-onesignal@5.2.8:
     resolution: {integrity: sha512-NZ0bq/z7Cjzb+mb/YJSC4atJ6S2yOGANkwzTQwUBAaMvhNuGzWJfWsj/gfhyS0AFTQScJV6Tsj1cR5nz2SEd3A==}
 
-  react-native-purchases-ui@8.5.0:
-    resolution: {integrity: sha512-KgVLcs4E58lKtTO6elstpmtSCAgpFPEQyUYKzzPbY5sxIjYwXYZJwd5xUPJ09vW5PO/vmdHxyDCAOm/bhyNxZg==}
+  react-native-purchases-ui@8.9.1:
+    resolution: {integrity: sha512-75GfrIbbTMoQWbF55gxsn7CU+6xWoA2zGySHipdCVms8Mm9TF2YxJAUqVF7fvR5yp/s1837OO9alT/ENJ7sLDQ==}
     peerDependencies:
       react: '*'
       react-native: '*'
 
-  react-native-purchases@8.5.0:
-    resolution: {integrity: sha512-Qu8P+ZNKH9e9mRnwD7lsdlgrN4HPy79fStSe9GDvVD89922jO0isdUz2m1d2vLAxR2Yawq+O0ggi0uUhA1NzUg==}
+  react-native-purchases@8.9.1:
+    resolution: {integrity: sha512-ijSanj0WZOukHXLChVjrFuEqZ7tWw7IfTgNZTVtlRzfnl5z7E7LCx9WFnSlnac/RBIVHJbWQymGMobaDX9C17w==}
     peerDependencies:
       react: '>= 16.6.3'
       react-native: '*'
@@ -12513,7 +12513,7 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 20.12.7
+      '@types/node': 22.13.5
       '@types/yargs': 15.0.19
       chalk: 4.1.2
     optional: true
@@ -14084,7 +14084,7 @@ snapshots:
     dependencies:
       web-streams-polyfill: 3.3.3
 
-  '@revenuecat/purchases-typescript-internal@13.14.0': {}
+  '@revenuecat/purchases-typescript-internal@13.26.0': {}
 
   '@rollup/plugin-commonjs@26.0.1(rollup@3.29.5)':
     dependencies:
@@ -19398,16 +19398,16 @@ snapshots:
     dependencies:
       invariant: 2.2.4
 
-  react-native-purchases-ui@8.5.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
+  react-native-purchases-ui@8.9.1(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@revenuecat/purchases-typescript-internal': 13.14.0
+      '@revenuecat/purchases-typescript-internal': 13.26.0
       react: 18.3.1
       react-native: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)
-      react-native-purchases: 8.5.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+      react-native-purchases: 8.9.1(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
 
-  react-native-purchases@8.5.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
+  react-native-purchases@8.9.1(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@revenuecat/purchases-typescript-internal': 13.14.0
+      '@revenuecat/purchases-typescript-internal': 13.26.0
       react: 18.3.1
       react-native: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.24.4(@babel/core@7.26.0))(@react-native-community/cli-server-api@12.3.6(encoding@0.1.13))(@types/react@18.3.18)(encoding@0.1.13)(react@18.3.1)
 
