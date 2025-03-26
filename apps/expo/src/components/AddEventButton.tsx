@@ -4,7 +4,14 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
-import { PlusIcon } from "lucide-react-native";
+import { ChevronDown, PlusIcon } from "lucide-react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 
 import { fetchRecentPhotos } from "~/hooks/useMediaLibrary";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -15,30 +22,45 @@ export default function AddEventButton() {
   const { resetAddEventState, setImagePreview, setInput } = useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const hasUnlimited = customerInfo?.entitlements.active.unlimited ?? false;
+  
+  const translateY = useSharedValue(0);
+  
+  translateY.value = withRepeat(
+    withTiming(-12, {
+      duration: 500,
+      easing: Easing.inOut(Easing.sin),
+    }),
+    -1,
+    true,
+  );
+  
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      position: "absolute",
+      top: -16,
+      left: "50%",
+      transform: [{ translateX: -32 }, { translateY: translateY.value }],
+      zIndex: 10,
+    };
+  });
 
   const handlePress = useCallback(async () => {
-    // If user doesn't have pro, show paywall
     if (!hasUnlimited) {
       await showProPaywallIfNeeded();
       return;
     }
 
-    // Reset state before we begin
     resetAddEventState();
 
-    // Request permissions if needed and fetch photos
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== MediaLibrary.PermissionStatus.GRANTED) {
-        // User denied permission, but we'll still navigate to /add
         router.push("/add");
         return;
       }
 
-      // Permission granted, fetch photos
       const photos = await fetchRecentPhotos();
 
-      // Auto-select first photo if available
       if (photos?.[0]?.uri) {
         const firstUri = photos[0].uri;
         setImagePreview(firstUri, "add");
@@ -46,7 +68,6 @@ export default function AddEventButton() {
         setInput(filename, "add");
       }
 
-      // Navigate to /add with store already set up
       router.push("/add");
     } catch (error) {
       logError("Error in AddEventButton", error);
@@ -106,6 +127,10 @@ export default function AddEventButton() {
           )}
         </View>
       </TouchableOpacity>
+      
+      <Animated.View style={animatedStyle}>
+        <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />
+      </Animated.View>
     </View>
   );
 }
