@@ -9,12 +9,20 @@ import {
   View,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
+  ChevronDown,
   Copy,
   EyeOff,
   Globe2,
@@ -378,6 +386,29 @@ export default function UserEventsList(props: UserEventsListProps) {
       );
     }
 
+    // Initialize the animation for the bouncing arrow
+    const translateY = useSharedValue(0);
+    
+    // Start the animation immediately
+    translateY.value = withRepeat(
+      withTiming(-12, {
+        duration: 500,
+        easing: Easing.inOut(Easing.sin),
+      }),
+      -1, // Infinite repetitions
+      true, // Reverse the animation
+    );
+    
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        position: "absolute",
+        bottom: 80, // Position above the plus button
+        left: "50%",
+        transform: [{ translateX: -32 }, { translateY: translateY.value }],
+        zIndex: 10,
+      };
+    });
+
     return (
       <View className="flex-1 items-center justify-center px-6">
         <Image
@@ -399,6 +430,11 @@ export default function UserEventsList(props: UserEventsListProps) {
         <Text className="text-center text-base text-neutral-2">
           Tap the plus button to add your first event.
         </Text>
+        
+        {/* Bouncing arrow pointing to the plus button */}
+        <Animated.View style={animatedStyle}>
+          <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />
+        </Animated.View>
       </View>
     );
   };
