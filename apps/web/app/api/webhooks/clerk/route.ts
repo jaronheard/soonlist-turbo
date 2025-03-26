@@ -69,13 +69,24 @@ export async function POST(req: Request) {
         throw new Error("No user ID found in webhook data");
       }
 
+      // Helper function to generate display name
+      const generateDisplayName = (firstName?: string | null, lastName?: string | null) => {
+        if (!firstName && !lastName) return "anonymous";
+        
+        const first = firstName || "";
+        const last = lastName || "";
+        
+        if (first && last) return `${first} ${last}`;
+        return first || last;
+      };
+
       if (evt.type === "user.updated") {
         const userId = evt.data.external_id || evt.data.id || "";
         await db
           .update(users)
           .set({
             username: evt.data.username || "",
-            displayName: `${evt.data.first_name} ${evt.data.last_name}`,
+            displayName: generateDisplayName(evt.data.first_name, evt.data.last_name),
             userImage: evt.data.image_url,
             email: evt.data.email_addresses[0]?.email_address || "",
             publicMetadata: evt.data.public_metadata,
@@ -89,7 +100,7 @@ export async function POST(req: Request) {
         await db.insert(users).values({
           id: userId,
           username: evt.data.username || "",
-          displayName: `${evt.data.first_name} ${evt.data.last_name}`,
+          displayName: generateDisplayName(evt.data.first_name, evt.data.last_name),
           userImage: evt.data.image_url,
           email: evt.data.email_addresses[0]?.email_address || "",
           publicMetadata: evt.data.public_metadata,
