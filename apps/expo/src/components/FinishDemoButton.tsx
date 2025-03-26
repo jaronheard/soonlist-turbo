@@ -6,7 +6,15 @@ import { toast } from "sonner-native";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 
-export function FinishDemoButton() {
+interface FinishDemoButtonProps {
+  text?: string;
+  variant?: "dark" | "light";
+}
+
+export function FinishDemoButton({
+  text = "Finish demo",
+  variant = "dark",
+}: FinishDemoButtonProps) {
   const router = useRouter();
   const { showProPaywallIfNeeded } = useRevenueCat();
   const { completeOnboarding } = useOnboarding();
@@ -30,14 +38,21 @@ export function FinishDemoButton() {
     }
   };
 
+  const buttonStyles =
+    variant === "dark"
+      ? `${isLoading ? "bg-interactive-1/50" : "bg-interactive-1"}`
+      : `${isLoading ? "bg-white/50" : "bg-white"}`;
+
+  const textStyles = variant === "dark" ? "text-white" : "text-interactive-1";
+
   return (
     <Pressable
       onPress={handlePress}
       disabled={isLoading}
-      className={`m-4 mb-8 rounded-full ${isLoading ? "bg-interactive-1/50" : "bg-interactive-1"} px-6 py-3`}
+      className={`m-4 mb-8 rounded-full ${buttonStyles} px-6 py-3`}
     >
-      <Text className="text-center text-lg font-bold text-white">
-        {isLoading ? "Loading..." : "Finish demo"}
+      <Text className={`text-center text-lg font-bold ${textStyles}`}>
+        {isLoading ? "Loading..." : text}
       </Text>
     </Pressable>
   );
