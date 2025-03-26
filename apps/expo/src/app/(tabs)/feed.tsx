@@ -95,6 +95,8 @@ function MyFeed() {
 
   const isAddingEvent = pendingAIMutations.length > 0;
 
+  const noLifetimeCaptures = statsQuery.data?.allTimeEvents === 0;
+
   if (!isLoaded) {
     return (
       <View className="flex-1 bg-white">
@@ -130,7 +132,7 @@ function MyFeed() {
             stats={statsQuery.data}
             promoCard={{ type: "addEvents" }}
           />
-          <AddEventButton />
+          <AddEventButton showChevron={noLifetimeCaptures} />
         </View>
       )}
     </View>
