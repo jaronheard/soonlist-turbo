@@ -1,10 +1,5 @@
 import React, { useCallback } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-import * as MediaLibrary from "expo-media-library";
-import { router } from "expo-router";
-import { ChevronDown, PlusIcon } from "lucide-react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -12,19 +7,30 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import * as MediaLibrary from "expo-media-library";
+import { router } from "expo-router";
+import { ChevronDown, PlusIcon } from "lucide-react-native";
 
 import { fetchRecentPhotos } from "~/hooks/useMediaLibrary";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { logError } from "../utils/errorLogging";
 
-export default function AddEventButton() {
+interface AddEventButtonProps {
+  showChevron?: boolean;
+}
+
+export default function AddEventButton({
+  showChevron = true,
+}: AddEventButtonProps) {
   const { resetAddEventState, setImagePreview, setInput } = useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const hasUnlimited = customerInfo?.entitlements.active.unlimited ?? false;
-  
+
   const translateY = useSharedValue(0);
-  
+
   translateY.value = withRepeat(
     withTiming(-12, {
       duration: 500,
@@ -33,11 +39,11 @@ export default function AddEventButton() {
     -1,
     true,
   );
-  
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       position: "absolute",
-      top: -16,
+      top: -150,
       left: "50%",
       transform: [{ translateX: -32 }, { translateY: translateY.value }],
       zIndex: 10,
@@ -127,10 +133,12 @@ export default function AddEventButton() {
           )}
         </View>
       </TouchableOpacity>
-      
-      <Animated.View style={animatedStyle}>
-        <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />
-      </Animated.View>
+
+      {showChevron && (
+        <Animated.View style={animatedStyle}>
+          <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />
+        </Animated.View>
+      )}
     </View>
   );
 }
