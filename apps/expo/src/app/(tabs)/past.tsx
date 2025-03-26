@@ -6,10 +6,14 @@ import { useUser } from "@clerk/clerk-expo";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
+import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { api } from "~/utils/api";
 
 export default function PastEvents() {
   const { user, isLoaded, isSignedIn } = useUser();
+  const { customerInfo } = useRevenueCat();
+  const hasUnlimited =
+    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
     {
@@ -60,6 +64,7 @@ export default function PastEvents() {
             showCreator="otherUsers"
             isRefetching={eventsQuery.isRefetching}
             isFetchingNextPage={eventsQuery.isFetchingNextPage}
+            hasUnlimited={hasUnlimited}
           />
           <AddEventButton />
         </View>

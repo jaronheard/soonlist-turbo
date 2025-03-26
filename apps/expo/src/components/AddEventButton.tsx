@@ -27,7 +27,8 @@ export default function AddEventButton({
 }: AddEventButtonProps) {
   const { resetAddEventState, setImagePreview, setInput } = useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
-  const hasUnlimited = customerInfo?.entitlements.active.unlimited ?? false;
+  const hasUnlimited =
+    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const translateY = useSharedValue(0);
 

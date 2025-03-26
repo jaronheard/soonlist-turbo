@@ -5,7 +5,8 @@ import { useAppStore } from "~/store";
 
 export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
-  const hasUnlimited = customerInfo?.entitlements.active.unlimited;
+  const hasUnlimited =
+    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
   );

@@ -27,7 +27,8 @@ interface CreateEventResult {
 export function useCreateEvent() {
   const { setIsImageLoading } = useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
-  const hasUnlimited = customerInfo?.entitlements.active.unlimited;
+  const hasUnlimited =
+    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
   const utils = api.useUtils();
   const userTimezone = useUserTimezone();
 
@@ -219,7 +220,7 @@ export function useCreateEvent() {
     [
       hasUnlimited,
       showProPaywallIfNeeded,
-      customerInfo?.entitlements.active.unlimited,
+      customerInfo?.entitlements.active.unlimited?.isActive,
       eventFromUrl,
       eventFromImage,
       eventFromRaw,

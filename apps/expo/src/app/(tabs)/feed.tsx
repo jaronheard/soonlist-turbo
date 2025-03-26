@@ -11,6 +11,7 @@ import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
+import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { logError } from "../../utils/errorLogging";
@@ -50,8 +51,10 @@ function GoButton({
 function MyFeed() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { hasCompletedOnboarding } = useAppStore();
+  const { customerInfo } = useRevenueCat();
+  const hasUnlimited =
+    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  // Fetch user data from database to check onboarding status
   const userQuery = api.user.getById.useQuery(
     { id: user?.id ?? "" },
     { enabled: isLoaded && isSignedIn && !!user.id },
@@ -85,7 +88,6 @@ function MyFeed() {
 
   const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
 
-  // Track any pending AI mutations
   const pendingAIMutations = useMutationState({
     filters: {
       mutationKey: ["ai"],
@@ -109,7 +111,6 @@ function MyFeed() {
     return <Redirect href="/sign-in" />;
   }
 
-  // Check if onboarding is completed in either app state OR database
   const dbHasCompletedOnboarding = !!userQuery.data?.onboardingCompletedAt;
   if (!hasCompletedOnboarding && !dbHasCompletedOnboarding) {
     return <Redirect href="/(onboarding)/onboarding" />;
@@ -131,6 +132,7 @@ function MyFeed() {
             showCreator="otherUsers"
             stats={statsQuery.data}
             promoCard={{ type: "addEvents" }}
+            hasUnlimited={hasUnlimited}
           />
           <AddEventButton showChevron={noLifetimeCaptures} />
         </View>

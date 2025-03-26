@@ -149,6 +149,7 @@ export default function DemoFeedScreen() {
           isFetchingNextPage={false}
           stats={stats}
           demoMode
+          hasUnlimited={true} // Demo mode always shows unlimited version
         />
       </View>
 
