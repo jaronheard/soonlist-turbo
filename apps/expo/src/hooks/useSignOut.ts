@@ -1,7 +1,7 @@
-import { OneSignal } from "react-native-onesignal";
 import { useAuth } from "@clerk/clerk-expo";
-import Intercom from "@intercom/intercom-react-native";
+import { usePostHog } from "posthog-react-native";
 
+import { resetUserData } from "~/utils/userDataSync";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
@@ -17,6 +17,7 @@ export const useSignOut = () => {
   const resetStore = useAppStore((state) => state.resetStore);
   const { logout: revenueCatLogout } = useRevenueCat();
   const { mutateAsync: deleteAccount } = api.user.deleteAccount.useMutation();
+  const posthog = usePostHog();
 
   return async (options?: SignOutOptions) => {
     if (!userId) return;
@@ -27,12 +28,13 @@ export const useSignOut = () => {
     // Reset local state
     resetStore();
 
-    // Then clear all auth and third-party services
+    // Reset all third-party services
+    await resetUserData(posthog);
+
+    // Then clear all auth and other services
     await Promise.all([
-      Intercom.logout(),
       revenueCatLogout(),
       deleteAuthData(),
-      OneSignal.logout(),
       options?.shouldDeleteAccount ? deleteAccount() : undefined,
       signOut(),
     ]);

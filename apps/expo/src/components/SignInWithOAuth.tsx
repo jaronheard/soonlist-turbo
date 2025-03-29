@@ -10,11 +10,12 @@ import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { X } from "lucide-react-native";
 import { usePostHog } from "posthog-react-native";
+import { syncUserData } from "~/utils/userDataSync";
 
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { logError } from "../utils/errorLogging";
 import { AppleSignInButton } from "./AppleSignInButton";
-import { EmailSignInButton } from "./EmailSignInButton"; // You'll need to create this component
+import { EmailSignInButton } from "./EmailSignInButton";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Logo } from "./Logo";
 
@@ -42,6 +43,7 @@ const SignInWithOAuth = () => {
   const [pendingSignUp, setPendingSignUp] = useState<
     ReturnType<typeof useSignUp>["signUp"] | null
   >(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleOtherOptions = () => {
     setShowOtherOptions(!showOtherOptions);
@@ -64,14 +66,51 @@ const SignInWithOAuth = () => {
           await setActiveSignIn({ session: result.createdSessionId });
           const email = Clerk.session?.user.emailAddresses[0]?.emailAddress;
           const userId = Clerk.session?.user.id;
-          const _ = await Intercom.loginUserWithUserAttributes({
-            email,
-            userId,
-          });
-          if (email) {
-            posthog.identify(email, {
+          
+          if (userId) {
+            await syncUserData({
+              userId,
               email,
-            });
+              name: Clerk.session?.user.fullName || undefined,
+              username: Clerk.session?.user.username || undefined,
+              createdAt: Clerk.session?.user.createdAt,
+              lastActive: new Date().toISOString(),
+            }, posthog);
+          }
+        } else if (result.signUp?.status === "missing_requirements") {
+          setPendingSignUp(result.signUp);
+          setShowUsernameInput(true);
+        }
+      } else if (result.signUp?.status === "missing_requirements") {
+        setPendingSignUp(result.signUp);
+        setShowUsernameInput(true);
+      }
+    } catch (err) {
+      // Handle error
+      logError("OAuth flow error", err);
+    }
+  };
+
+  const handleOAuthSignIn = async () => {
+    try {
+      setIsLoading(true);
+
+      const result = await startOAuthFlow();
+      if (result.createdSessionId) {
+        if (result.signIn?.status === "complete") {
+          await setActiveSignIn({ session: result.createdSessionId });
+          const email = Clerk.session?.user.emailAddresses[0]?.emailAddress;
+          const userId = Clerk.session?.user.id;
+          
+          if (userId) {
+            await syncUserData({
+              userId,
+              email,
+              name: Clerk.session?.user.fullName || undefined,
+              username: Clerk.session?.user.username || undefined,
+              createdAt: Clerk.session?.user.createdAt,
+              lastActive: new Date().toISOString(),
+            }, posthog);
           }
         } else if (result.signUp?.status === "missing_requirements") {
           setPendingSignUp(result.signUp);
@@ -99,8 +138,16 @@ const SignInWithOAuth = () => {
 
       if (res.status === "complete") {
         await setActiveSignUp({ session: res.createdSessionId });
-        // Register user with Intercom
-        await Intercom.loginUnidentifiedUser();
+        
+        const userId = Clerk.session?.user.id;
+        if (userId) {
+          await syncUserData({
+            userId,
+            username,
+            lastActive: new Date().toISOString(),
+          }, posthog);
+        }
+        
         setShowUsernameInput(false);
         setPendingSignUp(null);
       } else if (res.status === "missing_requirements") {
