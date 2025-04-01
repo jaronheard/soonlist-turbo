@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { AlertTriangle, RefreshCw } from "lucide-react-native";
 
 import { Dialog } from "~/components/Dialog";
@@ -15,6 +15,13 @@ export function ResetOnboardingButton({ style }: ResetOnboardingButtonProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const signOut = useSignOut();
   const resetStore = useAppStore((state) => state.resetStore);
+  const pathname = usePathname();
+
+  // Only show on sign-in/sign-up screens
+  const isAuthScreen = pathname.includes("/sign-in") || pathname.includes("/sign-up") || pathname.includes("/verify-email");
+  if (!isAuthScreen) {
+    return null;
+  }
 
   const handleReset = async () => {
     setShowConfirmation(false);
