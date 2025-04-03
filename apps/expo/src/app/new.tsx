@@ -47,13 +47,17 @@ export default function NewShareScreen() {
 
   /**
    * Use same initialization logic from old new.tsx
+   * Use a key to force re-initialization when text or imageUri changes
    */
-  const { initialized } = useInitializeInput({
-    text,
-    imageUri,
-    recentPhotos: [], // We skip recent photos for share extension
-    route: "new",
-  });
+  const { initialized } = useInitializeInput(
+    {
+      text,
+      imageUri,
+      recentPhotos: [], // We skip recent photos for share extension
+      route: "new",
+    },
+    `${text || ""}-${imageUri || ""}`,
+  );
 
   /**
    * Link detection from typed input (if user modifies text).

@@ -14,12 +14,10 @@ interface UseInitializeInputParams {
   route: "add" | "new";
 }
 
-export function useInitializeInput({
-  text,
-  imageUri,
-  recentPhotos,
-  route,
-}: UseInitializeInputParams) {
+export function useInitializeInput(
+  { text, imageUri, recentPhotos, route }: UseInitializeInputParams,
+  key?: string,
+) {
   const [initialized, setInitialized] = useState(false);
   const {
     setInput,
@@ -69,6 +67,11 @@ export function useInitializeInput({
     },
     [handleLinkPreview, setInput, setLinkPreview, route],
   );
+
+  useEffect(() => {
+    // Reset initialized state when key changes
+    setInitialized(false);
+  }, [key]);
 
   useEffect(() => {
     if (initialized) return;
