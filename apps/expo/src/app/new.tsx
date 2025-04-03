@@ -80,20 +80,26 @@ export default function NewShareScreen() {
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username) return;
 
+    // Store values needed for event creation before resetting state
+    const eventData = {
+      rawText: input,
+      linkPreview: linkPreview ?? undefined,
+      imageUri: imagePreview ?? undefined,
+      userId: user.id,
+      username: user.username,
+    };
+
     // Immediately navigate away
     router.canGoBack() ? router.back() : router.push("/feed");
     toast.info("Capturing in background. Add another?", {
       duration: 5000,
     });
 
+    // Reset state immediately for better UX
+    resetNewEventState();
+
     try {
-      const eventId = await createEvent({
-        rawText: input,
-        linkPreview: linkPreview ?? undefined,
-        imageUri: imagePreview ?? undefined,
-        userId: user.id,
-        username: user.username,
-      });
+      const eventId = await createEvent(eventData);
 
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {
@@ -109,8 +115,6 @@ export default function NewShareScreen() {
     } catch (error) {
       logError("Error creating event", error);
       toast.error("Failed to create event. Please try again.");
-    } finally {
-      resetNewEventState();
     }
   };
 

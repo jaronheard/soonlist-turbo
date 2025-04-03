@@ -37,13 +37,6 @@ export default function AddEventModal() {
     hasFullPhotoAccess,
   } = useAppStore();
 
-  // Reset state on unmount
-  useEffect(() => {
-    return () => {
-      resetAddEventState();
-    };
-  }, [resetAddEventState]);
-
   const handleTextChange = useCallback(
     (text: string) => {
       setInput(text, "add");
@@ -115,17 +108,23 @@ export default function AddEventModal() {
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username) return;
 
+    // Store values needed for event creation before resetting state
+    const eventData = {
+      rawText: input,
+      linkPreview: linkPreview ?? undefined,
+      imageUri: imagePreview ?? undefined,
+      userId: user.id,
+      username: user.username,
+    };
+
     router.canGoBack() ? router.back() : router.replace("/feed");
     toast.info("Capturing in background. Add another?", { duration: 5000 });
 
+    // Reset state immediately for better UX
+    resetAddEventState();
+
     try {
-      const eventId = await createEvent({
-        rawText: input,
-        linkPreview: linkPreview ?? undefined,
-        imageUri: imagePreview ?? undefined,
-        userId: user.id,
-        username: user.username,
-      });
+      const eventId = await createEvent(eventData);
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {
           action: {
@@ -140,8 +139,6 @@ export default function AddEventModal() {
     } catch (error) {
       logError("Error creating event", error);
       toast.error("Failed to create event. Please try again.");
-    } finally {
-      resetAddEventState();
     }
   };
 
