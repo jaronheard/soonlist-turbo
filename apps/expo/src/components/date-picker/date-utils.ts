@@ -1,21 +1,80 @@
 import { logError } from "~/utils/errorLogging";
 
+// Helper to parse YYYY-MM-DD string into a local Date object
+function parseDateStringToLocalDate(dateString: string): Date | null {
+  try {
+    const parts = dateString.split("-");
+    if (parts.length === 3) {
+      const year = parseInt(parts[0]!, 10);
+      const month = parseInt(parts[1]!, 10) - 1; // Month is 0-indexed
+      const day = parseInt(parts[2]!, 10);
+
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        const localDate = new Date(year, month, day);
+        // Verify the date wasn't invalid (e.g., Feb 30th -> Mar 2nd)
+        if (
+          localDate.getFullYear() === year &&
+          localDate.getMonth() === month &&
+          localDate.getDate() === day
+        ) {
+          return localDate;
+        }
+      }
+    }
+    logError(
+      "Failed to parse date string to local date",
+      new Error(`Invalid date format or values: ${dateString}`),
+    );
+    return null; // Indicate parsing failure
+  } catch (error) {
+    logError("Error parsing date string to local date", error);
+    return null;
+  }
+}
+
 export function formatDateForDisplay(dateString?: string): string {
   if (!dateString) return "";
 
-  try {
-    const date = new Date(`${dateString}T00:00:00`);
-    if (isNaN(date.getTime())) return dateString;
+  // Use the new helper to parse as local date first
+  const localDate = parseDateStringToLocalDate(dateString);
 
+  if (!localDate) {
+    // Fallback: Try original UTC-based parsing if local parsing fails,
+    // but log that this fallback was used.
+    try {
+      const utcDate = new Date(`${dateString}T00:00:00`);
+      if (!isNaN(utcDate.getTime())) {
+        logError(
+          "formatDateForDisplay fallback",
+          new Error(
+            `Used UTC fallback for formatting display date: ${dateString}`,
+          ),
+        );
+        const options: Intl.DateTimeFormatOptions = {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        };
+        return utcDate.toLocaleDateString("en-US", options);
+      }
+    } catch (fallbackError) {
+      logError("Error in formatDateForDisplay fallback", fallbackError);
+    }
+    // Ultimate fallback: return original string
+    return dateString;
+  }
+
+  // Format the correctly parsed local date
+  try {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
       month: "short",
       day: "numeric",
     };
-    return date.toLocaleDateString("en-US", options);
+    return localDate.toLocaleDateString("en-US", options);
   } catch (error) {
-    logError("Error formatting date", error);
-    return dateString;
+    logError("Error formatting display date", error);
+    return dateString; // Fallback on formatting error
   }
 }
 
@@ -75,14 +134,24 @@ export function parseTimeString(timeString?: string): Date {
 }
 
 export function parseDateString(dateString?: string): Date {
-  if (!dateString) return new Date();
+  const defaultDate = new Date(); // Use current date as default
 
-  try {
-    const date = new Date(dateString);
-    if (!isNaN(date.getTime())) return date;
-  } catch (error) {
-    logError("Error parsing date", error);
+  if (!dateString) return defaultDate;
+
+  const localDate = parseDateStringToLocalDate(dateString);
+
+  if (localDate) {
+    return localDate;
   }
 
-  return new Date();
+  // Fallback if local parsing failed: Log and return default date.
+  // Avoid returning potentially incorrect UTC-parsed date here,
+  // as it's meant for the picker which relies on local time.
+  logError(
+    "parseDateString fallback",
+    new Error(
+      `Failed to parse date string locally, returning default date for: ${dateString}`,
+    ),
+  );
+  return defaultDate;
 }
