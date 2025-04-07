@@ -158,7 +158,7 @@ export default function EditEventScreen() {
     if (!dateString) return "";
 
     try {
-      const date = new Date(dateString);
+      const date = new Date(`${dateString}T00:00:00`);
       if (isNaN(date.getTime())) return dateString;
 
       const options: Intl.DateTimeFormatOptions = {
