@@ -25,6 +25,12 @@ import { toast } from "sonner-native";
 import { z } from "zod";
 
 import { Button } from "~/components/Button";
+import {
+  DatePickerField,
+  parseDateString,
+  parseTimeString,
+  TimePickerField,
+} from "~/components/date-picker";
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
@@ -66,6 +72,18 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+// Helper function to format date (YYYY-MM-DD)
+function formatDateForStorage(date: Date): string {
+  return date.toISOString().split("T")[0] || "";
+}
+
+// Helper function to format time (HH:mm)
+function formatTimeForStorage(date: Date): string {
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
 
 export default function EditEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -123,6 +141,7 @@ export default function EditEventScreen() {
     handleSubmit,
     formState: { errors, isDirty, isValid },
     reset,
+    setValue,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onTouched",
@@ -153,93 +172,6 @@ export default function EditEventScreen() {
       visibility: "private" as const,
     },
   });
-
-  const formatDateForDisplay = (dateString?: string): string => {
-    if (!dateString) return "";
-
-    try {
-      const date = new Date(`${dateString}T00:00:00`);
-      if (isNaN(date.getTime())) return dateString;
-
-      const options: Intl.DateTimeFormatOptions = {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      };
-      return date.toLocaleDateString("en-US", options);
-    } catch (error) {
-      logError("Error formatting date", error);
-      return dateString;
-    }
-  };
-
-  const formatTimeForDisplay = (timeString?: string): string => {
-    if (!timeString) return "";
-
-    try {
-      const parts = timeString.split(":");
-      if (parts.length < 2) return timeString;
-
-      const hoursStr = parts[0]!;
-      const minutesStr = parts[1]!;
-      const hours = parseInt(hoursStr, 10);
-      const minutes = parseInt(minutesStr, 10);
-
-      if (isNaN(hours) || isNaN(minutes)) return timeString;
-
-      const date = new Date();
-      date.setHours(hours);
-      date.setMinutes(minutes);
-      date.setSeconds(0);
-
-      return date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch (error) {
-      logError("Error formatting time", error);
-      return timeString;
-    }
-  };
-
-  const parseTimeString = (timeString?: string): Date => {
-    const date = new Date();
-    if (!timeString) return date;
-
-    try {
-      const parts = timeString.split(":");
-      if (parts.length !== 2) return date;
-
-      const hoursStr = parts[0]!;
-      const minutesStr = parts[1]!;
-      const hours = parseInt(hoursStr, 10);
-      const minutes = parseInt(minutesStr, 10);
-
-      if (!isNaN(hours) && !isNaN(minutes)) {
-        date.setHours(hours);
-        date.setMinutes(minutes);
-        date.setSeconds(0);
-      }
-    } catch (error) {
-      logError("Error parsing time", error);
-    }
-
-    return date;
-  };
-
-  const parseDateString = (dateString?: string): Date => {
-    if (!dateString) return new Date();
-
-    try {
-      const date = new Date(dateString);
-      if (!isNaN(date.getTime())) return date;
-    } catch (error) {
-      logError("Error parsing date", error);
-    }
-
-    return new Date();
-  };
 
   useEffect(() => {
     if (eventQuery.data) {
@@ -580,6 +512,141 @@ export default function EditEventScreen() {
     ],
   );
 
+  // --- Handlers for Pickers ---
+  const handleShowStartDatePicker = () => {
+    setTempStartDate(
+      parseDateString(
+        (control._getWatch("event.startDate") as string | undefined) ||
+          new Date(),
+      ),
+    );
+    setShowStartDatePicker(true);
+    setShowStartTimePicker(false);
+    setShowEndDatePicker(false);
+    setShowEndTimePicker(false);
+  };
+
+  const handleShowStartTimePicker = () => {
+    setTempStartTime(
+      parseTimeString(
+        (control._getWatch("event.startTime") as string | undefined) ||
+          new Date(),
+      ),
+    );
+    setShowStartTimePicker(true);
+    setShowStartDatePicker(false);
+    setShowEndDatePicker(false);
+    setShowEndTimePicker(false);
+  };
+
+  const handleShowEndDatePicker = () => {
+    setTempEndDate(
+      parseDateString(
+        (control._getWatch("event.endDate") as string | undefined) ||
+          new Date(),
+      ),
+    );
+    setShowEndDatePicker(true);
+    setShowStartDatePicker(false);
+    setShowStartTimePicker(false);
+    setShowEndTimePicker(false);
+  };
+
+  const handleShowEndTimePicker = () => {
+    setTempEndTime(
+      parseTimeString(
+        (control._getWatch("event.endTime") as string | undefined) ||
+          new Date(),
+      ),
+    );
+    setShowEndTimePicker(true);
+    setShowStartDatePicker(false);
+    setShowStartTimePicker(false);
+    setShowEndDatePicker(false);
+  };
+
+  // --- Picker Change Handlers ---
+  const onStartDateChange = (_: unknown, selectedDate?: Date) => {
+    const currentDate = selectedDate || tempStartDate;
+    if (Platform.OS === "android") {
+      setShowStartDatePicker(false);
+    }
+    setTempStartDate(currentDate);
+    if (Platform.OS === "android") {
+      setValue("event.startDate", formatDateForStorage(currentDate), {
+        shouldDirty: true,
+      });
+    }
+  };
+
+  const onStartTimeChange = (_: unknown, selectedTime?: Date) => {
+    const currentTime = selectedTime || tempStartTime;
+    if (Platform.OS === "android") {
+      setShowStartTimePicker(false);
+    }
+    setTempStartTime(currentTime);
+    if (Platform.OS === "android") {
+      setValue("event.startTime", formatTimeForStorage(currentTime), {
+        shouldDirty: true,
+      });
+    }
+  };
+
+  const onEndDateChange = (_: unknown, selectedDate?: Date) => {
+    const currentDate = selectedDate || tempEndDate;
+    if (Platform.OS === "android") {
+      setShowEndDatePicker(false);
+    }
+    setTempEndDate(currentDate);
+    if (Platform.OS === "android") {
+      setValue("event.endDate", formatDateForStorage(currentDate), {
+        shouldDirty: true,
+      });
+    }
+  };
+
+  const onEndTimeChange = (_: unknown, selectedTime?: Date) => {
+    const currentTime = selectedTime || tempEndTime;
+    if (Platform.OS === "android") {
+      setShowEndTimePicker(false);
+    }
+    setTempEndTime(currentTime);
+    if (Platform.OS === "android") {
+      setValue("event.endTime", formatTimeForStorage(currentTime), {
+        shouldDirty: true,
+      });
+    }
+  };
+
+  // --- iOS Done Handlers ---
+  const handleStartDateDone = () => {
+    setValue("event.startDate", formatDateForStorage(tempStartDate), {
+      shouldDirty: true,
+    });
+    setShowStartDatePicker(false);
+  };
+
+  const handleStartTimeDone = () => {
+    setValue("event.startTime", formatTimeForStorage(tempStartTime), {
+      shouldDirty: true,
+    });
+    setShowStartTimePicker(false);
+  };
+
+  const handleEndDateDone = () => {
+    setValue("event.endDate", formatDateForStorage(tempEndDate), {
+      shouldDirty: true,
+    });
+    setShowEndDatePicker(false);
+  };
+
+  const handleEndTimeDone = () => {
+    setValue("event.endTime", formatTimeForStorage(tempEndTime), {
+      shouldDirty: true,
+    });
+    setShowEndTimePicker(false);
+  };
+
   if (!id || typeof id !== "string") {
     return (
       <View className="flex-1 bg-white">
@@ -753,192 +820,87 @@ export default function EditEventScreen() {
               )}
             />
 
-            <View>
+            {/* ----- STARTS Section ----- */}
+            <View className="z-50">
               <Text className="mb-2 text-base font-semibold">Starts</Text>
               <View className="relative rounded-md border border-neutral-300">
                 <View className="flex-row">
-                  <Controller
+                  <DatePickerField
                     control={control}
                     name="event.startDate"
-                    render={({ field: { onChange: _onChange, value } }) => (
-                      <TouchableOpacity
-                        onPress={() => {
-                          if (showStartDatePicker) {
-                            setShowStartDatePicker(false);
-                          } else {
-                            setTempStartDate(parseDateString(value));
-                            setShowStartDatePicker(true);
-                            setShowStartTimePicker(false);
-                            setShowEndDatePicker(false);
-                            setShowEndTimePicker(false);
-                          }
-                        }}
-                        className="flex-1 border-r border-neutral-100 px-3 py-3.5"
-                      >
-                        <Text
-                          className={
-                            showStartDatePicker
-                              ? "font-medium text-red-500"
-                              : value
-                                ? "text-black"
-                                : "text-neutral-500"
-                          }
-                        >
-                          {formatDateForDisplay(value) || "Select date"}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
+                    label=""
+                    onPress={handleShowStartDatePicker}
+                    error={errors.event?.startDate?.message}
+                    className="flex-1"
                   />
-
-                  <Controller
+                  <TimePickerField
                     control={control}
                     name="event.startTime"
-                    render={({ field: { onChange: _onChange, value } }) => (
-                      <TouchableOpacity
-                        onPress={() => {
-                          if (showStartTimePicker) {
-                            setShowStartTimePicker(false);
-                          } else {
-                            if (value) {
-                              setTempStartTime(parseTimeString(value));
-                            }
-                            setShowStartTimePicker(true);
-                            setShowStartDatePicker(false);
-                            setShowEndDatePicker(false);
-                            setShowEndTimePicker(false);
-                          }
-                        }}
-                        className="flex-1 px-3 py-3.5"
-                      >
-                        <Text
-                          className={
-                            showStartTimePicker
-                              ? "font-medium text-red-500"
-                              : value
-                                ? "text-black"
-                                : "text-neutral-500"
-                          }
-                        >
-                          {formatTimeForDisplay(value) || "Select time"}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
+                    label=""
+                    onPress={handleShowStartTimePicker}
+                    error={errors.event?.startTime?.message}
+                    className="flex-1"
                   />
                 </View>
 
+                {/* --- START DATE Picker --- */}
                 {showStartDatePicker && (
-                  <View className="border-t border-neutral-100 bg-gray-50 px-2">
-                    <Controller
-                      control={control}
-                      name="event.startDate"
-                      render={({ field: { onChange: onChangeStartDate } }) => (
-                        <>
-                          <DateTimePicker
-                            testID="startDatePicker"
-                            value={tempStartDate}
-                            mode="date"
-                            display={
-                              Platform.OS === "ios" ? "inline" : "default"
-                            }
-                            onChange={(_, selectedDate) => {
-                              if (selectedDate) {
-                                setTempStartDate(selectedDate);
-
-                                if (Platform.OS === "android") {
-                                  const formattedDate = selectedDate
-                                    .toISOString()
-                                    .split("T")[0];
-                                  onChangeStartDate(formattedDate);
-                                  setShowStartDatePicker(false);
-                                }
-                              }
-                            }}
-                            style={{ height: 350, marginVertical: 8 }}
-                          />
-
-                          {Platform.OS === "ios" && (
-                            <TouchableOpacity
-                              onPress={() => {
-                                const formattedDate = tempStartDate
-                                  .toISOString()
-                                  .split("T")[0];
-                                onChangeStartDate(formattedDate);
-                                setShowStartDatePicker(false);
-                              }}
-                              className="mb-2 mr-2 self-end"
-                            >
-                              <Text className="text-base font-semibold text-indigo-600">
-                                Done
-                              </Text>
-                            </TouchableOpacity>
-                          )}
-                        </>
-                      )}
+                  <View
+                    className="absolute left-0 right-0 top-14 z-50 border-t border-neutral-100 bg-gray-50 px-2 shadow-lg"
+                    style={{ elevation: 5 }}
+                  >
+                    <DateTimePicker
+                      testID="startDatePicker"
+                      value={tempStartDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "inline" : "default"}
+                      onChange={onStartDateChange}
+                      style={{
+                        height: Platform.OS === "ios" ? 350 : undefined,
+                        marginVertical: 8,
+                      }}
                     />
+                    {Platform.OS === "ios" && (
+                      <TouchableOpacity
+                        onPress={handleStartDateDone}
+                        className="mb-2 mr-2 self-end"
+                      >
+                        <Text className="text-base font-semibold text-indigo-600">
+                          Done
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 )}
 
+                {/* --- START TIME Picker --- */}
                 {showStartTimePicker && (
-                  <View className="border-t border-neutral-100 bg-gray-50 px-2">
-                    <Controller
-                      control={control}
-                      name="event.startTime"
-                      render={({ field: { onChange: onChangeStartTime } }) => (
-                        <>
-                          <DateTimePicker
-                            testID="startTimePicker"
-                            value={tempStartTime}
-                            mode="time"
-                            minuteInterval={5}
-                            display={
-                              Platform.OS === "ios" ? "spinner" : "default"
-                            }
-                            onChange={(_, selectedTime) => {
-                              if (selectedTime) {
-                                setTempStartTime(selectedTime);
-
-                                const hours = selectedTime
-                                  .getHours()
-                                  .toString()
-                                  .padStart(2, "0");
-                                const minutes = selectedTime
-                                  .getMinutes()
-                                  .toString()
-                                  .padStart(2, "0");
-                                onChangeStartTime(`${hours}:${minutes}`);
-
-                                if (Platform.OS === "android") {
-                                  setShowStartTimePicker(false);
-                                }
-                              }
-                            }}
-                            style={{ height: 350, marginVertical: 8 }}
-                          />
-
-                          {Platform.OS === "ios" && (
-                            <TouchableOpacity
-                              onPress={() => {
-                                const hours = tempStartTime
-                                  .getHours()
-                                  .toString()
-                                  .padStart(2, "0");
-                                const minutes = tempStartTime
-                                  .getMinutes()
-                                  .toString()
-                                  .padStart(2, "0");
-                                onChangeStartTime(`${hours}:${minutes}`);
-                                setShowStartTimePicker(false);
-                              }}
-                              className="mb-2 mr-2 self-end"
-                            >
-                              <Text className="text-base font-semibold text-indigo-600">
-                                Done
-                              </Text>
-                            </TouchableOpacity>
-                          )}
-                        </>
-                      )}
+                  <View
+                    className="absolute left-0 right-0 top-14 z-50 border-t border-neutral-100 bg-gray-50 px-2 shadow-lg"
+                    style={{ elevation: 5 }}
+                  >
+                    <DateTimePicker
+                      testID="startTimePicker"
+                      value={tempStartTime}
+                      mode="time"
+                      minuteInterval={5}
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={onStartTimeChange}
+                      style={{
+                        height: Platform.OS === "ios" ? 350 : undefined,
+                        marginVertical: 8,
+                      }}
                     />
+                    {Platform.OS === "ios" && (
+                      <TouchableOpacity
+                        onPress={handleStartTimeDone}
+                        className="mb-2 mr-2 self-end"
+                      >
+                        <Text className="text-base font-semibold text-indigo-600">
+                          Done
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 )}
               </View>
@@ -950,192 +912,87 @@ export default function EditEventScreen() {
               )}
             </View>
 
-            <View>
+            {/* ----- ENDS Section ----- */}
+            <View className="z-40">
               <Text className="mb-2 text-base font-semibold">Ends</Text>
               <View className="relative rounded-md border border-neutral-300">
                 <View className="flex-row">
-                  <Controller
+                  <DatePickerField
                     control={control}
                     name="event.endDate"
-                    render={({ field: { onChange: _onChange, value } }) => (
-                      <TouchableOpacity
-                        onPress={() => {
-                          if (showEndDatePicker) {
-                            setShowEndDatePicker(false);
-                          } else {
-                            setTempEndDate(parseDateString(value));
-                            setShowEndDatePicker(true);
-                            setShowEndTimePicker(false);
-                            setShowStartDatePicker(false);
-                            setShowStartTimePicker(false);
-                          }
-                        }}
-                        className="flex-1 border-r border-neutral-100 px-3 py-3.5"
-                      >
-                        <Text
-                          className={
-                            showEndDatePicker
-                              ? "font-medium text-red-500"
-                              : value
-                                ? "text-black"
-                                : "text-neutral-500"
-                          }
-                        >
-                          {formatDateForDisplay(value) || "Select date"}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
+                    label=""
+                    onPress={handleShowEndDatePicker}
+                    error={errors.event?.endDate?.message}
+                    className="flex-1"
                   />
-
-                  <Controller
+                  <TimePickerField
                     control={control}
                     name="event.endTime"
-                    render={({ field: { onChange: _onChange, value } }) => (
-                      <TouchableOpacity
-                        onPress={() => {
-                          if (showEndTimePicker) {
-                            setShowEndTimePicker(false);
-                          } else {
-                            if (value) {
-                              setTempEndTime(parseTimeString(value));
-                            }
-                            setShowEndTimePicker(true);
-                            setShowEndDatePicker(false);
-                            setShowStartDatePicker(false);
-                            setShowStartTimePicker(false);
-                          }
-                        }}
-                        className="flex-1 px-3 py-3.5"
-                      >
-                        <Text
-                          className={
-                            showEndTimePicker
-                              ? "font-medium text-red-500"
-                              : value
-                                ? "text-black"
-                                : "text-neutral-500"
-                          }
-                        >
-                          {formatTimeForDisplay(value) || "Select time"}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
+                    label=""
+                    onPress={handleShowEndTimePicker}
+                    error={errors.event?.endTime?.message}
+                    className="flex-1"
                   />
                 </View>
 
+                {/* --- END DATE Picker --- */}
                 {showEndDatePicker && (
-                  <View className="border-t border-neutral-100 bg-gray-50 px-2">
-                    <Controller
-                      control={control}
-                      name="event.endDate"
-                      render={({ field: { onChange: onChangeEndDate } }) => (
-                        <>
-                          <DateTimePicker
-                            testID="endDatePicker"
-                            value={tempEndDate}
-                            mode="date"
-                            display={
-                              Platform.OS === "ios" ? "inline" : "default"
-                            }
-                            onChange={(_, selectedDate) => {
-                              if (selectedDate) {
-                                setTempEndDate(selectedDate);
-
-                                if (Platform.OS === "android") {
-                                  const formattedDate = selectedDate
-                                    .toISOString()
-                                    .split("T")[0];
-                                  onChangeEndDate(formattedDate);
-                                  setShowEndDatePicker(false);
-                                }
-                              }
-                            }}
-                            style={{ height: 350, marginVertical: 8 }}
-                          />
-
-                          {Platform.OS === "ios" && (
-                            <TouchableOpacity
-                              onPress={() => {
-                                const formattedDate = tempEndDate
-                                  .toISOString()
-                                  .split("T")[0];
-                                onChangeEndDate(formattedDate);
-                                setShowEndDatePicker(false);
-                              }}
-                              className="mb-2 mr-2 self-end"
-                            >
-                              <Text className="text-base font-semibold text-indigo-600">
-                                Done
-                              </Text>
-                            </TouchableOpacity>
-                          )}
-                        </>
-                      )}
+                  <View
+                    className="absolute left-0 right-0 top-14 z-50 border-t border-neutral-100 bg-gray-50 px-2 shadow-lg"
+                    style={{ elevation: 5 }}
+                  >
+                    <DateTimePicker
+                      testID="endDatePicker"
+                      value={tempEndDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "inline" : "default"}
+                      onChange={onEndDateChange}
+                      style={{
+                        height: Platform.OS === "ios" ? 350 : undefined,
+                        marginVertical: 8,
+                      }}
                     />
+                    {Platform.OS === "ios" && (
+                      <TouchableOpacity
+                        onPress={handleEndDateDone}
+                        className="mb-2 mr-2 self-end"
+                      >
+                        <Text className="text-base font-semibold text-indigo-600">
+                          Done
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 )}
 
+                {/* --- END TIME Picker --- */}
                 {showEndTimePicker && (
-                  <View className="border-t border-neutral-100 bg-gray-50 px-2">
-                    <Controller
-                      control={control}
-                      name="event.endTime"
-                      render={({ field: { onChange: onChangeEndTime } }) => (
-                        <>
-                          <DateTimePicker
-                            testID="endTimePicker"
-                            value={tempEndTime}
-                            mode="time"
-                            minuteInterval={5}
-                            display={
-                              Platform.OS === "ios" ? "spinner" : "default"
-                            }
-                            onChange={(_, selectedTime) => {
-                              if (selectedTime) {
-                                setTempEndTime(selectedTime);
-
-                                const hours = selectedTime
-                                  .getHours()
-                                  .toString()
-                                  .padStart(2, "0");
-                                const minutes = selectedTime
-                                  .getMinutes()
-                                  .toString()
-                                  .padStart(2, "0");
-                                onChangeEndTime(`${hours}:${minutes}`);
-
-                                if (Platform.OS === "android") {
-                                  setShowEndTimePicker(false);
-                                }
-                              }
-                            }}
-                            style={{ height: 350, marginVertical: 8 }}
-                          />
-
-                          {Platform.OS === "ios" && (
-                            <TouchableOpacity
-                              onPress={() => {
-                                const hours = tempEndTime
-                                  .getHours()
-                                  .toString()
-                                  .padStart(2, "0");
-                                const minutes = tempEndTime
-                                  .getMinutes()
-                                  .toString()
-                                  .padStart(2, "0");
-                                onChangeEndTime(`${hours}:${minutes}`);
-                                setShowEndTimePicker(false);
-                              }}
-                              className="mb-2 mr-2 self-end"
-                            >
-                              <Text className="text-base font-semibold text-indigo-600">
-                                Done
-                              </Text>
-                            </TouchableOpacity>
-                          )}
-                        </>
-                      )}
+                  <View
+                    className="absolute left-0 right-0 top-14 z-50 border-t border-neutral-100 bg-gray-50 px-2 shadow-lg"
+                    style={{ elevation: 5 }}
+                  >
+                    <DateTimePicker
+                      testID="endTimePicker"
+                      value={tempEndTime}
+                      mode="time"
+                      minuteInterval={5}
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={onEndTimeChange}
+                      style={{
+                        height: Platform.OS === "ios" ? 350 : undefined,
+                        marginVertical: 8,
+                      }}
                     />
+                    {Platform.OS === "ios" && (
+                      <TouchableOpacity
+                        onPress={handleEndTimeDone}
+                        className="mb-2 mr-2 self-end"
+                      >
+                        <Text className="text-base font-semibold text-indigo-600">
+                          Done
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 )}
               </View>
