@@ -110,11 +110,21 @@ export function formatTimeForDisplay(timeString?: string): string {
 
 export function parseTimeString(timeString?: string): Date {
   const date = new Date();
-  if (!timeString) return date;
+  // Default to midnight if no time string is provided
+  date.setHours(0, 0, 0, 0);
+
+  if (!timeString) return date; // Return midnight if empty
 
   try {
     const parts = timeString.split(":");
-    if (parts.length !== 2) return date;
+    // Allow for HH:mm or HH:mm:ss formats
+    if (parts.length < 2) {
+      logError(
+        "Invalid time format in parseTimeString (less than 2 parts)",
+        new Error(timeString),
+      );
+      return date; // Return midnight on invalid format
+    }
 
     const hoursStr = parts[0]!;
     const minutesStr = parts[1]!;
@@ -122,12 +132,18 @@ export function parseTimeString(timeString?: string): Date {
     const minutes = parseInt(minutesStr, 10);
 
     if (!isNaN(hours) && !isNaN(minutes)) {
-      date.setHours(hours);
-      date.setMinutes(minutes);
-      date.setSeconds(0);
+      // Set the parsed hours and minutes, keep date as today, seconds/ms as 0
+      date.setHours(hours, minutes, 0, 0);
+    } else {
+      logError(
+        "NaN parsing time parts in parseTimeString",
+        new Error(timeString),
+      );
+      // Keep date defaulted to midnight if parsing results in NaN
     }
   } catch (error) {
-    logError("Error parsing time", error);
+    logError("Error parsing time in parseTimeString", error, { timeString });
+    // Keep date defaulted to midnight on general error
   }
 
   return date;

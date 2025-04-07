@@ -537,8 +537,7 @@ export default function EditEventScreen() {
     }
     setTempStartTime(
       parseTimeString(
-        (control._getWatch("event.startTime") as string | undefined) ||
-          formatTimeForStorage(new Date()),
+        control._getWatch("event.startTime") as string | undefined,
       ),
     );
     setShowStartTimePicker(true);
@@ -570,10 +569,7 @@ export default function EditEventScreen() {
       return;
     }
     setTempEndTime(
-      parseTimeString(
-        (control._getWatch("event.endTime") as string | undefined) ||
-          formatTimeForStorage(new Date()),
-      ),
+      parseTimeString(control._getWatch("event.endTime") as string | undefined),
     );
     setShowEndTimePicker(true);
     setShowStartDatePicker(false);
