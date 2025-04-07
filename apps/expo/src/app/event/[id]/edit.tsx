@@ -514,10 +514,14 @@ export default function EditEventScreen() {
 
   // --- Handlers for Pickers ---
   const handleShowStartDatePicker = () => {
+    if (showStartDatePicker) {
+      handleStartDateDone();
+      return;
+    }
     setTempStartDate(
       parseDateString(
         (control._getWatch("event.startDate") as string | undefined) ||
-          new Date(),
+          formatDateForStorage(new Date()),
       ),
     );
     setShowStartDatePicker(true);
@@ -527,10 +531,14 @@ export default function EditEventScreen() {
   };
 
   const handleShowStartTimePicker = () => {
+    if (showStartTimePicker) {
+      handleStartTimeDone();
+      return;
+    }
     setTempStartTime(
       parseTimeString(
         (control._getWatch("event.startTime") as string | undefined) ||
-          new Date(),
+          formatTimeForStorage(new Date()),
       ),
     );
     setShowStartTimePicker(true);
@@ -540,10 +548,14 @@ export default function EditEventScreen() {
   };
 
   const handleShowEndDatePicker = () => {
+    if (showEndDatePicker) {
+      handleEndDateDone();
+      return;
+    }
     setTempEndDate(
       parseDateString(
         (control._getWatch("event.endDate") as string | undefined) ||
-          new Date(),
+          formatDateForStorage(new Date()),
       ),
     );
     setShowEndDatePicker(true);
@@ -553,10 +565,14 @@ export default function EditEventScreen() {
   };
 
   const handleShowEndTimePicker = () => {
+    if (showEndTimePicker) {
+      handleEndTimeDone();
+      return;
+    }
     setTempEndTime(
       parseTimeString(
         (control._getWatch("event.endTime") as string | undefined) ||
-          new Date(),
+          formatTimeForStorage(new Date()),
       ),
     );
     setShowEndTimePicker(true);
