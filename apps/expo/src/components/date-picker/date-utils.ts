@@ -171,3 +171,15 @@ export function parseDateString(dateString?: string): Date {
   );
   return defaultDate;
 }
+
+// Helper function to format date (YYYY-MM-DD)
+export function formatDateForStorage(date: Date): string {
+  return date.toISOString().split("T")[0] || "";
+}
+
+// Helper function to format time (HH:mm)
+export function formatTimeForStorage(date: Date): string {
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+}

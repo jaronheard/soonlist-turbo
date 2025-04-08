@@ -31,6 +31,10 @@ import {
   parseTimeString,
   TimePickerField,
 } from "~/components/date-picker";
+import {
+  formatDateForStorage,
+  formatTimeForStorage,
+} from "~/components/date-picker/date-utils";
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
@@ -72,18 +76,6 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
-
-// Helper function to format date (YYYY-MM-DD)
-function formatDateForStorage(date: Date): string {
-  return date.toISOString().split("T")[0] || "";
-}
-
-// Helper function to format time (HH:mm)
-function formatTimeForStorage(date: Date): string {
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  return `${hours}:${minutes}`;
-}
 
 export default function EditEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
