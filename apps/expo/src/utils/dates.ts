@@ -389,3 +389,86 @@ export function formatEventDateRange(
 
   return { date: formattedDate, time: timeRange.trim() };
 }
+
+// --- Functions moved from date-picker/date-utils --- //
+
+/**
+ * Parses a time string (HH:mm or HH:mm:ss) into a Date object set to today's date
+ * with the specified time. Defaults to midnight if parsing fails or input is empty.
+ * Note: This uses the built-in Date object, not Temporal.
+ */
+export function parseTimeString(timeString?: string): Date {
+  const date = new Date();
+  // Default to midnight if no time string is provided
+  date.setHours(0, 0, 0, 0);
+
+  if (!timeString) return date; // Return midnight if empty
+
+  try {
+    const parts = timeString.split(":");
+    // Allow for HH:mm or HH:mm:ss formats
+    if (parts.length < 2) {
+      logError(
+        "Invalid time format in parseTimeString (less than 2 parts)",
+        new Error(timeString),
+      );
+      return date; // Return midnight on invalid format
+    }
+
+    const hoursStr = parts[0]!;
+    const minutesStr = parts[1]!;
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
+
+    if (!isNaN(hours) && !isNaN(minutes)) {
+      // Set the parsed hours and minutes, keep date as today, seconds/ms as 0
+      date.setHours(hours, minutes, 0, 0);
+    } else {
+      logError(
+        "NaN parsing time parts in parseTimeString",
+        new Error(timeString),
+      );
+      // Keep date defaulted to midnight if parsing results in NaN
+    }
+  } catch (error) {
+    logError("Error parsing time in parseTimeString", error, { timeString });
+    // Keep date defaulted to midnight on general error
+  }
+
+  return date;
+}
+
+/**
+ * Formats a Date object into a YYYY-MM-DD string.
+ * Note: This uses the built-in Date object, not Temporal.
+ */
+export function formatDateForStorage(date: Date): string {
+  // Ensure date is valid before calling toISOString
+  if (isNaN(date.getTime())) {
+    logError(
+      "Invalid Date object passed to formatDateForStorage",
+      new Error("Invalid Date received"),
+    );
+    const today = new Date();
+    return today.toISOString().split("T")[0] || ""; // Fallback to today
+  }
+  return date.toISOString().split("T")[0] || "";
+}
+
+/**
+ * Formats a Date object into an HH:mm string (24-hour format).
+ * Note: This uses the built-in Date object, not Temporal.
+ */
+export function formatTimeForStorage(date: Date): string {
+  // Ensure date is valid before getting hours/minutes
+  if (isNaN(date.getTime())) {
+    logError(
+      "Invalid Date object passed to formatTimeForStorage",
+      new Error("Invalid Date received"),
+    );
+    return "00:00"; // Fallback
+  }
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
