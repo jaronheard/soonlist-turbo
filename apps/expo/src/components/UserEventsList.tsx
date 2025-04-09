@@ -58,7 +58,6 @@ interface PromoCardProps {
 interface UserEventListItemProps {
   event: Event;
   ActionButton?: React.ComponentType<ActionButtonProps>;
-  isLastItem?: boolean;
   showCreator: ShowCreatorOption;
   isSaved: boolean;
   similarEventsCount?: number;
@@ -70,7 +69,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const {
     event,
     ActionButton,
-    isLastItem,
     showCreator,
     isSaved,
     similarEventsCount,
@@ -133,7 +131,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const imageWidth = 80 * fontScale;
   const imageHeight = (imageWidth * 16) / 9;
 
-  const imageRotation = index % 2 === 0 ? "15deg" : "-15deg";
+  const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
 
   return (
     <EventMenu
@@ -160,88 +158,15 @@ export function UserEventListItem(props: UserEventListItemProps) {
         }}
         delayLongPress={350} // optional; adjust as desired
       >
-        <View
-          className={cn(
-            "-mx-2 flex-row items-center rounded-lg p-4 px-6",
-            relativeTime ? "pt-12" : "pt-8",
-            isLastItem ? "" : "border-b border-neutral-3",
-            isHappeningNow ? "bg-accent-yellow" : "bg-white",
-            "relative",
-          )}
-        >
-          <View className="mr-4 flex-1">
-            <View className="mb-2 flex-row items-center justify-between">
-              <Text className="text-base font-medium text-neutral-2">
-                {dateString.date} • {dateString.time}
-              </Text>
-              {isOwner && (
-                <View className="flex-row items-center gap-2 opacity-60">
-                  {similarEventsCount ? (
-                    <View className="bg-neutral-5/90 flex-row items-center gap-1 rounded-full px-1">
-                      <Copy size={12} color="#627496" />
-                      <Text className="text-xs text-neutral-2">
-                        {similarEventsCount}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {event.visibility === "public" ? (
-                    <Globe2 size={iconSize} color="#627496" />
-                  ) : (
-                    <EyeOff size={iconSize} color="#627496" />
-                  )}
-                </View>
-              )}
-            </View>
-            <Text
-              className="mb-2 text-xl font-bold text-neutral-1"
-              numberOfLines={2}
-              ellipsizeMode="tail"
-            >
-              {e.name}
-            </Text>
-            <View className="mb-2 flex-row items-center justify-between">
-              {e.location ? (
-                <View className="flex-shrink flex-row items-center gap-1">
-                  <MapPin size={iconSize} color="#627496" />
-                  <Text
-                    className="text-base text-neutral-2"
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {e.location}
-                  </Text>
-                </View>
-              ) : (
-                <View />
-              )}
-            </View>
-            {shouldShowCreator ? (
-              <View className="flex-row items-center gap-2">
-                <UserProfileFlair username={eventUser.username} size="xs">
-                  {eventUser.userImage ? (
-                    <Image
-                      source={{ uri: eventUser.userImage }}
-                      style={{
-                        width: iconSize,
-                        height: iconSize,
-                        borderRadius: 9999,
-                      }}
-                      contentFit="cover"
-                      contentPosition="center"
-                      cachePolicy="disk"
-                      transition={100}
-                    />
-                  ) : (
-                    <User size={iconSize} color="#627496" />
-                  )}
-                </UserProfileFlair>
-                <Text className="text-sm text-neutral-2">
-                  @{eventUser.username}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-          <View className="relative flex items-center justify-center">
+        <View className={cn("relative mb-4 px-4")}>
+          <View
+            style={{
+              position: "absolute",
+              right: 10,
+              top: -5,
+              zIndex: 10,
+            }}
+          >
             {e.images?.[3] ? (
               <Image
                 source={
@@ -269,27 +194,108 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 style={{
                   width: imageWidth,
                   height: imageHeight,
-                  transform: [{ rotate: imageRotation }],
                 }}
               />
             )}
           </View>
+          <View
+            className={cn(
+              "mt-4 border-neutral-3 bg-white p-3 shadow-lg",
+              isHappeningNow ? "border border-accent-yellow" : "",
+              "overflow-hidden",
+            )}
+            style={{
+              marginRight: imageWidth * 0.6,
+              borderRadius: 20,
+              borderWidth: 0.5,
+            }}
+          >
+            <View className="mb-1 flex-row items-center justify-between">
+              <Text className="text-sm font-medium text-neutral-2">
+                {dateString.date} • {dateString.time}
+              </Text>
+              {isOwner && !ActionButton && (
+                <View className="flex-row items-center gap-1 opacity-60">
+                  {similarEventsCount ? (
+                    <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
+                      <Copy size={iconSize * 0.7} color="#627496" />
+                      <Text className="text-xs text-neutral-2">
+                        {similarEventsCount}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {event.visibility === "public" ? (
+                    <Globe2 size={iconSize * 0.8} color="#627496" />
+                  ) : (
+                    <EyeOff size={iconSize * 0.8} color="#627496" />
+                  )}
+                </View>
+              )}
+            </View>
+            <Text
+              className="mb-1 text-lg font-bold text-neutral-1"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {e.name}
+            </Text>
+            {e.location ? (
+              <View className="mb-1 flex-shrink flex-row items-center gap-1">
+                <MapPin size={iconSize * 0.9} color="#627496" />
+                <Text
+                  className="text-sm text-neutral-2"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {e.location}
+                </Text>
+              </View>
+            ) : null}
+            {shouldShowCreator ? (
+              <View className="mt-1 flex-row items-center gap-1">
+                <UserProfileFlair username={eventUser.username} size="xs">
+                  {eventUser.userImage ? (
+                    <Image
+                      source={{ uri: eventUser.userImage }}
+                      style={{
+                        width: iconSize * 0.9,
+                        height: iconSize * 0.9,
+                        borderRadius: 9999,
+                      }}
+                      contentFit="cover"
+                      contentPosition="center"
+                      cachePolicy="disk"
+                      transition={100}
+                    />
+                  ) : (
+                    <User size={iconSize * 0.9} color="#627496" />
+                  )}
+                </UserProfileFlair>
+                <Text className="text-xs text-neutral-2">
+                  @{eventUser.username}
+                </Text>
+              </View>
+            ) : null}
+          </View>
           {relativeTime && (
-            <View className="absolute left-0 right-0 top-2 flex items-center justify-center">
+            <View className="absolute left-6 top-0 z-20">
               <View
                 className={cn(
-                  "rounded-full px-2 py-1",
+                  "rounded-full px-2 py-0.5 shadow",
                   isHappeningNow ? "bg-white" : "bg-accent-yellow",
                 )}
               >
-                <Text className="text-sm font-medium text-neutral-1">
+                <Text className="text-xs font-medium text-neutral-1">
                   {relativeTime}
                 </Text>
               </View>
             </View>
           )}
           {ActionButton && (
-            <View className="absolute bottom-4 right-4">
+            <View
+              className="absolute bottom-2 z-20"
+              style={{ right: imageWidth * 0.6 + 10 }}
+            >
               <ActionButton event={event} />
             </View>
           )}
@@ -301,6 +307,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
 function PromoCard({ type }: PromoCardProps) {
   const { fontScale } = useWindowDimensions();
+  const iconSize = 16 * fontScale;
 
   const handlePress = async () => {
     try {
@@ -319,12 +326,15 @@ function PromoCard({ type }: PromoCardProps) {
       <TouchableOpacity onPress={handlePress}>
         <View className="mx-4 rounded-2xl bg-accent-yellow/80 p-4">
           <Text className="mb-1 text-lg font-semibold text-neutral-1">
-            Keep capturing
+            Add more events
           </Text>
-          <Text className="text-base text-neutral-2">
-            Fill your list with possibilities. Tap{" "}
-            <PlusCircle size={16 * fontScale} color="#4B5563" /> to add more.
-          </Text>
+          <View className="flex-row items-center">
+            <Text className="text-base text-neutral-2">
+              Tap the{" "}
+              <PlusCircle size={iconSize} color="#4B5563" className="-mb-0.5" />{" "}
+              button below to add more.
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -511,7 +521,6 @@ export default function UserEventsList(props: UserEventsListProps) {
             <UserEventListItem
               event={item.event}
               ActionButton={ActionButton}
-              isLastItem={index === collapsedEvents.length - 1}
               showCreator={showCreator}
               isSaved={isSaved}
               similarEventsCount={
@@ -533,7 +542,8 @@ export default function UserEventsList(props: UserEventsListProps) {
         onEndReachedThreshold={0.5}
         contentContainerStyle={{
           paddingBottom: 120,
-          flexGrow: 1,
+          flexGrow: collapsedEvents.length === 0 ? 1 : 0,
+          paddingTop: 10,
         }}
         ListFooterComponent={renderFooter()}
       />
