@@ -210,6 +210,13 @@ export function UserEventListItem(props: UserEventListItemProps) {
               borderWidth: 0.5,
             }}
           >
+            <Text
+              className="mb-1 text-lg font-bold text-neutral-1"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {e.name}
+            </Text>
             <View className="mb-1 flex-row items-center justify-between">
               <Text className="text-sm font-medium text-neutral-2">
                 {dateString.date} • {dateString.time}
@@ -232,13 +239,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 </View>
               )}
             </View>
-            <Text
-              className="mb-1 text-lg font-bold text-neutral-1"
-              numberOfLines={2}
-              ellipsizeMode="tail"
-            >
-              {e.name}
-            </Text>
             {e.location ? (
               <View className="mb-1 flex-shrink flex-row items-center gap-1">
                 <MapPin size={iconSize * 0.9} color="#627496" />
@@ -292,10 +292,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
             </View>
           )}
           {ActionButton && (
-            <View
-              className="absolute bottom-2 z-20"
-              style={{ right: imageWidth * 0.6 + 10 }}
-            >
+            <View className="absolute bottom-2 right-2 z-20">
               <ActionButton event={event} />
             </View>
           )}
