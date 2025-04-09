@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -186,22 +187,37 @@ export function UserEventListItem(props: UserEventListItemProps) {
             />
           )}
 
+          {/* Gradient Overlay */}
+          <LinearGradient
+            colors={["transparent", "rgba(255,255,255,1)"]} // Fade from transparent to opaque white
+            locations={[0, 1]} // Start the fade at 50% of the gradient height
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: squareImageSize * 0.6, // Cover bottom 40% of the image
+              zIndex: 1, // Ensure gradient is above image but below card/badge
+            }}
+          />
+
           {/* Overlay Card at the bottom - Use Flexbox for centering */}
-          <View className="absolute bottom-4 left-4 right-4 flex-row items-center justify-between rounded-2xl bg-interactive-3 p-4 shadow-lg">
+          <View className="absolute bottom-4 left-4 right-4 z-10 flex-row items-center justify-between rounded-2xl bg-interactive-1 p-4 shadow-lg">
+            {/* Added z-10 to ensure card is above gradient */}
             {/* Wrapper for Text Content */}
             <View className="flex-1 pr-2">
               {/* flex-1 to take available space, pr-2 for spacing */}
               {/* Card Content */}
               <Text
-                className="mb-1 text-lg font-bold text-neutral-1"
+                className="mb-1 text-lg font-bold text-white"
                 numberOfLines={2}
                 ellipsizeMode="tail"
               >
                 {e.name}
               </Text>
               <View className="mb-1 flex-row items-center justify-between">
-                {/* Lighter gray -> text-neutral-1 */}
-                <Text className="text-sm font-medium text-neutral-1">
+                {/* Text color updated */}
+                <Text className="text-sm font-medium text-white">
                   {dateString.date} • {dateString.time}
                 </Text>
                 {/* Moved owner/visibility icons inside overlay? Or remove? Keeping original logic for now */}
@@ -209,34 +225,33 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   // Increased opacity slightly
                   <View className="flex-row items-center gap-1 opacity-80">
                     {similarEventsCount ? (
-                      // Darker bg -> neutral-4 might work on interactive-3? Adjust if needed
-                      <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
-                        {/* Lighter icon -> neutral-1 */}
-                        <Copy size={iconSize * 0.7} color="#171717" />{" "}
-                        {/* Assuming neutral-1 is dark */}
+                      // Updated badge styles for new bg
+                      <View className="flex-row items-center gap-0.5 rounded-full bg-white/30 px-1 py-0.5">
+                        {/* Icon color updated */}
+                        <Copy size={iconSize * 0.7} color="white" />
                         {/* Lighter text -> neutral-1 */}
-                        <Text className="text-xs text-neutral-1">
+                        <Text className="text-xs text-white">
                           {similarEventsCount}
                         </Text>
                       </View>
                     ) : null}
                     {event.visibility === "public" ? (
-                      // Lighter icon -> neutral-1
-                      <Globe2 size={iconSize * 0.8} color="#171717" />
+                      // Icon color updated
+                      <Globe2 size={iconSize * 0.8} color="white" />
                     ) : (
-                      // Lighter icon -> neutral-1
-                      <EyeOff size={iconSize * 0.8} color="#171717" />
+                      // Icon color updated
+                      <EyeOff size={iconSize * 0.8} color="white" />
                     )}
                   </View>
                 )}
               </View>
               {e.location ? (
                 <View className="mb-1 flex-shrink flex-row items-center gap-1">
-                  {/* Lighter icon -> neutral-1 */}
-                  <MapPin size={iconSize * 0.9} color="#171717" />
-                  {/* Lighter gray -> text-neutral-1 */}
+                  {/* Icon color updated */}
+                  <MapPin size={iconSize * 0.9} color="white" />
+                  {/* Text color updated */}
                   <Text
-                    className="text-sm text-neutral-1"
+                    className="text-sm text-white"
                     numberOfLines={1}
                     ellipsizeMode="tail"
                   >
@@ -262,18 +277,17 @@ export function UserEventListItem(props: UserEventListItemProps) {
                         transition={100}
                       />
                     ) : (
-                      // Lighter icon -> neutral-1
-                      <User size={iconSize * 0.9} color="#171717" />
+                      // Icon color updated
+                      <User size={iconSize * 0.9} color="white" />
                     )}
                   </UserProfileFlair>
-                  {/* Lighter gray -> text-neutral-1 */}
-                  <Text className="text-xs text-neutral-1">
+                  {/* Text color updated */}
+                  <Text className="text-xs text-white">
                     @{eventUser.username}
                   </Text>
                 </View>
               ) : null}
             </View>
-
             {/* Action Button - Now positioned by parent Flexbox */}
             {ActionButton && (
               <View>
