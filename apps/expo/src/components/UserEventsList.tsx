@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   Pressable,
   RefreshControl,
   Text,
@@ -62,7 +63,6 @@ interface UserEventListItemProps {
   isSaved: boolean;
   similarEventsCount?: number;
   demoMode?: boolean;
-  index: number;
 }
 
 export function UserEventListItem(props: UserEventListItemProps) {
@@ -73,7 +73,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
     isSaved,
     similarEventsCount,
     demoMode,
-    index,
   } = props;
   const { fontScale } = useWindowDimensions();
   const id = event.id;
@@ -128,10 +127,14 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const isOwner = demoMode || isCurrentUser;
 
   const iconSize = 16 * fontScale;
-  const imageWidth = 80 * fontScale;
-  const imageHeight = (imageWidth * 16) / 9;
+  // Get screen width for the square image
+  const screenWidth = Dimensions.get("window").width;
+  const squareImageSize = screenWidth; // Full width square
 
-  const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
+  // Use the first image, or a fallback if none exist
+  const mainImageUri = e.images?.[0]
+    ? `${e.images[0]}?w=720&h=720&fit=cover&f=webp&q=80`
+    : null;
 
   return (
     <EventMenu
@@ -158,127 +161,131 @@ export function UserEventListItem(props: UserEventListItemProps) {
         }}
         delayLongPress={350} // optional; adjust as desired
       >
-        <View className={cn("relative mb-4 px-4")}>
-          <View
-            style={{
-              position: "absolute",
-              right: 10,
-              top: -5,
-              zIndex: 10,
-            }}
-          >
-            {e.images?.[3] ? (
-              <Image
-                source={
-                  typeof e.images[3] === "number"
-                    ? e.images[3]
-                    : {
-                        uri: `${e.images[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
-                      }
-                }
-                style={{
-                  width: imageWidth,
-                  height: imageHeight,
-                  borderRadius: 20,
-                  borderWidth: 1,
-                  borderColor: "#C4B5FD",
-                  transform: [{ rotate: imageRotation }],
-                }}
-                contentFit="cover"
-                cachePolicy="disk"
-                transition={100}
-              />
-            ) : (
-              <View
-                className="rounded-2xl border border-purple-300 bg-accent-yellow"
-                style={{
-                  width: imageWidth,
-                  height: imageHeight,
-                }}
-              />
-            )}
-          </View>
-          <View
-            className={cn(
-              "mt-4 border-neutral-3 bg-white p-3 shadow-lg",
-              isHappeningNow ? "border border-accent-yellow" : "",
-              "overflow-hidden",
-            )}
-            style={{
-              marginRight: imageWidth * 0.6,
-              borderRadius: 20,
-              borderWidth: 0.5,
-            }}
-          >
-            <Text
-              className="mb-1 text-lg font-bold text-neutral-1"
-              numberOfLines={2}
-              ellipsizeMode="tail"
-            >
-              {e.name}
-            </Text>
-            <View className="mb-1 flex-row items-center justify-between">
-              <Text className="text-sm font-medium text-neutral-2">
-                {dateString.date} • {dateString.time}
+        {/* Main container for the full-width square image and overlay */}
+        <View
+          className="relative mb-4 border-b border-neutral-3" // Added bottom border for gridline
+          style={{ width: squareImageSize, height: squareImageSize }}
+        >
+          {/* Background Image */}
+          {mainImageUri ? (
+            <Image
+              source={{ uri: mainImageUri }}
+              style={{
+                width: "100%",
+                height: "100%",
+                position: "absolute",
+              }}
+              contentFit="cover"
+              cachePolicy="disk"
+              transition={100}
+            />
+          ) : (
+            // Fallback background if no image
+            <View
+              className="absolute h-full w-full bg-neutral-4" // Simple fallback background
+            />
+          )}
+
+          {/* Overlay Card at the bottom - Use Flexbox for centering */}
+          <View className="absolute bottom-4 left-4 right-4 flex-row items-center justify-between rounded-2xl bg-interactive-3 p-4 shadow-lg">
+            {/* Wrapper for Text Content */}
+            <View className="flex-1 pr-2">
+              {/* flex-1 to take available space, pr-2 for spacing */}
+              {/* Card Content */}
+              <Text
+                className="mb-1 text-lg font-bold text-neutral-1"
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {e.name}
               </Text>
-              {isOwner && !ActionButton && (
-                <View className="flex-row items-center gap-1 opacity-60">
-                  {similarEventsCount ? (
-                    <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
-                      <Copy size={iconSize * 0.7} color="#627496" />
-                      <Text className="text-xs text-neutral-2">
-                        {similarEventsCount}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {event.visibility === "public" ? (
-                    <Globe2 size={iconSize * 0.8} color="#627496" />
-                  ) : (
-                    <EyeOff size={iconSize * 0.8} color="#627496" />
-                  )}
+              <View className="mb-1 flex-row items-center justify-between">
+                {/* Lighter gray -> text-neutral-1 */}
+                <Text className="text-sm font-medium text-neutral-1">
+                  {dateString.date} • {dateString.time}
+                </Text>
+                {/* Moved owner/visibility icons inside overlay? Or remove? Keeping original logic for now */}
+                {isOwner && !ActionButton && (
+                  // Increased opacity slightly
+                  <View className="flex-row items-center gap-1 opacity-80">
+                    {similarEventsCount ? (
+                      // Darker bg -> neutral-4 might work on interactive-3? Adjust if needed
+                      <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
+                        {/* Lighter icon -> neutral-1 */}
+                        <Copy size={iconSize * 0.7} color="#171717" />{" "}
+                        {/* Assuming neutral-1 is dark */}
+                        {/* Lighter text -> neutral-1 */}
+                        <Text className="text-xs text-neutral-1">
+                          {similarEventsCount}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {event.visibility === "public" ? (
+                      // Lighter icon -> neutral-1
+                      <Globe2 size={iconSize * 0.8} color="#171717" />
+                    ) : (
+                      // Lighter icon -> neutral-1
+                      <EyeOff size={iconSize * 0.8} color="#171717" />
+                    )}
+                  </View>
+                )}
+              </View>
+              {e.location ? (
+                <View className="mb-1 flex-shrink flex-row items-center gap-1">
+                  {/* Lighter icon -> neutral-1 */}
+                  <MapPin size={iconSize * 0.9} color="#171717" />
+                  {/* Lighter gray -> text-neutral-1 */}
+                  <Text
+                    className="text-sm text-neutral-1"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {e.location}
+                  </Text>
                 </View>
-              )}
+              ) : null}
+              {/* Maybe remove creator info from this view or restyle */}
+              {shouldShowCreator ? (
+                <View className="mt-1 flex-row items-center gap-1">
+                  <UserProfileFlair username={eventUser.username} size="xs">
+                    {eventUser.userImage ? (
+                      <Image
+                        source={{ uri: eventUser.userImage }}
+                        style={{
+                          width: iconSize * 0.9,
+                          height: iconSize * 0.9,
+                          borderRadius: 9999,
+                        }}
+                        contentFit="cover"
+                        contentPosition="center"
+                        cachePolicy="disk"
+                        transition={100}
+                      />
+                    ) : (
+                      // Lighter icon -> neutral-1
+                      <User size={iconSize * 0.9} color="#171717" />
+                    )}
+                  </UserProfileFlair>
+                  {/* Lighter gray -> text-neutral-1 */}
+                  <Text className="text-xs text-neutral-1">
+                    @{eventUser.username}
+                  </Text>
+                </View>
+              ) : null}
             </View>
-            {e.location ? (
-              <View className="mb-1 flex-shrink flex-row items-center gap-1">
-                <MapPin size={iconSize * 0.9} color="#627496" />
-                <Text
-                  className="text-sm text-neutral-2"
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {e.location}
-                </Text>
+
+            {/* Action Button - Now positioned by parent Flexbox */}
+            {ActionButton && (
+              <View>
+                <ActionButton event={event} />
               </View>
-            ) : null}
-            {shouldShowCreator ? (
-              <View className="mt-1 flex-row items-center gap-1">
-                <UserProfileFlair username={eventUser.username} size="xs">
-                  {eventUser.userImage ? (
-                    <Image
-                      source={{ uri: eventUser.userImage }}
-                      style={{
-                        width: iconSize * 0.9,
-                        height: iconSize * 0.9,
-                        borderRadius: 9999,
-                      }}
-                      contentFit="cover"
-                      contentPosition="center"
-                      cachePolicy="disk"
-                      transition={100}
-                    />
-                  ) : (
-                    <User size={iconSize * 0.9} color="#627496" />
-                  )}
-                </UserProfileFlair>
-                <Text className="text-xs text-neutral-2">
-                  @{eventUser.username}
-                </Text>
-              </View>
-            ) : null}
+            )}
           </View>
+
+          {/* Relative Time Badge - kept from original */}
           {relativeTime && (
-            <View className="absolute left-6 top-0 z-20">
+            <View className="absolute left-4 top-4 z-20">
+              {/* Adjusted position */}
               <View
                 className={cn(
                   "rounded-full px-2 py-0.5 shadow",
@@ -289,11 +296,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   {relativeTime}
                 </Text>
               </View>
-            </View>
-          )}
-          {ActionButton && (
-            <View className="absolute bottom-2 right-2 z-20">
-              <ActionButton event={event} />
             </View>
           )}
         </View>
@@ -506,7 +508,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         data={collapsedEvents}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
-        renderItem={({ item, index }) => {
+        renderItem={({ item, index: _index }) => {
           const isSaved =
             savedIdsQuery.data?.some(
               (savedEvent) => savedEvent.id === item.event.id,
@@ -524,7 +526,6 @@ export default function UserEventsList(props: UserEventsListProps) {
                 similarEventsCount > 0 ? similarEventsCount : undefined
               }
               demoMode={demoMode}
-              index={index}
             />
           );
         }}
