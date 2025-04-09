@@ -1,7 +1,7 @@
-import type { ImageSource } from "expo-image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   Pressable,
   RefreshControl,
   Text,
@@ -11,24 +11,41 @@ import {
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
-import { MapPin, PlusCircle } from "lucide-react-native";
+import {
+  Copy,
+  EyeOff,
+  Globe2,
+  MapPin,
+  PlusCircle,
+  User,
+} from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
-import { formatEventDateRange } from "~/utils/dates";
+import { cn } from "~/utils/cn";
+import {
+  formatEventDateRange,
+  formatRelativeTime,
+  getDateTimeInfo,
+  isOver,
+} from "~/utils/dates";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { logError } from "../utils/errorLogging";
 import { EventListItemSkeleton } from "./EventListItemSkeleton";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
+import { UserProfileFlair } from "./UserProfileFlair";
+
+type ShowCreatorOption = "always" | "otherUsers" | "never";
 
 type Event = RouterOutputs["event"]["getDiscoverInfinite"]["events"][number];
 
@@ -43,13 +60,21 @@ interface PromoCardProps {
 interface UserEventListItemProps {
   event: Event;
   ActionButton?: React.ComponentType<ActionButtonProps>;
+  showCreator: ShowCreatorOption;
   isSaved: boolean;
+  similarEventsCount?: number;
   demoMode?: boolean;
-  itemWidth: number;
 }
 
 export function UserEventListItem(props: UserEventListItemProps) {
-  const { event, isSaved, demoMode, itemWidth } = props;
+  const {
+    event,
+    ActionButton,
+    showCreator,
+    isSaved,
+    similarEventsCount,
+    demoMode,
+  } = props;
   const { fontScale } = useWindowDimensions();
   const id = event.id;
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -62,89 +87,171 @@ export function UserEventListItem(props: UserEventListItemProps) {
     e.timeZone || "",
   );
 
-  const { user: currentUser } = useUser();
-  const isOwner = demoMode || currentUser?.id === event.userId;
+  const startDateInfo = useMemo(
+    () => getDateTimeInfo(e.startDate || "", e.startTime || ""),
+    [e.startDate, e.startTime],
+  );
 
-  const iconSize = 14 * fontScale;
-  const imageHeight = itemWidth * (16 / 9);
+  const endDateInfo = useMemo(
+    () =>
+      getDateTimeInfo(
+        e.endDate || e.startDate || "",
+        e.endTime || e.startTime || "",
+      ),
+    [e.endDate, e.startDate, e.endTime, e.startTime],
+  );
+
+  const eventIsOver = useMemo(() => {
+    if (!endDateInfo) return false;
+    return isOver(endDateInfo);
+  }, [endDateInfo]);
+
+  const relativeTime = useMemo(() => {
+    if (!startDateInfo || eventIsOver) return "";
+    return formatRelativeTime(startDateInfo);
+  }, [startDateInfo, eventIsOver]);
+
+  const isHappeningNow = relativeTime === "Happening now" && !eventIsOver;
+
+  const { user: currentUser } = useUser();
+  const eventUser = event.user;
+
+  // guard against null user
+  if (!eventUser) return null;
+
+  const isCurrentUser = currentUser?.id === eventUser.id;
+
+  const shouldShowCreator =
+    showCreator === "always" ||
+    (showCreator === "otherUsers" && !isCurrentUser);
+
+  const isOwner = demoMode || isCurrentUser;
+
+  const iconSize = 16 * fontScale;
+  // Get screen width for the square image
+  const screenWidth = Dimensions.get("window").width;
+  const squareImageSize = screenWidth; // Full width square
 
   // Use the first image, or a fallback if none exist
   const mainImageUri = e.images?.[0]
-    ? `${e.images[0]}?w=${Math.round(itemWidth * 2)}&h=${Math.round(imageHeight * 2)}&fit=cover&f=webp&q=80`
+    ? `${e.images[0]}?w=720&h=720&fit=cover&f=webp&q=80`
     : null;
 
   return (
-    <View style={{ width: itemWidth }} className="mx-1.5 mb-3">
-      <EventMenu
-        event={event}
-        isOwner={isOwner}
-        isSaved={isSaved}
-        menuType="context"
-        demoMode={demoMode}
+    <EventMenu
+      event={event}
+      isOwner={isOwner}
+      isSaved={isSaved}
+      menuType="context"
+      demoMode={demoMode}
+    >
+      <Pressable
+        className="relative"
+        onPress={() => {
+          // Short press → navigate
+          const isDemoEvent = id.startsWith("demo-");
+          if (isDemoEvent) {
+            router.push(`/onboarding/demo-event/${id}`);
+          } else {
+            router.push(`/event/${id}`);
+          }
+        }}
+        onLongPress={(e) => {
+          // Long press → stop native press so menu can open without navigation
+          e.stopPropagation();
+        }}
+        delayLongPress={350} // optional; adjust as desired
       >
-        <Pressable
-          onPress={() => {
-            // Short press → navigate
-            const isDemoEvent = id.startsWith("demo-");
-            if (isDemoEvent) {
-              router.push(`/onboarding/demo-event/${id}`);
-            } else {
-              router.push(`/event/${id}`);
-            }
-          }}
-          onLongPress={(e) => {
-            // Long press → stop native press so menu can open without navigation
-            e.stopPropagation();
-          }}
-          delayLongPress={350}
-          className="overflow-hidden rounded-xl border-4 border-interactive-3"
+        {/* Main container for the full-width square image and overlay */}
+        <View
+          className="relative mb-4 border-b border-neutral-3" // Added bottom border for gridline
+          style={{ width: squareImageSize, height: squareImageSize }}
         >
-          <View
-            className="relative"
-            style={{ width: itemWidth, height: imageHeight }}
-          >
-            {/* Background Image */}
-            {mainImageUri ? (
-              <Image
-                source={{ uri: mainImageUri }}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  position: "absolute",
-                }}
-                contentFit="cover"
-                cachePolicy="disk"
-                transition={100}
-              />
-            ) : (
-              // Simple fallback background
-              <View className="absolute h-full w-full bg-neutral-3" />
-            )}
+          {/* Background Image */}
+          {mainImageUri ? (
+            <Image
+              source={{ uri: mainImageUri }}
+              style={{
+                width: "100%",
+                height: "100%",
+                position: "absolute",
+              }}
+              contentFit="cover"
+              cachePolicy="disk"
+              transition={100}
+            />
+          ) : (
+            // Fallback background if no image
+            <View
+              className="absolute h-full w-full bg-neutral-4" // Simple fallback background
+            />
+          )}
 
-            {/* Simplified Overlay Content at the bottom */}
-            <View className="absolute bottom-0 left-0 right-0 bg-interactive-3 p-2">
-              {/* Text color updated */}
+          {/* Gradient Overlay */}
+          <LinearGradient
+            colors={["transparent", "rgba(255,255,255,1)"]} // Fade from transparent to opaque white
+            locations={[0, 1]} // Start the fade at 50% of the gradient height
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: squareImageSize * 0.6, // Cover bottom 40% of the image
+              zIndex: 1, // Ensure gradient is above image but below card/badge
+            }}
+          />
+
+          {/* Overlay Card at the bottom - Use Flexbox for centering */}
+          <View className="absolute bottom-4 left-4 right-4 z-10 flex-row items-center justify-between rounded-2xl bg-interactive-1 p-4 shadow-lg">
+            {/* Added z-10 to ensure card is above gradient */}
+            {/* Wrapper for Text Content */}
+            <View className="flex-1 pr-2">
+              {/* flex-1 to take available space, pr-2 for spacing */}
+              {/* Card Content */}
               <Text
-                className="text-sm font-semibold text-black"
-                numberOfLines={1}
+                className="mb-1 text-lg font-bold text-white"
+                numberOfLines={2}
                 ellipsizeMode="tail"
               >
-                {dateString.date}
+                {e.name}
               </Text>
-              <Text
-                className="text-sm font-semibold text-black"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {dateString.time}
-              </Text>
+              <View className="mb-1 flex-row items-center justify-between">
+                {/* Text color updated */}
+                <Text className="text-sm font-medium text-white">
+                  {dateString.date} • {dateString.time}
+                </Text>
+                {/* Moved owner/visibility icons inside overlay? Or remove? Keeping original logic for now */}
+                {isOwner && !ActionButton && (
+                  // Increased opacity slightly
+                  <View className="flex-row items-center gap-1 opacity-80">
+                    {similarEventsCount ? (
+                      // Updated badge styles for new bg
+                      <View className="flex-row items-center gap-0.5 rounded-full bg-white/30 px-1 py-0.5">
+                        {/* Icon color updated */}
+                        <Copy size={iconSize * 0.7} color="white" />
+                        {/* Lighter text -> neutral-1 */}
+                        <Text className="text-xs text-white">
+                          {similarEventsCount}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {event.visibility === "public" ? (
+                      // Icon color updated
+                      <Globe2 size={iconSize * 0.8} color="white" />
+                    ) : (
+                      // Icon color updated
+                      <EyeOff size={iconSize * 0.8} color="white" />
+                    )}
+                  </View>
+                )}
+              </View>
               {e.location ? (
-                <View className="flex-shrink flex-row items-center gap-1">
+                <View className="mb-1 flex-shrink flex-row items-center gap-1">
                   {/* Icon color updated */}
-                  <MapPin size={iconSize * 0.9} color="black" />
+                  <MapPin size={iconSize * 0.9} color="white" />
                   {/* Text color updated */}
                   <Text
-                    className="text-xs text-black"
+                    className="text-sm text-white"
                     numberOfLines={1}
                     ellipsizeMode="tail"
                   >
@@ -152,11 +259,62 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   </Text>
                 </View>
               ) : null}
+              {/* Maybe remove creator info from this view or restyle */}
+              {shouldShowCreator ? (
+                <View className="mt-1 flex-row items-center gap-1">
+                  <UserProfileFlair username={eventUser.username} size="xs">
+                    {eventUser.userImage ? (
+                      <Image
+                        source={{ uri: eventUser.userImage }}
+                        style={{
+                          width: iconSize * 0.9,
+                          height: iconSize * 0.9,
+                          borderRadius: 9999,
+                        }}
+                        contentFit="cover"
+                        contentPosition="center"
+                        cachePolicy="disk"
+                        transition={100}
+                      />
+                    ) : (
+                      // Icon color updated
+                      <User size={iconSize * 0.9} color="white" />
+                    )}
+                  </UserProfileFlair>
+                  {/* Text color updated */}
+                  <Text className="text-xs text-white">
+                    @{eventUser.username}
+                  </Text>
+                </View>
+              ) : null}
             </View>
+            {/* Action Button - Now positioned by parent Flexbox */}
+            {ActionButton && (
+              <View>
+                <ActionButton event={event} />
+              </View>
+            )}
           </View>
-        </Pressable>
-      </EventMenu>
-    </View>
+
+          {/* Relative Time Badge - kept from original */}
+          {relativeTime && (
+            <View className="absolute left-4 top-4 z-20">
+              {/* Adjusted position */}
+              <View
+                className={cn(
+                  "rounded-full px-2 py-0.5 shadow",
+                  isHappeningNow ? "bg-white" : "bg-accent-yellow",
+                )}
+              >
+                <Text className="text-xs font-medium text-neutral-1">
+                  {relativeTime}
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </Pressable>
+    </EventMenu>
   );
 }
 
@@ -200,6 +358,8 @@ function PromoCard({ type }: PromoCardProps) {
 
 interface UserEventsListProps {
   events: Event[];
+  ActionButton?: React.ComponentType<ActionButtonProps>;
+  showCreator: ShowCreatorOption;
   isRefetching: boolean;
   onRefresh: () => Promise<void>;
   onEndReached: () => void;
@@ -218,6 +378,8 @@ interface UserEventsListProps {
 export default function UserEventsList(props: UserEventsListProps) {
   const {
     events,
+    ActionButton,
+    showCreator,
     isRefetching,
     onRefresh,
     onEndReached,
@@ -230,19 +392,12 @@ export default function UserEventsList(props: UserEventsListProps) {
   const { user } = useUser();
   const queryClient = useQueryClient();
   const username = user?.username || "";
-  const { width: screenWidth } = useWindowDimensions();
-
-  const numColumns = 2;
-  const listPadding = 6;
-  const itemMargin = 6;
-  const totalHorizontalSpacing =
-    listPadding * 2 + itemMargin * 2 * (numColumns - 1);
-  const itemWidth = (screenWidth - totalHorizontalSpacing) / numColumns;
 
   const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
     userName: username,
   });
 
+  // Collapse similar events
   const collapsedEvents = collapseSimilarEvents(events, user?.id);
 
   const pendingAIMutations = useMutationState(
@@ -278,7 +433,8 @@ export default function UserEventsList(props: UserEventsListProps) {
       return (
         <View className="flex-1 items-center justify-center px-6">
           <Image
-            source={require("../assets/icon.png") as ImageSource}
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            source={require("../assets/icon.png")}
             style={{
               width: 64,
               height: 64,
@@ -308,7 +464,8 @@ export default function UserEventsList(props: UserEventsListProps) {
     return (
       <View className="flex-1 items-center justify-center px-6">
         <Image
-          source={require("../assets/icon.png") as ImageSource}
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          source={require("../assets/icon.png")}
           style={{
             width: 64,
             height: 64,
@@ -363,9 +520,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     <>
       <FlatList
         data={collapsedEvents}
-        numColumns={numColumns}
-        keyExtractor={(item) => item.event.id}
-        columnWrapperStyle={{ justifyContent: "flex-start" }}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index: _index }) => {
@@ -374,12 +528,18 @@ export default function UserEventsList(props: UserEventsListProps) {
               (savedEvent) => savedEvent.id === item.event.id,
             ) ?? false;
 
+          const similarEventsCount = item.similarEvents.length;
+
           return (
             <UserEventListItem
               event={item.event}
+              ActionButton={ActionButton}
+              showCreator={showCreator}
               isSaved={isSaved}
+              similarEventsCount={
+                similarEventsCount > 0 ? similarEventsCount : undefined
+              }
               demoMode={demoMode}
-              itemWidth={itemWidth}
             />
           );
         }}
@@ -396,7 +556,6 @@ export default function UserEventsList(props: UserEventsListProps) {
           paddingBottom: 120,
           flexGrow: collapsedEvents.length === 0 ? 1 : 0,
           paddingTop: 10,
-          paddingHorizontal: listPadding,
         }}
         ListFooterComponent={renderFooter()}
       />
