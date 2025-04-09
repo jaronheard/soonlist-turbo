@@ -1,5 +1,9 @@
 import { logError } from "~/utils/errorLogging";
-import { getDateInfo, timeFormat } from "../../utils/dates";
+import {
+  getDateInfo,
+  parseTimeString as parseTimeStringFromDates,
+  timeFormat,
+} from "../../utils/dates";
 
 export function formatDateForDisplay(dateString?: string): string {
   if (!dateString) return "";
@@ -87,3 +91,8 @@ export function parseDateString(dateString?: string): Date {
   );
   return defaultDate;
 }
+
+/**
+ * Re-export parseTimeString from the dates utility
+ */
+export const parseTimeString = parseTimeStringFromDates;

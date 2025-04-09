@@ -92,6 +92,7 @@
     "react-native-ios-context-menu": "^3.1.0",
     "react-native-ios-utilities": "^5.1.0",
     "react-native-keyboard-controller": "^1.15.2",
+    "react-native-modal": "14.0.0-rc.1",
     "react-native-onesignal": "^5.2.8",
     "react-native-purchases": "^8.5.0",
     "react-native-purchases-ui": "^8.5.0",
