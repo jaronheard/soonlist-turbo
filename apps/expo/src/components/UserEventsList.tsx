@@ -55,7 +55,7 @@ interface PromoCardProps {
   type: "addEvents";
 }
 
-export function UserEventListItem(props: {
+interface UserEventListItemProps {
   event: Event;
   ActionButton?: React.ComponentType<ActionButtonProps>;
   isLastItem?: boolean;
@@ -63,7 +63,10 @@ export function UserEventListItem(props: {
   isSaved: boolean;
   similarEventsCount?: number;
   demoMode?: boolean;
-}) {
+  index: number;
+}
+
+export function UserEventListItem(props: UserEventListItemProps) {
   const {
     event,
     ActionButton,
@@ -72,6 +75,7 @@ export function UserEventListItem(props: {
     isSaved,
     similarEventsCount,
     demoMode,
+    index,
   } = props;
   const { fontScale } = useWindowDimensions();
   const id = event.id;
@@ -126,7 +130,10 @@ export function UserEventListItem(props: {
   const isOwner = demoMode || isCurrentUser;
 
   const iconSize = 16 * fontScale;
-  const imageSize = 80 * fontScale;
+  const imageWidth = 80 * fontScale;
+  const imageHeight = (imageWidth * 16) / 9;
+
+  const imageRotation = index % 2 === 0 ? "15deg" : "-15deg";
 
   return (
     <EventMenu
@@ -137,6 +144,7 @@ export function UserEventListItem(props: {
       demoMode={demoMode}
     >
       <Pressable
+        className="relative"
         onPress={() => {
           // Short press → navigate
           const isDemoEvent = id.startsWith("demo-");
@@ -161,28 +169,28 @@ export function UserEventListItem(props: {
             "relative",
           )}
         >
-          {isOwner && (
-            <View className="absolute right-4 top-2 flex-row items-center gap-2 opacity-60">
-              {similarEventsCount ? (
-                <View className="bg-neutral-5/90 flex-row items-center gap-1 rounded-full px-1">
-                  <Copy size={12} color="#627496" />
-                  <Text className="text-xs text-neutral-2">
-                    {similarEventsCount}
-                  </Text>
-                </View>
-              ) : null}
-              {event.visibility === "public" ? (
-                <Globe2 size={iconSize} color="#627496" />
-              ) : (
-                <EyeOff size={iconSize} color="#627496" />
-              )}
-            </View>
-          )}
           <View className="mr-4 flex-1">
-            <View className="mb-2">
+            <View className="mb-2 flex-row items-center justify-between">
               <Text className="text-base font-medium text-neutral-2">
                 {dateString.date} • {dateString.time}
               </Text>
+              {isOwner && (
+                <View className="flex-row items-center gap-2 opacity-60">
+                  {similarEventsCount ? (
+                    <View className="bg-neutral-5/90 flex-row items-center gap-1 rounded-full px-1">
+                      <Copy size={12} color="#627496" />
+                      <Text className="text-xs text-neutral-2">
+                        {similarEventsCount}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {event.visibility === "public" ? (
+                    <Globe2 size={iconSize} color="#627496" />
+                  ) : (
+                    <EyeOff size={iconSize} color="#627496" />
+                  )}
+                </View>
+              )}
             </View>
             <Text
               className="mb-2 text-xl font-bold text-neutral-1"
@@ -191,17 +199,22 @@ export function UserEventListItem(props: {
             >
               {e.name}
             </Text>
-            {e.location ? (
-              <View className="mb-2 flex-row items-center gap-1">
-                <MapPin size={iconSize} color="#627496" />
-                <Text
-                  className="flex-1 text-base text-neutral-2"
-                  numberOfLines={1}
-                >
-                  {e.location}
-                </Text>
-              </View>
-            ) : null}
+            <View className="mb-2 flex-row items-center justify-between">
+              {e.location ? (
+                <View className="flex-shrink flex-row items-center gap-1">
+                  <MapPin size={iconSize} color="#627496" />
+                  <Text
+                    className="text-base text-neutral-2"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {e.location}
+                  </Text>
+                </View>
+              ) : (
+                <View />
+              )}
+            </View>
             {shouldShowCreator ? (
               <View className="flex-row items-center gap-2">
                 <UserProfileFlair username={eventUser.username} size="xs">
@@ -239,9 +252,12 @@ export function UserEventListItem(props: {
                       }
                 }
                 style={{
-                  width: imageSize,
-                  height: imageSize,
+                  width: imageWidth,
+                  height: imageHeight,
                   borderRadius: 20,
+                  borderWidth: 1,
+                  borderColor: "#C4B5FD",
+                  transform: [{ rotate: imageRotation }],
                 }}
                 contentFit="cover"
                 cachePolicy="disk"
@@ -249,17 +265,13 @@ export function UserEventListItem(props: {
               />
             ) : (
               <View
-                className="rounded-2xl bg-accent-yellow"
+                className="rounded-2xl border border-purple-300 bg-accent-yellow"
                 style={{
-                  width: imageSize,
-                  height: imageSize,
+                  width: imageWidth,
+                  height: imageHeight,
+                  transform: [{ rotate: imageRotation }],
                 }}
               />
-            )}
-            {ActionButton && (
-              <View className="absolute -bottom-2 -right-2">
-                <ActionButton event={event} />
-              </View>
             )}
           </View>
           {relativeTime && (
@@ -274,6 +286,11 @@ export function UserEventListItem(props: {
                   {relativeTime}
                 </Text>
               </View>
+            </View>
+          )}
+          {ActionButton && (
+            <View className="absolute bottom-4 right-4">
+              <ActionButton event={event} />
             </View>
           )}
         </View>
@@ -501,6 +518,7 @@ export default function UserEventsList(props: UserEventsListProps) {
                 similarEventsCount > 0 ? similarEventsCount : undefined
               }
               demoMode={demoMode}
+              index={index}
             />
           );
         }}
