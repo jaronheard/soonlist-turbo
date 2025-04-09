@@ -28,17 +28,17 @@ import { Button } from "~/components/Button";
 import {
   DatePickerField,
   parseDateString,
-  parseTimeString,
   TimePickerField,
 } from "~/components/date-picker";
-import {
-  formatDateForStorage,
-  formatTimeForStorage,
-} from "~/components/date-picker/date-utils";
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { api } from "~/utils/api";
+import {
+  formatDateForStorage,
+  formatTimeForStorage,
+  parseTimeString,
+} from "~/utils/dates";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
 
@@ -259,19 +259,23 @@ export default function EditEventScreen() {
       }
 
       if (typedEventData.startDate) {
-        setTempStartDate(parseDateString(typedEventData.startDate));
+        const parsedDate = parseDateString(typedEventData.startDate);
+        setTempStartDate(parsedDate);
       }
 
       if (typedEventData.endDate) {
-        setTempEndDate(parseDateString(typedEventData.endDate));
+        const parsedDate = parseDateString(typedEventData.endDate);
+        setTempEndDate(parsedDate);
       }
 
       if (typedEventData.startTime) {
-        setTempStartTime(parseTimeString(typedEventData.startTime));
+        const parsedTime = parseTimeString(typedEventData.startTime);
+        if (parsedTime) setTempStartTime(parsedTime);
       }
 
       if (typedEventData.endTime) {
-        setTempEndTime(parseTimeString(typedEventData.endTime));
+        const parsedTime = parseTimeString(typedEventData.endTime);
+        if (parsedTime) setTempEndTime(parsedTime);
       }
     }
   }, [eventQuery.data, reset, setSelectedImage]);
@@ -510,12 +514,13 @@ export default function EditEventScreen() {
       handleStartDateDone();
       return;
     }
-    setTempStartDate(
-      parseDateString(
-        (control._getWatch("event.startDate") as string | undefined) ||
-          formatDateForStorage(new Date()),
-      ),
+    const startDateString = control._getWatch("event.startDate") as
+      | string
+      | undefined;
+    const parsedDate = parseDateString(
+      startDateString || formatDateForStorage(new Date()),
     );
+    setTempStartDate(parsedDate);
     setShowStartDatePicker(true);
     setShowStartTimePicker(false);
     setShowEndDatePicker(false);
@@ -527,11 +532,10 @@ export default function EditEventScreen() {
       handleStartTimeDone();
       return;
     }
-    setTempStartTime(
-      parseTimeString(
-        control._getWatch("event.startTime") as string | undefined,
-      ),
+    const parsedTime = parseTimeString(
+      control._getWatch("event.startTime") as string | undefined,
     );
+    if (parsedTime) setTempStartTime(parsedTime);
     setShowStartTimePicker(true);
     setShowStartDatePicker(false);
     setShowEndDatePicker(false);
@@ -543,12 +547,13 @@ export default function EditEventScreen() {
       handleEndDateDone();
       return;
     }
-    setTempEndDate(
-      parseDateString(
-        (control._getWatch("event.endDate") as string | undefined) ||
-          formatDateForStorage(new Date()),
-      ),
+    const endDateString = control._getWatch("event.endDate") as
+      | string
+      | undefined;
+    const parsedDate = parseDateString(
+      endDateString || formatDateForStorage(new Date()),
     );
+    setTempEndDate(parsedDate);
     setShowEndDatePicker(true);
     setShowStartDatePicker(false);
     setShowStartTimePicker(false);
@@ -560,9 +565,10 @@ export default function EditEventScreen() {
       handleEndTimeDone();
       return;
     }
-    setTempEndTime(
-      parseTimeString(control._getWatch("event.endTime") as string | undefined),
+    const parsedTime = parseTimeString(
+      control._getWatch("event.endTime") as string | undefined,
     );
+    if (parsedTime) setTempEndTime(parsedTime);
     setShowEndTimePicker(true);
     setShowStartDatePicker(false);
     setShowStartTimePicker(false);
@@ -577,7 +583,8 @@ export default function EditEventScreen() {
     }
     setTempStartDate(currentDate);
     if (Platform.OS === "android") {
-      setValue("event.startDate", formatDateForStorage(currentDate), {
+      const formatted = formatDateForStorage(currentDate);
+      setValue("event.startDate", formatted, {
         shouldDirty: true,
       });
     }
@@ -590,7 +597,8 @@ export default function EditEventScreen() {
     }
     setTempStartTime(currentTime);
     if (Platform.OS === "android") {
-      setValue("event.startTime", formatTimeForStorage(currentTime), {
+      const formatted = formatTimeForStorage(currentTime);
+      setValue("event.startTime", formatted, {
         shouldDirty: true,
       });
     }
@@ -603,7 +611,8 @@ export default function EditEventScreen() {
     }
     setTempEndDate(currentDate);
     if (Platform.OS === "android") {
-      setValue("event.endDate", formatDateForStorage(currentDate), {
+      const formatted = formatDateForStorage(currentDate);
+      setValue("event.endDate", formatted, {
         shouldDirty: true,
       });
     }
@@ -616,7 +625,8 @@ export default function EditEventScreen() {
     }
     setTempEndTime(currentTime);
     if (Platform.OS === "android") {
-      setValue("event.endTime", formatTimeForStorage(currentTime), {
+      const formatted = formatTimeForStorage(currentTime);
+      setValue("event.endTime", formatted, {
         shouldDirty: true,
       });
     }
@@ -624,28 +634,32 @@ export default function EditEventScreen() {
 
   // --- iOS Done Handlers ---
   const handleStartDateDone = () => {
-    setValue("event.startDate", formatDateForStorage(tempStartDate), {
+    const formatted = formatDateForStorage(tempStartDate);
+    setValue("event.startDate", formatted, {
       shouldDirty: true,
     });
     setShowStartDatePicker(false);
   };
 
   const handleStartTimeDone = () => {
-    setValue("event.startTime", formatTimeForStorage(tempStartTime), {
+    const formatted = formatTimeForStorage(tempStartTime);
+    setValue("event.startTime", formatted, {
       shouldDirty: true,
     });
     setShowStartTimePicker(false);
   };
 
   const handleEndDateDone = () => {
-    setValue("event.endDate", formatDateForStorage(tempEndDate), {
+    const formatted = formatDateForStorage(tempEndDate);
+    setValue("event.endDate", formatted, {
       shouldDirty: true,
     });
     setShowEndDatePicker(false);
   };
 
   const handleEndTimeDone = () => {
-    setValue("event.endTime", formatTimeForStorage(tempEndTime), {
+    const formatted = formatTimeForStorage(tempEndTime);
+    setValue("event.endTime", formatted, {
       shouldDirty: true,
     });
     setShowEndTimePicker(false);
