@@ -15,6 +15,9 @@ export const useSignOut = () => {
   const utils = api.useUtils();
   const { signOut, userId } = useAuth();
   const resetStore = useAppStore((state) => state.resetStore);
+  const setHasCompletedOnboarding = useAppStore(
+    (state) => state.setHasCompletedOnboarding,
+  );
   const { logout: revenueCatLogout } = useRevenueCat();
   const { mutateAsync: deleteAccount } = api.user.deleteAccount.useMutation();
 
@@ -36,5 +39,7 @@ export const useSignOut = () => {
       options?.shouldDeleteAccount ? deleteAccount() : undefined,
       signOut(),
     ]);
+
+    setHasCompletedOnboarding(false);
   };
 };
