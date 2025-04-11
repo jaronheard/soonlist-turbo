@@ -20,7 +20,7 @@ interface Testimonial {
 }
 
 // For now, we'll use a static testimonial but this could be made dynamic
-const testimonial: Testimonial = {
+const testimonialDella: Testimonial = {
   body: "Soonlist has brought SO much more ease into organizing and prioritizing events I see!",
   author: {
     name: "Della Mueller",
@@ -31,6 +31,16 @@ const testimonial: Testimonial = {
   },
 };
 
+const testimonialEric: Testimonial = {
+  body: "I'm a freak for my calendar and Soonlist keeps it fresh and full of events that inspire me.",
+  author: {
+    name: "Eric Benedon",
+    bio: "Educator, Portland, OR",
+    handle: "eggsbenedon",
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    imageUrl: require("~/assets/eric.png"),
+  },
+};
 export default function WeGotYouScreen() {
   const { onboardingData } = useAppStore();
 
@@ -69,11 +79,11 @@ export default function WeGotYouScreen() {
         </Text>
         <View className="mb-12 w-full rounded-lg bg-accent-yellow px-6 py-4 shadow-sm">
           <Text className="text-lg font-medium leading-tight text-neutral-1">
-            "{testimonial.body}"
+            "{testimonialDella.body}"
           </Text>
           <View className="mt-2 flex-row items-center justify-start gap-2">
             <Image
-              source={testimonial.author.imageUrl}
+              source={testimonialDella.author.imageUrl}
               style={styles.authorImage}
               contentFit="cover"
               contentPosition="center"
@@ -83,10 +93,34 @@ export default function WeGotYouScreen() {
             />
             <View>
               <Text className="text-base font-semibold leading-none text-neutral-1">
-                {testimonial.author.name}
+                {testimonialDella.author.name}
               </Text>
               <Text className="text-base font-medium leading-none text-neutral-2">
-                {testimonial.author.bio}
+                {testimonialDella.author.bio}
+              </Text>
+            </View>
+          </View>
+        </View>
+        <View className="mb-12 w-full rounded-lg bg-accent-yellow px-6 py-4 shadow-sm">
+          <Text className="text-lg font-medium leading-tight text-neutral-1">
+            "{testimonialEric.body}"
+          </Text>
+          <View className="mt-2 flex-row items-center justify-start gap-2">
+            <Image
+              source={testimonialEric.author.imageUrl}
+              style={styles.authorImage}
+              contentFit="cover"
+              contentPosition="center"
+              onError={(error) => {
+                logError("Image loading error", error);
+              }}
+            />
+            <View>
+              <Text className="text-base font-semibold leading-none text-neutral-1">
+                {testimonialEric.author.name}
+              </Text>
+              <Text className="text-base font-medium leading-none text-neutral-2">
+                {testimonialEric.author.bio}
               </Text>
             </View>
           </View>

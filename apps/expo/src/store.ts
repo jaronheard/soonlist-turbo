@@ -340,6 +340,7 @@ export const useAppStore = create<AppState>()(
           userPriority: null,
           userTimezone: getUserTimeZone(),
           hasShownTimezoneAlert: false,
+          // note: hasCompletedOnboarding is not reset here, reset in useSignOut
           onboardingData: {},
           currentOnboardingStep: null,
         }),
