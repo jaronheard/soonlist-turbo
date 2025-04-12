@@ -170,7 +170,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               right: 10,
               top: -5,
               zIndex: 10,
-              shadowColor: "#000",
+              shadowColor: "#5A32FB",
               shadowOffset: {
                 width: 0,
                 height: 1,
@@ -213,14 +213,22 @@ export function UserEventListItem(props: UserEventListItemProps) {
           </View>
           <View
             className={cn(
-              "mt-4 border-neutral-3 bg-white p-3 shadow-lg",
+              "mt-4 bg-white p-3",
               isHappeningNow ? "border border-accent-yellow" : "",
-              "overflow-hidden",
             )}
             style={{
               marginRight: imageWidth * 0.6,
               borderRadius: 20,
-              borderWidth: 0.5,
+              borderWidth: 3,
+              borderColor: "white",
+              shadowColor: "#5A32FB",
+              shadowOffset: {
+                width: 0,
+                height: 1,
+              },
+              shadowOpacity: 0.15,
+              shadowRadius: 2.5,
+              elevation: 2,
             }}
           >
             <Text
@@ -313,12 +321,24 @@ export function UserEventListItem(props: UserEventListItemProps) {
             {/* End new buttons section */}
           </View>
           {relativeTime && (
-            <View className="absolute left-6 top-0 z-20">
+            <View className="absolute left-0 right-0 top-0 z-20 flex items-center justify-center">
               <View
                 className={cn(
-                  "rounded-full px-2 py-0.5 shadow",
+                  "rounded-full px-2 py-0.5",
                   isHappeningNow ? "bg-white" : "bg-accent-yellow",
                 )}
+                style={{
+                  borderWidth: 2,
+                  borderColor: "white",
+                  shadowColor: "#5A32FB",
+                  shadowOffset: {
+                    width: 0,
+                    height: 1,
+                  },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 1,
+                  elevation: 1,
+                }}
               >
                 <Text className="text-xs font-medium text-neutral-1">
                   {relativeTime}
