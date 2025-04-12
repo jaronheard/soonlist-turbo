@@ -60,7 +60,7 @@ export function EventStats({
   const progress = Math.min(capturesThisWeek / weeklyGoal, 1);
 
   return (
-    <View className="flex-row justify-between bg-white px-4 py-2.5">
+    <View className="flex-row justify-between bg-interactive-3 px-4 py-2.5">
       <View className="relative flex-1 px-4">
         <View className="absolute right-0 top-[10%] h-[80%] w-[1px] bg-neutral-200" />
         <View className="flex-row items-center gap-2">

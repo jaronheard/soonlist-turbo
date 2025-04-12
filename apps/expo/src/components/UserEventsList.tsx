@@ -16,11 +16,16 @@ import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
+  Calendar,
   Copy,
   EyeOff,
   Globe2,
   MapPin,
+  Navigation,
+  Pencil,
   PlusCircle,
+  QrCode,
+  Share,
   User,
 } from "lucide-react-native";
 
@@ -158,7 +163,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
         }}
         delayLongPress={350} // optional; adjust as desired
       >
-        <View className={cn("relative mb-4 px-4")}>
+        <View className={cn("relative mb-6 px-4")}>
           <View
             style={{
               position: "absolute",
@@ -212,15 +217,18 @@ export function UserEventListItem(props: UserEventListItemProps) {
           >
             <Text
               className="mb-1 text-lg font-bold text-neutral-1"
-              numberOfLines={2}
+              numberOfLines={1}
               ellipsizeMode="tail"
             >
               {e.name}
             </Text>
             <View className="mb-1 flex-row items-center justify-between">
-              <Text className="text-sm font-medium text-neutral-2">
-                {dateString.date} • {dateString.time}
-              </Text>
+              <View className="flex-row items-center gap-1">
+                <Calendar size={iconSize * 0.9} color="#627496" />
+                <Text className="text-sm font-medium text-neutral-2">
+                  {dateString.date} • {dateString.time}
+                </Text>
+              </View>
               {isOwner && !ActionButton && (
                 <View className="flex-row items-center gap-1 opacity-60">
                   {similarEventsCount ? (
@@ -276,6 +284,25 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 </Text>
               </View>
             ) : null}
+            {/* New buttons section */}
+            <View className="mt-2 flex-row items-center justify-start gap-3">
+              <TouchableOpacity className="rounded-full p-1.5">
+                <Navigation size={iconSize * 1.1} color="#5A32FB" />
+              </TouchableOpacity>
+              <TouchableOpacity className="rounded-full p-1.5">
+                <Calendar size={iconSize * 1.1} color="#5A32FB" />
+              </TouchableOpacity>
+              <TouchableOpacity className="rounded-full p-1.5">
+                <Pencil size={iconSize * 1.1} color="#5A32FB" />
+              </TouchableOpacity>
+              <TouchableOpacity className="rounded-full p-1.5">
+                <QrCode size={iconSize * 1.1} color="#5A32FB" />
+              </TouchableOpacity>
+              <TouchableOpacity className="rounded-full p-1.5">
+                <Share size={iconSize * 1.1} color="#5A32FB" />
+              </TouchableOpacity>
+            </View>
+            {/* End new buttons section */}
           </View>
           {relativeTime && (
             <View className="absolute left-6 top-0 z-20">
@@ -289,11 +316,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   {relativeTime}
                 </Text>
               </View>
-            </View>
-          )}
-          {ActionButton && (
-            <View className="absolute bottom-2 right-2 z-20">
-              <ActionButton event={event} />
             </View>
           )}
         </View>
@@ -541,6 +563,7 @@ export default function UserEventsList(props: UserEventsListProps) {
           paddingBottom: 120,
           flexGrow: collapsedEvents.length === 0 ? 1 : 0,
           paddingTop: 10,
+          backgroundColor: "#F4F1FF",
         }}
         ListFooterComponent={renderFooter()}
       />
