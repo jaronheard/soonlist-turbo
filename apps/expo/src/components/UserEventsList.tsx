@@ -170,6 +170,15 @@ export function UserEventListItem(props: UserEventListItemProps) {
               right: 10,
               top: -5,
               zIndex: 10,
+              shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: 1,
+              },
+              shadowOpacity: 0.3,
+              shadowRadius: 1.5,
+              elevation: 3,
+              transform: [{ rotate: imageRotation }],
             }}
           >
             {e.images?.[3] ? (
@@ -185,9 +194,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   width: imageWidth,
                   height: imageHeight,
                   borderRadius: 20,
-                  borderWidth: 1,
-                  borderColor: "#C4B5FD",
-                  transform: [{ rotate: imageRotation }],
+                  borderWidth: 3,
+                  borderColor: "white",
                 }}
                 contentFit="cover"
                 cachePolicy="disk"
