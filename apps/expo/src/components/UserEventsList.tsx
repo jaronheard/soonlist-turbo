@@ -32,6 +32,7 @@ import {
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
@@ -45,7 +46,6 @@ import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { logError } from "../utils/errorLogging";
 import { EventListItemSkeleton } from "./EventListItemSkeleton";
 import { EventMenu } from "./EventMenu";
-import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
@@ -70,6 +70,193 @@ interface UserEventListItemProps {
   index: number;
 }
 
+interface CurrentVibeProps {
+  events: EventWithSimilarity[];
+}
+
+function getEventDetails(
+  item: EventWithSimilarity,
+): AddToCalendarButtonPropsRestricted | null {
+  const details = item.event.event as
+    | AddToCalendarButtonPropsRestricted
+    | undefined;
+  return details ?? null;
+}
+
+function CurrentVibe({ events }: CurrentVibeProps) {
+  const { fontScale } = useWindowDimensions();
+
+  const { quantityVibe, contentVibe } = useMemo(() => {
+    const now = new Date();
+    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const upcomingEvents = events.filter((item) => {
+      const details = getEventDetails(item);
+      if (!details) return false;
+      const endDateInfo = getDateTimeInfo(
+        details.endDate || details.startDate || "",
+        details.endTime || details.startTime || "",
+      );
+      if (!endDateInfo) return false;
+      const endDate = new Date(
+        endDateInfo.year,
+        endDateInfo.month - 1,
+        endDateInfo.day,
+        endDateInfo.hour,
+        endDateInfo.minute,
+      );
+      return endDate > now;
+    });
+
+    let calculatedQuantityVibe = { emoji: "✨", text: "Fresh Start" };
+    if (upcomingEvents.length > 0) {
+      const soonEvents = upcomingEvents.filter((item) => {
+        const details = getEventDetails(item);
+        if (!details) return false;
+        const startDateInfo = getDateTimeInfo(
+          details.startDate || "",
+          details.startTime || "",
+        );
+        if (!startDateInfo) return false;
+        const startDate = new Date(
+          startDateInfo.year,
+          startDateInfo.month - 1,
+          startDateInfo.day,
+          startDateInfo.hour,
+          startDateInfo.minute,
+        );
+        return startDate < oneWeekFromNow;
+      });
+
+      const farEvents = upcomingEvents.length - soonEvents.length;
+
+      if (soonEvents.length > farEvents && soonEvents.length >= 3) {
+        calculatedQuantityVibe = { emoji: "🚀", text: "Packed Week!" };
+      } else if (soonEvents.length > 0 && soonEvents.length >= farEvents) {
+        calculatedQuantityVibe = { emoji: "🎉", text: "Getting Busy" };
+      } else if (farEvents > soonEvents.length && farEvents >= 2) {
+        calculatedQuantityVibe = { emoji: "🤔", text: "Planning Ahead" };
+      } else {
+        calculatedQuantityVibe = { emoji: "🗓️", text: "Upcoming Fun" };
+      }
+    }
+
+    let calculatedContentVibe = { emoji: "🌟", text: "Good Times" };
+    const upcomingEventNames = upcomingEvents
+      .map((item) => getEventDetails(item)?.name?.toLowerCase() || "")
+      .filter((name) => name);
+
+    const musicKeywords = ["music", "concert", "dj", "live band", "show"];
+    const communityKeywords = [
+      "community",
+      "volunteer",
+      "mutual aid",
+      "gathering",
+      "potluck",
+    ];
+    const activismKeywords = [
+      "protest",
+      "rally",
+      "march",
+      "activism",
+      "justice",
+    ];
+    const artKeywords = [
+      "art",
+      "gallery",
+      "exhibit",
+      "craft",
+      "market",
+      "workshop",
+    ];
+
+    let musicCount = 0;
+    let communityCount = 0;
+    let activismCount = 0;
+    let artCount = 0;
+
+    upcomingEventNames.forEach((name) => {
+      if (musicKeywords.some((kw) => name.includes(kw))) musicCount++;
+      if (communityKeywords.some((kw) => name.includes(kw))) communityCount++;
+      if (activismKeywords.some((kw) => name.includes(kw))) activismCount++;
+      if (artKeywords.some((kw) => name.includes(kw))) artCount++;
+    });
+
+    const categoryCounts = [
+      { type: "Music", count: musicCount, emoji: "🎵" },
+      { type: "Community", count: communityCount, emoji: "🤝" },
+      { type: "Activism", count: activismCount, emoji: "✊" },
+      { type: "Art & Market", count: artCount, emoji: "🎨" },
+    ].sort((a, b) => b.count - a.count);
+
+    if (upcomingEvents.length === 0) {
+      calculatedContentVibe = { emoji: "👀", text: "What's Next?" };
+    } else if (categoryCounts[0] && categoryCounts[0].count > 0) {
+      calculatedContentVibe = {
+        emoji: categoryCounts[0].emoji,
+        text: categoryCounts[0].type + " Focus",
+      };
+    } else {
+      calculatedContentVibe = { emoji: "✨", text: "Diverse Mix" };
+    }
+
+    return {
+      quantityVibe: calculatedQuantityVibe,
+      contentVibe: calculatedContentVibe,
+    };
+  }, [events]);
+
+  if (events.length === 0) return null;
+
+  return (
+    <View className="mx-4 mb-4 mt-4 flex-row flex-wrap items-start justify-center gap-2">
+      <View
+        className="bg-accent-purple/20 self-start rounded-full p-2 px-3 shadow-md"
+        style={{
+          shadowColor: "#5A32FB",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.2,
+          shadowRadius: 3,
+          elevation: 4,
+          transform: [{ rotate: "-2deg" }],
+        }}
+      >
+        <Text
+          style={{ fontSize: 16 * fontScale }}
+          className="font-semibold text-neutral-1"
+        >
+          {quantityVibe.emoji}{" "}
+          <Text style={{ fontSize: 13 * fontScale }} className="font-medium">
+            {quantityVibe.text}
+          </Text>
+        </Text>
+      </View>
+
+      <View
+        className="self-start rounded-full bg-accent-yellow/20 p-2 px-3 shadow-md"
+        style={{
+          shadowColor: "#FFC107",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.2,
+          shadowRadius: 3,
+          elevation: 4,
+          transform: [{ rotate: "3deg" }],
+        }}
+      >
+        <Text
+          style={{ fontSize: 16 * fontScale }}
+          className="font-semibold text-neutral-1"
+        >
+          {contentVibe.emoji}{" "}
+          <Text style={{ fontSize: 13 * fontScale }} className="font-medium">
+            {contentVibe.text}
+          </Text>
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 export function UserEventListItem(props: UserEventListItemProps) {
   const {
     event,
@@ -82,7 +269,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
   } = props;
   const { fontScale } = useWindowDimensions();
   const id = event.id;
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const e = event.event as AddToCalendarButtonPropsRestricted;
 
   const dateString = formatEventDateRange(
@@ -121,7 +307,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const { user: currentUser } = useUser();
   const eventUser = event.user;
 
-  // guard against null user
   if (!eventUser) return null;
 
   const isCurrentUser = currentUser?.id === eventUser.id;
@@ -133,7 +318,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const isOwner = demoMode || isCurrentUser;
 
   const iconSize = 16 * fontScale;
-  const imageWidth = 80 * fontScale;
+  const imageWidth = 90 * fontScale;
   const imageHeight = (imageWidth * 16) / 9;
 
   const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
@@ -149,7 +334,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
       <Pressable
         className="relative"
         onPress={() => {
-          // Short press → navigate
           const isDemoEvent = id.startsWith("demo-");
           if (isDemoEvent) {
             router.push(`/onboarding/demo-event/${id}`);
@@ -158,10 +342,9 @@ export function UserEventListItem(props: UserEventListItemProps) {
           }
         }}
         onLongPress={(e) => {
-          // Long press → stop native press so menu can open without navigation
           e.stopPropagation();
         }}
-        delayLongPress={350} // optional; adjust as desired
+        delayLongPress={350}
       >
         <View className={cn("relative mb-6 px-4")}>
           <View
@@ -171,10 +354,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               top: -5,
               zIndex: 10,
               shadowColor: "#5A32FB",
-              shadowOffset: {
-                width: 0,
-                height: 1,
-              },
+              shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.3,
               shadowRadius: 1.5,
               elevation: 3,
@@ -222,10 +402,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               borderWidth: 3,
               borderColor: "white",
               shadowColor: "#5A32FB",
-              shadowOffset: {
-                width: 0,
-                height: 1,
-              },
+              shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.15,
               shadowRadius: 2.5,
               elevation: 2,
@@ -300,7 +477,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 </Text>
               </View>
             ) : null}
-            {/* New buttons section */}
             <View className="mt-2 flex-row items-center justify-start gap-3">
               <TouchableOpacity className="rounded-full p-1.5">
                 <Navigation size={iconSize * 1.1} color="#5A32FB" />
@@ -318,7 +494,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 <Share size={iconSize * 1.1} color="#5A32FB" />
               </TouchableOpacity>
             </View>
-            {/* End new buttons section */}
           </View>
           {relativeTime && (
             <View className="absolute left-0 right-0 top-0 z-20 flex items-center justify-center">
@@ -331,10 +506,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   borderWidth: 2,
                   borderColor: "white",
                   shadowColor: "#5A32FB",
-                  shadowOffset: {
-                    width: 0,
-                    height: 1,
-                  },
+                  shadowOffset: { width: 0, height: 1 },
                   shadowOpacity: 0.15,
                   shadowRadius: 1,
                   elevation: 1,
@@ -398,12 +570,6 @@ interface UserEventsListProps {
   onRefresh: () => Promise<void>;
   onEndReached: () => void;
   isFetchingNextPage: boolean;
-  stats?: {
-    capturesThisWeek: number;
-    weeklyGoal: number;
-    upcomingEvents: number;
-    allTimeEvents: number;
-  };
   promoCard?: PromoCardProps;
   demoMode?: boolean;
   hasUnlimited?: boolean;
@@ -418,7 +584,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     onRefresh,
     onEndReached,
     isFetchingNextPage,
-    stats,
     promoCard,
     demoMode,
     hasUnlimited = false,
@@ -431,8 +596,10 @@ export default function UserEventsList(props: UserEventsListProps) {
     userName: username,
   });
 
-  // Collapse similar events
-  const collapsedEvents = collapseSimilarEvents(events, user?.id);
+  const collapsedEvents = useMemo(
+    () => collapseSimilarEvents(events, user?.id),
+    [events, user?.id],
+  );
 
   const pendingAIMutations = useMutationState(
     {
@@ -527,7 +694,7 @@ export default function UserEventsList(props: UserEventsListProps) {
           <ActivityIndicator size="large" color="#5A32FB" />
         </View>
       ) : null}
-      {events.length >= 1 && promoCard ? (
+      {collapsedEvents.length >= 1 && promoCard ? (
         <View className="mb-4 mt-2">
           <PromoCard {...promoCard} />
         </View>
@@ -548,7 +715,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     await onRefresh();
   };
 
-  const renderHeader = () => (stats ? <EventStats {...stats} /> : null);
+  const renderHeader = () => <CurrentVibe events={collapsedEvents} />;
 
   return (
     <>
@@ -557,16 +724,17 @@ export default function UserEventsList(props: UserEventsListProps) {
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
+          const eventData = item.event;
           const isSaved =
             savedIdsQuery.data?.some(
-              (savedEvent) => savedEvent.id === item.event.id,
+              (savedEvent) => savedEvent.id === eventData.id,
             ) ?? false;
 
           const similarEventsCount = item.similarEvents.length;
 
           return (
             <UserEventListItem
-              event={item.event}
+              event={eventData}
               ActionButton={ActionButton}
               showCreator={showCreator}
               isSaved={isSaved}
@@ -590,7 +758,6 @@ export default function UserEventsList(props: UserEventsListProps) {
         contentContainerStyle={{
           paddingBottom: 120,
           flexGrow: collapsedEvents.length === 0 ? 1 : 0,
-          paddingTop: 10,
           backgroundColor: "#F4F1FF",
         }}
         ListFooterComponent={renderFooter()}
