@@ -126,8 +126,17 @@ export default function AddEventButton({
           onPress={handlePress}
           className="absolute bottom-8 left-1/2 -translate-x-1/2"
         >
-          <View className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-2 p-6 shadow-lg">
-            <PlusIcon size={28} color="#5A32FB" />
+          <View
+            className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-6"
+            style={{
+              shadowColor: "#5A32FB",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
+              elevation: 8,
+            }}
+          >
+            <PlusIcon size={28} color="#FFF" />
           </View>
         </TouchableOpacity>
       ) : (
@@ -135,7 +144,16 @@ export default function AddEventButton({
           onPress={handlePress}
           className="absolute bottom-8 left-1/2 -translate-x-1/2"
         >
-          <View className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-3.5 shadow-lg">
+          <View
+            className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-3.5"
+            style={{
+              shadowColor: "#5A32FB",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
+              elevation: 8,
+            }}
+          >
             <Sparkles size={20} color="#FFF" />
             <Text className="ml-2 text-2xl font-bold text-white">
               Start your free trial

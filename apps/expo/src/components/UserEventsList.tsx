@@ -408,16 +408,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
               elevation: 2,
             }}
           >
-            <Text
-              className="mb-1 text-lg font-bold text-neutral-1"
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {e.name}
-            </Text>
             <View className="mb-1 flex-row items-center justify-between">
               <View className="flex-row items-center gap-1">
-                <Calendar size={iconSize * 0.9} color="#627496" />
                 <Text className="text-sm font-medium text-neutral-2">
                   {dateString.date} • {dateString.time}
                 </Text>
@@ -440,6 +432,13 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 </View>
               )}
             </View>
+            <Text
+              className="mb-1 text-lg font-bold text-neutral-1"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {e.name}
+            </Text>
             {e.location ? (
               <View className="mb-1 flex-shrink flex-row items-center gap-1">
                 <MapPin size={iconSize * 0.9} color="#627496" />
