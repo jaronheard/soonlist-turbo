@@ -476,21 +476,21 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 </Text>
               </View>
             ) : null}
-            <View className="mt-2 flex-row items-center justify-start gap-3">
-              <TouchableOpacity className="rounded-full p-1.5">
-                <Navigation size={iconSize * 1.1} color="#5A32FB" />
+            <View className="mt-2 flex-row items-center justify-start gap-2">
+              <TouchableOpacity className="rounded-full p-1">
+                <Navigation size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
-              <TouchableOpacity className="rounded-full p-1.5">
-                <Calendar size={iconSize * 1.1} color="#5A32FB" />
+              <TouchableOpacity className="rounded-full p-1">
+                <Calendar size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
-              <TouchableOpacity className="rounded-full p-1.5">
-                <Pencil size={iconSize * 1.1} color="#5A32FB" />
+              <TouchableOpacity className="rounded-full p-1">
+                <Pencil size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
-              <TouchableOpacity className="rounded-full p-1.5">
-                <QrCode size={iconSize * 1.1} color="#5A32FB" />
+              <TouchableOpacity className="rounded-full p-1">
+                <QrCode size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
-              <TouchableOpacity className="rounded-full p-1.5">
-                <Share size={iconSize * 1.1} color="#5A32FB" />
+              <TouchableOpacity className="rounded-full p-1">
+                <Share size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
             </View>
           </View>
