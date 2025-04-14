@@ -25,13 +25,14 @@ import {
   Pencil,
   PlusCircle,
   QrCode,
-  Share,
+  ShareIcon,
   User,
 } from "lucide-react-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
+import { useEventActions } from "~/hooks/useEventActions";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
@@ -81,6 +82,13 @@ export function UserEventListItem(props: UserEventListItemProps) {
     index,
   } = props;
   const { fontScale } = useWindowDimensions();
+  const {
+    handleShare,
+    handleDirections,
+    handleAddToCal,
+    handleEdit,
+    handleShowQR,
+  } = useEventActions({ event, isSaved, demoMode });
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
 
@@ -290,20 +298,37 @@ export function UserEventListItem(props: UserEventListItemProps) {
               </View>
             ) : null}
             <View className="mt-2 flex-row items-center justify-start gap-2">
-              <TouchableOpacity className="rounded-full p-1">
+              <TouchableOpacity
+                className="rounded-full p-1"
+                onPress={handleDirections}
+              >
                 <Navigation size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
-              <TouchableOpacity className="rounded-full p-1">
+              <TouchableOpacity
+                className="rounded-full p-1"
+                onPress={handleAddToCal}
+              >
                 <Calendar size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
-              <TouchableOpacity className="rounded-full p-1">
-                <Pencil size={iconSize} color="#5A32FB" />
-              </TouchableOpacity>
-              <TouchableOpacity className="rounded-full p-1">
+              {isOwner && (
+                <TouchableOpacity
+                  className="rounded-full p-1"
+                  onPress={handleEdit}
+                >
+                  <Pencil size={iconSize} color="#5A32FB" />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                className="rounded-full p-1"
+                onPress={handleShowQR}
+              >
                 <QrCode size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
-              <TouchableOpacity className="rounded-full p-1">
-                <Share size={iconSize} color="#5A32FB" />
+              <TouchableOpacity
+                className="rounded-full p-1"
+                onPress={handleShare}
+              >
+                <ShareIcon size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
             </View>
           </View>
