@@ -32,7 +32,6 @@ import {
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
-import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
@@ -46,6 +45,7 @@ import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { logError } from "../utils/errorLogging";
 import { EventListItemSkeleton } from "./EventListItemSkeleton";
 import { EventMenu } from "./EventMenu";
+import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
@@ -68,193 +68,6 @@ interface UserEventListItemProps {
   similarEventsCount?: number;
   demoMode?: boolean;
   index: number;
-}
-
-interface CurrentVibeProps {
-  events: EventWithSimilarity[];
-}
-
-function getEventDetails(
-  item: EventWithSimilarity,
-): AddToCalendarButtonPropsRestricted | null {
-  const details = item.event.event as
-    | AddToCalendarButtonPropsRestricted
-    | undefined;
-  return details ?? null;
-}
-
-function CurrentVibe({ events }: CurrentVibeProps) {
-  const { fontScale } = useWindowDimensions();
-
-  const { quantityVibe, contentVibe } = useMemo(() => {
-    const now = new Date();
-    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    const upcomingEvents = events.filter((item) => {
-      const details = getEventDetails(item);
-      if (!details) return false;
-      const endDateInfo = getDateTimeInfo(
-        details.endDate || details.startDate || "",
-        details.endTime || details.startTime || "",
-      );
-      if (!endDateInfo) return false;
-      const endDate = new Date(
-        endDateInfo.year,
-        endDateInfo.month - 1,
-        endDateInfo.day,
-        endDateInfo.hour,
-        endDateInfo.minute,
-      );
-      return endDate > now;
-    });
-
-    let calculatedQuantityVibe = { emoji: "✨", text: "Fresh Start" };
-    if (upcomingEvents.length > 0) {
-      const soonEvents = upcomingEvents.filter((item) => {
-        const details = getEventDetails(item);
-        if (!details) return false;
-        const startDateInfo = getDateTimeInfo(
-          details.startDate || "",
-          details.startTime || "",
-        );
-        if (!startDateInfo) return false;
-        const startDate = new Date(
-          startDateInfo.year,
-          startDateInfo.month - 1,
-          startDateInfo.day,
-          startDateInfo.hour,
-          startDateInfo.minute,
-        );
-        return startDate < oneWeekFromNow;
-      });
-
-      const farEvents = upcomingEvents.length - soonEvents.length;
-
-      if (soonEvents.length > farEvents && soonEvents.length >= 3) {
-        calculatedQuantityVibe = { emoji: "🚀", text: "Packed Week!" };
-      } else if (soonEvents.length > 0 && soonEvents.length >= farEvents) {
-        calculatedQuantityVibe = { emoji: "🎉", text: "Getting Busy" };
-      } else if (farEvents > soonEvents.length && farEvents >= 2) {
-        calculatedQuantityVibe = { emoji: "🤔", text: "Planning Ahead" };
-      } else {
-        calculatedQuantityVibe = { emoji: "🗓️", text: "Upcoming Fun" };
-      }
-    }
-
-    let calculatedContentVibe = { emoji: "🌟", text: "Good Times" };
-    const upcomingEventNames = upcomingEvents
-      .map((item) => getEventDetails(item)?.name?.toLowerCase() || "")
-      .filter((name) => name);
-
-    const musicKeywords = ["music", "concert", "dj", "live band", "show"];
-    const communityKeywords = [
-      "community",
-      "volunteer",
-      "mutual aid",
-      "gathering",
-      "potluck",
-    ];
-    const activismKeywords = [
-      "protest",
-      "rally",
-      "march",
-      "activism",
-      "justice",
-    ];
-    const artKeywords = [
-      "art",
-      "gallery",
-      "exhibit",
-      "craft",
-      "market",
-      "workshop",
-    ];
-
-    let musicCount = 0;
-    let communityCount = 0;
-    let activismCount = 0;
-    let artCount = 0;
-
-    upcomingEventNames.forEach((name) => {
-      if (musicKeywords.some((kw) => name.includes(kw))) musicCount++;
-      if (communityKeywords.some((kw) => name.includes(kw))) communityCount++;
-      if (activismKeywords.some((kw) => name.includes(kw))) activismCount++;
-      if (artKeywords.some((kw) => name.includes(kw))) artCount++;
-    });
-
-    const categoryCounts = [
-      { type: "Music", count: musicCount, emoji: "🎵" },
-      { type: "Community", count: communityCount, emoji: "🤝" },
-      { type: "Activism", count: activismCount, emoji: "✊" },
-      { type: "Art & Market", count: artCount, emoji: "🎨" },
-    ].sort((a, b) => b.count - a.count);
-
-    if (upcomingEvents.length === 0) {
-      calculatedContentVibe = { emoji: "👀", text: "What's Next?" };
-    } else if (categoryCounts[0] && categoryCounts[0].count > 0) {
-      calculatedContentVibe = {
-        emoji: categoryCounts[0].emoji,
-        text: categoryCounts[0].type + " Focus",
-      };
-    } else {
-      calculatedContentVibe = { emoji: "✨", text: "Diverse Mix" };
-    }
-
-    return {
-      quantityVibe: calculatedQuantityVibe,
-      contentVibe: calculatedContentVibe,
-    };
-  }, [events]);
-
-  if (events.length === 0) return null;
-
-  return (
-    <View className="mx-4 mb-4 mt-4 flex-row flex-wrap items-start justify-center gap-2">
-      <View
-        className="bg-accent-purple/20 self-start rounded-full p-2 px-3 shadow-md"
-        style={{
-          shadowColor: "#5A32FB",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.2,
-          shadowRadius: 3,
-          elevation: 4,
-          transform: [{ rotate: "-2deg" }],
-        }}
-      >
-        <Text
-          style={{ fontSize: 16 * fontScale }}
-          className="font-semibold text-neutral-1"
-        >
-          {quantityVibe.emoji}{" "}
-          <Text style={{ fontSize: 13 * fontScale }} className="font-medium">
-            {quantityVibe.text}
-          </Text>
-        </Text>
-      </View>
-
-      <View
-        className="self-start rounded-full bg-accent-yellow/20 p-2 px-3 shadow-md"
-        style={{
-          shadowColor: "#FFC107",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.2,
-          shadowRadius: 3,
-          elevation: 4,
-          transform: [{ rotate: "3deg" }],
-        }}
-      >
-        <Text
-          style={{ fontSize: 16 * fontScale }}
-          className="font-semibold text-neutral-1"
-        >
-          {contentVibe.emoji}{" "}
-          <Text style={{ fontSize: 13 * fontScale }} className="font-medium">
-            {contentVibe.text}
-          </Text>
-        </Text>
-      </View>
-    </View>
-  );
 }
 
 export function UserEventListItem(props: UserEventListItemProps) {
@@ -714,7 +527,39 @@ export default function UserEventsList(props: UserEventsListProps) {
     await onRefresh();
   };
 
-  const renderHeader = () => <CurrentVibe events={collapsedEvents} />;
+  const renderHeader = () => {
+    const now = new Date();
+    const upcomingEventsCount = collapsedEvents.filter((item) => {
+      const details = item.event.event as
+        | AddToCalendarButtonPropsRestricted
+        | undefined;
+      if (!details) return false;
+      const endDateInfo = getDateTimeInfo(
+        details.endDate || details.startDate || "",
+        details.endTime || details.startTime || "",
+      );
+      if (!endDateInfo) return false;
+      const endDate = new Date(
+        endDateInfo.year,
+        endDateInfo.month - 1,
+        endDateInfo.day,
+        endDateInfo.hour,
+        endDateInfo.minute,
+      );
+      return endDate > now;
+    }).length;
+
+    const allTimeEventsCount = events.length;
+
+    return (
+      <EventStats
+        capturesThisWeek={5}
+        weeklyGoal={10}
+        upcomingEvents={upcomingEventsCount}
+        allTimeEvents={allTimeEventsCount}
+      />
+    );
+  };
 
   return (
     <>
