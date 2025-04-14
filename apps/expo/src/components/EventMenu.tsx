@@ -86,7 +86,7 @@ export function EventMenu({
     handleUnfollow,
     handleShowQR,
     showDiscover,
-  } = useEventActions({ event, isOwner, isSaved, demoMode, onDelete });
+  } = useEventActions({ event, isSaved, demoMode, onDelete });
 
   const getMenuItems = (): MenuItem[] => {
     const baseItems: MenuItem[] = [

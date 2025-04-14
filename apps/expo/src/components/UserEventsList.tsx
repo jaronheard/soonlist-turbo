@@ -218,7 +218,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               isHappeningNow ? "border border-accent-yellow" : "",
             )}
             style={{
-              marginRight: imageWidth * 0.6,
+              paddingRight: imageWidth * 1.1,
               borderRadius: 20,
               borderWidth: 3,
               borderColor: "white",
