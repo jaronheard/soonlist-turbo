@@ -1,3 +1,4 @@
+import type { TRPCClientError } from "@trpc/client";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -123,6 +124,26 @@ export function UserEventListItem(props: UserEventListItemProps) {
     return formatRelativeTime(startDateInfo);
   }, [startDateInfo, eventIsOver]);
 
+  const queryClient = useQueryClient();
+
+  const toggleVisibilityMutation = api.event.toggleVisibility.useMutation({
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [["event"]] });
+    },
+    onError: (error) => {
+      logError("Error toggling event visibility", error);
+    },
+  });
+
+  const handleToggleVisibility = () => {
+    if (toggleVisibilityMutation.isPending) return;
+    const nextVisibility = event.visibility === "public" ? "private" : "public";
+    toggleVisibilityMutation.mutate({
+      id: event.id,
+      visibility: nextVisibility,
+    });
+  };
+
   const isHappeningNow = relativeTime === "Happening now" && !eventIsOver;
 
   const { user: currentUser } = useUser();
@@ -245,11 +266,20 @@ export function UserEventListItem(props: UserEventListItemProps) {
                       </Text>
                     </View>
                   ) : null}
-                  {event.visibility === "public" ? (
-                    <Globe2 size={iconSize * 0.8} color="#627496" />
-                  ) : (
-                    <EyeOff size={iconSize * 0.8} color="#627496" />
-                  )}
+                  <TouchableOpacity
+                    onPress={handleToggleVisibility}
+                    disabled={toggleVisibilityMutation.isPending}
+                    className={cn(
+                      "p-1",
+                      toggleVisibilityMutation.isPending && "opacity-30",
+                    )}
+                  >
+                    {event.visibility === "public" ? (
+                      <Globe2 size={iconSize * 1} color="#627496" />
+                    ) : (
+                      <EyeOff size={iconSize * 1} color="#627496" />
+                    )}
+                  </TouchableOpacity>
                 </View>
               )}
             </View>
