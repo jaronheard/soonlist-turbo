@@ -16,12 +16,12 @@ interface UserProfileFlairProps {
 }
 
 const sizeClasses: Record<Size, string> = {
-  xs: "text-xs top-0 -right-2",
-  sm: "text-sm top-0 -right-2",
-  md: "text-base top-0 -right-2",
-  lg: "text-lg top-0 -right-2",
-  xl: "text-xl top-0 -right-2",
-  "2xl": "text-2xl top-0 -right-2",
+  xs: "text-xs top-0 -right-2 min-w-[1.25rem]",
+  sm: "text-sm top-0 -right-2 min-w-[1.5rem]",
+  md: "text-base top-0 -right-2 min-w-[1.75rem]",
+  lg: "text-lg top-0 -right-2 min-w-[2rem]",
+  xl: "text-xl top-0 -right-2 min-w-[2.25rem]",
+  "2xl": "text-2xl top-0 -right-2 min-w-[2.5rem]",
 };
 
 function UserEmoji({
@@ -41,7 +41,13 @@ function UserEmoji({
   if (!userEmoji) return null;
 
   return (
-    <View className={cn("absolute z-10", sizeClasses[size], flairClassName)}>
+    <View
+      className={cn(
+        "absolute z-10 overflow-visible",
+        sizeClasses[size],
+        flairClassName,
+      )}
+    >
       <Text className="flex items-center justify-center text-interactive-1">
         {userEmoji}
       </Text>

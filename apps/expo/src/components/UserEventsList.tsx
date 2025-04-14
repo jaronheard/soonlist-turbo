@@ -272,31 +272,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 </Text>
               </View>
             ) : null}
-            {shouldShowCreator ? (
-              <View className="mt-1 flex-row items-center gap-3">
-                <UserProfileFlair username={eventUser.username} size="xs">
-                  {eventUser.userImage ? (
-                    <Image
-                      source={{ uri: eventUser.userImage }}
-                      style={{
-                        width: iconSize * 0.9,
-                        height: iconSize * 0.9,
-                        borderRadius: 9999,
-                      }}
-                      contentFit="cover"
-                      contentPosition="center"
-                      cachePolicy="disk"
-                      transition={100}
-                    />
-                  ) : (
-                    <User size={iconSize * 0.9} color="#627496" />
-                  )}
-                </UserProfileFlair>
-                <Text className="text-xs text-neutral-2">
-                  @{eventUser.username}
-                </Text>
-              </View>
-            ) : null}
+
             <View className="mt-2 flex-row items-center justify-start gap-2">
               <TouchableOpacity
                 className="rounded-full p-1"
@@ -332,6 +308,31 @@ export function UserEventListItem(props: UserEventListItemProps) {
               </TouchableOpacity>
             </View>
           </View>
+          {shouldShowCreator ? (
+            <View className="mx-auto mt-1 flex-row items-center gap-3">
+              <UserProfileFlair username={eventUser.username} size="xs">
+                {eventUser.userImage ? (
+                  <Image
+                    source={{ uri: eventUser.userImage }}
+                    style={{
+                      width: iconSize * 0.9,
+                      height: iconSize * 0.9,
+                      borderRadius: 9999,
+                    }}
+                    contentFit="cover"
+                    contentPosition="center"
+                    cachePolicy="disk"
+                    transition={100}
+                  />
+                ) : (
+                  <User size={iconSize * 0.9} color="#627496" />
+                )}
+              </UserProfileFlair>
+              <Text className="text-xs text-neutral-2">
+                @{eventUser.username}
+              </Text>
+            </View>
+          ) : null}
           {relativeTime && (
             <View className="absolute left-0 right-0 top-0 z-20 flex items-center justify-center">
               <View
