@@ -308,6 +308,11 @@ export function UserEventListItem(props: UserEventListItemProps) {
               </TouchableOpacity>
             </View>
           </View>
+          {ActionButton && (
+            <View className="absolute bottom-6 right-6 z-[11]">
+              <ActionButton event={event} />
+            </View>
+          )}
           {shouldShowCreator ? (
             <View className="mx-auto mt-1 flex-row items-center gap-3">
               <UserProfileFlair username={eventUser.username} size="xs">
