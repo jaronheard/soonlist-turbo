@@ -273,7 +273,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               </View>
             ) : null}
             {shouldShowCreator ? (
-              <View className="mt-1 flex-row items-center gap-1">
+              <View className="mt-1 flex-row items-center gap-3">
                 <UserProfileFlair username={eventUser.username} size="xs">
                   {eventUser.userImage ? (
                     <Image
