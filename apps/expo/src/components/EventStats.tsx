@@ -62,19 +62,8 @@ export function EventStats({
   return (
     <View className="flex-row justify-around px-2 pb-6 pt-2">
       <View
-        className="flex-1 items-center bg-white p-3"
+        className="flex-1 items-center p-3"
         style={{
-          borderRadius: 15,
-          borderWidth: 2,
-          borderColor: "white",
-          shadowColor: "#5A32FB",
-          shadowOffset: {
-            width: 0,
-            height: 1,
-          },
-          shadowOpacity: 0.15,
-          shadowRadius: 2.5,
-          elevation: 2,
           maxWidth: "30%",
         }}
       >
@@ -88,19 +77,8 @@ export function EventStats({
       </View>
 
       <View
-        className="flex-1 items-center bg-white p-3"
+        className="flex-1 items-center p-3"
         style={{
-          borderRadius: 15,
-          borderWidth: 2,
-          borderColor: "white",
-          shadowColor: "#5A32FB",
-          shadowOffset: {
-            width: 0,
-            height: 1,
-          },
-          shadowOpacity: 0.15,
-          shadowRadius: 2.5,
-          elevation: 2,
           maxWidth: "30%",
         }}
       >
@@ -114,19 +92,8 @@ export function EventStats({
       </View>
 
       <View
-        className="flex-1 items-center bg-white p-3"
+        className="flex-1 items-center p-3"
         style={{
-          borderRadius: 15,
-          borderWidth: 2,
-          borderColor: "white",
-          shadowColor: "#5A32FB",
-          shadowOffset: {
-            width: 0,
-            height: 1,
-          },
-          shadowOpacity: 0.15,
-          shadowRadius: 2.5,
-          elevation: 2,
           maxWidth: "30%",
         }}
       >
