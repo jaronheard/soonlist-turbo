@@ -1,4 +1,3 @@
-import type { TRPCClientError } from "@trpc/client";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -51,6 +50,9 @@ import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never";
+
+// Define the type for the stats data based on the expected query output
+type EventStatsData = RouterOutputs["event"]["getStats"];
 
 type Event = RouterOutputs["event"]["getDiscoverInfinite"]["events"][number];
 
@@ -446,6 +448,7 @@ interface UserEventsListProps {
   promoCard?: PromoCardProps;
   demoMode?: boolean;
   hasUnlimited?: boolean;
+  stats?: EventStatsData;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -460,6 +463,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     promoCard,
     demoMode,
     hasUnlimited = false,
+    stats,
   } = props;
   const { user } = useUser();
   const queryClient = useQueryClient();
@@ -589,35 +593,16 @@ export default function UserEventsList(props: UserEventsListProps) {
   };
 
   const renderHeader = () => {
-    const now = new Date();
-    const upcomingEventsCount = collapsedEvents.filter((item) => {
-      const details = item.event.event as
-        | AddToCalendarButtonPropsRestricted
-        | undefined;
-      if (!details) return false;
-      const endDateInfo = getDateTimeInfo(
-        details.endDate || details.startDate || "",
-        details.endTime || details.startTime || "",
-      );
-      if (!endDateInfo) return false;
-      const endDate = new Date(
-        endDateInfo.year,
-        endDateInfo.month - 1,
-        endDateInfo.day,
-        endDateInfo.hour,
-        endDateInfo.minute,
-      );
-      return endDate > now;
-    }).length;
-
-    const allTimeEventsCount = events.length;
+    if (!stats) {
+      return null;
+    }
 
     return (
       <EventStats
-        capturesThisWeek={5}
-        weeklyGoal={10}
-        upcomingEvents={upcomingEventsCount}
-        allTimeEvents={allTimeEventsCount}
+        capturesThisWeek={stats.capturesThisWeek ?? 0}
+        weeklyGoal={stats.weeklyGoal ?? 0}
+        upcomingEvents={stats.upcomingEvents ?? 0}
+        allTimeEvents={stats.allTimeEvents ?? 0}
       />
     );
   };
