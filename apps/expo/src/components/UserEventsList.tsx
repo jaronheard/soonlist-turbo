@@ -294,7 +294,7 @@ function PromoCard({ type }: PromoCardProps) {
     } catch (error) {
       logError("Error requesting media permissions", error);
     }
-    router.push("/new");
+    router.push("/add");
   };
 
   if (type === "addEvents") {
