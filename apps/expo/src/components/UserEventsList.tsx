@@ -203,6 +203,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               shadowRadius: 1.5,
               elevation: 3,
               transform: [{ rotate: imageRotation }],
+              backgroundColor: "transparent",
             }}
           >
             <View
