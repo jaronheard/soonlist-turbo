@@ -44,5 +44,8 @@
     "overrides": {
       "promise": "^8.3.0"
     }
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^1.2.11"
   }
 }

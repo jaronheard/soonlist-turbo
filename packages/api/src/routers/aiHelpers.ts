@@ -1,4 +1,5 @@
 import type { CoreMessage } from "ai";
+import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
@@ -39,13 +40,8 @@ const langfuse = new Langfuse({
   baseUrl: process.env.LANGFUSE_BASE_URL || "",
 });
 
-const MODEL = "gpt-4o";
-const aiConfig = {
-  model: openai(MODEL),
-  mode: "json",
-  temperature: 0.2,
-  maxRetries: 0,
-} as const;
+const OPENAI_MODEL = openai("gpt-4o");
+const GEMINI_MODEL = google("gemini-2.0-flash");
 
 function createLoggedObjectGenerator({
   ctx,
@@ -70,7 +66,7 @@ function createLoggedObjectGenerator({
     const generation = trace.generation({
       name: "generation",
       input: input.rawText || input.imageUrl,
-      model: MODEL,
+      model: "gemini-2.0-flash",
       version: promptVersion,
     });
     generation.update({
@@ -157,6 +153,8 @@ function constructMessagesImage({
   prompt: string;
   imageUrl: string;
 }): CoreMessage[] {
+  const isBase64DataUrl = imageUrl.startsWith('data:image/');
+  
   return [
     { role: "system", content: systemPrompt },
     {
@@ -168,7 +166,7 @@ function constructMessagesImage({
       content: [
         {
           type: "image",
-          image: new URL(imageUrl),
+          image: isBase64DataUrl ? imageUrl : new URL(imageUrl),
         },
       ],
     },
@@ -215,89 +213,143 @@ export async function fetchAndProcessEvent({
 }> {
   const { systemPromptEvent, systemPromptMetadata, prompt, promptVersion } =
     getPrompts(input.timezone);
-  const createLoggedObject = createLoggedObjectGenerator({
-    ctx,
-    input,
-    promptVersion,
+  
+  // Create a trace for Langfuse
+  const trace = langfuse.trace({
+    name: fnName,
+    sessionId: ctx.auth.sessionId,
+    userId: ctx.auth.userId,
+    input: input.rawText || input.imageUrl || input.url,
+    version: promptVersion,
   });
 
-  let eventMessages: CoreMessage[];
-  let metadataMessages: CoreMessage[];
+  try {
+    // Create event and metadata messages
+    let eventMessages: CoreMessage[] = [];
+    let metadataMessages: CoreMessage[] = [];
 
-  if (input.rawText) {
-    eventMessages = constructMessagesRawText({
-      systemPrompt: systemPromptEvent.text,
-      prompt: prompt.text,
-      rawText: input.rawText,
-    });
-
-    metadataMessages = constructMessagesRawText({
-      systemPrompt: systemPromptMetadata.text,
-      prompt: prompt.textMetadata,
-      rawText: input.rawText,
-    });
-  } else if (input.imageUrl) {
-    eventMessages = constructMessagesImage({
-      systemPrompt: systemPromptEvent.text,
-      prompt: prompt.text,
-      imageUrl: input.imageUrl,
-    });
-
-    metadataMessages = constructMessagesImage({
-      systemPrompt: systemPromptMetadata.text,
-      prompt: prompt.textMetadata,
-      imageUrl: input.imageUrl,
-    });
-  } else if (input.url) {
-    const jinaReader = await fetch(`https://r.jina.ai/${input.url}`, {
-      method: "GET",
-    });
-    const rawText = await jinaReader.text();
-    if (!rawText) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Failed to fetch the text from the URL",
+    if (input.rawText) {
+      eventMessages = constructMessagesRawText({
+        systemPrompt: systemPromptEvent.text,
+        prompt: prompt.text,
+        rawText: input.rawText,
       });
+
+      metadataMessages = constructMessagesRawText({
+        systemPrompt: systemPromptMetadata.text,
+        prompt: prompt.textMetadata,
+        rawText: input.rawText,
+      });
+    } else if (input.imageUrl) {
+      eventMessages = constructMessagesImage({
+        systemPrompt: systemPromptEvent.text,
+        prompt: prompt.text,
+        imageUrl: input.imageUrl,
+      });
+
+      metadataMessages = constructMessagesImage({
+        systemPrompt: systemPromptMetadata.text,
+        prompt: prompt.textMetadata,
+        imageUrl: input.imageUrl,
+      });
+    } else if (input.url) {
+      const jinaReader = await fetch(`https://r.jina.ai/${input.url}`, {
+        method: "GET",
+      });
+      const rawText = await jinaReader.text();
+      if (!rawText) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Failed to fetch the text from the URL",
+        });
+      }
+      
+      eventMessages = constructMessagesRawText({
+        systemPrompt: systemPromptEvent.text,
+        prompt: prompt.text,
+        rawText: rawText,
+      });
+
+      metadataMessages = constructMessagesRawText({
+        systemPrompt: systemPromptMetadata.text,
+        prompt: prompt.textMetadata,
+        rawText: rawText,
+      });
+    } else {
+      throw new Error("No input provided");
     }
-    eventMessages = constructMessagesRawText({
-      systemPrompt: systemPromptEvent.text,
-      prompt: prompt.text,
-      rawText: rawText,
+
+    // Create logged object generator for consistent logging
+    const createLoggedObject = createLoggedObjectGenerator({
+      ctx,
+      input,
+      promptVersion,
     });
 
-    metadataMessages = constructMessagesRawText({
-      systemPrompt: systemPromptMetadata.text,
-      prompt: prompt.textMetadata,
-      rawText: rawText,
+    const aiConfig = {
+      model: GEMINI_MODEL,
+      temperature: 0.2,
+      maxRetries: 0,
+    };
+
+    const openAiConfig = {
+      model: OPENAI_MODEL,
+      temperature: 0.2,
+      maxRetries: 0,
+    };
+    
+    const [event, metadata] = await Promise.all([
+      createLoggedObject(
+        {
+          ...openAiConfig,
+          messages: eventMessages,
+          schema: EventSchema,
+        },
+        { name: `${fnName}.event` },
+      ),
+      createLoggedObject(
+        {
+          ...openAiConfig,
+          messages: metadataMessages,
+          schema: EventMetadataSchema,
+        },
+        { name: `${fnName}.metadata` },
+      ),
+    ]);
+
+    const eventObject = { ...event.object, eventMetadata: metadata.object };
+    const events = addCommonAddToCalendarProps([eventObject]);
+    
+    trace.update({
+      output: eventObject,
+      metadata: {
+        finishReason: "success",
+      },
     });
-  } else {
-    throw new Error("No input provided");
+    
+    waitUntil(langfuse.flushAsync());
+    
+    return { 
+      events, 
+      response: `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString() || ""}`
+    };
+  } catch (error) {
+    trace.update({
+      output: null,
+      metadata: {
+        finishReason: "error",
+        error: error,
+      },
+    });
+    
+    waitUntil(langfuse.flushAsync());
+    
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to generate AI response",
+      cause: error,
+    });
   }
-
-  const [event, metadata] = await Promise.all([
-    createLoggedObject(
-      {
-        ...aiConfig,
-        messages: eventMessages,
-        schema: EventSchema,
-      },
-      { name: `${fnName}.event` },
-    ),
-    createLoggedObject(
-      {
-        ...aiConfig,
-        messages: metadataMessages,
-        schema: EventMetadataSchema,
-      },
-      { name: `${fnName}.metadata` },
-    ),
-  ]);
-
-  const eventObject = { ...event.object, eventMetadata: metadata.object };
-
-  const events = addCommonAddToCalendarProps([eventObject]);
-  const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
-  return { events, response };
 }
 
 export interface CreateEventParams {
