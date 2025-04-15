@@ -203,6 +203,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               shadowRadius: 1.5,
               elevation: 3,
               transform: [{ rotate: imageRotation }],
+              backgroundColor: "white",
             }}
           >
             {e.images?.[3] ? (
@@ -250,6 +251,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               shadowOpacity: 0.15,
               shadowRadius: 2.5,
               elevation: 2,
+              backgroundColor: "white",
             }}
           >
             <View className="mb-1 flex-row items-center justify-between">
@@ -385,6 +387,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   shadowOpacity: 0.15,
                   shadowRadius: 1,
                   elevation: 1,
+                  backgroundColor: isHappeningNow ? "white" : "#FEEA9F",
                 }}
               >
                 <Text className="text-xs font-medium text-neutral-1">
