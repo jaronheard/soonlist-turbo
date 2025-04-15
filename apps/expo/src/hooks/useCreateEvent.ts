@@ -120,8 +120,8 @@ export function useCreateEvent() {
           try {
             manipulatedImage = await ImageManipulator.manipulateAsync(
               fileUri,
-              [{ resize: { width: 1284 } }],
-              { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+              [{ resize: { width: 1000 } }],
+              { compress: 0.8, format: ImageManipulator.SaveFormat.WEBP },
             );
           } catch (error) {
             throw new Error(
@@ -134,53 +134,31 @@ export function useCreateEvent() {
             throw new Error("Image manipulation failed - no URI returned");
           }
 
-          // 2. Upload image
-          let response;
+          let base64Data;
           try {
-            response = await FileSystem.uploadAsync(
-              "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
-              manipulatedImage.uri,
-              {
-                uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-                httpMethod: "POST",
-                headers: {
-                  "Content-Type": "image/jpeg",
-                  Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
-                },
-              },
-            );
+            const fileInfo = await FileSystem.getInfoAsync(manipulatedImage.uri);
+            if (!fileInfo.exists) {
+              throw new Error("File does not exist");
+            }
+            
+            base64Data = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            
+            if (!base64Data) {
+              throw new Error("Failed to read image data as base64");
+            }
           } catch (error) {
             throw new Error(
-              `Failed to upload image: ${error instanceof Error ? error.message : "Network error"}`,
+              `Failed to get base64 data: ${error instanceof Error ? error.message : "Unknown error"}`,
             );
           }
 
-          if (response.status !== 200) {
-            throw new Error(
-              `Upload failed with status ${response.status}: ${response.body}`,
-            );
-          }
+          const dataUrl = `data:image/webp;base64,${base64Data}`;
 
-          // 3. Parse response
-          let fileUrl: string;
-          try {
-            if (!response.body) {
-              throw new Error("Empty response from upload server");
-            }
-            const parsed = JSON.parse(response.body) as { fileUrl?: string };
-            if (!parsed.fileUrl) {
-              throw new Error("No file URL in response");
-            }
-            fileUrl = parsed.fileUrl;
-          } catch (error) {
-            throw new Error(
-              `Failed to parse upload response: ${error instanceof Error ? error.message : "Invalid JSON"}`,
-            );
-          }
-
-          // 4. Create event
+          // 4. Create event with base64 data URL instead of uploaded URL
           const result = (await eventFromImage.mutateAsync({
-            imageUrl: fileUrl,
+            imageUrl: dataUrl,
             userId,
             username,
             lists: [],
