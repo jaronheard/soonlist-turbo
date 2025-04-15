@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { Alert, AppState, Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import * as Application from "expo-application";
 import * as Updates from "expo-updates";
 
@@ -27,10 +27,10 @@ async function setExtraParams() {
 async function checkAndInstallUpdate() {
   try {
     await setExtraParams();
-    
+
     logDebug("Checking for update");
     const res = await Updates.checkForUpdateAsync();
-    
+
     if (res.isAvailable) {
       logDebug("Update available, downloading and installing");
       await Updates.fetchUpdateAsync();
@@ -38,7 +38,7 @@ async function checkAndInstallUpdate() {
     } else {
       logDebug("No update available");
     }
-  } catch (e: any) {
+  } catch (e) {
     logError("OTA Update Error", e, { buildVersion: nativeBuildVersion });
   }
 }
@@ -111,7 +111,7 @@ export function useOTAUpdates() {
             await checkAndInstallUpdate();
             return;
           }
-          
+
           // If it's been 15 minutes since the last "minimize", we should feel comfortable updating the client since
           // chances are that there isn't anything important going on in the current session.
           if (lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME) {
