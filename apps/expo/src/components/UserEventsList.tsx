@@ -203,38 +203,47 @@ export function UserEventListItem(props: UserEventListItemProps) {
               shadowRadius: 1.5,
               elevation: 3,
               transform: [{ rotate: imageRotation }],
-              backgroundColor: "white",
             }}
           >
-            {e.images?.[3] ? (
-              <Image
-                source={
-                  typeof e.images[3] === "number"
-                    ? e.images[3]
-                    : {
-                        uri: `${e.images[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
-                      }
-                }
-                style={{
-                  width: imageWidth,
-                  height: imageHeight,
-                  borderRadius: 20,
-                  borderWidth: 3,
-                  borderColor: "white",
-                }}
-                contentFit="cover"
-                cachePolicy="disk"
-                transition={100}
-              />
-            ) : (
-              <View
-                className="rounded-2xl border border-purple-300 bg-accent-yellow"
-                style={{
-                  width: imageWidth,
-                  height: imageHeight,
-                }}
-              />
-            )}
+            <View
+              style={{
+                width: imageWidth,
+                height: imageHeight,
+                borderRadius: 20,
+                overflow: "hidden",
+                backgroundColor: "white",
+              }}
+            >
+              {e.images?.[3] ? (
+                <Image
+                  source={
+                    typeof e.images[3] === "number"
+                      ? e.images[3]
+                      : {
+                          uri: `${e.images[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
+                        }
+                  }
+                  style={{
+                    width: imageWidth,
+                    height: imageHeight,
+                    borderRadius: 20,
+                    borderWidth: 3,
+                    borderColor: "white",
+                  }}
+                  contentFit="cover"
+                  cachePolicy="disk"
+                  transition={100}
+                />
+              ) : (
+                <View
+                  className="border border-purple-300 bg-accent-yellow"
+                  style={{
+                    width: imageWidth,
+                    height: imageHeight,
+                  }}
+                />
+              )}
+            </View>
           </View>
           <View
             className={cn(
