@@ -261,8 +261,8 @@ export default function EditEventScreen() {
       try {
         manipulatedImage = await ImageManipulator.manipulateAsync(
           fileUri,
-          [{ resize: { width: 1284, height: undefined } }],
-          { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+          [{ resize: { width: 1000, height: undefined } }],
+          { compress: 0.8, format: ImageManipulator.SaveFormat.WEBP },
         );
       } catch (error) {
         throw new Error(
@@ -283,7 +283,7 @@ export default function EditEventScreen() {
             uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
             httpMethod: "POST",
             headers: {
-              "Content-Type": "image/jpeg",
+              "Content-Type": "image/webp",
               Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
             },
           },
