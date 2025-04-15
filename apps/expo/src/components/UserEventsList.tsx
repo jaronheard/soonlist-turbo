@@ -658,6 +658,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         contentContainerStyle={{
+          paddingTop: stats ? 0 : 16,
           paddingBottom: 120,
           flexGrow: collapsedEvents.length === 0 ? 1 : 0,
           backgroundColor: "#F4F1FF",
