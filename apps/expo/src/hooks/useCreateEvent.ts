@@ -137,15 +137,20 @@ export function useCreateEvent() {
 
           let base64Data;
           try {
-            const fileInfo = await FileSystem.getInfoAsync(manipulatedImage.uri);
+            const fileInfo = await FileSystem.getInfoAsync(
+              manipulatedImage.uri,
+            );
             if (!fileInfo.exists) {
               throw new Error("File does not exist");
             }
-            
-            base64Data = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
-              encoding: FileSystem.EncodingType.Base64,
-            });
-            
+
+            base64Data = await FileSystem.readAsStringAsync(
+              manipulatedImage.uri,
+              {
+                encoding: FileSystem.EncodingType.Base64,
+              },
+            );
+
             if (!base64Data) {
               throw new Error("Failed to read image data as base64");
             }

@@ -1,5 +1,4 @@
 import type { CoreMessage } from "ai";
-import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
@@ -41,7 +40,7 @@ const langfuse = new Langfuse({
 });
 
 const OPENAI_MODEL = openai("gpt-4o");
-const GEMINI_MODEL = google("gemini-2.0-flash");
+const GEMINI_MODEL_NAME = "gemini-2.0-flash";
 
 function createLoggedObjectGenerator({
   ctx,
@@ -66,7 +65,7 @@ function createLoggedObjectGenerator({
     const generation = trace.generation({
       name: "generation",
       input: input.rawText || input.imageUrl,
-      model: "gemini-2.0-flash",
+      model: GEMINI_MODEL_NAME,
       version: promptVersion,
     });
     generation.update({
@@ -153,8 +152,8 @@ function constructMessagesImage({
   prompt: string;
   imageUrl: string;
 }): CoreMessage[] {
-  const isBase64DataUrl = imageUrl.startsWith('data:image/');
-  
+  const isBase64DataUrl = imageUrl.startsWith("data:image/");
+
   return [
     { role: "system", content: systemPrompt },
     {
@@ -213,7 +212,7 @@ export async function fetchAndProcessEvent({
 }> {
   const { systemPromptEvent, systemPromptMetadata, prompt, promptVersion } =
     getPrompts(input.timezone);
-  
+
   // Create a trace for Langfuse
   const trace = langfuse.trace({
     name: fnName,
@@ -263,7 +262,7 @@ export async function fetchAndProcessEvent({
           message: "Failed to fetch the text from the URL",
         });
       }
-      
+
       eventMessages = constructMessagesRawText({
         systemPrompt: systemPromptEvent.text,
         prompt: prompt.text,
@@ -287,21 +286,15 @@ export async function fetchAndProcessEvent({
     });
 
     const aiConfig = {
-      model: GEMINI_MODEL,
-      temperature: 0.2,
-      maxRetries: 0,
-    };
-
-    const openAiConfig = {
       model: OPENAI_MODEL,
       temperature: 0.2,
       maxRetries: 0,
     };
-    
+
     const [event, metadata] = await Promise.all([
       createLoggedObject(
         {
-          ...openAiConfig,
+          ...aiConfig,
           messages: eventMessages,
           schema: EventSchema,
         },
@@ -309,7 +302,7 @@ export async function fetchAndProcessEvent({
       ),
       createLoggedObject(
         {
-          ...openAiConfig,
+          ...aiConfig,
           messages: metadataMessages,
           schema: EventMetadataSchema,
         },
@@ -319,19 +312,19 @@ export async function fetchAndProcessEvent({
 
     const eventObject = { ...event.object, eventMetadata: metadata.object };
     const events = addCommonAddToCalendarProps([eventObject]);
-    
+
     trace.update({
       output: eventObject,
       metadata: {
         finishReason: "success",
       },
     });
-    
+
     waitUntil(langfuse.flushAsync());
-    
-    return { 
-      events, 
-      response: `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString() || ""}`
+
+    return {
+      events,
+      response: `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString() || ""}`,
     };
   } catch (error) {
     trace.update({
@@ -341,9 +334,9 @@ export async function fetchAndProcessEvent({
         error: error,
       },
     });
-    
+
     waitUntil(langfuse.flushAsync());
-    
+
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Failed to generate AI response",

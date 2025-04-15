@@ -280,11 +280,11 @@ export default function EditEventScreen() {
         if (!fileInfo.exists) {
           throw new Error("File does not exist");
         }
-        
+
         base64Data = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
           encoding: FileSystem.EncodingType.Base64,
         });
-        
+
         if (!base64Data) {
           throw new Error("Failed to read image data as base64");
         }
@@ -295,7 +295,7 @@ export default function EditEventScreen() {
       }
 
       const dataUrl = `data:image/webp;base64,${base64Data}`;
-      
+
       return dataUrl;
     } catch (error) {
       logError("Error uploading image", error);
