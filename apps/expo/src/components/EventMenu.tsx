@@ -1,15 +1,7 @@
 import type { LucideIcon } from "lucide-react-native";
 import React from "react";
-import {
-  Dimensions,
-  Linking,
-  Share,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Dimensions, TouchableOpacity, View } from "react-native";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
 import {
   CalendarPlus,
   EyeOff,
@@ -24,8 +16,6 @@ import {
   Trash2,
 } from "lucide-react-native";
 import { toast } from "sonner-native";
-
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
 import {
@@ -44,14 +34,10 @@ import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu-primitives";
-import { useCalendar } from "~/hooks/useCalendar";
-import { api } from "~/utils/api";
-import Config from "~/utils/config";
-import { logError } from "~/utils/errorLogging";
-import { getPlanStatusFromUser } from "~/utils/plan";
+import { useEventActions } from "~/hooks/useEventActions";
 
 const screenWidth = Dimensions.get("window").width;
-const menuMinWidth = screenWidth * 0.6; // 60% of screen width
+const menuMinWidth = screenWidth * 0.6;
 
 interface EventMenuProps {
   event: RouterOutputs["event"]["getUpcomingForUser"][number];
@@ -76,7 +62,7 @@ interface MenuItem {
     | "square.and.pencil"
     | "trash"
     | "plus.circle"
-    | "minus.circle"; // Valid SF Symbols for iOS
+    | "minus.circle";
   destructive?: boolean;
 }
 
@@ -89,34 +75,18 @@ export function EventMenu({
   children,
   onDelete,
 }: EventMenuProps) {
-  const utils = api.useUtils();
-  const { handleAddToCal: addToCalendar } = useCalendar();
-  const { user } = useUser();
-  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
-
-  const deleteEventMutation = api.event.delete.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
-    },
-  });
-
-  const unfollowEventMutation = api.event.unfollow.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
-    },
-  });
-
-  const followEventMutation = api.event.follow.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
-    },
-  });
-
-  const toggleVisibilityMutation = api.event.toggleVisibility.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
-    },
-  });
+  const {
+    handleShare,
+    handleDirections,
+    handleAddToCal,
+    handleToggleVisibility,
+    handleEdit,
+    handleDelete,
+    handleFollow,
+    handleUnfollow,
+    handleShowQR,
+    showDiscover,
+  } = useEventActions({ event, isSaved, demoMode, onDelete });
 
   const getMenuItems = (): MenuItem[] => {
     const baseItems: MenuItem[] = [
@@ -156,7 +126,6 @@ export function EventMenu({
     if (isOwner) {
       return [
         ...baseItems,
-
         {
           title: "Edit",
           lucideIcon: PenSquare,
@@ -191,105 +160,6 @@ export function EventMenu({
     }
   };
 
-  const handleDirections = () => {
-    const eventData = event.event as AddToCalendarButtonPropsRestricted;
-    if (eventData.location) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-        eventData.location,
-      )}`;
-      void Linking.openURL(url);
-    } else {
-      logError(
-        "No location available for directions",
-        new Error("No location data"),
-      );
-    }
-  };
-
-  const handleEdit = () => {
-    router.push(`/event/${event.id}/edit`);
-  };
-
-  const handleDelete = async () => {
-    const loadingToastId = toast.loading("Deleting event...");
-    try {
-      if (onDelete) {
-        await onDelete();
-      } else {
-        await deleteEventMutation.mutateAsync({ id: event.id });
-      }
-      toast.dismiss(loadingToastId);
-      toast.success("Event deleted successfully");
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      toast.error(`Failed to delete event: ${(error as Error).message}`);
-    }
-  };
-
-  const handleUnfollow = async () => {
-    const loadingToastId = toast.loading("Unfollowing event...");
-    try {
-      await unfollowEventMutation.mutateAsync({ id: event.id });
-      toast.dismiss(loadingToastId);
-      toast.success("Event unfollowed");
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      toast.error(`Failed to unfollow event: ${(error as Error).message}`);
-    }
-  };
-
-  const handleFollow = async () => {
-    const loadingToastId = toast.loading("Following event...");
-    try {
-      await followEventMutation.mutateAsync({ id: event.id });
-      toast.dismiss(loadingToastId);
-      toast.success("Event followed");
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      toast.error(`Failed to follow event: ${(error as Error).message}`);
-    }
-  };
-
-  const handleShare = async () => {
-    try {
-      await Share.share({
-        url: `${Config.apiBaseUrl}/event/${event.id}`,
-      });
-    } catch (error) {
-      logError("Error sharing event", error);
-    }
-  };
-
-  const handleAddToCal = async () => {
-    await addToCalendar(event);
-  };
-
-  const handleToggleVisibility = async (
-    newVisibility: "public" | "private",
-  ) => {
-    const action = newVisibility === "public" ? "Adding to" : "Removing from";
-    const loadingToastId = toast.loading(`${action} Discover...`);
-    try {
-      await toggleVisibilityMutation.mutateAsync({
-        id: event.id,
-        visibility: newVisibility,
-      });
-      toast.dismiss(loadingToastId);
-      const actionCompleted =
-        newVisibility === "public" ? "added to" : "removed from";
-      toast.success(`Event ${actionCompleted} Discover`);
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      toast.error(
-        `Failed to update event visibility: ${(error as Error).message}`,
-      );
-    }
-  };
-
-  const handleShowQR = () => {
-    router.push(`/event/${event.id}/qr`);
-  };
-
   const handleMenuSelect = (title: string) => {
     if (demoMode) {
       toast("Demo mode: action disabled");
@@ -300,7 +170,7 @@ export function EventMenu({
       case "Share":
         void handleShare();
         break;
-      case "Directions":
+      case "Get directions":
         handleDirections();
         break;
       case "Add to calendar":
@@ -331,7 +201,6 @@ export function EventMenu({
     }
   };
 
-  // RENDER: if context menu
   if (menuType === "context") {
     return (
       <ContextMenuRoot>
@@ -375,7 +244,6 @@ export function EventMenu({
     );
   }
 
-  // RENDER: if popup menu
   return (
     <DropdownMenuRoot>
       <DropdownMenuTrigger asChild>
