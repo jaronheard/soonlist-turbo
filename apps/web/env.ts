@@ -22,6 +22,7 @@ export const env = createEnv({
     LANGFUSE_HOST: z.string().url(),
     LANGFUSE_PUBLIC_KEY: z.string(),
     LANGFUSE_SECRET_KEY: z.string(),
+    GOOGLE_API_KEY: z.string(),
     OPENAI_API_KEY: z.string(),
     SENTRY_AUTH_TOKEN: z.string(),
     STRIPE_PRICE_ID_PERSONAL_MONTHLY: z.string(),
