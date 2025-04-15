@@ -83,6 +83,7 @@ export function useCreateEvent() {
           lists: [],
           timezone: userTimezone,
           visibility: "private",
+          expoPushToken: "", // Add empty token as it's required by the API
         })) as CreateEventResult;
         return result.success && result.eventId ? result.eventId : undefined;
       }
@@ -164,6 +165,7 @@ export function useCreateEvent() {
             lists: [],
             timezone: userTimezone,
             visibility: "private",
+            expoPushToken: "", // Add empty token as it's required by the API
           })) as CreateEventResult;
 
           if (!result.success) {
@@ -189,6 +191,7 @@ export function useCreateEvent() {
           lists: [],
           timezone: userTimezone,
           visibility: "private",
+          expoPushToken: "", // Add empty token as it's required by the API
         })) as CreateEventResult;
         return result.success && result.eventId ? result.eventId : undefined;
       }
