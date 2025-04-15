@@ -23,6 +23,26 @@ async function setExtraParams() {
   );
 }
 
+// Function to check, download and install updates immediately
+async function checkAndInstallUpdate() {
+  try {
+    await setExtraParams();
+    
+    logDebug("Checking for update");
+    const res = await Updates.checkForUpdateAsync();
+    
+    if (res.isAvailable) {
+      logDebug("Update available, downloading and installing");
+      await Updates.fetchUpdateAsync();
+      await Updates.reloadAsync();
+    } else {
+      logDebug("No update available");
+    }
+  } catch (e: any) {
+    logError("OTA Update Error", e, { buildVersion: nativeBuildVersion });
+  }
+}
+
 export function useOTAUpdates() {
   const shouldReceiveUpdates = Updates.isEnabled && !__DEV__;
   const appState = useRef(AppState.currentState);
@@ -56,46 +76,12 @@ export function useOTAUpdates() {
   }, []);
 
   const onIsTestFlight = useCallback(async () => {
-    try {
-      await setExtraParams();
-
-      const res = await Updates.checkForUpdateAsync();
-      if (res.isAvailable) {
-        await Updates.fetchUpdateAsync();
-
-        Alert.alert(
-          "Update Available",
-          "A new version of the app is available. Relaunch now?",
-          [
-            {
-              text: "No",
-              style: "cancel",
-            },
-            {
-              text: "Relaunch",
-              style: "default",
-              // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              onPress: async () => {
-                await Updates.reloadAsync();
-              },
-            },
-          ],
-        );
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      logError("Internal OTA Update Error", e, {
-        isTestFlight: IS_TESTFLIGHT,
-        buildVersion: nativeBuildVersion,
-      });
-    }
+    // For TestFlight, immediately check, download and install updates without prompting
+    await checkAndInstallUpdate();
   }, []);
 
   useEffect(() => {
-    // We use this setTimeout to allow Statsig to initialize before we check for an update
-    // For Testflight users, we can prompt the user to update immediately whenever there's an available update. This
-    // is suspect however with the Apple App Store guidelines, so we don't want to prompt production users to update
-    // immediately.
+    // For TestFlight, immediately check for updates on app launch
     if (IS_TESTFLIGHT) {
       void onIsTestFlight();
       return;
@@ -120,6 +106,12 @@ export function useOTAUpdates() {
           appState.current.match(/inactive|background/) &&
           nextAppState === "active"
         ) {
+          // For TestFlight, immediately check and install updates when returning to the app
+          if (IS_TESTFLIGHT) {
+            await checkAndInstallUpdate();
+            return;
+          }
+          
           // If it's been 15 minutes since the last "minimize", we should feel comfortable updating the client since
           // chances are that there isn't anything important going on in the current session.
           if (lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME) {
