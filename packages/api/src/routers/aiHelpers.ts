@@ -42,7 +42,6 @@ const langfuse = new Langfuse({
 const MODEL = "gpt-4o";
 const aiConfig = {
   model: openai(MODEL),
-  mode: "json",
   temperature: 0.2,
   maxRetries: 0,
 } as const;
@@ -56,10 +55,16 @@ function createLoggedObjectGenerator({
   input: { rawText?: string; timezone: string; imageUrl?: string };
   promptVersion: string;
 }) {
-  return async <T>(
-    generateObjectOptions: Parameters<typeof generateObject<T>>[0],
+  return async (
+    generateObjectOptions: {
+      model: any;
+      messages: any[];
+      schema?: any;
+      temperature?: number;
+      maxRetries?: number;
+    },
     loggingOptions: { name: string },
-  ): Promise<ReturnType<typeof generateObject<T>>> => {
+  ) => {
     const trace = langfuse.trace({
       name: loggingOptions.name,
       sessionId: ctx.auth.sessionId,
@@ -77,7 +82,10 @@ function createLoggedObjectGenerator({
       completionStartTime: new Date(),
     });
     try {
-      const result = await generateObject(generateObjectOptions);
+      const result = await generateObject({
+        ...generateObjectOptions,
+        output: 'object',
+      } as any);
       generation.end({
         output: result.object,
       });
@@ -90,7 +98,7 @@ function createLoggedObjectGenerator({
         metadata: {
           finishReason: result.finishReason,
           logprobs: result.logprobs,
-          rawResponse: result.rawResponse,
+          rawResponse: result.response,
           warnings: result.warnings,
         },
       });
@@ -293,10 +301,32 @@ export async function fetchAndProcessEvent({
     ),
   ]);
 
-  const eventObject = { ...event.object, eventMetadata: metadata.object };
+  const eventData = event.object as {
+    name?: string;
+    description?: string;
+    startDate?: string;
+    startTime?: string;
+    endDate?: string;
+    endTime?: string;
+    timeZone?: string;
+    location?: string;
+  };
+
+  // Create a properly typed event object with all required fields
+  const eventObject = {
+    name: typeof eventData.name === 'string' ? eventData.name : 'Untitled Event',
+    description: typeof eventData.description === 'string' ? eventData.description : '',
+    startDate: typeof eventData.startDate === 'string' ? eventData.startDate : new Date().toISOString().split('T')[0],
+    startTime: typeof eventData.startTime === 'string' ? eventData.startTime : '00:00:00',
+    endDate: typeof eventData.endDate === 'string' ? eventData.endDate : new Date().toISOString().split('T')[0],
+    endTime: typeof eventData.endTime === 'string' ? eventData.endTime : '23:59:00',
+    timeZone: typeof eventData.timeZone === 'string' ? eventData.timeZone : 'America/Los_Angeles',
+    location: typeof eventData.location === 'string' ? eventData.location : '',
+    eventMetadata: metadata.object as EventWithMetadata['eventMetadata'],
+  } as EventWithMetadata;
 
   const events = addCommonAddToCalendarProps([eventObject]);
-  const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
+  const response = `${event.response?.toString() || ""} ${metadata.response?.toString()}`;
   return { events, response };
 }
 
