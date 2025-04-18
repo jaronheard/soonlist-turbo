@@ -444,7 +444,7 @@ export default function EditEventScreen() {
           visibility: data.visibility,
         };
 
-        await updateEventMutation.mutateAsync(updatedData);
+        await updateEventMutation.mutateAsync(updatedData as any);
 
         toast.dismiss(loadingToastId);
       } catch (error) {
