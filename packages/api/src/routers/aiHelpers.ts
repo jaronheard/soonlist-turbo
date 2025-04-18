@@ -2,7 +2,6 @@ import type { CoreMessage } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
-import { waitUntil } from "@vercel/functions";
 import { generateObject } from "ai";
 import { LangfuseExporter } from "langfuse-vercel";
 
@@ -57,9 +56,9 @@ function createLoggedObjectGenerator({
 }) {
   return async (
     generateObjectOptions: {
-      model: any;
-      messages: any[];
-      schema?: any;
+      model: ReturnType<typeof openai>;
+      messages: CoreMessage[];
+      schema?: unknown;
       temperature?: number;
       maxRetries?: number;
     },
@@ -68,7 +67,6 @@ function createLoggedObjectGenerator({
     try {
       const result = await generateObject({
         ...generateObjectOptions,
-        output: "object",
         experimental_telemetry: {
           isEnabled: true,
           functionId: loggingOptions.name,
@@ -309,7 +307,9 @@ export async function fetchAndProcessEvent({
   } as EventWithMetadata;
 
   const events = addCommonAddToCalendarProps([eventObject]);
-  const response = `${event.response?.toString() || ""} ${metadata.response?.toString()}`;
+  const eventResponseStr = typeof event.response === 'object' ? JSON.stringify(event.response) : String(event.response || "");
+  const metadataResponseStr = typeof metadata.response === 'object' ? JSON.stringify(metadata.response) : String(metadata.response || "");
+  const response = `${eventResponseStr} ${metadataResponseStr}`;
   return { events, response };
 }
 

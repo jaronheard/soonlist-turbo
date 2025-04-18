@@ -571,7 +571,13 @@ export const eventRouter = createTRPCRouter({
       const hasLists = input.lists.length > 0;
       const hasVisibility = input.visibility && input.visibility.length > 0;
 
-      const typedEvent = event as any;
+      const typedEvent = event as {
+        startTime?: string;
+        endTime?: string;
+        timeZone?: string;
+        startDate?: string;
+        endDate?: string;
+      };
       let startTime = typedEvent.startTime;
       let endTime = typedEvent.endTime;
       let timeZone = typedEvent.timeZone;
@@ -696,7 +702,13 @@ export const eventRouter = createTRPCRouter({
       const hasLists = input.lists.length > 0;
       const hasVisibility = input.visibility && input.visibility.length > 0;
 
-      const typedEvent = event as any;
+      const typedEvent = event as {
+        startTime?: string;
+        endTime?: string;
+        timeZone?: string;
+        startDate?: string;
+        endDate?: string;
+      };
       let startTime = typedEvent.startTime;
       let endTime = typedEvent.endTime;
       let timeZone = typedEvent.timeZone;
