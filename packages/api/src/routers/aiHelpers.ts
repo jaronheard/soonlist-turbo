@@ -4,7 +4,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
 import { waitUntil } from "@vercel/functions";
 import { generateObject } from "ai";
-import { Langfuse } from "langfuse";
+import { LangfuseExporter } from "langfuse-vercel";
 
 import type { EventWithMetadata } from "@soonlist/cal";
 import {
@@ -33,10 +33,10 @@ import {
 } from "../utils/notificationHelpers";
 import { createDeepLink } from "../utils/urlScheme";
 
-const langfuse = new Langfuse({
+const langfuseExporter = new LangfuseExporter({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
   secretKey: process.env.LANGFUSE_SECRET_KEY || "",
-  baseUrl: process.env.LANGFUSE_BASE_URL || "",
+  baseUrl: process.env.LANGFUSE_HOST || "",
 });
 
 const MODEL = "gpt-4o";
@@ -65,59 +65,27 @@ function createLoggedObjectGenerator({
     },
     loggingOptions: { name: string },
   ) => {
-    const trace = langfuse.trace({
-      name: loggingOptions.name,
-      sessionId: ctx.auth.sessionId,
-      userId: ctx.auth.userId,
-      input: input.rawText || input.imageUrl,
-      version: promptVersion,
-    });
-    const generation = trace.generation({
-      name: "generation",
-      input: input.rawText || input.imageUrl,
-      model: MODEL,
-      version: promptVersion,
-    });
-    generation.update({
-      completionStartTime: new Date(),
-    });
     try {
       const result = await generateObject({
         ...generateObjectOptions,
         output: 'object',
-      } as any);
-      generation.end({
-        output: result.object,
-      });
-      generation.score({
-        name: "eventToJson",
-        value: result.object === null ? 0 : 1,
-      });
-      trace.update({
-        output: result.object,
-        metadata: {
-          finishReason: result.finishReason,
-          logprobs: result.logprobs,
-          rawResponse: result.response,
-          warnings: result.warnings,
+        experimental_telemetry: {
+          isEnabled: true,
+          functionId: loggingOptions.name,
+          metadata: {
+            sessionId: ctx.auth.sessionId,
+            userId: ctx.auth.userId,
+            input: input.rawText || input.imageUrl,
+            version: promptVersion,
+            source: 'soonlist-api',
+          },
+          exporter: langfuseExporter,
         },
-      });
-      waitUntil(langfuse.flushAsync());
+      } as any);
+      
       return result;
     } catch (error) {
       console.error("An error occurred while generating the response:", error);
-      generation.score({
-        name: "eventToJson",
-        value: 0,
-      });
-      trace.update({
-        output: null,
-        metadata: {
-          finishReason: "error",
-          error: error,
-        },
-      });
-      waitUntil(langfuse.flushAsync());
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to generate AI response",
