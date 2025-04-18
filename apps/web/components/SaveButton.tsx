@@ -49,8 +49,8 @@ export function SaveButton(props: SaveButtonProps) {
             onClick={() => {
               props.onClick?.();
               updateEvent.mutate({
-                event: props.event,
-                eventMetadata: props.eventMetadata,
+                event: props.event as any,
+                eventMetadata: props.eventMetadata as any,
                 comment: props.notes,
                 visibility: props.visibility,
                 lists: props.lists,
