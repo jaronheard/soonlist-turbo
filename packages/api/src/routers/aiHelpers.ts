@@ -68,7 +68,7 @@ function createLoggedObjectGenerator({
     try {
       const result = await generateObject({
         ...generateObjectOptions,
-        output: 'object',
+        output: "object",
         experimental_telemetry: {
           isEnabled: true,
           functionId: loggingOptions.name,
@@ -77,12 +77,12 @@ function createLoggedObjectGenerator({
             userId: ctx.auth.userId,
             input: input.rawText || input.imageUrl,
             version: promptVersion,
-            source: 'soonlist-api',
+            source: "soonlist-api",
           },
           exporter: langfuseExporter,
         },
       } as any);
-      
+
       return result;
     } catch (error) {
       console.error("An error occurred while generating the response:", error);
@@ -282,15 +282,30 @@ export async function fetchAndProcessEvent({
 
   // Create a properly typed event object with all required fields
   const eventObject = {
-    name: typeof eventData.name === 'string' ? eventData.name : 'Untitled Event',
-    description: typeof eventData.description === 'string' ? eventData.description : '',
-    startDate: typeof eventData.startDate === 'string' ? eventData.startDate : new Date().toISOString().split('T')[0],
-    startTime: typeof eventData.startTime === 'string' ? eventData.startTime : '00:00:00',
-    endDate: typeof eventData.endDate === 'string' ? eventData.endDate : new Date().toISOString().split('T')[0],
-    endTime: typeof eventData.endTime === 'string' ? eventData.endTime : '23:59:00',
-    timeZone: typeof eventData.timeZone === 'string' ? eventData.timeZone : 'America/Los_Angeles',
-    location: typeof eventData.location === 'string' ? eventData.location : '',
-    eventMetadata: metadata.object as EventWithMetadata['eventMetadata'],
+    name:
+      typeof eventData.name === "string" ? eventData.name : "Untitled Event",
+    description:
+      typeof eventData.description === "string" ? eventData.description : "",
+    startDate:
+      typeof eventData.startDate === "string"
+        ? eventData.startDate
+        : new Date().toISOString().split("T")[0],
+    startTime:
+      typeof eventData.startTime === "string"
+        ? eventData.startTime
+        : "00:00:00",
+    endDate:
+      typeof eventData.endDate === "string"
+        ? eventData.endDate
+        : new Date().toISOString().split("T")[0],
+    endTime:
+      typeof eventData.endTime === "string" ? eventData.endTime : "23:59:00",
+    timeZone:
+      typeof eventData.timeZone === "string"
+        ? eventData.timeZone
+        : "America/Los_Angeles",
+    location: typeof eventData.location === "string" ? eventData.location : "",
+    eventMetadata: metadata.object as EventWithMetadata["eventMetadata"],
   } as EventWithMetadata;
 
   const events = addCommonAddToCalendarProps([eventObject]);
