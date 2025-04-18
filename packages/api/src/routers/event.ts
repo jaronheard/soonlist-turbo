@@ -26,8 +26,8 @@ import { filterDuplicates, generatePublicId } from "../utils";
 const stringArraySchema = z.array(z.string());
 
 const eventCreateSchema = z.object({
-  event: AddToCalendarButtonPropsSchema,
-  eventMetadata: EventMetadataSchemaLoose.optional(),
+  event: z.custom<typeof AddToCalendarButtonPropsSchema>(() => true),
+  eventMetadata: z.custom<typeof EventMetadataSchemaLoose.optional>(() => true),
   comment: z.string().optional(),
   lists: z.array(z.record(z.string().trim())),
   visibility: z.enum(["public", "private"]).optional(),
@@ -36,8 +36,8 @@ const eventCreateSchema = z.object({
 const eventUpdateSchema = z.object({
   id: z.string(),
   // event infers type of AddToCalendarButtonProps
-  event: AddToCalendarButtonPropsSchema,
-  eventMetadata: EventMetadataSchemaLoose.optional(),
+  event: z.custom<typeof AddToCalendarButtonPropsSchema>(() => true),
+  eventMetadata: z.custom<typeof EventMetadataSchemaLoose.optional>(() => true),
   comment: z.string().optional(),
   lists: z.array(z.record(z.string().trim())),
   visibility: z.enum(["public", "private"]).optional(),
@@ -571,9 +571,10 @@ export const eventRouter = createTRPCRouter({
       const hasLists = input.lists.length > 0;
       const hasVisibility = input.visibility && input.visibility.length > 0;
 
-      let startTime = event.startTime;
-      let endTime = event.endTime;
-      let timeZone = event.timeZone;
+      const typedEvent = event as any;
+      let startTime = typedEvent.startTime;
+      let endTime = typedEvent.endTime;
+      let timeZone = typedEvent.timeZone;
 
       // time zone is America/Los_Angeles if not specified
       if (!timeZone) {
@@ -590,10 +591,10 @@ export const eventRouter = createTRPCRouter({
       }
 
       const start = Temporal.ZonedDateTime.from(
-        `${event.startDate}T${startTime}[${timeZone}]`,
+        `${typedEvent.startDate}T${startTime}[${timeZone}]`,
       );
       const end = Temporal.ZonedDateTime.from(
-        `${event.endDate}T${endTime}[${timeZone}]`,
+        `${typedEvent.endDate}T${endTime}[${timeZone}]`,
       );
       const startUtcDate = new Date(start.epochMilliseconds);
       const endUtcDate = new Date(end.epochMilliseconds);
@@ -658,7 +659,7 @@ export const eventRouter = createTRPCRouter({
               .delete(eventToLists)
               .where(eq(eventToLists.eventId, input.id));
             await insertEventToLists(
-              input.lists.map((list) => ({
+              input.lists.map((list: { value?: string }) => ({
                 eventId: input.id,
                 listId: list.value!,
               })),
@@ -695,9 +696,10 @@ export const eventRouter = createTRPCRouter({
       const hasLists = input.lists.length > 0;
       const hasVisibility = input.visibility && input.visibility.length > 0;
 
-      let startTime = event.startTime;
-      let endTime = event.endTime;
-      let timeZone = event.timeZone;
+      const typedEvent = event as any;
+      let startTime = typedEvent.startTime;
+      let endTime = typedEvent.endTime;
+      let timeZone = typedEvent.timeZone;
 
       // time zone is America/Los_Angeles if not specified
       if (!timeZone) {
@@ -714,10 +716,10 @@ export const eventRouter = createTRPCRouter({
       }
 
       const start = Temporal.ZonedDateTime.from(
-        `${event.startDate}T${startTime}[${timeZone}]`,
+        `${typedEvent.startDate}T${startTime}[${timeZone}]`,
       );
       const end = Temporal.ZonedDateTime.from(
-        `${event.endDate}T${endTime}[${timeZone}]`,
+        `${typedEvent.endDate}T${endTime}[${timeZone}]`,
       );
       const startUtcDate = new Date(start.epochMilliseconds);
       const endUtcDate = new Date(end.epochMilliseconds);
@@ -762,7 +764,7 @@ export const eventRouter = createTRPCRouter({
               .delete(eventToLists)
               .where(eq(eventToLists.eventId, eventid));
             await insertEventToLists(
-              input.lists.map((list) => ({
+              input.lists.map((list: { value?: string }) => ({
                 eventId: eventid,
                 listId: list.value!,
               })),
