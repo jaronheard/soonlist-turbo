@@ -59,8 +59,8 @@ export function UpdateButton(props: UpdateButtonProps) {
             onClick={() =>
               updateEvent.mutate({
                 id: props.id,
-                event: props.event,
-                eventMetadata: props.eventMetadata,
+                event: props.event as any,
+                eventMetadata: props.eventMetadata as any,
                 comment: props.notes,
                 visibility: props.visibility,
                 lists: props.lists,

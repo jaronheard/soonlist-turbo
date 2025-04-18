@@ -28,6 +28,7 @@
     "ui-add": "pnpm -F ui ui-add"
   },
   "devDependencies": {
+    "@ai-sdk/codemod": "^1.2.0",
     "@soonlist/prettier-config": "workspace:*",
     "@turbo/gen": "^2.0.4",
     "dotenv-cli": "^7.4.1",

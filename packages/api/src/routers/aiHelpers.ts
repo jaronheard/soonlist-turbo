@@ -2,9 +2,8 @@ import type { CoreMessage } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
-import { waitUntil } from "@vercel/functions";
 import { generateObject } from "ai";
-import { Langfuse } from "langfuse";
+import { LangfuseExporter } from "langfuse-vercel";
 
 import type { EventWithMetadata } from "@soonlist/cal";
 import {
@@ -33,16 +32,15 @@ import {
 } from "../utils/notificationHelpers";
 import { createDeepLink } from "../utils/urlScheme";
 
-const langfuse = new Langfuse({
+const langfuseExporter = new LangfuseExporter({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
   secretKey: process.env.LANGFUSE_SECRET_KEY || "",
-  baseUrl: process.env.LANGFUSE_BASE_URL || "",
+  baseUrl: process.env.LANGFUSE_HOST || "",
 });
 
 const MODEL = "gpt-4o";
 const aiConfig = {
   model: openai(MODEL),
-  mode: "json",
   temperature: 0.2,
   maxRetries: 0,
 } as const;
@@ -56,60 +54,36 @@ function createLoggedObjectGenerator({
   input: { rawText?: string; timezone: string; imageUrl?: string };
   promptVersion: string;
 }) {
-  return async <T>(
-    generateObjectOptions: Parameters<typeof generateObject<T>>[0],
+  return async (
+    generateObjectOptions: {
+      model: ReturnType<typeof openai>;
+      messages: CoreMessage[];
+      schema?: unknown;
+      temperature?: number;
+      maxRetries?: number;
+    },
     loggingOptions: { name: string },
-  ): Promise<ReturnType<typeof generateObject<T>>> => {
-    const trace = langfuse.trace({
-      name: loggingOptions.name,
-      sessionId: ctx.auth.sessionId,
-      userId: ctx.auth.userId,
-      input: input.rawText || input.imageUrl,
-      version: promptVersion,
-    });
-    const generation = trace.generation({
-      name: "generation",
-      input: input.rawText || input.imageUrl,
-      model: MODEL,
-      version: promptVersion,
-    });
-    generation.update({
-      completionStartTime: new Date(),
-    });
+  ) => {
     try {
-      const result = await generateObject(generateObjectOptions);
-      generation.end({
-        output: result.object,
-      });
-      generation.score({
-        name: "eventToJson",
-        value: result.object === null ? 0 : 1,
-      });
-      trace.update({
-        output: result.object,
-        metadata: {
-          finishReason: result.finishReason,
-          logprobs: result.logprobs,
-          rawResponse: result.rawResponse,
-          warnings: result.warnings,
+      const result = await generateObject({
+        ...generateObjectOptions,
+        experimental_telemetry: {
+          isEnabled: true,
+          functionId: loggingOptions.name,
+          metadata: {
+            sessionId: ctx.auth.sessionId,
+            userId: ctx.auth.userId,
+            input: input.rawText || input.imageUrl,
+            version: promptVersion,
+            source: "soonlist-api",
+          },
+          exporter: langfuseExporter,
         },
-      });
-      waitUntil(langfuse.flushAsync());
+      } as any);
+
       return result;
     } catch (error) {
       console.error("An error occurred while generating the response:", error);
-      generation.score({
-        name: "eventToJson",
-        value: 0,
-      });
-      trace.update({
-        output: null,
-        metadata: {
-          finishReason: "error",
-          error: error,
-        },
-      });
-      waitUntil(langfuse.flushAsync());
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to generate AI response",
@@ -293,10 +267,55 @@ export async function fetchAndProcessEvent({
     ),
   ]);
 
-  const eventObject = { ...event.object, eventMetadata: metadata.object };
+  const eventData = event.object as {
+    name?: string;
+    description?: string;
+    startDate?: string;
+    startTime?: string;
+    endDate?: string;
+    endTime?: string;
+    timeZone?: string;
+    location?: string;
+  };
+
+  // Create a properly typed event object with all required fields
+  const eventObject = {
+    name:
+      typeof eventData.name === "string" ? eventData.name : "Untitled Event",
+    description:
+      typeof eventData.description === "string" ? eventData.description : "",
+    startDate:
+      typeof eventData.startDate === "string"
+        ? eventData.startDate
+        : new Date().toISOString().split("T")[0],
+    startTime:
+      typeof eventData.startTime === "string"
+        ? eventData.startTime
+        : "00:00:00",
+    endDate:
+      typeof eventData.endDate === "string"
+        ? eventData.endDate
+        : new Date().toISOString().split("T")[0],
+    endTime:
+      typeof eventData.endTime === "string" ? eventData.endTime : "23:59:00",
+    timeZone:
+      typeof eventData.timeZone === "string"
+        ? eventData.timeZone
+        : "America/Los_Angeles",
+    location: typeof eventData.location === "string" ? eventData.location : "",
+    eventMetadata: metadata.object as EventWithMetadata["eventMetadata"],
+  } as EventWithMetadata;
 
   const events = addCommonAddToCalendarProps([eventObject]);
-  const response = `${event.rawResponse?.toString() || ""} ${metadata.rawResponse?.toString()}`;
+  const eventResponseStr =
+    typeof event.response === "object"
+      ? JSON.stringify(event.response)
+      : String(event.response || "");
+  const metadataResponseStr =
+    typeof metadata.response === "object"
+      ? JSON.stringify(metadata.response)
+      : String(metadata.response || "");
+  const response = `${eventResponseStr} ${metadataResponseStr}`;
   return { events, response };
 }
 
