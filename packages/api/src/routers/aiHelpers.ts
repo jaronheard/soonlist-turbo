@@ -307,8 +307,14 @@ export async function fetchAndProcessEvent({
   } as EventWithMetadata;
 
   const events = addCommonAddToCalendarProps([eventObject]);
-  const eventResponseStr = typeof event.response === 'object' ? JSON.stringify(event.response) : String(event.response || "");
-  const metadataResponseStr = typeof metadata.response === 'object' ? JSON.stringify(metadata.response) : String(metadata.response || "");
+  const eventResponseStr =
+    typeof event.response === "object"
+      ? JSON.stringify(event.response)
+      : String(event.response || "");
+  const metadataResponseStr =
+    typeof metadata.response === "object"
+      ? JSON.stringify(metadata.response)
+      : String(metadata.response || "");
   const response = `${eventResponseStr} ${metadataResponseStr}`;
   return { events, response };
 }
