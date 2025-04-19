@@ -16,13 +16,13 @@ import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
-  Calendar,
+  CalendarPlus,
   Copy,
   EyeOff,
   Globe2,
   MapPin,
+  MapPinned,
   MoreVertical,
-  Navigation,
   PlusCircle,
   User,
 } from "lucide-react-native";
@@ -316,13 +316,13 @@ export function UserEventListItem(props: UserEventListItemProps) {
               className="rounded-full p-1"
               onPress={handleDirections}
             >
-              <Navigation size={iconSize} color="#5A32FB" />
+              <MapPinned size={iconSize} color="#5A32FB" />
             </TouchableOpacity>
             <TouchableOpacity
               className="rounded-full p-1"
               onPress={handleAddToCal}
             >
-              <Calendar size={iconSize} color="#5A32FB" />
+              <CalendarPlus size={iconSize} color="#5A32FB" />
             </TouchableOpacity>
 
             {showDiscover && !hideDiscoverableButton && (
@@ -664,6 +664,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
+        style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
           paddingTop: stats ? 0 : 16,
           paddingBottom: 120,
