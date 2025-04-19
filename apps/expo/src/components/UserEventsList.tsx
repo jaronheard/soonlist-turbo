@@ -309,31 +309,34 @@ export function UserEventListItem(props: UserEventListItemProps) {
             </View>
           ) : null}
 
-          <View className="mt-2 flex-row items-center justify-start gap-2">
+          <View className="mt-2 flex-row items-center justify-start gap-3">
             {ActionButton && <ActionButton event={event} />}
 
             <TouchableOpacity
-              className="rounded-full p-1"
+              className="rounded-full p-2.5"
               onPress={handleDirections}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <MapPinned size={iconSize} color="#5A32FB" />
             </TouchableOpacity>
             <TouchableOpacity
-              className="rounded-full p-1"
+              className="rounded-full p-2.5"
               onPress={handleAddToCal}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <CalendarPlus size={iconSize} color="#5A32FB" />
             </TouchableOpacity>
 
             {showDiscover && !hideDiscoverableButton && (
               <TouchableOpacity
-                className="rounded-full p-1"
+                className="rounded-full p-2.5"
                 onPress={() => {
                   const nextVisibility =
                     event.visibility === "public" ? "private" : "public";
                   void toggleVisibilityAction(nextVisibility);
                 }}
                 disabled={toggleVisibilityMutation.isPending}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 {event.visibility === "public" ? (
                   <Globe2 size={iconSize} color="#5A32FB" />
@@ -351,10 +354,11 @@ export function UserEventListItem(props: UserEventListItemProps) {
               demoMode={demoMode}
             >
               <TouchableOpacity
-                className="rounded-full p-1"
+                className="rounded-full p-2.5"
                 onPress={(e) => {
                   e.stopPropagation();
                 }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <MoreVertical size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
