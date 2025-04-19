@@ -46,6 +46,155 @@ import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
 
+// Event type to emoji mapping
+const getEventEmoji = (
+  event: RouterOutputs["event"]["getDiscoverInfinite"]["events"][number],
+) => {
+  const eventMetadata = event.eventMetadata as
+    | { type?: string; category?: string }
+    | undefined;
+
+  // Default emoji and background color
+  let emoji = "📅";
+  let bgColor = "bg-accent-yellow";
+
+  if (!eventMetadata) return { emoji, bgColor };
+
+  // Map event types to emojis
+  switch (eventMetadata.type) {
+    case "concert":
+      emoji = "🎵";
+      bgColor = "bg-blue-100";
+      break;
+    case "party":
+      emoji = "🎉";
+      bgColor = "bg-pink-100";
+      break;
+    case "festival":
+      emoji = "🎪";
+      bgColor = "bg-purple-100";
+      break;
+    case "exhibition":
+      emoji = "🖼️";
+      bgColor = "bg-indigo-100";
+      break;
+    case "performance":
+      emoji = "🎭";
+      bgColor = "bg-red-100";
+      break;
+    case "conference":
+      emoji = "💼";
+      bgColor = "bg-gray-100";
+      break;
+    case "workshop":
+      emoji = "🔧";
+      bgColor = "bg-orange-100";
+      break;
+    case "seminar":
+      emoji = "📚";
+      bgColor = "bg-green-100";
+      break;
+    case "meeting":
+      emoji = "👥";
+      bgColor = "bg-teal-100";
+      break;
+    case "game":
+      emoji = "🎮";
+      bgColor = "bg-yellow-100";
+      break;
+    case "movie":
+      emoji = "🎬";
+      bgColor = "bg-red-100";
+      break;
+    case "show":
+      emoji = "🎪";
+      bgColor = "bg-purple-100";
+      break;
+    case "competition":
+      emoji = "🏆";
+      bgColor = "bg-yellow-100";
+      break;
+    case "webinar":
+      emoji = "💻";
+      bgColor = "bg-blue-100";
+      break;
+    case "opening":
+      emoji = "🎉";
+      bgColor = "bg-pink-100";
+      break;
+    default:
+      // If type is unknown, try to use category
+      switch (eventMetadata.category) {
+        case "music":
+          emoji = "🎵";
+          bgColor = "bg-blue-100";
+          break;
+        case "arts":
+          emoji = "🎨";
+          bgColor = "bg-indigo-100";
+          break;
+        case "sports":
+          emoji = "⚽";
+          bgColor = "bg-green-100";
+          break;
+        case "food":
+          emoji = "🍽️";
+          bgColor = "bg-orange-100";
+          break;
+        case "tech":
+          emoji = "💻";
+          bgColor = "bg-blue-100";
+          break;
+        case "education":
+          emoji = "📚";
+          bgColor = "bg-green-100";
+          break;
+        case "community":
+          emoji = "👥";
+          bgColor = "bg-teal-100";
+          break;
+        case "entertainment":
+          emoji = "🎭";
+          bgColor = "bg-red-100";
+          break;
+        case "business":
+          emoji = "💼";
+          bgColor = "bg-gray-100";
+          break;
+        case "health":
+          emoji = "🏥";
+          bgColor = "bg-red-100";
+          break;
+        case "literature":
+          emoji = "📖";
+          bgColor = "bg-amber-100";
+          break;
+        case "science":
+          emoji = "🔬";
+          bgColor = "bg-blue-100";
+          break;
+        case "religion":
+          emoji = "⛪";
+          bgColor = "bg-purple-100";
+          break;
+        case "lifestyle":
+          emoji = "🌟";
+          bgColor = "bg-pink-100";
+          break;
+        case "culture":
+          emoji = "🏛️";
+          bgColor = "bg-amber-100";
+          break;
+        default:
+          // Default emoji and background color
+          emoji = "📅";
+          bgColor = "bg-accent-yellow";
+      }
+  }
+
+  return { emoji, bgColor };
+};
+
 type ShowCreatorOption = "always" | "otherUsers" | "never";
 
 // Define the type for the stats data based on the expected query output
@@ -156,6 +305,9 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
 
+  // Get emoji and background color based on event type/category
+  const { emoji, bgColor } = getEventEmoji(event);
+
   return (
     <Pressable
       className="relative"
@@ -219,12 +371,19 @@ export function UserEventListItem(props: UserEventListItemProps) {
               />
             ) : (
               <View
-                className="border border-purple-300 bg-accent-yellow"
+                className={cn("border border-purple-300", bgColor)}
                 style={{
                   width: imageWidth,
                   height: imageHeight,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  borderRadius: 20,
+                  borderWidth: 3,
+                  borderColor: "white",
                 }}
-              />
+              >
+                <Text style={{ fontSize: 32 * fontScale }}>{emoji}</Text>
+              </View>
             )}
           </View>
         </View>
