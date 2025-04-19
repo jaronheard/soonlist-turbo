@@ -396,7 +396,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
           </View>
           <View
             className={cn(
-              "mt-4 bg-white p-3",
+              "my-1 mt-4 bg-white p-3",
               isHappeningNow ? "border border-accent-yellow" : "",
             )}
             style={{
@@ -448,7 +448,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               </View>
             ) : null}
 
-            <View className="-ml-1.5 mt-1.5 flex-row items-center justify-start gap-3">
+            <View className="-mb-2 -ml-1.5 mt-1.5 flex-row items-center justify-start gap-3">
               {ActionButton && <ActionButton event={event} />}
 
               <TouchableOpacity
