@@ -437,13 +437,13 @@ function PromoCard({ type }: PromoCardProps) {
         <View
           className="mx-4 rounded-2xl bg-accent-yellow/80 p-4"
           style={{
-            borderWidth: 2,
+            borderWidth: 3,
             borderColor: "white",
             shadowColor: "#5A32FB",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.15,
-            shadowRadius: 1,
-            elevation: 1,
+            shadowRadius: 2.5,
+            elevation: 2,
           }}
         >
           <Text className="mb-1 text-lg font-semibold text-neutral-1">
@@ -461,7 +461,7 @@ function PromoCard({ type }: PromoCardProps) {
                   marginVertical: -2,
                 }}
               >
-                <Plus size={iconSize} color="#FFFFFF" />
+                <Plus size={iconSize} color="#FFFFFF" strokeWidth={3} />
               </View>{" "}
               button below to add more.
             </Text>
