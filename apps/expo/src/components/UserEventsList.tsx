@@ -20,7 +20,6 @@ import {
   Copy,
   EyeOff,
   Globe2,
-  MapPin,
   MapPinned,
   MoreVertical,
   Plus,
@@ -135,15 +134,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
       logError("Error toggling event visibility", error);
     },
   });
-
-  const handleToggleVisibility = () => {
-    if (toggleVisibilityMutation.isPending) return;
-    const nextVisibility = event.visibility === "public" ? "private" : "public";
-    toggleVisibilityMutation.mutate({
-      id: event.id,
-      visibility: nextVisibility,
-    });
-  };
 
   const isHappeningNow = relativeTime === "Happening now" && !eventIsOver;
 
@@ -262,32 +252,16 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 {dateString.date} • {dateString.time}
               </Text>
             </View>
-            {isOwner && !ActionButton && (
+            {isOwner && !ActionButton && similarEventsCount ? (
               <View className="flex-row items-center gap-1 opacity-60">
-                {similarEventsCount ? (
-                  <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
-                    <Copy size={iconSize * 0.7} color="#627496" />
-                    <Text className="text-xs text-neutral-2">
-                      {similarEventsCount}
-                    </Text>
-                  </View>
-                ) : null}
-                <TouchableOpacity
-                  onPress={handleToggleVisibility}
-                  disabled={toggleVisibilityMutation.isPending}
-                  className={cn(
-                    "p-1",
-                    toggleVisibilityMutation.isPending && "opacity-30",
-                  )}
-                >
-                  {event.visibility === "public" ? (
-                    <Globe2 size={iconSize * 1} color="#627496" />
-                  ) : (
-                    <EyeOff size={iconSize * 1} color="#627496" />
-                  )}
-                </TouchableOpacity>
+                <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
+                  <Copy size={iconSize * 0.7} color="#627496" />
+                  <Text className="text-xs text-neutral-2">
+                    {similarEventsCount}
+                  </Text>
+                </View>
               </View>
-            )}
+            ) : null}
           </View>
           <Text
             className="mb-1 text-lg font-bold text-neutral-1"
@@ -297,8 +271,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
             {e.name}
           </Text>
           {e.location ? (
-            <View className="mb-1 flex-shrink flex-row items-center gap-1">
-              <MapPin size={iconSize * 0.9} color="#627496" />
+            <View className="mb-1 flex-shrink flex-row items-center">
               <Text
                 className="text-sm text-neutral-2"
                 numberOfLines={1}
@@ -309,7 +282,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
             </View>
           ) : null}
 
-          <View className="mt-2 flex-row items-center justify-start gap-3">
+          <View className="-ml-1.5 mt-1.5 flex-row items-center justify-start gap-3">
             {ActionButton && <ActionButton event={event} />}
 
             <TouchableOpacity
