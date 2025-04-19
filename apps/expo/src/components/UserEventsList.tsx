@@ -532,10 +532,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
           {relativeTime && (
             <View className="absolute left-0 right-0 top-0 z-20 flex items-center justify-center">
               <View
-                className={cn(
-                  "rounded-full px-2 py-0.5",
-                  isHappeningNow ? "bg-white" : "bg-accent-yellow",
-                )}
+                className={cn("rounded-full px-2 py-0.5", "bg-accent-yellow")}
                 style={{
                   borderWidth: 2,
                   borderColor: "white",
@@ -544,7 +541,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   shadowOpacity: 0.15,
                   shadowRadius: 1,
                   elevation: 1,
-                  backgroundColor: isHappeningNow ? "white" : "#FEEA9F",
+                  backgroundColor: "#FEEA9F",
                 }}
               >
                 <Text className="text-xs font-medium text-neutral-1">
