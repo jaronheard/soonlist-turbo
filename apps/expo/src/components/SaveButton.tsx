@@ -13,7 +13,7 @@ interface SaveButtonProps {
 export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
   const { isLoaded, user } = useUser();
   const username = user?.username || "";
-  const scaleAnim = new Animated.Value(1);
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const { fontScale } = useWindowDimensions();
   const iconSize = 16 * fontScale;
 
