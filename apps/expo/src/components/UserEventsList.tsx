@@ -23,7 +23,7 @@ import {
   MapPin,
   MapPinned,
   MoreVertical,
-  PlusCircle,
+  Plus,
   User,
 } from "lucide-react-native";
 
@@ -434,14 +434,35 @@ function PromoCard({ type }: PromoCardProps) {
   if (type === "addEvents") {
     return (
       <TouchableOpacity onPress={handlePress}>
-        <View className="mx-4 rounded-2xl bg-accent-yellow/80 p-4">
+        <View
+          className="mx-4 rounded-2xl bg-accent-yellow/80 p-4"
+          style={{
+            borderWidth: 2,
+            borderColor: "white",
+            shadowColor: "#5A32FB",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.15,
+            shadowRadius: 1,
+            elevation: 1,
+          }}
+        >
           <Text className="mb-1 text-lg font-semibold text-neutral-1">
             Add more events
           </Text>
           <View className="flex-row items-center">
             <Text className="text-base text-neutral-2">
               Tap the{" "}
-              <PlusCircle size={iconSize} color="#4B5563" className="-mb-0.5" />{" "}
+              <View
+                className="inline-flex items-center justify-center rounded-full bg-interactive-1"
+                style={{
+                  width: iconSize * 1.5,
+                  height: iconSize * 1.5,
+                  marginHorizontal: 2,
+                  marginVertical: -2,
+                }}
+              >
+                <Plus size={iconSize} color="#FFFFFF" />
+              </View>{" "}
               button below to add more.
             </Text>
           </View>
