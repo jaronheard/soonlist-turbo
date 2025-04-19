@@ -127,7 +127,7 @@ export default function AddEventButton({
           className="absolute bottom-8 left-1/2 -translate-x-1/2"
         >
           <View
-            className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-6"
+            className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
             style={{
               shadowColor: "#5A32FB",
               shadowOffset: { width: 0, height: 3 },
@@ -136,7 +136,7 @@ export default function AddEventButton({
               elevation: 8,
             }}
           >
-            <PlusIcon size={28} color="#FFF" />
+            <PlusIcon size={44} color="#FFF" strokeWidth={2} />
           </View>
         </TouchableOpacity>
       ) : (

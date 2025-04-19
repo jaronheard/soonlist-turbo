@@ -91,7 +91,7 @@ function MyFeed() {
             onRefresh={onRefresh}
             onEndReached={loadMore}
             isFetchingNextPage={eventsQuery.isFetchingNextPage}
-            showCreator="otherUsers"
+            showCreator="never"
             stats={statsQuery.data}
             promoCard={{ type: "addEvents" }}
             hasUnlimited={hasUnlimited}

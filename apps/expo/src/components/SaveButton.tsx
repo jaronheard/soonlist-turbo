@@ -1,5 +1,5 @@
 import React from "react";
-import { Animated, Pressable } from "react-native";
+import { Animated, Pressable, useWindowDimensions } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 import { Heart } from "lucide-react-native";
 
@@ -13,7 +13,9 @@ interface SaveButtonProps {
 export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
   const { isLoaded, user } = useUser();
   const username = user?.username || "";
-  const scaleAnim = new Animated.Value(1);
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const { fontScale } = useWindowDimensions();
+  const iconSize = 16 * fontScale;
 
   const utils = api.useUtils();
   const saveEventMutation = api.event.follow.useMutation({
@@ -101,9 +103,9 @@ export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         {isSaved ? (
-          <Heart color="#5A32FB" size={24} fill={"#5A32FB"} />
+          <Heart color="#5A32FB" size={iconSize} fill={"#5A32FB"} />
         ) : (
-          <Heart color="#5A32FB" size={24} fill="white" />
+          <Heart color="#5A32FB" size={iconSize} fill="white" />
         )}
       </Animated.View>
     </Pressable>

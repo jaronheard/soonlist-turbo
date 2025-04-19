@@ -16,16 +16,13 @@ import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import {
-  Calendar,
+  CalendarPlus,
   Copy,
   EyeOff,
   Globe2,
-  MapPin,
-  Navigation,
-  Pencil,
-  PlusCircle,
-  QrCode,
-  ShareIcon,
+  MapPinned,
+  MoreVertical,
+  Plus,
   User,
 } from "lucide-react-native";
 
@@ -42,6 +39,7 @@ import {
   getDateTimeInfo,
   isOver,
 } from "~/utils/dates";
+import { getEventEmoji } from "~/utils/eventEmoji";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { logError } from "../utils/errorLogging";
 import { EventListItemSkeleton } from "./EventListItemSkeleton";
@@ -72,6 +70,7 @@ interface UserEventListItemProps {
   similarEventsCount?: number;
   demoMode?: boolean;
   index: number;
+  hideDiscoverableButton?: boolean;
 }
 
 export function UserEventListItem(props: UserEventListItemProps) {
@@ -83,14 +82,14 @@ export function UserEventListItem(props: UserEventListItemProps) {
     similarEventsCount,
     demoMode,
     index,
+    hideDiscoverableButton = false,
   } = props;
   const { fontScale } = useWindowDimensions();
   const {
-    handleShare,
     handleDirections,
     handleAddToCal,
-    handleEdit,
-    handleShowQR,
+    handleToggleVisibility: toggleVisibilityAction,
+    showDiscover,
   } = useEventActions({ event, isSaved, demoMode });
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
@@ -137,15 +136,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
     },
   });
 
-  const handleToggleVisibility = () => {
-    if (toggleVisibilityMutation.isPending) return;
-    const nextVisibility = event.visibility === "public" ? "private" : "public";
-    toggleVisibilityMutation.mutate({
-      id: event.id,
-      visibility: nextVisibility,
-    });
-  };
-
   const isHappeningNow = relativeTime === "Happening now" && !eventIsOver;
 
   const { user: currentUser } = useUser();
@@ -166,6 +156,9 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const imageHeight = (imageWidth * 16) / 9;
 
   const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
+
+  // Get emoji and background color based on event type/category
+  const { emoji, bgColor } = getEventEmoji(event);
 
   return (
     <EventMenu
@@ -237,18 +230,25 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 />
               ) : (
                 <View
-                  className="border border-purple-300 bg-accent-yellow"
+                  className={cn("border border-purple-300", bgColor)}
                   style={{
                     width: imageWidth,
                     height: imageHeight,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderRadius: 20,
+                    borderWidth: 3,
+                    borderColor: "white",
                   }}
-                />
+                >
+                  <Text style={{ fontSize: 32 * fontScale }}>{emoji}</Text>
+                </View>
               )}
             </View>
           </View>
           <View
             className={cn(
-              "mt-4 bg-white p-3",
+              "my-1 mt-4 bg-white p-3",
               isHappeningNow ? "border border-accent-yellow" : "",
             )}
             style={{
@@ -270,32 +270,16 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   {dateString.date} • {dateString.time}
                 </Text>
               </View>
-              {isOwner && !ActionButton && (
+              {isOwner && !ActionButton && similarEventsCount ? (
                 <View className="flex-row items-center gap-1 opacity-60">
-                  {similarEventsCount ? (
-                    <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
-                      <Copy size={iconSize * 0.7} color="#627496" />
-                      <Text className="text-xs text-neutral-2">
-                        {similarEventsCount}
-                      </Text>
-                    </View>
-                  ) : null}
-                  <TouchableOpacity
-                    onPress={handleToggleVisibility}
-                    disabled={toggleVisibilityMutation.isPending}
-                    className={cn(
-                      "p-1",
-                      toggleVisibilityMutation.isPending && "opacity-30",
-                    )}
-                  >
-                    {event.visibility === "public" ? (
-                      <Globe2 size={iconSize * 1} color="#627496" />
-                    ) : (
-                      <EyeOff size={iconSize * 1} color="#627496" />
-                    )}
-                  </TouchableOpacity>
+                  <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
+                    <Copy size={iconSize * 0.7} color="#627496" />
+                    <Text className="text-xs text-neutral-2">
+                      {similarEventsCount}
+                    </Text>
+                  </View>
                 </View>
-              )}
+              ) : null}
             </View>
             <Text
               className="mb-1 text-lg font-bold text-neutral-1"
@@ -305,8 +289,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               {e.name}
             </Text>
             {e.location ? (
-              <View className="mb-1 flex-shrink flex-row items-center gap-1">
-                <MapPin size={iconSize * 0.9} color="#627496" />
+              <View className="mb-1 flex-shrink flex-row items-center">
                 <Text
                   className="text-sm text-neutral-2"
                   numberOfLines={1}
@@ -317,46 +300,62 @@ export function UserEventListItem(props: UserEventListItemProps) {
               </View>
             ) : null}
 
-            <View className="mt-2 flex-row items-center justify-start gap-2">
+            <View className="-mb-2 -ml-1.5 mt-1.5 flex-row items-center justify-start gap-3">
+              {ActionButton && <ActionButton event={event} />}
+
               <TouchableOpacity
-                className="rounded-full p-1"
+                className="rounded-full p-2.5"
                 onPress={handleDirections}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Navigation size={iconSize} color="#5A32FB" />
+                <MapPinned size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
               <TouchableOpacity
-                className="rounded-full p-1"
+                className="rounded-full p-2.5"
                 onPress={handleAddToCal}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Calendar size={iconSize} color="#5A32FB" />
+                <CalendarPlus size={iconSize} color="#5A32FB" />
               </TouchableOpacity>
-              {isOwner && (
+
+              {showDiscover && !hideDiscoverableButton && (
                 <TouchableOpacity
-                  className="rounded-full p-1"
-                  onPress={handleEdit}
+                  className="rounded-full p-2.5"
+                  onPress={() => {
+                    const nextVisibility =
+                      event.visibility === "public" ? "private" : "public";
+                    void toggleVisibilityAction(nextVisibility);
+                  }}
+                  disabled={toggleVisibilityMutation.isPending}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Pencil size={iconSize} color="#5A32FB" />
+                  {event.visibility === "public" ? (
+                    <Globe2 size={iconSize} color="#5A32FB" />
+                  ) : (
+                    <EyeOff size={iconSize} color="#5A32FB" />
+                  )}
                 </TouchableOpacity>
               )}
-              <TouchableOpacity
-                className="rounded-full p-1"
-                onPress={handleShowQR}
+
+              <EventMenu
+                event={event}
+                isOwner={isOwner}
+                isSaved={isSaved}
+                menuType="popup"
+                demoMode={demoMode}
               >
-                <QrCode size={iconSize} color="#5A32FB" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="rounded-full p-1"
-                onPress={handleShare}
-              >
-                <ShareIcon size={iconSize} color="#5A32FB" />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  className="rounded-full p-2.5"
+                  onPress={(e) => {
+                    e.stopPropagation();
+                  }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <MoreVertical size={iconSize} color="#5A32FB" />
+                </TouchableOpacity>
+              </EventMenu>
             </View>
           </View>
-          {ActionButton && (
-            <View className="absolute bottom-6 right-6 z-[11]">
-              <ActionButton event={event} />
-            </View>
-          )}
           {shouldShowCreator ? (
             <View className="mx-auto mt-1 flex-row items-center gap-3">
               <UserProfileFlair username={eventUser.username} size="xs">
@@ -385,10 +384,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
           {relativeTime && (
             <View className="absolute left-0 right-0 top-0 z-20 flex items-center justify-center">
               <View
-                className={cn(
-                  "rounded-full px-2 py-0.5",
-                  isHappeningNow ? "bg-white" : "bg-accent-yellow",
-                )}
+                className={cn("rounded-full px-2 py-0.5", "bg-accent-yellow")}
                 style={{
                   borderWidth: 2,
                   borderColor: "white",
@@ -397,7 +393,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   shadowOpacity: 0.15,
                   shadowRadius: 1,
                   elevation: 1,
-                  backgroundColor: isHappeningNow ? "white" : "#FEEA9F",
+                  backgroundColor: "#FEEA9F",
                 }}
               >
                 <Text className="text-xs font-medium text-neutral-1">
@@ -431,14 +427,35 @@ function PromoCard({ type }: PromoCardProps) {
   if (type === "addEvents") {
     return (
       <TouchableOpacity onPress={handlePress}>
-        <View className="mx-4 rounded-2xl bg-accent-yellow/80 p-4">
+        <View
+          className="mx-4 rounded-2xl bg-accent-yellow/80 p-4"
+          style={{
+            borderWidth: 3,
+            borderColor: "white",
+            shadowColor: "#5A32FB",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.15,
+            shadowRadius: 2.5,
+            elevation: 2,
+          }}
+        >
           <Text className="mb-1 text-lg font-semibold text-neutral-1">
             Add more events
           </Text>
           <View className="flex-row items-center">
             <Text className="text-base text-neutral-2">
               Tap the{" "}
-              <PlusCircle size={iconSize} color="#4B5563" className="-mb-0.5" />{" "}
+              <View
+                className="inline-flex items-center justify-center rounded-full bg-interactive-1"
+                style={{
+                  width: iconSize * 1.5,
+                  height: iconSize * 1.5,
+                  marginHorizontal: 2,
+                  marginVertical: -2,
+                }}
+              >
+                <Plus size={iconSize} color="#FFFFFF" strokeWidth={3} />
+              </View>{" "}
               button below to add more.
             </Text>
           </View>
@@ -462,6 +479,7 @@ interface UserEventsListProps {
   demoMode?: boolean;
   hasUnlimited?: boolean;
   stats?: EventStatsData;
+  hideDiscoverableButton?: boolean;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -477,6 +495,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     demoMode,
     hasUnlimited = false,
     stats,
+    hideDiscoverableButton = false,
   } = props;
   const { user } = useUser();
   const queryClient = useQueryClient();
@@ -646,6 +665,7 @@ export default function UserEventsList(props: UserEventsListProps) {
               }
               demoMode={demoMode}
               index={index}
+              hideDiscoverableButton={hideDiscoverableButton}
             />
           );
         }}
@@ -658,6 +678,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
+        style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
           paddingTop: stats ? 0 : 16,
           paddingBottom: 120,

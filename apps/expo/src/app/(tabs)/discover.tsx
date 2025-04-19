@@ -99,6 +99,7 @@ export default function Page() {
             ActionButton={SaveButtonWrapper}
             showCreator="always"
             hasUnlimited={hasUnlimited}
+            hideDiscoverableButton={true}
           />
           <AddEventButton />
         </View>

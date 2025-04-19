@@ -61,7 +61,7 @@ export default function PastEvents() {
             events={events}
             onRefresh={onRefresh}
             onEndReached={loadMore}
-            showCreator="otherUsers"
+            showCreator="never"
             isRefetching={eventsQuery.isRefetching}
             isFetchingNextPage={eventsQuery.isFetchingNextPage}
             hasUnlimited={hasUnlimited}
