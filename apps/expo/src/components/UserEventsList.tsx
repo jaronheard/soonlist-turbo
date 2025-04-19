@@ -309,245 +309,253 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const { emoji, bgColor } = getEventEmoji(event);
 
   return (
-    <Pressable
-      className="relative"
-      onPress={() => {
-        const isDemoEvent = id.startsWith("demo-");
-        if (isDemoEvent) {
-          router.push(`/onboarding/demo-event/${id}`);
-        } else {
-          router.push(`/event/${id}`);
-        }
-      }}
-      onLongPress={(e) => {
-        e.stopPropagation();
-      }}
-      delayLongPress={350}
+    <EventMenu
+      event={event}
+      isOwner={isOwner}
+      isSaved={isSaved}
+      menuType="context"
+      demoMode={demoMode}
     >
-      <View className={cn("relative mb-6 px-4")}>
-        <View
-          style={{
-            position: "absolute",
-            right: 10,
-            top: -5,
-            zIndex: 10,
-            shadowColor: "#5A32FB",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.3,
-            shadowRadius: 1.5,
-            elevation: 3,
-            transform: [{ rotate: imageRotation }],
-            backgroundColor: "transparent",
-          }}
-        >
+      <Pressable
+        className="relative"
+        onPress={() => {
+          const isDemoEvent = id.startsWith("demo-");
+          if (isDemoEvent) {
+            router.push(`/onboarding/demo-event/${id}`);
+          } else {
+            router.push(`/event/${id}`);
+          }
+        }}
+        onLongPress={(e) => {
+          e.stopPropagation();
+        }}
+        delayLongPress={350}
+      >
+        <View className={cn("relative mb-6 px-4")}>
           <View
             style={{
-              width: imageWidth,
-              height: imageHeight,
-              borderRadius: 20,
-              overflow: "hidden",
-              backgroundColor: "white",
+              position: "absolute",
+              right: 10,
+              top: -5,
+              zIndex: 10,
+              shadowColor: "#5A32FB",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.3,
+              shadowRadius: 1.5,
+              elevation: 3,
+              transform: [{ rotate: imageRotation }],
+              backgroundColor: "transparent",
             }}
           >
-            {e.images?.[3] ? (
-              <Image
-                source={
-                  typeof e.images[3] === "number"
-                    ? e.images[3]
-                    : {
-                        uri: `${e.images[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
-                      }
-                }
-                style={{
-                  width: imageWidth,
-                  height: imageHeight,
-                  borderRadius: 20,
-                  borderWidth: 3,
-                  borderColor: "white",
-                }}
-                contentFit="cover"
-                cachePolicy="disk"
-                transition={100}
-              />
-            ) : (
-              <View
-                className={cn("border border-purple-300", bgColor)}
-                style={{
-                  width: imageWidth,
-                  height: imageHeight,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: 20,
-                  borderWidth: 3,
-                  borderColor: "white",
-                }}
-              >
-                <Text style={{ fontSize: 32 * fontScale }}>{emoji}</Text>
-              </View>
-            )}
-          </View>
-        </View>
-        <View
-          className={cn(
-            "mt-4 bg-white p-3",
-            isHappeningNow ? "border border-accent-yellow" : "",
-          )}
-          style={{
-            paddingRight: imageWidth * 1.1,
-            borderRadius: 20,
-            borderWidth: 3,
-            borderColor: "white",
-            shadowColor: "#5A32FB",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.15,
-            shadowRadius: 2.5,
-            elevation: 2,
-            backgroundColor: "white",
-          }}
-        >
-          <View className="mb-1 flex-row items-center justify-between">
-            <View className="flex-row items-center gap-1">
-              <Text className="text-sm font-medium text-neutral-2">
-                {dateString.date} • {dateString.time}
-              </Text>
-            </View>
-            {isOwner && !ActionButton && similarEventsCount ? (
-              <View className="flex-row items-center gap-1 opacity-60">
-                <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
-                  <Copy size={iconSize * 0.7} color="#627496" />
-                  <Text className="text-xs text-neutral-2">
-                    {similarEventsCount}
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-          </View>
-          <Text
-            className="mb-1 text-lg font-bold text-neutral-1"
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {e.name}
-          </Text>
-          {e.location ? (
-            <View className="mb-1 flex-shrink flex-row items-center">
-              <Text
-                className="text-sm text-neutral-2"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {e.location}
-              </Text>
-            </View>
-          ) : null}
-
-          <View className="-ml-1.5 mt-1.5 flex-row items-center justify-start gap-3">
-            {ActionButton && <ActionButton event={event} />}
-
-            <TouchableOpacity
-              className="rounded-full p-2.5"
-              onPress={handleDirections}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            <View
+              style={{
+                width: imageWidth,
+                height: imageHeight,
+                borderRadius: 20,
+                overflow: "hidden",
+                backgroundColor: "white",
+              }}
             >
-              <MapPinned size={iconSize} color="#5A32FB" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="rounded-full p-2.5"
-              onPress={handleAddToCal}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <CalendarPlus size={iconSize} color="#5A32FB" />
-            </TouchableOpacity>
-
-            {showDiscover && !hideDiscoverableButton && (
-              <TouchableOpacity
-                className="rounded-full p-2.5"
-                onPress={() => {
-                  const nextVisibility =
-                    event.visibility === "public" ? "private" : "public";
-                  void toggleVisibilityAction(nextVisibility);
-                }}
-                disabled={toggleVisibilityMutation.isPending}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                {event.visibility === "public" ? (
-                  <Globe2 size={iconSize} color="#5A32FB" />
-                ) : (
-                  <EyeOff size={iconSize} color="#5A32FB" />
-                )}
-              </TouchableOpacity>
-            )}
-
-            <EventMenu
-              event={event}
-              isOwner={isOwner}
-              isSaved={isSaved}
-              menuType="popup"
-              demoMode={demoMode}
-            >
-              <TouchableOpacity
-                className="rounded-full p-2.5"
-                onPress={(e) => {
-                  e.stopPropagation();
-                }}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <MoreVertical size={iconSize} color="#5A32FB" />
-              </TouchableOpacity>
-            </EventMenu>
-          </View>
-        </View>
-        {shouldShowCreator ? (
-          <View className="mx-auto mt-1 flex-row items-center gap-3">
-            <UserProfileFlair username={eventUser.username} size="xs">
-              {eventUser.userImage ? (
+              {e.images?.[3] ? (
                 <Image
-                  source={{ uri: eventUser.userImage }}
+                  source={
+                    typeof e.images[3] === "number"
+                      ? e.images[3]
+                      : {
+                          uri: `${e.images[3]}?w=160&h=160&fit=cover&f=webp&q=80`,
+                        }
+                  }
                   style={{
-                    width: iconSize * 0.9,
-                    height: iconSize * 0.9,
-                    borderRadius: 9999,
+                    width: imageWidth,
+                    height: imageHeight,
+                    borderRadius: 20,
+                    borderWidth: 3,
+                    borderColor: "white",
                   }}
                   contentFit="cover"
-                  contentPosition="center"
                   cachePolicy="disk"
                   transition={100}
                 />
               ) : (
-                <User size={iconSize * 0.9} color="#627496" />
+                <View
+                  className={cn("border border-purple-300", bgColor)}
+                  style={{
+                    width: imageWidth,
+                    height: imageHeight,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderRadius: 20,
+                    borderWidth: 3,
+                    borderColor: "white",
+                  }}
+                >
+                  <Text style={{ fontSize: 32 * fontScale }}>{emoji}</Text>
+                </View>
               )}
-            </UserProfileFlair>
-            <Text className="text-xs text-neutral-2">
-              @{eventUser.username}
-            </Text>
-          </View>
-        ) : null}
-        {relativeTime && (
-          <View className="absolute left-0 right-0 top-0 z-20 flex items-center justify-center">
-            <View
-              className={cn(
-                "rounded-full px-2 py-0.5",
-                isHappeningNow ? "bg-white" : "bg-accent-yellow",
-              )}
-              style={{
-                borderWidth: 2,
-                borderColor: "white",
-                shadowColor: "#5A32FB",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.15,
-                shadowRadius: 1,
-                elevation: 1,
-                backgroundColor: isHappeningNow ? "white" : "#FEEA9F",
-              }}
-            >
-              <Text className="text-xs font-medium text-neutral-1">
-                {relativeTime}
-              </Text>
             </View>
           </View>
-        )}
-      </View>
-    </Pressable>
+          <View
+            className={cn(
+              "mt-4 bg-white p-3",
+              isHappeningNow ? "border border-accent-yellow" : "",
+            )}
+            style={{
+              paddingRight: imageWidth * 1.1,
+              borderRadius: 20,
+              borderWidth: 3,
+              borderColor: "white",
+              shadowColor: "#5A32FB",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.15,
+              shadowRadius: 2.5,
+              elevation: 2,
+              backgroundColor: "white",
+            }}
+          >
+            <View className="mb-1 flex-row items-center justify-between">
+              <View className="flex-row items-center gap-1">
+                <Text className="text-sm font-medium text-neutral-2">
+                  {dateString.date} • {dateString.time}
+                </Text>
+              </View>
+              {isOwner && !ActionButton && similarEventsCount ? (
+                <View className="flex-row items-center gap-1 opacity-60">
+                  <View className="flex-row items-center gap-0.5 rounded-full bg-neutral-4/70 px-1 py-0.5">
+                    <Copy size={iconSize * 0.7} color="#627496" />
+                    <Text className="text-xs text-neutral-2">
+                      {similarEventsCount}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
+            </View>
+            <Text
+              className="mb-1 text-lg font-bold text-neutral-1"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {e.name}
+            </Text>
+            {e.location ? (
+              <View className="mb-1 flex-shrink flex-row items-center">
+                <Text
+                  className="text-sm text-neutral-2"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {e.location}
+                </Text>
+              </View>
+            ) : null}
+
+            <View className="-ml-1.5 mt-1.5 flex-row items-center justify-start gap-3">
+              {ActionButton && <ActionButton event={event} />}
+
+              <TouchableOpacity
+                className="rounded-full p-2.5"
+                onPress={handleDirections}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <MapPinned size={iconSize} color="#5A32FB" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="rounded-full p-2.5"
+                onPress={handleAddToCal}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <CalendarPlus size={iconSize} color="#5A32FB" />
+              </TouchableOpacity>
+
+              {showDiscover && !hideDiscoverableButton && (
+                <TouchableOpacity
+                  className="rounded-full p-2.5"
+                  onPress={() => {
+                    const nextVisibility =
+                      event.visibility === "public" ? "private" : "public";
+                    void toggleVisibilityAction(nextVisibility);
+                  }}
+                  disabled={toggleVisibilityMutation.isPending}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  {event.visibility === "public" ? (
+                    <Globe2 size={iconSize} color="#5A32FB" />
+                  ) : (
+                    <EyeOff size={iconSize} color="#5A32FB" />
+                  )}
+                </TouchableOpacity>
+              )}
+
+              <EventMenu
+                event={event}
+                isOwner={isOwner}
+                isSaved={isSaved}
+                menuType="popup"
+                demoMode={demoMode}
+              >
+                <TouchableOpacity
+                  className="rounded-full p-2.5"
+                  onPress={(e) => {
+                    e.stopPropagation();
+                  }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <MoreVertical size={iconSize} color="#5A32FB" />
+                </TouchableOpacity>
+              </EventMenu>
+            </View>
+          </View>
+          {shouldShowCreator ? (
+            <View className="mx-auto mt-1 flex-row items-center gap-3">
+              <UserProfileFlair username={eventUser.username} size="xs">
+                {eventUser.userImage ? (
+                  <Image
+                    source={{ uri: eventUser.userImage }}
+                    style={{
+                      width: iconSize * 0.9,
+                      height: iconSize * 0.9,
+                      borderRadius: 9999,
+                    }}
+                    contentFit="cover"
+                    contentPosition="center"
+                    cachePolicy="disk"
+                    transition={100}
+                  />
+                ) : (
+                  <User size={iconSize * 0.9} color="#627496" />
+                )}
+              </UserProfileFlair>
+              <Text className="text-xs text-neutral-2">
+                @{eventUser.username}
+              </Text>
+            </View>
+          ) : null}
+          {relativeTime && (
+            <View className="absolute left-0 right-0 top-0 z-20 flex items-center justify-center">
+              <View
+                className={cn(
+                  "rounded-full px-2 py-0.5",
+                  isHappeningNow ? "bg-white" : "bg-accent-yellow",
+                )}
+                style={{
+                  borderWidth: 2,
+                  borderColor: "white",
+                  shadowColor: "#5A32FB",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 1,
+                  elevation: 1,
+                  backgroundColor: isHappeningNow ? "white" : "#FEEA9F",
+                }}
+              >
+                <Text className="text-xs font-medium text-neutral-1">
+                  {relativeTime}
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </Pressable>
+    </EventMenu>
   );
 }
 
