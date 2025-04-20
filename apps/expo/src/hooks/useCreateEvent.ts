@@ -120,8 +120,8 @@ export function useCreateEvent() {
           try {
             manipulatedImage = await ImageManipulator.manipulateAsync(
               fileUri,
-              [{ resize: { width: 1284 } }],
-              { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+              [{ resize: { width: 770 } }],
+              { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP },
             );
           } catch (error) {
             throw new Error(
