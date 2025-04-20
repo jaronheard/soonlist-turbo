@@ -1,5 +1,5 @@
 import type { CoreMessage } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { Temporal } from "@js-temporal/polyfill";
 import { TRPCError } from "@trpc/server";
 import { waitUntil } from "@vercel/functions";
@@ -39,9 +39,13 @@ const langfuse = new Langfuse({
   baseUrl: process.env.LANGFUSE_BASE_URL || "",
 });
 
-const MODEL = "gpt-4o";
+const openrouter = createOpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY || "",
+  baseURL: process.env.OPENROUTER_BASE_URL || "",
+});
+const MODEL = "google/gemini-2.0-flash-001";
 const aiConfig = {
-  model: openai(MODEL),
+  model: openrouter(MODEL),
   mode: "json",
   temperature: 0.2,
   maxRetries: 0,
