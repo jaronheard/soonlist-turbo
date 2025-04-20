@@ -23,6 +23,8 @@ export const env = createEnv({
     LANGFUSE_PUBLIC_KEY: z.string(),
     LANGFUSE_SECRET_KEY: z.string(),
     OPENAI_API_KEY: z.string(),
+    OPENROUTER_API_KEY: z.string(),
+    OPENROUTER_BASE_URL: z.string().url(),
     SENTRY_AUTH_TOKEN: z.string(),
     STRIPE_PRICE_ID_PERSONAL_MONTHLY: z.string(),
     STRIPE_PRICE_ID_PRO_MONTHLY: z.string(),

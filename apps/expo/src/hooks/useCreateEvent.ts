@@ -144,7 +144,7 @@ export function useCreateEvent() {
                 uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
                 httpMethod: "POST",
                 headers: {
-                  "Content-Type": "image/jpeg",
+                  "Content-Type": "image/webp",
                   Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
                 },
               },
