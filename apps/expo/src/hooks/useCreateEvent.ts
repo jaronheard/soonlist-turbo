@@ -121,7 +121,7 @@ export function useCreateEvent() {
             manipulatedImage = await ImageManipulator.manipulateAsync(
               fileUri,
               [{ resize: { width: 1284 } }],
-              { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+              { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP },
             );
           } catch (error) {
             throw new Error(
@@ -144,7 +144,7 @@ export function useCreateEvent() {
                 uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
                 httpMethod: "POST",
                 headers: {
-                  "Content-Type": "image/jpeg",
+                  "Content-Type": "image/webp",
                   Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
                 },
               },
