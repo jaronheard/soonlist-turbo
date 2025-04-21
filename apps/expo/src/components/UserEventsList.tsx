@@ -300,7 +300,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               </View>
             ) : null}
 
-            <View className="-mb-2 -ml-1.5 mt-1.5 flex-row items-center justify-start gap-3">
+            <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
               {ActionButton && <ActionButton event={event} />}
 
               <TouchableOpacity
