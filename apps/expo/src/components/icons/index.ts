@@ -1,7 +1,7 @@
 // This file exports all icon components
-import type { IconProps, LucideIcon } from "./types";
+import type { LucideIcon } from "./types";
 
-export type { IconProps, LucideIcon };
+export type { LucideIcon };
 
 export { default as AlertTriangle } from "./AlertTriangle";
 export { default as Calendar } from "./Calendar";
