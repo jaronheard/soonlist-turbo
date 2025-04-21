@@ -47,7 +47,7 @@ import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
 
-type ShowCreatorOption = "always" | "otherUsers" | "never";
+type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 
 // Define the type for the stats data based on the expected query output
 type EventStatsData = RouterOutputs["event"]["getStats"];
@@ -147,7 +147,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
   const shouldShowCreator =
     showCreator === "always" ||
-    (showCreator === "otherUsers" && !isCurrentUser);
+    (showCreator === "otherUsers" && !isCurrentUser) ||
+    (isSaved && !isCurrentUser && showCreator === "savedFromOthers");
 
   const isOwner = demoMode || isCurrentUser;
 
