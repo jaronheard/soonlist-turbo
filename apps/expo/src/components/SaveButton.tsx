@@ -97,9 +97,10 @@ export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
     <Pressable
       onPress={handlePress}
       disabled={!isLoaded}
-      className={`flex-row items-center rounded-full p-1 ${
+      className={`flex-row items-center rounded-full p-2.5 ${
         isSaved ? "bg-interactive-2" : "bg-interactive-2"
       } ${!isLoaded ? "opacity-50" : ""}`}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         {isSaved ? (
