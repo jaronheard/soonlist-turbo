@@ -10,4 +10,3 @@ const History = createLucideIcon("History", [
 ]);
 
 export { History as default };
-//# sourceMappingURL=history.js.map

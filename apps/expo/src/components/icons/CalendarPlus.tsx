@@ -16,4 +16,3 @@ const CalendarPlus = createLucideIcon("CalendarPlus", [
 ]);
 
 export { CalendarPlus as default };
-//# sourceMappingURL=calendar-plus.js.map

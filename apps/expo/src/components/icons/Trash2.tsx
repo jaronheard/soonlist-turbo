@@ -9,4 +9,3 @@ const Trash2 = createLucideIcon("Trash2", [
 ]);
 
 export { Trash2 as default };
-//# sourceMappingURL=trash-2.js.map

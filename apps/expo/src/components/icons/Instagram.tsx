@@ -21,4 +21,3 @@ const Instagram = createLucideIcon("Instagram", [
 ]);
 
 export { Instagram as default };
-//# sourceMappingURL=instagram.js.map

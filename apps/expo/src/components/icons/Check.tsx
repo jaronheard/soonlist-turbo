@@ -5,4 +5,3 @@ const Check = createLucideIcon("Check", [
 ]);
 
 export { Check as default };
-//# sourceMappingURL=check.js.map

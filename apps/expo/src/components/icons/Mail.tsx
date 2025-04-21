@@ -9,4 +9,3 @@ const Mail = createLucideIcon("Mail", [
 ]);
 
 export { Mail as default };
-//# sourceMappingURL=mail.js.map

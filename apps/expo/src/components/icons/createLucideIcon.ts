@@ -35,7 +35,7 @@ const createLucideIcon = (iconName: string, iconNode: IconNode): LucideIcon => {
           ...defaultAttributes,
           width: size as number,
           height: size as number,
-          "data-testid": dataTestId as string | undefined,
+          "data-testid": dataTestId,
           ...customAttrs,
         },
         [

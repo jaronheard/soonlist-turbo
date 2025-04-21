@@ -12,4 +12,3 @@ const MapPin = createLucideIcon("MapPin", [
 ]);
 
 export { MapPin as default };
-//# sourceMappingURL=map-pin.js.map

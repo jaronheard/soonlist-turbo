@@ -11,4 +11,3 @@ const Phone = createLucideIcon("Phone", [
 ]);
 
 export { Phone as default };
-//# sourceMappingURL=phone.js.map

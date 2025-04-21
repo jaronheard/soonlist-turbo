@@ -18,4 +18,3 @@ const SquarePen = createLucideIcon("SquarePen", [
 ]);
 
 export { SquarePen as default };
-//# sourceMappingURL=square-pen.js.map

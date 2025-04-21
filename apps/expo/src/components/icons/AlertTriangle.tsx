@@ -13,4 +13,3 @@ const TriangleAlert = createLucideIcon("TriangleAlert", [
 ]);
 
 export { TriangleAlert as default };
-//# sourceMappingURL=triangle-alert.js.map

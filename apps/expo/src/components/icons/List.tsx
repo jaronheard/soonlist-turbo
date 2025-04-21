@@ -10,4 +10,3 @@ const List = createLucideIcon("List", [
 ]);
 
 export { List as default };
-//# sourceMappingURL=list.js.map

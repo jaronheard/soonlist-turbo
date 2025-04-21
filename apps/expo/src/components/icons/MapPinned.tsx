@@ -19,4 +19,3 @@ const MapPinned = createLucideIcon("MapPinned", [
 ]);
 
 export { MapPinned as default };
-//# sourceMappingURL=map-pinned.js.map

@@ -6,4 +6,3 @@ const X = createLucideIcon("X", [
 ]);
 
 export { X as default };
-//# sourceMappingURL=x.js.map

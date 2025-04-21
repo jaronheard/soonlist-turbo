@@ -11,4 +11,3 @@ const Heart = createLucideIcon("Heart", [
 ]);
 
 export { Heart as default };
-//# sourceMappingURL=heart.js.map

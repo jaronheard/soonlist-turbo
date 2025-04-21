@@ -7,4 +7,3 @@ const LogOut = createLucideIcon("LogOut", [
 ]);
 
 export { LogOut as default };
-//# sourceMappingURL=log-out.js.map

@@ -12,4 +12,3 @@ const Camera = createLucideIcon("Camera", [
 ]);
 
 export { Camera as default };
-//# sourceMappingURL=camera.js.map

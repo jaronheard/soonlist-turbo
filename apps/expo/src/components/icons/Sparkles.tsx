@@ -15,4 +15,3 @@ const Sparkles = createLucideIcon("Sparkles", [
 ]);
 
 export { Sparkles as default };
-//# sourceMappingURL=sparkles.js.map

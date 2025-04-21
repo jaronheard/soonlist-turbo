@@ -5,4 +5,3 @@ const MessageCircle = createLucideIcon("MessageCircle", [
 ]);
 
 export { MessageCircle as default };
-//# sourceMappingURL=message-circle.js.map

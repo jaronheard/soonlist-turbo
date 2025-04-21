@@ -13,4 +13,3 @@ const Map = createLucideIcon("Map", [
 ]);
 
 export { Map as default };
-//# sourceMappingURL=map.js.map

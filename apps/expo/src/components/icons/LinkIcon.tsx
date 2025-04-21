@@ -18,4 +18,3 @@ const Link = createLucideIcon("Link", [
 ]);
 
 export { Link as default };
-//# sourceMappingURL=link.js.map

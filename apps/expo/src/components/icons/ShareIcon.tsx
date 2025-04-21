@@ -7,4 +7,3 @@ const Share = createLucideIcon("Share", [
 ]);
 
 export { Share as default };
-//# sourceMappingURL=share.js.map

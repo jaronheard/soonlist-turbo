@@ -7,4 +7,3 @@ const Type = createLucideIcon("Type", [
 ]);
 
 export { Type as default };
-//# sourceMappingURL=type.js.map

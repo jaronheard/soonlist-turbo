@@ -15,4 +15,3 @@ const ImagePlus = createLucideIcon("ImagePlus", [
 ]);
 
 export { ImagePlus as default };
-//# sourceMappingURL=image-plus.js.map

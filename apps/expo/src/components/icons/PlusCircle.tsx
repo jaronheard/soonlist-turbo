@@ -7,4 +7,3 @@ const CirclePlus = createLucideIcon("CirclePlus", [
 ]);
 
 export { CirclePlus as default };
-//# sourceMappingURL=circle-plus.js.map

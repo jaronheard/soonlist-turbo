@@ -7,4 +7,3 @@ const EllipsisVertical = createLucideIcon("EllipsisVertical", [
 ]);
 
 export { EllipsisVertical as default };
-//# sourceMappingURL=ellipsis-vertical.js.map

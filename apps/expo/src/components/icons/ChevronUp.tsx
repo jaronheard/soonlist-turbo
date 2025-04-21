@@ -5,4 +5,3 @@ const ChevronUp = createLucideIcon("ChevronUp", [
 ]);
 
 export { ChevronUp as default };
-//# sourceMappingURL=chevron-up.js.map

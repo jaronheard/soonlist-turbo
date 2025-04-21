@@ -22,4 +22,3 @@ const QrCode = createLucideIcon("QrCode", [
 ]);
 
 export { QrCode as default };
-//# sourceMappingURL=qr-code.js.map

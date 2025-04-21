@@ -6,4 +6,3 @@ const Search = createLucideIcon("Search", [
 ]);
 
 export { Search as default };
-//# sourceMappingURL=search.js.map

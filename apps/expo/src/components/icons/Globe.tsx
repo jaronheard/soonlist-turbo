@@ -10,4 +10,3 @@ const Globe = createLucideIcon("Globe", [
 ]);
 
 export { Globe as default };
-//# sourceMappingURL=globe.js.map
