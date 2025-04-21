@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { Image, LinkIcon, Type } from "lucide-react-native";
+
+import { Image, LinkIcon, Type } from "~/components/icons";
 
 interface NewEventHeaderProps {
   isFromIntent: boolean;

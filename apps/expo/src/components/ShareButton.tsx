@@ -1,7 +1,7 @@
 import React from "react";
 import { Share, TouchableOpacity } from "react-native";
-import { ShareIcon } from "lucide-react-native";
 
+import { ShareIcon } from "~/components/icons";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 

@@ -1,10 +1,10 @@
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { router, useLocalSearchParams } from "expo-router";
-import { X } from "lucide-react-native";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 
+import { X } from "~/components/icons";
 import { Logo } from "~/components/Logo";
 import { api } from "~/utils/api";
 import Config from "~/utils/config";

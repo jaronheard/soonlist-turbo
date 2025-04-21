@@ -18,13 +18,13 @@ import * as MediaLibrary from "expo-media-library";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EyeOff, Globe2, Image as ImageIcon } from "lucide-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
 
 import { Button } from "~/components/Button";
 import { DatePickerField, TimePickerField } from "~/components/date-picker";
+import { EyeOff, Globe2, Image as ImageIcon } from "~/components/icons";
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";

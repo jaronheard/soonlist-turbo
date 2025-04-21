@@ -8,9 +8,9 @@ import {
   View,
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
-import { Image, Link as LinkIcon, X } from "lucide-react-native";
 
 import type { ImageSource } from "~/components/demoData";
+import { Image, Link as LinkIcon, X } from "~/components/icons";
 import { cn } from "~/utils/cn";
 
 interface EventPreviewProps {

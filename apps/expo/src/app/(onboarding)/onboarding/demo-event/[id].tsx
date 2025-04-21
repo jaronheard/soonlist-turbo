@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { Dimensions, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { Link, Stack, useLocalSearchParams } from "expo-router";
-import { Globe2, MapPin } from "lucide-react-native";
 
 import type { DemoEvent } from "~/components/demoData";
 import { DEMO_CAPTURE_EVENTS } from "~/components/demoData";
 import { FinishDemoButton } from "~/components/FinishDemoButton";
+import { Globe2, MapPin } from "~/components/icons";
 import { formatEventDateRange } from "~/utils/dates";
 
 export default function DemoEventDetail() {

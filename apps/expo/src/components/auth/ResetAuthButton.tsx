@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { router, usePathname } from "expo-router";
-import { AlertTriangle, RefreshCw } from "lucide-react-native";
 
 import { Dialog } from "~/components/Dialog";
+import { AlertTriangle, RefreshCw } from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
 
 interface ResetAuthButtonProps {

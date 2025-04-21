@@ -11,8 +11,8 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
-import { ChevronDown, PlusIcon, Sparkles } from "lucide-react-native";
 
+import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
 import { fetchRecentPhotos } from "~/hooks/useMediaLibrary";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";

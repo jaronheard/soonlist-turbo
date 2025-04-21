@@ -1,7 +1,8 @@
 import React from "react";
 import { Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { Calendar, History, Plus } from "lucide-react-native";
+
+import { Calendar, History, Plus } from "~/components/icons";
 
 interface EventStatsProps {
   capturesThisWeek: number;

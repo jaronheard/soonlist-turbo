@@ -8,9 +8,9 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { router } from "expo-router";
-import { ChevronUp } from "lucide-react-native";
 import { toast } from "sonner-native";
 
+import { ChevronUp } from "~/components/icons";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useOneSignal } from "~/providers/OneSignalProvider";

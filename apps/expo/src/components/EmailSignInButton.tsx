@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Mail } from "lucide-react-native";
+
+import { Mail } from "~/components/icons";
 
 interface EmailSignInButtonProps {
   onPress: () => void;

@@ -8,9 +8,9 @@ import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
-import { X } from "lucide-react-native";
 import { usePostHog } from "posthog-react-native";
 
+import { X } from "~/components/icons";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { logError } from "../utils/errorLogging";
 import { AppleSignInButton } from "./AppleSignInButton";

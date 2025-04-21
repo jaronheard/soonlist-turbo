@@ -14,9 +14,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Check, ChevronDown, Search, X } from "lucide-react-native";
 import moment from "moment-timezone";
 
+import { Check, ChevronDown, Search, X } from "~/components/icons";
 import { getUserTimeZone } from "~/utils/dates";
 import { logError } from "../utils/errorLogging";
 

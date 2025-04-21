@@ -80,7 +80,6 @@
     "expo-task-manager": "~12.0.3",
     "expo-updates": "~0.26.10",
     "expo-web-browser": "~14.0.1",
-    "lucide-react-native": "^0.424.0",
     "moment-timezone": "^0.5.47",
     "nativewind": "~4.1.23",
     "onesignal-expo-plugin": "^2.0.3",

@@ -4,15 +4,15 @@ import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
+import * as DropdownMenu from "zeego/dropdown-menu";
+
 import {
   HelpCircle,
   LogOut,
   MessageCircle,
   ShareIcon,
   User,
-} from "lucide-react-native";
-import * as DropdownMenu from "zeego/dropdown-menu";
-
+} from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
 import { logError } from "../utils/errorLogging";
 import { UserProfileFlair } from "./UserProfileFlair";
