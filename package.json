@@ -14,6 +14,7 @@
     "db:studio:prod": "pnpm -F db studio:prod",
     "dev": "turbo dev --parallel",
     "dev:expo": "pnpm -F @soonlist/expo dev",
+    "dev:expo:prod": "pnpm -F @soonlist/expo dev:prod",
     "dev:no-expo": "turbo dev --filter=!@soonlist/expo",
     "format": "turbo format --continue -- --cache --cache-location .cache/.prettiercache",
     "format:fix": "turbo format --continue -- --write --cache --cache-location .cache/.prettiercache",
