@@ -10,7 +10,7 @@
     "debug": "open 'rndebugger://set-debugger-loc?host=localhost&port=19000'",
     "dev:android": "pnpm with-env expo start --android",
     "dev:ios": "pnpm with-env expo start --ios",
-    "dev": "pnpm with-env expo start --clear",
+    "dev": "pnpm with-env expo start --clear --no-dev",
     "test": "pnpm with-env maestro test .maestro/local/",
     "eas:build.dev.device.android": "pnpm with-env eas build --profile development-device --platform android",
     "eas:build.dev.device.ios": "pnpm with-env eas build --profile development-device --platform ios",
@@ -119,6 +119,7 @@
     "@types/invariant": "^2.2.37",
     "@types/react": "^18.3.18",
     "eslint": "^9.1.1",
+    "expo-atlas": "^0.4.0",
     "prettier": "^3.2.5",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5"

@@ -16,6 +16,12 @@ module.exports = withTurborepoManagedCache(
       serializer: {
         customSerializer: createSentryMetroSerializer(),
       },
+      transformer: {
+        transform: {
+          experimentalImportSupport: true,
+          inlineRequires: true,
+        },
+      },
     }),
   ),
 );
