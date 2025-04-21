@@ -1,8 +1,8 @@
 import React from "react";
 import { Text, TouchableOpacity } from "react-native";
-import { Sparkles } from "lucide-react-native";
 
 import type { ImageSource } from "~/components/demoData";
+import { Sparkles } from "~/components/icons";
 import { cn } from "~/utils/cn";
 
 interface CaptureEventButtonProps {

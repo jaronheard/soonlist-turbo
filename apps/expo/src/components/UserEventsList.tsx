@@ -15,6 +15,10 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
+
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+
+import type { RouterOutputs } from "~/utils/api";
 import {
   CalendarPlus,
   Copy,
@@ -24,11 +28,7 @@ import {
   MoreVertical,
   Plus,
   User,
-} from "lucide-react-native";
-
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
-
-import type { RouterOutputs } from "~/utils/api";
+} from "~/components/icons";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useAppStore } from "~/store";
 import { api } from "~/utils/api";

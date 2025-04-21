@@ -10,10 +10,10 @@ import {
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
-import { Camera, ChevronRight, ImagePlus } from "lucide-react-native";
 
 import type { ImageSource } from "~/components/demoData";
 import type { RecentPhoto } from "~/store";
+import { Camera, ChevronRight, ImagePlus } from "~/components/icons";
 import { cn } from "~/utils/cn";
 
 interface PhotoGridProps {

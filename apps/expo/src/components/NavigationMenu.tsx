@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { Check, ChevronDown } from "lucide-react-native";
 
+import { Check, ChevronDown } from "~/components/icons";
 import { logDebug } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import {

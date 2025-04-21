@@ -1,8 +1,8 @@
 import React from "react";
 import { Animated, Pressable, useWindowDimensions } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
-import { Heart } from "lucide-react-native";
 
+import { Heart } from "~/components/icons";
 import { api } from "~/utils/api";
 
 interface SaveButtonProps {

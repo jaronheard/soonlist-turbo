@@ -1,7 +1,10 @@
-import type { LucideIcon } from "lucide-react-native";
 import React from "react";
 import { Dimensions, TouchableOpacity, View } from "react-native";
 import * as Haptics from "expo-haptics";
+import { toast } from "sonner-native";
+
+import type { LucideIcon } from "~/components/icons";
+import type { RouterOutputs } from "~/utils/api";
 import {
   CalendarPlus,
   EyeOff,
@@ -14,10 +17,7 @@ import {
   QrCode,
   ShareIcon,
   Trash2,
-} from "lucide-react-native";
-import { toast } from "sonner-native";
-
-import type { RouterOutputs } from "~/utils/api";
+} from "~/components/icons";
 import {
   ContextMenuContent,
   ContextMenuItem,

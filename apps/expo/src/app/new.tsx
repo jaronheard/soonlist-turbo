@@ -3,11 +3,11 @@ import { Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { X } from "lucide-react-native";
 import { toast } from "sonner-native";
 
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
+import { X } from "~/components/icons";
 import { NewEventHeader } from "~/components/NewEventHeader";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInitializeInput } from "~/hooks/useInitializeInput";

@@ -1,6 +1,7 @@
 import React from "react";
 import { Linking, Pressable, Text, View } from "react-native";
-import { X } from "lucide-react-native";
+
+import { X } from "~/components/icons";
 
 interface PhotoAccessPromptProps {
   onClose?: () => void;

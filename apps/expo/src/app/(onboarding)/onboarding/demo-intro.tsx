@@ -11,10 +11,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Camera, ChevronDown, List, Plus, Sparkles } from "lucide-react-native";
 import { toast } from "sonner-native";
 
 import { DemoProgressBar } from "~/components/DemoProgressBar";
+import { Camera, ChevronDown, List, Plus, Sparkles } from "~/components/icons";
 import { SkipDemoButton } from "~/components/SkipDemoButton";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
