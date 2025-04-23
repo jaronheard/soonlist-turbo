@@ -226,6 +226,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                     borderColor: "white",
                   }}
                   contentFit="cover"
+                  contentPosition="top"
                   cachePolicy="disk"
                   transition={100}
                 />
