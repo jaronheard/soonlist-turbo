@@ -172,6 +172,9 @@ export default function DemoCaptureScreen() {
                 onCameraPress={handleCameraPress}
                 onMorePhotos={handleMorePhotos}
                 selectedUri={selectedEvent.imageUri ?? null}
+                isLoadingMore={false}
+                hasNextPage={false}
+                onEndReached={() => {}}
               />
             </View>
           </View>

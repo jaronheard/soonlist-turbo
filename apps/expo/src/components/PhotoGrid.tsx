@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import {
   ActionSheetIOS,
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Linking,
@@ -25,6 +26,9 @@ interface PhotoGridProps {
   onMorePhotos: () => void;
   selectedUri: string | ImageSource | null;
   containerClassName?: string;
+  isLoadingMore?: boolean;
+  hasNextPage?: boolean;
+  onEndReached?: () => void;
 }
 
 // Helper function to compare image URIs
@@ -137,6 +141,23 @@ const GridItem = React.memo(
   },
 );
 
+// Footer component for loading indicator
+const ListFooter = React.memo(
+  ({ isLoadingMore, hasNextPage }: { isLoadingMore?: boolean; hasNextPage?: boolean }) => {
+    if (!hasNextPage) return null;
+    
+    return (
+      <View className="items-center justify-center py-4">
+        {isLoadingMore ? (
+          <ActivityIndicator size="small" color="#5A32FB" />
+        ) : (
+          <Text className="text-sm text-neutral-3">Scroll to load more photos</Text>
+        )}
+      </View>
+    );
+  }
+);
+
 export const PhotoGrid = React.memo(
   ({
     hasMediaPermission,
@@ -147,6 +168,9 @@ export const PhotoGrid = React.memo(
     onMorePhotos,
     selectedUri,
     containerClassName,
+    isLoadingMore,
+    hasNextPage,
+    onEndReached,
   }: PhotoGridProps) => {
     const windowWidth = Dimensions.get("window").width;
     const spacing = 2;
@@ -213,6 +237,13 @@ export const PhotoGrid = React.memo(
       ],
     );
 
+    // Handle end reached for infinite scrolling
+    const handleEndReached = () => {
+      if (onEndReached && !isLoadingMore && hasNextPage) {
+        onEndReached();
+      }
+    };
+
     return (
       <View className={cn("flex-1", containerClassName)}>
         <View className="flex-row items-center justify-between py-2">
@@ -267,6 +298,11 @@ export const PhotoGrid = React.memo(
             getItemLayout={getItemLayout}
             contentContainerStyle={{ paddingBottom: 140, gap: spacing }}
             columnWrapperStyle={{ gap: spacing }}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              <ListFooter isLoadingMore={isLoadingMore} hasNextPage={hasNextPage} />
+            }
           />
         </View>
       </View>

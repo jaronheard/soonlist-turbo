@@ -15,6 +15,7 @@ import { PhotoAccessPrompt } from "~/components/PhotoAccessPrompt";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
+import { useRecentPhotos } from "~/hooks/useMediaLibrary";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore } from "~/store";
 import { logError } from "../utils/errorLogging";
@@ -32,10 +33,16 @@ export default function AddEventModal() {
     resetAddEventState,
     setIsOptionSelected,
     setActiveInput,
-    recentPhotos,
     hasMediaPermission,
     hasFullPhotoAccess,
   } = useAppStore();
+  
+  const { 
+    data: recentPhotos, 
+    isLoadingMore, 
+    hasNextPage, 
+    loadMorePhotos 
+  } = useRecentPhotos();
 
   const handleTextChange = useCallback(
     (text: string) => {
@@ -108,7 +115,6 @@ export default function AddEventModal() {
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username) return;
 
-    // Store values needed for event creation before resetting state
     const eventData = {
       rawText: input,
       linkPreview: linkPreview ?? undefined,
@@ -120,7 +126,6 @@ export default function AddEventModal() {
     router.canGoBack() ? router.back() : router.replace("/feed");
     toast.info("Capturing in background. Add another?", { duration: 3000 });
 
-    // Reset state immediately for better UX
     resetAddEventState();
 
     try {
@@ -218,6 +223,9 @@ export default function AddEventModal() {
                     onCameraPress={handleCameraCapture}
                     onMorePhotos={handleMorePhotosPress}
                     selectedUri={imagePreview}
+                    isLoadingMore={isLoadingMore}
+                    hasNextPage={hasNextPage}
+                    onEndReached={loadMorePhotos}
                   />
                 </View>
               )}
