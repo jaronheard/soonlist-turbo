@@ -70,9 +70,13 @@ async function fetchRecentPhotosQueryFn(): Promise<PhotoAsset[] | null> {
       photos.map((photo) => Image.prefetch(photo.uri)),
     );
     prefetchResults.forEach((result, index) => {
-      if (result.status === "rejected") {
+      const isRejected = result.status === "rejected";
+      const isFulfilledAndFailed =
+        result.status === "fulfilled" && !result.value;
+
+      if (isRejected || isFulfilledAndFailed) {
         logDebug(
-          `[fetchRecentPhotosQueryFn] Failed to prefetch image ${photos[index]?.id}: ${result.reason}`,
+          `[fetchRecentPhotosQueryFn] Failed to prefetch image ${photos[index]?.id}`,
         );
       }
     });
