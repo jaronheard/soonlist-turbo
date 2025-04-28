@@ -24,10 +24,6 @@ async function fetchRecentPhotosQueryFn(): Promise<PhotoAsset[] | null> {
     const { status } = await MediaLibrary.getPermissionsAsync();
     const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
 
-    // Update permission state in store (redundant if useMediaPermissions is also used, but safe)
-    // Consider removing if useMediaPermissions hook is guaranteed to run first elsewhere
-    useAppStore.setState({ hasMediaPermission: isGranted });
-
     if (!isGranted) {
       logDebug(
         "[fetchRecentPhotosQueryFn] No permission to access media library",
@@ -61,8 +57,17 @@ async function fetchRecentPhotosQueryFn(): Promise<PhotoAsset[] | null> {
       `[fetchRecentPhotosQueryFn] Mapped photos in ${photosTime - assetsTime}ms`,
     );
 
-    // Prefetch all photos in parallel for faster display later
-    await Promise.all(photos.map((photo) => Image.prefetch(photo.uri)));
+    // Prefetch all photos in parallel, handling individual failures
+    const prefetchResults = await Promise.allSettled(
+      photos.map((photo) => Image.prefetch(photo.uri)),
+    );
+    prefetchResults.forEach((result, index) => {
+      if (result.status === "rejected") {
+        logDebug(
+          `[fetchRecentPhotosQueryFn] Failed to prefetch image ${photos[index]?.id}: ${result.reason}`,
+        );
+      }
+    });
     const prefetchTime = Date.now();
     logDebug(
       `[fetchRecentPhotosQueryFn] Prefetched photos in ${prefetchTime - photosTime}ms`,
@@ -126,6 +131,7 @@ export function useRecentPhotos() {
           );
           void queryClient.invalidateQueries({
             queryKey: recentPhotosQueryKey,
+            exact: true, // Ensure only this exact query is invalidated
           });
         }
       });
