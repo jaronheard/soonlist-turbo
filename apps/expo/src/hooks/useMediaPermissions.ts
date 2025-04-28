@@ -8,7 +8,9 @@ export const mediaPermissionsQueryKey = ["mediaPermissions"];
 
 async function fetchMediaPermissions() {
   const { status, accessPrivileges } = await MediaLibrary.getPermissionsAsync();
-  const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+  const isGranted =
+    status === MediaLibrary.PermissionStatus.GRANTED ||
+    accessPrivileges === "limited";
   const hasFullAccess = accessPrivileges === "all";
   return { isGranted, hasFullAccess };
 }

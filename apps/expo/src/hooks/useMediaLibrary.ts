@@ -21,12 +21,20 @@ async function fetchRecentPhotosQueryFn(): Promise<PhotoAsset[] | null> {
 
   try {
     // Check permissions directly within the query function
-    const { status } = await MediaLibrary.getPermissionsAsync();
-    const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+    const { status, accessPrivileges } =
+      await MediaLibrary.getPermissionsAsync();
+    // Allow proceeding if granted or limited access
+    const canAccessMedia =
+      status === MediaLibrary.PermissionStatus.GRANTED ||
+      accessPrivileges === "limited";
 
-    if (!isGranted) {
+    if (!canAccessMedia) {
       logDebug(
-        "[fetchRecentPhotosQueryFn] No permission to access media library",
+        "[fetchRecentPhotosQueryFn] No permission to access media library (status: " +
+          status +
+          ", access: " +
+          accessPrivileges +
+          ")",
       );
       // Return null or empty array if no permission, Tanstack Query will handle this state
       return null;

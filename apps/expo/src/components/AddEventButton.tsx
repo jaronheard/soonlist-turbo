@@ -31,7 +31,12 @@ export default function AddEventButton({
   showChevron = true,
 }: AddEventButtonProps) {
   const { resetAddEventState, setImagePreview, setInput, hasMediaPermission } =
-    useAppStore();
+    useAppStore((state) => ({
+      resetAddEventState: state.resetAddEventState,
+      setImagePreview: state.setImagePreview,
+      setInput: state.setInput,
+      hasMediaPermission: state.hasMediaPermission,
+    }));
   const { customerInfo, showProPaywallIfNeeded, isLoading } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
@@ -84,11 +89,16 @@ export default function AddEventButton({
         logDebug(
           "[AddEventButton] Media permission not granted, requesting...",
         );
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        permissionGranted = status === MediaLibrary.PermissionStatus.GRANTED;
+        const permissionResponse = await MediaLibrary.requestPermissionsAsync();
+        // Use accessPrivileges for iOS 14+ limited access, fallback to status
+        permissionGranted =
+          permissionResponse.status === MediaLibrary.PermissionStatus.GRANTED ||
+          permissionResponse.accessPrivileges === "limited";
 
         if (permissionGranted) {
-          logDebug("[AddEventButton] Media permission granted after request.");
+          logDebug(
+            "[AddEventButton] Media permission granted/limited after request.",
+          );
           // Invalidate query so useMediaPermissions hook updates the store
           await queryClient.invalidateQueries({
             queryKey: mediaPermissionsQueryKey,
@@ -100,7 +110,7 @@ export default function AddEventButton({
           logDebug("[AddEventButton] Media permission denied after request.");
         }
       } else {
-        logDebug("[AddEventButton] Media permission already granted.");
+        logDebug("[AddEventButton] Media permission already granted/limited.");
       }
 
       // Proceed only if permission is granted (either initially or after request)
