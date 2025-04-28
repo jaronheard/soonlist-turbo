@@ -27,9 +27,17 @@ interface AddEventButtonProps {
   showChevron?: boolean;
 }
 
+/**
+ * AddEventButton
+ * ---------------
+ * Navigates to the /add screen and preloads the most recent photo.
+ * The navigation happens instantly; media‑library work is done afterwards
+ * so the screen transition feels snappy.
+ */
 export default function AddEventButton({
   showChevron = true,
 }: AddEventButtonProps) {
+  // Zustand selectors
   const { resetAddEventState, setImagePreview, setInput, hasMediaPermission } =
     useAppStore((state) => ({
       resetAddEventState: state.resetAddEventState,
@@ -37,6 +45,7 @@ export default function AddEventButton({
       setInput: state.setInput,
       hasMediaPermission: state.hasMediaPermission,
     }));
+
   const { customerInfo, showProPaywallIfNeeded, isLoading } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
@@ -44,17 +53,16 @@ export default function AddEventButton({
   const queryClient = useQueryClient();
   const { refetch: refetchRecentPhotos } = useRecentPhotos();
 
-  // Ensure media permissions are managed and monitored
+  // Keep permission status up‑to‑date globally
   useMediaPermissions();
 
+  /**
+   * Small bounce for the chevron hint
+   */
   const translateY = useSharedValue(0);
-
   useEffect(() => {
     translateY.value = withRepeat(
-      withTiming(-12, {
-        duration: 500,
-        easing: Easing.inOut(Easing.sin),
-      }),
+      withTiming(-12, { duration: 500, easing: Easing.inOut(Easing.sin) }),
       -1,
       true,
     );
@@ -63,105 +71,91 @@ export default function AddEventButton({
     };
   }, [translateY]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      position: "absolute",
-      top: -150,
-      left: "50%",
-      transform: [{ translateX: -32 }, { translateY: translateY.value }],
-      zIndex: 10,
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    position: "absolute",
+    top: -150,
+    left: "50%",
+    transform: [{ translateX: -32 }, { translateY: translateY.value }],
+    zIndex: 10,
+  }));
 
+  /**
+   * Main press handler
+   * ------------------
+   * 1. Show paywall if needed.
+   * 2. Reset any previous draft.
+   * 3. Navigate immediately.
+   * 4. In the background: ensure permission → refresh photos → select latest.
+   */
   const handlePress = useCallback(async () => {
+    // 1. Paywall gate
     if (!hasUnlimited) {
       await showProPaywallIfNeeded();
       return;
     }
 
+    // 2. Clear draft state (so /add opens fresh)
     resetAddEventState();
 
-    try {
-      let permissionGranted = hasMediaPermission;
+    // 3. Navigate right away for instant feedback
+    router.push("/add");
 
-      // If permission is not already granted, request it
-      if (!permissionGranted) {
-        logDebug(
-          "[AddEventButton] Media permission not granted, requesting...",
-        );
-        const permissionResponse = await MediaLibrary.requestPermissionsAsync();
-        // Use accessPrivileges for iOS 14+ limited access, fallback to status
-        permissionGranted =
-          permissionResponse.status === MediaLibrary.PermissionStatus.GRANTED ||
-          permissionResponse.accessPrivileges === "limited";
+    // 4. Heavy work in background (don’t block UI)
+    void (async () => {
+      try {
+        let permissionGranted = hasMediaPermission;
+
+        if (!permissionGranted) {
+          logDebug("[AddEventButton] Requesting media permission …");
+          const permissionResponse =
+            await MediaLibrary.requestPermissionsAsync();
+          permissionGranted =
+            permissionResponse.status ===
+              MediaLibrary.PermissionStatus.GRANTED ||
+            permissionResponse.accessPrivileges === "limited";
+
+          if (permissionGranted) {
+            await queryClient.invalidateQueries({
+              queryKey: mediaPermissionsQueryKey,
+            });
+          }
+        }
 
         if (permissionGranted) {
-          logDebug(
-            "[AddEventButton] Media permission granted/limited after request.",
-          );
-          // Invalidate query so useMediaPermissions hook updates the store
-          await queryClient.invalidateQueries({
-            queryKey: mediaPermissionsQueryKey,
-          });
-        } else {
-          logDebug("[AddEventButton] Media permission denied after request.");
-        }
-      } else {
-        logDebug("[AddEventButton] Media permission already granted/limited.");
-      }
-
-      // Proceed only if permission is granted (either initially or after request)
-      if (permissionGranted) {
-        logDebug("[AddEventButton] Proceeding to fetch recent photos...");
-        const { data: photos, isSuccess } = await refetchRecentPhotos();
-
-        if (isSuccess && photos?.[0]?.uri) {
-          const firstUri = photos[0].uri;
-          logDebug(
-            `[AddEventButton] Setting image preview and input with URI: ${firstUri}`,
-          );
-          setImagePreview(firstUri, "add");
-          const filename = firstUri.split("/").pop() || "photo.jpg";
-          setInput(filename, "add");
+          const { data: photos, isSuccess } = await refetchRecentPhotos();
+          if (isSuccess && photos?.[0]?.uri) {
+            const uri = photos[0].uri;
+            setImagePreview(uri, "add");
+            const filename = uri.split("/").pop() || "photo.jpg";
+            setInput(filename, "add");
+            logDebug(`[AddEventButton] Selected latest photo ${uri}`);
+          }
         } else {
           logDebug(
-            "[AddEventButton] No photos found after refetch or refetch failed.",
+            "[AddEventButton] Permission denied – skipping photo refresh",
           );
-          setImagePreview(null, "add");
-          setInput("", "add");
         }
-      } else {
-        // If permission was denied (either initially or after request)
-        logDebug(
-          "[AddEventButton] Navigating to /add without photos due to denied permission.",
-        );
-        setImagePreview(null, "add");
-        setInput("", "add");
+      } catch (err) {
+        logError("Error in AddEventButton handlePress", err);
       }
-
-      logDebug("[AddEventButton] Navigating to /add");
-      router.push("/add");
-    } catch (error) {
-      logError("Error in AddEventButton handlePress", error);
-      // Reset state in case of error before navigating
-      setImagePreview(null, "add");
-      setInput("", "add");
-      router.push("/add");
-    }
+    })();
   }, [
     hasUnlimited,
     showProPaywallIfNeeded,
     resetAddEventState,
-    setImagePreview,
-    setInput,
+    hasMediaPermission,
     queryClient,
     refetchRecentPhotos,
-    hasMediaPermission, // Add hasMediaPermission dependency
+    setImagePreview,
+    setInput,
   ]);
 
+  /**
+   * UI
+   */
   return (
     <>
-      {/* Gradients container - completely ignore touches */}
+      {/* Background gradients */}
       <View className="absolute bottom-0 left-0 right-0" pointerEvents="none">
         <View className="absolute bottom-0 h-24 w-full">
           <BlurView
@@ -170,7 +164,6 @@ export default function AddEventButton({
             tint="light"
           />
         </View>
-
         <View className="absolute bottom-0 h-40 w-full">
           <LinearGradient
             colors={["transparent", "#5A32FB"]}
@@ -195,7 +188,7 @@ export default function AddEventButton({
         </View>
       </View>
 
-      {/* Button - separate from gradients in hierarchy */}
+      {/* Main action button */}
       {!isLoading && (
         <TouchableOpacity
           onPress={handlePress}
@@ -234,7 +227,7 @@ export default function AddEventButton({
         </TouchableOpacity>
       )}
 
-      {/* Chevron - separate from gradients in hierarchy */}
+      {/* Bouncing chevron */}
       {showChevron && (
         <Animated.View style={animatedStyle}>
           <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />
