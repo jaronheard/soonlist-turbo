@@ -101,7 +101,7 @@ export default function Page() {
             hasUnlimited={hasUnlimited}
             hideDiscoverableButton={true}
           />
-          <AddEventButton />
+          <AddEventButton showChevron={false} />
         </View>
       )}
     </View>
