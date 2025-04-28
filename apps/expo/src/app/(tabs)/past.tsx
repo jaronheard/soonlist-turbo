@@ -66,7 +66,7 @@ export default function PastEvents() {
             isFetchingNextPage={eventsQuery.isFetchingNextPage}
             hasUnlimited={hasUnlimited}
           />
-          <AddEventButton />
+          <AddEventButton showChevron={false} />
         </View>
       )}
     </View>
