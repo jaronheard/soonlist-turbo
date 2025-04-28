@@ -103,13 +103,14 @@ export function useRecentPhotos() {
   const queryClient = useQueryClient();
   // Read permission status once per render
   const hasMediaPermission = useAppStore((s) => s.hasMediaPermission);
+  const hasFullPhotoAccess = useAppStore((s) => s.hasFullPhotoAccess);
 
   const { data, isSuccess, ...queryRest } = useQuery({
     queryKey: recentPhotosQueryKey,
     queryFn: fetchRecentPhotosQueryFn,
-    // Enable the query only if permissions are granted initially
-    // It will be re-enabled automatically if permissions change and the hook reruns
-    enabled: hasMediaPermission,
+    // Enable the query automatically only if FULL permissions are granted initially
+    // It will still be manually fetchable with limited permissions via refetch()
+    enabled: hasFullPhotoAccess,
   });
 
   // Update Zustand store when query is successful
