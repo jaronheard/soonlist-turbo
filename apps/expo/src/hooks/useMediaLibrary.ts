@@ -1,71 +1,149 @@
+import { useEffect } from "react";
 import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useAppStore } from "~/store";
 import { logDebug, logError } from "~/utils/errorLogging";
 
-export async function fetchRecentPhotos() {
+// Define the query key
+export const recentPhotosQueryKey = ["recentPhotos"];
+
+interface PhotoAsset {
+  id: string;
+  uri: string;
+}
+
+// The core query function
+async function fetchRecentPhotosQueryFn(): Promise<PhotoAsset[] | null> {
   const startTime = Date.now();
-  logDebug("[fetchRecentPhotos] Starting to load recent photos");
-  let isGranted = false;
-  let hasFullAccess = false;
+  logDebug("[fetchRecentPhotosQueryFn] Starting query");
 
   try {
-    // First check permissions
-    const { status, accessPrivileges } =
-      await MediaLibrary.getPermissionsAsync();
-    isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
-    hasFullAccess = accessPrivileges === "all";
+    // Check permissions directly within the query function
+    const { status } = await MediaLibrary.getPermissionsAsync();
+    const isGranted = status === MediaLibrary.PermissionStatus.GRANTED;
 
-    // Update permission state
-    useAppStore.setState({
-      hasMediaPermission: isGranted,
-      hasFullPhotoAccess: hasFullAccess,
-    });
+    // Update permission state in store (redundant if useMediaPermissions is also used, but safe)
+    // Consider removing if useMediaPermissions hook is guaranteed to run first elsewhere
+    useAppStore.setState({ hasMediaPermission: isGranted });
 
     if (!isGranted) {
-      logDebug("[fetchRecentPhotos] No permission to access media library");
+      logDebug(
+        "[fetchRecentPhotosQueryFn] No permission to access media library",
+      );
+      // Return null or empty array if no permission, Tanstack Query will handle this state
       return null;
     }
 
-    logDebug("[fetchRecentPhotos] Getting assets");
+    logDebug("[fetchRecentPhotosQueryFn] Getting assets");
     const { assets } = await MediaLibrary.getAssetsAsync({
-      first: 15,
+      first: 15, // Fetch a reasonable number for the "recent" context
       sortBy: MediaLibrary.SortBy.creationTime,
       mediaType: [MediaLibrary.MediaType.photo],
     });
     const assetsTime = Date.now();
-    logDebug(`[fetchRecentPhotos] Got assets in ${assetsTime - startTime}ms`);
+    logDebug(
+      `[fetchRecentPhotosQueryFn] Got assets in ${assetsTime - startTime}ms`,
+    );
 
-    const photos = assets.map((asset) => ({
+    if (assets.length === 0) {
+      logDebug("[fetchRecentPhotosQueryFn] No photos found");
+      return [];
+    }
+
+    const photos: PhotoAsset[] = assets.map((asset) => ({
       id: asset.id,
       uri: asset.uri,
     }));
     const photosTime = Date.now();
-    logDebug(`[fetchRecentPhotos] Got photos in ${photosTime - assetsTime}ms`);
+    logDebug(
+      `[fetchRecentPhotosQueryFn] Mapped photos in ${photosTime - assetsTime}ms`,
+    );
 
-    // Prefetch all photos in parallel
+    // Prefetch all photos in parallel for faster display later
     await Promise.all(photos.map((photo) => Image.prefetch(photo.uri)));
     const prefetchTime = Date.now();
     logDebug(
-      `[fetchRecentPhotos] Prefetched photos in ${prefetchTime - photosTime}ms`,
+      `[fetchRecentPhotosQueryFn] Prefetched photos in ${prefetchTime - photosTime}ms`,
     );
-
-    // Save in store
-    useAppStore.setState({ recentPhotos: photos });
 
     const totalTime = Date.now() - startTime;
     logDebug(
-      `[fetchRecentPhotos] Finished loading ${photos.length} photos in ${totalTime}ms total`,
+      `[fetchRecentPhotosQueryFn] Finished query for ${photos.length} photos in ${totalTime}ms`,
     );
 
     return photos;
   } catch (error) {
     const duration = Date.now() - startTime;
     logError(
-      `[fetchRecentPhotos] Error loading recent photos after ${duration}ms total. Permission state: isGranted=${isGranted}, hasFullAccess=${hasFullAccess}`,
+      `[fetchRecentPhotosQueryFn] Error loading recent photos after ${duration}ms`,
       error,
     );
-    return null;
+    // Throw error so Tanstack Query catches it
+    throw error;
   }
+}
+
+// The Tanstack Query hook
+export function useRecentPhotos() {
+  const queryClient = useQueryClient();
+  // Read permission status once per render
+  const hasMediaPermission = useAppStore((s) => s.hasMediaPermission);
+
+  const { data, isSuccess, ...queryRest } = useQuery({
+    queryKey: recentPhotosQueryKey,
+    queryFn: fetchRecentPhotosQueryFn,
+    // Enable the query only if permissions are granted initially
+    // It will be re-enabled automatically if permissions change and the hook reruns
+    enabled: hasMediaPermission,
+  });
+
+  // Update Zustand store when query is successful
+  useEffect(() => {
+    if (isSuccess && data) {
+      useAppStore.setState({ recentPhotos: data });
+      logDebug("[useRecentPhotos] Updated Zustand store with recent photos");
+    } else if (isSuccess && data === null) {
+      useAppStore.setState({ recentPhotos: [] });
+      logDebug(
+        "[useRecentPhotos] Cleared recent photos in Zustand store due to null data (likely permissions)",
+      );
+    }
+  }, [data, isSuccess]);
+
+  // Effect to listen for media library changes and invalidate query
+  useEffect(() => {
+    let subscription: MediaLibrary.Subscription | undefined;
+
+    // Use the stable 'hasMediaPermission' value read at the hook's top level
+    if (hasMediaPermission) {
+      logDebug("[useRecentPhotos] Subscribing to media library updates");
+      subscription = MediaLibrary.addListener(({ hasIncrementalChanges }) => {
+        if (hasIncrementalChanges) {
+          logDebug(
+            "[useRecentPhotos] Media library changed, invalidating photos query",
+          );
+          void queryClient.invalidateQueries({
+            queryKey: recentPhotosQueryKey,
+          });
+        }
+      });
+    } else {
+      logDebug(
+        "[useRecentPhotos] Skipping media library subscription (no permission)",
+      );
+    }
+
+    return () => {
+      if (subscription) {
+        logDebug("[useRecentPhotos] Unsubscribing from media library updates");
+        subscription.remove();
+      }
+    };
+    // Depend on the queryClient and the permission status read from the store
+  }, [queryClient, hasMediaPermission]);
+
+  // Return the query result and client for potential direct interaction
+  return { data, isSuccess, ...queryRest, queryClient };
 }

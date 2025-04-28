@@ -11,12 +11,13 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
-import { fetchRecentPhotos } from "~/hooks/useMediaLibrary";
+import { recentPhotosQueryKey, useRecentPhotos } from "~/hooks/useMediaLibrary";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
-import { logError } from "../utils/errorLogging";
+import { logDebug, logError } from "../utils/errorLogging";
 
 interface AddEventButtonProps {
   showChevron?: boolean;
@@ -30,21 +31,22 @@ export default function AddEventButton({
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
+  const queryClient = useQueryClient();
+  const { refetch: refetchRecentPhotos } = useRecentPhotos();
+
   const translateY = useSharedValue(0);
 
-  // Start animation on mount
   useEffect(() => {
     translateY.value = withRepeat(
       withTiming(-12, {
         duration: 500,
         easing: Easing.inOut(Easing.sin),
       }),
-      -1, // Infinite repeats
-      true, // Reverse animation
+      -1,
+      true,
     );
-
     return () => {
-      translateY.value = 0; // Reset value and cancel any ongoing animation
+      translateY.value = 0;
     };
   }, [translateY]);
 
@@ -67,24 +69,43 @@ export default function AddEventButton({
     resetAddEventState();
 
     try {
+      logDebug("[AddEventButton] Requesting media permissions...");
       const { status } = await MediaLibrary.requestPermissionsAsync();
+
       if (status !== MediaLibrary.PermissionStatus.GRANTED) {
+        logDebug(
+          "[AddEventButton] Media permission denied, navigating to /add",
+        );
+        await queryClient.invalidateQueries({ queryKey: recentPhotosQueryKey });
         router.push("/add");
         return;
       }
 
-      const photos = await fetchRecentPhotos();
+      logDebug(
+        "[AddEventButton] Media permission granted, refetching recent photos...",
+      );
+      const { data: photos, isSuccess } = await refetchRecentPhotos();
 
-      if (photos?.[0]?.uri) {
+      if (isSuccess && photos?.[0]?.uri) {
         const firstUri = photos[0].uri;
+        logDebug(
+          `[AddEventButton] Setting image preview and input with URI: ${firstUri}`,
+        );
         setImagePreview(firstUri, "add");
-        const filename = firstUri.split("/").pop() || "";
+        const filename = firstUri.split("/").pop() || "photo.jpg";
         setInput(filename, "add");
+      } else {
+        logDebug(
+          "[AddEventButton] No photos found after refetch or refetch failed.",
+        );
+        setImagePreview(null, "add");
+        setInput("", "add");
       }
 
+      logDebug("[AddEventButton] Navigating to /add");
       router.push("/add");
     } catch (error) {
-      logError("Error in AddEventButton", error);
+      logError("Error in AddEventButton handlePress", error);
       router.push("/add");
     }
   }, [
@@ -93,6 +114,8 @@ export default function AddEventButton({
     resetAddEventState,
     setImagePreview,
     setInput,
+    queryClient,
+    refetchRecentPhotos,
   ]);
 
   return (
