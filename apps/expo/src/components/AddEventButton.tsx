@@ -192,7 +192,7 @@ export default function AddEventButton({
       {!isLoading && (
         <TouchableOpacity
           onPress={handlePress}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          className="absolute bottom-8 self-center"
         >
           {hasUnlimited ? (
             <View
