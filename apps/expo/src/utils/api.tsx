@@ -44,7 +44,19 @@ const getBaseUrl = () => {
  */
 export function TRPCProvider(props: { children: React.ReactNode }) {
   const { getToken } = useAuth();
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            networkMode: "offlineFirst",
+          },
+          mutations: {
+            networkMode: "offlineFirst",
+          },
+        },
+      }),
+  );
   const [trpcClient] = useState(() =>
     api.createClient({
       links: [
