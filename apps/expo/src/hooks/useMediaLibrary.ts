@@ -71,12 +71,14 @@ async function fetchRecentPhotosQueryFn(): Promise<PhotoAsset[] | null> {
     );
     prefetchResults.forEach((result, index) => {
       const isRejected = result.status === "rejected";
-      const isFulfilledAndFailed =
-        result.status === "fulfilled" && !result.value;
+      const photoId = photos[index]?.id ?? "unknown"; // Get photo ID safely
 
-      if (isRejected || isFulfilledAndFailed) {
+      if (isRejected) {
+        // Log the rejection reason
         logDebug(
-          `[fetchRecentPhotosQueryFn] Failed to prefetch image ${photos[index]?.id}`,
+          `[fetchRecentPhotosQueryFn] Failed to prefetch image ${photoId} (Rejected)`,
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          { error: result.reason as unknown }, // Cast reason to unknown
         );
       }
     });
