@@ -1,7 +1,10 @@
 import { useState } from "react";
 import Constants from "expo-constants";
 import { useAuth } from "@clerk/clerk-expo";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import superjson from "superjson";
@@ -49,6 +52,7 @@ export function TRPCProvider(props: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
+            gcTime: Infinity, // Use Infinity gcTime with persistence
             networkMode: "offlineFirst",
           },
           mutations: {
@@ -84,11 +88,18 @@ export function TRPCProvider(props: { children: React.ReactNode }) {
     }),
   );
 
+  const asyncStoragePersister = createAsyncStoragePersister({
+    storage: AsyncStorage,
+  });
+
   return (
     <api.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister: asyncStoragePersister }}
+      >
         {props.children}
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </api.Provider>
   );
 }
