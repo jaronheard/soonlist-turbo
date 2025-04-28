@@ -103,9 +103,6 @@ export default function AddEventButton({
           await queryClient.invalidateQueries({
             queryKey: mediaPermissionsQueryKey,
           });
-          // Manually update state here if immediate update is needed before query refetches,
-          // though usually invalidation is sufficient if subsequent logic depends on the hook's state update.
-          // useAppStore.setState({ hasMediaPermission: true }); // Optional immediate update
         } else {
           logDebug("[AddEventButton] Media permission denied after request.");
         }
@@ -138,7 +135,6 @@ export default function AddEventButton({
         logDebug(
           "[AddEventButton] Navigating to /add without photos due to denied permission.",
         );
-        // Reset image preview/input if permission denied after being potentially set earlier? No, handled by resetAddEventState.
         setImagePreview(null, "add");
         setInput("", "add");
       }
