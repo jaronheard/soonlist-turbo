@@ -26,7 +26,7 @@ export default function AddEventButton({
   showChevron = true,
 }: AddEventButtonProps) {
   const { resetAddEventState, setImagePreview, setInput } = useAppStore();
-  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
+  const { customerInfo, showProPaywallIfNeeded, isLoading } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
@@ -94,6 +94,10 @@ export default function AddEventButton({
     setImagePreview,
     setInput,
   ]);
+
+  if (isLoading) {
+    return null; // Or a loading indicator
+  }
 
   return (
     <View className="absolute bottom-0 left-0 right-0">
