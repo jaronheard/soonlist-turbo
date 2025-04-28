@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   Easing,
@@ -22,15 +22,21 @@ export default function DemoIntroScreen() {
   const translateY = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Start the animation immediately
-  translateY.value = withRepeat(
-    withTiming(-12, {
-      duration: 500,
-      easing: Easing.inOut(Easing.sin),
-    }),
-    -1,
-    true,
-  );
+  // Start the animation immediately on mount
+  useEffect(() => {
+    translateY.value = withRepeat(
+      withTiming(-12, {
+        duration: 500,
+        easing: Easing.inOut(Easing.sin),
+      }),
+      -1, // Infinite repeats
+      true, // Reverse animation
+    );
+
+    return () => {
+      translateY.value = 0; // Reset value and cancel any ongoing animation
+    };
+  }, [translateY]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
