@@ -14,7 +14,7 @@ import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
-import { useRecentPhotos } from "~/hooks/useMediaLibrary";
+import { recentPhotosQueryKey, useRecentPhotos } from "~/hooks/useMediaLibrary";
 import {
   mediaPermissionsQueryKey,
   useMediaPermissions,
@@ -83,9 +83,11 @@ export default function AddEventButton({
    * Main press handler
    * ------------------
    * 1. Show paywall if needed.
-   * 2. Reset any previous draft.
-   * 3. Navigate immediately.
-   * 4. In the background: ensure permission → refresh photos → select latest.
+   * 2. Grab any cached photos **before** we wipe redux/query state
+   * 3. Clear draft state (so /add opens fresh)
+   * 4. Navigate right away for instant feedback
+   * 5. If we had something in the cache, show it **immediately**
+   * 6. Heavy work in background (don't block UI)
    */
   const handlePress = useCallback(async () => {
     // 1. Paywall gate
@@ -94,13 +96,28 @@ export default function AddEventButton({
       return;
     }
 
-    // 2. Clear draft state (so /add opens fresh)
+    // 2. Grab any cached photos **before** we wipe redux/query state
+    interface CachedPhoto {
+      uri: string;
+    }
+    const cachedPhotos =
+      queryClient.getQueryData<CachedPhoto[]>(recentPhotosQueryKey);
+    const initialUri = cachedPhotos?.[0]?.uri;
+
+    // 3. Clear draft state (so /add opens fresh)
     resetAddEventState();
 
-    // 3. Navigate right away for instant feedback
+    // 4. Navigate right away for instant feedback
     router.push("/add");
 
-    // 4. Heavy work in background (don’t block UI)
+    // 5. If we had something in the cache, show it **immediately**
+    if (initialUri) {
+      setImagePreview(initialUri, "add");
+      const filename = initialUri.split("/").pop() || "photo.jpg";
+      setInput(filename, "add");
+    }
+
+    // 6. Heavy work in background (don't block UI)
     void (async () => {
       try {
         let permissionGranted = hasMediaPermission;
