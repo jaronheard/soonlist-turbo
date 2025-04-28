@@ -60,7 +60,8 @@ function MyFeed() {
 
   const isAddingEvent = pendingAIMutations.length > 0;
 
-  const noLifetimeCaptures = statsQuery.data?.allTimeEvents === 0;
+  // Check if the user has no upcoming events
+  const noUpcomingEvents = events.length === 0 && !isAddingEvent;
 
   if (!isLoaded) {
     return (
@@ -96,7 +97,7 @@ function MyFeed() {
             promoCard={{ type: "addEvents" }}
             hasUnlimited={hasUnlimited}
           />
-          <AddEventButton showChevron={noLifetimeCaptures} />
+          <AddEventButton showChevron={noUpcomingEvents} />
         </View>
       )}
     </View>
