@@ -11,12 +11,17 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
-import { fetchRecentPhotos } from "~/hooks/useMediaLibrary";
+import { useRecentPhotos } from "~/hooks/useMediaLibrary";
+import {
+  mediaPermissionsQueryKey,
+  useMediaPermissions,
+} from "~/hooks/useMediaPermissions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
-import { logError } from "../utils/errorLogging";
+import { logDebug, logError } from "../utils/errorLogging";
 
 interface AddEventButtonProps {
   showChevron?: boolean;
@@ -25,26 +30,36 @@ interface AddEventButtonProps {
 export default function AddEventButton({
   showChevron = true,
 }: AddEventButtonProps) {
-  const { resetAddEventState, setImagePreview, setInput } = useAppStore();
+  const { resetAddEventState, setImagePreview, setInput, hasMediaPermission } =
+    useAppStore((state) => ({
+      resetAddEventState: state.resetAddEventState,
+      setImagePreview: state.setImagePreview,
+      setInput: state.setInput,
+      hasMediaPermission: state.hasMediaPermission,
+    }));
   const { customerInfo, showProPaywallIfNeeded, isLoading } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
+  const queryClient = useQueryClient();
+  const { refetch: refetchRecentPhotos } = useRecentPhotos();
+
+  // Ensure media permissions are managed and monitored
+  useMediaPermissions();
+
   const translateY = useSharedValue(0);
 
-  // Start animation on mount
   useEffect(() => {
     translateY.value = withRepeat(
       withTiming(-12, {
         duration: 500,
         easing: Easing.inOut(Easing.sin),
       }),
-      -1, // Infinite repeats
-      true, // Reverse animation
+      -1,
+      true,
     );
-
     return () => {
-      translateY.value = 0; // Reset value and cancel any ongoing animation
+      translateY.value = 0;
     };
   }, [translateY]);
 
@@ -67,24 +82,70 @@ export default function AddEventButton({
     resetAddEventState();
 
     try {
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== MediaLibrary.PermissionStatus.GRANTED) {
-        router.push("/add");
-        return;
+      let permissionGranted = hasMediaPermission;
+
+      // If permission is not already granted, request it
+      if (!permissionGranted) {
+        logDebug(
+          "[AddEventButton] Media permission not granted, requesting...",
+        );
+        const permissionResponse = await MediaLibrary.requestPermissionsAsync();
+        // Use accessPrivileges for iOS 14+ limited access, fallback to status
+        permissionGranted =
+          permissionResponse.status === MediaLibrary.PermissionStatus.GRANTED ||
+          permissionResponse.accessPrivileges === "limited";
+
+        if (permissionGranted) {
+          logDebug(
+            "[AddEventButton] Media permission granted/limited after request.",
+          );
+          // Invalidate query so useMediaPermissions hook updates the store
+          await queryClient.invalidateQueries({
+            queryKey: mediaPermissionsQueryKey,
+          });
+        } else {
+          logDebug("[AddEventButton] Media permission denied after request.");
+        }
+      } else {
+        logDebug("[AddEventButton] Media permission already granted/limited.");
       }
 
-      const photos = await fetchRecentPhotos();
+      // Proceed only if permission is granted (either initially or after request)
+      if (permissionGranted) {
+        logDebug("[AddEventButton] Proceeding to fetch recent photos...");
+        const { data: photos, isSuccess } = await refetchRecentPhotos();
 
-      if (photos?.[0]?.uri) {
-        const firstUri = photos[0].uri;
-        setImagePreview(firstUri, "add");
-        const filename = firstUri.split("/").pop() || "";
-        setInput(filename, "add");
+        if (isSuccess && photos?.[0]?.uri) {
+          const firstUri = photos[0].uri;
+          logDebug(
+            `[AddEventButton] Setting image preview and input with URI: ${firstUri}`,
+          );
+          setImagePreview(firstUri, "add");
+          const filename = firstUri.split("/").pop() || "photo.jpg";
+          setInput(filename, "add");
+        } else {
+          logDebug(
+            "[AddEventButton] No photos found after refetch or refetch failed.",
+          );
+          setImagePreview(null, "add");
+          setInput("", "add");
+        }
+      } else {
+        // If permission was denied (either initially or after request)
+        logDebug(
+          "[AddEventButton] Navigating to /add without photos due to denied permission.",
+        );
+        setImagePreview(null, "add");
+        setInput("", "add");
       }
 
+      logDebug("[AddEventButton] Navigating to /add");
       router.push("/add");
     } catch (error) {
-      logError("Error in AddEventButton", error);
+      logError("Error in AddEventButton handlePress", error);
+      // Reset state in case of error before navigating
+      setImagePreview(null, "add");
+      setInput("", "add");
       router.push("/add");
     }
   }, [
@@ -93,6 +154,9 @@ export default function AddEventButton({
     resetAddEventState,
     setImagePreview,
     setInput,
+    queryClient,
+    refetchRecentPhotos,
+    hasMediaPermission, // Add hasMediaPermission dependency
   ]);
 
   return (
