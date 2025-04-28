@@ -194,6 +194,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   experiments: {
     tsconfigPaths: true,
     typedRoutes: true,
+    reactCompiler: true,
   },
   newArchEnabled: false,
   // plugins: ["expo-router"],

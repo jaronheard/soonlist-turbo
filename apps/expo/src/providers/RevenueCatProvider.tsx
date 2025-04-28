@@ -84,10 +84,12 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   };
 
   // Public login function exposed in the context
-  const login = useCallback(async (userIdToLogin: string) => {
-    await loginInternal(userIdToLogin);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const login = useCallback(
+    async (userIdToLogin: string) => {
+      await loginInternal(userIdToLogin);
+    },
+    [loginInternal],
+  );
 
   const logout = useCallback(async () => {
     if (!isInitialized) {
