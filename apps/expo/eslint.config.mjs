@@ -1,3 +1,5 @@
+import reactCompilerPlugin from "eslint-plugin-react-compiler";
+
 import baseConfig from "@soonlist/eslint-config/base";
 import reactConfig from "@soonlist/eslint-config/react";
 
@@ -8,4 +10,12 @@ export default [
   },
   ...baseConfig,
   ...reactConfig,
+  {
+    plugins: {
+      "react-compiler": reactCompilerPlugin,
+    },
+    rules: {
+      "react-compiler/react-compiler": "error",
+    },
+  },
 ];
