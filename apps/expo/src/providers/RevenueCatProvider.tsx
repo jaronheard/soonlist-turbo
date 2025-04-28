@@ -15,6 +15,7 @@ import { useOneSignal } from "./OneSignalProvider";
 
 interface RevenueCatContextType {
   isInitialized: boolean;
+  isLoading: boolean;
   customerInfo: CustomerInfo | null;
   login: (userId: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -29,6 +30,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   "use no memo";
 
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const { userId } = useAuth();
   const { hasNotificationPermission } = useOneSignal();
@@ -45,10 +47,12 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
 
         // Only try to log in if there's a userId after initialization
         if (userId) {
-          void loginInternal(userId);
+          await loginInternal(userId);
         }
       } catch (error) {
         logError("Failed to initialize RevenueCat", error);
+      } finally {
+        setIsLoading(false);
       }
     }
 
@@ -68,7 +72,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       logMessage("RevenueCat not initialized yet", { action: "login" });
       return;
     }
-
+    setIsLoading(true);
     try {
       const { customerInfo } = await Purchases.logIn(userIdToLogin);
       setCustomerInfo(customerInfo);
@@ -82,6 +86,8 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       logError("Error logging in to RevenueCat", error, {
         userId: userIdToLogin,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -97,11 +103,14 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       logMessage("RevenueCat not initialized yet", { action: "logout" });
       return;
     }
+    setIsLoading(true);
     try {
       await Purchases.logOut();
       setCustomerInfo(null);
     } catch (error) {
       logError("Error logging out from RevenueCat", error);
+    } finally {
+      setIsLoading(false);
     }
   }, [isInitialized]);
 
@@ -156,6 +165,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     <RevenueCatContext.Provider
       value={{
         isInitialized,
+        isLoading,
         customerInfo,
         login,
         logout,

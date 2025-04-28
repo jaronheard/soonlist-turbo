@@ -26,7 +26,7 @@ export default function AddEventButton({
   showChevron = true,
 }: AddEventButtonProps) {
   const { resetAddEventState, setImagePreview, setInput } = useAppStore();
-  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
+  const { customerInfo, showProPaywallIfNeeded, isLoading } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
@@ -96,84 +96,86 @@ export default function AddEventButton({
   ]);
 
   return (
-    <View className="absolute bottom-0 left-0 right-0">
-      <View className="absolute bottom-0 h-24 w-full">
-        <BlurView
-          intensity={10}
-          className="h-full w-full opacity-20"
-          tint="light"
-        />
+    <>
+      {/* Gradients container - completely ignore touches */}
+      <View className="absolute bottom-0 left-0 right-0" pointerEvents="none">
+        <View className="absolute bottom-0 h-24 w-full">
+          <BlurView
+            intensity={10}
+            className="h-full w-full opacity-20"
+            tint="light"
+          />
+        </View>
+
+        <View className="absolute bottom-0 h-40 w-full">
+          <LinearGradient
+            colors={["transparent", "#5A32FB"]}
+            locations={[0, 1]}
+            style={{
+              position: "absolute",
+              height: "100%",
+              width: "100%",
+              opacity: 0.3,
+            }}
+          />
+          <LinearGradient
+            colors={["transparent", "#E0D9FF"]}
+            locations={[0, 1]}
+            style={{
+              position: "absolute",
+              height: "100%",
+              width: "100%",
+              opacity: 0.1,
+            }}
+          />
+        </View>
       </View>
 
-      <View className="absolute bottom-0 h-40 w-full">
-        <LinearGradient
-          colors={["transparent", "#5A32FB"]}
-          locations={[0, 1]}
-          style={{
-            position: "absolute",
-            height: "100%",
-            width: "100%",
-            opacity: 0.3,
-          }}
-        />
-        <LinearGradient
-          colors={["transparent", "#E0D9FF"]}
-          locations={[0, 1]}
-          style={{
-            position: "absolute",
-            height: "100%",
-            width: "100%",
-            opacity: 0.1,
-          }}
-        />
-      </View>
-
-      {hasUnlimited ? (
+      {/* Button - separate from gradients in hierarchy */}
+      {!isLoading && (
         <TouchableOpacity
           onPress={handlePress}
           className="absolute bottom-8 left-1/2 -translate-x-1/2"
         >
-          <View
-            className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
-            style={{
-              shadowColor: "#5A32FB",
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.3,
-              shadowRadius: 6,
-              elevation: 8,
-            }}
-          >
-            <PlusIcon size={44} color="#FFF" strokeWidth={2} />
-          </View>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          onPress={handlePress}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        >
-          <View
-            className="w-full flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-3.5"
-            style={{
-              shadowColor: "#5A32FB",
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.3,
-              shadowRadius: 6,
-              elevation: 8,
-            }}
-          >
-            <Sparkles size={20} color="#FFF" />
-            <Text className="ml-2 text-2xl font-bold text-white">
-              Start your free trial
-            </Text>
-          </View>
+          {hasUnlimited ? (
+            <View
+              className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
+              style={{
+                shadowColor: "#5A32FB",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 8,
+              }}
+            >
+              <PlusIcon size={44} color="#FFF" strokeWidth={2} />
+            </View>
+          ) : (
+            <View
+              className="flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-3.5"
+              style={{
+                shadowColor: "#5A32FB",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 8,
+              }}
+            >
+              <Sparkles size={20} color="#FFF" />
+              <Text className="ml-2 text-2xl font-bold text-white">
+                Start your free trial
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       )}
 
+      {/* Chevron - separate from gradients in hierarchy */}
       {showChevron && (
         <Animated.View style={animatedStyle}>
           <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />
         </Animated.View>
       )}
-    </View>
+    </>
   );
 }
