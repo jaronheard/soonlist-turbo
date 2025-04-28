@@ -42,6 +42,10 @@ export default function AddEventButton({
       -1, // Infinite repeats
       true, // Reverse animation
     );
+
+    return () => {
+      translateY.value = 0; // Reset value and cancel any ongoing animation
+    };
   }, [translateY]);
 
   const animatedStyle = useAnimatedStyle(() => {
