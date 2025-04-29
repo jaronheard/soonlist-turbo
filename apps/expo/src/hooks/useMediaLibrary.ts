@@ -26,14 +26,9 @@ const PAGE_SIZE = 100; // Fixed page size of 100 assets
 const LOAD_THRESHOLD = 0.4; // Start loading when 40% from the end
 
 // The core query function
-async function fetchRecentPhotosQueryFn(
-  paginationParams?: PhotoPaginationParams,
-): Promise<{ photos: PhotoAsset[]; hasNextPage: boolean; endCursor: string | undefined } | null> {
+async function fetchRecentPhotosQueryFn(): Promise<PhotoAsset[] | null> {
   const startTime = Date.now();
-  const batchSize = paginationParams?.first || INITIAL_NUM_TO_RENDER;
-  const after = paginationParams?.after;
-  
-  logDebug(`[fetchRecentPhotosQueryFn] Starting query with batch size ${batchSize}${after ? ` after ${after}` : ''}`);
+  logDebug("[fetchRecentPhotosQueryFn] Starting query");
 
   try {
     // Check permissions directly within the query function
@@ -53,13 +48,12 @@ async function fetchRecentPhotosQueryFn(
           ")",
       );
       // Return null or empty array if no permission, Tanstack Query will handle this state
-      return { photos: [], hasNextPage: false, endCursor: undefined };
+      return null;
     }
 
     logDebug("[fetchRecentPhotosQueryFn] Getting assets");
-    const { assets, hasNextPage, endCursor } = await MediaLibrary.getAssetsAsync({
-      first: batchSize,
-      after,
+    const { assets } = await MediaLibrary.getAssetsAsync({
+      first: INITIAL_NUM_TO_RENDER,
       sortBy: MediaLibrary.SortBy.creationTime,
       mediaType: [MediaLibrary.MediaType.photo],
     });
@@ -70,7 +64,7 @@ async function fetchRecentPhotosQueryFn(
 
     if (assets.length === 0) {
       logDebug("[fetchRecentPhotosQueryFn] No photos found");
-      return { photos: [], hasNextPage: false, endCursor: undefined };
+      return null;
     }
 
     const photos: PhotoAsset[] = assets.map((asset) => ({
@@ -106,10 +100,10 @@ async function fetchRecentPhotosQueryFn(
 
     const totalTime = Date.now() - startTime;
     logDebug(
-      `[fetchRecentPhotosQueryFn] Finished query for ${photos.length} photos in ${totalTime}ms, hasNextPage: ${hasNextPage}`,
+      `[fetchRecentPhotosQueryFn] Finished query for ${photos.length} photos in ${totalTime}ms`,
     );
 
-    return { photos, hasNextPage, endCursor };
+    return photos;
   } catch (error) {
     const duration = Date.now() - startTime;
     logError(
@@ -143,7 +137,7 @@ export function useRecentPhotos() {
 
   const { data, isSuccess, isLoading, ...queryRest } = useQuery({
     queryKey: [...recentPhotosQueryKey, { after: undefined }],
-    queryFn: () => fetchRecentPhotosQueryFn({ first: INITIAL_NUM_TO_RENDER }),
+    queryFn: () => fetchRecentPhotosQueryFn(),
     // Enable the query automatically only if FULL permissions are granted initially
     // It will still be manually fetchable with limited permissions via refetch()
     enabled: hasFullPhotoAccess,

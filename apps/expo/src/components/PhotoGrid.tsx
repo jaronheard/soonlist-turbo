@@ -142,10 +142,6 @@ const GridItem = React.memo(
           placeholder={null}
           placeholderContentFit="cover"
           className="bg-muted/10"
-          // Add image optimization hints
-          resizeMode="fast"
-          // Target size for thumbnail (cell size)
-          targetSize={200}
         />
       </Pressable>
     );
