@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import {
   ActionSheetIOS,
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Linking,
@@ -16,6 +17,13 @@ import type { RecentPhoto } from "~/store";
 import { Camera, ChevronRight, ImagePlus } from "~/components/icons";
 import { cn } from "~/utils/cn";
 
+// Constants for FlatList performance optimization
+const NUM_COLUMNS = 4;
+const INITIAL_NUM_TO_RENDER = 36; // 12 visible + 24 buffer
+const MAX_TO_RENDER_PER_BATCH = 16;
+const WINDOW_SIZE = 5; // ~2 screens above & below
+const ON_END_REACHED_THRESHOLD = 0.4;
+
 interface PhotoGridProps {
   hasMediaPermission: boolean;
   hasFullPhotoAccess: boolean;
@@ -25,6 +33,9 @@ interface PhotoGridProps {
   onMorePhotos: () => void;
   selectedUri: string | ImageSource | null;
   containerClassName?: string;
+  isLoadingMore?: boolean;
+  hasNextPage?: boolean;
+  onEndReached?: () => void;
 }
 
 // Helper function to compare image URIs
@@ -131,10 +142,31 @@ const GridItem = React.memo(
           placeholder={null}
           placeholderContentFit="cover"
           className="bg-muted/10"
+          // Add image optimization hints
+          resizeMode="fast"
+          // Target size for thumbnail (cell size)
+          targetSize={200}
         />
       </Pressable>
     );
   },
+);
+
+// Footer component for loading indicator
+const ListFooter = React.memo(
+  ({ isLoadingMore, hasNextPage }: { isLoadingMore?: boolean; hasNextPage?: boolean }) => {
+    if (!hasNextPage) return null;
+    
+    return (
+      <View className="items-center justify-center py-4">
+        {isLoadingMore ? (
+          <ActivityIndicator size="small" color="#5A32FB" />
+        ) : (
+          <Text className="text-sm text-neutral-3">Scroll to load more photos</Text>
+        )}
+      </View>
+    );
+  }
 );
 
 export const PhotoGrid = React.memo(
@@ -147,14 +179,16 @@ export const PhotoGrid = React.memo(
     onMorePhotos,
     selectedUri,
     containerClassName,
+    isLoadingMore,
+    hasNextPage,
+    onEndReached,
   }: PhotoGridProps) => {
     const windowWidth = Dimensions.get("window").width;
     const spacing = 2;
-    const columns = 4;
     const containerPadding = 0;
     const availableWidth =
-      windowWidth - spacing * (columns - 1) - containerPadding * 2;
-    const imageSize = availableWidth / columns;
+      windowWidth - spacing * (NUM_COLUMNS - 1) - containerPadding * 2;
+    const imageSize = availableWidth / NUM_COLUMNS;
 
     const handleManagePress = () => {
       void Linking.openSettings();
@@ -180,10 +214,10 @@ export const PhotoGrid = React.memo(
           index: number,
         ) => ({
           length: imageSize,
-          offset: imageSize * Math.floor(index / columns),
+          offset: imageSize * Math.floor(index / NUM_COLUMNS),
           index,
         }),
-      [imageSize, columns],
+      [imageSize],
     );
 
     const renderItem = useMemo(
@@ -212,6 +246,13 @@ export const PhotoGrid = React.memo(
         onMorePhotos,
       ],
     );
+
+    // Handle end reached for infinite scrolling
+    const handleEndReached = () => {
+      if (onEndReached && !isLoadingMore && hasNextPage) {
+        onEndReached();
+      }
+    };
 
     return (
       <View className={cn("flex-1", containerClassName)}>
@@ -255,18 +296,23 @@ export const PhotoGrid = React.memo(
           <FlatList
             data={gridData}
             renderItem={renderItem}
-            numColumns={4}
+            numColumns={NUM_COLUMNS}
             showsVerticalScrollIndicator={false}
             keyExtractor={(item) => item.id}
             horizontal={false}
-            windowSize={5}
-            maxToRenderPerBatch={16}
+            windowSize={WINDOW_SIZE}
+            maxToRenderPerBatch={MAX_TO_RENDER_PER_BATCH}
             updateCellsBatchingPeriod={50}
-            initialNumToRender={12}
+            initialNumToRender={INITIAL_NUM_TO_RENDER}
             removeClippedSubviews={true}
             getItemLayout={getItemLayout}
             contentContainerStyle={{ paddingBottom: 140, gap: spacing }}
             columnWrapperStyle={{ gap: spacing }}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={ON_END_REACHED_THRESHOLD}
+            ListFooterComponent={
+              <ListFooter isLoadingMore={isLoadingMore} hasNextPage={hasNextPage} />
+            }
           />
         </View>
       </View>

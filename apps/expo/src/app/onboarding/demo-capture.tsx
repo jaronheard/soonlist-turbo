@@ -62,6 +62,14 @@ export default function DemoCaptureScreen() {
     setSelectedEvent(event);
   };
 
+  // Add the handlePhotoSelect function inside the component
+  const handlePhotoSelect = (uri: string | ImageSource) => {
+    const event = DEMO_CAPTURE_EVENTS.find((e) =>
+      compareImageUris(e.imageUri, uri),
+    );
+    if (event) handleEventSelect(event);
+  };
+
   const handleSubmit = () => {
     // Schedule a notification after the delay
     setTimeout(() => {
@@ -163,15 +171,13 @@ export default function DemoCaptureScreen() {
                 hasMediaPermission={true}
                 hasFullPhotoAccess={true}
                 recentPhotos={demoPhotos}
-                onPhotoSelect={(uri) => {
-                  const event = DEMO_CAPTURE_EVENTS.find((e) =>
-                    compareImageUris(e.imageUri, uri),
-                  );
-                  if (event) handleEventSelect(event);
-                }}
+                onPhotoSelect={handlePhotoSelect}
                 onCameraPress={handleCameraPress}
                 onMorePhotos={handleMorePhotos}
                 selectedUri={selectedEvent.imageUri ?? null}
+                isLoadingMore={false}
+                hasNextPage={false}
+                onEndReached={() => {}}
               />
             </View>
           </View>
