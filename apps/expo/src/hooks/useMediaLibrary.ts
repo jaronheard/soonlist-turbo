@@ -23,10 +23,16 @@ export interface PhotoPaginationParams {
 // Constants based on performance guidelines
 const INITIAL_NUM_TO_RENDER = 36; // 12 visible + 24 buffer
 const PAGE_SIZE = 100; // Fixed page size of 100 assets
-const LOAD_THRESHOLD = 0.4; // Start loading when 40% from the end
+// const LOAD_THRESHOLD = 0.4; // Start loading when 40% from the end
 
 // The core query function
-async function fetchRecentPhotosQueryFn(): Promise<PhotoAsset[] | null> {
+async function fetchRecentPhotosQueryFn(
+  params?: PhotoPaginationParams
+): Promise<{
+  photos: PhotoAsset[];
+  hasNextPage: boolean;
+  endCursor?: string;
+}> {
   const startTime = Date.now();
   logDebug("[fetchRecentPhotosQueryFn] Starting query");
 
@@ -45,26 +51,33 @@ async function fetchRecentPhotosQueryFn(): Promise<PhotoAsset[] | null> {
           status +
           ", access: " +
           accessPrivileges +
-          ")",
+          ")"
       );
-      // Return null or empty array if no permission, Tanstack Query will handle this state
-      return null;
+      // Return empty result if no permission
+      return {
+        photos: [],
+        hasNextPage: false,
+      };
     }
 
     logDebug("[fetchRecentPhotosQueryFn] Getting assets");
-    const { assets } = await MediaLibrary.getAssetsAsync({
-      first: INITIAL_NUM_TO_RENDER,
+    const { assets, hasNextPage, endCursor } = await MediaLibrary.getAssetsAsync({
+      first: params?.first || INITIAL_NUM_TO_RENDER,
+      after: params?.after,
       sortBy: MediaLibrary.SortBy.creationTime,
       mediaType: [MediaLibrary.MediaType.photo],
     });
     const assetsTime = Date.now();
     logDebug(
-      `[fetchRecentPhotosQueryFn] Got assets in ${assetsTime - startTime}ms`,
+      `[fetchRecentPhotosQueryFn] Got assets in ${assetsTime - startTime}ms`
     );
 
     if (assets.length === 0) {
       logDebug("[fetchRecentPhotosQueryFn] No photos found");
-      return null;
+      return {
+        photos: [],
+        hasNextPage: false,
+      };
     }
 
     const photos: PhotoAsset[] = assets.map((asset) => ({
@@ -73,12 +86,12 @@ async function fetchRecentPhotosQueryFn(): Promise<PhotoAsset[] | null> {
     }));
     const photosTime = Date.now();
     logDebug(
-      `[fetchRecentPhotosQueryFn] Mapped photos in ${photosTime - assetsTime}ms`,
+      `[fetchRecentPhotosQueryFn] Mapped photos in ${photosTime - assetsTime}ms`
     );
 
     // Prefetch all photos in parallel, handling individual failures
     const prefetchResults = await Promise.allSettled(
-      photos.map((photo) => Image.prefetch(photo.uri)),
+      photos.map((photo) => Image.prefetch(photo.uri))
     );
     prefetchResults.forEach((result, index) => {
       const isRejected = result.status === "rejected";
@@ -89,26 +102,30 @@ async function fetchRecentPhotosQueryFn(): Promise<PhotoAsset[] | null> {
         logDebug(
           `[fetchRecentPhotosQueryFn] Failed to prefetch image ${photoId} (Rejected)`,
           // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-          { error: result.reason as unknown }, // Cast reason to unknown
+          { error: result.reason as unknown } // Cast reason to unknown
         );
       }
     });
     const prefetchTime = Date.now();
     logDebug(
-      `[fetchRecentPhotosQueryFn] Prefetched photos in ${prefetchTime - photosTime}ms`,
+      `[fetchRecentPhotosQueryFn] Prefetched photos in ${prefetchTime - photosTime}ms`
     );
 
     const totalTime = Date.now() - startTime;
     logDebug(
-      `[fetchRecentPhotosQueryFn] Finished query for ${photos.length} photos in ${totalTime}ms`,
+      `[fetchRecentPhotosQueryFn] Finished query for ${photos.length} photos in ${totalTime}ms`
     );
 
-    return photos;
+    return {
+      photos,
+      hasNextPage: hasNextPage || false,
+      endCursor,
+    };
   } catch (error) {
     const duration = Date.now() - startTime;
     logError(
       `[fetchRecentPhotosQueryFn] Error loading recent photos after ${duration}ms`,
-      error,
+      error
     );
     // Throw error so Tanstack Query catches it
     throw error;
@@ -146,26 +163,14 @@ export function useRecentPhotos() {
   // Update Zustand store when query is successful
   useEffect(() => {
     if (isSuccess && data) {
-      const { photos, hasNextPage, endCursor } = data;
       setPaginationState({
-        allPhotos: photos,
-        hasNextPage,
-        endCursor,
+        allPhotos: data.photos,
+        hasNextPage: data.hasNextPage,
+        endCursor: data.endCursor,
         isLoadingMore: false,
       });
-      useAppStore.setState({ recentPhotos: photos });
+      useAppStore.setState({ recentPhotos: data.photos });
       logDebug("[useRecentPhotos] Updated Zustand store with recent photos");
-    } else if (isSuccess && data === null) {
-      setPaginationState({
-        allPhotos: [],
-        hasNextPage: false,
-        endCursor: undefined,
-        isLoadingMore: false,
-      });
-      useAppStore.setState({ recentPhotos: [] });
-      logDebug(
-        "[useRecentPhotos] Cleared recent photos in Zustand store due to null data (likely permissions)",
-      );
     }
   }, [data, isSuccess]);
 
@@ -184,21 +189,18 @@ export function useRecentPhotos() {
         after: paginationState.endCursor,
       });
 
-      if (result) {
-        const { photos, hasNextPage, endCursor } = result;
-        const newAllPhotos = [...paginationState.allPhotos, ...photos];
-        
-        setPaginationState({
-          allPhotos: newAllPhotos,
-          hasNextPage,
-          endCursor,
-          isLoadingMore: false,
-        });
-        
-        // Update the store with all photos
-        useAppStore.setState({ recentPhotos: newAllPhotos });
-        logDebug(`[useRecentPhotos] Added ${photos.length} more photos, total: ${newAllPhotos.length}`);
-      }
+      const newAllPhotos = [...paginationState.allPhotos, ...result.photos];
+      
+      setPaginationState({
+        allPhotos: newAllPhotos,
+        hasNextPage: result.hasNextPage,
+        endCursor: result.endCursor,
+        isLoadingMore: false,
+      });
+      
+      // Update the store with all photos
+      useAppStore.setState({ recentPhotos: newAllPhotos });
+      logDebug(`[useRecentPhotos] Added ${result.photos.length} more photos, total: ${newAllPhotos.length}`);
     } catch (error) {
       logError("[useRecentPhotos] Error loading more photos", error);
       setPaginationState(prev => ({ ...prev, isLoadingMore: false }));
@@ -215,7 +217,7 @@ export function useRecentPhotos() {
       subscription = MediaLibrary.addListener(({ hasIncrementalChanges }) => {
         if (hasIncrementalChanges) {
           logDebug(
-            "[useRecentPhotos] Media library changed, invalidating photos query",
+            "[useRecentPhotos] Media library changed, invalidating photos query"
           );
           void queryClient.invalidateQueries({
             queryKey: recentPhotosQueryKey,
@@ -233,7 +235,7 @@ export function useRecentPhotos() {
       });
     } else {
       logDebug(
-        "[useRecentPhotos] Skipping media library subscription (no permission)",
+        "[useRecentPhotos] Skipping media library subscription (no permission)"
       );
     }
 
