@@ -85,15 +85,6 @@ export function useCreateEvent() {
         ]);
       },
     });
-  const eventFromImage =
-    api.ai.eventFromImageThenCreateThenNotification.useMutation({
-      onSuccess: () => {
-        return Promise.all([
-          utils.event.getEventsForUser.invalidate(),
-          utils.event.getStats.invalidate(),
-        ]);
-      },
-    });
   const eventFromImageBase64 =
     api.ai.eventFromImageBase64ThenCreate.useMutation({
       onSuccess: () => {
@@ -171,7 +162,12 @@ export function useCreateEvent() {
           // 1. Optimize image and get base64
           const { base64, uri } = await optimizeImage(fileUri);
 
-          // 2. Create event with base64 image
+          // 2. Start CDN upload in parallel
+          const uploadPromise = uploadImageToCDN(uri).catch((error) => {
+            logError("Error uploading image to CDN", error);
+          });
+
+          // 3. Create event with base64 image
           const eventResult = await eventFromImageBase64.mutateAsync({
             base64Image: base64,
             userId,
@@ -185,8 +181,8 @@ export function useCreateEvent() {
             throw new Error(eventResult.error ?? "Failed to create event");
           }
 
-          // 3. Upload image to CDN in background
-          uploadImageToCDN(uri).catch((error) => {
+          // Wait for upload to complete in background
+          uploadPromise.catch((error) => {
             logError("Error uploading image to CDN", error);
           });
 
