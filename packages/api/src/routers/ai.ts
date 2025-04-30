@@ -47,7 +47,11 @@ const prototypeEventCreateFromUrlSchema = prototypeEventCreateBaseSchema.extend(
 
 const prototypeEventCreateFromBase64Schema =
   prototypeEventCreateBaseSchema.extend({
-    base64Image: z.string(),
+    // require at least 1 byte, cap around 500 KB (≈670 KB once base64-encoded)
+    base64Image: z
+      .string()
+      .min(1, "Image data missing")
+      .max(700_000, "Image exceeds size limit"),
   });
 
 function getDayBounds(timezone: string) {

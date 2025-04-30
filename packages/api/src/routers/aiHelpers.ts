@@ -70,16 +70,20 @@ function createLoggedObjectGenerator({
     generateObjectOptions: Parameters<typeof generateObject<T>>[0],
     loggingOptions: { name: string },
   ): Promise<ReturnType<typeof generateObject<T>>> => {
+    const loggedInput =
+      input.rawText ??
+      input.imageUrl ??
+      (input.base64Image ? "[base64 image omitted]" : undefined);
     const trace = langfuse.trace({
       name: loggingOptions.name,
       sessionId: ctx.auth.sessionId,
       userId: ctx.auth.userId,
-      input: input.rawText || input.imageUrl || input.base64Image,
+      input: loggedInput,
       version: promptVersion,
     });
     const generation = trace.generation({
       name: "generation",
-      input: input.rawText || input.imageUrl || input.base64Image,
+      input: loggedInput,
       model: MODEL,
       version: promptVersion,
     });
