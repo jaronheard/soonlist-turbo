@@ -24,6 +24,50 @@ interface CreateEventResult {
   error?: string;
 }
 
+async function optimizeImage(uri: string) {
+  const manipulatedImage = await ImageManipulator.manipulateAsync(
+    uri,
+    [{ resize: { width: 1284 } }],
+    { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP },
+  );
+
+  // Convert to base64
+  const base64 = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+
+  return {
+    base64,
+    uri: manipulatedImage.uri,
+  };
+}
+
+interface UploadResponse {
+  fileUrl: string;
+}
+
+async function uploadImageToCDN(uri: string): Promise<string> {
+  const response = await FileSystem.uploadAsync(
+    "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
+    uri,
+    {
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+      httpMethod: "POST",
+      headers: {
+        "Content-Type": "image/webp",
+        Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
+      },
+    },
+  );
+
+  if (response.status !== 200) {
+    throw new Error(`Upload failed with status ${response.status}`);
+  }
+
+  const parsedResponse = JSON.parse(response.body) as UploadResponse;
+  return parsedResponse.fileUrl;
+}
+
 export function useCreateEvent() {
   const { setIsImageLoading } = useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
@@ -43,6 +87,15 @@ export function useCreateEvent() {
     });
   const eventFromImage =
     api.ai.eventFromImageThenCreateThenNotification.useMutation({
+      onSuccess: () => {
+        return Promise.all([
+          utils.event.getEventsForUser.invalidate(),
+          utils.event.getStats.invalidate(),
+        ]);
+      },
+    });
+  const eventFromImageBase64 =
+    api.ai.eventFromImageBase64ThenCreate.useMutation({
       onSuccess: () => {
         return Promise.all([
           utils.event.getEventsForUser.invalidate(),
@@ -115,84 +168,29 @@ export function useCreateEvent() {
             throw new Error("Invalid image URI format");
           }
 
-          // 1. Manipulate image
-          let manipulatedImage;
-          try {
-            manipulatedImage = await ImageManipulator.manipulateAsync(
-              fileUri,
-              [{ resize: { width: 1284 } }],
-              { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP },
-            );
-          } catch (error) {
-            throw new Error(
-              `Failed to manipulate image: ${error instanceof Error ? error.message : "Unknown error"}`,
-            );
-          }
+          // 1. Optimize image and get base64
+          const { base64, uri } = await optimizeImage(fileUri);
 
-          // Validate manipulated image
-          if (!manipulatedImage.uri) {
-            throw new Error("Image manipulation failed - no URI returned");
-          }
-
-          // 2. Upload image
-          let response;
-          try {
-            response = await FileSystem.uploadAsync(
-              "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
-              manipulatedImage.uri,
-              {
-                uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-                httpMethod: "POST",
-                headers: {
-                  "Content-Type": "image/webp",
-                  Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
-                },
-              },
-            );
-          } catch (error) {
-            throw new Error(
-              `Failed to upload image: ${error instanceof Error ? error.message : "Network error"}`,
-            );
-          }
-
-          if (response.status !== 200) {
-            throw new Error(
-              `Upload failed with status ${response.status}: ${response.body}`,
-            );
-          }
-
-          // 3. Parse response
-          let fileUrl: string;
-          try {
-            if (!response.body) {
-              throw new Error("Empty response from upload server");
-            }
-            const parsed = JSON.parse(response.body) as { fileUrl?: string };
-            if (!parsed.fileUrl) {
-              throw new Error("No file URL in response");
-            }
-            fileUrl = parsed.fileUrl;
-          } catch (error) {
-            throw new Error(
-              `Failed to parse upload response: ${error instanceof Error ? error.message : "Invalid JSON"}`,
-            );
-          }
-
-          // 4. Create event
-          const result = (await eventFromImage.mutateAsync({
-            imageUrl: fileUrl,
+          // 2. Create event with base64 image
+          const eventResult = await eventFromImageBase64.mutateAsync({
+            base64Image: base64,
             userId,
             username,
             lists: [],
             timezone: userTimezone,
             visibility: "private",
-          })) as CreateEventResult;
+          });
 
-          if (!result.success) {
-            throw new Error(result.error ?? "Failed to create event");
+          if (!eventResult.success) {
+            throw new Error(eventResult.error ?? "Failed to create event");
           }
 
-          return result.eventId;
+          // 3. Upload image to CDN in background
+          uploadImageToCDN(uri).catch((error) => {
+            logError("Error uploading image to CDN", error);
+          });
+
+          return eventResult.eventId;
         } catch (error) {
           logError("Error processing image", error);
         } finally {
@@ -220,12 +218,12 @@ export function useCreateEvent() {
     [
       hasUnlimited,
       showProPaywallIfNeeded,
-      customerInfo?.entitlements.active.unlimited?.isActive,
+      customerInfo?.entitlements.active.unlimited,
       eventFromUrl,
-      eventFromImage,
-      eventFromRaw,
-      setIsImageLoading,
       userTimezone,
+      setIsImageLoading,
+      eventFromImageBase64,
+      eventFromRaw,
     ],
   );
 

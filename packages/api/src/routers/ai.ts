@@ -14,6 +14,7 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { sendNotification } from "../utils/oneSignal";
 import { createDeepLink } from "../utils/urlScheme";
 import {
+  createEvent,
   createEventAndNotify,
   fetchAndProcessEvent,
   validateFirstEvent,
@@ -42,6 +43,11 @@ const prototypeEventCreateFromUrlSchema = prototypeEventCreateBaseSchema.extend(
     url: z.string(),
   },
 );
+
+const prototypeEventCreateFromBase64Schema =
+  prototypeEventCreateBaseSchema.extend({
+    base64Image: z.string(),
+  });
 
 function getDayBounds(timezone: string) {
   const now = Temporal.Now.zonedDateTimeISO(timezone);
@@ -289,4 +295,50 @@ export const aiRouter = createTRPCRouter({
         }
       },
     ),
+  eventFromImageBase64ThenCreate: publicProcedure
+    .input(prototypeEventCreateFromBase64Schema)
+    .mutation(async ({ ctx, input }): Promise<AIEventResponse> => {
+      try {
+        const { events } = await fetchAndProcessEvent({
+          ctx,
+          input,
+          fnName: "eventFromImageBase64ThenCreate",
+        });
+
+        const validatedEvent = validateFirstEvent(events);
+
+        const dailyEventsPromise = ctx.db
+          .select({
+            id: eventsSchema.id,
+          })
+          .from(eventsSchema)
+          .where(
+            and(
+              eq(eventsSchema.userId, input.userId),
+              gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
+              lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
+            ),
+          );
+
+        const result = await createEvent({
+          ctx,
+          input,
+          firstEvent: validatedEvent,
+          dailyEventsPromise,
+          source: "image",
+        });
+
+        return result;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        };
+      }
+    }),
 });
