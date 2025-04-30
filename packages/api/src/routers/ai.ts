@@ -17,6 +17,7 @@ import {
   createEvent,
   createEventAndNotify,
   fetchAndProcessEvent,
+  uploadImageToCDNFromBase64,
   validateFirstEvent,
 } from "./aiHelpers";
 
@@ -299,14 +300,39 @@ export const aiRouter = createTRPCRouter({
     .input(prototypeEventCreateFromBase64Schema)
     .mutation(async ({ ctx, input }): Promise<AIEventResponse> => {
       try {
-        const { events } = await fetchAndProcessEvent({
-          ctx,
-          input,
-          fnName: "eventFromImageBase64ThenCreate",
-        });
+        // Start AI processing and image upload in parallel
+        const [aiResult, uploadResult] = await Promise.allSettled([
+          fetchAndProcessEvent({
+            ctx,
+            input,
+            fnName: "eventFromImageBase64ThenCreate",
+          }),
+          uploadImageToCDNFromBase64(input.base64Image), // Upload the base64 image
+        ]);
 
+        // Handle AI processing result
+        if (aiResult.status === "rejected") {
+          console.error("AI Processing failed:", aiResult.reason);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to process event data from image.",
+            cause: aiResult.reason,
+          });
+        }
+        const { events } = aiResult.value;
         const validatedEvent = validateFirstEvent(events);
 
+        // Handle image upload result (log error but don't fail the request)
+        let uploadedImageUrl: string | null = null;
+        if (uploadResult.status === "fulfilled") {
+          uploadedImageUrl = uploadResult.value;
+        } else {
+          // Log the upload error but continue
+          console.error("Image upload failed:", uploadResult.reason);
+          // Consider logging this error more formally (Sentry, etc.)
+        }
+
+        // Fetch daily events count (can potentially run earlier if needed)
         const dailyEventsPromise = ctx.db
           .select({
             id: eventsSchema.id,
@@ -320,12 +346,14 @@ export const aiRouter = createTRPCRouter({
             ),
           );
 
+        // Create the event, passing the potentially null uploadedImageUrl
         const result = await createEvent({
           ctx,
           input,
           firstEvent: validatedEvent,
           dailyEventsPromise,
           source: "image",
+          uploadedImageUrl: uploadedImageUrl, // Pass the URL to createEvent
         });
 
         return result;

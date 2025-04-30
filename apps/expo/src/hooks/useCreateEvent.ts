@@ -24,11 +24,12 @@ interface CreateEventResult {
   error?: string;
 }
 
-async function optimizeImage(uri: string) {
+// Optimize image and return base64 string
+async function optimizeImage(uri: string): Promise<string> {
   const manipulatedImage = await ImageManipulator.manipulateAsync(
     uri,
-    [{ resize: { width: 800 } }],
-    { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP },
+    [{ resize: { width: 800 } }], // Keep resizing
+    { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP }, // Keep compression and format
   );
 
   // Convert to base64
@@ -36,36 +37,10 @@ async function optimizeImage(uri: string) {
     encoding: FileSystem.EncodingType.Base64,
   });
 
-  return {
-    base64,
-    uri: manipulatedImage.uri,
-  };
-}
+  // Clean up the temporary manipulated image file
+  await FileSystem.deleteAsync(manipulatedImage.uri, { idempotent: true });
 
-interface UploadResponse {
-  fileUrl: string;
-}
-
-async function uploadImageToCDN(uri: string): Promise<string> {
-  const response = await FileSystem.uploadAsync(
-    "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
-    uri,
-    {
-      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-      httpMethod: "POST",
-      headers: {
-        "Content-Type": "image/webp",
-        Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
-      },
-    },
-  );
-
-  if (response.status !== 200) {
-    throw new Error(`Upload failed with status ${response.status}`);
-  }
-
-  const parsedResponse = JSON.parse(response.body) as UploadResponse;
-  return parsedResponse.fileUrl;
+  return base64;
 }
 
 export function useCreateEvent() {
@@ -160,14 +135,9 @@ export function useCreateEvent() {
           }
 
           // 1. Optimize image and get base64
-          const { base64, uri } = await optimizeImage(fileUri);
+          const base64 = await optimizeImage(fileUri);
 
-          // 2. Start CDN upload in parallel
-          const uploadPromise = uploadImageToCDN(uri).catch((error) => {
-            logError("Error uploading image to CDN", error);
-          });
-
-          // 3. Create event with base64 image
+          // 2. Create event with base64 image (backend handles upload now)
           const eventResult = await eventFromImageBase64.mutateAsync({
             base64Image: base64,
             userId,
@@ -180,11 +150,6 @@ export function useCreateEvent() {
           if (!eventResult.success) {
             throw new Error(eventResult.error ?? "Failed to create event");
           }
-
-          // Wait for upload to complete in background
-          uploadPromise.catch((error) => {
-            logError("Error uploading image to CDN", error);
-          });
 
           return eventResult.eventId;
         } catch (error) {

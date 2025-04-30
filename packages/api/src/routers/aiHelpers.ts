@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import type { CoreMessage } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { Temporal } from "@js-temporal/polyfill";
@@ -360,6 +361,7 @@ export interface CreateEventParams {
   firstEvent: EventWithMetadata;
   dailyEventsPromise: Promise<{ id: string }[]>;
   source: "rawText" | "url" | "image";
+  uploadedImageUrl?: string | null;
 }
 
 export async function createEventAndNotify(
@@ -513,7 +515,7 @@ export async function createEventAndNotify(
 export async function createEvent(
   params: CreateEventParams,
 ): Promise<AIEventResponse> {
-  const { ctx, input, firstEvent } = params;
+  const { ctx, input, firstEvent, uploadedImageUrl } = params;
   const { userId, username } = input;
 
   if (!userId) {
@@ -560,7 +562,17 @@ export async function createEvent(
     id: eventid,
     userId,
     userName: username,
-    event: firstEvent,
+    event: {
+      ...firstEvent,
+      ...(uploadedImageUrl && {
+        images: [
+          uploadedImageUrl,
+          uploadedImageUrl,
+          uploadedImageUrl,
+          uploadedImageUrl,
+        ],
+      }),
+    },
     eventMetadata: firstEvent.eventMetadata,
     startDateTime: startUtcDate,
     endDateTime: endUtcDate,
@@ -648,5 +660,46 @@ export function validateFirstEvent(events: unknown[]) {
       message: "Invalid event data received",
       cause: error,
     });
+  }
+}
+
+interface UploadResponse {
+  fileUrl: string;
+}
+
+export async function uploadImageToCDNFromBase64(
+  base64Image: string,
+): Promise<string | null> {
+  try {
+    // Convert base64 string to Buffer
+    const imageBuffer = Buffer.from(base64Image, "base64");
+
+    const response = await fetch(
+      "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "image/webp", // Assuming optimizeImage always produces webp
+          Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8", // Use environment variable in production
+        },
+        body: imageBuffer,
+      },
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(
+        `Upload failed with status ${response.status}: ${errorBody}`,
+      );
+      // Optionally log this error more formally
+      return null; // Return null on failure, don't throw to avoid failing the whole event creation
+    }
+
+    const parsedResponse = (await response.json()) as UploadResponse;
+    return parsedResponse.fileUrl;
+  } catch (error) {
+    console.error("Error uploading image to CDN:", error);
+    // Optionally log this error more formally (e.g., using Sentry or Langfuse)
+    return null; // Return null on error
   }
 }
