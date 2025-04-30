@@ -27,7 +27,7 @@ interface CreateEventResult {
 async function optimizeImage(uri: string) {
   const manipulatedImage = await ImageManipulator.manipulateAsync(
     uri,
-    [{ resize: { width: 1284 } }],
+    [{ resize: { width: 800 } }],
     { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP },
   );
 
