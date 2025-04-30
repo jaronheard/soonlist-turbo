@@ -154,6 +154,7 @@ export function useCreateEvent() {
           return eventResult.eventId;
         } catch (error) {
           logError("Error processing image", error);
+          throw error; // Rethrow to trigger mutation's onError
         } finally {
           // Reset loading state for both routes
           setIsImageLoading(false, "add");
