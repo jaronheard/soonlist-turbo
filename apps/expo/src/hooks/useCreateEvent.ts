@@ -42,8 +42,6 @@ async function optimizeImage(uri: string) {
   };
 }
 
-// Temporarily disabled
-/*
 interface UploadResponse {
   fileUrl: string;
 }
@@ -69,7 +67,6 @@ async function uploadImageToCDN(uri: string): Promise<string> {
   const parsedResponse = JSON.parse(response.body) as UploadResponse;
   return parsedResponse.fileUrl;
 }
-*/
 
 export function useCreateEvent() {
   const { setIsImageLoading } = useAppStore();
@@ -163,9 +160,14 @@ export function useCreateEvent() {
           }
 
           // 1. Optimize image and get base64
-          const { base64 } = await optimizeImage(fileUri);
+          const { base64, uri } = await optimizeImage(fileUri);
 
-          // 2. Create event with base64 image
+          // 2. Start CDN upload in parallel
+          const uploadPromise = uploadImageToCDN(uri).catch((error) => {
+            logError("Error uploading image to CDN", error);
+          });
+
+          // 3. Create event with base64 image
           const eventResult = await eventFromImageBase64.mutateAsync({
             base64Image: base64,
             userId,
@@ -178,6 +180,11 @@ export function useCreateEvent() {
           if (!eventResult.success) {
             throw new Error(eventResult.error ?? "Failed to create event");
           }
+
+          // Wait for upload to complete in background
+          uploadPromise.catch((error) => {
+            logError("Error uploading image to CDN", error);
+          });
 
           return eventResult.eventId;
         } catch (error) {
