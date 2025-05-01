@@ -2,10 +2,12 @@ import { useCallback } from "react";
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
+import { router } from "expo-router";
 import { toast } from "sonner-native";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useUserTimezone } from "~/store";
+import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { api } from "~/utils/api";
 import { logError } from "~/utils/errorLogging";
 
@@ -46,6 +48,7 @@ async function optimizeImage(uri: string): Promise<string> {
 export function useCreateEvent() {
   const { setIsImageLoading } = useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
+  const { setIsCapturing } = useInFlightEventStore();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
   const utils = api.useUtils();
@@ -93,89 +96,130 @@ export function useCreateEvent() {
 
       const { rawText, linkPreview, imageUri, userId, username } = options;
 
-      // URL flow
-      if (linkPreview) {
-        const result = (await eventFromUrl.mutateAsync({
-          url: linkPreview,
-          userId,
-          username,
-          lists: [],
-          timezone: userTimezone,
-          visibility: "private",
-        })) as CreateEventResult;
-        return result.success && result.eventId ? result.eventId : undefined;
-      }
+      setIsCapturing(true);
 
-      // Image flow
-      if (imageUri) {
-        // Set loading state for both routes since we don't know which one is active
-        setIsImageLoading(true, "add");
-        setIsImageLoading(true, "new");
-
-        try {
-          // Convert photo library URI to file URI if needed
-          let fileUri = imageUri;
-          if (imageUri.startsWith("ph://")) {
-            const assetId = imageUri.replace("ph://", "").split("/")[0];
-            if (!assetId) {
-              throw new Error("Invalid photo library asset ID");
-            }
-            const asset = await MediaLibrary.getAssetInfoAsync(assetId);
-            if (!asset.localUri) {
-              throw new Error(
-                "Could not get local URI for photo library asset",
-              );
-            }
-            fileUri = asset.localUri;
-          }
-
-          // Validate image URI
-          if (!fileUri.startsWith("file://")) {
-            throw new Error("Invalid image URI format");
-          }
-
-          // 1. Optimize image and get base64
-          const base64 = await optimizeImage(fileUri);
-
-          // 2. Create event with base64 image (backend handles upload now)
-          const eventResult = await eventFromImageBase64.mutateAsync({
-            base64Image: base64,
+      try {
+        // URL flow
+        if (linkPreview) {
+          const result = (await eventFromUrl.mutateAsync({
+            url: linkPreview,
             userId,
             username,
             lists: [],
             timezone: userTimezone,
             visibility: "private",
-          });
+          })) as CreateEventResult;
 
-          if (!eventResult.success) {
-            throw new Error(eventResult.error ?? "Failed to create event");
+          if (result.success && result.eventId) {
+            toast.success("Event captured!", {
+              duration: 5000,
+              action: {
+                label: "View",
+                onClick: () => {
+                  void router.push(`/event/${result.eventId}`);
+                },
+              },
+            });
+            return result.eventId;
           }
-
-          return eventResult.eventId;
-        } catch (error) {
-          logError("Error processing image", error);
-          throw error; // Rethrow to trigger mutation's onError
-        } finally {
-          // Reset loading state for both routes
-          setIsImageLoading(false, "add");
-          setIsImageLoading(false, "new");
+          return undefined;
         }
-      }
 
-      // Raw text flow
-      if (rawText) {
-        const result = (await eventFromRaw.mutateAsync({
-          rawText,
-          userId,
-          username,
-          lists: [],
-          timezone: userTimezone,
-          visibility: "private",
-        })) as CreateEventResult;
-        return result.success && result.eventId ? result.eventId : undefined;
-      }
+        // Image flow
+        if (imageUri) {
+          // Set loading state for both routes since we don't know which one is active
+          setIsImageLoading(true, "add");
+          setIsImageLoading(true, "new");
 
-      return undefined;
+          try {
+            // Convert photo library URI to file URI if needed
+            let fileUri = imageUri;
+            if (imageUri.startsWith("ph://")) {
+              const assetId = imageUri.replace("ph://", "").split("/")[0];
+              if (!assetId) {
+                throw new Error("Invalid photo library asset ID");
+              }
+              const asset = await MediaLibrary.getAssetInfoAsync(assetId);
+              if (!asset.localUri) {
+                throw new Error(
+                  "Could not get local URI for photo library asset",
+                );
+              }
+              fileUri = asset.localUri;
+            }
+
+            // Validate image URI
+            if (!fileUri.startsWith("file://")) {
+              throw new Error("Invalid image URI format");
+            }
+
+            // 1. Optimize image and get base64
+            const base64 = await optimizeImage(fileUri);
+
+            // 2. Create event with base64 image (backend handles upload now)
+            const eventResult = await eventFromImageBase64.mutateAsync({
+              base64Image: base64,
+              userId,
+              username,
+              lists: [],
+              timezone: userTimezone,
+              visibility: "private",
+            });
+
+            if (!eventResult.success) {
+              throw new Error(eventResult.error ?? "Failed to create event");
+            }
+
+            toast.success("Event captured!", {
+              duration: 5000,
+              action: {
+                label: "View",
+                onClick: () => {
+                  void router.push(`/event/${eventResult.eventId}`);
+                },
+              },
+            });
+            return eventResult.eventId;
+          } catch (error) {
+            logError("Error processing image", error);
+            throw error; // Rethrow to trigger mutation's onError
+          } finally {
+            // Reset loading state for both routes
+            setIsImageLoading(false, "add");
+            setIsImageLoading(false, "new");
+          }
+        }
+
+        // Raw text flow
+        if (rawText) {
+          const result = (await eventFromRaw.mutateAsync({
+            rawText,
+            userId,
+            username,
+            lists: [],
+            timezone: userTimezone,
+            visibility: "private",
+          })) as CreateEventResult;
+
+          if (result.success && result.eventId) {
+            toast.success("Event captured!", {
+              duration: 5000,
+              action: {
+                label: "View",
+                onClick: () => {
+                  void router.push(`/event/${result.eventId}`);
+                },
+              },
+            });
+            return result.eventId;
+          }
+          return undefined;
+        }
+
+        return undefined;
+      } finally {
+        setIsCapturing(false);
+      }
     },
     [
       hasUnlimited,
@@ -186,6 +230,7 @@ export function useCreateEvent() {
       setIsImageLoading,
       eventFromImageBase64,
       eventFromRaw,
+      setIsCapturing,
     ],
   );
 
