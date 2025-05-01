@@ -302,75 +302,94 @@ export const aiRouter = createTRPCRouter({
     ),
   eventFromImageBase64ThenCreate: publicProcedure
     .input(prototypeEventCreateFromBase64Schema)
-    .mutation(async ({ ctx, input }): Promise<AIEventResponse> => {
-      try {
-        // Start AI processing and image upload in parallel
-        const [aiResult, uploadResult] = await Promise.allSettled([
-          fetchAndProcessEvent({
+    .mutation(
+      async ({ ctx, input }): Promise<AIEventResponse | AIErrorResponse> => {
+        try {
+          // Start AI processing and image upload in parallel
+          const [aiResult, uploadResult] = await Promise.allSettled([
+            fetchAndProcessEvent({
+              ctx,
+              input,
+              fnName: "eventFromImageBase64ThenCreate",
+            }),
+            uploadImageToCDNFromBase64(input.base64Image), // Upload the base64 image
+          ]);
+
+          // Handle AI processing result
+          if (aiResult.status === "rejected") {
+            console.error("AI Processing failed:", aiResult.reason);
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to process event data from image.",
+              cause: aiResult.reason,
+            });
+          }
+          const { events } = aiResult.value;
+          const validatedEvent = validateFirstEvent(events);
+
+          // Handle image upload result (log error but don't fail the request)
+          let uploadedImageUrl: string | null = null;
+          if (uploadResult.status === "fulfilled") {
+            uploadedImageUrl = uploadResult.value;
+          } else {
+            // Log the upload error but continue
+            console.error("Image upload failed:", uploadResult.reason);
+            // Consider logging this error more formally (Sentry, etc.)
+          }
+
+          // Fetch daily events count (can potentially run earlier if needed)
+          const dailyEventsPromise = ctx.db
+            .select({
+              id: eventsSchema.id,
+            })
+            .from(eventsSchema)
+            .where(
+              and(
+                eq(eventsSchema.userId, input.userId),
+                gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
+                lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
+              ),
+            );
+
+          // Create the event using createEventAndNotify for consistency with other flows
+          const result = await createEventAndNotify({
             ctx,
             input,
-            fnName: "eventFromImageBase64ThenCreate",
-          }),
-          uploadImageToCDNFromBase64(input.base64Image), // Upload the base64 image
-        ]);
-
-        // Handle AI processing result
-        if (aiResult.status === "rejected") {
-          console.error("AI Processing failed:", aiResult.reason);
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to process event data from image.",
-            cause: aiResult.reason,
+            firstEvent: validatedEvent,
+            dailyEventsPromise: Promise.resolve([]), // This is unused, provide empty promise
+            source: "image",
+            uploadedImageUrl: uploadedImageUrl,
           });
+
+          return result;
+        } catch (error) {
+          if (error instanceof TRPCError) {
+            throw error;
+          }
+
+          const { userId } = input;
+
+          // Send error notification using OneSignal to match other endpoints
+          const notificationId = crypto.randomUUID();
+          const notificationResult = await sendNotification({
+            userId,
+            title: "Soonlist",
+            body: "There was an error creating your event.",
+            url: createDeepLink("feed"),
+            data: {
+              notificationId,
+            },
+            source: "ai_router",
+            method: "image",
+          });
+
+          return {
+            success: false,
+            id: notificationResult.id,
+            error:
+              error instanceof Error ? error.message : "Unknown error occurred",
+          };
         }
-        const { events } = aiResult.value;
-        const validatedEvent = validateFirstEvent(events);
-
-        // Handle image upload result (log error but don't fail the request)
-        let uploadedImageUrl: string | null = null;
-        if (uploadResult.status === "fulfilled") {
-          uploadedImageUrl = uploadResult.value;
-        } else {
-          // Log the upload error but continue
-          console.error("Image upload failed:", uploadResult.reason);
-          // Consider logging this error more formally (Sentry, etc.)
-        }
-
-        // Fetch daily events count (can potentially run earlier if needed)
-        const dailyEventsPromise = ctx.db
-          .select({
-            id: eventsSchema.id,
-          })
-          .from(eventsSchema)
-          .where(
-            and(
-              eq(eventsSchema.userId, input.userId),
-              gte(eventsSchema.createdAt, getDayBounds(input.timezone).start),
-              lte(eventsSchema.createdAt, getDayBounds(input.timezone).end),
-            ),
-          );
-
-        // Create the event, passing the potentially null uploadedImageUrl
-        const result = await createEvent({
-          ctx,
-          input,
-          firstEvent: validatedEvent,
-          dailyEventsPromise,
-          source: "image",
-          uploadedImageUrl: uploadedImageUrl, // Pass the URL to createEvent
-        });
-
-        return result;
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    }),
+      },
+    ),
 });

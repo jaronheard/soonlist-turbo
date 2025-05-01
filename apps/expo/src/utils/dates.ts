@@ -416,8 +416,22 @@ export function formatEventDateRangeCompact(
     3,
   )} ${startDateInfo.day}`;
 
-  // Only show start time if available
-  const formattedTime = startTime ? timeFormatDateInfo(startDateInfo) : "";
+  // Handle time range formatting
+  let formattedTime = "";
+  if (startTime) {
+    formattedTime = timeFormatDateInfo(startDateInfo);
+
+    if (endTime) {
+      const endDateInfo = getDateTimeInfo(
+        date,
+        endTime,
+        eventTimezone || "unknown",
+      );
+      if (endDateInfo) {
+        formattedTime += ` - ${timeFormatDateInfo(endDateInfo)}`;
+      }
+    }
+  }
 
   return { date: formattedDate, time: formattedTime };
 }

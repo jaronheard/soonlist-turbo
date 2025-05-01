@@ -675,8 +675,15 @@ export async function uploadImageToCDNFromBase64(
   base64Image: string,
 ): Promise<string | null> {
   try {
+    if (!base64Image || typeof base64Image !== "string") {
+      console.error("Invalid base64 string format");
+      return null;
+    }
+
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+
     // Convert base64 string to Buffer
-    const imageBuffer = Buffer.from(base64Image, "base64");
+    const imageBuffer = Buffer.from(base64Data, "base64");
 
     const response = await fetch(
       "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
@@ -684,7 +691,7 @@ export async function uploadImageToCDNFromBase64(
         method: "POST",
         headers: {
           "Content-Type": "image/webp", // Assuming optimizeImage always produces webp
-          Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8", // Use environment variable in production
+          Authorization: `Bearer ${process.env.BYTESCALE_API_KEY || ""}`,
         },
         body: imageBuffer,
       },

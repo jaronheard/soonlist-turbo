@@ -27,21 +27,26 @@ type _EventResponse =
 
 // Optimize image and return base64 string
 async function optimizeImage(uri: string): Promise<string> {
-  const manipulatedImage = await ImageManipulator.manipulateAsync(
-    uri,
-    [{ resize: { width: 800 } }], // Keep resizing
-    { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP }, // Keep compression and format
-  );
+  try {
+    const manipulatedImage = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 800 } }], // Keep resizing
+      { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP }, // Keep compression and format
+    );
 
-  // Convert to base64
-  const base64 = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
+    // Convert to base64
+    const base64 = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
 
-  // Clean up the temporary manipulated image file
-  await FileSystem.deleteAsync(manipulatedImage.uri, { idempotent: true });
+    // Clean up the temporary manipulated image file
+    await FileSystem.deleteAsync(manipulatedImage.uri, { idempotent: true });
 
-  return base64;
+    return base64;
+  } catch (error) {
+    logError("Error manipulating image", error);
+    throw new Error("Failed to optimize image for upload");
+  }
 }
 
 export function useCreateEvent() {
@@ -95,9 +100,8 @@ export function useCreateEvent() {
 
       const { rawText, linkPreview, imageUri, userId, username } = options;
 
-      setIsCapturing(true);
-
       try {
+        setIsCapturing(true);
         // URL flow
         if (linkPreview) {
           const result = await eventFromUrl.mutateAsync({
@@ -165,11 +169,7 @@ export function useCreateEvent() {
               throw new Error(eventResult.error ?? "Failed to create event");
             }
 
-            if (
-              eventResult.success &&
-              "event" in eventResult &&
-              eventResult.event
-            ) {
+            if ("event" in eventResult && eventResult.event) {
               showEventCaptureToast({
                 id: eventResult.event.id,
                 event: eventResult.event

@@ -36,6 +36,7 @@ export function EventCaptureToast({ event }: EventCaptureToastProps) {
       toast.dismiss();
     } catch (error) {
       logError("Error sharing event", error);
+      toast.error("Failed to share event. Please try again.");
     }
   };
 
