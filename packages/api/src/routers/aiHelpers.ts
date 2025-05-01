@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import type { CoreMessage } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { Temporal } from "@js-temporal/polyfill";
@@ -57,23 +58,32 @@ function createLoggedObjectGenerator({
   promptVersion,
 }: {
   ctx: Context;
-  input: { rawText?: string; timezone: string; imageUrl?: string };
+  input: {
+    rawText?: string;
+    timezone: string;
+    imageUrl?: string;
+    base64Image?: string;
+  };
   promptVersion: string;
 }) {
   return async <T>(
     generateObjectOptions: Parameters<typeof generateObject<T>>[0],
     loggingOptions: { name: string },
   ): Promise<ReturnType<typeof generateObject<T>>> => {
+    const loggedInput =
+      input.rawText ??
+      input.imageUrl ??
+      (input.base64Image ? "[base64 image omitted]" : undefined);
     const trace = langfuse.trace({
       name: loggingOptions.name,
       sessionId: ctx.auth.sessionId,
       userId: ctx.auth.userId,
-      input: input.rawText || input.imageUrl,
+      input: loggedInput,
       version: promptVersion,
     });
     const generation = trace.generation({
       name: "generation",
-      input: input.rawText || input.imageUrl,
+      input: loggedInput,
       model: MODEL,
       version: promptVersion,
     });
@@ -179,6 +189,30 @@ function constructMessagesImage({
   ];
 }
 
+function constructMessagesBase64Image({
+  systemPrompt,
+  prompt,
+  base64Image,
+}: {
+  systemPrompt: string;
+  prompt: string;
+  base64Image: string;
+}): CoreMessage[] {
+  return [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: prompt },
+    {
+      role: "user",
+      content: [
+        {
+          type: "image",
+          image: base64Image,
+        },
+      ],
+    },
+  ];
+}
+
 export interface AIEventResponse {
   success: boolean;
   ticket?: unknown;
@@ -209,6 +243,7 @@ export async function fetchAndProcessEvent({
   input: {
     rawText?: string;
     imageUrl?: string;
+    base64Image?: string;
     timezone: string;
     url?: string;
   };
@@ -239,6 +274,18 @@ export async function fetchAndProcessEvent({
       systemPrompt: systemPromptMetadata.text,
       prompt: prompt.textMetadata,
       rawText: input.rawText,
+    });
+  } else if (input.base64Image) {
+    eventMessages = constructMessagesBase64Image({
+      systemPrompt: systemPromptEvent.text,
+      prompt: prompt.text,
+      base64Image: input.base64Image,
+    });
+
+    metadataMessages = constructMessagesBase64Image({
+      systemPrompt: systemPromptMetadata.text,
+      prompt: prompt.textMetadata,
+      base64Image: input.base64Image,
     });
   } else if (input.imageUrl) {
     eventMessages = constructMessagesImage({
@@ -318,6 +365,7 @@ export interface CreateEventParams {
   firstEvent: EventWithMetadata;
   dailyEventsPromise: Promise<{ id: string }[]>;
   source: "rawText" | "url" | "image";
+  uploadedImageUrl?: string | null;
 }
 
 export async function createEventAndNotify(
@@ -468,6 +516,136 @@ export async function createEventAndNotify(
   };
 }
 
+export async function createEvent(
+  params: CreateEventParams,
+): Promise<AIEventResponse> {
+  const { ctx, input, firstEvent, uploadedImageUrl } = params;
+  const { userId, username } = input;
+
+  if (!userId) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "No user id found in session",
+    });
+  }
+
+  if (!username) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "No username found in session",
+    });
+  }
+
+  const hasComment = input.comment && input.comment.length > 0;
+  const hasLists = input.lists.length > 0;
+  const hasVisibility = input.visibility && input.visibility.length > 0;
+
+  let { startTime, endTime, timeZone } = firstEvent;
+  if (!timeZone) {
+    timeZone = input.timezone;
+  }
+  if (!startTime) {
+    startTime = "00:00";
+  }
+  if (!endTime) {
+    endTime = "23:59";
+  }
+
+  const start = Temporal.ZonedDateTime.from(
+    `${firstEvent.startDate}T${startTime}[${timeZone}]`,
+  );
+  const end = Temporal.ZonedDateTime.from(
+    `${firstEvent.endDate}T${endTime}[${timeZone}]`,
+  );
+  const startUtcDate = new Date(start.epochMilliseconds);
+  const endUtcDate = new Date(end.epochMilliseconds);
+
+  const eventid = generatePublicId();
+
+  const values = {
+    id: eventid,
+    userId,
+    userName: username,
+    event: {
+      ...firstEvent,
+      ...(uploadedImageUrl && {
+        images: [
+          uploadedImageUrl,
+          uploadedImageUrl,
+          uploadedImageUrl,
+          uploadedImageUrl,
+        ],
+      }),
+    },
+    eventMetadata: firstEvent.eventMetadata,
+    startDateTime: startUtcDate,
+    endDateTime: endUtcDate,
+    ...(hasVisibility && {
+      visibility: input.visibility,
+    }),
+  };
+
+  await ctx.db.transaction(async (tx: Context["db"]) => {
+    // Insert event
+    await tx.insert(eventsSchema).values(values);
+
+    // Insert comment, if any
+    if (hasComment) {
+      await tx.insert(comments).values({
+        eventId: eventid,
+        content: input.comment ?? "",
+        userId,
+      });
+    }
+
+    // Insert event-to-lists, if any
+    if (hasLists) {
+      await tx.delete(eventToLists).where(eq(eventToLists.eventId, eventid));
+      await tx.insert(eventToLists).values(
+        input.lists.map((list) => ({
+          eventId: eventid,
+          listId: list.value,
+        })),
+      );
+    }
+
+    return eventid;
+  });
+
+  const createdEvent = await ctx.db.query.events
+    .findMany({
+      where: eq(events.id, eventid),
+      with: {
+        user: {
+          with: {
+            lists: true,
+          },
+        },
+        eventFollows: true,
+        comments: true,
+        eventToLists: {
+          with: {
+            list: true,
+          },
+        },
+      },
+    })
+    .then((events) => events[0] || null);
+
+  if (!createdEvent) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to create event",
+    });
+  }
+
+  return {
+    success: true,
+    eventId: eventid,
+    event: createdEvent,
+  };
+}
+
 export function validateFirstEvent(events: unknown[]) {
   if (!events.length) {
     throw new TRPCError({
@@ -486,5 +664,53 @@ export function validateFirstEvent(events: unknown[]) {
       message: "Invalid event data received",
       cause: error,
     });
+  }
+}
+
+interface UploadResponse {
+  fileUrl: string;
+}
+
+export async function uploadImageToCDNFromBase64(
+  base64Image: string,
+): Promise<string | null> {
+  try {
+    if (!base64Image || typeof base64Image !== "string") {
+      console.error("Invalid base64 string format");
+      return null;
+    }
+
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+
+    // Convert base64 string to Buffer
+    const imageBuffer = Buffer.from(base64Data, "base64");
+
+    const response = await fetch(
+      "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "image/webp", // Assuming optimizeImage always produces webp
+          Authorization: `Bearer ${process.env.BYTESCALE_API_KEY || ""}`,
+        },
+        body: imageBuffer,
+      },
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(
+        `Upload failed with status ${response.status}: ${errorBody}`,
+      );
+      // Optionally log this error more formally
+      return null; // Return null on failure, don't throw to avoid failing the whole event creation
+    }
+
+    const parsedResponse = (await response.json()) as UploadResponse;
+    return parsedResponse.fileUrl;
+  } catch (error) {
+    console.error("Error uploading image to CDN:", error);
+    // Optionally log this error more formally (e.g., using Sentry or Langfuse)
+    return null; // Return null on error
   }
 }

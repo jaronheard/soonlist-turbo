@@ -80,7 +80,10 @@ export default function NewShareScreen() {
   /**
    * Actually create the event
    */
+  const { newEventState } = useAppStore();
+
   const handleCreateEvent = async () => {
+    const { input, imagePreview, linkPreview } = newEventState;
     if (!input.trim() && !imagePreview && !linkPreview) return;
     if (!user?.id || !user.username) return;
 
@@ -93,17 +96,13 @@ export default function NewShareScreen() {
       username: user.username,
     };
 
-    // Immediately navigate away
-    router.canGoBack() ? router.back() : router.push("/feed");
-    toast.info("Capturing in background. Add another?", {
-      duration: 3000,
-    });
-
     // Reset state immediately for better UX
     resetNewEventState();
 
     try {
       const eventId = await createEvent(eventData);
+
+      router.canGoBack() ? router.back() : router.replace("/feed");
 
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {
