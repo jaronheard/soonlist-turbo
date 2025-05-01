@@ -144,7 +144,7 @@ export function EventCaptureToast({ event }: EventCaptureToastProps) {
 
 export function showEventCaptureToast(event: EventCaptureToastProps["event"]) {
   return toast.custom(<EventCaptureToast event={event} />, {
-    duration: 5000,
+    duration: 8000,
     dismissible: true,
     position: "top-center",
   });
