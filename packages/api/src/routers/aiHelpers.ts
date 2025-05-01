@@ -691,7 +691,7 @@ export async function uploadImageToCDNFromBase64(
         method: "POST",
         headers: {
           "Content-Type": "image/webp", // Assuming optimizeImage always produces webp
-          Authorization: `Bearer ${process.env.BYTESCALE_API_KEY || ""}`,
+          Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
         },
         body: imageBuffer,
       },

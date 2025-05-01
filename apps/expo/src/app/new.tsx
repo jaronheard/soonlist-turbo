@@ -96,13 +96,13 @@ export default function NewShareScreen() {
       username: user.username,
     };
 
+    router.canGoBack() ? router.back() : router.replace("/feed");
+
     // Reset state immediately for better UX
     resetNewEventState();
 
     try {
       const eventId = await createEvent(eventData);
-
-      router.canGoBack() ? router.back() : router.replace("/feed");
 
       if (!hasNotificationPermission && eventId) {
         toast.success("Captured successfully!", {
