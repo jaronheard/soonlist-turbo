@@ -352,11 +352,11 @@ export const aiRouter = createTRPCRouter({
             );
 
           // Create the event using createEventAndNotify for consistency with other flows
-          const result = await createEventAndNotify({
+          const result = await createEvent({
             ctx,
             input,
             firstEvent: validatedEvent,
-            dailyEventsPromise: Promise.resolve([]), // This is unused, provide empty promise
+            dailyEventsPromise,
             source: "image",
             uploadedImageUrl: uploadedImageUrl,
           });
