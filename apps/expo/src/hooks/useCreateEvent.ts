@@ -2,9 +2,12 @@ import { useCallback } from "react";
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
-import { router } from "expo-router";
 import { toast } from "sonner-native";
 
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+
+import type { RouterOutputs } from "~/utils/api";
+import { showEventCaptureToast } from "~/components/EventCaptureToast";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
@@ -19,12 +22,8 @@ interface CreateEventOptions {
   username: string;
 }
 
-interface CreateEventResult {
-  success: boolean;
-  eventId: string | undefined;
-  ticket?: unknown;
-  error?: string;
-}
+type _EventResponse =
+  RouterOutputs["ai"]["eventFromUrlThenCreateThenNotification"];
 
 // Optimize image and return base64 string
 async function optimizeImage(uri: string): Promise<string> {
@@ -101,26 +100,22 @@ export function useCreateEvent() {
       try {
         // URL flow
         if (linkPreview) {
-          const result = (await eventFromUrl.mutateAsync({
+          const result = await eventFromUrl.mutateAsync({
             url: linkPreview,
             userId,
             username,
             lists: [],
             timezone: userTimezone,
             visibility: "private",
-          })) as CreateEventResult;
+          });
 
-          if (result.success && result.eventId) {
-            toast.success("Event captured!", {
-              duration: 5000,
-              action: {
-                label: "View",
-                onClick: () => {
-                  void router.push(`/event/${result.eventId}`);
-                },
-              },
+          if (result.success && "event" in result && result.event) {
+            showEventCaptureToast({
+              id: result.event.id,
+              event: result.event.event as AddToCalendarButtonPropsRestricted,
+              visibility: result.event.visibility,
             });
-            return result.eventId;
+            return result.event.id;
           }
           return undefined;
         }
@@ -170,16 +165,20 @@ export function useCreateEvent() {
               throw new Error(eventResult.error ?? "Failed to create event");
             }
 
-            toast.success("Event captured!", {
-              duration: 5000,
-              action: {
-                label: "View",
-                onClick: () => {
-                  void router.push(`/event/${eventResult.eventId}`);
-                },
-              },
-            });
-            return eventResult.eventId;
+            if (
+              eventResult.success &&
+              "event" in eventResult &&
+              eventResult.event
+            ) {
+              showEventCaptureToast({
+                id: eventResult.event.id,
+                event: eventResult.event
+                  .event as AddToCalendarButtonPropsRestricted,
+                visibility: eventResult.event.visibility,
+              });
+              return eventResult.event.id;
+            }
+            return undefined;
           } catch (error) {
             logError("Error processing image", error);
             throw error; // Rethrow to trigger mutation's onError
@@ -192,26 +191,22 @@ export function useCreateEvent() {
 
         // Raw text flow
         if (rawText) {
-          const result = (await eventFromRaw.mutateAsync({
+          const result = await eventFromRaw.mutateAsync({
             rawText,
             userId,
             username,
             lists: [],
             timezone: userTimezone,
             visibility: "private",
-          })) as CreateEventResult;
+          });
 
-          if (result.success && result.eventId) {
-            toast.success("Event captured!", {
-              duration: 5000,
-              action: {
-                label: "View",
-                onClick: () => {
-                  void router.push(`/event/${result.eventId}`);
-                },
-              },
+          if (result.success && "event" in result && result.event) {
+            showEventCaptureToast({
+              id: result.event.id,
+              event: result.event.event as AddToCalendarButtonPropsRestricted,
+              visibility: result.event.visibility,
             });
-            return result.eventId;
+            return result.event.id;
           }
           return undefined;
         }
