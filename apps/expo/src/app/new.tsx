@@ -12,7 +12,6 @@ import { NewEventHeader } from "~/components/NewEventHeader";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInitializeInput } from "~/hooks/useInitializeInput";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
-import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore } from "~/store";
 import { logError } from "../utils/errorLogging";
 
@@ -27,7 +26,6 @@ const OFFSET_VALUE = 32;
 
 export default function NewShareScreen() {
   const { style: keyboardStyle } = useKeyboardHeight(OFFSET_VALUE);
-  const { hasNotificationPermission } = useOneSignal();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
   const [activeInput, setActiveInput] = useState<string | null>(null);
@@ -96,29 +94,18 @@ export default function NewShareScreen() {
       username: user.username,
     };
 
+    // Navigate immediately
     router.canGoBack() ? router.back() : router.replace("/feed");
 
     // Reset state immediately for better UX
-    resetNewEventState();
+    requestAnimationFrame(() => resetNewEventState());
 
-    try {
-      const eventId = await createEvent(eventData);
-
-      if (!hasNotificationPermission && eventId) {
-        toast.success("Captured successfully!", {
-          action: {
-            label: "View event",
-            onClick: () => {
-              toast.dismiss();
-              router.push(`/event/${eventId}`);
-            },
-          },
-        });
-      }
-    } catch (error) {
-      logError("Error creating event", error);
-      toast.error("Failed to create event. Please try again.");
-    }
+    // Fire and forget the createEvent call
+    void createEvent(eventData).catch((error) => {
+      logError("Error creating event in background", error);
+      // Notify user of background failure
+      toast.error("Failed to save event in background.");
+    });
   };
 
   // Set activeInput to "describe" when text is passed
