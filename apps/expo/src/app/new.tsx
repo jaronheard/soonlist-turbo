@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Pressable, View } from "react-native";
+import { InteractionManager, Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -97,14 +97,14 @@ export default function NewShareScreen() {
     // Navigate immediately
     router.canGoBack() ? router.back() : router.replace("/feed");
 
-    // Reset state immediately for better UX
-    requestAnimationFrame(() => resetNewEventState());
-
-    // Fire and forget the createEvent call
-    void createEvent(eventData).catch((error) => {
-      logError("Error creating event in background", error);
-      // Notify user of background failure
-      toast.error("Failed to save event in background.");
+    // Reset state and fire the createEvent call after interactions/animations
+    void InteractionManager.runAfterInteractions(() => {
+      resetNewEventState(); // Reset state first
+      void createEvent(eventData).catch((error) => {
+        logError("Error creating event in background", error);
+        // Notify user of background failure
+        toast.error("Failed to save event in background.");
+      });
     });
   };
 
