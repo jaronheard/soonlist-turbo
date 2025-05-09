@@ -111,7 +111,10 @@ const SignInWithOAuth = () => {
       }
     } catch (err: unknown) {
       logError("Username submission error", err);
-      const clerkError = err as any;
+      const clerkError = err as {
+        errors?: ClerkAPIError[];
+        message?: string;
+      };
       let specificErrorMessage: string | null = null;
 
       if (

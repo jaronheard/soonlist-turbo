@@ -32,7 +32,6 @@ export default function SignUpScreen() {
   const {
     control,
     handleSubmit,
-    setError,
     formState: { errors },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -62,32 +61,19 @@ export default function SignUpScreen() {
     } catch (err: unknown) {
       logError("Error during sign up", err);
 
-      const clerkError = err as any;
+      const clerkError = err as {
+        errors?: ClerkAPIError[];
+        message?: string;
+      };
       if (
         clerkError.errors &&
         Array.isArray(clerkError.errors) &&
         clerkError.errors.length > 0
       ) {
-        let hasSetFieldErrors = false;
-        clerkError.errors.forEach((error: ClerkAPIError) => {
-          const field = error.meta?.paramName as
-            | keyof SignUpFormData
-            | undefined;
-          if (field && error.message) {
-            setError(field, {
-              type: "server",
-              message: error.message,
-            });
-            hasSetFieldErrors = true;
-          }
-        });
-        if (!hasSetFieldErrors && clerkError.message) {
-          setGeneralError(clerkError.message);
-        } else if (!hasSetFieldErrors) {
-          setGeneralError(
+        setGeneralError(
+          clerkError.message ||
             "An error occurred during sign up. Please check your input.",
-          );
-        }
+        );
       } else if (err instanceof Error) {
         setGeneralError(err.message);
       } else {
