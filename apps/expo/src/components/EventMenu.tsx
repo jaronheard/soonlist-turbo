@@ -112,7 +112,6 @@ export function EventMenu({
       },
     ];
 
-    // Only show discoverable option if user has discover feature enabled AND is the owner of the event
     if (showDiscover && isOwner) {
       baseItems.push({
         title:
