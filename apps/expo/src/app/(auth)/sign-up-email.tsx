@@ -23,6 +23,8 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpScreen() {
   const [generalError, setGeneralError] = React.useState("");
+  const [usernameError, setUsernameError] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { isLoaded, signUp } = useSignUp();
   const { isSignedIn } = useAuth();
   const hasCompletedOnboarding = useAppStore(
@@ -50,17 +52,70 @@ export default function SignUpScreen() {
   }
 
   const onSignUpPress = async (data: SignUpFormData) => {
-    if (!isLoaded) return;
+    if (!isLoaded || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setGeneralError("");
+    setUsernameError("");
 
     try {
       await signUp.create(data);
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       router.push("/verify-email");
     } catch (err: unknown) {
-      logError("Error during sign up", err);
-      setGeneralError(
-        err instanceof Error ? err.message : "An error occurred during sign up",
-      );
+      logError("Error during sign up", err, {
+        name: err instanceof Error ? err.name : "Unknown",
+        message: err instanceof Error ? err.message : "Unknown error",
+        stack: err instanceof Error ? err.stack : undefined,
+      });
+
+      if (err instanceof Error) {
+        const clerkError = err as {
+          errors?: { message: string; code: string; meta?: { paramName?: string } }[];
+          status?: number;
+        };
+        
+        if (clerkError.status === 422 || clerkError.errors?.[0]) {
+          const errorDetails = clerkError.errors?.[0];
+          if (errorDetails) {
+            logError("Clerk error details", new Error(errorDetails.message), {
+              code: errorDetails.code,
+              message: errorDetails.message,
+              paramName: errorDetails.meta?.paramName,
+            });
+
+            // Handle username-specific errors
+            if (errorDetails.meta?.paramName === "username") {
+              setUsernameError(errorDetails.message);
+            } else {
+              // Handle other specific errors
+              switch (errorDetails.code) {
+                case "form_identifier_exists":
+                  setGeneralError("An account with this email already exists");
+                  break;
+                case "form_password_pwned":
+                  setGeneralError("This password has been compromised. Please choose a stronger password");
+                  break;
+                case "form_username_exists":
+                  setUsernameError("This username is already taken");
+                  break;
+                default:
+                  setGeneralError(
+                    errorDetails.message || "An error occurred during sign up"
+                  );
+              }
+            }
+          } else {
+            setGeneralError("Validation error. Please check your information.");
+          }
+        } else {
+          setGeneralError(err.message);
+        }
+      } else {
+        setGeneralError("An unexpected error occurred. Please try again");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -168,9 +223,15 @@ export default function SignUpScreen() {
                   autoComplete="username-new"
                   autoCorrect={false}
                   defaultValue={value}
-                  onChangeText={onChange}
+                  onChangeText={(text) => {
+                    onChange(text);
+                    // Clear username error when user types
+                    if (usernameError) setUsernameError("");
+                  }}
                   onBlur={onBlur}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
+                  className={`w-full rounded-lg border ${
+                    errors.username || usernameError ? "border-red-500" : "border-gray-300"
+                  } bg-white px-4 py-3`}
                   returnKeyType="next"
                 />
               )}
@@ -178,6 +239,11 @@ export default function SignUpScreen() {
             {errors.username && (
               <Text className="mt-1 text-red-500">
                 {errors.username.message}
+              </Text>
+            )}
+            {usernameError && !errors.username && (
+              <Text className="mt-1 text-red-500">
+                {usernameError}
               </Text>
             )}
             <Text className="mt-1 text-sm text-gray-500">
@@ -243,10 +309,13 @@ export default function SignUpScreen() {
 
           <Pressable
             onPress={handleSubmit(onSignUpPress)}
-            className="w-full rounded-full bg-interactive-1 px-6 py-3"
+            disabled={isSubmitting}
+            className={`w-full rounded-full ${
+              isSubmitting ? "bg-gray-400" : "bg-interactive-1"
+            } px-6 py-3`}
           >
             <Text className="text-center text-lg font-bold text-white">
-              Sign Up
+              {isSubmitting ? "Signing Up..." : "Sign Up"}
             </Text>
           </Pressable>
 
