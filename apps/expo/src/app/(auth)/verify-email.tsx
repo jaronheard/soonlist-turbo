@@ -4,6 +4,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, Stack } from "expo-router";
 import { useAuth, useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Intercom from "@intercom/intercom-react-native";
 import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -62,6 +63,20 @@ const VerifyEmail = () => {
           email: completeSignUp.emailAddress,
           username: completeSignUp.username,
         });
+        const userId = completeSignUp.createdUserId;
+        const email = completeSignUp.emailAddress;
+        if (
+          email &&
+          typeof email === "string" &&
+          userId &&
+          typeof userId === "string"
+        ) {
+          await Intercom.loginUserWithUserAttributes({
+            email,
+            userId,
+            name: completeSignUp.username ?? undefined,
+          });
+        }
       } else {
         logError("Verification failed", completeSignUp);
         setGeneralError("Verification failed. Please try again.");
