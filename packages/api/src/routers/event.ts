@@ -484,7 +484,7 @@ export const eventRouter = createTRPCRouter({
 
       const e = await ctx.db.query.events.findMany({
         where: and(
-          gte(events.startDateTime, now),
+          gte(events.endDateTime, now), // Changed from startDateTime to endDateTime to include currently happening events
           not(eq(events.userId, userId)),
           eq(events.visibility, "public"),
         ),
