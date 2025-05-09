@@ -14,7 +14,6 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { sendNotification } from "../utils/oneSignal";
 import { createDeepLink } from "../utils/urlScheme";
 import {
-  createEvent,
   createEventAndNotify,
   fetchAndProcessEvent,
   uploadImageToCDNFromBase64,
@@ -352,12 +351,12 @@ export const aiRouter = createTRPCRouter({
             );
 
           // Create the event using createEventAndNotify for consistency with other flows
-          const result = await createEvent({
+          const result = await createEventAndNotify({
             ctx,
             input,
             firstEvent: validatedEvent,
             dailyEventsPromise,
-            source: "image",
+            source: "image", // Explicitly set source for notification context
             uploadedImageUrl: uploadedImageUrl,
           });
 
@@ -367,6 +366,8 @@ export const aiRouter = createTRPCRouter({
             throw error;
           }
 
+          console.error("Error in eventFromImageBase64ThenCreate:", error); // Log the actual error
+
           const { userId } = input;
 
           // Send error notification using OneSignal to match other endpoints
@@ -374,20 +375,23 @@ export const aiRouter = createTRPCRouter({
           const notificationResult = await sendNotification({
             userId,
             title: "Soonlist",
-            body: "There was an error creating your event.",
+            body: "There was an error creating your event from the image.", // More specific message
             url: createDeepLink("feed"),
             data: {
               notificationId,
             },
             source: "ai_router",
-            method: "image",
+            method: "image", // Consistent method name
           });
 
           return {
-            success: false,
-            id: notificationResult.id,
+            success: false, // Event creation failed
+            id: notificationResult.id, // ID of the *error* notification
+            // Provide the primary error message
             error:
-              error instanceof Error ? error.message : "Unknown error occurred",
+              error instanceof Error
+                ? error.message
+                : "Unknown error occurred while processing image event",
           };
         }
       },
