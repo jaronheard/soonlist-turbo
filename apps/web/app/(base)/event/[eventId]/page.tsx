@@ -37,7 +37,8 @@ export async function generateMetadata(
   // optionally access and extend (rather than replace) parent metadata
   // images are in the order of square, 4:3, 16:9, cropped
   const hasAllImages = eventData.images && eventData.images.length === 4;
-  const previewImage = hasAllImages ? eventData.images?.slice(0, 1) : undefined; // Use square image (index 0) instead of 16:9 (index 2)
+  // Use the cropped image (index 3) for Open Graph to ensure compatibility with mobile app
+  const previewImage = hasAllImages ? eventData.images?.slice(3, 4) : undefined;
 
   return {
     title: `${eventData.name} | Soonlist`,
