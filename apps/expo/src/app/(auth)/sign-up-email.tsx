@@ -71,10 +71,14 @@ export default function SignUpScreen() {
 
       if (err instanceof Error) {
         const clerkError = err as {
-          errors?: { message: string; code: string; meta?: { paramName?: string } }[];
+          errors?: {
+            message: string;
+            code: string;
+            meta?: { paramName?: string };
+          }[];
           status?: number;
         };
-        
+
         if (clerkError.status === 422 || clerkError.errors?.[0]) {
           const errorDetails = clerkError.errors?.[0];
           if (errorDetails) {
@@ -94,14 +98,16 @@ export default function SignUpScreen() {
                   setGeneralError("An account with this email already exists");
                   break;
                 case "form_password_pwned":
-                  setGeneralError("This password has been compromised. Please choose a stronger password");
+                  setGeneralError(
+                    "This password has been compromised. Please choose a stronger password",
+                  );
                   break;
                 case "form_username_exists":
                   setUsernameError("This username is already taken");
                   break;
                 default:
                   setGeneralError(
-                    errorDetails.message || "An error occurred during sign up"
+                    errorDetails.message || "An error occurred during sign up",
                   );
               }
             }
@@ -230,7 +236,9 @@ export default function SignUpScreen() {
                   }}
                   onBlur={onBlur}
                   className={`w-full rounded-lg border ${
-                    errors.username || usernameError ? "border-red-500" : "border-gray-300"
+                    errors.username || usernameError
+                      ? "border-red-500"
+                      : "border-gray-300"
                   } bg-white px-4 py-3`}
                   returnKeyType="next"
                 />
@@ -242,9 +250,7 @@ export default function SignUpScreen() {
               </Text>
             )}
             {usernameError && !errors.username && (
-              <Text className="mt-1 text-red-500">
-                {usernameError}
-              </Text>
+              <Text className="mt-1 text-red-500">{usernameError}</Text>
             )}
             <Text className="mt-1 text-sm text-gray-500">
               On Instagram? Consider using the same username
