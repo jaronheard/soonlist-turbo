@@ -1,3 +1,4 @@
+import type { ClerkAPIError } from "@clerk/types";
 import * as React from "react";
 import { Linking, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -51,6 +52,7 @@ export default function SignUpScreen() {
 
   const onSignUpPress = async (data: SignUpFormData) => {
     if (!isLoaded) return;
+    setGeneralError("");
 
     try {
       await signUp.create(data);
@@ -58,9 +60,25 @@ export default function SignUpScreen() {
       router.push("/verify-email");
     } catch (err: unknown) {
       logError("Error during sign up", err);
-      setGeneralError(
-        err instanceof Error ? err.message : "An error occurred during sign up",
-      );
+
+      const clerkError = err as {
+        errors?: ClerkAPIError[];
+        message?: string;
+      };
+      if (
+        clerkError.errors &&
+        Array.isArray(clerkError.errors) &&
+        clerkError.errors.length > 0
+      ) {
+        setGeneralError(
+          clerkError.message ||
+            "An error occurred during sign up. Please check your input.",
+        );
+      } else if (err instanceof Error) {
+        setGeneralError(err.message);
+      } else {
+        setGeneralError("An error occurred during sign up.");
+      }
     }
   };
 

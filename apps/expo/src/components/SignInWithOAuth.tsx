@@ -1,4 +1,4 @@
-import type { OAuthStrategy } from "@clerk/types";
+import type { ClerkAPIError, OAuthStrategy } from "@clerk/types";
 import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -42,6 +42,7 @@ const SignInWithOAuth = () => {
   const [pendingSignUp, setPendingSignUp] = useState<
     ReturnType<typeof useSignUp>["signUp"] | null
   >(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
 
   const toggleOtherOptions = () => {
     setShowOtherOptions(!showOtherOptions);
@@ -88,27 +89,54 @@ const SignInWithOAuth = () => {
   };
 
   const handleUsernameSubmit = async () => {
-    try {
-      if (!pendingSignUp) {
-        return;
-      }
+    if (!pendingSignUp) {
+      return;
+    }
+    setUsernameError(null);
 
+    try {
       const res = await pendingSignUp.update({
         username: username,
       });
 
       if (res.status === "complete") {
         await setActiveSignUp({ session: res.createdSessionId });
-        // Register user with Intercom
         await Intercom.loginUnidentifiedUser();
         setShowUsernameInput(false);
         setPendingSignUp(null);
       } else if (res.status === "missing_requirements") {
-        // Handle any other missing fields here
+        setUsernameError(
+          "There are other pending requirements for your account.",
+        );
       }
-    } catch (err) {
-      // Handle error
+    } catch (err: unknown) {
       logError("Username submission error", err);
+      const clerkError = err as {
+        errors?: ClerkAPIError[];
+        message?: string;
+      };
+      let specificErrorMessage: string | null = null;
+
+      if (
+        clerkError.errors &&
+        Array.isArray(clerkError.errors) &&
+        clerkError.errors.length > 0
+      ) {
+        const usernameSpecificError = clerkError.errors.find(
+          (e: ClerkAPIError) => e.meta?.paramName === "username",
+        );
+        if (usernameSpecificError) {
+          specificErrorMessage = usernameSpecificError.message;
+        } else if (clerkError.errors[0]?.message) {
+          specificErrorMessage = clerkError.errors[0].message;
+        }
+      } else if (clerkError.message) {
+        specificErrorMessage = clerkError.message;
+      }
+      setUsernameError(
+        specificErrorMessage ||
+          "An unexpected error occurred. Please try again.",
+      );
     }
   };
 
@@ -129,9 +157,14 @@ const SignInWithOAuth = () => {
           </Text>
           <TextInput
             value={username}
-            onChangeText={setUsername}
+            onChangeText={(text) => {
+              setUsername(text);
+              if (usernameError) {
+                setUsernameError(null);
+              }
+            }}
             placeholder="Enter your username"
-            className="mb-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg"
+            className="mb-1 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg"
             autoComplete="off"
             autoCorrect={false}
             autoCapitalize="none"
@@ -139,6 +172,11 @@ const SignInWithOAuth = () => {
             onSubmitEditing={handleUsernameSubmit}
             returnKeyType="done"
           />
+          {usernameError && (
+            <Text className="mb-4 ml-1 mt-1 text-sm text-red-500">
+              {usernameError}
+            </Text>
+          )}
 
           <View className="mb-6 rounded-lg bg-accent-yellow p-4">
             <Text className="text-accent-yellow-contrast mb-2 text-base font-bold uppercase">
