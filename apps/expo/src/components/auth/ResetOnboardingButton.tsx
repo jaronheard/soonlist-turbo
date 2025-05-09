@@ -18,10 +18,8 @@ export function ResetOnboardingButton({ style }: ResetOnboardingButtonProps) {
   const pathname = usePathname();
 
   // Only show on sign-in/sign-up screens
-  const isAuthScreen =
-    pathname.includes("/sign-in") ||
-    pathname.includes("/sign-up") ||
-    pathname.includes("/verify-email");
+  const authPaths = ["/sign-in", "/sign-up", "/verify-email"];
+  const isAuthScreen = authPaths.includes(pathname);
   if (!isAuthScreen) {
     return null;
   }
