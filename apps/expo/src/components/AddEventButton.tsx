@@ -14,7 +14,7 @@ import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
-import { useMediaPermissions } from "~/hooks/useMediaLibrary";
+import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { logError } from "../utils/errorLogging";
@@ -34,10 +34,9 @@ export default function AddEventButton({
   showChevron = true,
 }: AddEventButtonProps) {
   // Zustand selectors
-  const { resetAddEventState } =
-    useAppStore((state) => ({
-      resetAddEventState: state.resetAddEventState,
-    }));
+  const { resetAddEventState } = useAppStore((state) => ({
+    resetAddEventState: state.resetAddEventState,
+  }));
 
   // RevenueCat
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
@@ -113,7 +112,7 @@ export default function AddEventButton({
 
         try {
           const eventId = await createEvent(eventData);
-          
+
           // 6. Show success toast with "View event" action
           if (eventId) {
             toast.success("Captured successfully!", {
