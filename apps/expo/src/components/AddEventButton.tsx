@@ -8,18 +8,18 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
+import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { logError } from "../utils/errorLogging";
-import { useCreateEvent } from "~/hooks/useCreateEvent";
 
 interface AddEventButtonProps {
   showChevron?: boolean;
@@ -94,14 +94,13 @@ export default function AddEventButton({
     // 3. Launch native photo picker directly
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         quality: 0.8,
       });
 
       // 4. Create event with selected photo if user didn't cancel
       if (!result.canceled && result.assets[0]) {
         const imageUri = result.assets[0].uri;
-        const filename = imageUri.split("/").pop() || "photo.jpg";
 
         if (!user?.id || !user.username) {
           toast.error("User information not available");
@@ -110,7 +109,6 @@ export default function AddEventButton({
 
         // 5. Create event with the selected image
         const eventData = {
-          rawText: filename,
           imageUri,
           userId: user.id,
           username: user.username,
