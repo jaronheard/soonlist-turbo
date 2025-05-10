@@ -1,6 +1,4 @@
 import React, { useCallback, useState } from "react";
-import { Pressable, View } from "react-native";
-import React, { useCallback, useEffect, useState } from "react";
 import { InteractionManager, Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { router, Stack, useLocalSearchParams } from "expo-router";
