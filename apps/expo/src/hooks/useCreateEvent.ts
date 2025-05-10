@@ -4,8 +4,13 @@ import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
 import { toast } from "sonner-native";
 
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+
+import type { RouterOutputs } from "~/utils/api";
+import { showEventCaptureToast } from "~/components/EventCaptureToast";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useUserTimezone } from "~/store";
+import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { api } from "~/utils/api";
 import { logError } from "~/utils/errorLogging";
 
@@ -17,16 +22,37 @@ interface CreateEventOptions {
   username: string;
 }
 
-interface CreateEventResult {
-  success: boolean;
-  eventId: string | undefined;
-  ticket?: unknown;
-  error?: string;
+type _EventResponse =
+  RouterOutputs["ai"]["eventFromUrlThenCreateThenNotification"];
+
+// Optimize image and return base64 string
+async function optimizeImage(uri: string): Promise<string> {
+  try {
+    const manipulatedImage = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 800 } }], // Keep resizing
+      { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP }, // Keep compression and format
+    );
+
+    // Convert to base64
+    const base64 = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    // Clean up the temporary manipulated image file
+    await FileSystem.deleteAsync(manipulatedImage.uri, { idempotent: true });
+
+    return base64;
+  } catch (error) {
+    logError("Error manipulating image", error);
+    throw new Error("Failed to optimize image for upload");
+  }
 }
 
 export function useCreateEvent() {
   const { setIsImageLoading } = useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
+  const { setIsCapturing } = useInFlightEventStore();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
   const utils = api.useUtils();
@@ -41,8 +67,8 @@ export function useCreateEvent() {
         ]);
       },
     });
-  const eventFromImage =
-    api.ai.eventFromImageThenCreateThenNotification.useMutation({
+  const eventFromImageBase64 =
+    api.ai.eventFromImageBase64ThenCreate.useMutation({
       onSuccess: () => {
         return Promise.all([
           utils.event.getEventsForUser.invalidate(),
@@ -74,158 +100,132 @@ export function useCreateEvent() {
 
       const { rawText, linkPreview, imageUri, userId, username } = options;
 
-      // URL flow
-      if (linkPreview) {
-        const result = (await eventFromUrl.mutateAsync({
-          url: linkPreview,
-          userId,
-          username,
-          lists: [],
-          timezone: userTimezone,
-          visibility: "private",
-        })) as CreateEventResult;
-        return result.success && result.eventId ? result.eventId : undefined;
-      }
-
-      // Image flow
-      if (imageUri) {
-        // Set loading state for both routes since we don't know which one is active
-        setIsImageLoading(true, "add");
-        setIsImageLoading(true, "new");
-
-        try {
-          // Convert photo library URI to file URI if needed
-          let fileUri = imageUri;
-          if (imageUri.startsWith("ph://")) {
-            const assetId = imageUri.replace("ph://", "").split("/")[0];
-            if (!assetId) {
-              throw new Error("Invalid photo library asset ID");
-            }
-            const asset = await MediaLibrary.getAssetInfoAsync(assetId);
-            if (!asset.localUri) {
-              throw new Error(
-                "Could not get local URI for photo library asset",
-              );
-            }
-            fileUri = asset.localUri;
-          }
-
-          // Validate image URI
-          if (!fileUri.startsWith("file://")) {
-            throw new Error("Invalid image URI format");
-          }
-
-          // 1. Manipulate image
-          let manipulatedImage;
-          try {
-            manipulatedImage = await ImageManipulator.manipulateAsync(
-              fileUri,
-              [{ resize: { width: 1284 } }],
-              { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP },
-            );
-          } catch (error) {
-            throw new Error(
-              `Failed to manipulate image: ${error instanceof Error ? error.message : "Unknown error"}`,
-            );
-          }
-
-          // Validate manipulated image
-          if (!manipulatedImage.uri) {
-            throw new Error("Image manipulation failed - no URI returned");
-          }
-
-          // 2. Upload image
-          let response;
-          try {
-            response = await FileSystem.uploadAsync(
-              "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
-              manipulatedImage.uri,
-              {
-                uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-                httpMethod: "POST",
-                headers: {
-                  "Content-Type": "image/webp",
-                  Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
-                },
-              },
-            );
-          } catch (error) {
-            throw new Error(
-              `Failed to upload image: ${error instanceof Error ? error.message : "Network error"}`,
-            );
-          }
-
-          if (response.status !== 200) {
-            throw new Error(
-              `Upload failed with status ${response.status}: ${response.body}`,
-            );
-          }
-
-          // 3. Parse response
-          let fileUrl: string;
-          try {
-            if (!response.body) {
-              throw new Error("Empty response from upload server");
-            }
-            const parsed = JSON.parse(response.body) as { fileUrl?: string };
-            if (!parsed.fileUrl) {
-              throw new Error("No file URL in response");
-            }
-            fileUrl = parsed.fileUrl;
-          } catch (error) {
-            throw new Error(
-              `Failed to parse upload response: ${error instanceof Error ? error.message : "Invalid JSON"}`,
-            );
-          }
-
-          // 4. Create event
-          const result = (await eventFromImage.mutateAsync({
-            imageUrl: fileUrl,
+      try {
+        setIsCapturing(true);
+        // URL flow
+        if (linkPreview) {
+          const result = await eventFromUrl.mutateAsync({
+            url: linkPreview,
             userId,
             username,
             lists: [],
             timezone: userTimezone,
             visibility: "private",
-          })) as CreateEventResult;
+          });
 
-          if (!result.success) {
-            throw new Error(result.error ?? "Failed to create event");
+          if (result.success && "event" in result && result.event) {
+            showEventCaptureToast({
+              id: result.event.id,
+              event: result.event.event as AddToCalendarButtonPropsRestricted,
+              visibility: result.event.visibility,
+            });
+            return result.event.id;
           }
-
-          return result.eventId;
-        } catch (error) {
-          logError("Error processing image", error);
-        } finally {
-          // Reset loading state for both routes
-          setIsImageLoading(false, "add");
-          setIsImageLoading(false, "new");
+          return undefined;
         }
-      }
 
-      // Raw text flow
-      if (rawText) {
-        const result = (await eventFromRaw.mutateAsync({
-          rawText,
-          userId,
-          username,
-          lists: [],
-          timezone: userTimezone,
-          visibility: "private",
-        })) as CreateEventResult;
-        return result.success && result.eventId ? result.eventId : undefined;
-      }
+        // Image flow
+        if (imageUri) {
+          // Set loading state for both routes since we don't know which one is active
+          setIsImageLoading(true, "add");
+          setIsImageLoading(true, "new");
 
-      return undefined;
+          try {
+            // Convert photo library URI to file URI if needed
+            let fileUri = imageUri;
+            if (imageUri.startsWith("ph://")) {
+              const assetId = imageUri.replace("ph://", "").split("/")[0];
+              if (!assetId) {
+                throw new Error("Invalid photo library asset ID");
+              }
+              const asset = await MediaLibrary.getAssetInfoAsync(assetId);
+              if (!asset.localUri) {
+                throw new Error(
+                  "Could not get local URI for photo library asset",
+                );
+              }
+              fileUri = asset.localUri;
+            }
+
+            // Validate image URI
+            if (!fileUri.startsWith("file://")) {
+              throw new Error("Invalid image URI format");
+            }
+
+            // 1. Optimize image and get base64
+            const base64 = await optimizeImage(fileUri);
+
+            // 2. Create event with base64 image (backend handles upload now)
+            const eventResult = await eventFromImageBase64.mutateAsync({
+              base64Image: base64,
+              userId,
+              username,
+              lists: [],
+              timezone: userTimezone,
+              visibility: "private",
+            });
+
+            if (!eventResult.success) {
+              throw new Error(eventResult.error ?? "Failed to create event");
+            }
+
+            if ("event" in eventResult && eventResult.event) {
+              showEventCaptureToast({
+                id: eventResult.event.id,
+                event: eventResult.event
+                  .event as AddToCalendarButtonPropsRestricted,
+                visibility: eventResult.event.visibility,
+              });
+              return eventResult.event.id;
+            }
+            return undefined;
+          } catch (error) {
+            logError("Error processing image", error);
+            throw error; // Rethrow to trigger mutation's onError
+          } finally {
+            // Reset loading state for both routes
+            setIsImageLoading(false, "add");
+            setIsImageLoading(false, "new");
+          }
+        }
+
+        // Raw text flow
+        if (rawText) {
+          const result = await eventFromRaw.mutateAsync({
+            rawText,
+            userId,
+            username,
+            lists: [],
+            timezone: userTimezone,
+            visibility: "private",
+          });
+
+          if (result.success && "event" in result && result.event) {
+            showEventCaptureToast({
+              id: result.event.id,
+              event: result.event.event as AddToCalendarButtonPropsRestricted,
+              visibility: result.event.visibility,
+            });
+            return result.event.id;
+          }
+          return undefined;
+        }
+
+        return undefined;
+      } finally {
+        setIsCapturing(false);
+      }
     },
     [
       hasUnlimited,
       showProPaywallIfNeeded,
-      customerInfo?.entitlements.active.unlimited?.isActive,
+      customerInfo?.entitlements.active.unlimited,
       eventFromUrl,
-      eventFromImage,
-      eventFromRaw,
-      setIsImageLoading,
       userTimezone,
+      setIsImageLoading,
+      eventFromImageBase64,
+      eventFromRaw,
+      setIsCapturing,
     ],
   );
 

@@ -118,7 +118,6 @@ export default function AddEventModal() {
     };
 
     router.canGoBack() ? router.back() : router.replace("/feed");
-    toast.info("Capturing in background. Add another?", { duration: 3000 });
 
     // Reset state immediately for better UX
     resetAddEventState();

@@ -19,10 +19,10 @@ export const posthog = new PostHog(POSTHOG_KEY, {
   }),
 });
 
-function handleShutdown() {
+async function handleShutdown() {
   try {
     console.log("Shutting down PostHog...");
-    posthog.shutdown();
+    await posthog.shutdown();
     process.exit(0);
   } catch (error) {
     console.error("PostHog shutdown failed:", error);
@@ -32,5 +32,7 @@ function handleShutdown() {
 
 // Gracefully handle shutdown signals
 ["SIGTERM", "SIGINT"].forEach((signal) => {
-  process.on(signal, () => handleShutdown());
+  process.on(signal, () => {
+    void handleShutdown();
+  });
 });

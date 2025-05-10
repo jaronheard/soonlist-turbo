@@ -112,7 +112,7 @@ export function EventMenu({
       },
     ];
 
-    if (showDiscover) {
+    if (showDiscover && isOwner) {
       baseItems.push({
         title:
           event.visibility === "public"

@@ -390,6 +390,52 @@ export function formatEventDateRange(
   return { date: formattedDate, time: timeRange.trim() };
 }
 
+/**
+ * Takes a date (YYYY-MM-DD), optional start/end times (HH:MM), and an event timezone.
+ * Returns a user-facing { date, time } string pair in local time, in a more compact format.
+ */
+export function formatEventDateRangeCompact(
+  date: string,
+  startTime: string | undefined,
+  endTime: string | undefined,
+  eventTimezone: string,
+): { date: string; time: string } {
+  if (!date) return { date: "", time: "" };
+
+  // Get local DateInfo for the start
+  const startDateInfo = getDateTimeInfo(
+    date,
+    startTime || "",
+    eventTimezone || "unknown",
+  );
+  if (!startDateInfo) return { date: "", time: "" };
+
+  // More compact date format: "Mon, Jan 1"
+  const formattedDate = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${startDateInfo.monthName.substring(
+    0,
+    3,
+  )} ${startDateInfo.day}`;
+
+  // Handle time range formatting
+  let formattedTime = "";
+  if (startTime) {
+    formattedTime = timeFormatDateInfo(startDateInfo);
+
+    if (endTime) {
+      const endDateInfo = getDateTimeInfo(
+        date,
+        endTime,
+        eventTimezone || "unknown",
+      );
+      if (endDateInfo) {
+        formattedTime += ` - ${timeFormatDateInfo(endDateInfo)}`;
+      }
+    }
+  }
+
+  return { date: formattedDate, time: formattedTime };
+}
+
 // --- Functions moved from date-picker/date-utils --- //
 
 /**
