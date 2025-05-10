@@ -28,8 +28,8 @@ interface AddEventButtonProps {
 /**
  * AddEventButton
  * ---------------
- * Opens the native photo picker directly and creates an event with the selected photo.
- * This bypasses the /add screen for a faster event creation flow.
+ * Opens the native photo picker (up to 10 images) and creates events for each selected photo in parallel.
+ * This bypasses the /add screen for a faster multi‑event creation flow.
  */
 export default function AddEventButton({
   showChevron = true,
@@ -96,42 +96,84 @@ export default function AddEventButton({
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         quality: 0.8,
+        allowsMultipleSelection: true,
+        selectionLimit: 10, // iOS‑only; we also enforce in JS
       });
 
-      // 4. Create event with selected photo if user didn't cancel
-      if (!result.canceled && result.assets[0]) {
-        const imageUri = result.assets[0].uri;
-
+      if (!result.canceled && result.assets.length) {
+        // Ensure user info is available before proceeding
         if (!user?.id || !user.username) {
           toast.error("User information not available");
           return;
         }
 
-        // 5. Create event with the selected image
-        const eventData = {
-          imageUri,
-          userId: user.id,
-          username: user.username,
-        };
+        // Respect the 10‑image limit in case the platform ignores selectionLimit
+        const assets = result.assets.slice(0, 10);
 
-        try {
-          const eventId = await createEvent(eventData);
+        // Show a persistent loading toast with the number of events being captured
+        const loadingToastId = toast.loading(
+          assets.length > 1
+            ? `Capturing ${assets.length} events…`
+            : "Capturing event…",
+          { duration: Infinity },
+        );
 
-          // 6. Show success toast with "View event" action
-          if (eventId) {
-            toast.success("Captured successfully!", {
+        // Kick off event creation requests in parallel
+        const creationResults = await Promise.allSettled(
+          assets.map((asset) =>
+            createEvent({
+              imageUri: asset.uri,
+              userId: user.id,
+              username: user.username!,
+            }),
+          ),
+        );
+
+        // Loading finished — remove spinner
+        toast.dismiss(loadingToastId);
+
+        // Gather successes
+        const successfulIds = creationResults
+          .filter(
+            (r): r is PromiseFulfilledResult<string | undefined> =>
+              r.status === "fulfilled" && typeof r.value === "string",
+          )
+          .map((r) => r.value);
+
+        const failedCount = assets.length - successfulIds.length;
+
+        // Aggregate feedback
+        if (successfulIds.length === 1) {
+          toast.success("Captured successfully!", {
+            action: {
+              label: "View event",
+              onClick: () => {
+                toast.dismiss();
+                router.push(`/event/${successfulIds[0]}`);
+              },
+            },
+          });
+        } else if (successfulIds.length > 1) {
+          toast.success(
+            `Captured ${successfulIds.length} events successfully!`,
+            {
               action: {
-                label: "View event",
+                label: "View events",
                 onClick: () => {
                   toast.dismiss();
-                  router.push(`/event/${eventId}`);
+                  router.push("/feed");
                 },
               },
-            });
-          }
-        } catch (error) {
-          logError("Error creating event from AddEventButton", error);
-          toast.error("Failed to create event. Please try again.");
+            },
+          );
+        }
+
+        if (failedCount > 0) {
+          toast.error(
+            `Failed to create ${failedCount} event${
+              failedCount > 1 ? "s" : ""
+            }. Please try again.`,
+          );
         }
       }
     } catch (err) {
