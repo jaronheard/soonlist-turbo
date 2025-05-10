@@ -9,9 +9,11 @@ import Animated, {
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import * as MediaLibrary from "expo-media-library";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@clerk/clerk-expo";
+import { toast } from "sonner-native";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
 import { recentPhotosQueryKey, useRecentPhotos } from "~/hooks/useMediaLibrary";
@@ -22,6 +24,7 @@ import {
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { logDebug, logError } from "../utils/errorLogging";
+import { useCreateEvent } from "~/hooks/useCreateEvent";
 
 interface AddEventButtonProps {
   showChevron?: boolean;
@@ -30,19 +33,16 @@ interface AddEventButtonProps {
 /**
  * AddEventButton
  * ---------------
- * Navigates to the /add screen and preloads the most recent photo.
- * The navigation happens instantly; media‑library work is done afterwards
- * so the screen transition feels snappy.
+ * Opens the native photo picker directly and creates an event with the selected photo.
+ * This bypasses the /add screen for a faster event creation flow.
  */
 export default function AddEventButton({
   showChevron = true,
 }: AddEventButtonProps) {
   // Zustand selectors
-  const { resetAddEventState, setImagePreview, setInput, hasMediaPermission } =
+  const { resetAddEventState, hasMediaPermission } =
     useAppStore((state) => ({
       resetAddEventState: state.resetAddEventState,
-      setImagePreview: state.setImagePreview,
-      setInput: state.setInput,
       hasMediaPermission: state.hasMediaPermission,
     }));
 
@@ -51,7 +51,8 @@ export default function AddEventButton({
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const queryClient = useQueryClient();
-  const { refetch: refetchRecentPhotos } = useRecentPhotos();
+  const { user } = useUser();
+  const { createEvent } = useCreateEvent();
 
   // Keep permission status up‑to‑date globally
   useMediaPermissions();
@@ -83,11 +84,10 @@ export default function AddEventButton({
    * Main press handler
    * ------------------
    * 1. Show paywall if needed.
-   * 2. Grab any cached photos **before** we wipe redux/query state
-   * 3. Clear draft state (so /add opens fresh)
-   * 4. Navigate right away for instant feedback
-   * 5. If we had something in the cache, show it **immediately**
-   * 6. Heavy work in background (don't block UI)
+   * 2. Clear draft state (so any stale data is removed)
+   * 3. Launch native photo picker directly
+   * 4. Create event with selected photo
+   * 5. Show success toast
    */
   const handlePress = useCallback(async () => {
     // 1. Paywall gate
@@ -96,75 +96,64 @@ export default function AddEventButton({
       return;
     }
 
-    // 2. Grab any cached photos **before** we wipe redux/query state
-    interface CachedPhoto {
-      uri: string;
-    }
-    const cachedPhotos =
-      queryClient.getQueryData<CachedPhoto[]>(recentPhotosQueryKey);
-    const initialUri = cachedPhotos?.[0]?.uri;
-
-    // 3. Clear draft state (so /add opens fresh)
+    // 2. Clear draft state
     resetAddEventState();
 
-    // 4. Navigate right away for instant feedback
-    router.push("/add");
+    // 3. Launch native photo picker directly
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+      });
 
-    // 5. If we had something in the cache, show it **immediately**
-    if (initialUri) {
-      setImagePreview(initialUri, "add");
-      const filename = initialUri.split("/").pop() || "photo.jpg";
-      setInput(filename, "add");
-    }
+      // 4. Create event with selected photo if user didn't cancel
+      if (!result.canceled && result.assets[0]) {
+        const imageUri = result.assets[0].uri;
+        const filename = imageUri.split("/").pop() || "photo.jpg";
 
-    // 6. Heavy work in background (don't block UI)
-    void (async () => {
-      try {
-        let permissionGranted = hasMediaPermission;
+        if (!user?.id || !user.username) {
+          toast.error("User information not available");
+          return;
+        }
 
-        if (!permissionGranted) {
-          logDebug("[AddEventButton] Requesting media permission …");
-          const permissionResponse =
-            await MediaLibrary.requestPermissionsAsync();
-          permissionGranted =
-            permissionResponse.status ===
-              MediaLibrary.PermissionStatus.GRANTED ||
-            permissionResponse.accessPrivileges === "limited";
+        // 5. Create event with the selected image
+        const eventData = {
+          rawText: filename,
+          imageUri,
+          userId: user.id,
+          username: user.username,
+        };
 
-          if (permissionGranted) {
-            await queryClient.invalidateQueries({
-              queryKey: mediaPermissionsQueryKey,
+        try {
+          const eventId = await createEvent(eventData);
+          
+          // 6. Show success toast with "View event" action
+          if (eventId) {
+            toast.success("Captured successfully!", {
+              action: {
+                label: "View event",
+                onClick: () => {
+                  toast.dismiss();
+                  router.push(`/event/${eventId}`);
+                },
+              },
             });
           }
+        } catch (error) {
+          logError("Error creating event from AddEventButton", error);
+          toast.error("Failed to create event. Please try again.");
         }
-
-        if (permissionGranted) {
-          const { data: photos, isSuccess } = await refetchRecentPhotos();
-          if (isSuccess && photos?.[0]?.uri) {
-            const uri = photos[0].uri;
-            setImagePreview(uri, "add");
-            const filename = uri.split("/").pop() || "photo.jpg";
-            setInput(filename, "add");
-            logDebug(`[AddEventButton] Selected latest photo ${uri}`);
-          }
-        } else {
-          logDebug(
-            "[AddEventButton] Permission denied – skipping photo refresh",
-          );
-        }
-      } catch (err) {
-        logError("Error in AddEventButton handlePress", err);
       }
-    })();
+    } catch (err) {
+      logError("Error in AddEventButton handlePress", err);
+      toast.error("Failed to open photo picker. Please try again.");
+    }
   }, [
     hasUnlimited,
     showProPaywallIfNeeded,
     resetAddEventState,
-    hasMediaPermission,
-    queryClient,
-    refetchRecentPhotos,
-    setImagePreview,
-    setInput,
+    user,
+    createEvent,
   ]);
 
   /**
