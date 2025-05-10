@@ -177,7 +177,7 @@ export default function DemoCaptureScreen() {
                 selectedUri={selectedEvent.imageUri ?? null}
                 isLoadingMore={false}
                 hasNextPage={false}
-                onEndReached={() => {}}
+                onEndReached={undefined}
               />
             </View>
           </View>

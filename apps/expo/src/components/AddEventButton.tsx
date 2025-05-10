@@ -27,17 +27,22 @@ interface AddEventButtonProps {
   showChevron?: boolean;
 }
 
+// Define PhotoAsset interface locally (ideally, export from useMediaLibrary.ts and import)
+interface PhotoAsset {
+  id: string;
+  uri: string;
+}
+
 /**
  * AddEventButton
  * ---------------
- * Navigates to the /add screen and preloads the most recent photo.
- * The navigation happens instantly; media‑library work is done afterwards
- * so the screen transition feels snappy.
+ * Navigates to the /add screen.
+ * Optimistically loads the most recent photo from cache for an instant preview.
+ * Then, fetches the absolute latest in the background to update if necessary.
  */
 export default function AddEventButton({
   showChevron = true,
 }: AddEventButtonProps) {
-  // Zustand selectors
   const { resetAddEventState, setImagePreview, setInput, hasMediaPermission } =
     useAppStore((state) => ({
       resetAddEventState: state.resetAddEventState,
@@ -53,12 +58,8 @@ export default function AddEventButton({
   const queryClient = useQueryClient();
   const { refetch: refetchRecentPhotos } = useRecentPhotos();
 
-  // Keep permission status up‑to‑date globally
   useMediaPermissions();
 
-  /**
-   * Small bounce for the chevron hint
-   */
   const translateY = useSharedValue(0);
   useEffect(() => {
     translateY.value = withRepeat(
@@ -79,45 +80,43 @@ export default function AddEventButton({
     zIndex: 10,
   }));
 
-  /**
-   * Main press handler
-   * ------------------
-   * 1. Show paywall if needed.
-   * 2. Grab any cached photos **before** we wipe redux/query state
-   * 3. Clear draft state (so /add opens fresh)
-   * 4. Navigate right away for instant feedback
-   * 5. If we had something in the cache, show it **immediately**
-   * 6. Heavy work in background (don't block UI)
-   */
   const handlePress = useCallback(async () => {
-    // 1. Paywall gate
     if (!hasUnlimited) {
       await showProPaywallIfNeeded();
       return;
     }
 
-    // 2. Grab any cached photos **before** we wipe redux/query state
-    interface CachedPhoto {
-      uri: string;
+    resetAddEventState(); // Clear previous state first
+
+    // Optimistically set image from cache for instant preview
+    try {
+      // The query key used in useRecentPhotos for the initial load
+      const initialQueryKey = [...recentPhotosQueryKey, { after: undefined }];
+      const cachedData = queryClient.getQueryData<{
+        photos: PhotoAsset[];
+        hasNextPage: boolean;
+        endCursor?: string;
+      }>(initialQueryKey);
+
+      if (cachedData?.photos[0]?.uri) {
+        const optimisticUri = cachedData.photos[0].uri;
+        setImagePreview(optimisticUri, "add");
+        const filename = optimisticUri.split("/").pop() || "photo.jpg";
+        setInput(filename, "add");
+        logDebug(
+          `[AddEventButton] Optimistically set photo ${optimisticUri} from cache`,
+        );
+      }
+    } catch (e) {
+      logError(
+        "[AddEventButton] Error reading from query cache for optimistic set",
+        e,
+      );
     }
-    const cachedPhotos =
-      queryClient.getQueryData<CachedPhoto[]>(recentPhotosQueryKey);
-    const initialUri = cachedPhotos?.[0]?.uri;
 
-    // 3. Clear draft state (so /add opens fresh)
-    resetAddEventState();
+    router.push("/add"); // Navigate immediately
 
-    // 4. Navigate right away for instant feedback
-    router.push("/add");
-
-    // 5. If we had something in the cache, show it **immediately**
-    if (initialUri) {
-      setImagePreview(initialUri, "add");
-      const filename = initialUri.split("/").pop() || "photo.jpg";
-      setInput(filename, "add");
-    }
-
-    // 6. Heavy work in background (don't block UI)
+    // Heavy work in background: fetch fresh data and update if needed
     void (async () => {
       try {
         let permissionGranted = hasMediaPermission;
@@ -139,13 +138,33 @@ export default function AddEventButton({
         }
 
         if (permissionGranted) {
-          const { data: photos, isSuccess } = await refetchRecentPhotos();
-          if (isSuccess && photos?.[0]?.uri) {
-            const uri = photos[0].uri;
-            setImagePreview(uri, "add");
-            const filename = uri.split("/").pop() || "photo.jpg";
+          const { data: photoFetchResult, isSuccess } =
+            await refetchRecentPhotos();
+
+          if (
+            isSuccess &&
+            photoFetchResult &&
+            Array.isArray(photoFetchResult.photos) &&
+            photoFetchResult.photos.length > 0 &&
+            photoFetchResult.photos[0]?.uri
+          ) {
+            const actualLatestUri = photoFetchResult.photos[0].uri;
+            setImagePreview(actualLatestUri, "add"); // Update/confirm the preview
+            const filename = actualLatestUri.split("/").pop() || "photo.jpg";
             setInput(filename, "add");
-            logDebug(`[AddEventButton] Selected latest photo ${uri}`);
+            logDebug(
+              `[AddEventButton] Background fetch updated/confirmed photo ${actualLatestUri}`,
+            );
+          } else {
+            logDebug(
+              "[AddEventButton] Background photo fetch was not successful or no photos found.",
+              {
+                isSuccess,
+                hasPhotoFetchResult: !!photoFetchResult,
+                hasPhotosArray: Array.isArray(photoFetchResult?.photos),
+                photosLength: photoFetchResult?.photos.length,
+              },
+            );
           }
         } else {
           logDebug(
@@ -153,18 +172,19 @@ export default function AddEventButton({
           );
         }
       } catch (err) {
-        logError("Error in AddEventButton handlePress", err);
+        logError("Error in AddEventButton background task", err);
       }
     })();
   }, [
     hasUnlimited,
     showProPaywallIfNeeded,
     resetAddEventState,
-    hasMediaPermission,
     queryClient,
-    refetchRecentPhotos,
     setImagePreview,
     setInput,
+    hasMediaPermission,
+    refetchRecentPhotos,
+    // router is stable, recentPhotosQueryKey is stable
   ]);
 
   /**
