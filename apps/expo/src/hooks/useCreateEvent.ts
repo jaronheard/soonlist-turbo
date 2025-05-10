@@ -20,6 +20,7 @@ interface CreateEventOptions {
   imageUri?: string;
   userId: string;
   username: string;
+  sendNotification?: boolean;
 }
 
 type _EventResponse =
@@ -98,7 +99,14 @@ export function useCreateEvent() {
         }
       }
 
-      const { rawText, linkPreview, imageUri, userId, username } = options;
+      const {
+        rawText,
+        linkPreview,
+        imageUri,
+        userId,
+        username,
+        sendNotification = false,
+      } = options;
 
       try {
         setIsCapturing(true);
@@ -111,6 +119,7 @@ export function useCreateEvent() {
             lists: [],
             timezone: userTimezone,
             visibility: "private",
+            sendNotification,
           });
 
           if (result.success && "event" in result && result.event) {
@@ -163,6 +172,7 @@ export function useCreateEvent() {
               lists: [],
               timezone: userTimezone,
               visibility: "private",
+              sendNotification,
             });
 
             if (!eventResult.success) {
@@ -198,6 +208,7 @@ export function useCreateEvent() {
             lists: [],
             timezone: userTimezone,
             visibility: "private",
+            sendNotification,
           });
 
           if (result.success && "event" in result && result.event) {

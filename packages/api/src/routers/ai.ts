@@ -25,6 +25,7 @@ const prototypeEventCreateBaseSchema = z.object({
   comment: z.string().optional(),
   lists: z.array(z.object({ value: z.string() })),
   visibility: z.enum(["public", "private"]).optional(),
+  sendNotification: z.boolean().optional().default(true),
   userId: z.string(),
   username: z.string(),
 });
@@ -90,7 +91,7 @@ export const aiRouter = createTRPCRouter({
       return fetchAndProcessEvent({
         ctx,
         input,
-        fnName: "eventFromUrl",
+        fnName: "eventsFromUrl",
       });
     }),
   eventFromImage: protectedProcedure
