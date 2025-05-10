@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -38,8 +39,7 @@ export default function AddEventButton({
     resetAddEventState: state.resetAddEventState,
   }));
 
-  // RevenueCat
-  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
+  const { customerInfo, showProPaywallIfNeeded, isLoading } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
@@ -49,22 +49,28 @@ export default function AddEventButton({
   // Keep permission status up‑to‑date globally
   useMediaPermissions();
 
-  // Animation for the plus icon
-  const rotation = useSharedValue(0);
-  const animatedStyles = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotate: `${rotation.value}deg` }],
-    };
-  });
-
-  // Start animation when component mounts
+  /**
+   * Small bounce for the chevron hint
+   */
+  const translateY = useSharedValue(0);
   useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(360, { duration: 2000 }),
-      -1, // Infinite repetition
-      false, // No reverse
+    translateY.value = withRepeat(
+      withTiming(-12, { duration: 500, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true,
     );
-  }, [rotation]);
+    return () => {
+      translateY.value = 0;
+    };
+  }, [translateY]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    position: "absolute",
+    top: -150,
+    left: "50%",
+    transform: [{ translateX: -32 }, { translateY: translateY.value }],
+    zIndex: 10,
+  }));
 
   /**
    * Main press handler
@@ -143,83 +149,88 @@ export default function AddEventButton({
   ]);
 
   /**
-   * Render
-   * ------
-   * Renders a floating action button with a plus icon.
-   * The button has a blur effect and a gradient background.
+   * UI
    */
   return (
-    <Pressable onPress={handlePress} style={styles.container}>
-      <BlurView intensity={30} style={styles.blurView}>
-        <LinearGradient
-          colors={["#FF5F6D", "#FFC371"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradient}
+    <>
+      {/* Background gradients */}
+      <View className="absolute bottom-0 left-0 right-0" pointerEvents="none">
+        <View className="absolute bottom-0 h-24 w-full">
+          <BlurView
+            intensity={10}
+            className="h-full w-full opacity-20"
+            tint="light"
+          />
+        </View>
+        <View className="absolute bottom-0 h-40 w-full">
+          <LinearGradient
+            colors={["transparent", "#5A32FB"]}
+            locations={[0, 1]}
+            style={{
+              position: "absolute",
+              height: "100%",
+              width: "100%",
+              opacity: 0.3,
+            }}
+          />
+          <LinearGradient
+            colors={["transparent", "#E0D9FF"]}
+            locations={[0, 1]}
+            style={{
+              position: "absolute",
+              height: "100%",
+              width: "100%",
+              opacity: 0.1,
+            }}
+          />
+        </View>
+      </View>
+
+      {/* Main action button */}
+      {!isLoading && (
+        <TouchableOpacity
+          onPress={handlePress}
+          className="absolute bottom-8 self-center"
         >
-          <View style={styles.iconContainer}>
-            <Animated.View style={[styles.plusIcon, animatedStyles]}>
-              <PlusIcon size={24} color="#fff" />
-            </Animated.View>
-            {showChevron && (
-              <View style={styles.chevronContainer}>
-                <ChevronDown size={12} color="#fff" />
-              </View>
-            )}
-            <View style={styles.sparklesContainer}>
-              <Sparkles size={14} color="#fff" />
+          {hasUnlimited ? (
+            <View
+              className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
+              style={{
+                shadowColor: "#5A32FB",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 8,
+              }}
+            >
+              <PlusIcon size={44} color="#FFF" strokeWidth={2} />
             </View>
-          </View>
-        </LinearGradient>
-      </BlurView>
-    </Pressable>
+          ) : (
+            <View
+              className="flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-3.5"
+              style={{
+                shadowColor: "#5A32FB",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 8,
+              }}
+            >
+              <Sparkles size={20} color="#FFF" />
+              <Text className="ml-2 text-2xl font-bold text-white">
+                Start your free trial
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      )}
+
+      {/* Bouncing chevron */}
+      {showChevron && (
+        <Animated.View style={animatedStyle}>
+          <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />
+        </Animated.View>
+      )}
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  blurView: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 30,
-    overflow: "hidden",
-  },
-  gradient: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconContainer: {
-    position: "relative",
-    width: 24,
-    height: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  plusIcon: {
-    position: "absolute",
-  },
-  chevronContainer: {
-    position: "absolute",
-    bottom: -18,
-  },
-  sparklesContainer: {
-    position: "absolute",
-    top: -18,
-    right: -18,
-  },
-});
