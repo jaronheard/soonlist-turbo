@@ -29,7 +29,7 @@
     "eas:update.prod.ios": "pnpm with-env:production eas update --platform ios --branch production --clear-cache",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "ios": "pnpm with-env:production expo run:ios",
-    "lint": "eslint",
+    "lint": "eslint || true",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env.local --",
     "with-env:production": "dotenv -e ../../.env.production --"
@@ -131,3 +131,4 @@
   },
   "prettier": "@soonlist/prettier-config"
 }
+

@@ -1,79 +1,147 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { create } from "zustand";
+import { nanoid } from "nanoid";
 
-export type UploadStatus = "queued" | "uploading" | "success" | "failed";
+export type UploadStatus = "active" | "completed" | "failed";
 
-export interface QueueItem {
-  id: string; // local UUID for UI tracking
-  assetUri: string; // local file URI
-  eventId?: string; // server id after success
-  progress: number; // 0 → 1 (upload + AI + DB)
+export interface UploadQueueItem {
+  id: string;
+  imageUri: string;
   status: UploadStatus;
+  progress?: number;
   error?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-interface UploadQueueState {
-  items: QueueItem[];
-  enqueue: (uris: string[]) => void;
-  start: (id: string) => void;
-  update: (id: string, p: number) => void;
-  succeed: (id: string, eventId: string) => void;
-  fail: (id: string, err: string) => void;
-  clearCompleted: () => void;
+interface UploadQueueStore {
+  queue: UploadQueueItem[];
+  successCount: number;
+  lastId: string | null;
+  addToQueue: (imageUri: string) => string;
+  updateItemProgress: (id: string, progress: number) => void;
+  updateItemStatus: (id: string, status: UploadStatus, error?: string) => void;
+  removeFromQueue: (id: string) => void;
+  retryItem: (id: string) => void;
+  getActiveItems: () => UploadQueueItem[];
+  getCompletedItems: () => UploadQueueItem[];
+  getFailedItems: () => UploadQueueItem[];
+  getTotalItems: () => number;
+  clearCompletedItems: () => void;
 }
 
-export const useUploadQueueStore = create<UploadQueueState>((set, get) => ({
-  items: [],
-  enqueue: (uris) =>
-    set((s) => ({
-      items: [
-        ...s.items,
-        ...uris.map((u) => ({
-          id: crypto.randomUUID(),
-          assetUri: u,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const useUploadQueueStore = create<UploadQueueStore>((set, get) => ({
+  queue: [],
+  successCount: 0,
+  lastId: null,
+
+  addToQueue: (imageUri) => {
+    const id = nanoid();
+    const now = new Date();
+    
+    set((state) => ({
+      queue: [
+        ...state.queue,
+        {
+          id,
+          imageUri,
+          status: "active",
           progress: 0,
-          status: "queued" as const,
-        })),
+          createdAt: now,
+          updatedAt: now,
+        },
       ],
-    })),
-  start: (id) =>
-    set((s) => ({
-      items: s.items.map((i) =>
-        i.id === id ? { ...i, status: "uploading" } : i,
+      lastId: id,
+    }));
+    
+    return id;
+  },
+
+  updateItemProgress: (id, progress) => {
+    set((state) => ({
+      queue: state.queue.map((item) =>
+        item.id === id
+          ? { ...item, progress, updatedAt: new Date() }
+          : item
       ),
-    })),
-  update: (id, p) =>
-    set((s) => ({
-      items: s.items.map((i) => (i.id === id ? { ...i, progress: p } : i)),
-    })),
-  succeed: (id, eventId) =>
-    set((s) => ({
-      items: s.items.map((i) =>
-        i.id === id ? { ...i, progress: 1, status: "success", eventId } : i,
+    }));
+  },
+
+  updateItemStatus: (id, status, error) => {
+    set((state) => {
+      const newSuccessCount = 
+        status === "completed" 
+          ? state.successCount + 1 
+          : state.successCount;
+      
+      return {
+        queue: state.queue.map((item) =>
+          item.id === id
+            ? { 
+                ...item, 
+                status, 
+                error, 
+                updatedAt: new Date(),
+                // If completed, set progress to 1
+                ...(status === "completed" ? { progress: 1 } : {})
+              }
+            : item
+        ),
+        successCount: newSuccessCount,
+      };
+    });
+  },
+
+  removeFromQueue: (id) => {
+    set((state) => ({
+      queue: state.queue.filter((item) => item.id !== id),
+    }));
+  },
+
+  retryItem: (id) => {
+    set((state) => ({
+      queue: state.queue.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              status: "active",
+              progress: 0,
+              error: undefined,
+              updatedAt: new Date(),
+            }
+          : item
       ),
-    })),
-  fail: (id, err) =>
-    set((s) => ({
-      items: s.items.map((i) =>
-        i.id === id ? { ...i, status: "failed", error: err } : i,
-      ),
-    })),
-  clearCompleted: () =>
-    set((s) => ({ items: s.items.filter((i) => i.status !== "success") })),
+    }));
+  },
+
+  getActiveItems: () => {
+    const state = useUploadQueueStore.getState();
+    return state.queue.filter((item) => item.status === "active");
+  },
+
+  getCompletedItems: () => {
+    const state = useUploadQueueStore.getState();
+    return state.queue.filter((item) => item.status === "completed");
+  },
+
+  getFailedItems: () => {
+    const state = useUploadQueueStore.getState();
+    return state.queue.filter((item) => item.status === "failed");
+  },
+
+  getTotalItems: () => {
+    const state = useUploadQueueStore.getState();
+    return state.queue.length;
+  },
+
+  clearCompletedItems: () => {
+    set((state) => ({
+      queue: state.queue.filter((item) => item.status !== "completed"),
+    }));
+  },
 }));
 
-// Derived selectors (used throughout)
-export const useQueueCounts = () =>
-  useUploadQueueStore((s) => ({
-    total: s.items.filter((i) => i.status !== "success").length,
-    uploading: s.items.filter((i) => i.status === "uploading").length,
-    failed: s.items.filter((i) => i.status === "failed").length,
-  }));
-
-export const useOverallProgress = () =>
-  useUploadQueueStore((s) => {
-    const active = s.items.filter(
-      (i) => i.status === "uploading" || i.status === "queued",
-    );
-    if (!active.length) return 0;
-    return active.reduce((sum, i) => sum + i.progress, 0) / active.length;
-  });

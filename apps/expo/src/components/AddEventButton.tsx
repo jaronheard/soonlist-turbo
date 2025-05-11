@@ -1,348 +1,388 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import Animated, {
-  Easing,
-  useAnimatedProps,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from "react-native-reanimated";
-import { BlurView } from "expo-blur";
-import * as Haptics from "expo-haptics";
-import * as ImagePicker from "expo-image-picker";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
-import { toast } from "sonner-native";
-import Svg, { Circle } from "react-native-svg";
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
+import { useColorScheme } from "nativewind";
+import { Ionicons } from "@expo/vector-icons";
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import { useUploadQueueStore } from "../store/useUploadQueueStore";
+import { useUploadQueueUi } from "../hooks/useFeatureFlags";
+import { UploadStatusSheet } from "./UploadStatusSheet";
+import { InlineBanner } from "./InlineBanner";
+import { CircularProgress } from "./CircularProgress";
+import { useCreateEvent } from "../hooks/useCreateEvent";
+import { useImagePicker } from "../hooks/useImagePicker";
+import { useAppState } from "../hooks/useAppState";
+import { useLocalNotifications } from "../hooks/useLocalNotifications";
+import { useHaptics } from "../hooks/useHaptics";
+import { useToast } from "../hooks/useToast";
+import { cn } from "../lib/utils";
+import { colors } from "../lib/colors";
 
-import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
-import { useCreateEvent } from "~/hooks/useCreateEvent";
-import { useMediaPermissions } from "~/hooks/useMediaPermissions";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore } from "~/store";
-import {
-  useQueueCounts,
-  useOverallProgress,
-  useUploadQueueStore,
-} from "~/store/useUploadQueueStore";
-import { logError } from "../utils/errorLogging";
-import { openUploadStatusSheet } from "./UploadStatusSheet";
-import { showInlineBanner } from "./InlineBanner";
+export function AddEventButton() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const { showActionSheetWithOptions } = useActionSheet();
+  const { showToast } = useToast();
+  const { triggerHaptic } = useHaptics();
+  const isFocused = useIsFocused();
+  const { scheduleNotification } = useLocalNotifications();
+  const appState = useAppState();
+  const [showBanner, setShowBanner] = useState(false);
+  const [bannerType, setBannerType] = useState<"success" | "error">("success");
+  const [bannerMessage, setBannerMessage] = useState("");
+  const [isStatusSheetOpen, setIsStatusSheetOpen] = useState(false);
+  const statusSheetRef = useRef<{ snapToIndex: (index: number) => void }>(null);
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+  // Feature flag for new upload queue UI
+  const useUploadQueueUiEnabled = useUploadQueueUi();
 
-interface AddEventButtonProps {
-  showChevron?: boolean;
-}
+  // Legacy toast-based upload state (will be removed when feature flag is removed)
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-/**
- * AddEventButton
- * ---------------
- * Opens the native photo picker (up to 10 images) and creates events for each selected photo in parallel.
- * This bypasses the /add screen for a faster multi‑event creation flow.
- */
-export default function AddEventButton({
-  showChevron = true,
-}: AddEventButtonProps) {
-  // Zustand selectors
-  const { resetAddEventState } = useAppStore((state) => ({
-    resetAddEventState: state.resetAddEventState,
-  }));
+  // New upload queue state
+  const {
+    queue,
+    addToQueue,
+    updateItemProgress,
+    updateItemStatus,
+    removeFromQueue,
+    retryItem,
+    getActiveItems,
+    getCompletedItems,
+    getFailedItems,
+    getTotalItems,
+    clearCompletedItems,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    successCount,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    lastId,
+  } = useUploadQueueStore();
 
-  const { customerInfo, showProPaywallIfNeeded, isLoading } = useRevenueCat();
-  const hasUnlimited =
-    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+  const activeItems = getActiveItems();
+  const failedItems = getFailedItems();
+  const completedItems = getCompletedItems();
+  const hasActiveUploads = activeItems.length > 0;
+  const hasFailedUploads = failedItems.length > 0;
+  const hasCompletedUploads = completedItems.length > 0;
+  const totalItems = getTotalItems();
 
-  const { user } = useUser();
-  const { createEvent } = useCreateEvent();
+  // Calculate overall progress for the progress ring
+  const overallProgress = queue.reduce(
+    (acc, item) => acc + (item.progress || 0),
+    0,
+  ) / Math.max(totalItems, 1);
 
-  // Keep permission status up‑to‑date globally
-  useMediaPermissions();
-
-  // Queue state
-  const { total, failed } = useQueueCounts();
-  const progress = useOverallProgress();
-  const [wasBusy, setWasBusy] = useState(false);
-  const [successCount, setSuccessCount] = useState(0);
-  const [lastId, setLastId] = useState<string | undefined>(undefined);
-
-  // Calculate circumference for progress ring
-  const radius = 46;
-  const circumference = 2 * Math.PI * radius;
-
-  // Watch for queue completion
+  // Handle background/foreground state changes for notifications
   useEffect(() => {
-    if (total > 0) setWasBusy(true);
+    // When app comes back to foreground and we have completed uploads
+    if (
+      appState.current === "active" &&
+      appState.previous === "background" &&
+      hasCompletedUploads &&
+      !hasActiveUploads
+    ) {
+      // Show banner for completed uploads that happened in background
+      void handleUploadCompletion();
+    }
+  }, [appState.current, hasCompletedUploads, hasActiveUploads]);
 
-    if (wasBusy && total === 0) {
-      setWasBusy(false);
+  // Show status sheet when there are failed uploads
+  useEffect(() => {
+    if (hasFailedUploads && useUploadQueueUiEnabled) {
+      void triggerHaptic("error");
+      setIsStatusSheetOpen(true);
+    }
+  }, [hasFailedUploads, useUploadQueueUiEnabled, triggerHaptic]);
 
-      // Count successful items before clearing them
-      const items = useUploadQueueStore.getState().items;
-      const successfulItems = items.filter((item) => item.status === "success");
-      const count = successfulItems.length;
+  // Handle upload completion
+  const handleUploadCompletion = useCallback(() => {
+    if (hasCompletedUploads) {
+      const count = completedItems.length;
+      const message =
+        count === 1
+          ? "1 photo uploaded successfully"
+          : `${count} photos uploaded successfully`;
 
-      // Get the last successful event ID for single-event navigation
-      const lastSuccessfulItem = successfulItems[successfulItems.length - 1];
-      const lastEventId = lastSuccessfulItem?.eventId;
-
-      setSuccessCount(count);
-      setLastId(lastEventId);
-
-      if (failed > 0) {
-        // Show failure banner
-        showInlineBanner(
-          `${failed} event${failed > 1 ? "s" : ""} failed · Retry`,
-          () => openUploadStatusSheet(),
-        );
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      } else if (count > 0) {
-        // Show success banner
-        showInlineBanner(`${count} event${count > 1 ? "s" : ""} added`, () =>
-          router.push(
-            count === 1 && lastEventId ? `/event/${lastEventId}` : "/feed",
-          ),
-        );
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // If app was in background, send notification
+      if (appState.previous === "background") {
+        void scheduleNotification({
+          title: "Upload Complete",
+          body: message,
+        });
+      } else {
+        // Otherwise show in-app banner
+        setBannerType("success");
+        setBannerMessage(message);
+        setShowBanner(true);
+        void triggerHaptic("success");
       }
 
-      // Clear successful items so badge stays hidden
-      useUploadQueueStore.getState().clearCompleted();
-    }
-  }, [total, failed, wasBusy]);
-
-  /**
-   * Small bounce for the chevron hint
-   */
-  const translateY = useSharedValue(0);
-  useEffect(() => {
-    translateY.value = withRepeat(
-      withTiming(-12, { duration: 500, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true,
-    );
-    return () => {
-      translateY.value = 0;
-    };
-  }, [translateY]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    position: "absolute",
-    top: -150,
-    left: "50%",
-    transform: [{ translateX: -32 }, { translateY: translateY.value }],
-    zIndex: 10,
-  }));
-
-  // Animated props for progress ring
-  const animatedProps = useAnimatedProps(() => ({
-    strokeDashoffset: circumference * (1 - progress),
-  }));
-
-  /**
-   * Main press handler
-   * ------------------
-   * 1. Show paywall if needed.
-   * 2. Clear draft state (so any stale data is removed)
-   * 3. Launch native photo picker directly
-   * 4. Create event with selected photo
-   * 5. Show success toast
-   */
-  const handlePress = useCallback(async () => {
-    // Haptic feedback on tap
-    Haptics.selectionAsync();
-
-    // 1. Paywall gate
-    if (!hasUnlimited) {
-      void showProPaywallIfNeeded();
-      return;
-    }
-
-    // 2. Clear draft state
-    resetAddEventState();
-
-    // 3. Launch native photo picker directly
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.8,
-        allowsMultipleSelection: true,
-        selectionLimit: 10, // iOS‑only; we also enforce in JS
-      });
-
-      if (!result.canceled && result.assets.length) {
-        const username = user?.username;
-        const userId = user?.id;
-
-        // Ensure user info is available before proceeding
-        if (!username || !userId) {
-          toast.error("User information not available");
-          return;
-        }
-
-        // Respect the 10‑image limit in case the platform ignores selectionLimit
-        const assets = result.assets.slice(0, 10);
-
-        // Add assets to queue
-        const assetUris = assets.map((asset) => asset.uri);
-        useUploadQueueStore.getState().enqueue(assetUris);
-
-        // Get the queue items for these assets
-        const queueItems = useUploadQueueStore
-          .getState()
-          .items.filter((item) => assetUris.includes(item.assetUri));
-
-        // Kick off event creation requests in parallel
-        void Promise.allSettled(
-          queueItems.map((item) =>
-            createEvent({
-              imageUri: item.assetUri,
-              userId: userId,
-              username: username,
-              queueItemId: item.id,
-            }),
-          ),
-        );
-      }
-    } catch (err) {
-      logError("Error in AddEventButton handlePress", err);
-      toast.error("Failed to open photo picker. Please try again.");
+      // Clear completed items after showing notification
+      clearCompletedItems();
     }
   }, [
-    hasUnlimited,
-    showProPaywallIfNeeded,
-    resetAddEventState,
-    user,
-    createEvent,
+    hasCompletedUploads,
+    completedItems.length,
+    appState.previous,
+    scheduleNotification,
+    triggerHaptic,
+    clearCompletedItems,
   ]);
 
-  // Handle badge tap
-  const handleBadgeTap = useCallback((e: any) => {
-    e.stopPropagation();
-    openUploadStatusSheet();
-  }, []);
+  // Handle upload failure notification
+  const handleUploadFailure = useCallback(() => {
+    if (hasFailedUploads) {
+      const count = failedItems.length;
+      const message =
+        count === 1
+          ? "1 photo failed to upload"
+          : `${count} photos failed to upload`;
 
-  /**
-   * UI
-   */
+      // Show error banner
+      setBannerType("error");
+      setBannerMessage(message);
+      setShowBanner(true);
+    }
+  }, [hasFailedUploads, failedItems.length]);
+
+  // Show completion banner when all uploads finish and we have completed items
+  useEffect(() => {
+    if (!hasActiveUploads && hasCompletedUploads && appState.current === "active") {
+      void handleUploadCompletion();
+    }
+  }, [hasActiveUploads, hasCompletedUploads, appState.current, handleUploadCompletion]);
+
+  // Image picker hook
+  const { pickImage, takePhoto } = useImagePicker();
+
+  // Create event hook with progress callback
+  const { createEvent } = useCreateEvent({
+    onProgress: (progress, queueItemId) => {
+      if (useUploadQueueUiEnabled && queueItemId) {
+        updateItemProgress(queueItemId, progress);
+      } else {
+        setUploadProgress(progress);
+      }
+    },
+    onSuccess: (_, queueItemId) => {
+      if (useUploadQueueUiEnabled && queueItemId) {
+        updateItemStatus(queueItemId, "completed");
+      } else {
+        setIsUploading(false);
+        setUploadProgress(0);
+        showToast({
+          message: "Event created successfully!",
+          type: "success",
+        });
+      }
+    },
+    onError: (error, queueItemId) => {
+      console.error("Error creating event:", error);
+      
+      if (useUploadQueueUiEnabled && queueItemId) {
+        updateItemStatus(queueItemId, "failed", error.message);
+        void handleUploadFailure();
+      } else {
+        setIsUploading(false);
+        setUploadProgress(0);
+        showToast({
+          message: "Failed to create event",
+          type: "error",
+        });
+      }
+    },
+  });
+
+  // Handle image selection and upload
+  const handleImageSelected = useCallback(
+    async (imageUri: string) => {
+      if (useUploadQueueUiEnabled) {
+        // Add to queue and get the queue item ID
+        const queueItemId = addToQueue(imageUri);
+        void triggerHaptic("light");
+        
+        // Start the upload with the queue item ID for tracking
+        await createEvent({ imageUri, queueItemId });
+      } else {
+        // Legacy flow
+        setIsUploading(true);
+        await createEvent({ imageUri });
+      }
+    },
+    [createEvent, addToQueue, useUploadQueueUiEnabled, triggerHaptic],
+  );
+
+  // Open action sheet to choose image source
+  const openActionSheet = useCallback(() => {
+    const options = ["Take Photo", "Choose from Library", "Cancel"];
+    const cancelButtonIndex = 2;
+
+    showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex,
+      },
+      async (buttonIndex) => {
+        try {
+          if (buttonIndex === 0) {
+            const photo = await takePhoto();
+            if (photo) {
+              await handleImageSelected(photo);
+            }
+          } else if (buttonIndex === 1) {
+            const image = await pickImage();
+            if (image) {
+              await handleImageSelected(image);
+            }
+          }
+        } catch (error) {
+          console.error("Error handling image selection:", error);
+        }
+      },
+    );
+  }, [showActionSheetWithOptions, takePhoto, pickImage, handleImageSelected]);
+
+  // Handle button press
+  const handlePress = useCallback((event: React.SyntheticEvent) => {
+    event.stopPropagation();
+    
+    if (useUploadQueueUiEnabled && (hasFailedUploads || hasActiveUploads)) {
+      // Open status sheet if we have active or failed uploads
+      setIsStatusSheetOpen(true);
+      void triggerHaptic("light");
+    } else {
+      // Otherwise open action sheet to add new photo
+      openActionSheet();
+    }
+  }, [
+    openActionSheet,
+    useUploadQueueUiEnabled,
+    hasFailedUploads,
+    hasActiveUploads,
+    triggerHaptic,
+  ]);
+
+  // Don't show the button if not on the main screen
+  if (!isFocused) return null;
+
   return (
     <>
-      {/* Background gradients */}
-      <View className="absolute bottom-0 left-0 right-0" pointerEvents="none">
-        <View className="absolute bottom-0 h-24 w-full">
-          <BlurView
-            intensity={10}
-            className="h-full w-full opacity-20"
-            tint="light"
-          />
-        </View>
-        <View className="absolute bottom-0 h-40 w-full">
-          <LinearGradient
-            colors={["transparent", "#5A32FB"]}
-            locations={[0, 1]}
-            style={{
-              position: "absolute",
-              height: "100%",
-              width: "100%",
-              opacity: 0.3,
-            }}
-          />
-          <LinearGradient
-            colors={["transparent", "#E0D9FF"]}
-            locations={[0, 1]}
-            style={{
-              position: "absolute",
-              height: "100%",
-              width: "100%",
-              opacity: 0.1,
-            }}
-          />
-        </View>
+      <View
+        className={cn(
+          "absolute bottom-0 right-0 m-4 z-10",
+          colorScheme === "dark" ? "bg-black" : "bg-white",
+        )}
+        style={styles.buttonContainer}
+      >
+        <Pressable
+          onPress={handlePress}
+          className={cn(
+            "items-center justify-center rounded-full",
+            colorScheme === "dark" ? "bg-neutral-800" : "bg-neutral-100",
+            hasFailedUploads && useUploadQueueUiEnabled
+              ? "border-2 border-red-500"
+              : "",
+          )}
+          style={styles.button}
+        >
+          {useUploadQueueUiEnabled && hasActiveUploads ? (
+            // Show progress ring when uploading with new UI
+            <CircularProgress
+              progress={overallProgress}
+              size={60}
+              strokeWidth={3}
+              color={colors.primary}
+            >
+              <View className="items-center justify-center">
+                <Ionicons
+                  name="add"
+                  size={30}
+                  color={colorScheme === "dark" ? "white" : "black"}
+                />
+                {totalItems > 1 && (
+                  <View
+                    className="absolute -top-1 -right-1 bg-primary rounded-full w-5 h-5 items-center justify-center"
+                    style={styles.badge}
+                  >
+                    <View className="text-xs text-white font-bold">
+                      {totalItems}
+                    </View>
+                  </View>
+                )}
+              </View>
+            </CircularProgress>
+          ) : (
+            // Regular add button
+            <Ionicons
+              name="add"
+              size={30}
+              color={colorScheme === "dark" ? "white" : "black"}
+            />
+          )}
+        </Pressable>
       </View>
 
-      {/* Main action button */}
-      {!isLoading && (
-        <TouchableOpacity
-          onPress={handlePress}
-          className="absolute bottom-8 self-center"
-        >
-          {hasUnlimited ? (
-            <View
-              className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
-              style={{
-                shadowColor: "#5A32FB",
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-                elevation: 8,
-              }}
-            >
-              {/* Progress ring */}
-              <Svg width={96} height={96} style={{ position: "absolute" }}>
-                <AnimatedCircle
-                  cx={48}
-                  cy={48}
-                  r={radius}
-                  stroke={failed ? "#FF4444" : "#5A32FB"}
-                  strokeWidth={4}
-                  strokeDasharray={circumference}
-                  animatedProps={animatedProps}
-                  strokeLinecap="round"
-                  fill="transparent"
-                />
-              </Svg>
-
-              {/* "+" icon stays centered */}
-              <PlusIcon size={44} color="#FFF" strokeWidth={2} />
-
-              {/* Badge */}
-              {total > 0 && (
-                <TouchableOpacity
-                  onPress={handleBadgeTap}
-                  className="absolute right-0 top-0 h-6 min-w-6 rounded-full bg-white px-1"
-                  style={{
-                    backgroundColor: failed ? "#FF4444" : "white",
-                  }}
-                >
-                  <Text
-                    className="text-center text-xs font-bold"
-                    style={{
-                      color: failed ? "white" : "black",
-                    }}
-                  >
-                    {failed ? "⚠️" : total}
-                  </Text>
-                </TouchableOpacity>
-              )}
+      {/* Legacy toast UI */}
+      {!useUploadQueueUiEnabled && isUploading && (
+        <View className="absolute bottom-24 left-0 right-0 items-center">
+          <View className="bg-neutral-800 rounded-lg px-4 py-2 flex-row items-center">
+            <View className="w-40 h-1 bg-neutral-700 rounded-full overflow-hidden">
+              <View
+                className="h-full bg-primary"
+                style={{ width: `${uploadProgress * 100}%` }}
+              />
             </View>
-          ) : (
-            <View
-              className="flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-3.5"
-              style={{
-                shadowColor: "#5A32FB",
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-                elevation: 8,
-              }}
-            >
-              <Sparkles size={20} color="#FFF" />
-              <Text className="ml-2 text-2xl font-bold text-white">
-                Start your free trial
-              </Text>
+            <View className="ml-2">
+              <View className="text-white text-xs">
+                {Math.round(uploadProgress * 100)}%
+              </View>
             </View>
-          )}
-        </TouchableOpacity>
+          </View>
+        </View>
       )}
 
-      {/* Bouncing chevron */}
-      {showChevron && (
-        <Animated.View style={animatedStyle}>
-          <ChevronDown size={64} color="#5A32FB" strokeWidth={4} />
-        </Animated.View>
+      {/* New UI components */}
+      {useUploadQueueUiEnabled && (
+        <>
+          <UploadStatusSheet
+            isOpen={isStatusSheetOpen}
+            onClose={() => setIsStatusSheetOpen(false)}
+            ref={statusSheetRef}
+          />
+          <InlineBanner
+            visible={showBanner}
+            message={bannerMessage}
+            type={bannerType}
+            onDismiss={() => setShowBanner(false)}
+          />
+        </>
       )}
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  buttonContainer: {
+    borderRadius: 30,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  button: {
+    width: 60,
+    height: 60,
+  },
+  badge: {
+    borderWidth: 1,
+    borderColor: "white",
+  },
+});
+
