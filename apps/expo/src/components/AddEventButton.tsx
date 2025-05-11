@@ -6,6 +6,7 @@ import { useActionSheet } from "@expo/react-native-action-sheet";
 import { Ionicons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 import { useColorScheme } from "nativewind";
+import { toast } from "sonner-native";
 
 import type { UploadQueueItem } from "../store/useUploadQueueStore";
 import { useAppState } from "../hooks/useAppState";
@@ -14,7 +15,6 @@ import { useUploadQueueUi } from "../hooks/useFeatureFlags";
 import { useHaptics } from "../hooks/useHaptics";
 import { useImagePicker } from "../hooks/useImagePicker";
 import { useLocalNotifications } from "../hooks/useLocalNotifications";
-import { useToast } from "../hooks/useToast";
 import { colors } from "../lib/colors";
 import { cn } from "../lib/utils";
 import { useUploadQueueStore } from "../store/useUploadQueueStore";
@@ -25,7 +25,6 @@ import { UploadStatusSheet } from "./UploadStatusSheet";
 export function AddEventButton() {
   const { colorScheme } = useColorScheme();
   const { showActionSheetWithOptions } = useActionSheet();
-  const { showToast } = useToast();
   const { triggerHaptic } = useHaptics();
   const { user } = useUser();
   const isFocused = useIsFocused();
@@ -173,10 +172,7 @@ export function AddEventButton() {
       } else {
         setIsUploading(false);
         setUploadProgress(0);
-        showToast({
-          message: "Event created successfully!",
-          type: "success",
-        });
+        toast.success("Event created successfully!");
       }
     },
     onError: (error: Error, queueItemId?: string) => {
@@ -188,10 +184,7 @@ export function AddEventButton() {
       } else {
         setIsUploading(false);
         setUploadProgress(0);
-        showToast({
-          message: "Failed to create event",
-          type: "error",
-        });
+        toast.error("Failed to create event");
       }
     },
   });
@@ -200,10 +193,7 @@ export function AddEventButton() {
   const handleImageSelected = useCallback(
     async (imageUri: string) => {
       if (!user?.id || !user.username) {
-        showToast({
-          message: "User information not available. Please try again.",
-          type: "error",
-        });
+        toast.error("User information not available. Please try again.");
         console.error("User ID or username is missing.");
         return;
       }
@@ -230,14 +220,7 @@ export function AddEventButton() {
         });
       }
     },
-    [
-      createEvent,
-      addToQueue,
-      useUploadQueueUiEnabled,
-      triggerHaptic,
-      user,
-      showToast,
-    ],
+    [createEvent, addToQueue, useUploadQueueUiEnabled, triggerHaptic, user],
   );
 
   // Open action sheet to choose image source
