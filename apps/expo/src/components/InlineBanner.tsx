@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, Pressable, StyleSheet, Animated } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 
@@ -73,9 +73,14 @@ export function InlineBanner({
       ]}
     >
       <View style={styles.content}>
-        <Ionicons name={iconName} size={20} color={iconColor} style={styles.icon} />
+        <Ionicons
+          name={iconName}
+          size={20}
+          color={iconColor}
+          style={styles.icon}
+        />
         <View style={styles.textContainer}>
-          <View style={{ color: textColor, fontSize: 14 }}>{message}</View>
+          <Text style={{ color: textColor, fontSize: 14 }}>{message}</Text>
         </View>
         <Pressable onPress={handleDismiss} style={styles.closeButton}>
           <Ionicons
@@ -127,4 +132,3 @@ const styles = StyleSheet.create({
     padding: 4,
   },
 });
-
