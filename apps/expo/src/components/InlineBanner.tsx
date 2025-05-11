@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
@@ -23,6 +23,16 @@ export function InlineBanner({
   const { colorScheme } = useColorScheme();
   const opacity = React.useRef(new Animated.Value(0)).current;
 
+  const handleDismiss = useCallback(() => {
+    Animated.timing(opacity, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      onDismiss();
+    });
+  }, [opacity, onDismiss]);
+
   useEffect(() => {
     if (visible) {
       Animated.timing(opacity, {
@@ -45,17 +55,7 @@ export function InlineBanner({
         useNativeDriver: true,
       }).start();
     }
-  }, [visible]);
-
-  const handleDismiss = () => {
-    Animated.timing(opacity, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      onDismiss();
-    });
-  };
+  }, [autoDismiss, dismissTimeout, handleDismiss, opacity, visible]);
 
   if (!visible) return null;
 

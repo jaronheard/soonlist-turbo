@@ -1,8 +1,10 @@
+import type { AppStateStatus } from "react-native";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { AppState, AppStateStatus } from "react-native";
+import { AppState } from "react-native";
 import * as Notifications from "expo-notifications";
-import { useUploadQueueStore } from "../store/useUploadQueueStore";
+
 import { useUploadQueueUi } from "../hooks/useFeatureFlags";
+import { useUploadQueueStore } from "../store/useUploadQueueStore";
 
 interface UploadQueueContextType {
   isBackgrounded: boolean;
