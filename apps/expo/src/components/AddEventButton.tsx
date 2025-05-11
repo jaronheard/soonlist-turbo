@@ -1,38 +1,33 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import type { GestureResponderEvent } from "react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, View, GestureResponderEvent } from "react-native";
-import { useRouter } from "expo-router";
+import { Pressable, StyleSheet, View } from "react-native";
+import { useUser } from "@clerk/clerk-expo";
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import { Ionicons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 import { useColorScheme } from "nativewind";
-import { Ionicons } from "@expo/vector-icons";
-import { useActionSheet } from "@expo/react-native-action-sheet";
-import { useUploadQueueStore } from "../store/useUploadQueueStore";
-import { useUploadQueueUi } from "../hooks/useFeatureFlags";
-import { UploadStatusSheet } from "./UploadStatusSheet";
-import { InlineBanner } from "./InlineBanner";
-import { CircularProgress } from "./CircularProgress";
-import { useCreateEvent, CreateEventOptions } from "../hooks/useCreateEvent";
-import { useImagePicker } from "../hooks/useImagePicker";
+
+import type { UploadQueueItem } from "../store/useUploadQueueStore";
 import { useAppState } from "../hooks/useAppState";
-import { useLocalNotifications } from "../hooks/useLocalNotifications";
+import { useCreateEvent } from "../hooks/useCreateEvent";
+import { useUploadQueueUi } from "../hooks/useFeatureFlags";
 import { useHaptics } from "../hooks/useHaptics";
+import { useImagePicker } from "../hooks/useImagePicker";
+import { useLocalNotifications } from "../hooks/useLocalNotifications";
 import { useToast } from "../hooks/useToast";
-import { cn } from "../lib/utils";
 import { colors } from "../lib/colors";
+import { cn } from "../lib/utils";
+import { useUploadQueueStore } from "../store/useUploadQueueStore";
+import { CircularProgress } from "./CircularProgress";
+import { InlineBanner } from "./InlineBanner";
+import { UploadStatusSheet } from "./UploadStatusSheet";
 
-interface AddEventButtonProps {
-  showChevron?: boolean;
-}
-
-export function AddEventButton({ showChevron }: AddEventButtonProps = {}) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const router = useRouter();
+export function AddEventButton() {
   const { colorScheme } = useColorScheme();
   const { showActionSheetWithOptions } = useActionSheet();
   const { showToast } = useToast();
   const { triggerHaptic } = useHaptics();
+  const { user } = useUser();
   const isFocused = useIsFocused();
   const { scheduleNotification } = useLocalNotifications();
   const appState = useAppState();
@@ -55,22 +50,16 @@ export function AddEventButton({ showChevron }: AddEventButtonProps = {}) {
     addToQueue,
     updateItemProgress,
     updateItemStatus,
-    removeFromQueue,
-    retryItem,
     getActiveItems,
     getCompletedItems,
     getFailedItems,
     getTotalItems,
     clearCompletedItems,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    successCount,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    lastId,
   } = useUploadQueueStore();
 
-  const activeItems = getActiveItems();
-  const failedItems = getFailedItems();
-  const completedItems = getCompletedItems();
+  const activeItems: UploadQueueItem[] = getActiveItems();
+  const failedItems: UploadQueueItem[] = getFailedItems();
+  const completedItems: UploadQueueItem[] = getCompletedItems();
   const hasActiveUploads = activeItems.length > 0;
   const hasFailedUploads = failedItems.length > 0;
   const hasCompletedUploads = completedItems.length > 0;
@@ -78,31 +67,10 @@ export function AddEventButton({ showChevron }: AddEventButtonProps = {}) {
 
   // Calculate overall progress for the progress ring
   const overallProgress =
-    queue.reduce((acc: number, item: any) => acc + (item.progress || 0), 0) /
-    Math.max(totalItems, 1);
-
-  // Handle background/foreground state changes for notifications
-  useEffect(() => {
-    // When app comes back to foreground and we have completed uploads
-    if (
-      appState.current === "active" &&
-      appState.previous === "background" &&
-      hasCompletedUploads &&
-      !hasActiveUploads
-    ) {
-      // Show banner for completed uploads that happened in background
-      void handleUploadCompletion();
-    }
-  }, [appState.current, hasCompletedUploads, hasActiveUploads]);
-
-  // Show status sheet when there are failed uploads
-  useEffect(() => {
-    if (hasFailedUploads && useUploadQueueUiEnabled) {
-      void triggerHaptic("error");
-      setIsStatusSheetOpen(true);
-    }
-  }, [hasFailedUploads, useUploadQueueUiEnabled, triggerHaptic]);
-
+    queue.reduce(
+      (acc: number, item: UploadQueueItem) => acc + (item.progress || 0),
+      0,
+    ) / Math.max(totalItems, 1);
   // Handle upload completion
   const handleUploadCompletion = useCallback(() => {
     if (hasCompletedUploads) {
@@ -163,26 +131,43 @@ export function AddEventButton({ showChevron }: AddEventButtonProps = {}) {
     ) {
       void handleUploadCompletion();
     }
-  }, [
-    hasActiveUploads,
-    hasCompletedUploads,
-    appState.current,
-    handleUploadCompletion,
-  ]);
+  }, [hasActiveUploads, hasCompletedUploads, handleUploadCompletion, appState]);
+
+  // Handle background/foreground state changes for notifications
+  useEffect(() => {
+    // When app comes back to foreground and we have completed uploads
+    if (
+      appState.current === "active" &&
+      appState.previous === "background" &&
+      hasCompletedUploads &&
+      !hasActiveUploads
+    ) {
+      // Show banner for completed uploads that happened in background
+      void handleUploadCompletion();
+    }
+  }, [hasCompletedUploads, hasActiveUploads, appState, handleUploadCompletion]);
+
+  // Show status sheet when there are failed uploads
+  useEffect(() => {
+    if (hasFailedUploads && useUploadQueueUiEnabled) {
+      void triggerHaptic("error");
+      setIsStatusSheetOpen(true);
+    }
+  }, [hasFailedUploads, useUploadQueueUiEnabled, triggerHaptic]);
 
   // Image picker hook
   const { pickImage, takePhoto } = useImagePicker();
 
   // Create event hook with progress callback
   const { createEvent } = useCreateEvent({
-    onProgress: (progress: number, queueItemId: string) => {
+    onProgress: (progress: number, queueItemId?: string) => {
       if (useUploadQueueUiEnabled && queueItemId) {
         updateItemProgress(queueItemId, progress);
       } else {
         setUploadProgress(progress);
       }
     },
-    onSuccess: (_: any, queueItemId: string) => {
+    onSuccess: (_data: unknown, queueItemId?: string) => {
       if (useUploadQueueUiEnabled && queueItemId) {
         updateItemStatus(queueItemId, "completed");
       } else {
@@ -194,7 +179,7 @@ export function AddEventButton({ showChevron }: AddEventButtonProps = {}) {
         });
       }
     },
-    onError: (error: Error, queueItemId: string) => {
+    onError: (error: Error, queueItemId?: string) => {
       console.error("Error creating event:", error);
 
       if (useUploadQueueUiEnabled && queueItemId) {
@@ -214,29 +199,45 @@ export function AddEventButton({ showChevron }: AddEventButtonProps = {}) {
   // Handle image selection and upload
   const handleImageSelected = useCallback(
     async (imageUri: string) => {
+      if (!user?.id || !user.username) {
+        showToast({
+          message: "User information not available. Please try again.",
+          type: "error",
+        });
+        console.error("User ID or username is missing.");
+        return;
+      }
+
       if (useUploadQueueUiEnabled) {
         // Add to queue and get the queue item ID
         const queueItemId = addToQueue(imageUri);
         void triggerHaptic("light");
 
         // Start the upload with the queue item ID for tracking
-        await createEvent({ 
-          imageUri, 
+        await createEvent({
+          imageUri,
           queueItemId,
-          userId: "", // Add required properties
-          username: ""
+          userId: user.id,
+          username: user.username,
         });
       } else {
         // Legacy flow
         setIsUploading(true);
-        await createEvent({ 
+        await createEvent({
           imageUri,
-          userId: "", // Add required properties
-          username: ""
+          userId: user.id,
+          username: user.username,
         });
       }
     },
-    [createEvent, addToQueue, useUploadQueueUiEnabled, triggerHaptic],
+    [
+      createEvent,
+      addToQueue,
+      useUploadQueueUiEnabled,
+      triggerHaptic,
+      user,
+      showToast,
+    ],
   );
 
   // Open action sheet to choose image source
@@ -249,7 +250,7 @@ export function AddEventButton({ showChevron }: AddEventButtonProps = {}) {
         options,
         cancelButtonIndex,
       },
-      async (buttonIndex: number) => {
+      async (buttonIndex?: number) => {
         try {
           if (buttonIndex === 0) {
             const photo = await takePhoto();
@@ -299,7 +300,7 @@ export function AddEventButton({ showChevron }: AddEventButtonProps = {}) {
     <>
       <View
         className={cn(
-          "absolute bottom-0 right-0 m-4 z-10",
+          "absolute bottom-0 right-0 z-10 m-4",
           colorScheme === "dark" ? "bg-black" : "bg-white",
         )}
         style={styles.buttonContainer}
@@ -331,10 +332,10 @@ export function AddEventButton({ showChevron }: AddEventButtonProps = {}) {
                 />
                 {totalItems > 1 && (
                   <View
-                    className="absolute -top-1 -right-1 bg-primary rounded-full w-5 h-5 items-center justify-center"
+                    className="absolute -right-1 -top-1 h-5 w-5 items-center justify-center rounded-full bg-primary"
                     style={styles.badge}
                   >
-                    <View className="text-xs text-white font-bold">
+                    <View className="text-xs font-bold text-white">
                       {totalItems}
                     </View>
                   </View>
@@ -355,15 +356,15 @@ export function AddEventButton({ showChevron }: AddEventButtonProps = {}) {
       {/* Legacy toast UI */}
       {!useUploadQueueUiEnabled && isUploading && (
         <View className="absolute bottom-24 left-0 right-0 items-center">
-          <View className="bg-neutral-800 rounded-lg px-4 py-2 flex-row items-center">
-            <View className="w-40 h-1 bg-neutral-700 rounded-full overflow-hidden">
+          <View className="flex-row items-center rounded-lg bg-neutral-800 px-4 py-2">
+            <View className="h-1 w-40 overflow-hidden rounded-full bg-neutral-700">
               <View
                 className="h-full bg-primary"
                 style={{ width: `${uploadProgress * 100}%` }}
               />
             </View>
             <View className="ml-2">
-              <View className="text-white text-xs">
+              <View className="text-xs text-white">
                 {Math.round(uploadProgress * 100)}%
               </View>
             </View>
