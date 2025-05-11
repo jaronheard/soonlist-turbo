@@ -11,6 +11,7 @@ import { showEventCaptureToast } from "~/components/EventCaptureToast";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
+import { useUploadQueueStore } from "~/store/useUploadQueueStore";
 import { api } from "~/utils/api";
 import { logError } from "~/utils/errorLogging";
 
@@ -21,6 +22,7 @@ interface CreateEventOptions {
   userId: string;
   username: string;
   sendNotification?: boolean;
+  queueItemId?: string;
 }
 
 type _EventResponse =
@@ -54,6 +56,9 @@ export function useCreateEvent() {
   const { setIsImageLoading } = useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const { setIsCapturing } = useInFlightEventStore();
+  const startItem = useUploadQueueStore((state) => state.startItem);
+  const succeedItem = useUploadQueueStore((state) => state.succeedItem);
+  const failItem = useUploadQueueStore((state) => state.failItem);
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
   const utils = api.useUtils();
@@ -106,6 +111,7 @@ export function useCreateEvent() {
         userId,
         username,
         sendNotification = false,
+        queueItemId,
       } = options;
 
       try {
@@ -135,6 +141,9 @@ export function useCreateEvent() {
 
         // Image flow
         if (imageUri) {
+          if (queueItemId) {
+            startItem(queueItemId);
+          }
           // Set loading state for both routes since we don't know which one is active
           setIsImageLoading(true, "add");
           setIsImageLoading(true, "new");
@@ -145,20 +154,26 @@ export function useCreateEvent() {
             if (imageUri.startsWith("ph://")) {
               const assetId = imageUri.replace("ph://", "").split("/")[0];
               if (!assetId) {
-                throw new Error("Invalid photo library asset ID");
+                const err = new Error("Invalid photo library asset ID");
+                if (queueItemId) failItem(queueItemId, err.message);
+                throw err;
               }
               const asset = await MediaLibrary.getAssetInfoAsync(assetId);
               if (!asset.localUri) {
-                throw new Error(
+                const err = new Error(
                   "Could not get local URI for photo library asset",
                 );
+                if (queueItemId) failItem(queueItemId, err.message);
+                throw err;
               }
               fileUri = asset.localUri;
             }
 
             // Validate image URI
             if (!fileUri.startsWith("file://")) {
-              throw new Error("Invalid image URI format");
+              const err = new Error("Invalid image URI format");
+              if (queueItemId) failItem(queueItemId, err.message);
+              throw err;
             }
 
             // 1. Optimize image and get base64
@@ -176,10 +191,18 @@ export function useCreateEvent() {
             });
 
             if (!eventResult.success) {
-              throw new Error(eventResult.error ?? "Failed to create event");
+              const errorMessage =
+                eventResult.error ?? "Failed to create event";
+              if (queueItemId) {
+                failItem(queueItemId, errorMessage);
+              }
+              throw new Error(errorMessage);
             }
 
             if ("event" in eventResult && eventResult.event) {
+              if (queueItemId) {
+                succeedItem(queueItemId, eventResult.event.id);
+              }
               showEventCaptureToast({
                 id: eventResult.event.id,
                 event: eventResult.event
@@ -188,9 +211,18 @@ export function useCreateEvent() {
               });
               return eventResult.event.id;
             }
+            // Should not happen if success is true and event is expected
+            const fallBackError = "Event data missing in successful response.";
+            if (queueItemId) failItem(queueItemId, fallBackError);
+            logError(fallBackError, eventResult);
             return undefined;
           } catch (error) {
-            logError("Error processing image", error);
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            if (queueItemId) {
+              failItem(queueItemId, errorMessage);
+            }
+            logError("Error processing image in createEvent", error);
             throw error; // Rethrow to trigger mutation's onError
           } finally {
             // Reset loading state for both routes
@@ -237,6 +269,9 @@ export function useCreateEvent() {
       eventFromImageBase64,
       eventFromRaw,
       setIsCapturing,
+      startItem,
+      succeedItem,
+      failItem,
     ],
   );
 
