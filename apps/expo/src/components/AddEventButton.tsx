@@ -101,8 +101,11 @@ export default function AddEventButton({
       });
 
       if (!result.canceled && result.assets.length) {
+        const username = user?.username;
+        const userId = user?.id;
+
         // Ensure user info is available before proceeding
-        if (!user?.id || !user.username) {
+        if (!username || !userId) {
           toast.error("User information not available");
           return;
         }
@@ -123,8 +126,8 @@ export default function AddEventButton({
           assets.map((asset) =>
             createEvent({
               imageUri: asset.uri,
-              userId: user.id,
-              username: user.username!,
+              userId: userId,
+              username: username,
             }),
           ),
         );
