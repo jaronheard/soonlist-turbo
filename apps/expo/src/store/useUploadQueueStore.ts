@@ -3,10 +3,10 @@ import { create } from "zustand";
 export type UploadStatus = "queued" | "uploading" | "success" | "failed";
 
 export interface QueueItem {
-  id: string;            // local UUID for UI tracking
-  assetUri: string;      // local file URI
-  eventId?: string;      // server id after success
-  progress: number;      // 0 → 1 (upload + AI + DB)
+  id: string; // local UUID for UI tracking
+  assetUri: string; // local file URI
+  eventId?: string; // server id after success
+  progress: number; // 0 → 1 (upload + AI + DB)
   status: UploadStatus;
   error?: string;
 }
@@ -48,9 +48,7 @@ export const useUploadQueueStore = create<UploadQueueState>((set, get) => ({
   succeed: (id, eventId) =>
     set((s) => ({
       items: s.items.map((i) =>
-        i.id === id
-          ? { ...i, progress: 1, status: "success", eventId }
-          : i,
+        i.id === id ? { ...i, progress: 1, status: "success", eventId } : i,
       ),
     })),
   fail: (id, err) =>
@@ -77,8 +75,5 @@ export const useOverallProgress = () =>
       (i) => i.status === "uploading" || i.status === "queued",
     );
     if (!active.length) return 0;
-    return (
-      active.reduce((sum, i) => sum + i.progress, 0) / active.length
-    );
+    return active.reduce((sum, i) => sum + i.progress, 0) / active.length;
   });
-

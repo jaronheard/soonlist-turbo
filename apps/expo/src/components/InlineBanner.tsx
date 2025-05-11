@@ -32,7 +32,7 @@ export function InlineBanner({
     timeoutRef.current = setTimeout(() => {
       translateY.value = withTiming(100, { duration: 300 });
       opacity.value = withTiming(0, { duration: 300 });
-      
+
       // Call onDismiss after animation completes
       setTimeout(() => {
         onDismiss?.();
@@ -71,7 +71,7 @@ export function InlineBanner({
             }
             translateY.value = withTiming(100, { duration: 300 });
             opacity.value = withTiming(0, { duration: 300 });
-            
+
             setTimeout(() => {
               onPress();
               onDismiss?.();
@@ -100,11 +100,13 @@ export function InlineBanner({
 
 // Global reference to active banner
 let activeBanner: React.ReactNode | null = null;
-let setActiveBanner: React.Dispatch<React.SetStateAction<React.ReactNode>> | null = null;
+let setActiveBanner: React.Dispatch<
+  React.SetStateAction<React.ReactNode>
+> | null = null;
 
 // Function to register the banner setter
 export function registerBannerSetter(
-  setter: React.Dispatch<React.SetStateAction<React.ReactNode>>
+  setter: React.Dispatch<React.SetStateAction<React.ReactNode>>,
 ) {
   setActiveBanner = setter;
 }
@@ -113,14 +115,14 @@ export function registerBannerSetter(
 export function showInlineBanner(
   message: string,
   onPress?: () => void,
-  duration = 3000
+  duration = 3000,
 ) {
   if (setActiveBanner) {
     // Clear any existing banner
     if (activeBanner) {
       setActiveBanner(null);
     }
-    
+
     // Create and show new banner
     const banner = (
       <InlineBanner
@@ -133,9 +135,8 @@ export function showInlineBanner(
         }}
       />
     );
-    
+
     activeBanner = banner;
     setActiveBanner(banner);
   }
 }
-

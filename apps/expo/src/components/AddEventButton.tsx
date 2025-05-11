@@ -22,7 +22,11 @@ import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
-import { useQueueCounts, useOverallProgress, useUploadQueueStore } from "~/store/useUploadQueueStore";
+import {
+  useQueueCounts,
+  useOverallProgress,
+  useUploadQueueStore,
+} from "~/store/useUploadQueueStore";
 import { logError } from "../utils/errorLogging";
 import { openUploadStatusSheet } from "./UploadStatusSheet";
 import { showInlineBanner } from "./InlineBanner";
@@ -71,22 +75,22 @@ export default function AddEventButton({
   // Watch for queue completion
   useEffect(() => {
     if (total > 0) setWasBusy(true);
-    
+
     if (wasBusy && total === 0) {
       setWasBusy(false);
-      
+
       // Count successful items before clearing them
       const items = useUploadQueueStore.getState().items;
-      const successfulItems = items.filter(item => item.status === "success");
+      const successfulItems = items.filter((item) => item.status === "success");
       const count = successfulItems.length;
-      
+
       // Get the last successful event ID for single-event navigation
       const lastSuccessfulItem = successfulItems[successfulItems.length - 1];
       const lastEventId = lastSuccessfulItem?.eventId;
-      
+
       setSuccessCount(count);
       setLastId(lastEventId);
-      
+
       if (failed > 0) {
         // Show failure banner
         showInlineBanner(
@@ -96,13 +100,14 @@ export default function AddEventButton({
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       } else if (count > 0) {
         // Show success banner
-        showInlineBanner(
-          `${count} event${count > 1 ? "s" : ""} added`,
-          () => router.push(count === 1 && lastEventId ? `/event/${lastEventId}` : "/feed"),
+        showInlineBanner(`${count} event${count > 1 ? "s" : ""} added`, () =>
+          router.push(
+            count === 1 && lastEventId ? `/event/${lastEventId}` : "/feed",
+          ),
         );
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      
+
       // Clear successful items so badge stays hidden
       useUploadQueueStore.getState().clearCompleted();
     }
@@ -179,14 +184,15 @@ export default function AddEventButton({
 
         // Respect the 10‑image limit in case the platform ignores selectionLimit
         const assets = result.assets.slice(0, 10);
-        
+
         // Add assets to queue
-        const assetUris = assets.map(asset => asset.uri);
+        const assetUris = assets.map((asset) => asset.uri);
         useUploadQueueStore.getState().enqueue(assetUris);
-        
+
         // Get the queue items for these assets
-        const queueItems = useUploadQueueStore.getState().items
-          .filter(item => assetUris.includes(item.assetUri));
+        const queueItems = useUploadQueueStore
+          .getState()
+          .items.filter((item) => assetUris.includes(item.assetUri));
 
         // Kick off event creation requests in parallel
         void Promise.allSettled(
@@ -274,7 +280,7 @@ export default function AddEventButton({
               }}
             >
               {/* Progress ring */}
-              <Svg width={96} height={96} style={{ position: 'absolute' }}>
+              <Svg width={96} height={96} style={{ position: "absolute" }}>
                 <AnimatedCircle
                   cx={48}
                   cy={48}
@@ -287,10 +293,10 @@ export default function AddEventButton({
                   fill="transparent"
                 />
               </Svg>
-              
+
               {/* "+" icon stays centered */}
               <PlusIcon size={44} color="#FFF" strokeWidth={2} />
-              
+
               {/* Badge */}
               {total > 0 && (
                 <TouchableOpacity
@@ -300,7 +306,7 @@ export default function AddEventButton({
                     backgroundColor: failed ? "#FF4444" : "white",
                   }}
                 >
-                  <Text 
+                  <Text
                     className="text-center text-xs font-bold"
                     style={{
                       color: failed ? "white" : "black",

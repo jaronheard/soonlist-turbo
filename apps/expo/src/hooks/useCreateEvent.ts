@@ -113,7 +113,7 @@ export function useCreateEvent() {
 
       try {
         setIsCapturing(true);
-        
+
         // URL flow
         if (linkPreview) {
           const result = await eventFromUrl.mutateAsync({
@@ -143,7 +143,7 @@ export function useCreateEvent() {
           if (queueItemId) {
             useUploadQueueStore.getState().start(queueItemId);
           }
-          
+
           // Set loading state for both routes since we don't know which one is active
           setIsImageLoading(true, "add");
           setIsImageLoading(true, "new");
@@ -172,7 +172,7 @@ export function useCreateEvent() {
 
             // 1. Optimize image and get base64
             const base64 = await optimizeImage(fileUri);
-            
+
             // Update progress if queueItemId is provided
             if (queueItemId) {
               useUploadQueueStore.getState().update(queueItemId, 0.5);
@@ -200,9 +200,11 @@ export function useCreateEvent() {
             if ("event" in eventResult && eventResult.event) {
               // Mark as success if queueItemId is provided
               if (queueItemId) {
-                useUploadQueueStore.getState().succeed(queueItemId, eventResult.event.id);
+                useUploadQueueStore
+                  .getState()
+                  .succeed(queueItemId, eventResult.event.id);
               }
-              
+
               showEventCaptureToast({
                 id: eventResult.event.id,
                 event: eventResult.event
@@ -215,9 +217,11 @@ export function useCreateEvent() {
           } catch (error) {
             // Mark as failed if queueItemId is provided
             if (queueItemId) {
-              useUploadQueueStore.getState().fail(queueItemId, (error as Error).message);
+              useUploadQueueStore
+                .getState()
+                .fail(queueItemId, (error as Error).message);
             }
-            
+
             logError("Error processing image", error);
             throw error; // Rethrow to trigger mutation's onError
           } finally {
