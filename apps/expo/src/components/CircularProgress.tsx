@@ -1,8 +1,12 @@
-import React, { ReactNode } from "react";
-import { View, StyleSheet } from "react-native";
+import type { ReactNode } from "react";
+import React from "react";
+import { StyleSheet, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 
 interface CircularProgressProps {
+  /**
+   * The progress value, ranging from 0 (0%) to 1 (100%).
+   */
   progress: number;
   size: number;
   strokeWidth: number;
@@ -58,4 +62,3 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
-
