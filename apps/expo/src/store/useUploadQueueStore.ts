@@ -1,9 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { create } from "zustand";
 import { nanoid } from "nanoid";
+import { create } from "zustand";
 
 export type UploadStatus = "active" | "completed" | "failed";
 
@@ -33,8 +29,7 @@ interface UploadQueueStore {
   clearCompletedItems: () => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const useUploadQueueStore = create<UploadQueueStore>((set, get) => ({
+export const useUploadQueueStore = create<UploadQueueStore>()((set, _get) => ({
   queue: [],
   successCount: 0,
   lastId: null,
@@ -115,22 +110,28 @@ export const useUploadQueueStore = create<UploadQueueStore>((set, get) => ({
   },
 
   getActiveItems: () => {
-    const state = useUploadQueueStore.getState();
-    return state.queue.filter((item) => item.status === "active");
+    const state = _get();
+    return state.queue.filter(
+      (item: UploadQueueItem) => item.status === "active",
+    );
   },
 
   getCompletedItems: () => {
-    const state = useUploadQueueStore.getState();
-    return state.queue.filter((item) => item.status === "completed");
+    const state = _get();
+    return state.queue.filter(
+      (item: UploadQueueItem) => item.status === "completed",
+    );
   },
 
   getFailedItems: () => {
-    const state = useUploadQueueStore.getState();
-    return state.queue.filter((item) => item.status === "failed");
+    const state = _get();
+    return state.queue.filter(
+      (item: UploadQueueItem) => item.status === "failed",
+    );
   },
 
   getTotalItems: () => {
-    const state = useUploadQueueStore.getState();
+    const state = _get();
     return state.queue.length;
   },
 
