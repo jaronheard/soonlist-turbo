@@ -42,7 +42,7 @@ export const useUploadQueueStore = create<UploadQueueStore>((set, get) => ({
   addToQueue: (imageUri) => {
     const id = nanoid();
     const now = new Date();
-    
+
     set((state) => ({
       queue: [
         ...state.queue,
@@ -57,39 +57,35 @@ export const useUploadQueueStore = create<UploadQueueStore>((set, get) => ({
       ],
       lastId: id,
     }));
-    
+
     return id;
   },
 
   updateItemProgress: (id, progress) => {
     set((state) => ({
       queue: state.queue.map((item) =>
-        item.id === id
-          ? { ...item, progress, updatedAt: new Date() }
-          : item
+        item.id === id ? { ...item, progress, updatedAt: new Date() } : item,
       ),
     }));
   },
 
   updateItemStatus: (id, status, error) => {
     set((state) => {
-      const newSuccessCount = 
-        status === "completed" 
-          ? state.successCount + 1 
-          : state.successCount;
-      
+      const newSuccessCount =
+        status === "completed" ? state.successCount + 1 : state.successCount;
+
       return {
         queue: state.queue.map((item) =>
           item.id === id
-            ? { 
-                ...item, 
-                status, 
-                error, 
+            ? {
+                ...item,
+                status,
+                error,
                 updatedAt: new Date(),
                 // If completed, set progress to 1
-                ...(status === "completed" ? { progress: 1 } : {})
+                ...(status === "completed" ? { progress: 1 } : {}),
               }
-            : item
+            : item,
         ),
         successCount: newSuccessCount,
       };
@@ -113,7 +109,7 @@ export const useUploadQueueStore = create<UploadQueueStore>((set, get) => ({
               error: undefined,
               updatedAt: new Date(),
             }
-          : item
+          : item,
       ),
     }));
   },
@@ -144,4 +140,3 @@ export const useUploadQueueStore = create<UploadQueueStore>((set, get) => ({
     }));
   },
 }));
-

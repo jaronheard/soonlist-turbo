@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
-import AddEventButton from "~/components/AddEventButton";
+import { AddEventButton } from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";

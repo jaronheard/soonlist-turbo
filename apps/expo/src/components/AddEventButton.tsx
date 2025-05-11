@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View, GestureResponderEvent } from "react-native";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { useColorScheme } from "nativewind";
@@ -13,7 +13,7 @@ import { useUploadQueueUi } from "../hooks/useFeatureFlags";
 import { UploadStatusSheet } from "./UploadStatusSheet";
 import { InlineBanner } from "./InlineBanner";
 import { CircularProgress } from "./CircularProgress";
-import { useCreateEvent } from "../hooks/useCreateEvent";
+import { useCreateEvent, CreateEventOptions } from "../hooks/useCreateEvent";
 import { useImagePicker } from "../hooks/useImagePicker";
 import { useAppState } from "../hooks/useAppState";
 import { useLocalNotifications } from "../hooks/useLocalNotifications";
@@ -22,7 +22,11 @@ import { useToast } from "../hooks/useToast";
 import { cn } from "../lib/utils";
 import { colors } from "../lib/colors";
 
-export function AddEventButton() {
+interface AddEventButtonProps {
+  showChevron?: boolean;
+}
+
+export function AddEventButton({ showChevron }: AddEventButtonProps = {}) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const router = useRouter();
   const { colorScheme } = useColorScheme();
@@ -73,10 +77,9 @@ export function AddEventButton() {
   const totalItems = getTotalItems();
 
   // Calculate overall progress for the progress ring
-  const overallProgress = queue.reduce(
-    (acc, item) => acc + (item.progress || 0),
-    0,
-  ) / Math.max(totalItems, 1);
+  const overallProgress =
+    queue.reduce((acc: number, item: any) => acc + (item.progress || 0), 0) /
+    Math.max(totalItems, 1);
 
   // Handle background/foreground state changes for notifications
   useEffect(() => {
@@ -153,24 +156,33 @@ export function AddEventButton() {
 
   // Show completion banner when all uploads finish and we have completed items
   useEffect(() => {
-    if (!hasActiveUploads && hasCompletedUploads && appState.current === "active") {
+    if (
+      !hasActiveUploads &&
+      hasCompletedUploads &&
+      appState.current === "active"
+    ) {
       void handleUploadCompletion();
     }
-  }, [hasActiveUploads, hasCompletedUploads, appState.current, handleUploadCompletion]);
+  }, [
+    hasActiveUploads,
+    hasCompletedUploads,
+    appState.current,
+    handleUploadCompletion,
+  ]);
 
   // Image picker hook
   const { pickImage, takePhoto } = useImagePicker();
 
   // Create event hook with progress callback
   const { createEvent } = useCreateEvent({
-    onProgress: (progress, queueItemId) => {
+    onProgress: (progress: number, queueItemId: string) => {
       if (useUploadQueueUiEnabled && queueItemId) {
         updateItemProgress(queueItemId, progress);
       } else {
         setUploadProgress(progress);
       }
     },
-    onSuccess: (_, queueItemId) => {
+    onSuccess: (_: any, queueItemId: string) => {
       if (useUploadQueueUiEnabled && queueItemId) {
         updateItemStatus(queueItemId, "completed");
       } else {
@@ -182,9 +194,9 @@ export function AddEventButton() {
         });
       }
     },
-    onError: (error, queueItemId) => {
+    onError: (error: Error, queueItemId: string) => {
       console.error("Error creating event:", error);
-      
+
       if (useUploadQueueUiEnabled && queueItemId) {
         updateItemStatus(queueItemId, "failed", error.message);
         void handleUploadFailure();
@@ -206,13 +218,22 @@ export function AddEventButton() {
         // Add to queue and get the queue item ID
         const queueItemId = addToQueue(imageUri);
         void triggerHaptic("light");
-        
+
         // Start the upload with the queue item ID for tracking
-        await createEvent({ imageUri, queueItemId });
+        await createEvent({ 
+          imageUri, 
+          queueItemId,
+          userId: "", // Add required properties
+          username: ""
+        });
       } else {
         // Legacy flow
         setIsUploading(true);
-        await createEvent({ imageUri });
+        await createEvent({ 
+          imageUri,
+          userId: "", // Add required properties
+          username: ""
+        });
       }
     },
     [createEvent, addToQueue, useUploadQueueUiEnabled, triggerHaptic],
@@ -228,7 +249,7 @@ export function AddEventButton() {
         options,
         cancelButtonIndex,
       },
-      async (buttonIndex) => {
+      async (buttonIndex: number) => {
         try {
           if (buttonIndex === 0) {
             const photo = await takePhoto();
@@ -249,24 +270,27 @@ export function AddEventButton() {
   }, [showActionSheetWithOptions, takePhoto, pickImage, handleImageSelected]);
 
   // Handle button press
-  const handlePress = useCallback((event: React.SyntheticEvent) => {
-    event.stopPropagation();
-    
-    if (useUploadQueueUiEnabled && (hasFailedUploads || hasActiveUploads)) {
-      // Open status sheet if we have active or failed uploads
-      setIsStatusSheetOpen(true);
-      void triggerHaptic("light");
-    } else {
-      // Otherwise open action sheet to add new photo
-      openActionSheet();
-    }
-  }, [
-    openActionSheet,
-    useUploadQueueUiEnabled,
-    hasFailedUploads,
-    hasActiveUploads,
-    triggerHaptic,
-  ]);
+  const handlePress = useCallback(
+    (event: GestureResponderEvent) => {
+      event.stopPropagation();
+
+      if (useUploadQueueUiEnabled && (hasFailedUploads || hasActiveUploads)) {
+        // Open status sheet if we have active or failed uploads
+        setIsStatusSheetOpen(true);
+        void triggerHaptic("light");
+      } else {
+        // Otherwise open action sheet to add new photo
+        openActionSheet();
+      }
+    },
+    [
+      openActionSheet,
+      useUploadQueueUiEnabled,
+      hasFailedUploads,
+      hasActiveUploads,
+      triggerHaptic,
+    ],
+  );
 
   // Don't show the button if not on the main screen
   if (!isFocused) return null;
@@ -385,4 +409,3 @@ const styles = StyleSheet.create({
     borderColor: "white",
   },
 });
-

@@ -4,7 +4,7 @@ import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
-import AddEventButton from "~/components/AddEventButton";
+import { AddEventButton } from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";

@@ -1,142 +1,130 @@
-import React, { useEffect, useRef } from "react";
-import { Pressable, Text, View } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import React, { useEffect } from "react";
+import { View, Pressable, StyleSheet, Animated } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "nativewind";
 
 interface InlineBannerProps {
+  visible: boolean;
   message: string;
-  onPress?: () => void;
-  duration?: number;
-  onDismiss?: () => void;
+  type: "success" | "error";
+  onDismiss: () => void;
+  autoDismiss?: boolean;
+  dismissTimeout?: number;
 }
 
 export function InlineBanner({
+  visible,
   message,
-  onPress,
-  duration = 3000,
+  type,
   onDismiss,
+  autoDismiss = true,
+  dismissTimeout = 5000,
 }: InlineBannerProps) {
-  const translateY = useSharedValue(100);
-  const opacity = useSharedValue(0);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { colorScheme } = useColorScheme();
+  const opacity = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Animate in
-    translateY.value = withTiming(0, { duration: 300 });
-    opacity.value = withTiming(1, { duration: 300 });
+    if (visible) {
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
 
-    // Set timeout to animate out
-    timeoutRef.current = setTimeout(() => {
-      translateY.value = withTiming(100, { duration: 300 });
-      opacity.value = withTiming(0, { duration: 300 });
+      if (autoDismiss) {
+        const timer = setTimeout(() => {
+          handleDismiss();
+        }, dismissTimeout);
 
-      // Call onDismiss after animation completes
-      setTimeout(() => {
-        onDismiss?.();
-      }, 300);
-    }, duration);
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+        return () => clearTimeout(timer);
       }
-    };
-  }, [translateY, opacity, duration, onDismiss]);
+    } else {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    opacity: opacity.value,
-  }));
+  const handleDismiss = () => {
+    Animated.timing(opacity, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      onDismiss();
+    });
+  };
+
+  if (!visible) return null;
+
+  const iconName = type === "success" ? "checkmark-circle" : "alert-circle";
+  const iconColor = type === "success" ? "#10B981" : "#EF4444";
+  const backgroundColor = colorScheme === "dark" ? "#1F2937" : "#F9FAFB";
+  const textColor = colorScheme === "dark" ? "#F9FAFB" : "#1F2937";
 
   return (
     <Animated.View
       style={[
-        {
-          position: "absolute",
-          bottom: 20,
-          alignSelf: "center",
-          zIndex: 1000,
-        },
-        animatedStyle,
+        styles.container,
+        { opacity, backgroundColor },
+        colorScheme === "dark" ? styles.shadowDark : styles.shadowLight,
       ]}
     >
-      <Pressable
-        onPress={() => {
-          if (onPress) {
-            if (timeoutRef.current) {
-              clearTimeout(timeoutRef.current);
-            }
-            translateY.value = withTiming(100, { duration: 300 });
-            opacity.value = withTiming(0, { duration: 300 });
-
-            setTimeout(() => {
-              onPress();
-              onDismiss?.();
-            }, 300);
-          }
-        }}
-      >
-        <View
-          className="rounded-full bg-interactive-1 px-4 py-3"
-          style={{
-            shadowColor: "#5A32FB",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            elevation: 3,
-          }}
-        >
-          <Text className="text-center text-sm font-medium text-white">
-            {message}
-          </Text>
+      <View style={styles.content}>
+        <Ionicons name={iconName} size={20} color={iconColor} style={styles.icon} />
+        <View style={styles.textContainer}>
+          <View style={{ color: textColor, fontSize: 14 }}>{message}</View>
         </View>
-      </Pressable>
+        <Pressable onPress={handleDismiss} style={styles.closeButton}>
+          <Ionicons
+            name="close"
+            size={20}
+            color={colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}
+          />
+        </Pressable>
+      </View>
     </Animated.View>
   );
 }
 
-// Global reference to active banner
-let activeBanner: React.ReactNode | null = null;
-let setActiveBanner: React.Dispatch<
-  React.SetStateAction<React.ReactNode>
-> | null = null;
+const styles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    right: 20,
+    borderRadius: 8,
+    padding: 12,
+    zIndex: 1000,
+  },
+  shadowLight: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  shadowDark: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  content: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  icon: {
+    marginRight: 8,
+  },
+  textContainer: {
+    flex: 1,
+  },
+  closeButton: {
+    padding: 4,
+  },
+});
 
-// Function to register the banner setter
-export function registerBannerSetter(
-  setter: React.Dispatch<React.SetStateAction<React.ReactNode>>,
-) {
-  setActiveBanner = setter;
-}
-
-// Function to show a banner
-export function showInlineBanner(
-  message: string,
-  onPress?: () => void,
-  duration = 3000,
-) {
-  if (setActiveBanner) {
-    // Clear any existing banner
-    if (activeBanner) {
-      setActiveBanner(null);
-    }
-
-    // Create and show new banner
-    const banner = (
-      <InlineBanner
-        message={message}
-        onPress={onPress}
-        duration={duration}
-        onDismiss={() => {
-          activeBanner = null;
-          setActiveBanner?.(null);
-        }}
-      />
-    );
-
-    activeBanner = banner;
-    setActiveBanner(banner);
-  }
-}

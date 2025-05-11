@@ -38,6 +38,7 @@
     "@bacons/apple-targets": "^0.2.1",
     "@bytescale/sdk": "^3.34.0",
     "@clerk/clerk-expo": "^1.1.0",
+    "@expo/react-native-action-sheet": "^4.1.1",
     "@intercom/intercom-react-native": "^7.2.1",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-community/datetimepicker": "^8.3.0",
@@ -131,4 +132,3 @@
   },
   "prettier": "@soonlist/prettier-config"
 }
-

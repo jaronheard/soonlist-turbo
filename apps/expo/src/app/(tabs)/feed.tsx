@@ -4,7 +4,7 @@ import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutationState } from "@tanstack/react-query";
 
-import AddEventButton from "~/components/AddEventButton";
+import { AddEventButton } from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";

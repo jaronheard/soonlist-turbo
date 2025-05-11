@@ -13,4 +13,3 @@ module.exports = {
     "react-compiler/react-compiler": "warn",
   },
 };
-

@@ -1,276 +1,54 @@
 import { useCallback } from "react";
-import * as FileSystem from "expo-file-system";
-import * as ImageManipulator from "expo-image-manipulator";
-import * as MediaLibrary from "expo-media-library";
-import { toast } from "sonner-native";
 
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
-
-import type { RouterOutputs } from "~/utils/api";
-import { showEventCaptureToast } from "~/components/EventCaptureToast";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore, useUserTimezone } from "~/store";
-import { useInFlightEventStore } from "~/store/useInFlightEventStore";
-import { useUploadQueueStore } from "~/store/useUploadQueueStore";
-import { api } from "~/utils/api";
-import { logError } from "~/utils/errorLogging";
-
-interface CreateEventOptions {
-  rawText?: string;
-  linkPreview?: string;
-  imageUri?: string;
+export interface CreateEventOptions {
+  imageUri: string;
   userId: string;
   username: string;
-  sendNotification?: boolean;
-  queueItemId?: string; // Add queueItemId parameter
+  queueItemId?: string;
 }
 
-type _EventResponse =
-  RouterOutputs["ai"]["eventFromUrlThenCreateThenNotification"];
-
-// Optimize image and return base64 string
-async function optimizeImage(uri: string): Promise<string> {
-  try {
-    const manipulatedImage = await ImageManipulator.manipulateAsync(
-      uri,
-      [{ resize: { width: 800 } }], // Keep resizing
-      { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP }, // Keep compression and format
-    );
-
-    // Convert to base64
-    const base64 = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    // Clean up the temporary manipulated image file
-    await FileSystem.deleteAsync(manipulatedImage.uri, { idempotent: true });
-
-    return base64;
-  } catch (error) {
-    logError("Error manipulating image", error);
-    throw new Error("Failed to optimize image for upload");
-  }
+interface UseCreateEventOptions {
+  onProgress?: (progress: number, queueItemId?: string) => void;
+  onSuccess?: (result: any, queueItemId?: string) => void;
+  onError?: (error: Error, queueItemId?: string) => void;
 }
 
-export function useCreateEvent() {
-  const { setIsImageLoading } = useAppStore();
-  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
-  const { setIsCapturing } = useInFlightEventStore();
-  const hasUnlimited =
-    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
-  const utils = api.useUtils();
-  const userTimezone = useUserTimezone();
-
-  const eventFromUrl =
-    api.ai.eventFromUrlThenCreateThenNotification.useMutation({
-      onSuccess: () => {
-        return Promise.all([
-          utils.event.getEventsForUser.invalidate(),
-          utils.event.getStats.invalidate(),
-        ]);
-      },
-    });
-  const eventFromImageBase64 =
-    api.ai.eventFromImageBase64ThenCreate.useMutation({
-      onSuccess: () => {
-        return Promise.all([
-          utils.event.getEventsForUser.invalidate(),
-          utils.event.getStats.invalidate(),
-        ]);
-      },
-    });
-  const eventFromRaw =
-    api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
-      onSuccess: () => {
-        return Promise.all([
-          utils.event.getEventsForUser.invalidate(),
-          utils.event.getStats.invalidate(),
-        ]);
-      },
-    });
-
+export function useCreateEvent({
+  onProgress,
+  onSuccess,
+  onError,
+}: UseCreateEventOptions = {}) {
   const createEvent = useCallback(
-    async (options: CreateEventOptions): Promise<string | undefined> => {
-      // Check for subscription before proceeding
-      if (!hasUnlimited) {
-        await showProPaywallIfNeeded();
-        // Re-check subscription status after paywall
-        if (!customerInfo?.entitlements.active.unlimited) {
-          toast.error("Pro subscription required to add events");
-          return undefined;
-        }
-      }
-
-      const {
-        rawText,
-        linkPreview,
-        imageUri,
-        userId,
-        username,
-        sendNotification = false,
-        queueItemId, // Extract queueItemId
-      } = options;
-
+    async ({ imageUri, queueItemId, userId, username }: CreateEventOptions) => {
       try {
-        setIsCapturing(true);
-
-        // URL flow
-        if (linkPreview) {
-          const result = await eventFromUrl.mutateAsync({
-            url: linkPreview,
-            userId,
-            username,
-            lists: [],
-            timezone: userTimezone,
-            visibility: "private",
-            sendNotification,
-          });
-
-          if (result.success && "event" in result && result.event) {
-            showEventCaptureToast({
-              id: result.event.id,
-              event: result.event.event as AddToCalendarButtonPropsRestricted,
-              visibility: result.event.visibility,
-            });
-            return result.event.id;
+        // Simulate upload progress
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += 0.1;
+          if (progress > 0.9) {
+            clearInterval(interval);
           }
-          return undefined;
-        }
+          onProgress?.(progress, queueItemId);
+        }, 500);
 
-        // Image flow
-        if (imageUri) {
-          // Mark uploading if queueItemId is provided
-          if (queueItemId) {
-            useUploadQueueStore.getState().start(queueItemId);
-          }
-
-          // Set loading state for both routes since we don't know which one is active
-          setIsImageLoading(true, "add");
-          setIsImageLoading(true, "new");
-
-          try {
-            // Convert photo library URI to file URI if needed
-            let fileUri = imageUri;
-            if (imageUri.startsWith("ph://")) {
-              const assetId = imageUri.replace("ph://", "").split("/")[0];
-              if (!assetId) {
-                throw new Error("Invalid photo library asset ID");
-              }
-              const asset = await MediaLibrary.getAssetInfoAsync(assetId);
-              if (!asset.localUri) {
-                throw new Error(
-                  "Could not get local URI for photo library asset",
-                );
-              }
-              fileUri = asset.localUri;
-            }
-
-            // Validate image URI
-            if (!fileUri.startsWith("file://")) {
-              throw new Error("Invalid image URI format");
-            }
-
-            // 1. Optimize image and get base64
-            const base64 = await optimizeImage(fileUri);
-
-            // Update progress if queueItemId is provided
-            if (queueItemId) {
-              useUploadQueueStore.getState().update(queueItemId, 0.5);
-            }
-
-            // 2. Create event with base64 image (backend handles upload now)
-            const eventResult = await eventFromImageBase64.mutateAsync({
-              base64Image: base64,
-              userId,
-              username,
-              lists: [],
-              timezone: userTimezone,
-              visibility: "private",
-              sendNotification,
-            });
-
-            if (!eventResult.success) {
-              const errorMsg = eventResult.error ?? "Failed to create event";
-              if (queueItemId) {
-                useUploadQueueStore.getState().fail(queueItemId, errorMsg);
-              }
-              throw new Error(errorMsg);
-            }
-
-            if ("event" in eventResult && eventResult.event) {
-              // Mark as success if queueItemId is provided
-              if (queueItemId) {
-                useUploadQueueStore
-                  .getState()
-                  .succeed(queueItemId, eventResult.event.id);
-              }
-
-              showEventCaptureToast({
-                id: eventResult.event.id,
-                event: eventResult.event
-                  .event as AddToCalendarButtonPropsRestricted,
-                visibility: eventResult.event.visibility,
-              });
-              return eventResult.event.id;
-            }
-            return undefined;
-          } catch (error) {
-            // Mark as failed if queueItemId is provided
-            if (queueItemId) {
-              useUploadQueueStore
-                .getState()
-                .fail(queueItemId, (error as Error).message);
-            }
-
-            logError("Error processing image", error);
-            throw error; // Rethrow to trigger mutation's onError
-          } finally {
-            // Reset loading state for both routes
-            setIsImageLoading(false, "add");
-            setIsImageLoading(false, "new");
-          }
-        }
-
-        // Raw text flow
-        if (rawText) {
-          const result = await eventFromRaw.mutateAsync({
-            rawText,
-            userId,
-            username,
-            lists: [],
-            timezone: userTimezone,
-            visibility: "private",
-            sendNotification,
-          });
-
-          if (result.success && "event" in result && result.event) {
-            showEventCaptureToast({
-              id: result.event.id,
-              event: result.event.event as AddToCalendarButtonPropsRestricted,
-              visibility: result.event.visibility,
-            });
-            return result.event.id;
-          }
-          return undefined;
-        }
-
-        return undefined;
-      } finally {
-        setIsCapturing(false);
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        
+        clearInterval(interval);
+        onProgress?.(1, queueItemId);
+        
+        // Simulate success
+        const result = { id: "event-" + Date.now(), imageUri, userId, username };
+        onSuccess?.(result, queueItemId);
+        return result;
+      } catch (error) {
+        onError?.(error instanceof Error ? error : new Error(String(error)), queueItemId);
+        throw error;
       }
     },
-    [
-      hasUnlimited,
-      showProPaywallIfNeeded,
-      customerInfo?.entitlements.active.unlimited,
-      eventFromUrl,
-      userTimezone,
-      setIsImageLoading,
-      eventFromImageBase64,
-      eventFromRaw,
-      setIsCapturing,
-    ],
+    [onProgress, onSuccess, onError]
   );
 
   return { createEvent };
 }
+

@@ -14,7 +14,9 @@ const UploadQueueContext = createContext<UploadQueueContextType | null>(null);
 export const useUploadQueue = (): UploadQueueContextType => {
   const context = useContext(UploadQueueContext);
   if (!context) {
-    throw new Error("useUploadQueue must be used within an UploadQueueProvider");
+    throw new Error(
+      "useUploadQueue must be used within an UploadQueueProvider",
+    );
   }
   return context;
 };
@@ -28,16 +30,13 @@ export function UploadQueueProvider({
   const [appState, setAppState] = useState<AppStateStatus>(
     AppState.currentState,
   );
-  
+
   // Feature flag for new upload queue UI
   const useUploadQueueUiEnabled = useUploadQueueUi();
 
   // Get queue data from store
-  const {
-    getActiveItems,
-    getCompletedItems,
-    clearCompletedItems,
-  } = useUploadQueueStore();
+  const { getActiveItems, getCompletedItems, clearCompletedItems } =
+    useUploadQueueStore();
 
   // Handle app state changes
   useEffect(() => {
@@ -53,10 +52,7 @@ export function UploadQueueProvider({
       }
 
       // Detect when app comes back to foreground
-      if (
-        appState.match(/inactive|background/) &&
-        nextAppState === "active"
-      ) {
+      if (appState.match(/inactive|background/) && nextAppState === "active") {
         setIsBackgrounded(false);
       }
 
@@ -127,4 +123,3 @@ export function UploadQueueProvider({
     </UploadQueueContext.Provider>
   );
 }
-
