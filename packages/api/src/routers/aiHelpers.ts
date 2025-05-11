@@ -361,6 +361,7 @@ export interface CreateEventParams {
     userId: string;
     username: string;
     imageUrl?: string;
+    sendNotification?: boolean;
   };
   firstEvent: EventWithMetadata;
   dailyEventsPromise: Promise<{ id: string }[]>;
@@ -380,6 +381,8 @@ export async function createEventAndNotify(
     uploadedImageUrl,
   } = params;
   const { userId, username } = input;
+
+  const shouldNotify = input.sendNotification !== false;
 
   if (!userId) {
     throw new TRPCError({
@@ -505,42 +508,44 @@ export async function createEventAndNotify(
     eventCount,
   );
 
-  waitUntil(
-    (async () => {
-      try {
-        const notificationResult = await sendNotification({
-          userId,
-          title,
-          subtitle,
-          body,
-          url: createDeepLink(`event/${eventid}`),
-          eventId: eventid,
-          source: "ai_router",
-          method: source,
-        });
-        if (!notificationResult.success) {
+  if (shouldNotify) {
+    waitUntil(
+      (async () => {
+        try {
+          const notificationResult = await sendNotification({
+            userId,
+            title,
+            subtitle,
+            body,
+            url: createDeepLink(`event/${eventid}`),
+            eventId: eventid,
+            source: "ai_router",
+            method: source,
+          });
+          if (!notificationResult.success) {
+            console.error(
+              "Background notification sending failed:",
+              notificationResult.error,
+              "ID:",
+              notificationResult.id,
+            );
+            // Log this error more formally (Sentry, Langfuse, etc.)
+          } else {
+            console.log(
+              "Background notification sent successfully:",
+              notificationResult.id,
+            );
+          }
+        } catch (notificationError) {
           console.error(
-            "Background notification sending failed:",
-            notificationResult.error,
-            "ID:",
-            notificationResult.id,
+            "Error in background notification task:",
+            notificationError,
           );
-          // Log this error more formally (Sentry, Langfuse, etc.)
-        } else {
-          console.log(
-            "Background notification sent successfully:",
-            notificationResult.id,
-          );
+          // Log this error more formally
         }
-      } catch (notificationError) {
-        console.error(
-          "Error in background notification task:",
-          notificationError,
-        );
-        // Log this error more formally
-      }
-    })(),
-  );
+      })(),
+    );
+  }
 
   return {
     success: true, // Event creation was successful
