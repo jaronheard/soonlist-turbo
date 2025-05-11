@@ -9,7 +9,12 @@ export function useImagePicker() {
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (
+        !result.canceled &&
+        result.assets &&
+        result.assets.length > 0 &&
+        result.assets[0]
+      ) {
         return result.assets[0].uri;
       }
       return null;
@@ -21,9 +26,10 @@ export function useImagePicker() {
 
   const takePhoto = async (): Promise<string | null> => {
     try {
-      const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-      
-      if (cameraPermission.status !== "granted") {
+      const cameraPermission =
+        await ImagePicker.requestCameraPermissionsAsync();
+
+      if (cameraPermission.status !== ImagePicker.PermissionStatus.GRANTED) {
         console.log("Camera permission denied");
         return null;
       }
@@ -34,7 +40,12 @@ export function useImagePicker() {
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (
+        !result.canceled &&
+        result.assets &&
+        result.assets.length > 0 &&
+        result.assets[0]
+      ) {
         return result.assets[0].uri;
       }
       return null;
@@ -46,4 +57,3 @@ export function useImagePicker() {
 
   return { pickImage, takePhoto };
 }
-

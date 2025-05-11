@@ -1,5 +1,6 @@
+import type { AppStateStatus } from "react-native";
 import { useEffect, useRef } from "react";
-import { AppState, AppStateStatus } from "react-native";
+import { AppState } from "react-native";
 
 export function useAppState() {
   const appState = useRef(AppState.currentState);
@@ -21,4 +22,3 @@ export function useAppState() {
     previous: previousAppState.current,
   };
 }
-

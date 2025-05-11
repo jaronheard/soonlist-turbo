@@ -9,10 +9,11 @@ export function useLocalNotifications() {
   const scheduleNotification = async ({ title, body }: NotificationOptions) => {
     try {
       const { status } = await Notifications.getPermissionsAsync();
-      
-      if (status !== "granted") {
-        const { status: newStatus } = await Notifications.requestPermissionsAsync();
-        if (newStatus !== "granted") {
+
+      if (status !== Notifications.PermissionStatus.GRANTED) {
+        const { status: newStatus } =
+          await Notifications.requestPermissionsAsync();
+        if (newStatus !== Notifications.PermissionStatus.GRANTED) {
           console.log("Notification permission not granted");
           return;
         }
@@ -33,4 +34,3 @@ export function useLocalNotifications() {
 
   return { scheduleNotification };
 }
-
