@@ -1,25 +1,33 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   Easing,
+  useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
+import Svg, { Circle } from "react-native-svg";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
+import { useQueueCounts, useOverallProgress, useUploadQueueStore } from "~/store/useUploadQueueStore";
 import { logError } from "../utils/errorLogging";
+import { openUploadStatusSheet } from "./UploadStatusSheet";
+import { showInlineBanner } from "./InlineBanner";
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 interface AddEventButtonProps {
   showChevron?: boolean;
@@ -49,6 +57,57 @@ export default function AddEventButton({
   // Keep permission status up‑to‑date globally
   useMediaPermissions();
 
+  // Queue state
+  const { total, failed } = useQueueCounts();
+  const progress = useOverallProgress();
+  const [wasBusy, setWasBusy] = useState(false);
+  const [successCount, setSuccessCount] = useState(0);
+  const [lastId, setLastId] = useState<string | undefined>(undefined);
+
+  // Calculate circumference for progress ring
+  const radius = 46;
+  const circumference = 2 * Math.PI * radius;
+
+  // Watch for queue completion
+  useEffect(() => {
+    if (total > 0) setWasBusy(true);
+    
+    if (wasBusy && total === 0) {
+      setWasBusy(false);
+      
+      // Count successful items before clearing them
+      const items = useUploadQueueStore.getState().items;
+      const successfulItems = items.filter(item => item.status === "success");
+      const count = successfulItems.length;
+      
+      // Get the last successful event ID for single-event navigation
+      const lastSuccessfulItem = successfulItems[successfulItems.length - 1];
+      const lastEventId = lastSuccessfulItem?.eventId;
+      
+      setSuccessCount(count);
+      setLastId(lastEventId);
+      
+      if (failed > 0) {
+        // Show failure banner
+        showInlineBanner(
+          `${failed} event${failed > 1 ? "s" : ""} failed · Retry`,
+          () => openUploadStatusSheet(),
+        );
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } else if (count > 0) {
+        // Show success banner
+        showInlineBanner(
+          `${count} event${count > 1 ? "s" : ""} added`,
+          () => router.push(count === 1 && lastEventId ? `/event/${lastEventId}` : "/feed"),
+        );
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+      // Clear successful items so badge stays hidden
+      useUploadQueueStore.getState().clearCompleted();
+    }
+  }, [total, failed, wasBusy]);
+
   /**
    * Small bounce for the chevron hint
    */
@@ -72,6 +131,11 @@ export default function AddEventButton({
     zIndex: 10,
   }));
 
+  // Animated props for progress ring
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: circumference * (1 - progress),
+  }));
+
   /**
    * Main press handler
    * ------------------
@@ -82,6 +146,9 @@ export default function AddEventButton({
    * 5. Show success toast
    */
   const handlePress = useCallback(async () => {
+    // Haptic feedback on tap
+    Haptics.selectionAsync();
+
     // 1. Paywall gate
     if (!hasUnlimited) {
       void showProPaywallIfNeeded();
@@ -94,7 +161,7 @@ export default function AddEventButton({
     // 3. Launch native photo picker directly
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.8,
         allowsMultipleSelection: true,
         selectionLimit: 10, // iOS‑only; we also enforce in JS
@@ -112,72 +179,26 @@ export default function AddEventButton({
 
         // Respect the 10‑image limit in case the platform ignores selectionLimit
         const assets = result.assets.slice(0, 10);
-
-        // Show a persistent loading toast with the number of events being captured
-        const loadingToastId = toast.loading(
-          assets.length > 1
-            ? `Capturing ${assets.length} events…`
-            : "Capturing event…",
-          { duration: Infinity },
-        );
+        
+        // Add assets to queue
+        const assetUris = assets.map(asset => asset.uri);
+        useUploadQueueStore.getState().enqueue(assetUris);
+        
+        // Get the queue items for these assets
+        const queueItems = useUploadQueueStore.getState().items
+          .filter(item => assetUris.includes(item.assetUri));
 
         // Kick off event creation requests in parallel
-        const creationResults = await Promise.allSettled(
-          assets.map((asset) =>
+        void Promise.allSettled(
+          queueItems.map((item) =>
             createEvent({
-              imageUri: asset.uri,
+              imageUri: item.assetUri,
               userId: userId,
               username: username,
+              queueItemId: item.id,
             }),
           ),
         );
-
-        // Loading finished — remove spinner
-        toast.dismiss(loadingToastId);
-
-        // Gather successes
-        const successfulIds = creationResults
-          .filter(
-            (r): r is PromiseFulfilledResult<string | undefined> =>
-              r.status === "fulfilled" && typeof r.value === "string",
-          )
-          .map((r) => r.value);
-
-        const failedCount = assets.length - successfulIds.length;
-
-        // Aggregate feedback
-        if (successfulIds.length === 1) {
-          toast.success("Captured successfully!", {
-            action: {
-              label: "View event",
-              onClick: () => {
-                toast.dismiss();
-                router.push(`/event/${successfulIds[0]}`);
-              },
-            },
-          });
-        } else if (successfulIds.length > 1) {
-          toast.success(
-            `Captured ${successfulIds.length} events successfully!`,
-            {
-              action: {
-                label: "View events",
-                onClick: () => {
-                  toast.dismiss();
-                  router.push("/feed");
-                },
-              },
-            },
-          );
-        }
-
-        if (failedCount > 0) {
-          toast.error(
-            `Failed to create ${failedCount} event${
-              failedCount > 1 ? "s" : ""
-            }. Please try again.`,
-          );
-        }
       }
     } catch (err) {
       logError("Error in AddEventButton handlePress", err);
@@ -190,6 +211,12 @@ export default function AddEventButton({
     user,
     createEvent,
   ]);
+
+  // Handle badge tap
+  const handleBadgeTap = useCallback((e: any) => {
+    e.stopPropagation();
+    openUploadStatusSheet();
+  }, []);
 
   /**
    * UI
@@ -246,7 +273,43 @@ export default function AddEventButton({
                 elevation: 8,
               }}
             >
+              {/* Progress ring */}
+              <Svg width={96} height={96} style={{ position: 'absolute' }}>
+                <AnimatedCircle
+                  cx={48}
+                  cy={48}
+                  r={radius}
+                  stroke={failed ? "#FF4444" : "#5A32FB"}
+                  strokeWidth={4}
+                  strokeDasharray={circumference}
+                  animatedProps={animatedProps}
+                  strokeLinecap="round"
+                  fill="transparent"
+                />
+              </Svg>
+              
+              {/* "+" icon stays centered */}
               <PlusIcon size={44} color="#FFF" strokeWidth={2} />
+              
+              {/* Badge */}
+              {total > 0 && (
+                <TouchableOpacity
+                  onPress={handleBadgeTap}
+                  className="absolute right-0 top-0 h-6 min-w-6 rounded-full bg-white px-1"
+                  style={{
+                    backgroundColor: failed ? "#FF4444" : "white",
+                  }}
+                >
+                  <Text 
+                    className="text-center text-xs font-bold"
+                    style={{
+                      color: failed ? "white" : "black",
+                    }}
+                  >
+                    {failed ? "⚠️" : total}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           ) : (
             <View

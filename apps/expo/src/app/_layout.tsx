@@ -27,6 +27,7 @@ import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
+import { UploadQueueProvider } from "~/components/UploadQueueProvider";
 import { useCalendar } from "~/hooks/useCalendar";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
@@ -299,14 +300,16 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <AuthAndTokenSync />
-      <InitialLayout />
-      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
-      <CalendarSelectionModal
-        onSelect={handleCalendarSelect}
-        onDismiss={() => setIsCalendarModalVisible(false)}
-        initialLimit={INITIAL_CALENDAR_LIMIT}
-      />
-      <Toaster position="top-center" offset={100} visibleToasts={1} />
+      <UploadQueueProvider>
+        <InitialLayout />
+        <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+        <CalendarSelectionModal
+          onSelect={handleCalendarSelect}
+          onDismiss={() => setIsCalendarModalVisible(false)}
+          initialLimit={INITIAL_CALENDAR_LIMIT}
+        />
+        <Toaster position="top-center" offset={100} visibleToasts={1} />
+      </UploadQueueProvider>
     </View>
   );
 }

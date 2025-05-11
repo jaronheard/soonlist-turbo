@@ -11,6 +11,7 @@ import { showEventCaptureToast } from "~/components/EventCaptureToast";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
+import { useUploadQueueStore } from "~/store/useUploadQueueStore";
 import { api } from "~/utils/api";
 import { logError } from "~/utils/errorLogging";
 
@@ -21,6 +22,7 @@ interface CreateEventOptions {
   userId: string;
   username: string;
   sendNotification?: boolean;
+  queueItemId?: string; // Add queueItemId parameter
 }
 
 type _EventResponse =
@@ -106,10 +108,12 @@ export function useCreateEvent() {
         userId,
         username,
         sendNotification = false,
+        queueItemId, // Extract queueItemId
       } = options;
 
       try {
         setIsCapturing(true);
+        
         // URL flow
         if (linkPreview) {
           const result = await eventFromUrl.mutateAsync({
@@ -135,6 +139,11 @@ export function useCreateEvent() {
 
         // Image flow
         if (imageUri) {
+          // Mark uploading if queueItemId is provided
+          if (queueItemId) {
+            useUploadQueueStore.getState().start(queueItemId);
+          }
+          
           // Set loading state for both routes since we don't know which one is active
           setIsImageLoading(true, "add");
           setIsImageLoading(true, "new");
@@ -163,6 +172,11 @@ export function useCreateEvent() {
 
             // 1. Optimize image and get base64
             const base64 = await optimizeImage(fileUri);
+            
+            // Update progress if queueItemId is provided
+            if (queueItemId) {
+              useUploadQueueStore.getState().update(queueItemId, 0.5);
+            }
 
             // 2. Create event with base64 image (backend handles upload now)
             const eventResult = await eventFromImageBase64.mutateAsync({
@@ -176,10 +190,19 @@ export function useCreateEvent() {
             });
 
             if (!eventResult.success) {
-              throw new Error(eventResult.error ?? "Failed to create event");
+              const errorMsg = eventResult.error ?? "Failed to create event";
+              if (queueItemId) {
+                useUploadQueueStore.getState().fail(queueItemId, errorMsg);
+              }
+              throw new Error(errorMsg);
             }
 
             if ("event" in eventResult && eventResult.event) {
+              // Mark as success if queueItemId is provided
+              if (queueItemId) {
+                useUploadQueueStore.getState().succeed(queueItemId, eventResult.event.id);
+              }
+              
               showEventCaptureToast({
                 id: eventResult.event.id,
                 event: eventResult.event
@@ -190,6 +213,11 @@ export function useCreateEvent() {
             }
             return undefined;
           } catch (error) {
+            // Mark as failed if queueItemId is provided
+            if (queueItemId) {
+              useUploadQueueStore.getState().fail(queueItemId, (error as Error).message);
+            }
+            
             logError("Error processing image", error);
             throw error; // Rethrow to trigger mutation's onError
           } finally {
