@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import * as FileSystem from "expo-file-system";
+import * as Haptics from "expo-haptics";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -200,6 +201,9 @@ export function useCreateEvent() {
           });
 
           if (result.success && "event" in result && result.event) {
+            void Haptics.notificationAsync(
+              Haptics.NotificationFeedbackType.Success,
+            );
             return result.event.id;
           }
           return undefined;
@@ -252,11 +256,17 @@ export function useCreateEvent() {
             }
 
             if ("event" in eventResult && eventResult.event) {
+              void Haptics.notificationAsync(
+                Haptics.NotificationFeedbackType.Success,
+              );
               return eventResult.event.id;
             }
             return undefined;
           } catch (error) {
             logError("Error processing image", error);
+            void Haptics.notificationAsync(
+              Haptics.NotificationFeedbackType.Error,
+            );
             throw error; // Rethrow to trigger mutation's onError
           } finally {
             // Reset loading state for both routes
@@ -278,6 +288,9 @@ export function useCreateEvent() {
           });
 
           if (result.success && "event" in result && result.event) {
+            void Haptics.notificationAsync(
+              Haptics.NotificationFeedbackType.Success,
+            );
             return result.event.id;
           }
           return undefined;

@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useUser } from "@clerk/clerk-expo";
@@ -91,6 +92,8 @@ export default function AddEventButton({
 
     // 2. Clear draft state
     resetAddEventState();
+    // Light feedback on intent to capture
+    await Haptics.selectionAsync();
 
     // 3. Launch native photo picker directly
     try {
@@ -115,6 +118,8 @@ export default function AddEventButton({
         const assets = result.assets.slice(0, 10);
 
         // Queue the jobs – they’ll keep running even if the app backgrounds
+        // Medium impact to confirm jobs queued
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         void enqueueEvents(
           assets.map((asset) => ({
             imageUri: asset.uri,
