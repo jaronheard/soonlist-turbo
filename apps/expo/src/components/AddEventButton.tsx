@@ -10,7 +10,6 @@ import Animated, {
 import { BlurView } from "expo-blur";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
@@ -79,7 +78,6 @@ export default function AddEventButton({
    * 2. Clear draft state (so any stale data is removed)
    * 3. Launch native photo picker directly
    * 4. Create event with selected photo
-   * 5. Show success toast
    */
   const handlePress = useCallback(async () => {
     // 1. Paywall gate
@@ -113,14 +111,6 @@ export default function AddEventButton({
         // Respect the 10‑image limit in case the platform ignores selectionLimit
         const assets = result.assets.slice(0, 10);
 
-        // Show a persistent loading toast with the number of events being captured
-        const loadingToastId = toast.loading(
-          assets.length > 1
-            ? `Capturing ${assets.length} events…`
-            : "Capturing event…",
-          { duration: Infinity },
-        );
-
         // Kick off event creation requests in parallel
         const creationResults = await Promise.allSettled(
           assets.map((asset) =>
@@ -132,9 +122,6 @@ export default function AddEventButton({
           ),
         );
 
-        // Loading finished — remove spinner
-        toast.dismiss(loadingToastId);
-
         // Gather successes
         const successfulIds = creationResults
           .filter(
@@ -144,32 +131,6 @@ export default function AddEventButton({
           .map((r) => r.value);
 
         const failedCount = assets.length - successfulIds.length;
-
-        // Aggregate feedback
-        if (successfulIds.length === 1) {
-          toast.success("Captured successfully!", {
-            action: {
-              label: "View event",
-              onClick: () => {
-                toast.dismiss();
-                router.push(`/event/${successfulIds[0]}`);
-              },
-            },
-          });
-        } else if (successfulIds.length > 1) {
-          toast.success(
-            `Captured ${successfulIds.length} events successfully!`,
-            {
-              action: {
-                label: "View events",
-                onClick: () => {
-                  toast.dismiss();
-                  router.push("/feed");
-                },
-              },
-            },
-          );
-        }
 
         if (failedCount > 0) {
           toast.error(

@@ -7,7 +7,6 @@ import { toast } from "sonner-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
 import type { RouterOutputs } from "~/utils/api";
-import { showEventCaptureToast } from "~/components/EventCaptureToast";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
@@ -123,11 +122,6 @@ export function useCreateEvent() {
           });
 
           if (result.success && "event" in result && result.event) {
-            showEventCaptureToast({
-              id: result.event.id,
-              event: result.event.event as AddToCalendarButtonPropsRestricted,
-              visibility: result.event.visibility,
-            });
             return result.event.id;
           }
           return undefined;
@@ -180,12 +174,6 @@ export function useCreateEvent() {
             }
 
             if ("event" in eventResult && eventResult.event) {
-              showEventCaptureToast({
-                id: eventResult.event.id,
-                event: eventResult.event
-                  .event as AddToCalendarButtonPropsRestricted,
-                visibility: eventResult.event.visibility,
-              });
               return eventResult.event.id;
             }
             return undefined;
@@ -212,11 +200,6 @@ export function useCreateEvent() {
           });
 
           if (result.success && "event" in result && result.event) {
-            showEventCaptureToast({
-              id: result.event.id,
-              event: result.event.event as AddToCalendarButtonPropsRestricted,
-              visibility: result.event.visibility,
-            });
             return result.event.id;
           }
           return undefined;
