@@ -14,10 +14,12 @@ import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
+import { CircularSpinner } from "~/components/ui/CircularSpinner";
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
+import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "../utils/errorLogging";
 
 interface AddEventButtonProps {
@@ -37,6 +39,7 @@ export default function AddEventButton({
   const { resetAddEventState } = useAppStore((state) => ({
     resetAddEventState: state.resetAddEventState,
   }));
+  const { isCapturing } = useInFlightEventStore();
 
   const { customerInfo, showProPaywallIfNeeded, isLoading } = useRevenueCat();
   const hasUnlimited =
@@ -195,19 +198,38 @@ export default function AddEventButton({
         <TouchableOpacity
           onPress={handlePress}
           className="absolute bottom-8 self-center"
+          disabled={isCapturing}
         >
           {hasUnlimited ? (
-            <View
-              className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
-              style={{
-                shadowColor: "#5A32FB",
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-                elevation: 8,
-              }}
-            >
-              <PlusIcon size={44} color="#FFF" strokeWidth={2} />
+            <View className="relative">
+              <View
+                className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
+                style={{
+                  shadowColor: "#5A32FB",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 6,
+                  elevation: 8,
+                }}
+              >
+                <PlusIcon size={44} color="#FFF" strokeWidth={2} />
+              </View>
+
+              {/* Spinner Overlay */}
+              {isCapturing && (
+                <View
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{
+                    transform: [{ translateX: -3 }, { translateY: -3 }],
+                  }}
+                >
+                  <CircularSpinner
+                    size={72} // Size = button diameter (68) + strokeWidth (4)
+                    strokeWidth={4}
+                    color="#FFFFFF"
+                  />
+                </View>
+              )}
             </View>
           ) : (
             <View
