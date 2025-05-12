@@ -2,11 +2,9 @@ import { useCallback } from "react";
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { toast } from "sonner-native";
 
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
-
-import type { RouterOutputs } from "~/utils/api";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
@@ -22,8 +20,15 @@ interface CreateEventOptions {
   sendNotification?: boolean;
 }
 
-type _EventResponse =
-  RouterOutputs["ai"]["eventFromUrlThenCreateThenNotification"];
+interface PersistedJob extends CreateEventOptions {
+  id: string; // unique id so jobs survive deduping
+}
+
+const QUEUE_STORAGE_KEY = "soonlist_event_job_queue";
+const CONCURRENCY_LIMIT = 3; // tweak as needed
+let jobQueue: PersistedJob[] = []; // loaded from storage
+let inFlight = 0; // # of currently running jobs
+let isProcessing = false; // guard against double runners
 
 // Optimize image and return base64 string
 async function optimizeImage(uri: string): Promise<string> {
@@ -47,6 +52,79 @@ async function optimizeImage(uri: string): Promise<string> {
     logError("Error manipulating image", error);
     throw new Error("Failed to optimize image for upload");
   }
+}
+
+async function loadQueue() {
+  if (jobQueue.length) return; // already in memory
+  try {
+    const raw = await AsyncStorage.getItem(QUEUE_STORAGE_KEY);
+    if (raw) jobQueue = JSON.parse(raw) as PersistedJob[];
+  } catch (e) {
+    logError("Failed loading queue", e);
+  }
+}
+
+async function persistQueue() {
+  try {
+    await AsyncStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(jobQueue));
+  } catch (e) {
+    logError("Failed saving queue", e);
+  }
+}
+
+async function processQueue(deps: {
+  createSingle: (o: CreateEventOptions) => Promise<string | undefined>;
+  setIsCapturing: (b: boolean) => void;
+}) {
+  if (isProcessing) return;
+  isProcessing = true;
+  deps.setIsCapturing(true);
+  await loadQueue();
+
+  const pump = async () => {
+    if (!jobQueue.length && inFlight === 0) {
+      deps.setIsCapturing(false);
+      isProcessing = false;
+      await persistQueue();
+      return;
+    }
+
+    while (inFlight < CONCURRENCY_LIMIT && jobQueue.length) {
+      const job = jobQueue.shift()!;
+      inFlight++;
+      deps
+        .createSingle(job)
+        .catch((e) => {
+          logError("Job failed", e);
+          // push back for retry later
+          jobQueue.push(job);
+        })
+        .finally(() => {
+          void (async () => {
+            inFlight--;
+            await persistQueue();
+            void pump();
+          })();
+        });
+    }
+  };
+
+  void pump();
+}
+
+export async function enqueueEvents(
+  tasks: CreateEventOptions[],
+  deps: {
+    createSingle: (o: CreateEventOptions) => Promise<string | undefined>;
+    setIsCapturing: (b: boolean) => void;
+  },
+) {
+  await loadQueue();
+  tasks.forEach((t) =>
+    jobQueue.push({ ...t, id: Math.random().toString(36).slice(2) }),
+  );
+  await persistQueue();
+  void processQueue(deps);
 }
 
 export function useCreateEvent() {
@@ -223,5 +301,9 @@ export function useCreateEvent() {
     ],
   );
 
-  return { createEvent };
+  return {
+    createEvent,
+    enqueueEvents: (tasks: CreateEventOptions[]) =>
+      enqueueEvents(tasks, { createSingle: createEvent, setIsCapturing }),
+  };
 }

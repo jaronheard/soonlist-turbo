@@ -46,7 +46,7 @@ export default function AddEventButton({
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const { user } = useUser();
-  const { createEvent } = useCreateEvent();
+  const { enqueueEvents } = useCreateEvent();
 
   // Keep permission status up‑to‑date globally
   useMediaPermissions();
@@ -114,34 +114,14 @@ export default function AddEventButton({
         // Respect the 10‑image limit in case the platform ignores selectionLimit
         const assets = result.assets.slice(0, 10);
 
-        // Kick off event creation requests in parallel
-        const creationResults = await Promise.allSettled(
-          assets.map((asset) =>
-            createEvent({
-              imageUri: asset.uri,
-              userId: userId,
-              username: username,
-            }),
-          ),
+        // Queue the jobs – they’ll keep running even if the app backgrounds
+        void enqueueEvents(
+          assets.map((asset) => ({
+            imageUri: asset.uri,
+            userId,
+            username,
+          })),
         );
-
-        // Gather successes
-        const successfulIds = creationResults
-          .filter(
-            (r): r is PromiseFulfilledResult<string | undefined> =>
-              r.status === "fulfilled" && typeof r.value === "string",
-          )
-          .map((r) => r.value);
-
-        const failedCount = assets.length - successfulIds.length;
-
-        if (failedCount > 0) {
-          toast.error(
-            `Failed to create ${failedCount} event${
-              failedCount > 1 ? "s" : ""
-            }. Please try again.`,
-          );
-        }
       }
     } catch (err) {
       logError("Error in AddEventButton handlePress", err);
@@ -152,7 +132,7 @@ export default function AddEventButton({
     showProPaywallIfNeeded,
     resetAddEventState,
     user,
-    createEvent,
+    enqueueEvents,
   ]);
 
   /**
