@@ -182,7 +182,7 @@ export function useCreateEvent() {
         imageUri,
         userId,
         username,
-        sendNotification = false,
+        sendNotification = true,
       } = options;
 
       try {

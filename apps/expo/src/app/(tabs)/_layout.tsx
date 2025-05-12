@@ -2,7 +2,6 @@ import { View } from "react-native";
 import { Tabs } from "expo-router";
 
 import { HeaderLogo } from "~/components/HeaderLogo";
-import { InFlightEventOverlay } from "~/components/InFlightEventOverlay";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
@@ -12,8 +11,6 @@ export const unstable_settings = {
 };
 
 export default function TabsLayout() {
-  const { isCapturing } = useInFlightEventStore();
-
   return (
     <>
       <Tabs
@@ -75,7 +72,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
-      {isCapturing && <InFlightEventOverlay />}
     </>
   );
 }
