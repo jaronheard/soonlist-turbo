@@ -19,6 +19,7 @@ import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
+import { useUploadQueueStore } from "~/store/useUploadQueueStore";
 import { logError } from "../utils/errorLogging";
 
 interface AddEventButtonProps {
@@ -48,6 +49,12 @@ export default function AddEventButton({
 
   // Keep permission status up‑to‑date globally
   useMediaPermissions();
+
+  useEffect(() => {
+    return () => {
+      useUploadQueueStore.getState().clearAllAnimationIntervals();
+    };
+  }, []);
 
   /**
    * Small bounce for the chevron hint

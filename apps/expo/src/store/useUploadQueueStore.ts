@@ -12,7 +12,7 @@ export interface UploadQueueItem {
   createdAt: Date;
   updatedAt: Date;
   eventId?: string;
-  animationIntervalId?: NodeJS.Timeout | number;
+  animationIntervalId?: NodeJS.Timeout;
 }
 
 interface UploadQueueStore {
@@ -31,6 +31,7 @@ interface UploadQueueStore {
   startItem: (id: string) => void;
   succeedItem: (id: string, eventId: string) => void;
   failItem: (id: string, errorMsg: string) => void;
+  clearAllAnimationIntervals: () => void;
 }
 
 export const useUploadQueueStore = create<UploadQueueStore>()((set, get) => ({
@@ -122,7 +123,7 @@ export const useUploadQueueStore = create<UploadQueueStore>()((set, get) => ({
     set((state) => ({
       queue: state.queue.filter((item) => {
         if (item.status === "completed" && item.animationIntervalId) {
-          clearInterval(item.animationIntervalId as unknown as number);
+          clearInterval(item.animationIntervalId);
         }
         return item.status !== "completed";
       }),
@@ -133,7 +134,7 @@ export const useUploadQueueStore = create<UploadQueueStore>()((set, get) => ({
     set((state) => {
       const item = state.queue.find((i) => i.id === id);
       if (item?.animationIntervalId) {
-        clearInterval(item.animationIntervalId as unknown as number);
+        clearInterval(item.animationIntervalId);
       }
       return {
         queue: state.queue.map((i) =>
@@ -162,14 +163,14 @@ export const useUploadQueueStore = create<UploadQueueStore>()((set, get) => ({
     const intervalId = setInterval(() => {
       const activeItem = get().queue.find((i) => i.id === id);
       if (!activeItem || activeItem.status !== "active") {
-        clearInterval(intervalId as unknown as number);
+        clearInterval(intervalId);
         return;
       }
 
       let newProgress = (activeItem.progress ?? 0) + progressIncrement;
       if (newProgress >= 0.9) {
         newProgress = 0.9;
-        clearInterval(intervalId as unknown as number);
+        clearInterval(intervalId);
         set((state) => ({
           queue: state.queue.map((item) =>
             item.id === id ? { ...item, animationIntervalId: undefined } : item,
@@ -197,12 +198,11 @@ export const useUploadQueueStore = create<UploadQueueStore>()((set, get) => ({
     set((state) => {
       const item = state.queue.find((i) => i.id === id);
       if (item?.animationIntervalId) {
-        clearInterval(item.animationIntervalId as unknown as number);
+        clearInterval(item.animationIntervalId);
       }
 
-      const itemExists = state.queue.find((i) => i.id === id);
       const newSuccessCount =
-        itemExists && itemExists.status !== "completed"
+        item && item.status !== "completed"
           ? state.successCount + 1
           : state.successCount;
 
@@ -229,7 +229,7 @@ export const useUploadQueueStore = create<UploadQueueStore>()((set, get) => ({
     set((state) => {
       const item = state.queue.find((i) => i.id === id);
       if (item?.animationIntervalId) {
-        clearInterval(item.animationIntervalId as unknown as number);
+        clearInterval(item.animationIntervalId);
       }
       return {
         queue: state.queue.map((i) =>
@@ -243,6 +243,22 @@ export const useUploadQueueStore = create<UploadQueueStore>()((set, get) => ({
               }
             : i,
         ),
+      };
+    });
+  },
+
+  clearAllAnimationIntervals: () => {
+    set((state) => {
+      state.queue.forEach((item) => {
+        if (item.animationIntervalId) {
+          clearInterval(item.animationIntervalId);
+        }
+      });
+      return {
+        queue: state.queue.map((item) => ({
+          ...item,
+          animationIntervalId: undefined,
+        })),
       };
     });
   },
