@@ -27,35 +27,27 @@ const CONCURRENCY_LIMIT = 5; // tweak as needed
 
 // Optimize image off the main JS thread and return a base64 string
 async function optimizeImage(uri: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    // Defer heavy work until after UI interactions/animations finish
-    void InteractionManager.runAfterInteractions(async () => {
-      try {
-        // Resize & compress on the native thread and get base64 in a single step
-        const { base64, uri: tmpUri } = await ImageManipulator.manipulateAsync(
-          uri,
-          [{ resize: { width: 800 } }],
-          {
-            compress: 0.7,
-            format: ImageManipulator.SaveFormat.WEBP,
-            base64: true,
-          },
-        );
+  try {
+    // Resize & compress on the native thread and get base64 in a single step
+    const { base64 } = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 800 } }],
+      {
+        compress: 0.7,
+        format: ImageManipulator.SaveFormat.WEBP,
+        base64: true,
+      },
+    );
 
-        if (!base64) {
-          throw new Error("Failed to encode image to base64");
-        }
+    if (!base64) {
+      throw new Error("Failed to encode image to base64");
+    }
 
-        // Delete the temporary file asynchronously (fire-and-forget)
-        FileSystem.deleteAsync(tmpUri, { idempotent: true }).catch(() => {});
-
-        resolve(base64);
-      } catch (error) {
-        logError("Error manipulating image", error);
-        reject(new Error("Failed to optimize image for upload"));
-      }
-    });
-  });
+    return base64;
+  } catch (error) {
+    logError("Error manipulating image", error);
+    throw new Error("Failed to optimize image for upload");
+  }
 }
 
 export async function enqueueEvents(
@@ -63,20 +55,65 @@ export async function enqueueEvents(
   deps: {
     createSingle: (o: CreateEventOptions) => Promise<string | undefined>;
     setIsCapturing: (b: boolean) => void;
+    logError: (
+      message: string,
+      error: unknown,
+      context?: Record<string, unknown>,
+    ) => void;
   },
 ) {
-  const { createSingle, setIsCapturing } = deps;
+  const { createSingle, setIsCapturing, logError: log } = deps;
   if (!tasks.length) return;
 
   setIsCapturing(true);
+  const results = {
+    successCount: 0,
+    failureCount: 0,
+  };
+
   try {
     await pMap(
       tasks,
-      (task) => createSingle({ ...task, suppressCapturing: true }),
+      async (task) => {
+        try {
+          // Attempt to create the single event
+          const eventId = await createSingle({
+            ...task,
+            suppressCapturing: true,
+          });
+          if (eventId) {
+            results.successCount++;
+          } else {
+            // This case might occur if createSingle returns undefined without throwing,
+            // e.g., due to paywall or other handled conditions within createSingle.
+            results.failureCount++;
+            log(
+              "Event creation returned no ID (handled failure)",
+              new Error("createSingle returned undefined"),
+              { task },
+            );
+          }
+        } catch (error) {
+          // Log the error for the specific task and increment failure count
+          results.failureCount++;
+          log("Error processing single event in enqueueEvents batch", error, {
+            task,
+          });
+          // We don't rethrow here, so pMap continues with other tasks
+        }
+      },
       { concurrency: CONCURRENCY_LIMIT },
     );
   } finally {
     setIsCapturing(false);
+    // Optionally, provide feedback based on results
+    if (results.failureCount > 0) {
+      toast.error(
+        `${results.failureCount} event(s) failed to process. ${results.successCount} succeeded.`,
+      );
+    } else if (results.successCount > 0) {
+      // Don't do anything
+    }
   }
 }
 
@@ -273,6 +310,10 @@ export function useCreateEvent() {
   return {
     createEvent,
     enqueueEvents: (tasks: CreateEventOptions[]) =>
-      enqueueEvents(tasks, { createSingle: createEvent, setIsCapturing }),
+      enqueueEvents(tasks, {
+        createSingle: createEvent,
+        setIsCapturing,
+        logError,
+      }),
   };
 }

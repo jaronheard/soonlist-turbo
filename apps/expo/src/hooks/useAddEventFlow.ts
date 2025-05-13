@@ -55,7 +55,11 @@ export function useAddEventFlow() {
             userId,
             username,
           })),
-        );
+        ).catch((err) => {
+          // Handle potential synchronous errors during queuing
+          logError("Failed to enqueue events", err, { userId, username });
+          toast.error("Failed to start adding events. Please try again.");
+        });
       }
     } catch (err) {
       // Check for specific permission errors if needed, although useMediaPermissions handles this broadly
