@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   Easing,
@@ -8,20 +8,14 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
-import * as Haptics from "expo-haptics";
-import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { useUser } from "@clerk/clerk-expo";
-import { toast } from "sonner-native";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
 import { CircularSpinner } from "~/components/ui/CircularSpinner";
-import { useCreateEvent } from "~/hooks/useCreateEvent";
+import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
-import { logError } from "../utils/errorLogging";
 
 interface AddEventButtonProps {
   showChevron?: boolean;
@@ -36,20 +30,14 @@ interface AddEventButtonProps {
 export default function AddEventButton({
   showChevron = true,
 }: AddEventButtonProps) {
-  // Zustand selectors
-  const { resetAddEventState } = useAppStore((state) => ({
-    resetAddEventState: state.resetAddEventState,
-  }));
   const { isCapturing } = useInFlightEventStore();
 
-  const { customerInfo, showProPaywallIfNeeded, isLoading } = useRevenueCat();
+  const { customerInfo, isLoading } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  const { user } = useUser();
-  const { enqueueEvents } = useCreateEvent();
+  const { triggerAddEventFlow } = useAddEventFlow();
 
-  // Keep permission status up‑to‑date globally
   useMediaPermissions();
 
   /**
@@ -74,71 +62,6 @@ export default function AddEventButton({
     transform: [{ translateX: -32 }, { translateY: translateY.value }],
     zIndex: 10,
   }));
-
-  /**
-   * Main press handler
-   * ------------------
-   * 1. Show paywall if needed.
-   * 2. Clear draft state (so any stale data is removed)
-   * 3. Launch native photo picker directly
-   * 4. Create event with selected photo
-   */
-  const handlePress = useCallback(async () => {
-    // 1. Paywall gate
-    if (!hasUnlimited) {
-      void showProPaywallIfNeeded();
-      return;
-    }
-
-    // 2. Clear draft state
-    resetAddEventState();
-    // Light feedback on intent to capture
-    await Haptics.selectionAsync();
-
-    // 3. Launch native photo picker directly
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        quality: 0.8,
-        allowsMultipleSelection: true,
-        selectionLimit: 20, // iOS‑only; we also enforce in JS
-      });
-
-      if (!result.canceled && result.assets.length) {
-        const username = user?.username;
-        const userId = user?.id;
-
-        // Ensure user info is available before proceeding
-        if (!username || !userId) {
-          toast.error("User information not available");
-          return;
-        }
-
-        // Respect the 10‑image limit in case the platform ignores selectionLimit
-        const assets = result.assets.slice(0, 20);
-
-        // Queue the jobs – they’ll keep running even if the app backgrounds
-        // Medium impact to confirm jobs queued
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        void enqueueEvents(
-          assets.map((asset) => ({
-            imageUri: asset.uri,
-            userId,
-            username,
-          })),
-        );
-      }
-    } catch (err) {
-      logError("Error in AddEventButton handlePress", err);
-      toast.error("Failed to open photo picker. Please try again.");
-    }
-  }, [
-    hasUnlimited,
-    showProPaywallIfNeeded,
-    resetAddEventState,
-    user,
-    enqueueEvents,
-  ]);
 
   /**
    * UI
@@ -181,7 +104,7 @@ export default function AddEventButton({
       {/* Main action button */}
       {!isLoading && (
         <TouchableOpacity
-          onPress={handlePress}
+          onPress={triggerAddEventFlow}
           className="absolute bottom-8 self-center"
           disabled={isCapturing}
         >

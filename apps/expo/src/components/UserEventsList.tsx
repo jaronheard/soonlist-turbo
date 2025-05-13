@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
-import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
@@ -29,8 +28,8 @@ import {
   Plus,
   User,
 } from "~/components/icons";
+import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
-import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import {
@@ -414,16 +413,10 @@ function PromoCard({ type }: PromoCardProps) {
   const { fontScale } = useWindowDimensions();
   const iconSize = 16 * fontScale;
 
-  const handlePress = async () => {
-    try {
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      useAppStore.setState({
-        hasMediaPermission: status === MediaLibrary.PermissionStatus.GRANTED,
-      });
-    } catch (error) {
-      logError("Error requesting media permissions", error);
-    }
-    router.push("/add");
+  const { triggerAddEventFlow } = useAddEventFlow();
+
+  const handlePress = () => {
+    void triggerAddEventFlow();
   };
 
   if (type === "addEvents") {
