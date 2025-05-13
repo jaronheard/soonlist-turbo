@@ -35,7 +35,7 @@ export async function generateMetadata(
 
   const eventData = event.event as AddToCalendarButtonProps;
   // optionally access and extend (rather than replace) parent metadata
-  
+
   // For Open Graph, use the first available image regardless of aspect ratio
   // This works for both web (with multiple aspect ratios) and iOS (with single aspect ratio)
   const previewImage = eventData.images && eventData.images.length > 0 
