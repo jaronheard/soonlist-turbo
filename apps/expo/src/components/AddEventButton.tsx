@@ -103,7 +103,6 @@ export default function AddEventButton({
         <TouchableOpacity
           onPress={triggerAddEventFlow}
           className="absolute bottom-8 self-center"
-          disabled={isCapturing}
         >
           {hasUnlimited ? (
             <View className="relative">
