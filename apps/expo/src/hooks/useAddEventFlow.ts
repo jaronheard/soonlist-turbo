@@ -5,8 +5,6 @@ import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
 import { useCreateEvent } from "~/hooks/useCreateEvent";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore } from "~/store";
 import { logError } from "~/utils/errorLogging";
 
 /**
@@ -14,28 +12,14 @@ import { logError } from "~/utils/errorLogging";
  * Encapsulates paywall checks, image selection, and event queuing.
  */
 export function useAddEventFlow() {
-  const { resetAddEventState } = useAppStore((state) => ({
-    resetAddEventState: state.resetAddEventState,
-  }));
-  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
-  const hasUnlimited =
-    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
   const { user } = useUser();
   const { enqueueEvents } = useCreateEvent();
 
   const triggerAddEventFlow = useCallback(async () => {
-    // 1. Paywall gate
-    if (!hasUnlimited) {
-      void showProPaywallIfNeeded();
-      return;
-    }
-
-    // 2. Clear draft state
-    resetAddEventState();
     // Light feedback on intent to capture
     await Haptics.selectionAsync();
 
-    // 3. Launch native photo picker directly
+    // 1. Launch native photo picker directly
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images, // Use enum for clarity
@@ -78,13 +62,7 @@ export function useAddEventFlow() {
       logError("Error in triggerAddEventFlow photo picker", err);
       toast.error("Failed to open photo picker. Please try again.");
     }
-  }, [
-    hasUnlimited,
-    showProPaywallIfNeeded,
-    resetAddEventState,
-    user,
-    enqueueEvents,
-  ]);
+  }, [user, enqueueEvents]);
 
   return { triggerAddEventFlow };
 }
