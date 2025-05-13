@@ -39,7 +39,7 @@ export async function generateMetadata(
   // For Open Graph, use the first available image regardless of aspect ratio
   // This works for both web (with multiple aspect ratios) and iOS (with single aspect ratio)
   const previewImage = eventData.images && eventData.images.length > 0 
-    ? [eventData.images[0]] 
+    ? [{ url: eventData.images[0] }] 
     : undefined;
 
   return {
