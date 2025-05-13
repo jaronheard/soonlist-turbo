@@ -35,10 +35,12 @@ export async function generateMetadata(
 
   const eventData = event.event as AddToCalendarButtonProps;
   // optionally access and extend (rather than replace) parent metadata
-  // images are in the order of square, 4:3, 16:9, cropped
-  const hasAllImages = eventData.images && eventData.images.length === 4;
-  // Use the square image (index 0) for Open Graph to match the EventPage component display
-  const previewImage = hasAllImages ? eventData.images?.slice(0, 1) : undefined;
+  
+  // For Open Graph, use the first available image regardless of aspect ratio
+  // This works for both web (with multiple aspect ratios) and iOS (with single aspect ratio)
+  const previewImage = eventData.images && eventData.images.length > 0 
+    ? [eventData.images[0]] 
+    : undefined;
 
   return {
     title: `${eventData.name} | Soonlist`,
