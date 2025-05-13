@@ -101,7 +101,7 @@ export default function AddEventButton({
         mediaTypes: ["images"],
         quality: 0.8,
         allowsMultipleSelection: true,
-        selectionLimit: 10, // iOS‑only; we also enforce in JS
+        selectionLimit: 20, // iOS‑only; we also enforce in JS
       });
 
       if (!result.canceled && result.assets.length) {
@@ -115,7 +115,7 @@ export default function AddEventButton({
         }
 
         // Respect the 10‑image limit in case the platform ignores selectionLimit
-        const assets = result.assets.slice(0, 10);
+        const assets = result.assets.slice(0, 20);
 
         // Queue the jobs – they’ll keep running even if the app backgrounds
         // Medium impact to confirm jobs queued

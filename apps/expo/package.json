@@ -86,6 +86,7 @@
     "moment-timezone": "^0.5.47",
     "nativewind": "~4.1.23",
     "onesignal-expo-plugin": "^2.0.3",
+    "p-map": "^7.0.3",
     "posthog-react-native": "^3.15.2",
     "posthog-react-native-session-replay": "^1.0.6",
     "react": "18.3.1",

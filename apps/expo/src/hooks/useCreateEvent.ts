@@ -1,9 +1,10 @@
 import { useCallback } from "react";
+import { InteractionManager } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import pMap from "p-map";
 import { toast } from "sonner-native";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -21,96 +22,39 @@ interface CreateEventOptions {
   sendNotification?: boolean;
 }
 
-interface PersistedJob extends CreateEventOptions {
-  id: string; // unique id so jobs survive deduping
-}
+const CONCURRENCY_LIMIT = 5; // tweak as needed
 
-const QUEUE_STORAGE_KEY = "soonlist_event_job_queue";
-const CONCURRENCY_LIMIT = 3; // tweak as needed
-let jobQueue: PersistedJob[] = []; // loaded from storage
-let inFlight = 0; // # of currently running jobs
-let isProcessing = false; // guard against double runners
-
-// Optimize image and return base64 string
+// Optimize image off the main JS thread and return a base64 string
 async function optimizeImage(uri: string): Promise<string> {
-  try {
-    const manipulatedImage = await ImageManipulator.manipulateAsync(
-      uri,
-      [{ resize: { width: 800 } }], // Keep resizing
-      { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP }, // Keep compression and format
-    );
+  return new Promise((resolve, reject) => {
+    // Defer heavy work until after UI interactions/animations finish
+    void InteractionManager.runAfterInteractions(async () => {
+      try {
+        // Resize & compress on the native thread and get base64 in a single step
+        const { base64, uri: tmpUri } = await ImageManipulator.manipulateAsync(
+          uri,
+          [{ resize: { width: 800 } }],
+          {
+            compress: 0.7,
+            format: ImageManipulator.SaveFormat.WEBP,
+            base64: true,
+          },
+        );
 
-    // Convert to base64
-    const base64 = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
-      encoding: FileSystem.EncodingType.Base64,
+        if (!base64) {
+          throw new Error("Failed to encode image to base64");
+        }
+
+        // Delete the temporary file asynchronously (fire-and-forget)
+        FileSystem.deleteAsync(tmpUri, { idempotent: true }).catch(() => {});
+
+        resolve(base64);
+      } catch (error) {
+        logError("Error manipulating image", error);
+        reject(new Error("Failed to optimize image for upload"));
+      }
     });
-
-    // Clean up the temporary manipulated image file
-    await FileSystem.deleteAsync(manipulatedImage.uri, { idempotent: true });
-
-    return base64;
-  } catch (error) {
-    logError("Error manipulating image", error);
-    throw new Error("Failed to optimize image for upload");
-  }
-}
-
-async function loadQueue() {
-  if (jobQueue.length) return; // already in memory
-  try {
-    const raw = await AsyncStorage.getItem(QUEUE_STORAGE_KEY);
-    if (raw) jobQueue = JSON.parse(raw) as PersistedJob[];
-  } catch (e) {
-    logError("Failed loading queue", e);
-  }
-}
-
-async function persistQueue() {
-  try {
-    await AsyncStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(jobQueue));
-  } catch (e) {
-    logError("Failed saving queue", e);
-  }
-}
-
-async function processQueue(deps: {
-  createSingle: (o: CreateEventOptions) => Promise<string | undefined>;
-  setIsCapturing: (b: boolean) => void;
-}) {
-  if (isProcessing) return;
-  isProcessing = true;
-  deps.setIsCapturing(true);
-  await loadQueue();
-
-  const pump = async () => {
-    if (!jobQueue.length && inFlight === 0) {
-      deps.setIsCapturing(false);
-      isProcessing = false;
-      await persistQueue();
-      return;
-    }
-
-    while (inFlight < CONCURRENCY_LIMIT && jobQueue.length) {
-      const job = jobQueue.shift()!;
-      inFlight++;
-      deps
-        .createSingle(job)
-        .catch((e) => {
-          logError("Job failed", e);
-          // push back for retry later
-          jobQueue.push(job);
-        })
-        .finally(() => {
-          void (async () => {
-            inFlight--;
-            await persistQueue();
-            void pump();
-          })();
-        });
-    }
-  };
-
-  void pump();
+  });
 }
 
 export async function enqueueEvents(
@@ -120,12 +64,15 @@ export async function enqueueEvents(
     setIsCapturing: (b: boolean) => void;
   },
 ) {
-  await loadQueue();
-  tasks.forEach((t) =>
-    jobQueue.push({ ...t, id: Math.random().toString(36).slice(2) }),
-  );
-  await persistQueue();
-  void processQueue(deps);
+  const { createSingle, setIsCapturing } = deps;
+  if (!tasks.length) return;
+
+  setIsCapturing(true);
+  try {
+    await pMap(tasks, createSingle, { concurrency: CONCURRENCY_LIMIT });
+  } finally {
+    setIsCapturing(false);
+  }
 }
 
 export function useCreateEvent() {
