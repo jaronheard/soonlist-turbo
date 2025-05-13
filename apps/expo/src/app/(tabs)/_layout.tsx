@@ -4,7 +4,6 @@ import { Tabs } from "expo-router";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
-import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
 export const unstable_settings = {
   initialRouteName: "feed",
