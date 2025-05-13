@@ -1,14 +1,10 @@
 import { useCallback } from "react";
-import * as FileSystem from "expo-file-system";
+import * as Haptics from "expo-haptics";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
+import pMap from "p-map";
 import { toast } from "sonner-native";
 
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
-
-import type { RouterOutputs } from "~/utils/api";
-import { showEventCaptureToast } from "~/components/EventCaptureToast";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { api } from "~/utils/api";
@@ -21,27 +17,28 @@ interface CreateEventOptions {
   userId: string;
   username: string;
   sendNotification?: boolean;
+  suppressCapturing?: boolean;
 }
 
-type _EventResponse =
-  RouterOutputs["ai"]["eventFromUrlThenCreateThenNotification"];
+const CONCURRENCY_LIMIT = 5; // tweak as needed
 
-// Optimize image and return base64 string
+// Optimize image off the main JS thread and return a base64 string
 async function optimizeImage(uri: string): Promise<string> {
   try {
-    const manipulatedImage = await ImageManipulator.manipulateAsync(
+    // Resize & compress on the native thread and get base64 in a single step
+    const { base64 } = await ImageManipulator.manipulateAsync(
       uri,
-      [{ resize: { width: 800 } }], // Keep resizing
-      { compress: 0.7, format: ImageManipulator.SaveFormat.WEBP }, // Keep compression and format
+      [{ resize: { width: 800 } }],
+      {
+        compress: 0.7,
+        format: ImageManipulator.SaveFormat.WEBP,
+        base64: true,
+      },
     );
 
-    // Convert to base64
-    const base64 = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    // Clean up the temporary manipulated image file
-    await FileSystem.deleteAsync(manipulatedImage.uri, { idempotent: true });
+    if (!base64) {
+      throw new Error("Failed to encode image to base64");
+    }
 
     return base64;
   } catch (error) {
@@ -50,12 +47,76 @@ async function optimizeImage(uri: string): Promise<string> {
   }
 }
 
+export async function enqueueEvents(
+  tasks: CreateEventOptions[],
+  deps: {
+    createSingle: (o: CreateEventOptions) => Promise<string | undefined>;
+    setIsCapturing: (b: boolean) => void;
+    logError: (
+      message: string,
+      error: unknown,
+      context?: Record<string, unknown>,
+    ) => void;
+  },
+) {
+  const { createSingle, setIsCapturing, logError: log } = deps;
+  if (!tasks.length) return;
+
+  setIsCapturing(true);
+  const results = {
+    successCount: 0,
+    failureCount: 0,
+  };
+
+  try {
+    await pMap(
+      tasks,
+      async (task) => {
+        try {
+          // Attempt to create the single event
+          const eventId = await createSingle({
+            ...task,
+            suppressCapturing: true,
+          });
+          if (eventId) {
+            results.successCount++;
+          } else {
+            // This case might occur if createSingle returns undefined without throwing,
+            // e.g., due to paywall or other handled conditions within createSingle.
+            results.failureCount++;
+            log(
+              "Event creation returned no ID (handled failure)",
+              new Error("createSingle returned undefined"),
+              { task },
+            );
+          }
+        } catch (error) {
+          // Log the error for the specific task and increment failure count
+          results.failureCount++;
+          log("Error processing single event in enqueueEvents batch", error, {
+            task,
+          });
+          // We don't rethrow here, so pMap continues with other tasks
+        }
+      },
+      { concurrency: CONCURRENCY_LIMIT },
+    );
+  } finally {
+    setIsCapturing(false);
+    // Optionally, provide feedback based on results
+    if (results.failureCount > 0) {
+      toast.error(
+        `${results.failureCount} event(s) failed to process. ${results.successCount} succeeded.`,
+      );
+    } else if (results.successCount > 0) {
+      // Don't do anything
+    }
+  }
+}
+
 export function useCreateEvent() {
   const { setIsImageLoading } = useAppStore();
-  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const { setIsCapturing } = useInFlightEventStore();
-  const hasUnlimited =
-    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
   const utils = api.useUtils();
   const userTimezone = useUserTimezone();
 
@@ -89,27 +150,19 @@ export function useCreateEvent() {
 
   const createEvent = useCallback(
     async (options: CreateEventOptions): Promise<string | undefined> => {
-      // Check for subscription before proceeding
-      if (!hasUnlimited) {
-        await showProPaywallIfNeeded();
-        // Re-check subscription status after paywall
-        if (!customerInfo?.entitlements.active.unlimited) {
-          toast.error("Pro subscription required to add events");
-          return undefined;
-        }
-      }
-
       const {
         rawText,
         linkPreview,
         imageUri,
         userId,
         username,
-        sendNotification = false,
+        sendNotification = true,
       } = options;
 
       try {
-        setIsCapturing(true);
+        if (!options.suppressCapturing) {
+          setIsCapturing(true);
+        }
         // URL flow
         if (linkPreview) {
           const result = await eventFromUrl.mutateAsync({
@@ -123,11 +176,9 @@ export function useCreateEvent() {
           });
 
           if (result.success && "event" in result && result.event) {
-            showEventCaptureToast({
-              id: result.event.id,
-              event: result.event.event as AddToCalendarButtonPropsRestricted,
-              visibility: result.event.visibility,
-            });
+            void Haptics.notificationAsync(
+              Haptics.NotificationFeedbackType.Success,
+            );
             return result.event.id;
           }
           return undefined;
@@ -180,17 +231,17 @@ export function useCreateEvent() {
             }
 
             if ("event" in eventResult && eventResult.event) {
-              showEventCaptureToast({
-                id: eventResult.event.id,
-                event: eventResult.event
-                  .event as AddToCalendarButtonPropsRestricted,
-                visibility: eventResult.event.visibility,
-              });
+              void Haptics.notificationAsync(
+                Haptics.NotificationFeedbackType.Success,
+              );
               return eventResult.event.id;
             }
             return undefined;
           } catch (error) {
             logError("Error processing image", error);
+            void Haptics.notificationAsync(
+              Haptics.NotificationFeedbackType.Error,
+            );
             throw error; // Rethrow to trigger mutation's onError
           } finally {
             // Reset loading state for both routes
@@ -212,11 +263,9 @@ export function useCreateEvent() {
           });
 
           if (result.success && "event" in result && result.event) {
-            showEventCaptureToast({
-              id: result.event.id,
-              event: result.event.event as AddToCalendarButtonPropsRestricted,
-              visibility: result.event.visibility,
-            });
+            void Haptics.notificationAsync(
+              Haptics.NotificationFeedbackType.Success,
+            );
             return result.event.id;
           }
           return undefined;
@@ -224,13 +273,12 @@ export function useCreateEvent() {
 
         return undefined;
       } finally {
-        setIsCapturing(false);
+        if (!options.suppressCapturing) {
+          setIsCapturing(false);
+        }
       }
     },
     [
-      hasUnlimited,
-      showProPaywallIfNeeded,
-      customerInfo?.entitlements.active.unlimited,
       eventFromUrl,
       userTimezone,
       setIsImageLoading,
@@ -240,5 +288,13 @@ export function useCreateEvent() {
     ],
   );
 
-  return { createEvent };
+  return {
+    createEvent,
+    enqueueEvents: (tasks: CreateEventOptions[]) =>
+      enqueueEvents(tasks, {
+        createSingle: createEvent,
+        setIsCapturing,
+        logError,
+      }),
+  };
 }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   Easing,
@@ -8,18 +8,14 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
-import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
-import { toast } from "sonner-native";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
-import { useCreateEvent } from "~/hooks/useCreateEvent";
+import { CircularSpinner } from "~/components/ui/CircularSpinner";
+import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore } from "~/store";
-import { logError } from "../utils/errorLogging";
+import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
 interface AddEventButtonProps {
   showChevron?: boolean;
@@ -34,19 +30,14 @@ interface AddEventButtonProps {
 export default function AddEventButton({
   showChevron = true,
 }: AddEventButtonProps) {
-  // Zustand selectors
-  const { resetAddEventState } = useAppStore((state) => ({
-    resetAddEventState: state.resetAddEventState,
-  }));
+  const { isCapturing } = useInFlightEventStore();
 
-  const { customerInfo, showProPaywallIfNeeded, isLoading } = useRevenueCat();
+  const { customerInfo, isLoading } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  const { user } = useUser();
-  const { createEvent } = useCreateEvent();
+  const { triggerAddEventFlow } = useAddEventFlow();
 
-  // Keep permission status up‑to‑date globally
   useMediaPermissions();
 
   /**
@@ -71,125 +62,6 @@ export default function AddEventButton({
     transform: [{ translateX: -32 }, { translateY: translateY.value }],
     zIndex: 10,
   }));
-
-  /**
-   * Main press handler
-   * ------------------
-   * 1. Show paywall if needed.
-   * 2. Clear draft state (so any stale data is removed)
-   * 3. Launch native photo picker directly
-   * 4. Create event with selected photo
-   * 5. Show success toast
-   */
-  const handlePress = useCallback(async () => {
-    // 1. Paywall gate
-    if (!hasUnlimited) {
-      void showProPaywallIfNeeded();
-      return;
-    }
-
-    // 2. Clear draft state
-    resetAddEventState();
-
-    // 3. Launch native photo picker directly
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        quality: 0.8,
-        allowsMultipleSelection: true,
-        selectionLimit: 10, // iOS‑only; we also enforce in JS
-      });
-
-      if (!result.canceled && result.assets.length) {
-        const username = user?.username;
-        const userId = user?.id;
-
-        // Ensure user info is available before proceeding
-        if (!username || !userId) {
-          toast.error("User information not available");
-          return;
-        }
-
-        // Respect the 10‑image limit in case the platform ignores selectionLimit
-        const assets = result.assets.slice(0, 10);
-
-        // Show a persistent loading toast with the number of events being captured
-        const loadingToastId = toast.loading(
-          assets.length > 1
-            ? `Capturing ${assets.length} events…`
-            : "Capturing event…",
-          { duration: Infinity },
-        );
-
-        // Kick off event creation requests in parallel
-        const creationResults = await Promise.allSettled(
-          assets.map((asset) =>
-            createEvent({
-              imageUri: asset.uri,
-              userId: userId,
-              username: username,
-            }),
-          ),
-        );
-
-        // Loading finished — remove spinner
-        toast.dismiss(loadingToastId);
-
-        // Gather successes
-        const successfulIds = creationResults
-          .filter(
-            (r): r is PromiseFulfilledResult<string | undefined> =>
-              r.status === "fulfilled" && typeof r.value === "string",
-          )
-          .map((r) => r.value);
-
-        const failedCount = assets.length - successfulIds.length;
-
-        // Aggregate feedback
-        if (successfulIds.length === 1) {
-          toast.success("Captured successfully!", {
-            action: {
-              label: "View event",
-              onClick: () => {
-                toast.dismiss();
-                router.push(`/event/${successfulIds[0]}`);
-              },
-            },
-          });
-        } else if (successfulIds.length > 1) {
-          toast.success(
-            `Captured ${successfulIds.length} events successfully!`,
-            {
-              action: {
-                label: "View events",
-                onClick: () => {
-                  toast.dismiss();
-                  router.push("/feed");
-                },
-              },
-            },
-          );
-        }
-
-        if (failedCount > 0) {
-          toast.error(
-            `Failed to create ${failedCount} event${
-              failedCount > 1 ? "s" : ""
-            }. Please try again.`,
-          );
-        }
-      }
-    } catch (err) {
-      logError("Error in AddEventButton handlePress", err);
-      toast.error("Failed to open photo picker. Please try again.");
-    }
-  }, [
-    hasUnlimited,
-    showProPaywallIfNeeded,
-    resetAddEventState,
-    user,
-    createEvent,
-  ]);
 
   /**
    * UI
@@ -232,21 +104,40 @@ export default function AddEventButton({
       {/* Main action button */}
       {!isLoading && (
         <TouchableOpacity
-          onPress={handlePress}
+          onPress={triggerAddEventFlow}
           className="absolute bottom-8 self-center"
+          disabled={isCapturing}
         >
           {hasUnlimited ? (
-            <View
-              className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
-              style={{
-                shadowColor: "#5A32FB",
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-                elevation: 8,
-              }}
-            >
-              <PlusIcon size={44} color="#FFF" strokeWidth={2} />
+            <View className="relative">
+              <View
+                className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
+                style={{
+                  shadowColor: "#5A32FB",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 6,
+                  elevation: 8,
+                }}
+              >
+                <PlusIcon size={44} color="#FFF" strokeWidth={2} />
+              </View>
+
+              {/* Spinner Overlay */}
+              {isCapturing && (
+                <View
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{
+                    transform: [{ translateX: -3 }, { translateY: -3 }],
+                  }}
+                >
+                  <CircularSpinner
+                    size={72} // Size = button diameter (68) + strokeWidth (4)
+                    strokeWidth={4}
+                    color="#FFFFFF"
+                  />
+                </View>
+              )}
             </View>
           ) : (
             <View

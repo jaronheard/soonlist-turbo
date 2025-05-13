@@ -1,3 +1,4 @@
+import type { ViewStyle } from "react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -10,7 +11,6 @@ import {
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
-import * as MediaLibrary from "expo-media-library";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
@@ -29,8 +29,8 @@ import {
   Plus,
   User,
 } from "~/components/icons";
+import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
-import { useAppStore } from "~/store";
 import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import {
@@ -67,6 +67,7 @@ interface UserEventListItemProps {
   ActionButton?: React.ComponentType<ActionButtonProps>;
   showCreator: ShowCreatorOption;
   isSaved: boolean;
+  savedAt?: Date;
   similarEventsCount?: number;
   demoMode?: boolean;
   index: number;
@@ -79,6 +80,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
     ActionButton,
     showCreator,
     isSaved,
+    savedAt,
     similarEventsCount,
     demoMode,
     index,
@@ -141,6 +143,68 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const { user: currentUser } = useUser();
   const eventUser = event.user;
 
+  const isRecent = useMemo(() => {
+    const threeHoursAgoTimestamp = Date.now() - 3 * 60 * 60 * 1000;
+
+    // Convert potential date strings to Date objects before comparison
+    const createdAtDate = event.createdAt ? new Date(event.createdAt) : null;
+    const savedAtDate = isSaved && savedAt ? new Date(savedAt) : null;
+
+    // Check if the conversion resulted in a valid date and compare timestamps
+    if (
+      createdAtDate &&
+      !isNaN(createdAtDate.getTime()) &&
+      createdAtDate.getTime() > threeHoursAgoTimestamp
+    ) {
+      return true;
+    }
+    if (
+      savedAtDate &&
+      !isNaN(savedAtDate.getTime()) &&
+      savedAtDate.getTime() > threeHoursAgoTimestamp
+    ) {
+      return true;
+    }
+    return false;
+  }, [event.createdAt, savedAt, isSaved]);
+
+  const iconSize = 16 * fontScale;
+  const imageWidth = 90 * fontScale;
+  const imageHeight = (imageWidth * 16) / 9;
+
+  const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
+
+  const dynamicCardStyle = useMemo(() => {
+    let currentBorderColor = "white"; // Default border color
+    // Based on the "Happening now" badge, accent-yellow is #FEEA9F
+    if (isHappeningNow) {
+      currentBorderColor = "#FEEA9F";
+    }
+
+    // Base style properties
+    const style: ViewStyle = {
+      paddingRight: imageWidth * 1.1,
+      borderRadius: 20,
+      borderWidth: 3,
+      borderColor: currentBorderColor,
+      shadowColor: "#5A32FB",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.15,
+      shadowRadius: 2.5,
+      elevation: 2,
+      backgroundColor: "white",
+    };
+
+    if (isRecent) {
+      style.borderColor = "#5A32FB"; // Glow border color
+      style.shadowColor = "#5A32FB"; // Glow shadow color
+      style.shadowOpacity = 0.45; // Increased opacity for glow
+      style.shadowRadius = 7; // Increased radius for glow
+      style.elevation = 6; // Increased elevation for Android glow
+    }
+    return style;
+  }, [isRecent, isHappeningNow, imageWidth]);
+
   if (!eventUser) return null;
 
   const isCurrentUser = currentUser?.id === eventUser.id;
@@ -151,12 +215,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
     (isSaved && !isCurrentUser && showCreator === "savedFromOthers");
 
   const isOwner = demoMode || isCurrentUser;
-
-  const iconSize = 16 * fontScale;
-  const imageWidth = 90 * fontScale;
-  const imageHeight = (imageWidth * 16) / 9;
-
-  const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
 
   // Get emoji and background color based on event type/category
   const { emoji, bgColor } = getEventEmoji(event);
@@ -248,24 +306,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               )}
             </View>
           </View>
-          <View
-            className={cn(
-              "my-1 mt-4 bg-white p-3",
-              isHappeningNow ? "border border-accent-yellow" : "",
-            )}
-            style={{
-              paddingRight: imageWidth * 1.1,
-              borderRadius: 20,
-              borderWidth: 3,
-              borderColor: "white",
-              shadowColor: "#5A32FB",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.15,
-              shadowRadius: 2.5,
-              elevation: 2,
-              backgroundColor: "white",
-            }}
-          >
+          <View className={cn("my-1 mt-4 p-3")} style={dynamicCardStyle}>
             <View className="mb-1 flex-row items-center justify-between">
               <View className="flex-row items-center gap-1">
                 <Text className="text-sm font-medium text-neutral-2">
@@ -414,16 +455,10 @@ function PromoCard({ type }: PromoCardProps) {
   const { fontScale } = useWindowDimensions();
   const iconSize = 16 * fontScale;
 
-  const handlePress = async () => {
-    try {
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      useAppStore.setState({
-        hasMediaPermission: status === MediaLibrary.PermissionStatus.GRANTED,
-      });
-    } catch (error) {
-      logError("Error requesting media permissions", error);
-    }
-    router.push("/add");
+  const { triggerAddEventFlow } = useAddEventFlow();
+
+  const handlePress = () => {
+    void triggerAddEventFlow();
   };
 
   if (type === "addEvents") {
@@ -649,10 +684,12 @@ export default function UserEventsList(props: UserEventsListProps) {
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
           const eventData = item.event;
-          const isSaved =
-            savedIdsQuery.data?.some(
+          const savedEventEntry: { id: string; savedAt?: Date } | undefined =
+            savedIdsQuery.data?.find(
               (savedEvent) => savedEvent.id === eventData.id,
-            ) ?? false;
+            );
+          const isSaved = !!savedEventEntry;
+          const savedAt = savedEventEntry?.savedAt;
 
           const similarEventsCount = item.similarEvents.length;
 
@@ -662,6 +699,7 @@ export default function UserEventsList(props: UserEventsListProps) {
               ActionButton={ActionButton}
               showCreator={showCreator}
               isSaved={isSaved}
+              savedAt={savedAt}
               similarEventsCount={
                 similarEventsCount > 0 ? similarEventsCount : undefined
               }
