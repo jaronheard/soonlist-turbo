@@ -42,6 +42,9 @@ export function CircularSpinner({
       -1, // Infinite repeats
       false, // Don't reverse
     );
+    return () => {
+      rotation.value = 0; // Cancel animation on cleanup
+    };
   }, [duration, rotation]); // Rerun if duration changes
 
   const animatedStyle = useAnimatedStyle(() => {
