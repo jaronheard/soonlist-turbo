@@ -624,10 +624,10 @@ export default function UserEventsList(props: UserEventsListProps) {
           transition={100}
         />
         <Text className="mb-2 rounded-lg text-center text-2xl font-bold text-neutral-1">
-          Save events instantly
+          Add events from photos
         </Text>
         <Text className="text-center text-base text-neutral-2">
-          Tap the plus button to add your first event.
+          Tap the plus button to start your list of possibilities
         </Text>
       </View>
     );
