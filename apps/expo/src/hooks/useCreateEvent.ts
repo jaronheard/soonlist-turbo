@@ -5,6 +5,7 @@ import * as MediaLibrary from "expo-media-library";
 import pMap from "p-map";
 import { toast } from "sonner-native";
 
+import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { api } from "~/utils/api";
@@ -57,9 +58,15 @@ export async function enqueueEvents(
       error: unknown,
       context?: Record<string, unknown>,
     ) => void;
+    hasNotificationPermission: boolean;
   },
 ) {
-  const { createSingle, setIsCapturing, logError: log } = deps;
+  const {
+    createSingle,
+    setIsCapturing,
+    logError: log,
+    hasNotificationPermission,
+  } = deps;
   if (!tasks.length) return;
 
   setIsCapturing(true);
@@ -109,7 +116,12 @@ export async function enqueueEvents(
         `${results.failureCount} event(s) failed to process. ${results.successCount} succeeded.`,
       );
     } else if (results.successCount > 0) {
-      // Don't do anything
+      if (!hasNotificationPermission) {
+        toast.success(
+          `${results.successCount} event${results.successCount > 1 ? "s" : ""} captured successfully!`,
+        );
+      }
+      // If notifications are enabled, we rely on the native notification.
     }
   }
 }
@@ -117,6 +129,7 @@ export async function enqueueEvents(
 export function useCreateEvent() {
   const { setIsImageLoading } = useAppStore();
   const { setIsCapturing } = useInFlightEventStore();
+  const { hasNotificationPermission } = useOneSignal();
   const utils = api.useUtils();
   const userTimezone = useUserTimezone();
 
@@ -179,6 +192,9 @@ export function useCreateEvent() {
             void Haptics.notificationAsync(
               Haptics.NotificationFeedbackType.Success,
             );
+            if (sendNotification && !hasNotificationPermission) {
+              toast.success("Event captured successfully!");
+            }
             return result.event.id;
           }
           return undefined;
@@ -234,6 +250,9 @@ export function useCreateEvent() {
               void Haptics.notificationAsync(
                 Haptics.NotificationFeedbackType.Success,
               );
+              if (sendNotification && !hasNotificationPermission) {
+                toast.success("Event captured successfully!");
+              }
               return eventResult.event.id;
             }
             return undefined;
@@ -266,6 +285,9 @@ export function useCreateEvent() {
             void Haptics.notificationAsync(
               Haptics.NotificationFeedbackType.Success,
             );
+            if (sendNotification && !hasNotificationPermission) {
+              toast.success("Event captured successfully!");
+            }
             return result.event.id;
           }
           return undefined;
@@ -285,6 +307,7 @@ export function useCreateEvent() {
       eventFromImageBase64,
       eventFromRaw,
       setIsCapturing,
+      hasNotificationPermission,
     ],
   );
 
@@ -295,6 +318,7 @@ export function useCreateEvent() {
         createSingle: createEvent,
         setIsCapturing,
         logError,
+        hasNotificationPermission,
       }),
   };
 }
