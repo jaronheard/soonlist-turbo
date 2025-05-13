@@ -13,7 +13,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
 import { CircularSpinner } from "~/components/ui/CircularSpinner";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
-import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
@@ -37,8 +36,6 @@ export default function AddEventButton({
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const { triggerAddEventFlow } = useAddEventFlow();
-
-  useMediaPermissions();
 
   /**
    * Small bounce for the chevron hint

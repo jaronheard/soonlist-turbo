@@ -62,7 +62,7 @@ export function useAddEventFlow() {
         });
       }
     } catch (err) {
-      // Check for specific permission errors if needed, although useMediaPermissions handles this broadly
+      // Permissions shouldn't be an issue here, but we'll log it
       logError("Error in triggerAddEventFlow photo picker", err);
       toast.error("Failed to open photo picker. Please try again.");
     }

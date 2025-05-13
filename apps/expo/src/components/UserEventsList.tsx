@@ -196,10 +196,10 @@ export function UserEventListItem(props: UserEventListItemProps) {
     };
 
     if (isRecent) {
-      style.borderColor = "#5A32FB"; // Glow border color
+      style.borderColor = "#E0D9FF"; // Glow border color
       style.shadowColor = "#5A32FB"; // Glow shadow color
       style.shadowOpacity = 0.45; // Increased opacity for glow
-      style.shadowRadius = 7; // Increased radius for glow
+      style.shadowRadius = 8; // Increased radius for glow
       style.elevation = 6; // Increased elevation for Android glow
     }
     return style;
