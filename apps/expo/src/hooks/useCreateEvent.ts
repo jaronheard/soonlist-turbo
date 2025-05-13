@@ -1,13 +1,10 @@
 import { useCallback } from "react";
-import { InteractionManager } from "react-native";
-import * as FileSystem from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
 import pMap from "p-map";
 import { toast } from "sonner-native";
 
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { api } from "~/utils/api";
@@ -119,10 +116,7 @@ export async function enqueueEvents(
 
 export function useCreateEvent() {
   const { setIsImageLoading } = useAppStore();
-  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const { setIsCapturing } = useInFlightEventStore();
-  const hasUnlimited =
-    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
   const utils = api.useUtils();
   const userTimezone = useUserTimezone();
 
@@ -156,16 +150,6 @@ export function useCreateEvent() {
 
   const createEvent = useCallback(
     async (options: CreateEventOptions): Promise<string | undefined> => {
-      // Check for subscription before proceeding
-      if (!hasUnlimited) {
-        await showProPaywallIfNeeded();
-        // Re-check subscription status after paywall
-        if (!customerInfo?.entitlements.active.unlimited) {
-          toast.error("Pro subscription required to add events");
-          return undefined;
-        }
-      }
-
       const {
         rawText,
         linkPreview,
@@ -295,9 +279,6 @@ export function useCreateEvent() {
       }
     },
     [
-      hasUnlimited,
-      showProPaywallIfNeeded,
-      customerInfo?.entitlements.active.unlimited,
       eventFromUrl,
       userTimezone,
       setIsImageLoading,
