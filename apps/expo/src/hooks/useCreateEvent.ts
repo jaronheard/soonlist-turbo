@@ -20,6 +20,7 @@ interface CreateEventOptions {
   userId: string;
   username: string;
   sendNotification?: boolean;
+  suppressCapturing?: boolean;
 }
 
 const CONCURRENCY_LIMIT = 5; // tweak as needed
@@ -69,7 +70,11 @@ export async function enqueueEvents(
 
   setIsCapturing(true);
   try {
-    await pMap(tasks, createSingle, { concurrency: CONCURRENCY_LIMIT });
+    await pMap(
+      tasks,
+      (task) => createSingle({ ...task, suppressCapturing: true }),
+      { concurrency: CONCURRENCY_LIMIT },
+    );
   } finally {
     setIsCapturing(false);
   }
@@ -134,7 +139,9 @@ export function useCreateEvent() {
       } = options;
 
       try {
-        setIsCapturing(true);
+        if (!options.suppressCapturing) {
+          setIsCapturing(true);
+        }
         // URL flow
         if (linkPreview) {
           const result = await eventFromUrl.mutateAsync({
@@ -245,7 +252,9 @@ export function useCreateEvent() {
 
         return undefined;
       } finally {
-        setIsCapturing(false);
+        if (!options.suppressCapturing) {
+          setIsCapturing(false);
+        }
       }
     },
     [
