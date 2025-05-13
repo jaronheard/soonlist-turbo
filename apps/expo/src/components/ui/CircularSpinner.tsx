@@ -31,7 +31,7 @@ export function CircularSpinner({
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const arcLength = circumference * 0.25; // 25 % of the circle
+  const arcLength = circumference * 0.25; // 25% of the circle
   const strokeDasharray = `${arcLength} ${circumference}`;
 
   const rotation = useSharedValue(0);

@@ -22,7 +22,7 @@ export function useAddEventFlow() {
     // 1. Launch native photo picker directly
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Use enum for clarity
+        mediaTypes: ["images"],
         quality: 0.8,
         allowsMultipleSelection: true,
         selectionLimit: 20, // iOS‑only; we also enforce in JS
