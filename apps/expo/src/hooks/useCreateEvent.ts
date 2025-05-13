@@ -20,7 +20,7 @@ interface CreateEventOptions {
   suppressCapturing?: boolean;
 }
 
-const CONCURRENCY_LIMIT = 5; // tweak as needed
+const CONCURRENCY_LIMIT = 4; // tweak as needed
 
 // Optimize image off the main JS thread and return a base64 string
 async function optimizeImage(uri: string): Promise<string> {
@@ -28,9 +28,9 @@ async function optimizeImage(uri: string): Promise<string> {
     // Resize & compress on the native thread and get base64 in a single step
     const { base64 } = await ImageManipulator.manipulateAsync(
       uri,
-      [{ resize: { width: 800 } }],
+      [{ resize: { width: 640 } }],
       {
-        compress: 0.7,
+        compress: 0.5,
         format: ImageManipulator.SaveFormat.WEBP,
         base64: true,
       },
