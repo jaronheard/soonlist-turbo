@@ -35,9 +35,15 @@ export async function generateMetadata(
 
   const eventData = event.event as AddToCalendarButtonProps;
   // optionally access and extend (rather than replace) parent metadata
-  // images are in the order of square, 4:3, 16:9, cropped
-  const hasAllImages = eventData.images && eventData.images.length === 4;
-  const previewImage = hasAllImages ? eventData.images?.slice(2, 3) : undefined;
+
+  // For Open Graph, use the first available image with CDN parameters to ensure square crop
+  let previewImage;
+  if (eventData.images && eventData.images.length > 0 && eventData.images[0]) {
+    // Apply CDN parameters to create a square crop anchored to the top
+    const baseUrl = eventData.images[0].replace("/raw/", "/image/");
+    const imageUrl = `${baseUrl}?w=640&h=640&fit=crop&crop=top&f=webp&q=80`;
+    previewImage = [{ url: imageUrl }];
+  }
 
   return {
     title: `${eventData.name} | Soonlist`,
