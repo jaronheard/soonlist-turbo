@@ -129,14 +129,6 @@ export default function EditProfileScreen() {
   const pickImage = useCallback(async () => {
     const loadingToastId = toast.loading("Updating profile image...");
     try {
-      const permissionResult =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (!permissionResult.granted) {
-        toast.dismiss(loadingToastId);
-        throw new Error("Permission to access photos was denied");
-      }
-
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
