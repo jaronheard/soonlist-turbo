@@ -1,3 +1,5 @@
+// Not used anymore, but keeping for reference
+
 import { useEffect } from "react";
 import { Image } from "expo-image";
 import * as MediaLibrary from "expo-media-library";

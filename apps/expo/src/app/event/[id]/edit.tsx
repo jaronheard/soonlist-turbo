@@ -327,14 +327,6 @@ export default function EditEventScreen() {
 
   const pickImage = async () => {
     try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (status !== ImagePicker.PermissionStatus.GRANTED) {
-        toast.error("Permission to access media library is required");
-        return;
-      }
-
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
