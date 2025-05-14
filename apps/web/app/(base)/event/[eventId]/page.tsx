@@ -38,9 +38,10 @@ export async function generateMetadata(
 
   // For Open Graph, use the first available image with CDN parameters to ensure square crop
   let previewImage;
-  if (eventData.images && eventData.images.length > 0) {
+  if (eventData.images && eventData.images.length > 0 && eventData.images[0]) {
     // Apply CDN parameters to create a square crop anchored to the top
-    const imageUrl = `${eventData.images[0]}?w=1200&h=1200&fit=cover&position=top&f=webp&q=80`;
+    const baseUrl = eventData.images[0].replace("/raw/", "/image/");
+    const imageUrl = `${baseUrl}?w=640&h=640&fit=crop&crop=top&f=webp&q=80`;
     previewImage = [{ url: imageUrl }];
   }
 
