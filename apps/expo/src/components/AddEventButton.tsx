@@ -9,7 +9,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
 import { CircularSpinner } from "~/components/ui/CircularSpinner";
@@ -36,16 +35,19 @@ interface AddEventButtonProps {
  * This bypasses the /add screen for a faster multi‑event creation flow.
  * Paywall logic:
  * - First event is free.
- * - If not the first event, and upcoming events > 5, requires "unlimited" entitlement.
+ * - If not the first event, and upcoming events >= 5, requires "unlimited" entitlement.
  */
 export default function AddEventButton({
   showChevron = true,
   stats,
 }: AddEventButtonProps) {
   const { isCapturing } = useInFlightEventStore();
-  const router = useRouter();
 
-  const { customerInfo, isLoading: isRevenueCatLoading } = useRevenueCat();
+  const {
+    customerInfo,
+    isLoading: isRevenueCatLoading,
+    showProPaywallIfNeeded,
+  } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
@@ -60,18 +62,18 @@ export default function AddEventButton({
     canProceedWithAdd = true;
   } else {
     if (upcomingEventsCount < 5) {
-      // Allowed if 5 or less upcoming events (and not the first capture)
+      // Allowed if less than 5 upcoming events (and not the first capture)
       canProceedWithAdd = true;
     } else {
-      // More than 5 upcoming events, and not the first capture: requires unlimited
+      // 5 or more upcoming events, and not the first capture: requires unlimited
       canProceedWithAdd = hasUnlimited;
     }
   }
 
-  const promptUserToUpgrade = () => {
+  const promptUserToUpgrade = async () => {
     // Navigate to settings/plans page.
     // You might want to adjust this path to your specific subscription/plans screen.
-    router.push("/(tabs)/settings");
+    await showProPaywallIfNeeded();
   };
 
   const handlePress = canProceedWithAdd

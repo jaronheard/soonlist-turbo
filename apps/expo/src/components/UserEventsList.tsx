@@ -13,7 +13,6 @@ import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import Intercom from "@intercom/intercom-react-native";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -530,7 +529,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     isFetchingNextPage,
     promoCard,
     demoMode,
-    hasUnlimited = false,
     stats,
     hideDiscoverableButton = false,
   } = props;
@@ -558,14 +556,6 @@ export default function UserEventsList(props: UserEventsListProps) {
   );
   const isAddingEvent =
     pendingAIMutations.filter((mutation) => mutation === "pending").length > 0;
-
-  const presentIntercom = async () => {
-    try {
-      await Intercom.present();
-    } catch (error) {
-      logError("Error presenting Intercom", error);
-    }
-  };
 
   const renderEmptyState = () => {
     if ((isAddingEvent || isRefetching) && collapsedEvents.length === 0) {
