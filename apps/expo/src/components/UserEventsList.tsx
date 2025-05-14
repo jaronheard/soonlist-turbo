@@ -439,9 +439,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   backgroundColor: "#E0D9FF",
                 }}
               >
-                <Text className="text-xs font-medium text-neutral-1">
-                  New
-                </Text>
+                <Text className="text-xs font-medium text-neutral-1">Recently captured</Text>
               </View>
             )}
             {relativeTime && (
