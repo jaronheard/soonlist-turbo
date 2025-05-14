@@ -440,7 +440,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 }}
               >
                 <Text className="text-xs font-medium text-neutral-1">
-                  Recently captured
+                  New
                 </Text>
               </View>
             )}
