@@ -69,9 +69,9 @@ export function Footer() {
             <Section className="bg-interactive-3">
               <div className="text-center">
                 <SectionTitle
-                  title="Save events instantly"
+                  title="Your photos → your event list"
                   subtitle="Get the app"
-                  description="From screenshots to your list of possibilities."
+                  description="Stop missing out"
                 />
                 <div className="mt-10 flex items-center justify-center gap-x-6">
                   <a
