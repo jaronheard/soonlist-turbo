@@ -424,8 +424,27 @@ export function UserEventListItem(props: UserEventListItemProps) {
               </Text>
             </View>
           ) : null}
-          {relativeTime && (
-            <View className="absolute left-0 right-0 top-0 z-20 flex items-center justify-center">
+          <View className="absolute left-0 right-0 top-0 z-20 flex flex-row items-center justify-center space-x-2">
+            {isRecent && (
+              <View
+                className={cn("rounded-full px-2 py-0.5", "bg-accent-purple")}
+                style={{
+                  borderWidth: 2,
+                  borderColor: "white",
+                  shadowColor: "#5A32FB",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 1,
+                  elevation: 1,
+                  backgroundColor: "#E0D9FF",
+                }}
+              >
+                <Text className="text-xs font-medium text-neutral-1">
+                  Recently captured
+                </Text>
+              </View>
+            )}
+            {relativeTime && (
               <View
                 className={cn("rounded-full px-2 py-0.5", "bg-accent-yellow")}
                 style={{
@@ -443,8 +462,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   {relativeTime}
                 </Text>
               </View>
-            </View>
-          )}
+            )}
+          </View>
         </View>
       </Pressable>
     </EventMenu>
