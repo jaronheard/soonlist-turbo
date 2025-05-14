@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import { toast } from "sonner-native";
 
 import { useOnboarding } from "~/hooks/useOnboarding";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
 
 interface FinishDemoButtonProps {
   text?: string;
@@ -16,7 +15,6 @@ export function FinishDemoButton({
   variant = "dark",
 }: FinishDemoButtonProps) {
   const router = useRouter();
-  const { showProPaywallIfNeeded } = useRevenueCat();
   const { completeOnboarding } = useOnboarding();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,7 +24,6 @@ export function FinishDemoButton({
 
     try {
       await completeOnboarding();
-      await showProPaywallIfNeeded();
       // Navigate to feed after paywall is handled
       router.push("/feed");
     } catch (error) {

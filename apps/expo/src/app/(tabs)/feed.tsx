@@ -96,7 +96,10 @@ function MyFeed() {
             promoCard={{ type: "addEvents" }}
             hasUnlimited={hasUnlimited}
           />
-          <AddEventButton showChevron={noLifetimeCaptures} />
+          <AddEventButton
+            showChevron={noLifetimeCaptures}
+            stats={statsQuery.data}
+          />
         </View>
       )}
     </View>

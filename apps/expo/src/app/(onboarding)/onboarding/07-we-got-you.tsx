@@ -126,7 +126,7 @@ export default function WeGotYouScreen() {
           </View>
         </View>
       </View>
-      <FinishDemoButton text="Start your free trial" variant="light" />
+      <FinishDemoButton text="Get started" variant="light" />
     </QuestionContainer>
   );
 }

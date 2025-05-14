@@ -576,38 +576,6 @@ export default function UserEventsList(props: UserEventsListProps) {
       );
     }
 
-    if (!hasUnlimited) {
-      return (
-        <View className="flex-1 items-center justify-center px-6">
-          <Image
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            source={require("../assets/icon.png")}
-            style={{
-              width: 64,
-              height: 64,
-              marginBottom: 16,
-              borderRadius: 8,
-            }}
-            contentFit="contain"
-            cachePolicy="disk"
-            transition={100}
-          />
-          <Text className="mb-2 rounded-lg text-center text-2xl font-bold text-neutral-1">
-            Try free now
-          </Text>
-          <Pressable
-            className="mb-4 text-center text-base text-neutral-2"
-            onPress={presentIntercom}
-          >
-            <Text className="text-neutral-2">
-              Funds an issue?{" "}
-              <Text className="text-interactive-1">Message us</Text>
-            </Text>
-          </Pressable>
-        </View>
-      );
-    }
-
     return (
       <View className="flex-1 items-center justify-center px-6">
         <Image

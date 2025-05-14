@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
 import { CircularSpinner } from "~/components/ui/CircularSpinner";
@@ -16,8 +17,16 @@ import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
+interface EventStats {
+  upcomingEvents: number;
+  allTimeEvents: number;
+  // Other fields from statsQuery.data if needed, but not used in current logic
+  // capturesThisWeek: number;
+  // weeklyGoal: number;
+}
 interface AddEventButtonProps {
   showChevron?: boolean;
+  stats?: EventStats;
 }
 
 /**
@@ -25,17 +34,49 @@ interface AddEventButtonProps {
  * ---------------
  * Opens the native photo picker (up to 10 images) and creates events for each selected photo in parallel.
  * This bypasses the /add screen for a faster multi‑event creation flow.
+ * Paywall logic:
+ * - First event is free.
+ * - If not the first event, and upcoming events > 5, requires "unlimited" entitlement.
  */
 export default function AddEventButton({
   showChevron = true,
+  stats,
 }: AddEventButtonProps) {
   const { isCapturing } = useInFlightEventStore();
+  const router = useRouter();
 
-  const { customerInfo, isLoading } = useRevenueCat();
+  const { customerInfo, isLoading: isRevenueCatLoading } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const { triggerAddEventFlow } = useAddEventFlow();
+
+  const upcomingEventsCount = stats?.upcomingEvents ?? 0;
+  const allTimeEventsCount = stats?.allTimeEvents ?? 0;
+
+  let canProceedWithAdd = false;
+  if (allTimeEventsCount === 0) {
+    // First capture is always allowed
+    canProceedWithAdd = true;
+  } else {
+    if (upcomingEventsCount < 5) {
+      // Allowed if 5 or less upcoming events (and not the first capture)
+      canProceedWithAdd = true;
+    } else {
+      // More than 5 upcoming events, and not the first capture: requires unlimited
+      canProceedWithAdd = hasUnlimited;
+    }
+  }
+
+  const promptUserToUpgrade = () => {
+    // Navigate to settings/plans page.
+    // You might want to adjust this path to your specific subscription/plans screen.
+    router.push("/(tabs)/settings");
+  };
+
+  const handlePress = canProceedWithAdd
+    ? triggerAddEventFlow
+    : promptUserToUpgrade;
 
   /**
    * Small bounce for the chevron hint
@@ -99,12 +140,12 @@ export default function AddEventButton({
       </View>
 
       {/* Main action button */}
-      {!isLoading && (
+      {!isRevenueCatLoading && (
         <TouchableOpacity
-          onPress={triggerAddEventFlow}
+          onPress={handlePress}
           className="absolute bottom-8 self-center"
         >
-          {hasUnlimited ? (
+          {canProceedWithAdd ? (
             <View className="relative">
               <View
                 className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
@@ -137,7 +178,7 @@ export default function AddEventButton({
             </View>
           ) : (
             <View
-              className="flex-row items-center justify-center rounded-full bg-interactive-1 px-3 py-3.5"
+              className="flex-row items-center justify-center rounded-full bg-interactive-1 px-5 py-4"
               style={{
                 shadowColor: "#5A32FB",
                 shadowOffset: { width: 0, height: 3 },
@@ -147,7 +188,7 @@ export default function AddEventButton({
               }}
             >
               <Sparkles size={20} color="#FFF" />
-              <Text className="ml-2 text-2xl font-bold text-white">
+              <Text className="ml-2 text-3xl font-bold text-white">
                 Start your free trial
               </Text>
             </View>
