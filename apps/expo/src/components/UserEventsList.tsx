@@ -13,7 +13,6 @@ import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import Intercom from "@intercom/intercom-react-native";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -547,7 +546,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     isFetchingNextPage,
     promoCard,
     demoMode,
-    hasUnlimited = false,
     stats,
     hideDiscoverableButton = false,
   } = props;
@@ -576,51 +574,11 @@ export default function UserEventsList(props: UserEventsListProps) {
   const isAddingEvent =
     pendingAIMutations.filter((mutation) => mutation === "pending").length > 0;
 
-  const presentIntercom = async () => {
-    try {
-      await Intercom.present();
-    } catch (error) {
-      logError("Error presenting Intercom", error);
-    }
-  };
-
   const renderEmptyState = () => {
     if ((isAddingEvent || isRefetching) && collapsedEvents.length === 0) {
       return (
         <View className="flex-1">
           <EventListItemSkeleton />
-        </View>
-      );
-    }
-
-    if (!hasUnlimited) {
-      return (
-        <View className="flex-1 items-center justify-center px-6">
-          <Image
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            source={require("../assets/icon.png")}
-            style={{
-              width: 64,
-              height: 64,
-              marginBottom: 16,
-              borderRadius: 8,
-            }}
-            contentFit="contain"
-            cachePolicy="disk"
-            transition={100}
-          />
-          <Text className="mb-2 rounded-lg text-center text-2xl font-bold text-neutral-1">
-            Try free now
-          </Text>
-          <Pressable
-            className="mb-4 text-center text-base text-neutral-2"
-            onPress={presentIntercom}
-          >
-            <Text className="text-neutral-2">
-              Funds an issue?{" "}
-              <Text className="text-interactive-1">Message us</Text>
-            </Text>
-          </Pressable>
         </View>
       );
     }

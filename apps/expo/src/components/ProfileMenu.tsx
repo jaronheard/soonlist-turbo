@@ -6,13 +6,7 @@ import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
-import {
-  HelpCircle,
-  LogOut,
-  MessageCircle,
-  ShareIcon,
-  User,
-} from "~/components/icons";
+import { LogOut, MessageCircle, ShareIcon, User } from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
 import { logError } from "../utils/errorLogging";
 import { UserProfileFlair } from "./UserProfileFlair";
@@ -20,10 +14,6 @@ import { UserProfileFlair } from "./UserProfileFlair";
 export function ProfileMenu() {
   const { user } = useUser();
   const signOut = useSignOut();
-
-  const showOnboarding = () => {
-    router.push("/onboarding?demo=true");
-  };
 
   const handleEditProfile = () => {
     router.push("/settings/account");
@@ -86,13 +76,6 @@ export function ProfileMenu() {
             <User />
           </DropdownMenu.ItemIcon>
           <DropdownMenu.ItemTitle>Account</DropdownMenu.ItemTitle>
-        </DropdownMenu.Item>
-
-        <DropdownMenu.Item key="how-to-use" onSelect={showOnboarding}>
-          <DropdownMenu.ItemIcon ios={{ name: "questionmark.circle" }}>
-            <HelpCircle />
-          </DropdownMenu.ItemIcon>
-          <DropdownMenu.ItemTitle>How to use</DropdownMenu.ItemTitle>
         </DropdownMenu.Item>
 
         <DropdownMenu.Item key="support" onSelect={presentIntercom}>
