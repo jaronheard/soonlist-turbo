@@ -5,6 +5,7 @@ import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
 import { useCreateEvent } from "~/hooks/useCreateEvent";
+import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 
 /**
@@ -14,10 +15,14 @@ import { logError } from "~/utils/errorLogging";
 export function useAddEventFlow() {
   const { user } = useUser();
   const { enqueueEvents } = useCreateEvent();
+  const { setIsCapturing } = useInFlightEventStore();
 
   const triggerAddEventFlow = useCallback(async () => {
     // Light feedback on intent to capture
     await Haptics.selectionAsync();
+
+    // Set capturing state to true immediately when photo selector opens
+    setIsCapturing(true);
 
     // 1. Launch native photo picker directly
     try {
@@ -34,6 +39,8 @@ export function useAddEventFlow() {
 
         // Ensure user info is available before proceeding
         if (!username || !userId) {
+          // Set capturing state to false if there's an error
+          setIsCapturing(false);
           toast.error("User information not available");
           logError(
             "User info missing in triggerAddEventFlow",
@@ -59,14 +66,21 @@ export function useAddEventFlow() {
           // Handle potential synchronous errors during queuing
           logError("Failed to enqueue events", err, { userId, username });
           toast.error("Failed to start adding events. Please try again.");
+          // Set capturing state to false if there's an error
+          setIsCapturing(false);
         });
+      } else {
+        // User canceled or didn't select any images
+        setIsCapturing(false);
       }
     } catch (err) {
       // Permissions shouldn't be an issue here, but we'll log it
       logError("Error in triggerAddEventFlow photo picker", err);
       toast.error("Failed to open photo picker. Please try again.");
+      // Set capturing state to false if there's an error
+      setIsCapturing(false);
     }
-  }, [user, enqueueEvents]);
+  }, [user, enqueueEvents, setIsCapturing]);
 
   return { triggerAddEventFlow };
 }

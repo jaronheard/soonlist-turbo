@@ -69,7 +69,8 @@ export async function enqueueEvents(
   } = deps;
   if (!tasks.length) return;
 
-  setIsCapturing(true);
+  // We don't set isCapturing to true here anymore as it's already set in triggerAddEventFlow
+  // setIsCapturing(true);
   const results = {
     successCount: 0,
     failureCount: 0,
