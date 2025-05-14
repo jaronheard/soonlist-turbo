@@ -124,13 +124,13 @@ export default function AddEventButton({
                 <View
                   className="absolute inset-0 flex items-center justify-center"
                   style={{
-                    transform: [{ translateX: -3 }, { translateY: -3 }],
+                    transform: [{ translateX: -5 }, { translateY: -5 }],
                   }}
                 >
                   <CircularSpinner
-                    size={72} // Size = button diameter (68) + strokeWidth (4)
+                    size={76} // Size = button diameter (68) + strokeWidth (4)
                     strokeWidth={4}
-                    color="#FFFFFF"
+                    color="#5A32FB"
                   />
                 </View>
               )}
