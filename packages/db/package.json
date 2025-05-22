@@ -32,6 +32,7 @@
     "studio": "pnpm with-env drizzle-kit studio --config src/config.ts",
     "studio:prod": "pnpm with-env:production drizzle-kit studio --config src/config.ts",
     "dr": "pscale dr create timetime dev",
+    "export:tables": "pnpm with-env node ./scripts/export-tables.js",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env.local --",
     "with-env:production": "dotenv -e ../../.env.production --"
