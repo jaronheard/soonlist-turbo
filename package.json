@@ -42,7 +42,10 @@
       "xcode@3.0.1": "patches/xcode@3.0.1.patch"
     },
     "overrides": {
-      "promise": "^8.3.0"
+      "promise": "^8.3.0",
+      "react": "19.0.0",
+      "react-dom": "19.0.0",
+      "@types/react": "~19.0.14"
     }
   }
 }
