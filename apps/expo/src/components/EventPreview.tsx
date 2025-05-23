@@ -60,7 +60,9 @@ export function EventPreview({
             source={
               typeof imagePreview === "number"
                 ? imagePreview
-                : { uri: imagePreview }
+                : typeof imagePreview === "string"
+                  ? { uri: imagePreview }
+                  : imagePreview
             }
             style={{ width: "100%", height: "100%" }}
             contentFit="contain"

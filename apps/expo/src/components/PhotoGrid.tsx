@@ -118,7 +118,13 @@ const GridItem = React.memo(
         }}
       >
         <ExpoImage
-          source={typeof item.uri === "number" ? item.uri : { uri: item.uri }}
+          source={
+            typeof item.uri === "number"
+              ? item.uri
+              : typeof item.uri === "string"
+                ? { uri: item.uri }
+                : item.uri
+          }
           style={{
             width: "100%",
             height: "100%",
