@@ -50,8 +50,8 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(@types/react@19.0.14)(expo-auth-session@6.1.5(expo@53.0.9(@babel/core@7.26.0)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(expo-web-browser@14.1.6(expo@53.0.9(@babel/core@7.26.0)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@intercom/intercom-react-native':
-        specifier: ^7.2.1
-        version: 7.2.1(encoding@0.1.13)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        specifier: ^8.5.0
+        version: 8.5.0(encoding@0.1.13)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@react-native-async-storage/async-storage':
         specifier: 2.1.2
         version: 2.1.2(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))
@@ -109,9 +109,6 @@ importers:
       expo-av:
         specifier: ~15.1.4
         version: 15.1.4(expo@53.0.9(@babel/core@7.26.0)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      expo-background-fetch:
-        specifier: ~13.1.5
-        version: 13.1.5(expo@53.0.9(@babel/core@7.26.0)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))
       expo-background-task:
         specifier: ~0.2.7
         version: 0.2.7(expo@53.0.9(@babel/core@7.26.0)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))
@@ -2615,8 +2612,8 @@ packages:
   '@ide/backoff@1.0.0':
     resolution: {integrity: sha512-F0YfUDjvT+Mtt/R4xdl2X0EYCHMMiJqNLdxHD++jDT5ydEFIyqbCHh51Qx2E211dgZprPKhV7sHmnXKpLuvc5g==}
 
-  '@intercom/intercom-react-native@7.2.1':
-    resolution: {integrity: sha512-idpA36sM0nNB3iJStwv4klw+6e+MuzvbMyPe1PFyJzjwHkZWXsz67g//RogTMFOvf6asTbYCLIadTQGeiCrz9Q==}
+  '@intercom/intercom-react-native@8.5.0':
+    resolution: {integrity: sha512-PQs6hNUxFvzNyESoFsUDa6e6LvOA1X7LON7EcUvC0CdYj+Zj09YWCIOH85bdTerNU2MwoIH70sTPfvOxNj4f0w==}
     engines: {node: '>=18'}
     peerDependencies:
       react: 19.0.0
@@ -6167,11 +6164,6 @@ packages:
     peerDependenciesMeta:
       react-native-web:
         optional: true
-
-  expo-background-fetch@13.1.5:
-    resolution: {integrity: sha512-tQiQEH68o6iduDDOKdlTx7oa1cWf8d+RsT4vm2dFzoSEIr1gJtdNojN4U2qBxwTGYttJI1ug5/PYKpQUIS5VmA==}
-    peerDependencies:
-      expo: '*'
 
   expo-background-task@0.2.7:
     resolution: {integrity: sha512-m2OWO3y3VbrD9F+aln/TRswDRauPMVU7n7k53O5MorLZZJ39fEfoJNmGeN1M3x3GvKWDBZ8ie4cHYQP4KEIfTw==}
@@ -12213,7 +12205,7 @@ snapshots:
 
   '@ide/backoff@1.0.0': {}
 
-  '@intercom/intercom-react-native@7.2.1(encoding@0.1.13)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
+  '@intercom/intercom-react-native@8.5.0(encoding@0.1.13)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
     dependencies:
       node-fetch: 2.7.0(encoding@0.1.13)
       react: 19.0.0
@@ -16397,13 +16389,6 @@ snapshots:
       expo: 53.0.9(@babel/core@7.26.0)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)
-
-  expo-background-fetch@13.1.5(expo@53.0.9(@babel/core@7.26.0)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)):
-    dependencies:
-      expo: 53.0.9(@babel/core@7.26.0)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      expo-task-manager: 13.1.5(expo@53.0.9(@babel/core@7.26.0)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))
-    transitivePeerDependencies:
-      - react-native
 
   expo-background-task@0.2.7(expo@53.0.9(@babel/core@7.26.0)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.0.14)(react@19.0.0)):
     dependencies:
