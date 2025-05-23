@@ -39,8 +39,7 @@
   "prettier": "@soonlist/prettier-config",
   "pnpm": {
     "patchedDependencies": {
-      "xcode@3.0.1": "patches/xcode@3.0.1.patch",
-      "expo-secure-store@14.0.0": "patches/expo-secure-store.patch"
+      "xcode@3.0.1": "patches/xcode@3.0.1.patch"
     },
     "overrides": {
       "promise": "^8.3.0"

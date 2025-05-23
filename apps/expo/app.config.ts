@@ -144,12 +144,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     ["react-native-appsflyer", {}],
-    // [
-    //   "expo-background-fetch",
-    //   {
-    //     startOnBoot: true,
-    //   },
-    // ],
+    ["expo-asset"],
+    ["expo-web-browser"],
+    ["expo-background-task"],
   ],
   ios: {
     supportsTablet: false,
