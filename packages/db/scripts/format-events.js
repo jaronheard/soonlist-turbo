@@ -16,7 +16,7 @@ async function formatEvents() {
 
     if (!fsSync.existsSync(eventsPath)) {
       console.error("Events.json file not found at:", eventsPath);
-      return;
+      process.exit(1);
     }
 
     const eventsData = JSON.parse(await fs.readFile(eventsPath, "utf8"));
