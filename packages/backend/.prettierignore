@@ -1,0 +1,6 @@
+# Convex generated files - should be in git but not formatted
+convex/_generated/**
+
+# Build outputs
+dist/**
+.cache/**
