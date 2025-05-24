@@ -28,7 +28,7 @@ export function useOTAUpdates() {
   const appState = useRef(AppState.currentState);
   const lastMinimize = useRef(0);
   const ranInitialCheck = useRef(false);
-  const timeout = useRef<NodeJS.Timeout>();
+  const timeout = useRef<NodeJS.Timeout | undefined>(undefined);
   const { isUpdatePending } = Updates.useUpdates();
 
   ///////////////////////////////////////////////////////////////////////////
@@ -117,7 +117,7 @@ export function useOTAUpdates() {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       async (nextAppState) => {
         if (
-          appState.current.match(/inactive|background/) &&
+          /inactive|background/.exec(appState.current) &&
           nextAppState === "active"
         ) {
           // If it's been 15 minutes since the last "minimize", we should feel comfortable updating the client since

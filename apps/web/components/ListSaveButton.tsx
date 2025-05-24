@@ -26,9 +26,11 @@ export function ListSaveButton(props: ListSaveButtonProps) {
     },
     onSuccess: ({ id }) => {
       toast.success("List saved.");
-      props.afterSuccessFunction
-        ? props.afterSuccessFunction()
-        : router.push(`/list/${id}`);
+      if (props.afterSuccessFunction) {
+        props.afterSuccessFunction();
+      } else {
+        router.push(`/list/${id}`);
+      }
       router.refresh();
     },
   });

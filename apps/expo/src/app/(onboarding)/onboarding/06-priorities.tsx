@@ -6,6 +6,7 @@ import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useAppStore } from "~/store";
+import { logError } from "~/utils/errorLogging";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const priorities = [
@@ -30,6 +31,7 @@ export default function PrioritiesScreen() {
     try {
       saveStep("priorities", { priority }, "/onboarding/07-we-got-you");
     } catch (error) {
+      logError("Failed to save priority", error);
       toast.error("Something went wrong", {
         description: "Please try again",
       });

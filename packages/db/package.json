@@ -56,8 +56,5 @@
     "prettier": "^3.2.5",
     "typescript": "^5.8.3"
   },
-  "prettier": "@soonlist/prettier-config",
-  "overrides": {
-    "react": "19.0.0"
-  }
+  "prettier": "@soonlist/prettier-config"
 }

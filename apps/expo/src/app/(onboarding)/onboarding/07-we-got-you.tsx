@@ -26,7 +26,7 @@ const testimonialDella: Testimonial = {
     name: "Della Mueller",
     bio: "Designer, Portland, OR",
     handle: "delladella",
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
     imageUrl: require("~/assets/della.png"),
   },
 };
@@ -37,7 +37,7 @@ const testimonialEric: Testimonial = {
     name: "Eric Benedon",
     bio: "Educator, Portland, OR",
     handle: "eggsbenedon",
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
     imageUrl: require("~/assets/eric.png"),
   },
 };

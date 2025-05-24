@@ -95,7 +95,11 @@ export default function NewShareScreen() {
     };
 
     // Navigate immediately
-    router.canGoBack() ? router.back() : router.replace("/feed");
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/feed");
+    }
 
     // Reset state and fire the createEvent call after interactions/animations
     void InteractionManager.runAfterInteractions(() => {

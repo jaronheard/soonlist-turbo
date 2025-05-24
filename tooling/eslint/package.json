@@ -20,7 +20,7 @@
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "5.1.0-beta-1beb73de0f-20240503",
-    "typescript-eslint": "^7.6.0"
+    "typescript-eslint": "^8.32.1"
   },
   "devDependencies": {
     "@soonlist/prettier-config": "workspace:*",

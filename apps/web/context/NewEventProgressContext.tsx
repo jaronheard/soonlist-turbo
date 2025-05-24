@@ -66,7 +66,9 @@ export const NewEventProgressProvider = ({
     const nextIndex = allStatuses.indexOf(status) + 1;
     if (nextIndex >= 0) {
       const previousStatus = allStatuses[nextIndex];
-      previousStatus && setStatus(previousStatus);
+      if (previousStatus) {
+        setStatus(previousStatus);
+      }
     }
   }
 
@@ -75,7 +77,9 @@ export const NewEventProgressProvider = ({
     const prevIndex = allStatuses.indexOf(status) - 1;
     if (prevIndex >= 0) {
       const previousStatus = allStatuses[prevIndex];
-      previousStatus && setStatus(previousStatus);
+      if (previousStatus) {
+        setStatus(previousStatus);
+      }
     }
   }
 

@@ -6,6 +6,7 @@ import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useAppStore } from "~/store";
+import { logError } from "~/utils/errorLogging";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const ageRanges = [
@@ -31,6 +32,7 @@ export default function AgeScreen() {
     try {
       saveStep("age", { ageRange: age }, "/onboarding/03-source");
     } catch (error) {
+      logError("Failed to save age", error);
       toast.error("Something went wrong", {
         description: "Please try again",
       });

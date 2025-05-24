@@ -12,6 +12,7 @@ import { EventPreview } from "~/components/EventPreview";
 import { PhotoGrid } from "~/components/PhotoGrid";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { api } from "~/utils/api";
+import { logError } from "~/utils/errorLogging";
 
 const OFFSET_VALUE = 32;
 const NOTIFICATION_DELAY = 3000;
@@ -85,7 +86,7 @@ export default function DemoCaptureScreen() {
             });
           }
         } catch (error) {
-          // Error handling without console logging
+          logError("Failed to send notification", error);
         }
       })();
     }, NOTIFICATION_DELAY);

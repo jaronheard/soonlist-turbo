@@ -181,7 +181,7 @@ export default function EditProfileScreen() {
   const websiteRef = useRef<TextInput>(null);
 
   // Function to focus the next input
-  const focusNextInput = (nextRef: React.RefObject<TextInput>) => {
+  const focusNextInput = (nextRef: React.RefObject<TextInput | null>) => {
     nextRef.current?.focus();
   };
 
@@ -189,7 +189,11 @@ export default function EditProfileScreen() {
     if (isDirty && isValid) {
       void handleSubmit(onSubmit)();
     } else {
-      router.canGoBack() ? router.back() : router.navigate("/feed");
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.navigate("/feed");
+      }
     }
   }, [isDirty, isValid, handleSubmit, onSubmit]);
 
