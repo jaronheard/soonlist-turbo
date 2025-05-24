@@ -8,8 +8,8 @@ import { PostHogProvider } from "posthog-js/react";
 
 import ContextProvider from "~/context/ContextProvider";
 import { env } from "~/env";
-import { IntercomProvider } from "~/lib/intercom/IntercomProvider";
 import { convex } from "~/lib/convex";
+import { IntercomProvider } from "~/lib/intercom/IntercomProvider";
 
 if (typeof window !== "undefined" && process.env.NODE_ENV !== "development") {
   posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {

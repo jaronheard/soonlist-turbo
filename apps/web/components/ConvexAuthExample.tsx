@@ -1,14 +1,18 @@
 "use client";
 
-import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
-import { useConvexAuth } from "convex/react";
+import {
+  Authenticated,
+  AuthLoading,
+  Unauthenticated,
+  useConvexAuth,
+} from "convex/react";
 
 export function ConvexAuthExample() {
   const { isAuthenticated, isLoading } = useConvexAuth();
 
   return (
-    <div className="p-4 border rounded-lg">
-      <h3 className="text-lg font-semibold mb-2">Convex Auth Status</h3>
+    <div className="rounded-lg border p-4">
+      <h3 className="mb-2 text-lg font-semibold">Convex Auth Status</h3>
 
       <AuthLoading>
         <div className="text-gray-500">Loading authentication...</div>
@@ -16,14 +20,14 @@ export function ConvexAuthExample() {
 
       <Authenticated>
         <div className="text-green-600">✅ Authenticated with Convex</div>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="mt-1 text-sm text-gray-600">
           You can now make authenticated Convex queries and mutations.
         </p>
       </Authenticated>
 
       <Unauthenticated>
         <div className="text-red-600">❌ Not authenticated</div>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="mt-1 text-sm text-gray-600">
           Please sign in to access Convex features.
         </p>
       </Unauthenticated>
