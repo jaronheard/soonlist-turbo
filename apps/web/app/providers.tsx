@@ -25,6 +25,7 @@ export function PHProvider({ children }: { children: React.ReactNode }) {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
+      publishableKey={env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
       appearance={{
         variables: { colorPrimary: "rgb(90, 50, 251)", borderRadius: "16px" },
       }}
