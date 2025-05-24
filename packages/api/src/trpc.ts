@@ -53,7 +53,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   const user = await currentUser();
 
   return createContextInner({
-    auth: auth(),
+    auth: await auth(),
     user,
   });
 };

@@ -45,7 +45,8 @@ export async function POST(req: NextRequest) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object;
-      const updatedUser = await clerkClient.users.updateUserMetadata(
+      const clerk = await clerkClient();
+      const updatedUser = await clerk.users.updateUserMetadata(
         event.data.object.metadata?.userId || "",
         {
           publicMetadata: {
@@ -60,7 +61,8 @@ export async function POST(req: NextRequest) {
     }
     case "customer.subscription.created": {
       const subscription = event.data.object;
-      const updatedUser = await clerkClient.users.updateUserMetadata(
+      const clerk = await clerkClient();
+      const updatedUser = await clerk.users.updateUserMetadata(
         event.data.object.metadata.userId || "",
         {
           publicMetadata: {
@@ -81,7 +83,8 @@ export async function POST(req: NextRequest) {
     case "customer.subscription.updated": {
       const subscription = event.data.object;
 
-      const updatedUser = await clerkClient.users.updateUserMetadata(
+      const clerk = await clerkClient();
+      const updatedUser = await clerk.users.updateUserMetadata(
         event.data.object.metadata.userId || "",
         {
           publicMetadata: {
@@ -101,7 +104,8 @@ export async function POST(req: NextRequest) {
     case "customer.subscription.deleted": {
       const subscription = event.data.object;
 
-      const updatedUser = await clerkClient.users.updateUserMetadata(
+      const clerk = await clerkClient();
+      const updatedUser = await clerk.users.updateUserMetadata(
         event.data.object.metadata.userId || "",
         {
           publicMetadata: {

@@ -61,7 +61,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@clerk/clerk-sdk-node": "catalog:",
+    "@clerk/backend": "catalog:",
     "@soonlist/eslint-config": "workspace:*",
     "@soonlist/prettier-config": "workspace:*",
     "@soonlist/tsconfig": "workspace:*",

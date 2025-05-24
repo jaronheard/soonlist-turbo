@@ -9,13 +9,11 @@ import { UserInfo } from "~/components/UserInfo";
 import { YourDetails } from "~/components/YourDetails";
 import { api } from "~/trpc/server";
 
-export default async function Page(
-  props: {
-    params: Promise<{ eventId: string }>;
-  }
-) {
+export default async function Page(props: {
+  params: Promise<{ eventId: string }>;
+}) {
   const params = await props.params;
-  const { userId } = auth().protect();
+  const { userId } = await auth.protect();
   const event = await api.event.get({ eventId: params.eventId });
 
   if (!event) {

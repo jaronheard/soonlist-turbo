@@ -38,9 +38,9 @@ catalog:
   mysql2: ^3.9.7
 
   # Authentication & Security
-  "@clerk/nextjs": ^5.0.8
-  "@clerk/clerk-expo": ^1.1.0
-  "@clerk/clerk-sdk-node": ^5.0.5
+  "@clerk/nextjs": ^6.20.0
+  "@clerk/clerk-expo": ^2.11.8
+  "@clerk/backend": ^1.33.0
 
   # Monitoring & Analytics
   "@sentry/nextjs": ^8.35.0
@@ -237,8 +237,8 @@ catalog:
 
 catalogs:
   react19:
-    react: 19.1.0
-    react-dom: 19.1.0
+    react: 19.0.0
+    react-dom: 19.0.0
     "@types/react": 19.1.5
     "@types/react-dom": 19.1.5
 

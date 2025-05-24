@@ -179,7 +179,8 @@ export const stripeRouter = createTRPCRouter({
       // Create an invitation using Clerk
       try {
         const subscription = session.subscription as Stripe.Subscription;
-        const invitation = await clerkClient.invitations.createInvitation({
+        const clerk = await clerkClient();
+        const invitation = await clerk.invitations.createInvitation({
           emailAddress: email,
           publicMetadata: {
             stripe: {
@@ -238,7 +239,8 @@ export const stripeRouter = createTRPCRouter({
       // Update the user's metadata
       try {
         const subscription = session.subscription as Stripe.Subscription;
-        await clerkClient.users.updateUser(ctx.user.id, {
+        const clerk = await clerkClient();
+        await clerk.users.updateUser(ctx.user.id, {
           publicMetadata: {
             ...ctx.user.publicMetadata,
             stripe: {
