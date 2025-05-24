@@ -147,8 +147,8 @@ catalog:
   "@types/invariant": ^2.2.37
 
   # Build Tools
-  turbo: ^2.0.4
-  "@turbo/gen": ^2.0.4
+  turbo: ^2.5.3
+  "@turbo/gen": ^2.5.3
   jiti: ^1.21.3
   postcss: ^8.4.38
 

@@ -103,7 +103,7 @@ catalogs:
       specifier: 11.0.0-rc.364
       version: 11.0.0-rc.364
     '@turbo/gen':
-      specifier: ^2.0.4
+      specifier: ^2.5.3
       version: 2.5.3
     '@types/babel__core':
       specifier: ^7.20.5
@@ -451,7 +451,7 @@ catalogs:
       specifier: ^1.5.2
       version: 1.5.2
     turbo:
-      specifier: ^2.0.4
+      specifier: ^2.5.3
       version: 2.5.3
     typescript:
       specifier: ^5.8.3
