@@ -28,6 +28,7 @@
     "eas:submit.prod.ios": "pnpm with-env:production eas submit --platform ios",
     "eas:update.prod.ios": "pnpm with-env:production eas update --platform ios --branch production --clear-cache",
     "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format:fix": "prettier --write . --ignore-path ../../.gitignore",
     "ios": "pnpm with-env:production expo run:ios",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
