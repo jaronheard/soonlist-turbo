@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { ChevronDownIcon } from "lucide-react";
 
-import { ConvexAuthExample } from "~/components/ConvexAuthExample";
 import { CarouselDemo } from "./components/CarouselDemo";
 
 const testimonials = [
@@ -378,7 +377,6 @@ export default function Page() {
       <div className="bg-interactive-3 pb-48">
         <HeroSection />
       </div>
-      <ConvexAuthExample />
       <div className="-mt-48">
         <ConnectWithWhatMatters />
       </div>
