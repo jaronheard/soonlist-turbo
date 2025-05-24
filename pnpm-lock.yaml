@@ -873,6 +873,9 @@ importers:
       cmdk:
         specifier: 'catalog:'
         version: 0.2.1(@types/react-dom@19.1.5(@types/react@19.1.5))(@types/react@19.1.5)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      convex:
+        specifier: 'catalog:'
+        version: 1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       dotenv:
         specifier: 'catalog:'
         version: 16.4.5
