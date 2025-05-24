@@ -1,14 +1,21 @@
-import OpenAI from "openai";
-import { internalAction, internalMutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import OpenAI from "openai";
+import { z } from "zod";
+
 import { internal } from "./_generated/api";
+import { internalAction, internalMutation, query } from "./_generated/server";
 import { missingEnvVariableUrl } from "./utils";
 
 export const openaiKeySet = query({
   args: {},
-  handler: async () => {
+  handler: () => {
     return !!process.env.OPENAI_API_KEY;
   },
+});
+
+// Define the expected response schema from OpenAI
+const OpenAIResponseSchema = z.object({
+  summary: z.string(),
 });
 
 export const summary = internalAction({
@@ -52,13 +59,32 @@ export const summary = internalAction({
 
     console.log({ messageContent });
 
-    const parsedOutput = JSON.parse(messageContent!);
-    console.log({ parsedOutput });
+    try {
+      if (!messageContent) {
+        throw new Error("No message content received from OpenAI");
+      }
 
-    await ctx.runMutation(internal.openai.saveSummary, {
-      id: id,
-      summary: parsedOutput.summary,
-    });
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const rawParsedOutput = JSON.parse(messageContent) as unknown;
+      const parsedOutput = OpenAIResponseSchema.parse(rawParsedOutput);
+
+      console.log({ parsedOutput });
+
+      await ctx.runMutation(internal.openai.saveSummary, {
+        id: id,
+        summary: parsedOutput.summary,
+      });
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error("Failed to parse OpenAI response:", errorMessage);
+      const fallbackSummary = "Failed to generate summary due to parsing error";
+
+      await ctx.runMutation(internal.openai.saveSummary, {
+        id: id,
+        summary: fallbackSummary,
+      });
+    }
   },
 });
 

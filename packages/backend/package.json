@@ -1,18 +1,36 @@
 {
-  "name": "@packages/backend",
-  "version": "1.0.0",
-  "description": "",
-  "scripts": {
-    "dev": "convex dev",
-    "setup": "convex dev --until-success"
+  "name": "@soonlist/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./convex/_generated/api.d.ts",
+      "default": "./convex/_generated/api.js"
+    },
+    "./convex/*": "./convex/*"
   },
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
+  "scripts": {
+    "build": "convex build",
+    "dev": "convex dev",
+    "setup": "convex dev --until-success",
+    "clean": "git clean -xdf .cache .turbo node_modules",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
-    "convex": "^1.13.0",
+    "convex": "catalog:",
     "openai": "^4.45.0"
   },
-   "devDependencies": {
-    "typescript": "^5.7.3"
-  }
+  "devDependencies": {
+    "@soonlist/eslint-config": "workspace:*",
+    "@soonlist/prettier-config": "workspace:*",
+    "@soonlist/tsconfig": "workspace:*",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
+  },
+  "prettier": "@soonlist/prettier-config"
 }

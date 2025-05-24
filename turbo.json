@@ -25,7 +25,8 @@
         ".output/**",
         ".vercel/output/**",
         "dist/**",
-        ".cache/tsbuildinfo.json"
+        ".cache/tsbuildinfo.json",
+        "convex/_generated/**"
       ],
       "env": ["SENTRY_AUTH_TOKEN", "LANGFUSE_SECRET_KEY"]
     },
