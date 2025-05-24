@@ -1,12 +1,14 @@
 "use client";
 
 import { Suspense } from "react";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider, useAuth } from "@clerk/nextjs";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { posthog } from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 
 import ContextProvider from "~/context/ContextProvider";
 import { env } from "~/env";
+import { convex } from "~/lib/convex";
 import { IntercomProvider } from "~/lib/intercom/IntercomProvider";
 
 if (typeof window !== "undefined" && process.env.NODE_ENV !== "development") {
@@ -27,10 +29,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
         variables: { colorPrimary: "rgb(90, 50, 251)", borderRadius: "16px" },
       }}
     >
-      <Suspense>
-        <IntercomProvider> </IntercomProvider>
-      </Suspense>
-      <ContextProvider>{children}</ContextProvider>
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <Suspense>
+          <IntercomProvider> </IntercomProvider>
+        </Suspense>
+        <ContextProvider>{children}</ContextProvider>
+      </ConvexProviderWithClerk>
     </ClerkProvider>
   );
 }

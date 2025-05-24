@@ -37,6 +37,7 @@
     "add-to-calendar-button-react": "catalog:",
     "clsx": "catalog:",
     "cmdk": "catalog:",
+    "convex": "catalog:",
     "dotenv": "catalog:",
     "dotenv-cli": "catalog:",
     "dotenv-expand": "catalog:",
