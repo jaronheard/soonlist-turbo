@@ -36,14 +36,14 @@
     "class-variance-authority": "^0.7.0",
     "embla-carousel-autoplay": "^8.3.0",
     "embla-carousel-react": "^8.3.0",
-    "lucide-react": "^0.373.0",
+    "lucide-react": "catalog:",
     "next-themes": "^0.3.0",
-    "react-dom": "19.1.0",
+    "react-dom": "catalog:react19",
     "react-hook-form": "^7.51.1",
     "sonner": "^1.4.41",
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
-    "uuid": "^9.0.1",
+    "uuid": "catalog:",
     "vaul": "^0.9.1"
   },
   "devDependencies": {
@@ -51,18 +51,18 @@
     "@soonlist/prettier-config": "workspace:*",
     "@soonlist/tailwind-config": "workspace:*",
     "@soonlist/tsconfig": "workspace:*",
-    "@types/react": "19.1.5",
-    "@types/react-dom": "19.1.5",
-    "eslint": "^9.1.1",
-    "prettier": "^3.2.5",
-    "react": "19.1.0",
-    "tailwindcss": "^3.4.3",
-    "typescript": "^5.8.3",
-    "zod": "^3.23.0"
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "react": "catalog:react19",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "zod": "catalog:"
   },
   "peerDependencies": {
-    "react": "19.1.0",
-    "zod": "^3.23.0"
+    "react": "catalog:react19",
+    "zod": "catalog:"
   },
   "prettier": "@soonlist/prettier-config"
 }

@@ -39,22 +39,22 @@
     "with-env:production": "dotenv -e ../../.env.production --"
   },
   "dependencies": {
-    "@planetscale/database": "^1.18.0",
-    "@t3-oss/env-core": "^0.10.0",
-    "drizzle-orm": "^0.30.10",
-    "drizzle-zod": "^0.5.1",
-    "zod": "^3.23.0"
+    "@planetscale/database": "catalog:",
+    "@t3-oss/env-core": "catalog:",
+    "drizzle-orm": "catalog:",
+    "drizzle-zod": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",
     "@soonlist/prettier-config": "workspace:*",
     "@soonlist/tsconfig": "workspace:*",
-    "dotenv-cli": "^7.4.1",
-    "drizzle-kit": "^0.21.1",
-    "eslint": "^9.1.1",
-    "mysql2": "^3.9.7",
-    "prettier": "^3.2.5",
-    "typescript": "^5.8.3"
+    "dotenv-cli": "catalog:",
+    "drizzle-kit": "catalog:",
+    "eslint": "catalog:",
+    "mysql2": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
   },
   "prettier": "@soonlist/prettier-config"
 }
