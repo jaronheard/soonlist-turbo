@@ -81,5 +81,6 @@
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@soonlist/prettier-config"
+  "prettier": "@soonlist/prettier-config",
+  "packageManager": "pnpm@10.11.0"
 }
