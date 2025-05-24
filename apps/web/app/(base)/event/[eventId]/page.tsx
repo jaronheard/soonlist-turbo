@@ -19,7 +19,10 @@ interface Props {
   }>;
 }
 
-export async function generateMetadata(props: Props, parent: ResolvingMetadata): Promise<Metadata> {
+export async function generateMetadata(
+  props: Props,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
   const params = await props.params;
   const event = await api.event.get({ eventId: params.eventId });
   if (!event) {

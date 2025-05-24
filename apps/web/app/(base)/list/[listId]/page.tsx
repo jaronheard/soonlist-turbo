@@ -16,7 +16,10 @@ interface Props {
   params: Promise<{ listId: string }>;
 }
 
-export async function generateMetadata(props: Props, parent: ResolvingMetadata): Promise<Metadata> {
+export async function generateMetadata(
+  props: Props,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
   const params = await props.params;
   const list = await api.list.get({ listId: params.listId });
 
