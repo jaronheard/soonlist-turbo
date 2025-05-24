@@ -9,6 +9,7 @@
     "EXPO_PUBLIC_API_BASE_URL",
     "EXPO_PUBLIC_APP_ENV"
   ],
+  "globalPassThroughEnv": ["COREPACK_HOME"],
   "ui": "stream",
   "tasks": {
     "topo": {
