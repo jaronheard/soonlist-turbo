@@ -152,9 +152,9 @@ function RootLayout() {
           tokenCache={tokenCache}
         >
           <ClerkLoaded>
-            {/* eslint-disable-next-line react-compiler/react-compiler */}
-            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-              <TRPCProvider>
+            <TRPCProvider>
+              {/* eslint-disable-next-line react-compiler/react-compiler */}
+              <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
                 <SafeAreaProvider>
                   <PostHogProvider
                     apiKey={Config.posthogApiKey}
@@ -179,8 +179,8 @@ function RootLayout() {
                     </OneSignalProvider>
                   </PostHogProvider>
                 </SafeAreaProvider>
-              </TRPCProvider>
-            </ConvexProviderWithClerk>
+              </ConvexProviderWithClerk>
+            </TRPCProvider>
           </ClerkLoaded>
         </ClerkProvider>
       </KeyboardProvider>
