@@ -17,7 +17,7 @@
   "dependencies": {
     "postcss": "catalog:",
     "tailwindcss": "catalog:",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "catalog:"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",

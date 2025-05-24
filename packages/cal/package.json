@@ -22,12 +22,12 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@js-temporal/polyfill": "^0.4.4",
+    "@js-temporal/polyfill": "catalog:",
     "@soonlist/db": "workspace:*",
-    "date-fns": "^3.6.0",
-    "timezone-soft": "^1.5.2",
+    "date-fns": "catalog:",
+    "timezone-soft": "catalog:",
     "zod": "catalog:",
-    "zod-to-json-schema": "^3.23.0"
+    "zod-to-json-schema": "catalog:"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",

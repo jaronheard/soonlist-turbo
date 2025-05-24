@@ -62,7 +62,7 @@ catalog:
   "lucide-react": ^0.373.0
   cmdk: ^0.2.0
 
-  # Expo & React Native
+  # Expo & React Native Core
   expo: ~53.0.9
   "expo-router": ~5.0.7
   "expo-constants": ~17.1.6
@@ -78,6 +78,50 @@ catalog:
   "react-native-svg": 15.11.2
   nativewind: ~4.1.23
 
+  # Additional Expo packages
+  "expo-apple-authentication": ~7.2.4
+  "expo-application": ^6.1.4
+  "expo-asset": ~11.1.5
+  "expo-auth-session": ^6.1.5
+  "expo-av": ~15.1.4
+  "expo-background-task": ~0.2.7
+  "expo-blur": ~14.1.4
+  "expo-build-properties": ~0.14.6
+  "expo-calendar": ~14.1.4
+  "expo-dev-menu": ^6.1.10
+  "expo-device": ~7.1.4
+  "expo-file-system": ~18.1.10
+  "expo-haptics": ~14.1.4
+  "expo-image-manipulator": ~13.1.7
+  "expo-image-picker": ~16.1.4
+  "expo-linear-gradient": ~14.1.4
+  "expo-linking": ~7.1.5
+  "expo-localization": ~16.1.5
+  "expo-media-library": ~17.1.6
+  "expo-notifications": ~0.31.2
+  "expo-splash-screen": ~0.30.8
+  "expo-task-manager": ~13.1.5
+  "expo-updates": ~0.28.13
+  "expo-web-browser": ~14.1.6
+
+  # React Native Additional packages
+  "@react-native-async-storage/async-storage": 2.1.2
+  "@react-native-community/datetimepicker": ^8.3.0
+  "react-native-appsflyer": ^6.15.3
+  "react-native-ios-context-menu": ^3.1.0
+  "react-native-ios-utilities": ^5.1.0
+  "react-native-keyboard-controller": ^1.15.2
+  "react-native-modal": 14.0.0-rc.1
+  "react-native-onesignal": ^5.2.8
+  "react-native-purchases-ui": ^8.9.1
+  "react-native-qrcode-svg": ^6.3.0
+  "posthog-react-native-session-replay": ^1.0.6
+
+  # Third-party integrations
+  "@intercom/intercom-react-native": ^8.5.0
+  "@bacons/apple-targets": ^0.2.1
+  "onesignal-expo-plugin": ^2.0.3
+
   # Payment & Subscriptions
   stripe: ^15.9.0
   "react-native-purchases": ^8.9.1
@@ -90,6 +134,8 @@ catalog:
   "@babel/core": ^7.26.0
   "@babel/preset-env": ^7.24.4
   "@babel/runtime": ^7.24.4
+  "babel-plugin-react-compiler": 19.0.0-beta-af1b7da-20250417
+  "react-compiler-runtime": 19.0.0-beta-af1b7da-20250417
 
   # State Management
   zustand: 4.5.5
@@ -97,12 +143,97 @@ catalog:
   # Node Types
   "@types/node": 20.12.7
   "@types/uuid": ^9.0.8
+  "@types/babel__core": ^7.20.5
+  "@types/invariant": ^2.2.37
 
   # Build Tools
   turbo: ^2.0.4
   "@turbo/gen": ^2.0.4
   jiti: ^1.21.3
   postcss: ^8.4.38
+
+  # Web-specific packages
+  "add-to-calendar-button-react": ^2.6.13
+  "react-easy-sort": ^1.6.0
+  "react-image-crop": ^11.0.5
+  "react-qr-code": ^2.0.15
+  "react-timezone-select": ^3.2.0
+  "recharts": ^2.15.0
+  "svix": ^1.15.0
+  "timezone-soft": ^1.5.2
+  "yet-another-react-lightbox": ^3.21.7
+
+  # Development tools
+  "@tailwindcss/typography": ^0.5.10
+  "concurrently": ^8.2.2
+  "encoding": ^0.1.13
+  "eslint-plugin-path": ^1.2.4
+  "eslint-plugin-tailwindcss": ^3.14.0
+  "eslint-plugin-react-compiler": 19.1.0-rc.1
+  "expo-atlas": ^0.4.0
+
+  # ESLint plugins
+  "@next/eslint-plugin-next": ^14.2.0
+  "eslint-config-turbo": ^1.13.2
+  "eslint-plugin-import": ^2.29.1
+  "eslint-plugin-jsx-a11y": ^6.8.0
+  "eslint-plugin-react": ^7.34.1
+  "eslint-plugin-react-hooks": 5.1.0-beta-1beb73de0f-20240503
+  "typescript-eslint": ^8.32.1
+
+  # Prettier plugins
+  "@ianvs/prettier-plugin-sort-imports": ^4.2.1
+  "prettier-plugin-tailwindcss": ^0.5.13
+
+  # Tailwind
+  "tailwindcss-animate": ^1.0.7
+
+  # UI Components (Radix)
+  "@hookform/resolvers": ^3.3.4
+  "@radix-ui/react-accordion": ^1.1.2
+  "@radix-ui/react-aspect-ratio": ^1.0.3
+  "@radix-ui/react-dialog": ^1.0.5
+  "@radix-ui/react-dropdown-menu": ^2.0.6
+  "@radix-ui/react-label": ^2.0.2
+  "@radix-ui/react-navigation-menu": ^1.1.4
+  "@radix-ui/react-popover": ^1.0.7
+  "@radix-ui/react-scroll-area": ^1.0.5
+  "@radix-ui/react-select": ^2.0.0
+  "@radix-ui/react-separator": ^1.0.3
+  "@radix-ui/react-slot": ^1.0.2
+  "@radix-ui/react-switch": ^1.0.3
+  "@radix-ui/react-tabs": ^1.0.4
+  "@radix-ui/react-toast": ^1.1.5
+  "@radix-ui/react-toggle": ^1.0.3
+
+  # Other UI utilities
+  "class-variance-authority": ^0.7.0
+  "embla-carousel-autoplay": ^8.3.0
+  "embla-carousel-react": ^8.3.0
+  "next-themes": ^0.3.0
+  "react-hook-form": ^7.51.1
+  "sonner": ^1.4.41
+  "tailwind-merge": ^2.2.2
+  "vaul": ^0.9.1
+  "sonner-native": ^0.16.2
+  "zeego": ^2.0.4
+
+  # API & AI
+  "@ai-sdk/anthropic": ^0.0.50
+  "@ai-sdk/openai": ^0.0.18
+  "@vercel/functions": ^1.0.2
+  "ai": ^3.1.22
+  "expo-server-sdk": ^3.10.0
+
+  # Date/Time utilities
+  "date-fns": ^3.6.0
+  "date-fns-tz": ^3.2.0
+  "moment-timezone": ^0.5.47
+
+  # Other utilities
+  "@js-temporal/polyfill": ^0.4.4
+  "zod-to-json-schema": ^3.23.0
+  "p-map": ^7.0.3
 
 catalogs:
   react19:
