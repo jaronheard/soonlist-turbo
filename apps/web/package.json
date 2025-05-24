@@ -10,6 +10,7 @@
     "dev:production": "pnpm with-env:production next dev --turbo",
     "dev:tunnel": "concurrently \"pnpm run tunnel\" \"pnpm with-env next dev --turbo\"",
     "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format:fix": "prettier --write . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "start": "pnpm with-env next start",
     "tunnel": "lt --port 3000 --subdomain soonlist",

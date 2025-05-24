@@ -17,6 +17,7 @@
     "setup": "convex dev --until-success",
     "clean": "git clean -xdf .cache .turbo node_modules",
     "format": "prettier --check .",
+    "format:fix": "prettier --write .",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
