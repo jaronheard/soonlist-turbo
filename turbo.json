@@ -20,12 +20,11 @@
       "outputs": [
         ".next/**",
         "!.next/cache/**",
-        "next-env.d.ts",
         ".expo/**",
-        ".output/**",
         ".vercel/output/**",
         "dist/**",
-        ".cache/tsbuildinfo.json"
+        "*.tsbuildinfo",
+        "convex/_generated/**"
       ],
       "env": ["SENTRY_AUTH_TOKEN", "LANGFUSE_SECRET_KEY"]
     },
@@ -43,8 +42,7 @@
       "outputs": [".cache/.eslintcache"]
     },
     "typecheck": {
-      "dependsOn": ["^topo", "^build"],
-      "outputs": [".cache/tsbuildinfo.json"]
+      "dependsOn": ["^topo", "^build"]
     },
     "clean": {
       "cache": false

@@ -10,6 +10,9 @@ catalog:
   tailwindcss: ^3.4.3
   typescript: ^5.8.3
 
+  # Backend
+  convex: ^1.13.0
+
   # Misc
   zod: ^3.23.0
   superjson: 2.2.1
