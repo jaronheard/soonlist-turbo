@@ -11,7 +11,7 @@ export function ConvexAuthExample() {
   const { isAuthenticated, isLoading } = useConvexAuth();
 
   return (
-    <View className="rounded-lg border border-gray-200 p-4 m-4">
+    <View className="m-4 rounded-lg border border-gray-200 p-4">
       <Text className="mb-2 text-lg font-semibold text-gray-900">
         Convex Auth Status
       </Text>
@@ -45,4 +45,3 @@ export function ConvexAuthExample() {
     </View>
   );
 }
-

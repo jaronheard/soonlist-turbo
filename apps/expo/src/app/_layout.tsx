@@ -8,8 +8,8 @@ import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
-import { ConvexProviderWithClerk } from "convex/react-clerk";
 import * as Sentry from "@sentry/react-native";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { PostHogProvider } from "posthog-react-native";
 
 import { useAppStateRefresh } from "~/hooks/useAppStateRefresh";
@@ -152,6 +152,7 @@ function RootLayout() {
           tokenCache={tokenCache}
         >
           <ClerkLoaded>
+            {/* eslint-disable-next-line react-compiler/react-compiler */}
             <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
               <TRPCProvider>
                 <SafeAreaProvider>
