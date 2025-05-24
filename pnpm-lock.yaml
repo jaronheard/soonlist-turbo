@@ -590,6 +590,9 @@ importers:
       babel-plugin-react-compiler:
         specifier: 'catalog:'
         version: 19.0.0-beta-af1b7da-20250417
+      convex:
+        specifier: 'catalog:'
+        version: 1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       expo:
         specifier: 'catalog:'
         version: 53.0.9(@babel/core@7.26.0)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.1.5)(react@19.1.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.0)(@types/react@19.1.5)(react@19.1.0))(react@19.1.0)
