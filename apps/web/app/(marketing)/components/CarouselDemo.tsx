@@ -35,7 +35,7 @@ export function CarouselDemo() {
             <Image
               src={src}
               alt={`Demo frame ${index + 1}`}
-              objectFit="cover"
+              style={{ objectFit: "cover" }}
               priority={index === 0}
               height={1616}
               width={750}
