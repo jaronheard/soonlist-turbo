@@ -1,7 +1,7 @@
 "use client";
 
 import type { z } from "zod";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, type JSX } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";

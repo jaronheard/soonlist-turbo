@@ -6,7 +6,7 @@
   "scripts": {
     "build": "pnpm with-env next build",
     "clean": "git clean -xdf .cache .next .turbo node_modules",
-    "dev": "pnpm with-env next dev --turbo",
+    "dev": "pnpm with-env next dev --turbopack",
     "dev:production": "pnpm with-env:production next dev --turbo",
     "dev:tunnel": "concurrently \"pnpm run tunnel\" \"pnpm with-env next dev --turbo\"",
     "format": "prettier --check . --ignore-path ../../.gitignore",
@@ -43,10 +43,10 @@
     "langfuse": "^3.11.0",
     "lucide-react": "^0.373.0",
     "mysql2": "^3.9.7",
-    "next": "^14.2.3",
+    "next": "15.1.8",
     "posthog-js": "^1.240.5",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-easy-sort": "^1.6.0",
     "react-image-crop": "^11.0.5",
     "react-qr-code": "^2.0.15",
@@ -68,8 +68,8 @@
     "@tailwindcss/typography": "^0.5.10",
     "@tanstack/react-query-devtools": "^5.74.7",
     "@types/node": "20.12.7",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "18.3.0",
+    "@types/react": "19.1.5",
+    "@types/react-dom": "19.1.5",
     "@types/uuid": "^9.0.8",
     "concurrently": "^8.2.2",
     "encoding": "^0.1.13",
@@ -79,7 +79,7 @@
     "jiti": "^1.21.3",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
-    "typescript": "^5.4.5"
+    "typescript": "^5.8.3"
   },
   "prettier": "@soonlist/prettier-config"
 }

@@ -14,15 +14,13 @@ import { env } from "~/env";
 import { api } from "~/trpc/server";
 
 interface Props {
-  params: {
+  params: Promise<{
     eventId: string;
-  };
+  }>;
 }
 
-export async function generateMetadata(
-  { params }: Props,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
+export async function generateMetadata(props: Props, parent: ResolvingMetadata): Promise<Metadata> {
+  const params = await props.params;
   const event = await api.event.get({ eventId: params.eventId });
   if (!event) {
     return {
@@ -57,7 +55,8 @@ export async function generateMetadata(
   };
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page(props: Props) {
+  const params = await props.params;
   const event = await api.event.get({ eventId: params.eventId });
   const user = await currentUser();
   if (!event) {

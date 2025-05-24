@@ -34,7 +34,7 @@
     "dotenv-cli": "^7.4.1",
     "prettier": "^3.2.5",
     "turbo": "^2.0.4",
-    "typescript": "^5.4.5"
+    "typescript": "^5.8.3"
   },
   "prettier": "@soonlist/prettier-config",
   "pnpm": {

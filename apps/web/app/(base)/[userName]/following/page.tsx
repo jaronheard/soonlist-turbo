@@ -7,13 +7,11 @@ import { env } from "~/env";
 import { api } from "~/trpc/server";
 
 interface Props {
-  params: { userName: string };
+  params: Promise<{ userName: string }>;
 }
 
-export async function generateMetadata(
-  { params }: Props,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
+export async function generateMetadata(props: Props, parent: ResolvingMetadata): Promise<Metadata> {
+  const params = await props.params;
   const events = await api.event.getFollowingUpcomingForUser({
     userName: params.userName,
   });
@@ -47,7 +45,8 @@ export async function generateMetadata(
   };
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page(props: Props) {
+  const params = await props.params;
   const events = await api.event.getFollowingUpcomingForUser({
     userName: params.userName,
   });

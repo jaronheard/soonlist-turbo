@@ -3,7 +3,8 @@ import { auth } from "@clerk/nextjs/server";
 import { AddListCard } from "~/components/AddListCard";
 import { api } from "~/trpc/server";
 
-export default async function Page({ params }: { params: { listId: string } }) {
+export default async function Page(props: { params: Promise<{ listId: string }> }) {
+  const params = await props.params;
   const { userId } = auth().protect();
   const list = await api.list.get({ listId: params.listId });
   if (!list) {
