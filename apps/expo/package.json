@@ -53,6 +53,7 @@
     "@trpc/react-query": "catalog:",
     "@trpc/server": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
+    "convex": "catalog:",
     "expo": "catalog:",
     "expo-apple-authentication": "catalog:",
     "expo-application": "catalog:",

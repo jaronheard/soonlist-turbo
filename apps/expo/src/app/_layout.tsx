@@ -7,11 +7,13 @@ import {
 import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
+import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
 import * as Sentry from "@sentry/react-native";
 import { PostHogProvider } from "posthog-react-native";
 
 import { useAppStateRefresh } from "~/hooks/useAppStateRefresh";
+import { convex } from "~/lib/convex";
 import { OneSignalProvider } from "~/providers/OneSignalProvider";
 import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import { TRPCProvider } from "~/utils/api";
@@ -150,32 +152,34 @@ function RootLayout() {
           tokenCache={tokenCache}
         >
           <ClerkLoaded>
-            <TRPCProvider>
-              <SafeAreaProvider>
-                <PostHogProvider
-                  apiKey={Config.posthogApiKey}
-                  options={{
-                    host: "https://us.i.posthog.com",
-                    disabled: isDev,
-                    enableSessionReplay: !isDev,
-                    sessionReplayConfig: {
-                      maskAllTextInputs: false,
-                      maskAllImages: false,
-                      captureLog: false,
-                      captureNetworkTelemetry: true,
-                      androidDebouncerDelayMs: 500,
-                      iOSdebouncerDelayMs: 1000,
-                    },
-                  }}
-                >
-                  <OneSignalProvider>
-                    <RevenueCatProvider>
-                      <RootLayoutContent />
-                    </RevenueCatProvider>
-                  </OneSignalProvider>
-                </PostHogProvider>
-              </SafeAreaProvider>
-            </TRPCProvider>
+            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+              <TRPCProvider>
+                <SafeAreaProvider>
+                  <PostHogProvider
+                    apiKey={Config.posthogApiKey}
+                    options={{
+                      host: "https://us.i.posthog.com",
+                      disabled: isDev,
+                      enableSessionReplay: !isDev,
+                      sessionReplayConfig: {
+                        maskAllTextInputs: false,
+                        maskAllImages: false,
+                        captureLog: false,
+                        captureNetworkTelemetry: true,
+                        androidDebouncerDelayMs: 500,
+                        iOSdebouncerDelayMs: 1000,
+                      },
+                    }}
+                  >
+                    <OneSignalProvider>
+                      <RevenueCatProvider>
+                        <RootLayoutContent />
+                      </RevenueCatProvider>
+                    </OneSignalProvider>
+                  </PostHogProvider>
+                </SafeAreaProvider>
+              </TRPCProvider>
+            </ConvexProviderWithClerk>
           </ClerkLoaded>
         </ClerkProvider>
       </KeyboardProvider>

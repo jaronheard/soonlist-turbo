@@ -8,12 +8,14 @@ interface Config {
   apiBaseUrl: string;
   clerkPublishableKey: string;
   posthogApiKey: string;
+  convexUrl: string;
 }
 
 const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL as string;
 const clerkPublishableKey = process.env
   .EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY as string;
 const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY as string;
+const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL as string;
 
 if (!apiBaseUrl) {
   throw new Error("EXPO_PUBLIC_API_BASE_URL is required");
@@ -25,6 +27,10 @@ if (!clerkPublishableKey) {
 
 if (!posthogApiKey) {
   throw new Error("EXPO_PUBLIC_POSTHOG_API_KEY is required");
+}
+
+if (!convexUrl) {
+  throw new Error("EXPO_PUBLIC_CONVEX_URL is required");
 }
 
 const Config: Config = {
@@ -39,6 +45,7 @@ const Config: Config = {
   apiBaseUrl,
   clerkPublishableKey,
   posthogApiKey,
+  convexUrl,
 };
 
 export default Config;

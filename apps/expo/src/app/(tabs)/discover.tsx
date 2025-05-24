@@ -5,6 +5,7 @@ import { useUser } from "@clerk/clerk-expo";
 
 import type { RouterOutputs } from "~/utils/api";
 import AddEventButton from "~/components/AddEventButton";
+import { ConvexAuthExample } from "~/components/ConvexAuthExample";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
@@ -86,6 +87,7 @@ export default function Page() {
 
   return (
     <View className="flex-1 bg-white">
+      <ConvexAuthExample />
       {eventsQuery.isPending && !eventsQuery.isRefetching ? (
         <LoadingSpinner />
       ) : (
