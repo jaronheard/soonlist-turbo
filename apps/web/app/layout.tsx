@@ -2,11 +2,10 @@ import type { Metadata, Viewport } from "next";
 
 import "~/styles/globals.css";
 
-import { Suspense } from "react";
-import dynamic from "next/dynamic";
 import { IBM_Plex_Sans, Kalam } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
+import PostHogClient from "./PostHogClient";
 import { PHProvider, Providers } from "./providers";
 
 export const preferredRegion = "pdx1";
@@ -23,10 +22,6 @@ const plex_sans = IBM_Plex_Sans({
   display: "swap",
   weight: ["400", "500", "600", "700"],
   variable: "--font-plex-sans",
-});
-
-const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
-  ssr: false,
 });
 
 const title = "Soonlist";
@@ -86,9 +81,7 @@ export default function RootLayout({
         <body className="overflow-x-hidden">
           <TRPCReactProvider>
             <Providers>
-              <Suspense>
-                <PostHogPageView />
-              </Suspense>
+              <PostHogClient />
               {children}
             </Providers>
           </TRPCReactProvider>

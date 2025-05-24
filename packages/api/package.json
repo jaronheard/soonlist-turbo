@@ -20,33 +20,33 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^0.0.50",
-    "@ai-sdk/openai": "^0.0.18",
-    "@clerk/nextjs": "^5.0.8",
-    "@sentry/nextjs": "^8.35.0",
-    "@sentry/node": "^8.35.0",
+    "@ai-sdk/anthropic": "catalog:",
+    "@ai-sdk/openai": "catalog:",
+    "@clerk/nextjs": "catalog:",
+    "@sentry/nextjs": "catalog:",
+    "@sentry/node": "catalog:",
     "@soonlist/cal": "workspace:*",
     "@soonlist/db": "workspace:*",
     "@soonlist/validators": "workspace:*",
-    "@trpc/server": "11.0.0-rc.364",
-    "@vercel/functions": "^1.0.2",
-    "ai": "^3.1.22",
-    "date-fns-tz": "^3.2.0",
-    "expo-server-sdk": "^3.10.0",
-    "langfuse": "^3.11.0",
-    "nanoid": "^5.0.7",
-    "posthog-node": "^4.17.1",
-    "stripe": "^15.9.0",
-    "superjson": "2.2.1",
-    "zod": "^3.23.0"
+    "@trpc/server": "catalog:",
+    "@vercel/functions": "catalog:",
+    "ai": "catalog:",
+    "date-fns-tz": "catalog:",
+    "expo-server-sdk": "catalog:",
+    "langfuse": "catalog:",
+    "nanoid": "catalog:",
+    "posthog-node": "catalog:",
+    "stripe": "catalog:",
+    "superjson": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",
     "@soonlist/prettier-config": "workspace:*",
     "@soonlist/tsconfig": "workspace:*",
-    "eslint": "^9.1.1",
-    "prettier": "^3.2.5",
-    "typescript": "^5.4.5"
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
   },
   "prettier": "@soonlist/prettier-config"
 }

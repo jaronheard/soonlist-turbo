@@ -15,17 +15,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.3",
-    "tailwindcss-animate": "^1.0.7"
+    "postcss": "catalog:",
+    "tailwindcss": "catalog:",
+    "tailwindcss-animate": "catalog:"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",
     "@soonlist/prettier-config": "workspace:*",
     "@soonlist/tsconfig": "workspace:*",
-    "eslint": "^9.1.1",
-    "prettier": "^3.2.5",
-    "typescript": "^5.4.5"
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
   },
   "prettier": "@soonlist/prettier-config"
 }

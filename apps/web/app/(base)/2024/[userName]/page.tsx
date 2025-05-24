@@ -9,7 +9,8 @@ import { env } from "~/env";
 import UserStatsCard from "../_components/userStatsCard";
 import dataForUsersFor2024 from "./dataForUsersFor2024";
 
-export function generateMetadata({ params }: Props) {
+export async function generateMetadata(props: Props) {
+  const params = await props.params;
   return {
     title: `@${params.userName} | Captured 2024! | Soonlist`,
     openGraph: {
@@ -23,7 +24,7 @@ export function generateMetadata({ params }: Props) {
 }
 
 interface Props {
-  params: { userName: string };
+  params: Promise<{ userName: string }>;
 }
 
 // Add type guard function
@@ -39,7 +40,8 @@ function isValidUserData(data: unknown): data is UserStatsCardProps {
 }
 
 // Example usage:
-const Page = async ({ params }: Props) => {
+const Page = async (props: Props) => {
+  const params = await props.params;
   const user = await currentUser();
   const userName = params.userName;
 

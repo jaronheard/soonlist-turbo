@@ -36,7 +36,7 @@ import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getUserTimeZone } from "~/utils/dates";
 import { logDebug, logError } from "~/utils/errorLogging";
-import { getKeyChainAccessGroup } from "~/utils/getKeyChainAccessGroup";
+import { getAccessGroup } from "~/utils/getAccessGroup";
 
 const styles = StyleSheet.create({
   container: {
@@ -73,17 +73,17 @@ export const unstable_settings = {
 const tokenCache = {
   getToken: async (key: string) => {
     return await SecureStore.getItemAsync(key, {
-      keychainAccessGroup: getKeyChainAccessGroup(),
+      accessGroup: getAccessGroup(),
     });
   },
   saveToken: (key: string, value: string) => {
     return SecureStore.setItemAsync(key, value, {
-      keychainAccessGroup: getKeyChainAccessGroup(),
+      accessGroup: getAccessGroup(),
     });
   },
   clearToken: (key: string) => {
     return SecureStore.deleteItemAsync(key, {
-      keychainAccessGroup: getKeyChainAccessGroup(),
+      accessGroup: getAccessGroup(),
     });
   },
 };

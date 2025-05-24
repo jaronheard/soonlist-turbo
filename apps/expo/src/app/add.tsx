@@ -117,7 +117,11 @@ export default function AddEventModal() {
       username: user.username,
     };
 
-    router.canGoBack() ? router.back() : router.replace("/feed");
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/feed");
+    }
 
     // Reset state immediately for better UX
     resetAddEventState();

@@ -4,7 +4,7 @@ import * as SecureStore from "expo-secure-store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 
-const getKeychainAccessGroup = () =>
+const getAccessGroup = () =>
   Config.env === "development"
     ? "group.com.soonlist.dev"
     : "group.com.soonlist";
@@ -12,14 +12,14 @@ const getKeychainAccessGroup = () =>
 const useEnvSync = () => {
   const saveEnvVar = useCallback(async (key: string, value: string | null) => {
     try {
-      const keychainAccessGroup = getKeychainAccessGroup();
+      const accessGroup = getAccessGroup();
       if (value) {
         await SecureStore.setItemAsync(key, value, {
           keychainAccessible: SecureStore.WHEN_UNLOCKED,
-          keychainAccessGroup,
+          accessGroup,
         });
       } else {
-        await SecureStore.deleteItemAsync(key, { keychainAccessGroup });
+        await SecureStore.deleteItemAsync(key, { accessGroup });
       }
     } catch (error) {
       logError(`Error syncing ${key}`, error);

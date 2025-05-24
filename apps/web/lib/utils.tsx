@@ -70,7 +70,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function extractFilePath(url: string) {
-  const match = url.match(/\/uploads\/\d{4}\/\d{2}\/\d{2}\/[^?]+/);
+  const match = /\/uploads\/\d{4}\/\d{2}\/\d{2}\/[^?]+/.exec(url);
   return match ? match[0] : "";
 }
 

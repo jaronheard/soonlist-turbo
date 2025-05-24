@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { toast } from "sonner-native";
 
 import { useOnboarding } from "~/hooks/useOnboarding";
+import { logError } from "~/utils/errorLogging";
 
 interface FinishDemoButtonProps {
   text?: string;
@@ -27,6 +28,7 @@ export function FinishDemoButton({
       // Navigate to feed after paywall is handled
       router.push("/feed");
     } catch (error) {
+      logError("Failed to complete onboarding", error);
       toast.error("Something went wrong", {
         description: "Please try again",
       });

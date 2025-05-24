@@ -4,7 +4,7 @@
   "engines": {
     "node": ">=20.12.0"
   },
-  "packageManager": "pnpm@9.0.6",
+  "packageManager": "pnpm@10.11.0",
   "scripts": {
     "build": "turbo build",
     "clean": "git clean -xdf .cache node_modules",
@@ -30,20 +30,37 @@
   },
   "devDependencies": {
     "@soonlist/prettier-config": "workspace:*",
-    "@turbo/gen": "^2.0.4",
-    "dotenv-cli": "^7.4.1",
-    "prettier": "^3.2.5",
-    "turbo": "^2.0.4",
-    "typescript": "^5.4.5"
+    "@turbo/gen": "catalog:",
+    "dotenv-cli": "catalog:",
+    "prettier": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
   },
   "prettier": "@soonlist/prettier-config",
   "pnpm": {
     "patchedDependencies": {
-      "xcode@3.0.1": "patches/xcode@3.0.1.patch",
-      "expo-secure-store@14.0.0": "patches/expo-secure-store.patch"
+      "xcode@3.0.1": "patches/xcode@3.0.1.patch"
     },
     "overrides": {
-      "promise": "^8.3.0"
+      "promise": "^8.3.0",
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "@types/react": "19.1.5",
+      "@radix-ui/react-slot": "1.2.3",
+      "@radix-ui/react-accordion": "1.2.1",
+      "@radix-ui/react-aspect-ratio": "1.1.0",
+      "@radix-ui/react-dialog": "1.1.2",
+      "@radix-ui/react-dropdown-menu": "2.1.2",
+      "@radix-ui/react-label": "2.1.0",
+      "@radix-ui/react-navigation-menu": "1.2.1",
+      "@radix-ui/react-popover": "1.1.2",
+      "@radix-ui/react-scroll-area": "1.2.0",
+      "@radix-ui/react-select": "2.1.2",
+      "@radix-ui/react-separator": "1.1.0",
+      "@radix-ui/react-switch": "1.1.1",
+      "@radix-ui/react-tabs": "1.1.1",
+      "@radix-ui/react-toast": "1.2.2",
+      "@radix-ui/react-toggle": "1.1.0"
     }
   }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import type { JSX } from "react";
 import type { z } from "zod";
 import { useContext, useEffect, useState } from "react";
 import Link from "next/link";

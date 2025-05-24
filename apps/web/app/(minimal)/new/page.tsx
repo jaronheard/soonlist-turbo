@@ -9,18 +9,19 @@ import { ProgressStages } from "./newEventProgressStages";
 export const maxDuration = 60;
 
 interface Props {
-  searchParams: {
+  searchParams: Promise<{
     rawText?: string;
     url?: string;
     saveIntent?: boolean;
     filePath?: string;
     timezone?: string;
     edit?: boolean;
-  };
+  }>;
 }
 
-export default async function Page({ searchParams }: Props) {
-  const { userId } = auth().protect({
+export default async function Page(props: Props) {
+  const searchParams = await props.searchParams;
+  const { userId } = await auth.protect({
     unauthenticatedUrl: "/sign-in",
     unauthorizedUrl: "/",
   });

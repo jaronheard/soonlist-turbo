@@ -16,6 +16,7 @@ import { toast } from "sonner-native";
 import { DemoProgressBar } from "~/components/DemoProgressBar";
 import { Camera, ChevronDown, List, Plus, Sparkles } from "~/components/icons";
 import { SkipDemoButton } from "~/components/SkipDemoButton";
+import { logError } from "~/utils/errorLogging";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function DemoIntroScreen() {
@@ -55,6 +56,7 @@ export default function DemoIntroScreen() {
     try {
       router.push("/onboarding/demo-capture");
     } catch (error) {
+      logError("Failed to navigate to demo capture", error);
       toast.error("Something went wrong", {
         description: "Please try again",
       });

@@ -14,6 +14,7 @@ import { ChevronUp } from "~/components/icons";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useOneSignal } from "~/providers/OneSignalProvider";
+import { logError } from "~/utils/errorLogging";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function NotificationsScreen() {
@@ -76,6 +77,7 @@ export default function NotificationsScreen() {
         "/onboarding/02-age",
       );
     } catch (error) {
+      logError("Failed to save notifications", error);
       toast.error("Something went wrong", {
         description: "Please try again",
       });

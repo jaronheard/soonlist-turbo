@@ -6,6 +6,7 @@ import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useAppStore } from "~/store";
+import { logError } from "~/utils/errorLogging";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const sources = [
@@ -32,6 +33,7 @@ export default function SourceScreen() {
     try {
       saveStep("source", { source }, "/onboarding/04-discovery");
     } catch (error) {
+      logError("Failed to save source", error);
       toast.error("Something went wrong", {
         description: "Please try again",
       });

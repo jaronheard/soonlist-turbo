@@ -2,9 +2,9 @@ import { auth } from "@clerk/nextjs/server";
 
 import { GetStartedClient } from "./GetStartedClient";
 
-export default function Page() {
+export default async function Page() {
   // Protect the page server-side
-  auth().protect();
+  await auth.protect();
 
   return <GetStartedClient />;
 }

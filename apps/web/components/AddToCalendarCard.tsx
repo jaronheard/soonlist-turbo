@@ -43,7 +43,7 @@ export type AddToCalendarCardProps = AddToCalendarButtonType & {
   updateId?: string;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   children?: React.ReactNode;
-  firstInputRef?: React.RefObject<HTMLInputElement>;
+  firstInputRef?: React.RefObject<HTMLInputElement | null>;
   setAddToCalendarButtonProps?: (props: AddToCalendarButtonType) => void;
   eventMetadata?: EventMetadata;
   onUpdate?: (props: AddToCalendarButtonType) => void;

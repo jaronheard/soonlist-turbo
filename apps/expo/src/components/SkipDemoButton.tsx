@@ -5,6 +5,7 @@ import { toast } from "sonner-native";
 
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
+import { logError } from "~/utils/errorLogging";
 
 interface SkipDemoButtonProps {
   className?: string;
@@ -29,6 +30,7 @@ export function SkipDemoButton({
       await showProPaywallIfNeeded();
       router.push("/feed");
     } catch (error) {
+      logError("Failed to skip demo and complete onboarding", error);
       toast.error("Something went wrong", {
         description: "Please try again",
       });

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Type for static image resources in React Native
 type ImageRequireSource = number;
 

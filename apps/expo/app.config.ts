@@ -60,7 +60,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: getAppName(),
   slug: "timetimecc",
   scheme: getScheme(),
-  version: "1.2.0",
+  version: "1.2.1",
   orientation: "portrait",
   icon: IS_DEV ? "./assets/icon-dev.png" : "./assets/icon.png",
   userInterfaceStyle: "light",
@@ -144,12 +144,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     ["react-native-appsflyer", {}],
-    // [
-    //   "expo-background-fetch",
-    //   {
-    //     startOnBoot: true,
-    //   },
-    // ],
+    ["expo-asset"],
+    ["expo-web-browser"],
+    ["expo-background-task"],
   ],
   ios: {
     supportsTablet: false,

@@ -22,20 +22,20 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@js-temporal/polyfill": "^0.4.4",
+    "@js-temporal/polyfill": "catalog:",
     "@soonlist/db": "workspace:*",
-    "date-fns": "^3.6.0",
-    "timezone-soft": "^1.5.2",
-    "zod": "^3.23.0",
-    "zod-to-json-schema": "^3.23.0"
+    "date-fns": "catalog:",
+    "timezone-soft": "catalog:",
+    "zod": "catalog:",
+    "zod-to-json-schema": "catalog:"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",
     "@soonlist/prettier-config": "workspace:*",
     "@soonlist/tsconfig": "workspace:*",
-    "eslint": "^9.1.1",
-    "prettier": "^3.2.5",
-    "typescript": "^5.4.5"
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
   },
   "prettier": "@soonlist/prettier-config"
 }

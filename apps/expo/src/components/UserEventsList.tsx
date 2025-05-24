@@ -586,7 +586,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     return (
       <View className="flex-1 items-center justify-center px-6">
         <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
           source={require("../assets/icon.png")}
           style={{
             width: 64,
