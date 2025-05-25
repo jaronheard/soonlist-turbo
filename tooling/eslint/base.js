@@ -60,6 +60,7 @@ export default tseslint.config(
         2,
         { checksVoidReturn: { attributes: false } },
       ],
+      "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-unnecessary-condition": [
         // "error",
         "warn",
