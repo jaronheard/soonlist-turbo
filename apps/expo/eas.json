@@ -6,7 +6,7 @@
   "build": {
     "base": {
       "node": "20.12.0",
-      "pnpm": "9.0.6",
+      "pnpm": "10.11.0",
       "ios": {
         "resourceClass": "medium"
       },
