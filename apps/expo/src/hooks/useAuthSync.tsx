@@ -78,7 +78,7 @@ const useAuthSync = () => {
       // Identify user for PostHog
       posthog.identify(authData.userId, {
         username: authData.username,
-        email: authData.email,
+        email: authData.email || "",
       });
     }
   }, [authData, getToken, posthog]);

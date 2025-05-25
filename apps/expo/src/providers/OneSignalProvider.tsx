@@ -43,6 +43,39 @@ interface NotificationData {
   [key: string]: unknown;
 }
 
+// Helper function to safely convert objects to JSON-serializable format
+const toJsonSerializable = (
+  obj: unknown,
+): Record<string, string | number | boolean | null> => {
+  if (!obj || typeof obj !== "object") {
+    return {};
+  }
+
+  try {
+    const serialized = JSON.parse(JSON.stringify(obj)) as Record<
+      string,
+      unknown
+    >;
+    const result: Record<string, string | number | boolean | null> = {};
+
+    for (const [key, value] of Object.entries(serialized)) {
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean" ||
+        value === null
+      ) {
+        result[key] = value;
+      }
+      // Skip complex objects to avoid stringification issues
+    }
+
+    return result;
+  } catch {
+    return {};
+  }
+};
+
 // Helper function to safely handle navigation
 const handleNavigation = (url: string) => {
   try {
@@ -135,7 +168,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
               title: event.notification.title || "",
               body: event.notification.body || "",
               notificationId: event.notification.notificationId || "",
-              data: event.notification.additionalData || {},
+              data: toJsonSerializable(event.notification.additionalData),
             });
           } catch (error) {
             logError("Failed to capture notification event", error, {
@@ -157,7 +190,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
               title: event.notification.title || "",
               body: event.notification.body || "",
               notificationId: event.notification.notificationId || "",
-              data: event.notification.additionalData || {},
+              data: toJsonSerializable(event.notification.additionalData),
             });
           } catch (error) {
             logError("Failed to capture notification event", error, {
@@ -175,7 +208,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
                 title: event.notification.title || "",
                 body: event.notification.body || "",
                 notificationId: event.notification.notificationId || "",
-                data: event.notification.additionalData || {},
+                data: toJsonSerializable(event.notification.additionalData),
                 url: data.url,
               });
             } catch (error) {

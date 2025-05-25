@@ -44,8 +44,8 @@ export function useOnboarding() {
     ]);
 
     posthog.capture("onboarding_completed", {
-      userId: user?.id,
-      completedAt,
+      userId: user?.id || "",
+      completedAt: completedAt.toISOString(),
     });
   }, [posthog, setOnboardingCompletedAt, user?.id, setHasCompletedOnboarding]);
 
@@ -74,7 +74,7 @@ export function useOnboarding() {
         // Track in PostHog
         posthog.capture("onboarding_step_completed", {
           step,
-          userId: user?.id,
+          userId: user?.id || "",
           ...data,
         });
       })();
