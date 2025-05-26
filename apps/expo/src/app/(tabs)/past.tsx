@@ -2,18 +2,14 @@ import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import {
-  Authenticated,
-  AuthLoading,
-  Unauthenticated,
-  usePaginatedQuery,
-} from "convex/react";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
+import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 
 function PastEventsContent() {
@@ -36,7 +32,7 @@ function PastEventsContent() {
     status,
     loadMore,
     isLoading,
-  } = usePaginatedQuery(api.events.getEventsForUserPaginated, queryArgs, {
+  } = useStablePaginatedQuery(api.events.getEventsForUserPaginated, queryArgs, {
     initialNumItems: 20,
   });
 

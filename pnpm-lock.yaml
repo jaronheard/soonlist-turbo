@@ -599,6 +599,9 @@ importers:
       convex:
         specifier: 'catalog:'
         version: 1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
+      convex-helpers:
+        specifier: ^0.1.89
+        version: 0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28)
       expo:
         specifier: 'catalog:'
         version: 53.0.9(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
@@ -5720,6 +5723,28 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+
+  convex-helpers@0.1.89:
+    resolution: {integrity: sha512-G/rfndoWBAChChDe6d1UTD27YadwTi0vzZrwy59gERCnumFVOJVS6VItMmlVr4yCOTXZwd69YEVbVoP8BvssJw==}
+    hasBin: true
+    peerDependencies:
+      '@standard-schema/spec': ^1.0.0
+      convex: ^1.13.0
+      hono: ^4.0.5
+      react: 19.0.0
+      typescript: ^5.5
+      zod: ^3.22.4
+    peerDependenciesMeta:
+      '@standard-schema/spec':
+        optional: true
+      hono:
+        optional: true
+      react:
+        optional: true
+      typescript:
+        optional: true
+      zod:
+        optional: true
 
   convex@1.24.1:
     resolution: {integrity: sha512-LucaIBktohO7KuKKsxLXxGhKoxYqcLUFqOXoC2p0HU4f8lWKNmDv1ackTB4DU5u/thnh/tIOvySEVNdoAdGXAw==}
@@ -15268,6 +15293,14 @@ snapshots:
   convert-source-map@1.9.0: {}
 
   convert-source-map@2.0.0: {}
+
+  convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28):
+    dependencies:
+      convex: 1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
+    optionalDependencies:
+      react: 19.0.0
+      typescript: 5.8.3
+      zod: 3.25.28
 
   convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0):
     dependencies:

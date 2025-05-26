@@ -2,18 +2,14 @@ import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import {
-  Authenticated,
-  AuthLoading,
-  Unauthenticated,
-  usePaginatedQuery,
-} from "convex/react";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
+import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 
 function MyFeedContent() {
@@ -36,8 +32,7 @@ function MyFeedContent() {
     results: events,
     status,
     loadMore,
-    isLoading,
-  } = usePaginatedQuery(api.events.getEventsForUserPaginated, queryArgs, {
+  } = useStablePaginatedQuery(api.events.getEventsForUserPaginated, queryArgs, {
     initialNumItems: 20,
   });
 
@@ -52,9 +47,6 @@ function MyFeedContent() {
     }
   }, [status, loadMore]);
 
-  // TODO: Add this back in when we have a way to track AI mutations
-  const isAddingEvent = false;
-
   // Check onboarding status after all hooks
   // const dbHasCompletedOnboarding = !!userQuery.data?.onboardingCompletedAt;
   // if (!hasCompletedOnboarding && !dbHasCompletedOnboarding) {
@@ -63,24 +55,20 @@ function MyFeedContent() {
 
   return (
     <View className="flex-1 bg-white">
-      {isLoading && status === "LoadingFirstPage" && !isAddingEvent ? (
-        <LoadingSpinner />
-      ) : (
-        <View className="flex-1">
-          <UserEventsList
-            events={events}
-            isRefetching={status === "LoadingMore"}
-            onRefresh={onRefresh}
-            onEndReached={handleLoadMore}
-            isFetchingNextPage={status === "LoadingMore"}
-            showCreator="savedFromOthers"
-            stats={undefined}
-            promoCard={{ type: "addEvents" }}
-            hasUnlimited={hasUnlimited}
-          />
-          <AddEventButton stats={undefined} />
-        </View>
-      )}
+      <View className="flex-1">
+        <UserEventsList
+          events={events}
+          isRefetching={status === "LoadingMore"}
+          onRefresh={onRefresh}
+          onEndReached={handleLoadMore}
+          isFetchingNextPage={status === "LoadingMore"}
+          showCreator="savedFromOthers"
+          stats={undefined}
+          promoCard={{ type: "addEvents" }}
+          hasUnlimited={hasUnlimited}
+        />
+        <AddEventButton stats={undefined} />
+      </View>
     </View>
   );
 }

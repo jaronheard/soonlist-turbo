@@ -6,7 +6,6 @@ import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
-  usePaginatedQuery,
   useQuery,
 } from "convex/react";
 
@@ -17,6 +16,7 @@ import { ConvexAuthExample } from "~/components/ConvexAuthExample";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
+import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { getPlanStatusFromUser } from "~/utils/plan";
 
@@ -31,7 +31,7 @@ function DiscoverContent() {
     status,
     loadMore,
     isLoading,
-  } = usePaginatedQuery(
+  } = useStablePaginatedQuery(
     api.events.getDiscoverPaginated,
     {},
     {
@@ -111,9 +111,7 @@ export default function Page() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-white">
-          <LoadingSpinner />
-        </View>
+        <View className="flex-1 bg-white"></View>
       </AuthLoading>
 
       <Unauthenticated>
