@@ -5,7 +5,7 @@ import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
-import { api } from "@soonlist/backend";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 export default function OnboardingIndex() {
   const { user: clerkUser, isLoaded } = useUser();

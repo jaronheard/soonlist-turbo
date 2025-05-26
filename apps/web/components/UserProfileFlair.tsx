@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { useQuery } from "convex/react";
 
-import { api } from "@soonlist/backend";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 type Size = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 

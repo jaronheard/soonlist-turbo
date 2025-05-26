@@ -1,10 +1,12 @@
+import type { FunctionReturnType } from "convex/server";
 import React from "react";
 import { Dimensions, TouchableOpacity, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { toast } from "sonner-native";
 
+import type { api } from "@soonlist/backend/convex/_generated/api";
+
 import type { LucideIcon } from "~/components/icons";
-import type { RouterOutputs } from "~/utils/api";
 import {
   CalendarPlus,
   EyeOff,
@@ -40,7 +42,7 @@ const screenWidth = Dimensions.get("window").width;
 const menuMinWidth = screenWidth * 0.6;
 
 interface EventMenuProps {
-  event: RouterOutputs["event"]["getUpcomingForUser"][number];
+  event: NonNullable<FunctionReturnType<typeof api.events.get>>;
   isOwner: boolean;
   isSaved: boolean;
   menuType: "context" | "popup";

@@ -1,6 +1,39 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+// Define reusable validators
+export const priorityValidator = v.object({
+  text: v.string(),
+  emoji: v.string(),
+});
+
+export const onboardingDataValidator = v.object({
+  notificationsEnabled: v.optional(v.boolean()),
+  ageRange: v.optional(
+    v.union(
+      v.literal("Under 24"),
+      v.literal("25-34"),
+      v.literal("35-44"),
+      v.literal("45-54"),
+      v.literal("55-64"),
+      v.literal("65+"),
+    ),
+  ),
+  source: v.optional(v.string()),
+  discoveryMethod: v.optional(v.string()),
+  screenshotEvents: v.optional(v.string()),
+  priority: v.optional(priorityValidator),
+  completedAt: v.optional(v.string()), // ISO date string
+});
+
+export const userAdditionalInfoValidator = v.object({
+  bio: v.optional(v.string()),
+  publicEmail: v.optional(v.string()),
+  publicPhone: v.optional(v.string()),
+  publicInsta: v.optional(v.string()),
+  publicWebsite: v.optional(v.string()),
+});
+
 export default defineSchema({
   comments: defineTable({
     content: v.string(),
@@ -96,8 +129,8 @@ export default defineSchema({
     publicWebsite: v.union(v.string(), v.null()),
     publicMetadata: v.union(v.any(), v.null()), // JSON field
     emoji: v.union(v.string(), v.null()),
-    // Onboarding fields
-    onboardingData: v.union(v.any(), v.null()), // JSON field
+    // Onboarding fields - now properly typed
+    onboardingData: v.union(onboardingDataValidator, v.null()),
     onboardingCompletedAt: v.union(v.string(), v.null()), // ISO date string or null
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null

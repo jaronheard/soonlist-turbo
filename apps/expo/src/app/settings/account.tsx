@@ -21,7 +21,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
 
-import { api } from "@soonlist/backend";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
 import { Globe, Instagram, Mail, Phone } from "~/components/icons";

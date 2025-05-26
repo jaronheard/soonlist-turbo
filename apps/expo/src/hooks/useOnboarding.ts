@@ -5,7 +5,7 @@ import { useUser } from "@clerk/clerk-expo";
 import { useMutation, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 
-import { api } from "@soonlist/backend";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import { useAppStore } from "~/store";

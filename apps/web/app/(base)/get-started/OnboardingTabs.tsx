@@ -9,7 +9,7 @@ import { Check, Globe, Instagram, Mail, Pen, Phone } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { api } from "@soonlist/backend";
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "@soonlist/ui/button";
 import {
   Form,

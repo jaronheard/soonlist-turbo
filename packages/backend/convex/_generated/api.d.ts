@@ -16,7 +16,6 @@ import type {
 import type * as ai from "../ai.js";
 import type * as crons from "../crons.js";
 import type * as events from "../events.js";
-import type * as lists from "../lists.js";
 import type * as model_ai from "../model/ai.js";
 import type * as model_events from "../model/events.js";
 import type * as model_notifications from "../model/notifications.js";
@@ -37,7 +36,6 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   crons: typeof crons;
   events: typeof events;
-  lists: typeof lists;
   "model/ai": typeof model_ai;
   "model/events": typeof model_events;
   "model/notifications": typeof model_notifications;

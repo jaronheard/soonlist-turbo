@@ -1,8 +1,9 @@
+import type { FunctionReturnType } from "convex/server";
+
+import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { EventMetadataLoose } from "@soonlist/cal";
 
-import type { RouterOutputs } from "~/utils/api";
-
-type Event = RouterOutputs["event"]["getDiscoverInfinite"]["events"][number];
+type Event = NonNullable<FunctionReturnType<typeof api.events.get>>;
 
 interface EmojiConfig {
   emoji: string;

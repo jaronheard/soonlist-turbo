@@ -1,8 +1,24 @@
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
+import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import * as Events from "./model/events";
+
+// Helper function to enrich events and filter out nulls
+async function enrichEventsAndFilterNulls(
+  ctx: QueryCtx,
+  events: { id: string }[],
+) {
+  const enrichedEventsWithNulls = await Promise.all(
+    events.map(async (event) => {
+      return await Events.getEventById(ctx, event.id);
+    }),
+  );
+
+  // Filter out null values
+  return enrichedEventsWithNulls.filter((event) => event !== null);
+}
 
 // Validators for complex types
 const eventDataValidator = v.object({
@@ -136,66 +152,6 @@ export const getNext = query({
 });
 
 /**
- * Get discover events (excluding user's own events)
- */
-export const getDiscover = query({
-  args: {
-    limit: v.optional(v.number()),
-    excludeCurrent: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError("User must be logged in to discover events");
-    }
-
-    return await Events.getDiscoverEvents(
-      ctx,
-      identity.subject,
-      args.limit,
-      args.excludeCurrent,
-    );
-  },
-});
-
-/**
- * Get discover events with infinite scroll
- */
-export const getDiscoverInfinite = query({
-  args: {
-    limit: v.number(),
-    cursor: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError("User must be logged in to discover events");
-    }
-
-    const { limit, cursor } = args;
-    const offset = cursor || 0;
-
-    const events = await Events.getDiscoverEvents(
-      ctx,
-      identity.subject,
-      limit + 1,
-      true,
-    );
-
-    let nextCursor: number | undefined = undefined;
-    if (events.length > limit) {
-      events.pop();
-      nextCursor = offset + limit;
-    }
-
-    return {
-      events,
-      nextCursor,
-    };
-  },
-});
-
-/**
  * Get discover events with Convex pagination
  */
 export const getDiscoverPaginated = query({
@@ -216,6 +172,7 @@ export const getDiscoverPaginated = query({
       .filter((q) =>
         q.and(
           q.eq(q.field("visibility"), "public"),
+          // TODO: Change to startDateTime when we have a way to filter out long events
           q.gte(q.field("endDateTime"), now.toISOString()),
           q.neq(q.field("userId"), identity.subject),
         ),
@@ -224,86 +181,7 @@ export const getDiscoverPaginated = query({
       .paginate(args.paginationOpts);
 
     // Enrich events with user data, comments, and follows
-    const enrichedEvents = await Promise.all(
-      result.page.map(async (event) => {
-        // Get event creator
-        const eventUser = await ctx.db
-          .query("users")
-          .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
-          .unique();
-
-        // Get comments for this event
-        const comments = await ctx.db
-          .query("comments")
-          .withIndex("by_event", (q) => q.eq("eventId", event.id))
-          .collect();
-
-        // Get follows for this event
-        const eventFollowsForEvent = await ctx.db
-          .query("eventFollows")
-          .withIndex("by_event", (q) => q.eq("eventId", event.id))
-          .collect();
-
-        return {
-          ...event,
-          startDateTime: event.startDateTime,
-          endDateTime: event.endDateTime,
-          createdAt: event.created_at,
-          updatedAt: event.updatedAt,
-          eventMetadata: event.eventMetadata ?? {},
-          user: eventUser
-            ? {
-                id: eventUser.id,
-                username: eventUser.username,
-                displayName: eventUser.displayName,
-                userImage: eventUser.userImage,
-                bio: eventUser.bio,
-                emoji: eventUser.emoji,
-                createdAt: eventUser.created_at,
-                updatedAt: eventUser.updatedAt,
-                email: eventUser.email,
-                publicEmail: eventUser.publicEmail,
-                publicPhone: eventUser.publicPhone,
-                publicInsta: eventUser.publicInsta,
-                publicWebsite: eventUser.publicWebsite,
-                publicMetadata: eventUser.publicMetadata,
-                onboardingData: eventUser.onboardingData,
-                onboardingCompletedAt: eventUser.onboardingCompletedAt,
-              }
-            : {
-                id: event.userId,
-                username: event.userName,
-                displayName: event.userName,
-                userImage: "",
-                bio: null,
-                emoji: null,
-                createdAt: new Date().toISOString(),
-                updatedAt: null,
-                email: "",
-                publicEmail: null,
-                publicPhone: null,
-                publicInsta: null,
-                publicWebsite: null,
-                publicMetadata: null,
-                onboardingData: null,
-                onboardingCompletedAt: null,
-              },
-          comments: comments.map((comment) => ({
-            id: comment.id,
-            content: comment.content,
-            userId: comment.userId,
-            eventId: comment.eventId,
-            oldId: comment.oldId,
-            createdAt: comment.created_at,
-            updatedAt: comment.updatedAt,
-          })),
-          eventFollows: eventFollowsForEvent.map((follow) => ({
-            userId: follow.userId,
-            eventId: follow.eventId,
-          })),
-        };
-      }),
-    );
+    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, result.page);
 
     return {
       ...result,
@@ -343,6 +221,7 @@ export const getEventsForUser = query({
 
 /**
  * Get events for user with Convex pagination (upcoming or past)
+ * This efficiently queries both owned and followed events in a single operation
  */
 export const getEventsForUserPaginated = query({
   args: {
@@ -363,146 +242,51 @@ export const getEventsForUserPaginated = query({
       throw new ConvexError("User not found");
     }
 
-    // Get user's own events
-    const ownEventsQuery = ctx.db
-      .query("events")
-      .withIndex("by_user", (q) => q.eq("userId", user.id));
-
-    // Filter by upcoming/past and sort
-    let filteredQuery;
-    if (filter === "upcoming") {
-      filteredQuery = ownEventsQuery
-        .filter((q) => q.gte(q.field("endDateTime"), now.toISOString()))
-        .order("asc");
-    } else {
-      filteredQuery = ownEventsQuery
-        .filter((q) => q.lt(q.field("endDateTime"), now.toISOString()))
-        .order("desc");
-    }
-
-    const result = await filteredQuery.paginate(args.paginationOpts);
-
-    // Get followed events for this user
+    // Get followed event IDs efficiently
     const eventFollows = await ctx.db
       .query("eventFollows")
       .withIndex("by_user", (q) => q.eq("userId", user.id))
       .collect();
 
-    // Get followed events that match the filter
-    const followedEvents = [];
-    for (const follow of eventFollows) {
-      const event = await ctx.db
-        .query("events")
-        .withIndex("by_custom_id", (q) => q.eq("id", follow.eventId))
-        .unique();
+    const followedEventIds = new Set(eventFollows.map((ef) => ef.eventId));
 
-      if (event) {
-        const eventDate = new Date(event.endDateTime);
-        if (filter === "upcoming" ? eventDate >= now : eventDate < now) {
-          followedEvents.push(event);
-        }
+    // Create a single query that filters for events that are either:
+    // 1. Created by the user, OR
+    // 2. Followed by the user
+    // AND match the date filter
+    const eventsQuery = ctx.db.query("events").filter((q) => {
+      const dateFilter =
+        filter === "upcoming"
+          ? q.gte(q.field("endDateTime"), now.toISOString())
+          : q.lt(q.field("endDateTime"), now.toISOString());
+
+      const userFilter = q.eq(q.field("userId"), user.id);
+
+      // If there are no followed events, just filter by user
+      if (followedEventIds.size === 0) {
+        return q.and(dateFilter, userFilter);
       }
-    }
 
-    // Combine own events with followed events
-    const allEvents = [...result.page, ...followedEvents];
+      // Create OR conditions for followed events
+      const followedEventFilters = Array.from(followedEventIds).map((eventId) =>
+        q.eq(q.field("id"), eventId),
+      );
 
-    // Sort combined events
-    const sortedEvents = allEvents.sort((a, b) => {
-      if (filter === "upcoming") {
-        return (
-          new Date(a.startDateTime).getTime() -
-          new Date(b.startDateTime).getTime()
-        );
-      } else {
-        return (
-          new Date(b.startDateTime).getTime() -
-          new Date(a.startDateTime).getTime()
-        );
-      }
+      const eventFilter = q.or(userFilter, ...followedEventFilters);
+
+      return q.and(dateFilter, eventFilter);
     });
 
+    // Apply ordering and pagination
+    const orderedQuery =
+      filter === "upcoming"
+        ? eventsQuery.order("asc")
+        : eventsQuery.order("desc");
+
+    const result = await orderedQuery.paginate(args.paginationOpts);
+
     // Enrich events with user data, comments, and follows
-    const enrichedEvents = await Promise.all(
-      sortedEvents.map(async (event) => {
-        // Get event creator
-        const eventUser = await ctx.db
-          .query("users")
-          .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
-          .unique();
-
-        // Get comments for this event
-        const comments = await ctx.db
-          .query("comments")
-          .withIndex("by_event", (q) => q.eq("eventId", event.id))
-          .collect();
-
-        // Get follows for this event
-        const eventFollowsForEvent = await ctx.db
-          .query("eventFollows")
-          .withIndex("by_event", (q) => q.eq("eventId", event.id))
-          .collect();
-
-        return {
-          ...event,
-          startDateTime: event.startDateTime,
-          endDateTime: event.endDateTime,
-          createdAt: event.created_at,
-          updatedAt: event.updatedAt,
-          eventMetadata: event.eventMetadata ?? {},
-          user: eventUser
-            ? {
-                id: eventUser.id,
-                username: eventUser.username,
-                displayName: eventUser.displayName,
-                userImage: eventUser.userImage,
-                bio: eventUser.bio,
-                emoji: eventUser.emoji,
-                createdAt: eventUser.created_at,
-                updatedAt: eventUser.updatedAt,
-                email: eventUser.email,
-                publicEmail: eventUser.publicEmail,
-                publicPhone: eventUser.publicPhone,
-                publicInsta: eventUser.publicInsta,
-                publicWebsite: eventUser.publicWebsite,
-                publicMetadata: eventUser.publicMetadata,
-                onboardingData: eventUser.onboardingData,
-                onboardingCompletedAt: eventUser.onboardingCompletedAt,
-              }
-            : {
-                id: event.userId,
-                username: event.userName,
-                displayName: event.userName,
-                userImage: "",
-                bio: null,
-                emoji: null,
-                createdAt: new Date().toISOString(),
-                updatedAt: null,
-                email: "",
-                publicEmail: null,
-                publicPhone: null,
-                publicInsta: null,
-                publicWebsite: null,
-                publicMetadata: null,
-                onboardingData: null,
-                onboardingCompletedAt: null,
-              },
-          comments: comments.map((comment) => ({
-            id: comment.id,
-            content: comment.content,
-            userId: comment.userId,
-            eventId: comment.eventId,
-            oldId: comment.oldId,
-            createdAt: comment.created_at,
-            updatedAt: comment.updatedAt,
-          })),
-          eventFollows: eventFollowsForEvent.map((follow) => ({
-            userId: follow.userId,
-            eventId: follow.eventId,
-          })),
-        };
-      }),
-    );
+    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, result.page);
 
     return {
       ...result,
@@ -641,44 +425,6 @@ export const unfollow = mutation({
     }
 
     return await Events.unfollowEvent(ctx, identity.subject, args.id);
-  },
-});
-
-/**
- * Add event to list
- */
-export const addToList = mutation({
-  args: {
-    eventId: v.string(),
-    listId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError("User must be logged in to add events to lists");
-    }
-
-    await Events.addEventToList(ctx, args.eventId, args.listId);
-  },
-});
-
-/**
- * Remove event from list
- */
-export const removeFromList = mutation({
-  args: {
-    eventId: v.string(),
-    listId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError(
-        "User must be logged in to remove events from lists",
-      );
-    }
-
-    await Events.removeEventFromList(ctx, args.eventId, args.listId);
   },
 });
 

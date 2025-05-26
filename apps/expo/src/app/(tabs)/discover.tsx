@@ -10,7 +10,7 @@ import {
   useQuery,
 } from "convex/react";
 
-import { api } from "@soonlist/backend";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
 import { ConvexAuthExample } from "~/components/ConvexAuthExample";
@@ -56,7 +56,7 @@ function DiscoverContent() {
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const {
-    results: rawEvents,
+    results: events,
     status,
     loadMore,
     isLoading,
@@ -67,11 +67,6 @@ function DiscoverContent() {
       initialNumItems: 20,
     },
   );
-
-  // Transform Convex events to match component expectations
-  const events = useMemo(() => {
-    return rawEvents?.map(transformConvexEvent) ?? [];
-  }, [rawEvents]);
 
   const savedEventIdsQuery = useQuery(api.events.getSavedIdsForUser, {
     userName: user?.username ?? "",

@@ -1,27 +1,12 @@
+import type { FunctionReturnType } from "convex/server";
 import { differenceInMinutes } from "date-fns";
 
+import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
-import type {
-  Comment,
-  Event,
-  EventFollow,
-  EventToLists,
-  List,
-  User,
-} from "@soonlist/db/types";
 
 import { logDebug } from "./errorLogging";
 
-type EventToListsWithList = EventToLists & {
-  list: List;
-};
-
-export type EventWithUser = Event & {
-  user: User;
-  eventFollows: EventFollow[];
-  comments: Comment[];
-  eventToLists?: EventToListsWithList[];
-};
+type Event = NonNullable<FunctionReturnType<typeof api.events.get>>;
 
 // Cosine Similarity Functions
 function textToVector(text: string): Map<string, number> {
@@ -122,19 +107,16 @@ function isEventSimilar(
 export type SimilarityDetails = ReturnType<typeof isEventSimilar>;
 
 export type SimilarEvents = {
-  event: EventWithUser;
+  event: Event;
   similarityDetails: SimilarityDetails;
 }[];
 // Structure to store similarity info
 export interface EventWithSimilarity {
-  event: EventWithUser;
+  event: Event;
   similarEvents: SimilarEvents;
 }
 
-function collapseSimilarEvents(
-  events: EventWithUser[],
-  currentUserId?: string,
-) {
+function collapseSimilarEvents(events: Event[], currentUserId?: string) {
   // Define thresholds
   const startTimeThreshold = 60; // 60 minutes for start time
   const endTimeThreshold = 60; // 60 minutes for end time

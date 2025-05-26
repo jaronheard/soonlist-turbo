@@ -1,20 +1,21 @@
+import type { FunctionReturnType } from "convex/server";
 import { Linking, Share } from "react-native";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { useMutation } from "convex/react";
 import { toast } from "sonner-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
-import type { RouterOutputs } from "~/utils/api";
-import { api } from "~/utils/api";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { useCalendar } from "./useCalendar";
 
 interface UseEventActionsProps {
-  event: RouterOutputs["event"]["getUpcomingForUser"][number];
+  event: NonNullable<FunctionReturnType<typeof api.events.get>>;
   isSaved: boolean;
   demoMode?: boolean;
   onDelete?: () => Promise<void>;
@@ -26,35 +27,15 @@ export function useEventActions({
   demoMode = false,
   onDelete,
 }: UseEventActionsProps) {
-  const utils = api.useUtils();
   const { handleAddToCal: addToCalendar } = useCalendar();
   const { user } = useUser();
   const isOwner = demoMode || user?.id === event.user?.id;
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
 
-  const deleteEventMutation = api.event.delete.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
-    },
-  });
-
-  const unfollowEventMutation = api.event.unfollow.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
-    },
-  });
-
-  const followEventMutation = api.event.follow.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
-    },
-  });
-
-  const toggleVisibilityMutation = api.event.toggleVisibility.useMutation({
-    onSuccess: () => {
-      void utils.event.invalidate();
-    },
-  });
+  const deleteEventMutation = useMutation(api.events.deleteEvent);
+  const unfollowEventMutation = useMutation(api.events.unfollow);
+  const followEventMutation = useMutation(api.events.follow);
+  const toggleVisibilityMutation = useMutation(api.events.toggleVisibility);
 
   const triggerHaptic = () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -111,7 +92,7 @@ export function useEventActions({
     const action = newVisibility === "public" ? "Adding to" : "Removing from";
     const loadingToastId = toast.loading(`${action} Discover...`);
     try {
-      await toggleVisibilityMutation.mutateAsync({
+      await toggleVisibilityMutation({
         id: event.id,
         visibility: newVisibility,
       });
@@ -141,7 +122,7 @@ export function useEventActions({
       if (onDelete) {
         await onDelete();
       } else {
-        await deleteEventMutation.mutateAsync({ id: event.id });
+        await deleteEventMutation({ id: event.id });
       }
       toast.dismiss(loadingToastId);
       toast.success("Event deleted successfully");
@@ -156,7 +137,7 @@ export function useEventActions({
     triggerHaptic();
     const loadingToastId = toast.loading("Following event...");
     try {
-      await followEventMutation.mutateAsync({ id: event.id });
+      await followEventMutation({ id: event.id });
       toast.dismiss(loadingToastId);
       toast.success("Event followed");
     } catch (error) {
@@ -170,7 +151,7 @@ export function useEventActions({
     triggerHaptic();
     const loadingToastId = toast.loading("Unfollowing event...");
     try {
-      await unfollowEventMutation.mutateAsync({ id: event.id });
+      await unfollowEventMutation({ id: event.id });
       toast.dismiss(loadingToastId);
       toast.success("Event unfollowed");
     } catch (error) {

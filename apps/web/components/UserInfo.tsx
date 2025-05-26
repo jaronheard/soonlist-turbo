@@ -6,7 +6,7 @@ import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { Instagram, LinkIcon, Mail, MessageSquare } from "lucide-react";
 
-import { api } from "@soonlist/backend";
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button, buttonVariants } from "@soonlist/ui/button";
 
 import { UserProfileFlair } from "./UserProfileFlair";

@@ -6,7 +6,7 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import { useConvexAuth, useQuery } from "convex/react";
 import QRCode from "react-qr-code";
 
-import { api } from "@soonlist/backend";
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Badge } from "@soonlist/ui/badge";
 import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
