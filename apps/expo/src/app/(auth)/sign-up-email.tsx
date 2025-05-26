@@ -1,10 +1,11 @@
-import type { ClerkAPIError } from "@clerk/types";
-import * as React from "react";
+import React from "react";
 import { Linking, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, router, Stack } from "expo-router";
-import { useAuth, useSignUp } from "@clerk/clerk-expo";
+import { useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useConvexAuth } from "convex/react";
+import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -13,40 +14,42 @@ import { Logo } from "../../components/Logo";
 import { logError } from "../../utils/errorLogging";
 
 const signUpSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  username: z.string().min(4, "Username must be at least 4 characters long"),
   emailAddress: z.string().email("Invalid email format"),
-  password: z.string().min(8, "Password must be at least 8 characters long"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username must be 30 characters or less"),
 });
 
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpScreen() {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [generalError, setGeneralError] = React.useState("");
   const { isLoaded, signUp } = useSignUp();
-  const { isSignedIn } = useAuth();
+  const posthog = usePostHog();
+  const { isAuthenticated } = useConvexAuth();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
   );
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      username: "",
       emailAddress: "",
       password: "",
+      username: "",
     },
+    mode: "onChange",
   });
 
-  if (isSignedIn && hasCompletedOnboarding) {
+  if (isAuthenticated && hasCompletedOnboarding) {
     return <Redirect href="/feed" />;
-  } else if (isSignedIn && !hasCompletedOnboarding) {
+  } else if (isAuthenticated && !hasCompletedOnboarding) {
     return <Redirect href="/onboarding" />;
   }
 

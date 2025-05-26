@@ -1,122 +1,118 @@
-import * as React from "react";
+import React from "react";
 import { Linking, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, router, Stack } from "expo-router";
-import { useAuth, useSignIn } from "@clerk/clerk-expo";
+import { useSignIn } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useConvexAuth } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useAppStore } from "~/store";
-import { logError } from "~/utils/errorLogging";
 import { Logo } from "../../components/Logo";
+import { logError } from "../../utils/errorLogging";
 
 const signInSchema = z.object({
-  emailAddress: z.string().email("Invalid email format"),
+  email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
 });
 
 type SignInFormData = z.infer<typeof signInSchema>;
 
-export default function SignInScreen() {
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+const SignInEmail = () => {
+  const [isSigningIn, setIsSigningIn] = React.useState(false);
   const [generalError, setGeneralError] = React.useState("");
-  const { isLoaded, signIn, setActive } = useSignIn();
+  const { signIn, setActive } = useSignIn();
   const posthog = usePostHog();
-  const { isSignedIn } = useAuth();
+  const { isAuthenticated } = useConvexAuth();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
   );
   const {
     control,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
-      emailAddress: "",
+      email: "",
       password: "",
     },
-    mode: "onChange",
   });
 
-  if (isSignedIn && hasCompletedOnboarding) {
+  if (isAuthenticated && hasCompletedOnboarding) {
     return <Redirect href="/feed" />;
-  } else if (isSignedIn && !hasCompletedOnboarding) {
+  } else if (isAuthenticated && !hasCompletedOnboarding) {
     return <Redirect href="/onboarding" />;
   }
 
   const onSignInPress = async (data: SignInFormData) => {
-    if (!isLoaded || isSubmitting) return;
+    if (!isSigningIn) {
+      setIsSigningIn(true);
+      setGeneralError("");
 
-    setIsSubmitting(true);
-    setGeneralError("");
-
-    try {
-      const completeSignIn = await signIn.create({
-        identifier: data.emailAddress.trim(),
-        password: data.password,
-      });
-
-      if (completeSignIn.status === "complete") {
-        posthog.identify(data.emailAddress, {
-          email: data.emailAddress,
+      try {
+        const completeSignIn = await signIn.create({
+          identifier: data.email.trim(),
+          password: data.password,
         });
-        await setActive({ session: completeSignIn.createdSessionId });
-      } else {
-        setGeneralError("Additional verification required");
-      }
-    } catch (err: unknown) {
-      logError("Error during sign in", err, {
-        name: err instanceof Error ? err.name : "Unknown",
-        message: err instanceof Error ? err.message : "Unknown error",
-        stack: err instanceof Error ? err.stack : undefined,
-      });
 
-      if (err instanceof Error) {
-        const clerkError = err as {
-          errors?: { message: string; code: string }[];
-        };
-        if (clerkError.errors?.[0]) {
-          const errorDetails = clerkError.errors[0];
-          logError("Clerk error details", new Error(errorDetails.message), {
-            code: errorDetails.code,
-            message: errorDetails.message,
+        if (completeSignIn.status === "complete") {
+          posthog.identify(data.email, {
+            email: data.email,
           });
+          await setActive({ session: completeSignIn.createdSessionId });
+        } else {
+          setGeneralError("Additional verification required");
+        }
+      } catch (err: unknown) {
+        logError("Error during sign in", err, {
+          name: err instanceof Error ? err.name : "Unknown",
+          message: err instanceof Error ? err.message : "Unknown error",
+          stack: err instanceof Error ? err.stack : undefined,
+        });
 
-          switch (errorDetails.code) {
-            case "form_identifier_not_found":
-              setGeneralError("No account found with this email address");
-              break;
-            case "form_password_incorrect":
-              setGeneralError("Incorrect password");
-              break;
-            case "form_identifier_verification_failed":
-              setGeneralError("Email verification required");
-              break;
-            case "rate_limit_exceeded":
-              setGeneralError("Too many attempts. Please try again later");
-              break;
-            default:
-              setGeneralError(
-                errorDetails.message || "An error occurred during sign in",
-              );
+        if (err instanceof Error) {
+          const clerkError = err as {
+            errors?: { message: string; code: string }[];
+          };
+          if (clerkError.errors?.[0]) {
+            const errorDetails = clerkError.errors[0];
+            logError("Clerk error details", new Error(errorDetails.message), {
+              code: errorDetails.code,
+              message: errorDetails.message,
+            });
+
+            switch (errorDetails.code) {
+              case "form_identifier_not_found":
+                setGeneralError("No account found with this email address");
+                break;
+              case "form_password_incorrect":
+                setGeneralError("Incorrect password");
+                break;
+              case "form_identifier_verification_failed":
+                setGeneralError("Email verification required");
+                break;
+              case "rate_limit_exceeded":
+                setGeneralError("Too many attempts. Please try again later");
+                break;
+              default:
+                setGeneralError(
+                  errorDetails.message || "An error occurred during sign in",
+                );
+            }
+          } else {
+            setGeneralError(err.message);
           }
         } else {
-          setGeneralError(err.message);
+          setGeneralError("An unexpected error occurred. Please try again");
         }
-      } else {
-        setGeneralError("An unexpected error occurred. Please try again");
+      } finally {
+        setIsSigningIn(false);
       }
-    } finally {
-      setIsSubmitting(false);
     }
   };
-
-  if (!isLoaded) {
-    return <Text>Loading...</Text>;
-  }
 
   return (
     <KeyboardAwareScrollView
@@ -154,7 +150,7 @@ export default function SignInScreen() {
           <View className="mb-4 w-full">
             <Controller
               control={control}
-              name="emailAddress"
+              name="email"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
                   autoCapitalize="none"
@@ -165,18 +161,16 @@ export default function SignInScreen() {
                   onBlur={onBlur}
                   placeholder="Email"
                   className={`mb-2 w-full rounded-lg border ${
-                    errors.emailAddress ? "border-red-500" : "border-gray-300"
+                    errors.email ? "border-red-500" : "border-gray-300"
                   } bg-white px-4 py-3`}
                   returnKeyType="next"
                   keyboardType="email-address"
-                  editable={!isSubmitting}
+                  editable={!isSigningIn}
                 />
               )}
             />
-            {errors.emailAddress && (
-              <Text className="text-red-500">
-                {errors.emailAddress.message}
-              </Text>
+            {errors.email && (
+              <Text className="text-red-500">{errors.email.message}</Text>
             )}
           </View>
 
@@ -199,7 +193,7 @@ export default function SignInScreen() {
                   } bg-white px-4 py-3`}
                   returnKeyType="done"
                   onSubmitEditing={handleSubmit(onSignInPress)}
-                  editable={!isSubmitting}
+                  editable={!isSigningIn}
                 />
               )}
             />
@@ -210,13 +204,15 @@ export default function SignInScreen() {
 
           <Pressable
             onPress={handleSubmit(onSignInPress)}
-            disabled={isSubmitting || !isValid}
+            disabled={isSigningIn || !errors.email || !errors.password}
             className={`w-full rounded-full px-6 py-3 ${
-              isSubmitting || !isValid ? "bg-gray-400" : "bg-interactive-1"
+              isSigningIn || !errors.email || !errors.password
+                ? "bg-gray-400"
+                : "bg-interactive-1"
             }`}
           >
             <Text className="text-center text-lg font-bold text-white">
-              {isSubmitting ? "Signing in..." : "Sign in"}
+              {isSigningIn ? "Signing in..." : "Sign in"}
             </Text>
           </Pressable>
 
@@ -243,4 +239,6 @@ export default function SignInScreen() {
       </View>
     </KeyboardAwareScrollView>
   );
-}
+};
+
+export default SignInEmail;

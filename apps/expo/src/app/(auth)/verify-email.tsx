@@ -2,8 +2,9 @@ import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, Stack } from "expo-router";
-import { useAuth, useSignUp } from "@clerk/clerk-expo";
+import { useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useConvexAuth } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -26,7 +27,7 @@ const VerifyEmail = () => {
   const [generalError, setGeneralError] = React.useState("");
   const { signUp, setActive } = useSignUp();
   const posthog = usePostHog();
-  const { isSignedIn } = useAuth();
+  const { isAuthenticated } = useConvexAuth();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
   );
@@ -41,9 +42,9 @@ const VerifyEmail = () => {
     },
   });
 
-  if (isSignedIn && hasCompletedOnboarding) {
+  if (isAuthenticated && hasCompletedOnboarding) {
     return <Redirect href="/feed" />;
-  } else if (isSignedIn && !hasCompletedOnboarding) {
+  } else if (isAuthenticated && !hasCompletedOnboarding) {
     return <Redirect href="/onboarding" />;
   }
 

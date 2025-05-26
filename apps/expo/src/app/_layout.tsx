@@ -27,6 +27,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
+import { AuthErrorBoundary } from "~/components/AuthErrorBoundary";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
 import { useCalendar } from "~/hooks/useCalendar";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
@@ -297,7 +298,9 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <AuthAndTokenSync />
-      <InitialLayout />
+      <AuthErrorBoundary>
+        <InitialLayout />
+      </AuthErrorBoundary>
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
       <CalendarSelectionModal
         onSelect={handleCalendarSelect}
