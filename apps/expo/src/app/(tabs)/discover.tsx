@@ -1,8 +1,14 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { usePaginatedQuery, useQuery } from "convex/react";
+import {
+  Authenticated,
+  AuthLoading,
+  Unauthenticated,
+  usePaginatedQuery,
+  useQuery,
+} from "convex/react";
 
 import { api } from "@soonlist/backend";
 
@@ -14,14 +20,43 @@ import UserEventsList from "~/components/UserEventsList";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { getPlanStatusFromUser } from "~/utils/plan";
 
-export default function Page() {
-  const { user, isLoaded, isSignedIn } = useUser();
+// Type adapter to transform Convex data to match component expectations
+function transformConvexEvent(convexEvent: any) {
+  return {
+    ...convexEvent,
+    startDateTime: new Date(convexEvent.startDateTime),
+    endDateTime: new Date(convexEvent.endDateTime),
+    createdAt: new Date(convexEvent.createdAt),
+    updatedAt: convexEvent.updatedAt ? new Date(convexEvent.updatedAt) : null,
+    user: convexEvent.user
+      ? {
+          ...convexEvent.user,
+          createdAt: new Date(convexEvent.user.createdAt),
+          updatedAt: convexEvent.user.updatedAt
+            ? new Date(convexEvent.user.updatedAt)
+            : null,
+          onboardingCompletedAt: convexEvent.user.onboardingCompletedAt
+            ? new Date(convexEvent.user.onboardingCompletedAt)
+            : null,
+        }
+      : convexEvent.user,
+    comments:
+      convexEvent.comments?.map((comment: any) => ({
+        ...comment,
+        createdAt: new Date(comment.createdAt),
+        updatedAt: comment.updatedAt ? new Date(comment.updatedAt) : null,
+      })) || [],
+  };
+}
+
+function DiscoverContent() {
+  const { user } = useUser();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const {
-    results: events,
+    results: rawEvents,
     status,
     loadMore,
     isLoading,
@@ -32,6 +67,11 @@ export default function Page() {
       initialNumItems: 20,
     },
   );
+
+  // Transform Convex events to match component expectations
+  const events = useMemo(() => {
+    return rawEvents?.map(transformConvexEvent) ?? [];
+  }, [rawEvents]);
 
   const savedEventIdsQuery = useQuery(api.events.getSavedIdsForUser, {
     userName: user?.username ?? "",
@@ -48,18 +88,7 @@ export default function Page() {
     }
   }, [status, loadMore]);
 
-  if (!isLoaded) {
-    return (
-      <View className="flex-1 bg-white">
-        <LoadingSpinner />
-      </View>
-    );
-  }
-
-  if (!isSignedIn) {
-    return <Redirect href="/sign-in" />;
-  }
-
+  // Check if user has access to discover feature after all hooks
   if (!user) {
     return <Redirect href="/sign-in" />;
   }
@@ -88,7 +117,7 @@ export default function Page() {
       ) : (
         <View className="flex-1">
           <UserEventsList
-            events={events ?? []}
+            events={events}
             isRefetching={status === "LoadingMore"}
             onRefresh={onRefresh}
             onEndReached={handleLoadMore}
@@ -102,5 +131,25 @@ export default function Page() {
         </View>
       )}
     </View>
+  );
+}
+
+export default function Page() {
+  return (
+    <>
+      <AuthLoading>
+        <View className="flex-1 bg-white">
+          <LoadingSpinner />
+        </View>
+      </AuthLoading>
+
+      <Unauthenticated>
+        <Redirect href="/sign-in" />
+      </Unauthenticated>
+
+      <Authenticated>
+        <DiscoverContent />
+      </Authenticated>
+    </>
   );
 }

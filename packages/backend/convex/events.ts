@@ -246,10 +246,10 @@ export const getDiscoverPaginated = query({
 
         return {
           ...event,
-          startDateTime: new Date(event.startDateTime),
-          endDateTime: new Date(event.endDateTime),
-          createdAt: new Date(event.created_at),
-          updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+          startDateTime: event.startDateTime,
+          endDateTime: event.endDateTime,
+          createdAt: event.created_at,
+          updatedAt: event.updatedAt,
           eventMetadata: event.eventMetadata ?? {},
           user: eventUser
             ? {
@@ -259,10 +259,8 @@ export const getDiscoverPaginated = query({
                 userImage: eventUser.userImage,
                 bio: eventUser.bio,
                 emoji: eventUser.emoji,
-                createdAt: new Date(eventUser.created_at),
-                updatedAt: eventUser.updatedAt
-                  ? new Date(eventUser.updatedAt)
-                  : null,
+                createdAt: eventUser.created_at,
+                updatedAt: eventUser.updatedAt,
                 email: eventUser.email,
                 publicEmail: eventUser.publicEmail,
                 publicPhone: eventUser.publicPhone,
@@ -270,9 +268,7 @@ export const getDiscoverPaginated = query({
                 publicWebsite: eventUser.publicWebsite,
                 publicMetadata: eventUser.publicMetadata,
                 onboardingData: eventUser.onboardingData,
-                onboardingCompletedAt: eventUser.onboardingCompletedAt
-                  ? new Date(eventUser.onboardingCompletedAt)
-                  : null,
+                onboardingCompletedAt: eventUser.onboardingCompletedAt,
               }
             : {
                 id: event.userId,
@@ -281,7 +277,7 @@ export const getDiscoverPaginated = query({
                 userImage: "",
                 bio: null,
                 emoji: null,
-                createdAt: new Date(),
+                createdAt: new Date().toISOString(),
                 updatedAt: null,
                 email: "",
                 publicEmail: null,
@@ -297,8 +293,9 @@ export const getDiscoverPaginated = query({
             content: comment.content,
             userId: comment.userId,
             eventId: comment.eventId,
-            createdAt: new Date(comment.created_at),
-            updatedAt: comment.updatedAt ? new Date(comment.updatedAt) : null,
+            oldId: comment.oldId,
+            createdAt: comment.created_at,
+            updatedAt: comment.updatedAt,
           })),
           eventFollows: eventFollowsForEvent.map((follow) => ({
             userId: follow.userId,
@@ -448,10 +445,10 @@ export const getEventsForUserPaginated = query({
 
         return {
           ...event,
-          startDateTime: new Date(event.startDateTime),
-          endDateTime: new Date(event.endDateTime),
-          createdAt: new Date(event.created_at),
-          updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+          startDateTime: event.startDateTime,
+          endDateTime: event.endDateTime,
+          createdAt: event.created_at,
+          updatedAt: event.updatedAt,
           eventMetadata: event.eventMetadata ?? {},
           user: eventUser
             ? {
@@ -461,10 +458,8 @@ export const getEventsForUserPaginated = query({
                 userImage: eventUser.userImage,
                 bio: eventUser.bio,
                 emoji: eventUser.emoji,
-                createdAt: new Date(eventUser.created_at),
-                updatedAt: eventUser.updatedAt
-                  ? new Date(eventUser.updatedAt)
-                  : null,
+                createdAt: eventUser.created_at,
+                updatedAt: eventUser.updatedAt,
                 email: eventUser.email,
                 publicEmail: eventUser.publicEmail,
                 publicPhone: eventUser.publicPhone,
@@ -472,9 +467,7 @@ export const getEventsForUserPaginated = query({
                 publicWebsite: eventUser.publicWebsite,
                 publicMetadata: eventUser.publicMetadata,
                 onboardingData: eventUser.onboardingData,
-                onboardingCompletedAt: eventUser.onboardingCompletedAt
-                  ? new Date(eventUser.onboardingCompletedAt)
-                  : null,
+                onboardingCompletedAt: eventUser.onboardingCompletedAt,
               }
             : {
                 id: event.userId,
@@ -483,7 +476,7 @@ export const getEventsForUserPaginated = query({
                 userImage: "",
                 bio: null,
                 emoji: null,
-                createdAt: new Date(),
+                createdAt: new Date().toISOString(),
                 updatedAt: null,
                 email: "",
                 publicEmail: null,
@@ -499,8 +492,9 @@ export const getEventsForUserPaginated = query({
             content: comment.content,
             userId: comment.userId,
             eventId: comment.eventId,
-            createdAt: new Date(comment.created_at),
-            updatedAt: comment.updatedAt ? new Date(comment.updatedAt) : null,
+            oldId: comment.oldId,
+            createdAt: comment.created_at,
+            updatedAt: comment.updatedAt,
           })),
           eventFollows: eventFollowsForEvent.map((follow) => ({
             userId: follow.userId,

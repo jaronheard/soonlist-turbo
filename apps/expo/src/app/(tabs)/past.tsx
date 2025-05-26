@@ -1,8 +1,13 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { usePaginatedQuery } from "convex/react";
+import {
+  Authenticated,
+  AuthLoading,
+  Unauthenticated,
+  usePaginatedQuery,
+} from "convex/react";
 
 import { api } from "@soonlist/backend";
 
@@ -11,14 +16,43 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 
-export default function PastEvents() {
-  const { user, isLoaded, isSignedIn } = useUser();
+// Type adapter to transform Convex data to match component expectations
+function transformConvexEvent(convexEvent: any) {
+  return {
+    ...convexEvent,
+    startDateTime: new Date(convexEvent.startDateTime),
+    endDateTime: new Date(convexEvent.endDateTime),
+    createdAt: new Date(convexEvent.createdAt),
+    updatedAt: convexEvent.updatedAt ? new Date(convexEvent.updatedAt) : null,
+    user: convexEvent.user
+      ? {
+          ...convexEvent.user,
+          createdAt: new Date(convexEvent.user.createdAt),
+          updatedAt: convexEvent.user.updatedAt
+            ? new Date(convexEvent.user.updatedAt)
+            : null,
+          onboardingCompletedAt: convexEvent.user.onboardingCompletedAt
+            ? new Date(convexEvent.user.onboardingCompletedAt)
+            : null,
+        }
+      : convexEvent.user,
+    comments:
+      convexEvent.comments?.map((comment: any) => ({
+        ...comment,
+        createdAt: new Date(comment.createdAt),
+        updatedAt: comment.updatedAt ? new Date(comment.updatedAt) : null,
+      })) || [],
+  };
+}
+
+function PastEventsContent() {
+  const { user } = useUser();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const {
-    results: events,
+    results: rawEvents,
     status,
     loadMore,
     isLoading,
@@ -33,6 +67,11 @@ export default function PastEvents() {
     },
   );
 
+  // Transform Convex events to match component expectations
+  const events = useMemo(() => {
+    return rawEvents?.map(transformConvexEvent) ?? [];
+  }, [rawEvents]);
+
   const handleLoadMore = useCallback(() => {
     if (status === "CanLoadMore") {
       loadMore(20);
@@ -44,18 +83,6 @@ export default function PastEvents() {
     // The usePaginatedQuery will automatically update when data changes
   }, []);
 
-  if (!isLoaded) {
-    return (
-      <View className="flex-1 bg-white">
-        <LoadingSpinner />
-      </View>
-    );
-  }
-
-  if (!isSignedIn) {
-    return <Redirect href="/sign-in" />;
-  }
-
   return (
     <View className="flex-1 bg-white">
       {isLoading && status === "LoadingFirstPage" ? (
@@ -63,7 +90,7 @@ export default function PastEvents() {
       ) : (
         <View className="flex-1">
           <UserEventsList
-            events={events ?? []}
+            events={events}
             onRefresh={onRefresh}
             onEndReached={handleLoadMore}
             showCreator="savedFromOthers"
@@ -75,5 +102,25 @@ export default function PastEvents() {
         </View>
       )}
     </View>
+  );
+}
+
+export default function PastEvents() {
+  return (
+    <>
+      <AuthLoading>
+        <View className="flex-1 bg-white">
+          <LoadingSpinner />
+        </View>
+      </AuthLoading>
+
+      <Unauthenticated>
+        <Redirect href="/sign-in" />
+      </Unauthenticated>
+
+      <Authenticated>
+        <PastEventsContent />
+      </Authenticated>
+    </>
   );
 }

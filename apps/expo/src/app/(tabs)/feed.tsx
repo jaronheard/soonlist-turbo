@@ -1,9 +1,14 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutationState } from "@tanstack/react-query";
-import { usePaginatedQuery } from "convex/react";
+import {
+  Authenticated,
+  AuthLoading,
+  Unauthenticated,
+  usePaginatedQuery,
+} from "convex/react";
 
 import { api } from "@soonlist/backend";
 
@@ -12,22 +17,50 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
-import { api as tRPCApi } from "~/utils/api";
 
-function MyFeed() {
-  const { user, isLoaded, isSignedIn } = useUser();
-  const { hasCompletedOnboarding } = useAppStore();
+// Type adapter to transform Convex data to match component expectations
+function transformConvexEvent(convexEvent: any) {
+  return {
+    ...convexEvent,
+    startDateTime: new Date(convexEvent.startDateTime),
+    endDateTime: new Date(convexEvent.endDateTime),
+    createdAt: new Date(convexEvent.createdAt),
+    updatedAt: convexEvent.updatedAt ? new Date(convexEvent.updatedAt) : null,
+    user: convexEvent.user
+      ? {
+          ...convexEvent.user,
+          createdAt: new Date(convexEvent.user.createdAt),
+          updatedAt: convexEvent.user.updatedAt
+            ? new Date(convexEvent.user.updatedAt)
+            : null,
+          onboardingCompletedAt: convexEvent.user.onboardingCompletedAt
+            ? new Date(convexEvent.user.onboardingCompletedAt)
+            : null,
+        }
+      : convexEvent.user,
+    comments:
+      convexEvent.comments?.map((comment: any) => ({
+        ...comment,
+        createdAt: new Date(comment.createdAt),
+        updatedAt: comment.updatedAt ? new Date(comment.updatedAt) : null,
+      })) || [],
+  };
+}
+
+function MyFeedContent() {
+  const { user } = useUser();
+  // const { hasCompletedOnboarding } = useAppStore();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  const userQuery = tRPCApi.user.getById.useQuery(
-    { id: user?.id ?? "" },
-    { enabled: isLoaded && isSignedIn && !!user?.id },
-  );
+  // const userQuery = tRPCApi.user.getById.useQuery(
+  //   { id: user?.id ?? "" },
+  //   { enabled: !!user?.id },
+  // );
 
   const {
-    results: events,
+    results: rawEvents,
     status,
     loadMore,
     isLoading,
@@ -42,9 +75,10 @@ function MyFeed() {
     },
   );
 
-  const statsQuery = tRPCApi.event.getStats.useQuery({
-    userName: user?.username ?? "",
-  });
+  // Transform Convex events to match component expectations
+  const events = useMemo(() => {
+    return rawEvents?.map(transformConvexEvent) ?? [];
+  }, [rawEvents]);
 
   const onRefresh = useCallback(async () => {
     // Convex queries are automatically reactive, so we don't need manual refresh
@@ -66,24 +100,11 @@ function MyFeed() {
 
   const isAddingEvent = pendingAIMutations.length > 0;
 
-  const noLifetimeCaptures = statsQuery.data?.allTimeEvents === 0;
-
-  if (!isLoaded) {
-    return (
-      <View className="flex-1 bg-white">
-        <LoadingSpinner />
-      </View>
-    );
-  }
-
-  if (!isSignedIn) {
-    return <Redirect href="/sign-in" />;
-  }
-
-  const dbHasCompletedOnboarding = !!userQuery.data?.onboardingCompletedAt;
-  if (!hasCompletedOnboarding && !dbHasCompletedOnboarding) {
-    return <Redirect href="/(onboarding)/onboarding" />;
-  }
+  // Check onboarding status after all hooks
+  // const dbHasCompletedOnboarding = !!userQuery.data?.onboardingCompletedAt;
+  // if (!hasCompletedOnboarding && !dbHasCompletedOnboarding) {
+  //   return <Redirect href="/(onboarding)/onboarding" />;
+  // }
 
   return (
     <View className="flex-1 bg-white">
@@ -92,23 +113,40 @@ function MyFeed() {
       ) : (
         <View className="flex-1">
           <UserEventsList
-            events={events ?? []}
+            events={events}
             isRefetching={status === "LoadingMore"}
             onRefresh={onRefresh}
             onEndReached={handleLoadMore}
             isFetchingNextPage={status === "LoadingMore"}
             showCreator="savedFromOthers"
-            stats={statsQuery.data}
+            stats={undefined}
             promoCard={{ type: "addEvents" }}
             hasUnlimited={hasUnlimited}
           />
-          <AddEventButton
-            showChevron={noLifetimeCaptures}
-            stats={statsQuery.data}
-          />
+          <AddEventButton stats={undefined} />
         </View>
       )}
     </View>
+  );
+}
+
+function MyFeed() {
+  return (
+    <>
+      <AuthLoading>
+        <View className="flex-1 bg-white">
+          <LoadingSpinner />
+        </View>
+      </AuthLoading>
+
+      <Unauthenticated>
+        <Redirect href="/sign-in" />
+      </Unauthenticated>
+
+      <Authenticated>
+        <MyFeedContent />
+      </Authenticated>
+    </>
   );
 }
 

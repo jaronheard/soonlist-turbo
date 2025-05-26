@@ -76,10 +76,14 @@ export function TRPCProvider(props: { children: React.ReactNode }) {
           async headers() {
             const authToken = await getToken();
             const headers: Record<string, string> = {
-              Authorization: authToken ?? "",
               // Set a custom User-Agent header
               "User-Agent": "SoonList-Expo-App/1.0",
             };
+
+            // Only add Authorization header if we have a token
+            if (authToken) {
+              headers.Authorization = authToken;
+            }
 
             return headers;
           },
