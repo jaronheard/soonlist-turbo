@@ -13,7 +13,6 @@ import { FullPageLoadingSpinner } from "~/components/FullPageLoadingSpinner";
 import { HelpButton } from "~/components/HelpButton";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { api } from "~/trpc/react";
-import { EmojiPicker } from "./EmojiPicker";
 import { OnboardingTabs } from "./OnboardingTabs";
 
 const HOST =
@@ -43,8 +42,8 @@ export function TestFlightInstall({ title }: TestFlightInstallProps) {
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
         <p className="text-center text-lg">
-          We're using Apple's TestFlight to provide access to Soonlist for
-          Founding Members.
+          Download the Soonlist app from the App Store to get started with
+          saving and sharing events.
         </p>
         {isIOS === null ? (
           <div className="h-48 w-full animate-pulse bg-gray-200" />
@@ -52,25 +51,21 @@ export function TestFlightInstall({ title }: TestFlightInstallProps) {
           <>
             <Button asChild className="h-16 w-full max-w-xs text-xl">
               <a
-                href="https://testflight.apple.com/join/AjmerTKm"
+                href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Install iOS App
+                Download iOS App
               </a>
             </Button>
             <p className="text-center text-sm font-medium text-muted-foreground">
-              <span className="font-medium text-destructive">
-                Important: tap both buttons on linked page!
-              </span>
-              <br />
-              Step 1 installs TestFlight, Step 2 installs Soonlist.
+              Available now on the App Store
             </p>
           </>
         ) : (
           <>
             <p className="text-center text-lg font-medium text-destructive">
-              Please switch to your iPhone to install the Soonlist app.
+              Please switch to your iPhone to download the Soonlist app.
             </p>
             <div className="flex flex-col items-center gap-2">
               <p className="text-center text-sm text-muted-foreground">
@@ -135,8 +130,8 @@ export function GetStartedClient() {
           </span>
         </h1>
         <p>
-          Thank you for becoming a founding member! We can't wait for you to try
-          Soonlist and to make it even better with you.
+          Thank you for joining Soonlist! We can't wait for you to try Soonlist
+          and to make it even better with you.
         </p>
         <p className="-mt-4 ml-4">
           💖 <span className="font-medium italic">Jaron</span> & 🙏{" "}
@@ -178,9 +173,6 @@ export function GetStartedClient() {
               </Button>
             </div>
           </div>
-          <div className="flex w-full justify-center">
-            <EmojiPicker currentEmoji={user?.emoji || undefined} />
-          </div>
         </CardContent>
       </Card>
 
@@ -205,8 +197,6 @@ export function GetStartedClient() {
           />
         </CardContent>
       </Card>
-
-      <TestFlightInstall title="3. Install the Soonlist App" />
     </div>
   );
 }
