@@ -641,7 +641,7 @@ function EventActionButtons({
         {visibility !== "private" && (
           <Link
             className="text-lg font-medium leading-none text-neutral-2"
-            href={`/${user.username}/events`}
+            href={`/${user.username}/upcoming`}
           >
             added by @{user.username}
           </Link>
@@ -652,7 +652,7 @@ function EventActionButtons({
           </div>
         )}
         <Link
-          href={`/${user.username}/events`}
+          href={`/${user.username}/upcoming`}
           className="box-content block size-[2.625rem] shrink-0 rounded-full border-4 border-accent-yellow"
         >
           <Image
@@ -697,7 +697,10 @@ export function UserInfoMini({
 }: Omit<UserInfoMiniProps, "displayName">) {
   return (
     <div className="flex items-center gap-0.5">
-      <Link href={`/${username}/events`} className="relative flex items-center">
+      <Link
+        href={`/${username}/upcoming`}
+        className="relative flex items-center"
+      >
         <UserProfileFlair username={username} size="xs">
           <Image
             className="inline-block size-3 rounded-full object-cover object-center"
@@ -708,7 +711,7 @@ export function UserInfoMini({
           />
         </UserProfileFlair>
       </Link>
-      <Link href={`/${username}/events`} className="group flex items-center">
+      <Link href={`/${username}/upcoming`} className="group flex items-center">
         <p className="text-xs text-neutral-2 group-hover:text-neutral-1">
           @{username}
         </p>

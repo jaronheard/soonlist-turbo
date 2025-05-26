@@ -47,7 +47,7 @@ export async function UserInfo(props: UserInfoProps) {
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-6">
           <Link
-            href={`/${user.username}/events`}
+            href={`/${user.username}/upcoming`}
             className="relative flex-shrink-0"
           >
             <UserProfileFlair username={user.username} size="2xl">
@@ -61,7 +61,7 @@ export async function UserInfo(props: UserInfoProps) {
             </UserProfileFlair>
           </Link>
           <div className="flex flex-col overflow-hidden">
-            <Link href={`/${user.username}/events`}>
+            <Link href={`/${user.username}/upcoming`}>
               <p className=" text-2xl font-bold text-neutral-1">
                 {user.displayName}
               </p>
@@ -117,7 +117,7 @@ export async function UserInfo(props: UserInfoProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-3">
-        <Link href={`/${user.username}/events`}>
+        <Link href={`/${user.username}/upcoming`}>
           <UserProfileFlair username={user.username}>
             <Image
               className="inline-block size-9 rounded-full object-cover object-center"
@@ -128,7 +128,7 @@ export async function UserInfo(props: UserInfoProps) {
             />
           </UserProfileFlair>
         </Link>
-        <Link href={`/${user.username}/events`} className="group">
+        <Link href={`/${user.username}/upcoming`} className="group">
           <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
             {user.displayName}
           </p>

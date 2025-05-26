@@ -124,7 +124,7 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: "/:userName/users",
+        source: "/users",
         destination: "/",
         permanent: true,
       },
