@@ -6,23 +6,37 @@ export default defineSchema({
     content: v.string(),
     eventId: v.string(),
     userId: v.string(),
-    oldId: v.optional(v.string()), // for migration
+    id: v.number(),
+    oldId: v.union(v.string(), v.null()),
+    created_at: v.string(), // ISO date string
+    updatedAt: v.union(v.string(), v.null()), // ISO date string or null
   })
     .index("by_event", ["eventId"])
     .index("by_user", ["userId"]),
 
   events: defineTable({
-    id: v.string(), // keeping the custom id field
+    id: v.string(),
     userId: v.string(),
     userName: v.string(),
     event: v.any(), // JSON field
-    eventMetadata: v.optional(v.any()), // JSON field
-    endDateTime: v.number(), // timestamp
-    startDateTime: v.number(), // timestamp
+    endDateTime: v.string(), // ISO date string
+    startDateTime: v.string(), // ISO date string
     visibility: v.union(v.literal("public"), v.literal("private")),
+    created_at: v.string(), // ISO date string
+    updatedAt: v.union(v.string(), v.null()), // ISO date string or null
+    // Fields extracted from nested event object
+    name: v.optional(v.string()),
+    image: v.optional(v.union(v.string(), v.null())), // First image from images array or null
+    endDate: v.optional(v.string()),
+    endTime: v.optional(v.string()),
+    location: v.optional(v.string()),
+    timeZone: v.optional(v.string()),
+    startDate: v.optional(v.string()),
+    startTime: v.optional(v.string()),
+    description: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
-    .index("by_id", ["id"]),
+    .index("by_custom_id", ["id"]),
 
   eventToLists: defineTable({
     eventId: v.string(),
@@ -62,9 +76,11 @@ export default defineSchema({
     name: v.string(),
     description: v.string(),
     visibility: v.union(v.literal("public"), v.literal("private")),
+    created_at: v.string(), // ISO date string
+    updatedAt: v.union(v.string(), v.null()), // ISO date string or null
   })
     .index("by_user", ["userId"])
-    .index("by_id", ["id"]),
+    .index("by_custom_id", ["id"]),
 
   requestResponses: defineTable({
     modelOutput: v.optional(v.any()), // JSON field
@@ -81,24 +97,29 @@ export default defineSchema({
     email: v.string(),
     displayName: v.string(),
     userImage: v.string(),
-    bio: v.optional(v.string()),
-    publicEmail: v.optional(v.string()),
-    publicPhone: v.optional(v.string()),
-    publicInsta: v.optional(v.string()),
-    publicWebsite: v.optional(v.string()),
-    publicMetadata: v.optional(v.any()), // JSON field
-    emoji: v.optional(v.string()),
+    bio: v.union(v.string(), v.null()),
+    publicEmail: v.union(v.string(), v.null()),
+    publicPhone: v.union(v.string(), v.null()),
+    publicInsta: v.union(v.string(), v.null()),
+    publicWebsite: v.union(v.string(), v.null()),
+    publicMetadata: v.union(v.any(), v.null()), // JSON field
+    emoji: v.union(v.string(), v.null()),
     // Onboarding fields
-    onboardingData: v.optional(v.any()), // JSON field
-    onboardingCompletedAt: v.optional(v.number()), // timestamp
+    onboardingData: v.union(v.any(), v.null()), // JSON field
+    onboardingCompletedAt: v.union(v.string(), v.null()), // ISO date string or null
+    created_at: v.string(), // ISO date string
+    updatedAt: v.union(v.string(), v.null()), // ISO date string or null
   })
     .index("by_username", ["username"])
     .index("by_email", ["email"])
-    .index("by_id", ["id"]),
+    .index("by_custom_id", ["id"]),
 
   pushTokens: defineTable({
     userId: v.string(),
     expoPushToken: v.string(),
+    id: v.number(), // numeric id field
+    created_at: v.string(), // ISO date string
+    updatedAt: v.union(v.string(), v.null()), // ISO date string or null
   })
     .index("by_user", ["userId"])
     .index("by_user_and_token", ["userId", "expoPushToken"]),
