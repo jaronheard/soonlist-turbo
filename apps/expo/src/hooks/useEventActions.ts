@@ -15,7 +15,7 @@ import { getPlanStatusFromUser } from "~/utils/plan";
 import { useCalendar } from "./useCalendar";
 
 interface UseEventActionsProps {
-  event: NonNullable<FunctionReturnType<typeof api.events.get>>;
+  event: FunctionReturnType<typeof api.events.get> | undefined;
   isSaved: boolean;
   demoMode?: boolean;
   onDelete?: () => Promise<void>;
@@ -29,7 +29,7 @@ export function useEventActions({
 }: UseEventActionsProps) {
   const { handleAddToCal: addToCalendar } = useCalendar();
   const { user } = useUser();
-  const isOwner = demoMode || user?.id === event.user?.id;
+  const isOwner = demoMode || (event && user?.id === event.user?.id);
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
 
   const deleteEventMutation = useMutation(api.events.deleteEvent);
@@ -56,7 +56,7 @@ export function useEventActions({
     }
 
     // Update user events queries if they're loaded and the user owns the event
-    if (user?.username && event.user?.username === user.username) {
+    if (user?.username && event?.user?.username === user.username) {
       // Update upcoming events for user
       const upcomingEvents = localStore.getQuery(
         api.events.getUpcomingForUser,
@@ -126,7 +126,7 @@ export function useEventActions({
   };
 
   const handleShare = async () => {
-    if (checkDemoMode()) return;
+    if (!event || checkDemoMode()) return;
     triggerHaptic();
     try {
       await Share.share({
@@ -138,7 +138,7 @@ export function useEventActions({
   };
 
   const handleDirections = () => {
-    if (checkDemoMode()) return;
+    if (!event || checkDemoMode()) return;
     triggerHaptic();
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     if (eventData.location) {
@@ -155,7 +155,7 @@ export function useEventActions({
   };
 
   const handleAddToCal = async () => {
-    if (checkDemoMode()) return;
+    if (!event || checkDemoMode()) return;
     triggerHaptic();
     await addToCalendar(event);
   };
@@ -163,7 +163,7 @@ export function useEventActions({
   const handleToggleVisibility = async (
     newVisibility: "public" | "private",
   ) => {
-    if (checkDemoMode() || !isOwner) return;
+    if (!event || checkDemoMode() || !isOwner) return;
     triggerHaptic();
     const action = newVisibility === "public" ? "Adding to" : "Removing from";
     const loadingToastId = toast.loading(`${action} Discover...`);
@@ -185,13 +185,13 @@ export function useEventActions({
   };
 
   const handleEdit = () => {
-    if (checkDemoMode() || !isOwner) return;
+    if (!event || checkDemoMode() || !isOwner) return;
     triggerHaptic();
     router.push(`/event/${event.id}/edit`);
   };
 
   const handleDelete = async () => {
-    if (checkDemoMode() || !isOwner) return;
+    if (!event || checkDemoMode() || !isOwner) return;
     triggerHaptic();
     const loadingToastId = toast.loading("Deleting event...");
     try {
@@ -209,7 +209,7 @@ export function useEventActions({
   };
 
   const handleFollow = async () => {
-    if (checkDemoMode() || isOwner || isSaved) return;
+    if (!event || checkDemoMode() || isOwner || isSaved) return;
     triggerHaptic();
     const loadingToastId = toast.loading("Following event...");
     try {
@@ -223,7 +223,7 @@ export function useEventActions({
   };
 
   const handleUnfollow = async () => {
-    if (checkDemoMode() || isOwner || !isSaved) return;
+    if (!event || checkDemoMode() || isOwner || !isSaved) return;
     triggerHaptic();
     const loadingToastId = toast.loading("Unfollowing event...");
     try {
@@ -237,7 +237,7 @@ export function useEventActions({
   };
 
   const handleShowQR = () => {
-    if (checkDemoMode()) return;
+    if (!event || checkDemoMode()) return;
     triggerHaptic();
     router.push(`/event/${event.id}/qr`);
   };
@@ -253,5 +253,60 @@ export function useEventActions({
     handleUnfollow,
     handleShowQR,
     showDiscover,
+  };
+}
+
+// Simplified hook for save/follow actions that doesn't require the full event object
+export function useEventSaveActions(
+  eventId: string,
+  isSaved: boolean,
+  demoMode = false,
+) {
+  const unfollowEventMutation = useMutation(api.events.unfollow);
+  const followEventMutation = useMutation(api.events.follow);
+
+  const triggerHaptic = () => {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  const checkDemoMode = () => {
+    if (demoMode) {
+      toast("Demo mode: action disabled");
+      return true;
+    }
+    return false;
+  };
+
+  const handleFollow = async () => {
+    if (checkDemoMode() || isSaved) return;
+    triggerHaptic();
+    const loadingToastId = toast.loading("Following event...");
+    try {
+      await followEventMutation({ id: eventId });
+      toast.dismiss(loadingToastId);
+      toast.success("Event followed");
+    } catch (error) {
+      toast.dismiss(loadingToastId);
+      toast.error(`Failed to follow event: ${(error as Error).message}`);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (checkDemoMode() || !isSaved) return;
+    triggerHaptic();
+    const loadingToastId = toast.loading("Unfollowing event...");
+    try {
+      await unfollowEventMutation({ id: eventId });
+      toast.dismiss(loadingToastId);
+      toast.success("Event unfollowed");
+    } catch (error) {
+      toast.dismiss(loadingToastId);
+      toast.error(`Failed to unfollow event: ${(error as Error).message}`);
+    }
+  };
+
+  return {
+    handleFollow,
+    handleUnfollow,
   };
 }

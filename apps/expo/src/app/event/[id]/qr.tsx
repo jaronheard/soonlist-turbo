@@ -1,23 +1,19 @@
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { router, useLocalSearchParams } from "expo-router";
+import { useQuery } from "convex/react";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { X } from "~/components/icons";
 import { Logo } from "~/components/Logo";
-import { api } from "~/utils/api";
 import Config from "~/utils/config";
 
 export default function QRModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const { data: event } = api.event.get.useQuery(
-    { eventId: id },
-    {
-      enabled: !!id,
-    },
-  );
+  const event = useQuery(api.events.get, { eventId: id });
 
   if (!event) return null;
 

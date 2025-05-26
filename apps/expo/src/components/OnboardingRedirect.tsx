@@ -1,9 +1,11 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { useQuery } from "convex/react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useAppStore } from "~/store";
-import { api } from "~/utils/api";
 
 export function OnboardingRedirect() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -12,10 +14,7 @@ export function OnboardingRedirect() {
   const { hasCompletedOnboarding } = useAppStore();
 
   // Get user data from our database
-  const { data: userData } = api.user.getById.useQuery(
-    { id: user?.id ?? "" },
-    { enabled: isLoaded && isSignedIn && !!user.id },
-  );
+  const userData = useQuery(api.users.getById, { id: user?.id ?? "" });
 
   useEffect(() => {
     // Only proceed if user data is loaded and user is signed in

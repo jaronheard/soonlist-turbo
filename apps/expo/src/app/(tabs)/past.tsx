@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -22,21 +22,23 @@ function PastEventsContent() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
+  // Memoize query args to prevent unnecessary re-renders
+  const queryArgs = useMemo(() => {
+    if (!user?.username) return "skip";
+    return {
+      userName: user.username,
+      filter: "past" as const,
+    };
+  }, [user?.username]);
+
   const {
     results: events,
     status,
     loadMore,
     isLoading,
-  } = usePaginatedQuery(
-    api.events.getEventsForUserPaginated,
-    {
-      userName: user?.username ?? "",
-      filter: "past" as const,
-    },
-    {
-      initialNumItems: 20,
-    },
-  );
+  } = usePaginatedQuery(api.events.getEventsForUserPaginated, queryArgs, {
+    initialNumItems: 20,
+  });
 
   const handleLoadMore = useCallback(() => {
     if (status === "CanLoadMore") {

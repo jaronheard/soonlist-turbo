@@ -20,7 +20,6 @@ export function useOnboarding() {
     setHasCompletedOnboarding,
   } = useAppStore();
 
-  // Use Convex mutations instead of tRPC
   const saveOnboardingDataMutation = useMutation(api.users.saveOnboardingData);
   const setOnboardingCompletedAtMutation = useMutation(
     api.users.setOnboardingCompletedAt,

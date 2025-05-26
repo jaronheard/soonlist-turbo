@@ -12,11 +12,9 @@ import * as Sentry from "@sentry/react-native";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { PostHogProvider } from "posthog-react-native";
 
-import { useAppStateRefresh } from "~/hooks/useAppStateRefresh";
 import { convex } from "~/lib/convex";
 import { OneSignalProvider } from "~/providers/OneSignalProvider";
 import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
-import { TRPCProvider } from "~/utils/api";
 
 import "../styles.css";
 
@@ -25,6 +23,7 @@ import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Constants, { AppOwnership } from "expo-constants";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
@@ -47,6 +46,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
+
+const queryClient = new QueryClient();
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const insets = useSafeAreaInsets();
@@ -147,12 +148,12 @@ function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
-        <ClerkProvider
-          publishableKey={clerkPublishableKey}
-          tokenCache={tokenCache}
-        >
-          <ClerkLoaded>
-            <TRPCProvider>
+        <QueryClientProvider client={queryClient}>
+          <ClerkProvider
+            publishableKey={clerkPublishableKey}
+            tokenCache={tokenCache}
+          >
+            <ClerkLoaded>
               {/* eslint-disable-next-line react-compiler/react-compiler */}
               <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
                 <SafeAreaProvider>
@@ -180,9 +181,9 @@ function RootLayout() {
                   </PostHogProvider>
                 </SafeAreaProvider>
               </ConvexProviderWithClerk>
-            </TRPCProvider>
-          </ClerkLoaded>
-        </ClerkProvider>
+            </ClerkLoaded>
+          </ClerkProvider>
+        </QueryClientProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );
@@ -282,7 +283,6 @@ const InitialLayout = () => {
 function RootLayoutContent() {
   const { handleCalendarSelect, INITIAL_CALENDAR_LIMIT } = useCalendar();
   const { setIsCalendarModalVisible } = useAppStore();
-  useAppStateRefresh();
   useMediaPermissions();
   const ref = useNavigationContainerRef();
 

@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import { Check, ChevronDown } from "~/components/icons";
-import { logDebug } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import {
   DropdownMenuCheckboxItem,
@@ -36,12 +35,16 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useUser();
 
-  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
-  logDebug("showDiscover", showDiscover);
-  const routes = showDiscover ? baseRoutes : baseRoutes.slice(0, 2);
+  const { routes, currentRoute } = useMemo(() => {
+    const showDiscover = user
+      ? getPlanStatusFromUser(user).showDiscover
+      : false;
+    const routes = showDiscover ? baseRoutes : baseRoutes.slice(0, 2);
+    const currentRoute =
+      routes.find((r) => isRouteActive(r.path, active))?.label ?? "Upcoming";
 
-  const currentRoute =
-    routes.find((r) => isRouteActive(r.path, active))?.label ?? "Upcoming";
+    return { routes, currentRoute };
+  }, [user, active]);
 
   const handleNavigation = (path: (typeof routes)[number]["path"]) => {
     setMenuOpen(false);

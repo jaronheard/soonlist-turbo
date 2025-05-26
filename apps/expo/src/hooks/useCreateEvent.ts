@@ -2,13 +2,15 @@ import { useCallback } from "react";
 import * as Haptics from "expo-haptics";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
+import { useAction, useMutation } from "convex/react";
 import pMap from "p-map";
 import { toast } from "sonner-native";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
-import { api } from "~/utils/api";
 import { logError } from "~/utils/errorLogging";
 
 interface CreateEventOptions {
@@ -131,36 +133,15 @@ export function useCreateEvent() {
   const { setIsImageLoading } = useAppStore();
   const { setIsCapturing } = useInFlightEventStore();
   const { hasNotificationPermission } = useOneSignal();
-  const utils = api.useUtils();
   const userTimezone = useUserTimezone();
 
-  const eventFromUrl =
-    api.ai.eventFromUrlThenCreateThenNotification.useMutation({
-      onSuccess: () => {
-        return Promise.all([
-          utils.event.getEventsForUser.invalidate(),
-          utils.event.getStats.invalidate(),
-        ]);
-      },
-    });
-  const eventFromImageBase64 =
-    api.ai.eventFromImageBase64ThenCreate.useMutation({
-      onSuccess: () => {
-        return Promise.all([
-          utils.event.getEventsForUser.invalidate(),
-          utils.event.getStats.invalidate(),
-        ]);
-      },
-    });
-  const eventFromRaw =
-    api.ai.eventFromRawTextThenCreateThenNotification.useMutation({
-      onSuccess: () => {
-        return Promise.all([
-          utils.event.getEventsForUser.invalidate(),
-          utils.event.getStats.invalidate(),
-        ]);
-      },
-    });
+  const eventFromUrl = useMutation(
+    api.ai.eventFromUrlThenCreateThenNotification,
+  );
+  const eventFromImageBase64 = useAction(api.ai.eventFromImageBase64ThenCreate);
+  const eventFromRaw = useMutation(
+    api.ai.eventFromRawTextThenCreateThenNotification,
+  );
 
   const createEvent = useCallback(
     async (options: CreateEventOptions): Promise<string | undefined> => {
@@ -179,7 +160,7 @@ export function useCreateEvent() {
         }
         // URL flow
         if (linkPreview) {
-          const result = await eventFromUrl.mutateAsync({
+          const result = await eventFromUrl({
             url: linkPreview,
             userId,
             username,
@@ -189,7 +170,12 @@ export function useCreateEvent() {
             sendNotification,
           });
 
-          if (result.success && "event" in result && result.event) {
+          if (
+            result.success &&
+            result.event &&
+            typeof result.event === "object" &&
+            "id" in result.event
+          ) {
             void Haptics.notificationAsync(
               Haptics.NotificationFeedbackType.Success,
             );
@@ -233,7 +219,7 @@ export function useCreateEvent() {
             const base64 = await optimizeImage(fileUri);
 
             // 2. Create event with base64 image (backend handles upload now)
-            const eventResult = await eventFromImageBase64.mutateAsync({
+            const eventResult = await eventFromImageBase64({
               base64Image: base64,
               userId,
               username,
@@ -247,14 +233,18 @@ export function useCreateEvent() {
               throw new Error(eventResult.error ?? "Failed to create event");
             }
 
-            if ("event" in eventResult && eventResult.event) {
+            if (
+              eventResult.event &&
+              typeof eventResult.event === "object" &&
+              "id" in eventResult.event
+            ) {
               void Haptics.notificationAsync(
                 Haptics.NotificationFeedbackType.Success,
               );
               if (sendNotification && !hasNotificationPermission) {
                 toast.success("Event captured successfully!");
               }
-              return eventResult.event.id;
+              return eventResult.event.id as string;
             }
             return undefined;
           } catch (error) {
@@ -272,7 +262,7 @@ export function useCreateEvent() {
 
         // Raw text flow
         if (rawText) {
-          const result = await eventFromRaw.mutateAsync({
+          const result = await eventFromRaw({
             rawText,
             userId,
             username,
@@ -282,7 +272,12 @@ export function useCreateEvent() {
             sendNotification,
           });
 
-          if (result.success && "event" in result && result.event) {
+          if (
+            result.success &&
+            result.event &&
+            typeof result.event === "object" &&
+            "id" in result.event
+          ) {
             void Haptics.notificationAsync(
               Haptics.NotificationFeedbackType.Success,
             );

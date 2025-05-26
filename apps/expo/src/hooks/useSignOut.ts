@@ -1,10 +1,12 @@
 import { OneSignal } from "react-native-onesignal";
 import { useAuth } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
+import { useMutation } from "convex/react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
-import { api } from "~/utils/api";
 import { deleteAuthData } from "./useAuthSync";
 
 interface SignOutOptions {
@@ -12,20 +14,16 @@ interface SignOutOptions {
 }
 
 export const useSignOut = () => {
-  const utils = api.useUtils();
   const { signOut, userId } = useAuth();
   const resetStore = useAppStore((state) => state.resetStore);
   const setHasCompletedOnboarding = useAppStore(
     (state) => state.setHasCompletedOnboarding,
   );
   const { logout: revenueCatLogout } = useRevenueCat();
-  const { mutateAsync: deleteAccount } = api.user.deleteAccount.useMutation();
+  const deleteAccount = useMutation(api.users.deleteAccount);
 
   return async (options?: SignOutOptions) => {
     if (!userId) return;
-
-    // First cancel all ongoing queries and prevent refetching
-    await utils.invalidate();
 
     // Reset local state
     resetStore();
@@ -36,7 +34,7 @@ export const useSignOut = () => {
       revenueCatLogout(),
       deleteAuthData(),
       OneSignal.logout(),
-      options?.shouldDeleteAccount ? deleteAccount() : undefined,
+      options?.shouldDeleteAccount ? deleteAccount({ userId }) : undefined,
       signOut(),
     ]);
 

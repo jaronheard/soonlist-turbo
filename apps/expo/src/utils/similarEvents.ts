@@ -175,11 +175,11 @@ function collapseSimilarEvents(events: Event[], currentUserId?: string) {
 
     let earliestEvent = firstEventWithCurrentUserId?.event || currentEvent;
     let earliestCreationDate = new Date(
-      firstEventWithCurrentUserId?.event.createdAt || currentEvent.createdAt,
+      firstEventWithCurrentUserId?.event.created_at || currentEvent.created_at,
     );
 
     similarEvents.forEach(({ event: similarEvent }) => {
-      const similarEventCreationDate = new Date(similarEvent.createdAt);
+      const similarEventCreationDate = new Date(similarEvent.created_at);
       if (similarEventsHasCurrentUserId) {
         // only set as earlies if it matches the current user
         if (similarEvent.userId === currentUserId) {

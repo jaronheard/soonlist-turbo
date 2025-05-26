@@ -1,10 +1,12 @@
+import type { FunctionReturnType } from "convex/server";
 import type * as Calendar from "expo-calendar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import type { api } from "@soonlist/backend/convex/_generated/api";
+
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
-import type { RouterOutputs } from "~/utils/api";
 import { getUserTimeZone } from "./utils/dates";
 
 export interface RecentPhoto {
@@ -78,15 +80,13 @@ interface AppState {
   // Calendar-related state
   defaultCalendarId: string | null;
   availableCalendars: Calendar.Calendar[];
-  selectedEvent: RouterOutputs["event"]["getUpcomingForUser"][number] | null;
+  selectedEvent: FunctionReturnType<typeof api.events.get>;
   calendarUsage: Record<string, number>;
 
   // Calendar-related actions
   setDefaultCalendarId: (id: string | null) => void;
   setAvailableCalendars: (calendars: Calendar.Calendar[]) => void;
-  setSelectedEvent: (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number] | null,
-  ) => void;
+  setSelectedEvent: (event: FunctionReturnType<typeof api.events.get>) => void;
   setCalendarUsage: (usage: Record<string, number>) => void;
   clearCalendarData: () => void;
 

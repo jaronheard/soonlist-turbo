@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -39,9 +39,16 @@ function DiscoverContent() {
     },
   );
 
-  const savedEventIdsQuery = useQuery(api.events.getSavedIdsForUser, {
-    userName: user?.username ?? "",
-  });
+  // Memoize saved events query args to prevent unnecessary re-renders
+  const savedEventsQueryArgs = useMemo(() => {
+    if (!user?.username) return "skip";
+    return { userName: user.username };
+  }, [user?.username]);
+
+  const savedEventIdsQuery = useQuery(
+    api.events.getSavedIdsForUser,
+    savedEventsQueryArgs,
+  );
 
   const onRefresh = useCallback(async () => {
     // Convex queries are automatically reactive, so we don't need manual refresh

@@ -15,7 +15,6 @@ import * as ImagePicker from "expo-image-picker";
 import { router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { useMutation, useQuery } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
@@ -59,7 +58,6 @@ export default function EditProfileScreen() {
     api.users.getByUsername,
     user?.username ? { userName: user.username } : "skip",
   );
-  const queryClient = useQueryClient();
   const {
     resetOnboarding: resetOnboardingStore,
     userTimezone,
@@ -254,10 +252,6 @@ export default function EditProfileScreen() {
                 if (user?.id) {
                   await resetOnboardingMutation({ userId: user.id });
                 }
-
-                // Invalidate all user-related queries at once
-                await queryClient.invalidateQueries({ queryKey: ["user"] });
-
                 // Reset client-side onboarding state in Zustand store
                 resetOnboardingStore();
 
@@ -275,7 +269,7 @@ export default function EditProfileScreen() {
         },
       ],
     );
-  }, [resetOnboardingMutation, queryClient, resetOnboardingStore, user?.id]);
+  }, [resetOnboardingMutation, resetOnboardingStore, user?.id]);
 
   return (
     <KeyboardAvoidingView

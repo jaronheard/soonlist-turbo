@@ -11,8 +11,8 @@ import {
 import { Image as ExpoImage } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
 
-import type { ImageSource } from "~/components/demoData";
 import type { RecentPhoto } from "~/store";
+import type { ImageSource } from "~/utils/images";
 import { Camera, ChevronRight, ImagePlus } from "~/components/icons";
 import { cn } from "~/utils/cn";
 

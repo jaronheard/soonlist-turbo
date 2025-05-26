@@ -1,8 +1,7 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useMutationState } from "@tanstack/react-query";
 import {
   Authenticated,
   AuthLoading,
@@ -24,21 +23,23 @@ function MyFeedContent() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
+  // Memoize query args to prevent unnecessary re-renders
+  const queryArgs = useMemo(() => {
+    if (!user?.username) return "skip";
+    return {
+      userName: user.username,
+      filter: "upcoming" as const,
+    };
+  }, [user?.username]);
+
   const {
     results: events,
     status,
     loadMore,
     isLoading,
-  } = usePaginatedQuery(
-    api.events.getEventsForUserPaginated,
-    {
-      userName: user?.username ?? "",
-      filter: "upcoming" as const,
-    },
-    {
-      initialNumItems: 20,
-    },
-  );
+  } = usePaginatedQuery(api.events.getEventsForUserPaginated, queryArgs, {
+    initialNumItems: 20,
+  });
 
   const onRefresh = useCallback(async () => {
     // Convex queries are automatically reactive, so we don't need manual refresh
@@ -51,14 +52,8 @@ function MyFeedContent() {
     }
   }, [status, loadMore]);
 
-  const pendingAIMutations = useMutationState({
-    filters: {
-      mutationKey: ["ai"],
-      status: "pending",
-    },
-  });
-
-  const isAddingEvent = pendingAIMutations.length > 0;
+  // TODO: Add this back in when we have a way to track AI mutations
+  const isAddingEvent = false;
 
   // Check onboarding status after all hooks
   // const dbHasCompletedOnboarding = !!userQuery.data?.onboardingCompletedAt;

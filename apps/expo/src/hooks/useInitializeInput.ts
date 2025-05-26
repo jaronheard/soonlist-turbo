@@ -1,6 +1,6 @@
+import type { ImageSource } from "expo-image";
 import { useCallback, useEffect, useState } from "react";
 
-import type { ImageSource } from "~/components/demoData";
 import type { RecentPhoto } from "~/store";
 import { useAppStore } from "~/store";
 import { logMessage } from "../utils/errorLogging";
@@ -29,7 +29,7 @@ export function useInitializeInput(
   } = useAppStore();
 
   const handleImagePreview = useCallback(
-    (uri: string | ImageSource) => {
+    (uri: string | number | ImageSource) => {
       if (typeof uri === "string") {
         setImagePreview(uri, route);
         setInput(uri.split("/").pop() || "", route);
@@ -37,7 +37,7 @@ export function useInitializeInput(
         // Handle ImageRequireSource (local image require)
         setImagePreview(String(uri), route);
         setInput(`local_image_${uri}`, route);
-      } else {
+      } else if (uri.uri) {
         // Handle RemoteImageSource
         setImagePreview(uri.uri, route);
         setInput(uri.uri.split("/").pop() || "", route);
