@@ -1,7 +1,7 @@
 "use client";
 
 import { ActivityIndicator, View } from "react-native";
-import { Redirect, useLocalSearchParams } from "expo-router";
+import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
@@ -9,7 +9,6 @@ import { api } from "@soonlist/backend";
 
 export default function OnboardingIndex() {
   const { user: clerkUser, isLoaded } = useUser();
-  const searchParams = useLocalSearchParams();
 
   // Get user data from our database using Convex
   const user = useQuery(
@@ -24,10 +23,6 @@ export default function OnboardingIndex() {
         <ActivityIndicator size="large" />
       </View>
     );
-  }
-
-  if (searchParams.demo) {
-    return <Redirect href="/onboarding/demo-intro" />;
   }
 
   if (user.onboardingCompletedAt) {

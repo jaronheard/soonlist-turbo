@@ -275,13 +275,6 @@ const InitialLayout = () => {
           presentation: "containedModal",
         }}
       />
-      <Stack.Screen
-        name="onboarding/demo-capture"
-        options={{
-          presentation: "modal",
-          headerShown: true,
-        }}
-      />
     </Stack>
   );
 };

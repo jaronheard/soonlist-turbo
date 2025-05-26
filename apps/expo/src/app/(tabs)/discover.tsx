@@ -2,15 +2,16 @@ import React, { useCallback } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { usePaginatedQuery, useQuery } from "convex/react";
 
-import type { RouterOutputs } from "~/utils/api";
+import { api } from "@soonlist/backend";
+
 import AddEventButton from "~/components/AddEventButton";
 import { ConvexAuthExample } from "~/components/ConvexAuthExample";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { api } from "~/utils/api";
 import { getPlanStatusFromUser } from "~/utils/plan";
 
 export default function Page() {
@@ -19,35 +20,33 @@ export default function Page() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  const eventsQuery = api.event.getDiscoverInfinite.useInfiniteQuery(
+  const {
+    results: events,
+    status,
+    loadMore,
+    isLoading,
+  } = usePaginatedQuery(
+    api.events.getDiscoverPaginated,
+    {},
     {
-      limit: 20,
-    },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialNumItems: 20,
     },
   );
 
-  const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery(
-    {
-      userName: user?.username ?? "",
-    },
-    {
-      enabled: isLoaded && isSignedIn && !!user && !!user.username,
-    },
-  );
+  const savedEventIdsQuery = useQuery(api.events.getSavedIdsForUser, {
+    userName: user?.username ?? "",
+  });
 
   const onRefresh = useCallback(async () => {
-    await eventsQuery.refetch();
-  }, [eventsQuery]);
+    // Convex queries are automatically reactive, so we don't need manual refresh
+    // The usePaginatedQuery will automatically update when data changes
+  }, []);
 
-  const loadMore = useCallback(() => {
-    if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
-      void eventsQuery.fetchNextPage();
+  const handleLoadMore = useCallback(() => {
+    if (status === "CanLoadMore") {
+      loadMore(20);
     }
-  }, [eventsQuery]);
-
-  const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
+  }, [status, loadMore]);
 
   if (!isLoaded) {
     return (
@@ -72,14 +71,10 @@ export default function Page() {
   }
 
   const savedEventIds = new Set(
-    savedEventIdsQuery.data?.map((event) => event.id),
+    savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
-  function SaveButtonWrapper({
-    event,
-  }: {
-    event: RouterOutputs["event"]["getDiscoverInfinite"]["events"][number];
-  }) {
+  function SaveButtonWrapper({ event }: { event: { id: string } }) {
     return (
       <SaveButton eventId={event.id} isSaved={savedEventIds.has(event.id)} />
     );
@@ -88,16 +83,16 @@ export default function Page() {
   return (
     <View className="flex-1 bg-white">
       <ConvexAuthExample />
-      {eventsQuery.isPending && !eventsQuery.isRefetching ? (
+      {isLoading && status === "LoadingFirstPage" ? (
         <LoadingSpinner />
       ) : (
         <View className="flex-1">
           <UserEventsList
-            events={events}
-            isRefetching={eventsQuery.isRefetching}
+            events={events ?? []}
+            isRefetching={status === "LoadingMore"}
             onRefresh={onRefresh}
-            onEndReached={loadMore}
-            isFetchingNextPage={eventsQuery.isFetchingNextPage}
+            onEndReached={handleLoadMore}
+            isFetchingNextPage={status === "LoadingMore"}
             ActionButton={SaveButtonWrapper}
             showCreator="always"
             hasUnlimited={hasUnlimited}

@@ -2,12 +2,14 @@ import React, { useCallback } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { usePaginatedQuery } from "convex/react";
+
+import { api } from "@soonlist/backend";
 
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { api } from "~/utils/api";
 
 export default function PastEvents() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -15,29 +17,32 @@ export default function PastEvents() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
+  const {
+    results: events,
+    status,
+    loadMore,
+    isLoading,
+  } = usePaginatedQuery(
+    api.events.getEventsForUserPaginated,
     {
       userName: user?.username ?? "",
-      filter: "past",
-      limit: 20,
+      filter: "past" as const,
     },
     {
-      enabled: !!user,
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialNumItems: 20,
     },
   );
 
-  const loadMore = useCallback(() => {
-    if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
-      void eventsQuery.fetchNextPage();
+  const handleLoadMore = useCallback(() => {
+    if (status === "CanLoadMore") {
+      loadMore(20);
     }
-  }, [eventsQuery]);
+  }, [status, loadMore]);
 
   const onRefresh = useCallback(async () => {
-    await eventsQuery.refetch();
-  }, [eventsQuery]);
-
-  const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
+    // Convex queries are automatically reactive, so we don't need manual refresh
+    // The usePaginatedQuery will automatically update when data changes
+  }, []);
 
   if (!isLoaded) {
     return (
@@ -53,17 +58,17 @@ export default function PastEvents() {
 
   return (
     <View className="flex-1 bg-white">
-      {eventsQuery.isPending && !eventsQuery.isRefetching ? (
+      {isLoading && status === "LoadingFirstPage" ? (
         <LoadingSpinner />
       ) : (
         <View className="flex-1">
           <UserEventsList
-            events={events}
+            events={events ?? []}
             onRefresh={onRefresh}
-            onEndReached={loadMore}
+            onEndReached={handleLoadMore}
             showCreator="savedFromOthers"
-            isRefetching={eventsQuery.isRefetching}
-            isFetchingNextPage={eventsQuery.isFetchingNextPage}
+            isRefetching={status === "LoadingMore"}
+            isFetchingNextPage={status === "LoadingMore"}
             hasUnlimited={hasUnlimited}
           />
           <AddEventButton showChevron={false} />

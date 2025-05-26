@@ -13,14 +13,15 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as ai__internal from "../ai/_internal.js";
-import type * as ai_helpers from "../ai/helpers.js";
-import type * as ai_index from "../ai/index.js";
-import type * as events__internal from "../events/_internal.js";
-import type * as events_user__internal from "../events/user/_internal.js";
-import type * as events_user from "../events/user.js";
+import type * as ai from "../ai.js";
+import type * as crons from "../crons.js";
 import type * as events from "../events.js";
 import type * as lists from "../lists.js";
+import type * as model_ai from "../model/ai.js";
+import type * as model_events from "../model/events.js";
+import type * as model_notifications from "../model/notifications.js";
+import type * as model_oneSignal from "../model/oneSignal.js";
+import type * as notifications from "../notifications.js";
 import type * as users from "../users.js";
 import type * as utils from "../utils.js";
 
@@ -33,14 +34,15 @@ import type * as utils from "../utils.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  "ai/_internal": typeof ai__internal;
-  "ai/helpers": typeof ai_helpers;
-  "ai/index": typeof ai_index;
-  "events/_internal": typeof events__internal;
-  "events/user/_internal": typeof events_user__internal;
-  "events/user": typeof events_user;
+  ai: typeof ai;
+  crons: typeof crons;
   events: typeof events;
   lists: typeof lists;
+  "model/ai": typeof model_ai;
+  "model/events": typeof model_events;
+  "model/notifications": typeof model_notifications;
+  "model/oneSignal": typeof model_oneSignal;
+  notifications: typeof notifications;
   users: typeof users;
   utils: typeof utils;
 }>;

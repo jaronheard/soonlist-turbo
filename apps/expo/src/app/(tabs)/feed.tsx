@@ -3,13 +3,16 @@ import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutationState } from "@tanstack/react-query";
+import { usePaginatedQuery } from "convex/react";
+
+import { api } from "@soonlist/backend";
 
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
-import { api } from "~/utils/api";
+import { api as tRPCApi } from "~/utils/api";
 
 function MyFeed() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -18,38 +21,41 @@ function MyFeed() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  const userQuery = api.user.getById.useQuery(
+  const userQuery = tRPCApi.user.getById.useQuery(
     { id: user?.id ?? "" },
-    { enabled: isLoaded && isSignedIn && !!user.id },
+    { enabled: isLoaded && isSignedIn && !!user?.id },
   );
 
-  const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
+  const {
+    results: events,
+    status,
+    loadMore,
+    isLoading,
+  } = usePaginatedQuery(
+    api.events.getEventsForUserPaginated,
     {
       userName: user?.username ?? "",
-      filter: "upcoming",
-      limit: 20,
+      filter: "upcoming" as const,
     },
     {
-      enabled: isLoaded && !!user && isSignedIn,
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialNumItems: 20,
     },
   );
 
-  const statsQuery = api.event.getStats.useQuery({
+  const statsQuery = tRPCApi.event.getStats.useQuery({
     userName: user?.username ?? "",
   });
 
   const onRefresh = useCallback(async () => {
-    await eventsQuery.refetch();
-  }, [eventsQuery]);
+    // Convex queries are automatically reactive, so we don't need manual refresh
+    // The usePaginatedQuery will automatically update when data changes
+  }, []);
 
-  const loadMore = useCallback(() => {
-    if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
-      void eventsQuery.fetchNextPage();
+  const handleLoadMore = useCallback(() => {
+    if (status === "CanLoadMore") {
+      loadMore(20);
     }
-  }, [eventsQuery]);
-
-  const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
+  }, [status, loadMore]);
 
   const pendingAIMutations = useMutationState({
     filters: {
@@ -81,16 +87,16 @@ function MyFeed() {
 
   return (
     <View className="flex-1 bg-white">
-      {eventsQuery.isPending && !eventsQuery.isRefetching && !isAddingEvent ? (
+      {isLoading && status === "LoadingFirstPage" && !isAddingEvent ? (
         <LoadingSpinner />
       ) : (
         <View className="flex-1">
           <UserEventsList
-            events={events}
-            isRefetching={eventsQuery.isRefetching}
+            events={events ?? []}
+            isRefetching={status === "LoadingMore"}
             onRefresh={onRefresh}
-            onEndReached={loadMore}
-            isFetchingNextPage={eventsQuery.isFetchingNextPage}
+            onEndReached={handleLoadMore}
+            isFetchingNextPage={status === "LoadingMore"}
             showCreator="savedFromOthers"
             stats={statsQuery.data}
             promoCard={{ type: "addEvents" }}

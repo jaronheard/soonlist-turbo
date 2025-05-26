@@ -1,331 +1,93 @@
+import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
-import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
-import { generatePublicId } from "./utils";
+import * as Events from "./model/events";
 
 // Validators for complex types
-const addToCalendarButtonPropsValidator = v.object({
+const eventDataValidator = v.object({
   name: v.string(),
   startDate: v.string(),
-  endDate: v.optional(v.string()),
+  endDate: v.string(),
   startTime: v.optional(v.string()),
   endTime: v.optional(v.string()),
   timeZone: v.optional(v.string()),
   location: v.optional(v.string()),
   description: v.optional(v.string()),
   images: v.optional(v.array(v.string())),
-  options: v.optional(v.array(v.string())),
-  iCalFileName: v.optional(v.string()),
-  listStyle: v.optional(v.string()),
-  buttonStyle: v.optional(v.string()),
-  trigger: v.optional(v.string()),
-  hideIconButton: v.optional(v.boolean()),
-  hideTextLabelButton: v.optional(v.boolean()),
-  hideBranding: v.optional(v.boolean()),
-  size: v.optional(v.string()),
-  label: v.optional(v.string()),
-  inline: v.optional(v.boolean()),
-  forceOverlay: v.optional(v.boolean()),
-  customLabels: v.optional(v.any()),
-  customCss: v.optional(v.string()),
-  lightMode: v.optional(v.string()),
-  language: v.optional(v.string()),
-  hideCheckmark: v.optional(v.boolean()),
-  hideBackground: v.optional(v.boolean()),
-  hideClose: v.optional(v.boolean()),
-  blockInteraction: v.optional(v.boolean()),
-  styleLight: v.optional(v.string()),
-  styleDark: v.optional(v.string()),
-  disabled: v.optional(v.boolean()),
-  hidden: v.optional(v.boolean()),
-  proxy: v.optional(v.boolean()),
-  fakeMobile: v.optional(v.boolean()),
-  identifier: v.optional(v.string()),
-  debug: v.optional(v.boolean()),
-  cspnonce: v.optional(v.string()),
-  bypassWebViewCheck: v.optional(v.boolean()),
-  blockInteractionMobile: v.optional(v.boolean()),
-  icsFile: v.optional(v.string()),
-  recurrence: v.optional(v.string()),
-  recurrence_interval: v.optional(v.number()),
-  recurrence_until: v.optional(v.string()),
-  recurrence_count: v.optional(v.number()),
-  recurrence_byDay: v.optional(v.string()),
-  recurrence_byMonth: v.optional(v.string()),
-  recurrence_byMonthDay: v.optional(v.string()),
-  recurrence_weekstart: v.optional(v.string()),
-  availability: v.optional(v.string()),
-  created: v.optional(v.string()),
-  updated: v.optional(v.string()),
-  uid: v.optional(v.string()),
-  organizer: v.optional(v.string()),
-  attendee: v.optional(v.string()),
-  rrule: v.optional(v.string()),
-  status: v.optional(v.string()),
-  sequence: v.optional(v.number()),
-  method: v.optional(v.string()),
-  classification: v.optional(v.string()),
-  subscribe: v.optional(v.boolean()),
-  pastDateHandling: v.optional(v.string()),
 });
 
-const eventMetadataValidator = v.optional(v.any());
-
-const listRecordValidator = v.record(v.string(), v.string());
-
-const eventCreateInputValidator = v.object({
-  event: addToCalendarButtonPropsValidator,
-  eventMetadata: eventMetadataValidator,
-  comment: v.optional(v.string()),
-  lists: v.array(listRecordValidator),
-  visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
-});
-
-const eventUpdateInputValidator = v.object({
-  id: v.string(),
-  event: addToCalendarButtonPropsValidator,
-  eventMetadata: eventMetadataValidator,
-  comment: v.optional(v.string()),
-  lists: v.array(listRecordValidator),
-  visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
-});
-
-// Return type validators
-const eventReturnValidator = v.object({
-  _id: v.id("events"),
-  _creationTime: v.number(),
-  id: v.string(),
-  userId: v.string(),
-  userName: v.string(),
-  event: v.any(),
-  endDateTime: v.string(),
-  startDateTime: v.string(),
-  visibility: v.union(v.literal("public"), v.literal("private")),
-  created_at: v.string(),
-  updatedAt: v.union(v.string(), v.null()),
-  name: v.optional(v.string()),
-  image: v.optional(v.union(v.string(), v.null())),
-  endDate: v.optional(v.string()),
-  endTime: v.optional(v.string()),
-  location: v.optional(v.string()),
-  timeZone: v.optional(v.string()),
-  startDate: v.optional(v.string()),
-  startTime: v.optional(v.string()),
-  description: v.optional(v.string()),
-});
-
-const eventWithRelationsValidator = v.object({
-  _id: v.id("events"),
-  _creationTime: v.number(),
-  id: v.string(),
-  userId: v.string(),
-  userName: v.string(),
-  event: v.any(),
-  endDateTime: v.string(),
-  startDateTime: v.string(),
-  visibility: v.union(v.literal("public"), v.literal("private")),
-  created_at: v.string(),
-  updatedAt: v.union(v.string(), v.null()),
-  name: v.optional(v.string()),
-  image: v.optional(v.union(v.string(), v.null())),
-  endDate: v.optional(v.string()),
-  endTime: v.optional(v.string()),
-  location: v.optional(v.string()),
-  timeZone: v.optional(v.string()),
-  startDate: v.optional(v.string()),
-  startTime: v.optional(v.string()),
-  description: v.optional(v.string()),
-  eventFollows: v.array(
-    v.object({
-      _id: v.id("eventFollows"),
-      _creationTime: v.number(),
-      userId: v.string(),
-      eventId: v.string(),
-    }),
-  ),
-  comments: v.array(
-    v.object({
-      _id: v.id("comments"),
-      _creationTime: v.number(),
-      content: v.string(),
-      eventId: v.string(),
-      userId: v.string(),
-      id: v.number(),
-      oldId: v.union(v.string(), v.null()),
-      created_at: v.string(),
-      updatedAt: v.union(v.string(), v.null()),
-    }),
-  ),
-  user: v.object({
-    _id: v.id("users"),
-    _creationTime: v.number(),
-    id: v.string(),
-    username: v.string(),
-    email: v.string(),
-    displayName: v.string(),
-    userImage: v.string(),
-    bio: v.union(v.string(), v.null()),
-    publicEmail: v.union(v.string(), v.null()),
-    publicPhone: v.union(v.string(), v.null()),
-    publicInsta: v.union(v.string(), v.null()),
-    publicWebsite: v.union(v.string(), v.null()),
-    publicMetadata: v.union(v.any(), v.null()),
-    emoji: v.union(v.string(), v.null()),
-    onboardingData: v.union(v.any(), v.null()),
-    onboardingCompletedAt: v.union(v.string(), v.null()),
-    created_at: v.string(),
-    updatedAt: v.union(v.string(), v.null()),
-  }),
-  eventToLists: v.optional(
-    v.array(
-      v.object({
-        _id: v.id("eventToLists"),
-        _creationTime: v.number(),
-        eventId: v.string(),
-        listId: v.string(),
-        list: v.object({
-          _id: v.id("lists"),
-          _creationTime: v.number(),
-          id: v.string(),
-          userId: v.string(),
-          name: v.string(),
-          description: v.string(),
-          visibility: v.union(v.literal("public"), v.literal("private")),
-          created_at: v.string(),
-          updatedAt: v.union(v.string(), v.null()),
-        }),
-      }),
-    ),
-  ),
+const listValidator = v.object({
+  value: v.string(),
 });
 
 /**
- * Get an event by its ID
+ * Get events for a specific user by username
  */
-export const get = query({
-  args: { eventId: v.string() },
-  returns: v.union(eventWithRelationsValidator, v.null()),
+export const getForUser = query({
+  args: { userName: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.runQuery(internal.events._internal.getEventWithRelations, {
-      eventId: args.eventId,
-    });
+    return await Events.getEventsForUser(ctx, args.userName);
   },
 });
 
 /**
- * Get all events ordered by start date
+ * Get upcoming events for a user (created + saved)
  */
-export const getAll = query({
-  args: {},
-  returns: v.array(eventWithRelationsValidator),
-  handler: async (ctx, _args) => {
-    return await ctx.runQuery(
-      internal.events._internal.getAllEventsWithRelations,
-      {},
-    );
-  },
-});
-
-/**
- * Get upcoming events with optional limit and exclude current filter
- */
-export const getNext = query({
-  args: {
-    limit: v.optional(v.number()),
-    excludeCurrent: v.optional(v.boolean()),
-  },
-  returns: v.array(eventWithRelationsValidator),
+export const getUpcomingForUser = query({
+  args: { userName: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.runQuery(internal.events._internal.getUpcomingEvents, {
-      limit: args.limit,
-      excludeCurrent: args.excludeCurrent ?? false,
-    });
+    return await Events.getUpcomingEventsForUser(ctx, args.userName);
   },
 });
 
 /**
- * Get events for discovery (excluding user's own events)
+ * Get created events for a user
  */
-export const getDiscover = query({
-  args: {
-    userId: v.string(),
-    limit: v.optional(v.number()),
-    excludeCurrent: v.optional(v.boolean()),
-  },
-  returns: v.array(eventWithRelationsValidator),
+export const getCreatedForUser = query({
+  args: { userName: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.runQuery(internal.events._internal.getDiscoverEvents, {
-      userId: args.userId,
-      limit: args.limit,
-      excludeCurrent: args.excludeCurrent ?? false,
-    });
+    return await Events.getEventsForUser(ctx, args.userName);
   },
 });
 
 /**
- * Get events for discovery with infinite pagination
+ * Get events that a user is following
  */
-export const getDiscoverInfinite = query({
-  args: {
-    userId: v.string(),
-    limit: v.optional(v.number()),
-    cursor: v.optional(v.number()),
-  },
-  returns: v.object({
-    events: v.array(eventWithRelationsValidator),
-    nextCursor: v.union(v.number(), v.null()),
-  }),
+export const getFollowingForUser = query({
+  args: { userName: v.string() },
   handler: async (ctx, args) => {
-    const limit = args.limit ?? 20;
-    const cursor = args.cursor ?? 0;
-
-    if (limit < 1 || limit > 100) {
-      throw new ConvexError("Limit must be between 1 and 100");
-    }
-
-    return await ctx.runQuery(
-      internal.events._internal.getDiscoverEventsInfinite,
-      {
-        userId: args.userId,
-        limit,
-        cursor,
-      },
-    );
+    return await Events.getFollowingEventsForUser(ctx, args.userName);
   },
 });
 
 /**
- * Get events for a specific user with pagination
+ * Get upcoming events from following (optimized)
  */
-export const getEventsForUser = query({
-  args: {
-    userName: v.string(),
-    filter: v.union(v.literal("upcoming"), v.literal("past")),
-    limit: v.optional(v.number()),
-    cursor: v.optional(v.number()),
-  },
-  returns: v.object({
-    events: v.array(eventWithRelationsValidator),
-    nextCursor: v.union(v.number(), v.null()),
-  }),
+export const getFollowingUpcomingForUser = query({
+  args: { userName: v.string() },
   handler: async (ctx, args) => {
-    const limit = args.limit ?? 20;
-    const cursor = args.cursor ?? 0;
+    return await Events.getFollowingUpcomingEventsForUser(ctx, args.userName);
+  },
+});
 
-    if (limit < 1 || limit > 100) {
-      throw new ConvexError("Limit must be between 1 and 100");
-    }
+/**
+ * Get saved events for a user
+ */
+export const getSavedForUser = query({
+  args: { userName: v.string() },
+  handler: async (ctx, args) => {
+    return await Events.getSavedEventsForUser(ctx, args.userName);
+  },
+});
 
-    return await ctx.runQuery(
-      internal.events._internal.getEventsForUserPaginated,
-      {
-        userName: args.userName,
-        filter: args.filter,
-        limit,
-        cursor,
-      },
-    );
+/**
+ * Get saved event IDs for a user
+ */
+export const getSavedIdsForUser = query({
+  args: { userName: v.string() },
+  handler: async (ctx, args) => {
+    return await Events.getSavedEventIdsForUser(ctx, args.userName);
   },
 });
 
@@ -334,32 +96,434 @@ export const getEventsForUser = query({
  */
 export const getPossibleDuplicates = query({
   args: { startDateTime: v.string() },
-  returns: v.array(eventWithRelationsValidator),
   handler: async (ctx, args) => {
-    return await ctx.runQuery(
-      internal.events._internal.findPossibleDuplicates,
-      {
-        startDateTime: args.startDateTime,
-      },
+    const startDateTime = new Date(args.startDateTime);
+    return await Events.getPossibleDuplicateEvents(ctx, startDateTime);
+  },
+});
+
+/**
+ * Get a single event by ID
+ */
+export const get = query({
+  args: { eventId: v.string() },
+  handler: async (ctx, args) => {
+    return await Events.getEventById(ctx, args.eventId);
+  },
+});
+
+/**
+ * Get all events
+ */
+export const getAll = query({
+  args: {},
+  handler: async (ctx, _args) => {
+    return await Events.getAllEvents(ctx);
+  },
+});
+
+/**
+ * Get next upcoming events
+ */
+export const getNext = query({
+  args: {
+    limit: v.optional(v.number()),
+    excludeCurrent: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    return await Events.getNextEvents(ctx, args.limit, args.excludeCurrent);
+  },
+});
+
+/**
+ * Get discover events (excluding user's own events)
+ */
+export const getDiscover = query({
+  args: {
+    limit: v.optional(v.number()),
+    excludeCurrent: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to discover events");
+    }
+
+    return await Events.getDiscoverEvents(
+      ctx,
+      identity.subject,
+      args.limit,
+      args.excludeCurrent,
     );
   },
 });
 
 /**
- * Get user statistics
+ * Get discover events with infinite scroll
+ */
+export const getDiscoverInfinite = query({
+  args: {
+    limit: v.number(),
+    cursor: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to discover events");
+    }
+
+    const { limit, cursor } = args;
+    const offset = cursor || 0;
+
+    const events = await Events.getDiscoverEvents(
+      ctx,
+      identity.subject,
+      limit + 1,
+      true,
+    );
+
+    let nextCursor: number | undefined = undefined;
+    if (events.length > limit) {
+      events.pop();
+      nextCursor = offset + limit;
+    }
+
+    return {
+      events,
+      nextCursor,
+    };
+  },
+});
+
+/**
+ * Get discover events with Convex pagination
+ */
+export const getDiscoverPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to discover events");
+    }
+
+    const now = new Date();
+
+    // Get all events that are upcoming and public, excluding user's own events
+    const result = await ctx.db
+      .query("events")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("visibility"), "public"),
+          q.gte(q.field("endDateTime"), now.toISOString()),
+          q.neq(q.field("userId"), identity.subject),
+        ),
+      )
+      .order("asc")
+      .paginate(args.paginationOpts);
+
+    // Enrich events with user data, comments, and follows
+    const enrichedEvents = await Promise.all(
+      result.page.map(async (event) => {
+        // Get event creator
+        const eventUser = await ctx.db
+          .query("users")
+          .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
+          .unique();
+
+        // Get comments for this event
+        const comments = await ctx.db
+          .query("comments")
+          .withIndex("by_event", (q) => q.eq("eventId", event.id))
+          .collect();
+
+        // Get follows for this event
+        const eventFollowsForEvent = await ctx.db
+          .query("eventFollows")
+          .withIndex("by_event", (q) => q.eq("eventId", event.id))
+          .collect();
+
+        return {
+          ...event,
+          startDateTime: new Date(event.startDateTime),
+          endDateTime: new Date(event.endDateTime),
+          createdAt: new Date(event.created_at),
+          updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+          eventMetadata: event.eventMetadata ?? {},
+          user: eventUser
+            ? {
+                id: eventUser.id,
+                username: eventUser.username,
+                displayName: eventUser.displayName,
+                userImage: eventUser.userImage,
+                bio: eventUser.bio,
+                emoji: eventUser.emoji,
+                createdAt: new Date(eventUser.created_at),
+                updatedAt: eventUser.updatedAt
+                  ? new Date(eventUser.updatedAt)
+                  : null,
+                email: eventUser.email,
+                publicEmail: eventUser.publicEmail,
+                publicPhone: eventUser.publicPhone,
+                publicInsta: eventUser.publicInsta,
+                publicWebsite: eventUser.publicWebsite,
+                publicMetadata: eventUser.publicMetadata,
+                onboardingData: eventUser.onboardingData,
+                onboardingCompletedAt: eventUser.onboardingCompletedAt
+                  ? new Date(eventUser.onboardingCompletedAt)
+                  : null,
+              }
+            : {
+                id: event.userId,
+                username: event.userName,
+                displayName: event.userName,
+                userImage: "",
+                bio: null,
+                emoji: null,
+                createdAt: new Date(),
+                updatedAt: null,
+                email: "",
+                publicEmail: null,
+                publicPhone: null,
+                publicInsta: null,
+                publicWebsite: null,
+                publicMetadata: null,
+                onboardingData: null,
+                onboardingCompletedAt: null,
+              },
+          comments: comments.map((comment) => ({
+            id: comment.id,
+            content: comment.content,
+            userId: comment.userId,
+            eventId: comment.eventId,
+            createdAt: new Date(comment.created_at),
+            updatedAt: comment.updatedAt ? new Date(comment.updatedAt) : null,
+          })),
+          eventFollows: eventFollowsForEvent.map((follow) => ({
+            userId: follow.userId,
+            eventId: follow.eventId,
+          })),
+        };
+      }),
+    );
+
+    return {
+      ...result,
+      page: enrichedEvents,
+    };
+  },
+});
+
+/**
+ * Get events for user with pagination
+ */
+export const getEventsForUser = query({
+  args: {
+    userName: v.string(),
+    filter: v.union(v.literal("upcoming"), v.literal("past")),
+    limit: v.number(),
+    cursor: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { userName, filter, limit, cursor } = args;
+    const offset = cursor || 0;
+
+    const result = await Events.getEventsForUserPaginated(
+      ctx,
+      userName,
+      filter,
+      limit,
+      offset,
+    );
+
+    return {
+      events: result.events,
+      nextCursor: result.hasMore ? offset + limit : undefined,
+    };
+  },
+});
+
+/**
+ * Get events for user with Convex pagination (upcoming or past)
+ */
+export const getEventsForUserPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    userName: v.string(),
+    filter: v.union(v.literal("upcoming"), v.literal("past")),
+  },
+  handler: async (ctx, args) => {
+    const { userName, filter } = args;
+    const now = new Date();
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", userName))
+      .unique();
+
+    if (!user) {
+      throw new ConvexError("User not found");
+    }
+
+    // Get user's own events
+    const ownEventsQuery = ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", user.id));
+
+    // Filter by upcoming/past and sort
+    let filteredQuery;
+    if (filter === "upcoming") {
+      filteredQuery = ownEventsQuery
+        .filter((q) => q.gte(q.field("endDateTime"), now.toISOString()))
+        .order("asc");
+    } else {
+      filteredQuery = ownEventsQuery
+        .filter((q) => q.lt(q.field("endDateTime"), now.toISOString()))
+        .order("desc");
+    }
+
+    const result = await filteredQuery.paginate(args.paginationOpts);
+
+    // Get followed events for this user
+    const eventFollows = await ctx.db
+      .query("eventFollows")
+      .withIndex("by_user", (q) => q.eq("userId", user.id))
+      .collect();
+
+    // Get followed events that match the filter
+    const followedEvents = [];
+    for (const follow of eventFollows) {
+      const event = await ctx.db
+        .query("events")
+        .withIndex("by_custom_id", (q) => q.eq("id", follow.eventId))
+        .unique();
+
+      if (event) {
+        const eventDate = new Date(event.endDateTime);
+        if (filter === "upcoming" ? eventDate >= now : eventDate < now) {
+          followedEvents.push(event);
+        }
+      }
+    }
+
+    // Combine own events with followed events
+    const allEvents = [...result.page, ...followedEvents];
+
+    // Sort combined events
+    const sortedEvents = allEvents.sort((a, b) => {
+      if (filter === "upcoming") {
+        return (
+          new Date(a.startDateTime).getTime() -
+          new Date(b.startDateTime).getTime()
+        );
+      } else {
+        return (
+          new Date(b.startDateTime).getTime() -
+          new Date(a.startDateTime).getTime()
+        );
+      }
+    });
+
+    // Enrich events with user data, comments, and follows
+    const enrichedEvents = await Promise.all(
+      sortedEvents.map(async (event) => {
+        // Get event creator
+        const eventUser = await ctx.db
+          .query("users")
+          .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
+          .unique();
+
+        // Get comments for this event
+        const comments = await ctx.db
+          .query("comments")
+          .withIndex("by_event", (q) => q.eq("eventId", event.id))
+          .collect();
+
+        // Get follows for this event
+        const eventFollowsForEvent = await ctx.db
+          .query("eventFollows")
+          .withIndex("by_event", (q) => q.eq("eventId", event.id))
+          .collect();
+
+        return {
+          ...event,
+          startDateTime: new Date(event.startDateTime),
+          endDateTime: new Date(event.endDateTime),
+          createdAt: new Date(event.created_at),
+          updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+          eventMetadata: event.eventMetadata ?? {},
+          user: eventUser
+            ? {
+                id: eventUser.id,
+                username: eventUser.username,
+                displayName: eventUser.displayName,
+                userImage: eventUser.userImage,
+                bio: eventUser.bio,
+                emoji: eventUser.emoji,
+                createdAt: new Date(eventUser.created_at),
+                updatedAt: eventUser.updatedAt
+                  ? new Date(eventUser.updatedAt)
+                  : null,
+                email: eventUser.email,
+                publicEmail: eventUser.publicEmail,
+                publicPhone: eventUser.publicPhone,
+                publicInsta: eventUser.publicInsta,
+                publicWebsite: eventUser.publicWebsite,
+                publicMetadata: eventUser.publicMetadata,
+                onboardingData: eventUser.onboardingData,
+                onboardingCompletedAt: eventUser.onboardingCompletedAt
+                  ? new Date(eventUser.onboardingCompletedAt)
+                  : null,
+              }
+            : {
+                id: event.userId,
+                username: event.userName,
+                displayName: event.userName,
+                userImage: "",
+                bio: null,
+                emoji: null,
+                createdAt: new Date(),
+                updatedAt: null,
+                email: "",
+                publicEmail: null,
+                publicPhone: null,
+                publicInsta: null,
+                publicWebsite: null,
+                publicMetadata: null,
+                onboardingData: null,
+                onboardingCompletedAt: null,
+              },
+          comments: comments.map((comment) => ({
+            id: comment.id,
+            content: comment.content,
+            userId: comment.userId,
+            eventId: comment.eventId,
+            createdAt: new Date(comment.created_at),
+            updatedAt: comment.updatedAt ? new Date(comment.updatedAt) : null,
+          })),
+          eventFollows: eventFollowsForEvent.map((follow) => ({
+            userId: follow.userId,
+            eventId: follow.eventId,
+          })),
+        };
+      }),
+    );
+
+    return {
+      ...result,
+      page: enrichedEvents,
+    };
+  },
+});
+
+/**
+ * Get user stats
  */
 export const getStats = query({
   args: { userName: v.string() },
-  returns: v.object({
-    capturesThisWeek: v.number(),
-    weeklyGoal: v.number(),
-    upcomingEvents: v.number(),
-    allTimeEvents: v.number(),
-  }),
   handler: async (ctx, args) => {
-    return await ctx.runQuery(internal.events._internal.getUserStats, {
-      userName: args.userName,
-    });
+    return await Events.getUserStats(ctx, args.userName);
   },
 });
 
@@ -368,26 +532,38 @@ export const getStats = query({
  */
 export const create = mutation({
   args: {
-    userId: v.string(),
-    username: v.string(),
-    ...eventCreateInputValidator.fields,
+    event: eventDataValidator,
+    eventMetadata: v.optional(v.any()),
+    comment: v.optional(v.string()),
+    lists: v.array(listValidator),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
   },
-  returns: v.object({ id: v.string() }),
   handler: async (ctx, args) => {
-    const eventId = generatePublicId();
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to create events");
+    }
 
-    await ctx.runMutation(internal.events._internal.createEventWithRelations, {
-      eventId,
-      userId: args.userId,
-      username: args.username,
-      event: args.event,
-      eventMetadata: args.eventMetadata,
-      comment: args.comment,
-      lists: args.lists,
-      visibility: args.visibility,
-    });
+    // Get user info
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", identity.subject))
+      .unique();
 
-    return { id: eventId };
+    if (!user) {
+      throw new ConvexError("User not found");
+    }
+
+    return await Events.createEvent(
+      ctx,
+      identity.subject,
+      user.username,
+      args.event,
+      args.eventMetadata as Record<string, unknown> | undefined,
+      args.comment,
+      args.lists,
+      args.visibility,
+    );
   },
 });
 
@@ -396,24 +572,33 @@ export const create = mutation({
  */
 export const update = mutation({
   args: {
-    userId: v.string(),
-    isAdmin: v.optional(v.boolean()),
-    ...eventUpdateInputValidator.fields,
+    id: v.string(),
+    event: eventDataValidator,
+    eventMetadata: v.optional(v.any()),
+    comment: v.optional(v.string()),
+    lists: v.array(listValidator),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
   },
-  returns: v.object({ id: v.string() }),
   handler: async (ctx, args) => {
-    await ctx.runMutation(internal.events._internal.updateEventWithRelations, {
-      eventId: args.id,
-      userId: args.userId,
-      isAdmin: args.isAdmin ?? false,
-      event: args.event,
-      eventMetadata: args.eventMetadata,
-      comment: args.comment,
-      lists: args.lists,
-      visibility: args.visibility,
-    });
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to update events");
+    }
 
-    return { id: args.id };
+    // Check if user is admin (you may need to implement this based on your auth system)
+    const isAdmin = false; // TODO: Implement admin check
+
+    return await Events.updateEvent(
+      ctx,
+      identity.subject,
+      args.id,
+      args.event,
+      args.eventMetadata as Record<string, unknown> | undefined,
+      args.comment,
+      args.lists,
+      args.visibility,
+      isAdmin,
+    );
   },
 });
 
@@ -421,20 +606,17 @@ export const update = mutation({
  * Delete an event
  */
 export const deleteEvent = mutation({
-  args: {
-    id: v.string(),
-    userId: v.string(),
-    isAdmin: v.optional(v.boolean()),
-  },
-  returns: v.object({ id: v.string() }),
+  args: { id: v.string() },
   handler: async (ctx, args) => {
-    await ctx.runMutation(internal.events._internal.deleteEventWithRelations, {
-      eventId: args.id,
-      userId: args.userId,
-      isAdmin: args.isAdmin ?? false,
-    });
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to delete events");
+    }
 
-    return { id: args.id };
+    // Check if user is admin (you may need to implement this based on your auth system)
+    const isAdmin = false; // TODO: Implement admin check
+
+    return await Events.deleteEvent(ctx, identity.subject, args.id, isAdmin);
   },
 });
 
@@ -442,16 +624,14 @@ export const deleteEvent = mutation({
  * Follow an event
  */
 export const follow = mutation({
-  args: {
-    id: v.string(),
-    userId: v.string(),
-  },
-  returns: v.union(eventWithRelationsValidator, v.null()),
+  args: { id: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.runMutation(internal.events._internal.followEvent, {
-      eventId: args.id,
-      userId: args.userId,
-    });
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to follow events");
+    }
+
+    return await Events.followEvent(ctx, identity.subject, args.id);
   },
 });
 
@@ -459,16 +639,14 @@ export const follow = mutation({
  * Unfollow an event
  */
 export const unfollow = mutation({
-  args: {
-    id: v.string(),
-    userId: v.string(),
-  },
-  returns: v.union(eventWithRelationsValidator, v.null()),
+  args: { id: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.runMutation(internal.events._internal.unfollowEvent, {
-      eventId: args.id,
-      userId: args.userId,
-    });
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to unfollow events");
+    }
+
+    return await Events.unfollowEvent(ctx, identity.subject, args.id);
   },
 });
 
@@ -479,16 +657,14 @@ export const addToList = mutation({
   args: {
     eventId: v.string(),
     listId: v.string(),
-    userId: v.string(),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
-    await ctx.runMutation(internal.events._internal.addEventToList, {
-      eventId: args.eventId,
-      listId: args.listId,
-      userId: args.userId,
-    });
-    return null;
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to add events to lists");
+    }
+
+    await Events.addEventToList(ctx, args.eventId, args.listId);
   },
 });
 
@@ -499,16 +675,16 @@ export const removeFromList = mutation({
   args: {
     eventId: v.string(),
     listId: v.string(),
-    userId: v.string(),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
-    await ctx.runMutation(internal.events._internal.removeEventFromList, {
-      eventId: args.eventId,
-      listId: args.listId,
-      userId: args.userId,
-    });
-    return null;
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError(
+        "User must be logged in to remove events from lists",
+      );
+    }
+
+    await Events.removeEventFromList(ctx, args.eventId, args.listId);
   },
 });
 
@@ -519,15 +695,20 @@ export const toggleVisibility = mutation({
   args: {
     id: v.string(),
     visibility: v.union(v.literal("public"), v.literal("private")),
-    userId: v.string(),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
-    await ctx.runMutation(internal.events._internal.toggleEventVisibility, {
-      eventId: args.id,
-      visibility: args.visibility,
-      userId: args.userId,
-    });
-    return null;
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError(
+        "User must be logged in to change event visibility",
+      );
+    }
+
+    return await Events.toggleEventVisibility(
+      ctx,
+      identity.subject,
+      args.id,
+      args.visibility,
+    );
   },
 });
