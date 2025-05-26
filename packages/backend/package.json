@@ -12,7 +12,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "build": "convex build",
+    "build": "convex codegen",
     "dev": "convex dev",
     "setup": "convex dev --until-success",
     "clean": "git clean -xdf .cache .turbo node_modules",

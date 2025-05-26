@@ -90,3 +90,95 @@ function handleButtonPress() {
 Use the Convex CLI to push your functions to a deployment. See everything
 the Convex CLI can do by running `npx convex -h` in your project root
 directory. To learn more, launch the docs with `npx convex docs`.
+
+# Convex Backend
+
+This package contains the Convex backend functions for the Soonlist application.
+
+## Structure
+
+- `schema.ts` - Database schema definitions
+- `users.ts` - User management functions (migrated from tRPC)
+- `utils.ts` - Utility functions
+
+## Users Functions
+
+The users module provides the following functions:
+
+### Queries (Read Operations)
+
+- `getById(id: string)` - Get a user by their ID
+- `getByUsername(userName: string)` - Get a user by their username
+- `getAll()` - Get all users ordered by username
+- `getFollowing(userName: string)` - Get users that a given user is following
+- `getIfFollowing(followerId: string, followingId: string)` - Check if one user is following another
+- `getAllTakenEmojis()` - Get all emojis currently in use
+- `getOnboardingData(userId: string)` - Get onboarding data for a user
+
+### Mutations (Write Operations)
+
+- `follow(followerId: string, followingId: string)` - Follow a user
+- `unfollow(followerId: string, followingId: string)` - Unfollow a user
+- `updateAdditionalInfo(userId: string, info: UserAdditionalInfo)` - Update user profile info
+- `updateEmoji(userId: string, emoji: string | null)` - Update user emoji
+- `saveOnboardingData(userId: string, data: OnboardingData)` - Save onboarding data
+- `deleteAccount(userId: string)` - Delete a user account and all related data
+- `resetOnboarding(userId: string)` - Reset onboarding for a user
+- `setOnboardingCompletedAt(userId: string, completedAt: string)` - Mark onboarding as completed
+
+## Usage Example
+
+```typescript
+import { useMutation, useQuery } from "convex/react";
+
+import { api } from "../convex/_generated/api";
+
+// Get a user by username
+const user = useQuery(api.users.getByUsername, { userName: "john_doe" });
+
+// Follow a user
+const followUser = useMutation(api.users.follow);
+await followUser({ followerId: "user1", followingId: "user2" });
+
+// Update user profile
+const updateProfile = useMutation(api.users.updateAdditionalInfo);
+await updateProfile({
+  userId: "user1",
+  bio: "Software developer",
+  publicEmail: "john@example.com",
+});
+```
+
+## Migration from tRPC
+
+This module replaces the tRPC users router with equivalent Convex functions. Key differences:
+
+1. **Authentication**: Instead of using `ctx.auth.userId` from Clerk, user IDs are passed as explicit parameters
+2. **Error Handling**: Uses `ConvexError` instead of `TRPCError`
+3. **Validation**: Uses Convex validators (`v.*`) instead of Zod schemas
+4. **Database Access**: Uses Convex database queries instead of Drizzle ORM
+
+## Development
+
+To add new functions:
+
+1. Define the function in the appropriate file
+2. Add proper argument and return validators
+3. Update this README with the new function
+4. Test the function in your application
+
+## Schema
+
+The users table includes the following fields:
+
+- `id` - Custom user ID (from Clerk)
+- `username` - Unique username
+- `email` - User email
+- `displayName` - Display name
+- `userImage` - Profile image URL
+- `bio` - User biography (optional)
+- `publicEmail`, `publicPhone`, `publicInsta`, `publicWebsite` - Public contact info (optional)
+- `emoji` - User emoji (optional, unique)
+- `onboardingData` - Onboarding information (JSON)
+- `onboardingCompletedAt` - Onboarding completion timestamp
+- `created_at`, `updatedAt` - Timestamps
