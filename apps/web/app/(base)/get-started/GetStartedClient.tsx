@@ -173,9 +173,6 @@ export function GetStartedClient() {
               </Button>
             </div>
           </div>
-          <div className="flex w-full justify-center">
-            <EmojiPicker currentEmoji={user?.emoji || undefined} />
-          </div>
         </CardContent>
       </Card>
 
