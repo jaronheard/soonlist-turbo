@@ -6,8 +6,8 @@ export default defineSchema({
     content: v.string(),
     eventId: v.string(),
     userId: v.string(),
-    id: v.number(),
-    oldId: v.union(v.string(), v.null()),
+    id: v.number(), // numeric id field from Planetscale
+    oldId: v.union(v.string(), v.null()), // This is an oldId from Planetscale
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null
   })
@@ -15,7 +15,7 @@ export default defineSchema({
     .index("by_user", ["userId"]),
 
   events: defineTable({
-    id: v.string(),
+    id: v.string(), // custom id field from Planetscale
     userId: v.string(),
     userName: v.string(),
     event: v.any(), // JSON field
@@ -71,7 +71,7 @@ export default defineSchema({
     .index("by_follower_and_following", ["followerId", "followingId"]),
 
   lists: defineTable({
-    id: v.string(), // keeping the custom id field
+    id: v.string(), // custom id field from Planetscale
     userId: v.string(),
     name: v.string(),
     description: v.string(),
@@ -108,7 +108,7 @@ export default defineSchema({
   pushTokens: defineTable({
     userId: v.string(),
     expoPushToken: v.string(),
-    id: v.number(), // numeric id field
+    id: v.number(), // numeric id field from Planetscale
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null
   })
