@@ -13,6 +13,9 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as ai__internal from "../ai/_internal.js";
+import type * as ai_helpers from "../ai/helpers.js";
+import type * as ai_index from "../ai/index.js";
 import type * as events__internal from "../events/_internal.js";
 import type * as events_user__internal from "../events/user/_internal.js";
 import type * as events_user from "../events/user.js";
@@ -30,6 +33,9 @@ import type * as utils from "../utils.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "ai/_internal": typeof ai__internal;
+  "ai/helpers": typeof ai_helpers;
+  "ai/index": typeof ai_index;
   "events/_internal": typeof events__internal;
   "events/user/_internal": typeof events_user__internal;
   "events/user": typeof events_user;
