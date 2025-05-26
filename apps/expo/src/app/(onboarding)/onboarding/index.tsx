@@ -1,21 +1,24 @@
+"use client";
+
 import { ActivityIndicator, View } from "react-native";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { useQuery } from "convex/react";
 
-import { api } from "~/utils/api";
+import { api } from "@soonlist/backend";
 
 export default function OnboardingIndex() {
   const { user: clerkUser, isLoaded } = useUser();
   const searchParams = useLocalSearchParams();
 
-  // Get user data from our database
-  const { data: user, isLoading: isLoadingUser } = api.user.getById.useQuery(
-    { id: clerkUser?.id ?? "" },
-    { enabled: !!clerkUser?.id },
+  // Get user data from our database using Convex
+  const user = useQuery(
+    api.users.getById,
+    clerkUser?.id ? { id: clerkUser.id } : "skip",
   );
 
   // If we're still loading, show a spinner
-  if (!isLoaded || isLoadingUser) {
+  if (!isLoaded || !user) {
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" />
@@ -27,7 +30,7 @@ export default function OnboardingIndex() {
     return <Redirect href="/onboarding/demo-intro" />;
   }
 
-  if (user?.onboardingCompletedAt) {
+  if (user.onboardingCompletedAt) {
     return <Redirect href="/feed" />;
   }
 
