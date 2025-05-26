@@ -153,7 +153,6 @@ export function Footer() {
 const navigation = {
   events: [
     { name: "New", href: "/new" },
-    { name: "All", href: "/events" },
     { name: "Discover", href: "/explore" },
   ],
   support: [

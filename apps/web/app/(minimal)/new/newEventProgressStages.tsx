@@ -7,27 +7,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Camera,
-  EyeOff,
-  Globe2,
-  LinkIcon,
-  Plus,
-  Sparkles,
-  Text,
-} from "lucide-react";
+import { Camera, EyeOff, Globe2, LinkIcon, Sparkles, Text } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import type { List } from "@soonlist/db/types";
 import { Button } from "@soonlist/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@soonlist/ui/dialog";
 import {
   Form,
   FormControl,
@@ -38,7 +22,6 @@ import {
 } from "@soonlist/ui/form";
 import { Input } from "@soonlist/ui/input";
 import { Label } from "@soonlist/ui/label";
-import { MultiSelect } from "@soonlist/ui/multiselect";
 import {
   Select,
   SelectContent,
@@ -50,7 +33,6 @@ import { Stepper, StepStatus } from "@soonlist/ui/stepper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 import { Textarea } from "@soonlist/ui/textarea";
 
-import { AddListCard } from "~/components/AddListCard";
 import { ImageUpload } from "~/components/ImageUpload";
 import { Logo } from "~/components/Logo";
 import { SaveButton } from "~/components/SaveButton";
@@ -210,7 +192,6 @@ function ProgressStagesWrapper({
 export function ProgressStages({
   showUpload,
   filePath,
-  lists,
   Preview,
 }: {
   showUpload?: boolean;
@@ -329,10 +310,10 @@ export function ProgressStages({
               Organize your event
             </h2>
             <p className="text-base font-medium leading-5 text-neutral-2">
-              Choose lists, set visibility, and add your notes.
+              Set visibility, and add your notes.
             </p>
           </div>
-          <Organize lists={lists || []} form={form} filePath={filePath} />
+          <Organize form={form} filePath={filePath} />
           {/* This ensures that the event starts being processed by the LLM immediately */}
           <div className="hidden">{Preview}</div>
         </>
@@ -377,22 +358,13 @@ function ProgressStagesFooter({ children }: { children: React.ReactNode }) {
 
 function Organize({
   form,
-  lists,
   filePath,
 }: {
   form: ReturnType<typeof useForm<z.infer<typeof organizeFormSchema>>>;
-  lists?: List[];
   filePath?: string;
 }) {
   const { setOrganizeData } = useNewEventContext();
   const { goToNextStatus } = useNewEventProgressContext();
-
-  const listOptions = lists
-    ?.map((list) => ({
-      label: list.name,
-      value: list.id,
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label));
 
   const onSubmit = (values: z.infer<typeof organizeFormSchema>) => {
     setOrganizeData(values);
@@ -405,45 +377,6 @@ function Organize({
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex w-full flex-col gap-6"
       >
-        <FormField
-          control={form.control}
-          name="lists"
-          render={({ field: { ...field } }) => (
-            <FormItem>
-              <FormLabel>Add to list(s)</FormLabel>
-              <MultiSelect
-                AdditionalPopoverAction={() => (
-                  <Dialog>
-                    <DialogTrigger className="w-full p-1">
-                      <Button size="sm" className="w-full rounded-sm">
-                        <Plus className="-ml-2 mr-2 size-4" />
-                        New list
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add a new list</DialogTitle>
-                        <DialogDescription>
-                          <AddListCard
-                            name=""
-                            description=""
-                            visibility="public"
-                            afterSuccessFunction={() => null}
-                          />
-                        </DialogDescription>
-                      </DialogHeader>
-                    </DialogContent>
-                  </Dialog>
-                )}
-                selected={field.value}
-                options={listOptions || []}
-                placeholder="All events"
-                {...field}
-              />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormField
           control={form.control}
           name="visibility"

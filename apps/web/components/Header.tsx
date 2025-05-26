@@ -268,7 +268,7 @@ const UserMenu = () => {
         </div>
         <DropdownMenuSeparator />
         <div className="p-1"></div>
-        {sideNav(user.username || "").map((item, index) => (
+        {sideNav().map((item, index) => (
           <div
             key={`user-nav-${index}`}
             className="ml-2 flex flex-col space-y-3"
@@ -293,19 +293,9 @@ const UserMenu = () => {
   );
 };
 
-const sideNav = (username: string) => [
+const sideNav = () => [
   {
     items: [
-      {
-        title: "My Events & Lists",
-        href: `/${username}/events`,
-        signedInOnly: true,
-      },
-      {
-        title: "Following",
-        href: `/${username}/following`,
-        signedInOnly: true,
-      },
       {
         title: "About",
         href: `/about`,
@@ -403,7 +393,7 @@ export function MobileNav() {
           <SignedIn>
             <div className="p-1.5"></div>
             <div className="flex flex-col space-y-2">
-              {sideNav(user?.username || "").map((item, index) => (
+              {sideNav().map((item, index) => (
                 <div key={index} className="flex flex-col space-y-3">
                   {item.items.length &&
                     item.items.map((item) => (

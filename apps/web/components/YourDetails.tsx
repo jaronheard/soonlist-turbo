@@ -3,21 +3,12 @@
 import * as React from "react";
 import { SignedIn } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EyeOff, Globe2, PenSquare, Plus } from "lucide-react";
+import { EyeOff, Globe2, PenSquare } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import type { List } from "@soonlist/db/types";
-import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@soonlist/ui/dialog";
 import {
   Form,
   FormControl,
@@ -27,7 +18,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@soonlist/ui/form";
-import { MultiSelect } from "@soonlist/ui/multiselect";
 import {
   Select,
   SelectContent,
@@ -38,7 +28,6 @@ import {
 import { Textarea } from "@soonlist/ui/textarea";
 
 import { useNewEventContext } from "~/context/NewEventContext";
-import { AddListCard } from "./AddListCard";
 
 export const organizeFormSchema = z.object({
   notes: z.string().optional(),
@@ -47,7 +36,6 @@ export const organizeFormSchema = z.object({
 });
 
 export function YourDetails({
-  lists,
   comment,
   visibility,
   eventLists,
@@ -57,10 +45,6 @@ export function YourDetails({
   visibility?: "public" | "private";
   eventLists?: List[];
 }) {
-  const listOptions = lists?.map((list) => ({
-    label: list.name,
-    value: list.id,
-  }));
   const eventListOptions = eventLists?.map((list) => ({
     label: list.name,
     value: list.id,
@@ -105,45 +89,6 @@ export function YourDetails({
         <CardContent>
           <Form {...form}>
             <form className="flex flex-col gap-6">
-              <FormField
-                control={form.control}
-                name="lists"
-                render={({ field: { ...field } }) => (
-                  <FormItem>
-                    <FormLabel>Lists</FormLabel>
-                    <MultiSelect
-                      selected={field.value}
-                      options={listOptions || []}
-                      placeholder="All events"
-                      AdditionalPopoverAction={() => (
-                        <Dialog>
-                          <DialogTrigger className="w-full p-1">
-                            <Button size="sm" className="w-full rounded-sm">
-                              <Plus className="-ml-2 mr-2 size-4" />
-                              New list
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Add a new list</DialogTitle>
-                              <DialogDescription>
-                                <AddListCard
-                                  name=""
-                                  description=""
-                                  visibility="public"
-                                  afterSuccessFunction={() => null}
-                                />
-                              </DialogDescription>
-                            </DialogHeader>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                      {...field}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="notes"

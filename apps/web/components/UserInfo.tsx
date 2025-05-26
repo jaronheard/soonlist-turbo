@@ -6,7 +6,6 @@ import { Instagram, LinkIcon, Mail, MessageSquare } from "lucide-react";
 import { Button, buttonVariants } from "@soonlist/ui/button";
 
 import { api } from "~/trpc/server";
-import { FollowUserButton } from "./FollowButtons";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 const SAMPLE_BIO = `I haven't written a bio yet... you'll have to find me at one of my events!`;
@@ -43,19 +42,12 @@ export async function UserInfo(props: UserInfoProps) {
 
   const self = activeUser?.username == user.username;
 
-  const following =
-    activeUser?.id &&
-    (await api.user.getIfFollowing({
-      followerId: activeUser.id,
-      followingId: user.id,
-    }));
-
   if (props.variant === "description") {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-6">
           <Link
-            href={`/${user.username}/events`}
+            href={`/${user.username}/upcoming`}
             className="relative flex-shrink-0"
           >
             <UserProfileFlair username={user.username} size="2xl">
@@ -69,7 +61,7 @@ export async function UserInfo(props: UserInfoProps) {
             </UserProfileFlair>
           </Link>
           <div className="flex flex-col overflow-hidden">
-            <Link href={`/${user.username}/events`}>
+            <Link href={`/${user.username}/upcoming`}>
               <p className=" text-2xl font-bold text-neutral-1">
                 {user.displayName}
               </p>
@@ -112,11 +104,6 @@ export async function UserInfo(props: UserInfoProps) {
               <LinkIcon className="size-6" />
             </a>
           )}
-          {!self && (
-            <div>
-              <FollowUserButton userId={user.id} following={!!following} />
-            </div>
-          )}
         </div>
         <div className="text-2xl text-neutral-2">{user.bio || SAMPLE_BIO}</div>
         {self && (
@@ -130,7 +117,7 @@ export async function UserInfo(props: UserInfoProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-3">
-        <Link href={`/${user.username}/events`}>
+        <Link href={`/${user.username}/upcoming`}>
           <UserProfileFlair username={user.username}>
             <Image
               className="inline-block size-9 rounded-full object-cover object-center"
@@ -141,7 +128,7 @@ export async function UserInfo(props: UserInfoProps) {
             />
           </UserProfileFlair>
         </Link>
-        <Link href={`/${user.username}/events`} className="group">
+        <Link href={`/${user.username}/upcoming`} className="group">
           <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
             {user.displayName}
           </p>
@@ -150,11 +137,6 @@ export async function UserInfo(props: UserInfoProps) {
           </p>
         </Link>
       </div>
-      {!self && (
-        <div>
-          <FollowUserButton userId={user.id} following={!!following} />
-        </div>
-      )}
     </div>
   );
 }

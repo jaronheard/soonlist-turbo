@@ -82,6 +82,52 @@ const nextConfig = {
         destination: "https://testflight.apple.com/join/AjmerTKm",
         permanent: false,
       },
+      // Redirects for deleted routes
+      {
+        source: "/:userName/events",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/:userName/following",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/:userName/following/lists",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/:userName/following/users",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/:userName/saved",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/:userName/list/:listId",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/:userName/list/:listId/edit",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/:userName/list/new",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/users",
+        destination: "/",
+        permanent: true,
+      },
     ];
   },
   // This is required to support PostHog trailing slash API requests
