@@ -44,14 +44,12 @@ import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { feedback } from "~/lib/intercom/intercom";
 import { cn } from "~/lib/utils";
-import { api } from "~/trpc/react";
 import { CalendarButton } from "./CalendarButton";
 import { DeleteButton } from "./DeleteButton";
 import { EditButton } from "./EditButton";
 import EventCard from "./EventCard";
-import { FollowEventButton, FollowUserButton } from "./FollowButtons";
+import { FollowEventButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
-import { ListCard } from "./ListCard";
 import { ShareButton } from "./ShareButton";
 import { UserProfileFlair } from "./UserProfileFlair";
 
@@ -696,30 +694,7 @@ interface UserInfoMiniProps {
 export function UserInfoMini({
   username,
   userImage,
-  showFollowButton = true,
 }: Omit<UserInfoMiniProps, "displayName">) {
-  const { user: activeUser } = useUser();
-
-  const userQuery = api.user.getByUsername.useQuery({
-    userName: username,
-  });
-
-  const followingQuery = api.user.getIfFollowing.useQuery(
-    {
-      followerId: activeUser?.id || "",
-      followingId: userQuery.data?.id || "",
-    },
-    {
-      enabled: !!activeUser?.id && !!userQuery.data?.id,
-    },
-  );
-
-  const user = userQuery.data;
-
-  const self = activeUser?.username === user?.username;
-
-  const following = followingQuery.data;
-
   return (
     <div className="flex items-center gap-0.5">
       <Link href={`/${username}/events`} className="relative flex items-center">
@@ -738,20 +713,13 @@ export function UserInfoMini({
           @{username}
         </p>
       </Link>
-      <div className="flex h-5 items-center">
-        {!self && user?.id && showFollowButton && (
-          <div className="origin-left scale-50 transform">
-            <FollowUserButton userId={user.id} following={!!following} />
-          </div>
-        )}
-      </div>
     </div>
   );
 }
 
 export function EventListItem(props: EventListItemProps) {
   const { user: clerkUser } = useUser();
-  const { user, eventFollows, id, event, filePath, visibility, lists } = props;
+  const { user, eventFollows, id, event, filePath, visibility } = props;
   const roles = clerkUser?.unsafeMetadata.roles as string[] | undefined;
   const isSelf = clerkUser?.id === user?.id;
   const isOwner = isSelf || roles?.includes("admin");
@@ -800,19 +768,6 @@ export function EventListItem(props: EventListItemProps) {
             />
           </div>
           <div className="p-1">
-            {user &&
-              lists &&
-              lists.length > 0 &&
-              lists.map((list) => (
-                <ListCard
-                  key={list.id}
-                  name={list.name}
-                  id={list.id}
-                  username={user.username}
-                  visibility={list.visibility}
-                  variant="badge"
-                ></ListCard>
-              ))}
             {user &&
               !isSelf &&
               (props.showOtherCurators || !props.hideCurator) && (
@@ -900,19 +855,6 @@ export function EventListItem(props: EventListItemProps) {
       </div>
       <div className="p-3"></div>
       <div className="absolute bottom-2 left-2 z-10 flex gap-2">
-        {user &&
-          lists &&
-          lists.length > 0 &&
-          lists.map((list) => (
-            <ListCard
-              key={list.id}
-              name={list.name}
-              id={list.id}
-              username={user.username}
-              visibility={list.visibility}
-              variant="badge"
-            ></ListCard>
-          ))}
         {user && (
           <UserInfoMini
             username={user.username}

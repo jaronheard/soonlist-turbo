@@ -6,7 +6,6 @@ import { Instagram, LinkIcon, Mail, MessageSquare } from "lucide-react";
 import { Button, buttonVariants } from "@soonlist/ui/button";
 
 import { api } from "~/trpc/server";
-import { FollowUserButton } from "./FollowButtons";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 const SAMPLE_BIO = `I haven't written a bio yet... you'll have to find me at one of my events!`;
@@ -42,13 +41,6 @@ export async function UserInfo(props: UserInfoProps) {
   }
 
   const self = activeUser?.username == user.username;
-
-  const following =
-    activeUser?.id &&
-    (await api.user.getIfFollowing({
-      followerId: activeUser.id,
-      followingId: user.id,
-    }));
 
   if (props.variant === "description") {
     return (
@@ -112,11 +104,6 @@ export async function UserInfo(props: UserInfoProps) {
               <LinkIcon className="size-6" />
             </a>
           )}
-          {!self && (
-            <div>
-              <FollowUserButton userId={user.id} following={!!following} />
-            </div>
-          )}
         </div>
         <div className="text-2xl text-neutral-2">{user.bio || SAMPLE_BIO}</div>
         {self && (
@@ -150,11 +137,6 @@ export async function UserInfo(props: UserInfoProps) {
           </p>
         </Link>
       </div>
-      {!self && (
-        <div>
-          <FollowUserButton userId={user.id} following={!!following} />
-        </div>
-      )}
     </div>
   );
 }
