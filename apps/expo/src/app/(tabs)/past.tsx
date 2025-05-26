@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -16,35 +16,6 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 
-// Type adapter to transform Convex data to match component expectations
-function transformConvexEvent(convexEvent: any) {
-  return {
-    ...convexEvent,
-    startDateTime: new Date(convexEvent.startDateTime),
-    endDateTime: new Date(convexEvent.endDateTime),
-    createdAt: new Date(convexEvent.createdAt),
-    updatedAt: convexEvent.updatedAt ? new Date(convexEvent.updatedAt) : null,
-    user: convexEvent.user
-      ? {
-          ...convexEvent.user,
-          createdAt: new Date(convexEvent.user.createdAt),
-          updatedAt: convexEvent.user.updatedAt
-            ? new Date(convexEvent.user.updatedAt)
-            : null,
-          onboardingCompletedAt: convexEvent.user.onboardingCompletedAt
-            ? new Date(convexEvent.user.onboardingCompletedAt)
-            : null,
-        }
-      : convexEvent.user,
-    comments:
-      convexEvent.comments?.map((comment: any) => ({
-        ...comment,
-        createdAt: new Date(comment.createdAt),
-        updatedAt: comment.updatedAt ? new Date(comment.updatedAt) : null,
-      })) || [],
-  };
-}
-
 function PastEventsContent() {
   const { user } = useUser();
   const { customerInfo } = useRevenueCat();
@@ -52,7 +23,7 @@ function PastEventsContent() {
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const {
-    results: rawEvents,
+    results: events,
     status,
     loadMore,
     isLoading,
@@ -66,11 +37,6 @@ function PastEventsContent() {
       initialNumItems: 20,
     },
   );
-
-  // Transform Convex events to match component expectations
-  const events = useMemo(() => {
-    return rawEvents?.map(transformConvexEvent) ?? [];
-  }, [rawEvents]);
 
   const handleLoadMore = useCallback(() => {
     if (status === "CanLoadMore") {

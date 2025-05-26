@@ -35,7 +35,83 @@ export function useEventActions({
   const deleteEventMutation = useMutation(api.events.deleteEvent);
   const unfollowEventMutation = useMutation(api.events.unfollow);
   const followEventMutation = useMutation(api.events.follow);
-  const toggleVisibilityMutation = useMutation(api.events.toggleVisibility);
+
+  // Use optimistic updates for visibility toggle
+  const toggleVisibilityMutation = useMutation(
+    api.events.toggleVisibility,
+  ).withOptimisticUpdate((localStore, args) => {
+    const { id, visibility } = args;
+
+    // Update the single event query if it's loaded
+    const currentEvent = localStore.getQuery(api.events.get, { eventId: id });
+    if (currentEvent !== undefined && currentEvent !== null) {
+      localStore.setQuery(
+        api.events.get,
+        { eventId: id },
+        {
+          ...currentEvent,
+          visibility,
+        },
+      );
+    }
+
+    // Update user events queries if they're loaded and the user owns the event
+    if (user?.username && event.user?.username === user.username) {
+      // Update upcoming events for user
+      const upcomingEvents = localStore.getQuery(
+        api.events.getUpcomingForUser,
+        {
+          userName: user.username,
+        },
+      );
+      if (upcomingEvents !== undefined) {
+        const updatedUpcomingEvents = upcomingEvents.map((evt) =>
+          evt.id === id ? { ...evt, visibility } : evt,
+        );
+        localStore.setQuery(
+          api.events.getUpcomingForUser,
+          {
+            userName: user.username,
+          },
+          updatedUpcomingEvents,
+        );
+      }
+
+      // Update created events for user
+      const createdEvents = localStore.getQuery(api.events.getCreatedForUser, {
+        userName: user.username,
+      });
+      if (createdEvents !== undefined) {
+        const updatedCreatedEvents = createdEvents.map((evt) =>
+          evt.id === id ? { ...evt, visibility } : evt,
+        );
+        localStore.setQuery(
+          api.events.getCreatedForUser,
+          {
+            userName: user.username,
+          },
+          updatedCreatedEvents,
+        );
+      }
+
+      // Update events for user
+      const userEvents = localStore.getQuery(api.events.getForUser, {
+        userName: user.username,
+      });
+      if (userEvents !== undefined) {
+        const updatedUserEvents = userEvents.map((evt) =>
+          evt.id === id ? { ...evt, visibility } : evt,
+        );
+        localStore.setQuery(
+          api.events.getForUser,
+          {
+            userName: user.username,
+          },
+          updatedUserEvents,
+        );
+      }
+    }
+  });
 
   const triggerHaptic = () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

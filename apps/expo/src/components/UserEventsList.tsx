@@ -14,10 +14,9 @@ import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useMutation } from "convex/react";
 
+import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
-import { api } from "@soonlist/backend/convex/_generated/api";
 
 import {
   CalendarPlus,
@@ -90,7 +89,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
     handleToggleVisibility: toggleVisibilityAction,
     showDiscover,
   } = useEventActions({ event, isSaved, demoMode });
-  const toggleVisibilityMutation = useMutation(api.events.toggleVisibility);
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
 
