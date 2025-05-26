@@ -268,7 +268,7 @@ const UserMenu = () => {
         </div>
         <DropdownMenuSeparator />
         <div className="p-1"></div>
-        {sideNav(user.username || "").map((item, index) => (
+        {sideNav().map((item, index) => (
           <div
             key={`user-nav-${index}`}
             className="ml-2 flex flex-col space-y-3"
