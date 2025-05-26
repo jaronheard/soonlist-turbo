@@ -44,6 +44,7 @@
     "@react-native-community/datetimepicker": "catalog:",
     "@sentry/react-native": "catalog:",
     "@soonlist/api": "workspace:*",
+    "@soonlist/backend": "workspace:*",
     "@soonlist/cal": "workspace:*",
     "@soonlist/db": "workspace:*",
     "@tanstack/query-async-storage-persister": "catalog:",
