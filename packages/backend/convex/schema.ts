@@ -82,15 +82,6 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"]),
 
-  requestResponses: defineTable({
-    modelOutput: v.optional(v.any()), // JSON field
-    modelInput: v.any(), // JSON field
-    modelStatus: v.string(),
-    source: v.string(),
-    modelCompletionTime: v.optional(v.number()),
-    parsedOutput: v.optional(v.any()), // JSON field
-  }),
-
   users: defineTable({
     id: v.string(), // keeping the custom id field
     username: v.string(),
