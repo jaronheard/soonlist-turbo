@@ -3,12 +3,16 @@ import { Linking, Share } from "react-native";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useMutation } from "convex/react";
+import {
+  optimisticallyUpdateValueInPaginatedQuery,
+  useMutation,
+} from "convex/react";
 import { toast } from "sonner-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
@@ -31,6 +35,7 @@ export function useEventActions({
   const { user } = useUser();
   const isOwner = demoMode || (event && user?.id === event.user?.id);
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
+  const stableTimestamp = useAppStore((state) => state.getStableTimestamp());
 
   const deleteEventMutation = useMutation(api.events.deleteEvent);
   const unfollowEventMutation = useMutation(api.events.unfollow);
@@ -42,74 +47,45 @@ export function useEventActions({
   ).withOptimisticUpdate((localStore, args) => {
     const { id, visibility } = args;
 
-    // Update the single event query if it's loaded
-    const currentEvent = localStore.getQuery(api.events.get, { eventId: id });
-    if (currentEvent !== undefined && currentEvent !== null) {
-      localStore.setQuery(
-        api.events.get,
-        { eventId: id },
-        {
-          ...currentEvent,
-          visibility,
-        },
-      );
-    }
-
     // Update user events queries if they're loaded and the user owns the event
     if (user?.username && event?.user?.username === user.username) {
-      // Update upcoming events for user
-      const upcomingEvents = localStore.getQuery(
-        api.events.getUpcomingForUser,
+      // Update paginated events for user (used in feed)
+      optimisticallyUpdateValueInPaginatedQuery(
+        localStore,
+        api.events.getEventsForUserPaginated,
         {
           userName: user.username,
+          filter: "upcoming",
+          beforeThisDateTime: stableTimestamp,
+        },
+        (currentValue) => {
+          if (currentValue.id === id) {
+            return {
+              ...currentValue,
+              visibility,
+            };
+          }
+          return currentValue;
         },
       );
-      if (upcomingEvents !== undefined) {
-        const updatedUpcomingEvents = upcomingEvents.map((evt) =>
-          evt.id === id ? { ...evt, visibility } : evt,
-        );
-        localStore.setQuery(
-          api.events.getUpcomingForUser,
-          {
-            userName: user.username,
-          },
-          updatedUpcomingEvents,
-        );
-      }
-
-      // Update created events for user
-      const createdEvents = localStore.getQuery(api.events.getCreatedForUser, {
-        userName: user.username,
-      });
-      if (createdEvents !== undefined) {
-        const updatedCreatedEvents = createdEvents.map((evt) =>
-          evt.id === id ? { ...evt, visibility } : evt,
-        );
-        localStore.setQuery(
-          api.events.getCreatedForUser,
-          {
-            userName: user.username,
-          },
-          updatedCreatedEvents,
-        );
-      }
-
-      // Update events for user
-      const userEvents = localStore.getQuery(api.events.getForUser, {
-        userName: user.username,
-      });
-      if (userEvents !== undefined) {
-        const updatedUserEvents = userEvents.map((evt) =>
-          evt.id === id ? { ...evt, visibility } : evt,
-        );
-        localStore.setQuery(
-          api.events.getForUser,
-          {
-            userName: user.username,
-          },
-          updatedUserEvents,
-        );
-      }
+      optimisticallyUpdateValueInPaginatedQuery(
+        localStore,
+        api.events.getEventsForUserPaginated,
+        {
+          userName: user.username,
+          filter: "past",
+          beforeThisDateTime: stableTimestamp,
+        },
+        (currentValue) => {
+          if (currentValue.id === id) {
+            return {
+              ...currentValue,
+              visibility,
+            };
+          }
+          return currentValue;
+        },
+      );
     }
   });
 
@@ -165,19 +141,12 @@ export function useEventActions({
   ) => {
     if (!event || checkDemoMode() || !isOwner) return;
     triggerHaptic();
-    const action = newVisibility === "public" ? "Adding to" : "Removing from";
-    const loadingToastId = toast.loading(`${action} Discover...`);
     try {
       await toggleVisibilityMutation({
         id: event.id,
         visibility: newVisibility,
       });
-      toast.dismiss(loadingToastId);
-      const actionCompleted =
-        newVisibility === "public" ? "added to" : "removed from";
-      toast.success(`Event ${actionCompleted} Discover`);
     } catch (error) {
-      toast.dismiss(loadingToastId);
       toast.error(
         `Failed to update event visibility: ${(error as Error).message}`,
       );

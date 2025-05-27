@@ -86,7 +86,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const {
     handleDirections,
     handleAddToCal,
-    handleToggleVisibility: toggleVisibilityAction,
+    handleToggleVisibility,
     showDiscover,
   } = useEventActions({ event, isSaved, demoMode });
   const id = event.id;
@@ -352,7 +352,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   onPress={() => {
                     const nextVisibility =
                       event.visibility === "public" ? "private" : "public";
-                    void toggleVisibilityAction(nextVisibility);
+                    void handleToggleVisibility(nextVisibility);
                   }}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >

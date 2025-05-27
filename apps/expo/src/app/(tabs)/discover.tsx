@@ -18,6 +18,7 @@ import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
+import { useStableTimestamp } from "~/store";
 import { getPlanStatusFromUser } from "~/utils/plan";
 
 function DiscoverContent() {
@@ -26,6 +27,10 @@ function DiscoverContent() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
+  // Use the stable timestamp from the store that updates every 15 minutes
+  // This prevents InvalidCursor errors while still filtering for upcoming events
+  const stableTimestamp = useStableTimestamp();
+
   const {
     results: events,
     status,
@@ -33,7 +38,7 @@ function DiscoverContent() {
     isLoading,
   } = useStablePaginatedQuery(
     api.events.getDiscoverPaginated,
-    {},
+    { beforeThisDateTime: stableTimestamp },
     {
       initialNumItems: 20,
     },

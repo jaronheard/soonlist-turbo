@@ -157,6 +157,7 @@ export const getNext = query({
 export const getDiscoverPaginated = query({
   args: {
     paginationOpts: paginationOptsValidator,
+    beforeThisDateTime: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -164,19 +165,27 @@ export const getDiscoverPaginated = query({
       throw new ConvexError("User must be logged in to discover events");
     }
 
-    const now = new Date();
+    const { beforeThisDateTime } = args;
 
     // Get all events that are upcoming and public, excluding user's own events
     const result = await ctx.db
       .query("events")
-      .filter((q) =>
-        q.and(
+      .filter((q) => {
+        const baseFilter = q.and(
           q.eq(q.field("visibility"), "public"),
-          // TODO: Change to startDateTime when we have a way to filter out long events
-          q.gte(q.field("endDateTime"), now.toISOString()),
           q.neq(q.field("userId"), identity.subject),
-        ),
-      )
+        );
+
+        // Apply date filter only if beforeThisDateTime is provided
+        if (beforeThisDateTime) {
+          return q.and(
+            baseFilter,
+            q.gte(q.field("endDateTime"), beforeThisDateTime),
+          );
+        }
+
+        return baseFilter;
+      })
       .order("asc")
       .paginate(args.paginationOpts);
 
@@ -228,10 +237,10 @@ export const getEventsForUserPaginated = query({
     paginationOpts: paginationOptsValidator,
     userName: v.string(),
     filter: v.union(v.literal("upcoming"), v.literal("past")),
+    beforeThisDateTime: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { userName, filter } = args;
-    const now = new Date();
+    const { userName, filter, beforeThisDateTime } = args;
 
     const user = await ctx.db
       .query("users")
@@ -253,18 +262,21 @@ export const getEventsForUserPaginated = query({
     // Create a single query that filters for events that are either:
     // 1. Created by the user, OR
     // 2. Followed by the user
-    // AND match the date filter
+    // AND optionally match the date filter
     const eventsQuery = ctx.db.query("events").filter((q) => {
-      const dateFilter =
-        filter === "upcoming"
-          ? q.gte(q.field("endDateTime"), now.toISOString())
-          : q.lt(q.field("endDateTime"), now.toISOString());
-
       const userFilter = q.eq(q.field("userId"), user.id);
 
       // If there are no followed events, just filter by user
       if (followedEventIds.size === 0) {
-        return q.and(dateFilter, userFilter);
+        // Apply date filter only if beforeThisDateTime is provided
+        if (beforeThisDateTime) {
+          const dateFilter =
+            filter === "upcoming"
+              ? q.gte(q.field("endDateTime"), beforeThisDateTime)
+              : q.lt(q.field("endDateTime"), beforeThisDateTime);
+          return q.and(dateFilter, userFilter);
+        }
+        return userFilter;
       }
 
       // Create OR conditions for followed events
@@ -274,7 +286,16 @@ export const getEventsForUserPaginated = query({
 
       const eventFilter = q.or(userFilter, ...followedEventFilters);
 
-      return q.and(dateFilter, eventFilter);
+      // Apply date filter only if beforeThisDateTime is provided
+      if (beforeThisDateTime) {
+        const dateFilter =
+          filter === "upcoming"
+            ? q.gte(q.field("endDateTime"), beforeThisDateTime)
+            : q.lt(q.field("endDateTime"), beforeThisDateTime);
+        return q.and(dateFilter, eventFilter);
+      }
+
+      return eventFilter;
     });
 
     // Apply ordering and pagination
