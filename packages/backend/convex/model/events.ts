@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill";
 import { ConvexError } from "convex/values";
 
 import type { Doc } from "../_generated/dataModel";
@@ -37,11 +38,64 @@ function filterDuplicates<T extends { id: string }>(items: T[]): T[] {
   });
 }
 
-// Helper function to parse date/time with timezone
-function parseDateTime(date: string, time: string, _timeZone: string): Date {
-  // Using a simplified approach since Temporal is not available in Convex
-  const dateTimeString = `${date}T${time}:00`;
-  return new Date(dateTimeString);
+// Helper function to parse date/time with timezone using Temporal
+function parseDateTime(date: string, time: string, timeZone: string): Date {
+  // Validate inputs
+  if (!date || !time) {
+    throw new ConvexError(
+      `Invalid date or time: date="${date}", time="${time}"`,
+    );
+  }
+
+  // Validate date format (YYYY-MM-DD)
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  if (!datePattern.test(date)) {
+    throw new ConvexError(
+      `Invalid date format: "${date}". Expected YYYY-MM-DD`,
+    );
+  }
+
+  // Validate time format (HH:MM or HH:MM:SS)
+  const timePattern = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
+  if (!timePattern.test(time)) {
+    throw new ConvexError(
+      `Invalid time format: "${time}". Expected HH:MM or HH:MM:SS`,
+    );
+  }
+
+  try {
+    // Ensure time has seconds
+    const timeWithSeconds =
+      time.includes(":") && time.split(":").length === 3 ? time : `${time}:00`;
+
+    // Use Temporal to properly handle timezone conversion
+    const zonedDateTime = Temporal.ZonedDateTime.from(
+      `${date}T${timeWithSeconds}[${timeZone || "America/Los_Angeles"}]`,
+    );
+
+    // Convert to a regular Date object
+    return new Date(zonedDateTime.epochMilliseconds);
+  } catch (error) {
+    // Fallback to simplified approach if Temporal fails
+    console.warn(
+      "Temporal parsing failed, falling back to simple Date parsing:",
+      error,
+    );
+
+    const timeWithSeconds =
+      time.includes(":") && time.split(":").length === 3 ? time : `${time}:00`;
+    const dateTimeString = `${date}T${timeWithSeconds}`;
+    const parsedDate = new Date(dateTimeString);
+
+    // Validate that the Date object is valid
+    if (isNaN(parsedDate.getTime())) {
+      throw new ConvexError(
+        `Invalid date/time combination: "${dateTimeString}"`,
+      );
+    }
+
+    return parsedDate;
+  }
 }
 
 /**
@@ -581,6 +635,14 @@ export async function updateEvent(
   const startTime = eventData.startTime || "00:00";
   const endTime = eventData.endTime || "23:59";
   const timeZone = eventData.timeZone || "America/Los_Angeles";
+
+  // Validate required date fields
+  if (!eventData.startDate) {
+    throw new ConvexError("Start date is required");
+  }
+  if (!eventData.endDate) {
+    throw new ConvexError("End date is required");
+  }
 
   const startDateTime = parseDateTime(eventData.startDate, startTime, timeZone);
   const endDateTime = parseDateTime(eventData.endDate, endTime, timeZone);
