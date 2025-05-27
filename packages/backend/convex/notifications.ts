@@ -367,3 +367,31 @@ export const getTrialExpirationUsersQuery = internalQuery({
     return await Notifications.getTrialExpirationUsers(ctx);
   },
 });
+
+// ============================================================================
+// INTERNAL ACTIONS FOR WORKFLOW
+// ============================================================================
+
+/**
+ * Send push notification for event creation
+ */
+export const push = internalAction({
+  args: {
+    eventId: v.string(),
+    userId: v.string(),
+    userName: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    id: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    // TODO: Implement notification logic
+    // This will extract the notification logic from aiHelpers.createEventAndNotify
+    return {
+      success: true,
+      id: "stub-notification-id",
+    };
+  },
+});

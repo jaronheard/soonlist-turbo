@@ -1,9 +1,13 @@
+import { WorkflowManager } from "@convex-dev/workflow";
 import { ConvexError, v } from "convex/values";
 
-import { api } from "./_generated/api";
-import { action, mutation, query } from "./_generated/server";
+import { api, components, internal } from "./_generated/api";
+import { action, internalAction, mutation, query } from "./_generated/server";
 import * as AI from "./model/ai";
 import * as Events from "./model/events";
+
+// Create workflow manager instance
+const workflow = new WorkflowManager(components.workflow);
 
 // Validators for complex types
 const listValidator = v.object({
@@ -191,9 +195,9 @@ export const eventFromImageThenCreateThenNotification = mutation({
 });
 
 /**
- * Create event from base64 image
+ * Create event from base64 image using workflow
  */
-export const eventFromImageBase64ThenCreate = action({
+export const eventFromImageBase64ThenCreate = mutation({
   args: {
     base64Image: v.string(),
     timezone: v.string(),
@@ -206,24 +210,67 @@ export const eventFromImageBase64ThenCreate = action({
   },
   returns: v.object({
     success: v.boolean(),
-    eventId: v.optional(v.string()),
-    event: v.optional(v.any()),
-    error: v.optional(v.string()),
+    workflowId: v.string(),
   }),
-  handler: async (
-    ctx,
-    args,
-  ): Promise<{
-    success: boolean;
-    eventId?: string;
-    event?: unknown;
-    error?: string;
-  }> => {
-    // do stuff - process base64 image and create event
+  handler: async (ctx, args) => {
+    // Start the workflow
+    const workflowId = await workflow.start(
+      ctx,
+      internal.workflows.eventIngestion.eventFromImageBase64Workflow,
+      args,
+      {
+        onComplete: internal.workflows.onComplete.handleEventIngestionComplete,
+        context: { userId: args.userId },
+      },
+    );
+
     return {
       success: true,
-      eventId: "stub-event-id",
-      event: { id: "stub-event-id", name: "Stub Event" },
+      workflowId,
     };
+  },
+});
+
+// ============================================================================
+// INTERNAL ACTIONS FOR WORKFLOW
+// ============================================================================
+
+/**
+ * Extract event data from base64 image using AI
+ */
+export const extractEvent = internalAction({
+  args: {
+    base64Image: v.string(),
+    timezone: v.string(),
+  },
+  returns: v.object({
+    events: v.array(v.any()), // TODO: Use proper event validator
+    response: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    // TODO: Implement AI extraction logic from model/ai.ts
+    // This will call AI.processEventFromBase64Image
+    return {
+      events: [],
+      response: "Stub response",
+    };
+  },
+});
+
+/**
+ * Validate that we have at least one valid event
+ */
+export const validateFirstEvent = internalAction({
+  args: {
+    events: v.array(v.any()),
+  },
+  returns: v.any(), // TODO: Use proper event validator
+  handler: async (ctx, args) => {
+    // TODO: Implement validation logic from model/ai.ts
+    // This will call AI.validateFirstEvent
+    if (args.events.length === 0) {
+      throw new Error("No events found in response");
+    }
+    return args.events[0];
   },
 });

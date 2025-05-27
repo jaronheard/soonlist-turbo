@@ -15,6 +15,7 @@
     "@ai-sdk/anthropic": "catalog:",
     "@ai-sdk/openai": "catalog:",
     "@clerk/nextjs": "catalog:",
+    "@convex-dev/workflow": "^0.2.4",
     "@sentry/nextjs": "catalog:",
     "@sentry/node": "catalog:",
     "@soonlist/cal": "workspace:*",

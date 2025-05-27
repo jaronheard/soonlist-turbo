@@ -2,7 +2,15 @@ import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
 import type { QueryCtx } from "./_generated/server";
-import { mutation, query } from "./_generated/server";
+import { api, internal } from "./_generated/api";
+import {
+  action,
+  internalAction,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 import * as Events from "./model/events";
 
 // Helper function to enrich events and filter out nulls
@@ -471,5 +479,31 @@ export const toggleVisibility = mutation({
       args.id,
       args.visibility,
     );
+  },
+});
+
+// ============================================================================
+// INTERNAL ACTIONS FOR WORKFLOW
+// ============================================================================
+
+/**
+ * Insert event into database
+ */
+export const insertEvent = internalAction({
+  args: {
+    firstEvent: v.any(), // TODO: Use proper event validator
+    uploadedImageUrl: v.union(v.string(), v.null()),
+    timezone: v.string(),
+    comment: v.optional(v.string()),
+    lists: v.array(v.object({ value: v.string() })),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+    userId: v.string(),
+    username: v.string(),
+  },
+  returns: v.string(), // eventId
+  handler: async (ctx, args) => {
+    // TODO: Implement event insertion logic
+    // This will extract the DB write logic from aiHelpers.createEventAndNotify
+    return "stub-event-id";
   },
 });
