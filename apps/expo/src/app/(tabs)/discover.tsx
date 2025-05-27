@@ -12,7 +12,6 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
-import { ConvexAuthExample } from "~/components/ConvexAuthExample";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
@@ -89,7 +88,6 @@ function DiscoverContent() {
 
   return (
     <View className="flex-1 bg-white">
-      <ConvexAuthExample />
       {isLoading && status === "LoadingFirstPage" ? (
         <LoadingSpinner />
       ) : (
