@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "convex": {
+      "command": "npx",
+      "args": ["-y", "convex@latest", "mcp", "start"]
+    },
+    "react-native-debugger-mcp": {
+      "command": "npx",
+      "args": ["-y", "@twodoorsdev/react-native-debugger-mcp"]
+    },
+    "browser-tools-mcp": {
+      "command": "npx",
+      "args": ["-y", "@agentdeskai/browser-tools-mcp@1.2.0"]
+    }
+  }
+}
