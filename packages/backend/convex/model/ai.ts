@@ -3,6 +3,11 @@
 import { Buffer } from "buffer";
 import { ConvexError } from "convex/values";
 
+import { EventWithMetadata, EventWithMetadataSchema } from "@soonlist/cal";
+
+import type { ActionCtx, MutationCtx, QueryCtx } from "../_generated/server";
+import { fetchAndProcessEvent } from "./aiHelpers";
+
 export interface GenerateTextParams {
   prompt: string;
   temperature?: number;
@@ -16,33 +21,6 @@ interface AnthropicResponse {
     text: string;
   }[];
 }
-
-// Types for event processing
-export interface EventData {
-  name: string;
-  startDate: string;
-  endDate: string;
-  startTime?: string;
-  endTime?: string;
-  timeZone?: string;
-  location?: string;
-  description?: string;
-  images?: string[];
-  [key: string]: unknown;
-}
-
-export interface EventMetadata {
-  category?: string;
-  tags?: string[];
-  source?: string;
-  confidence?: number;
-  [key: string]: unknown;
-}
-
-export interface EventWithMetadata extends EventData {
-  eventMetadata?: EventMetadata;
-}
-
 export interface ProcessedEventResponse {
   events: EventWithMetadata[];
   response: string;
@@ -120,238 +98,6 @@ export async function generateText({
 }
 
 /**
- * Generate structured event data from raw text using AI
- */
-export async function processEventFromRawText(
-  rawText: string,
-  timezone: string,
-): Promise<ProcessedEventResponse> {
-  const prompt = `Extract event information from the following text and return it as a JSON object with the following structure:
-{
-  "events": [{
-    "name": "Event Name",
-    "startDate": "YYYY-MM-DD",
-    "endDate": "YYYY-MM-DD", 
-    "startTime": "HH:MM",
-    "endTime": "HH:MM",
-    "timeZone": "${timezone}",
-    "location": "Event Location",
-    "description": "Event Description",
-    "images": []
-  }],
-  "eventMetadata": {
-    "category": "category",
-    "tags": ["tag1", "tag2"],
-    "source": "text",
-    "confidence": 0.9
-  }
-}
-
-Text to process: ${rawText}`;
-
-  try {
-    const response = await generateText({
-      prompt,
-      temperature: 0.2,
-      maxTokens: 2000,
-    });
-
-    const parsed = JSON.parse(response) as {
-      events: EventData[];
-      eventMetadata?: EventMetadata;
-    };
-
-    // Validate the response structure
-    if (!parsed.events || !Array.isArray(parsed.events)) {
-      throw new Error("Invalid response format: missing events array");
-    }
-
-    // Add metadata to each event
-    const eventsWithMetadata: EventWithMetadata[] = parsed.events.map(
-      (event: EventData) => ({
-        ...event,
-        eventMetadata: parsed.eventMetadata || {},
-      }),
-    );
-
-    return {
-      events: eventsWithMetadata,
-      response,
-    };
-  } catch (error) {
-    console.error("Error processing event from raw text:", error);
-    throw new ConvexError("Failed to process event from text");
-  }
-}
-
-/**
- * Generate structured event data from image URL using AI
- */
-export async function processEventFromImage(
-  imageUrl: string,
-  timezone: string,
-): Promise<ProcessedEventResponse> {
-  const prompt = `Analyze this image and extract any event information. Return it as a JSON object with the following structure:
-{
-  "events": [{
-    "name": "Event Name",
-    "startDate": "YYYY-MM-DD",
-    "endDate": "YYYY-MM-DD", 
-    "startTime": "HH:MM",
-    "endTime": "HH:MM",
-    "timeZone": "${timezone}",
-    "location": "Event Location",
-    "description": "Event Description",
-    "images": ["${imageUrl}"]
-  }],
-  "eventMetadata": {
-    "category": "category",
-    "tags": ["tag1", "tag2"],
-    "source": "image",
-    "confidence": 0.9
-  }
-}
-
-If no event information can be extracted, return an empty events array.`;
-
-  try {
-    // For now, we'll use text-based processing since Anthropic's vision API
-    // requires a different approach. This would need to be enhanced with
-    // proper image analysis capabilities.
-    const response = await generateText({
-      prompt: `${prompt}\n\nImage URL: ${imageUrl}`,
-      temperature: 0.2,
-      maxTokens: 2000,
-    });
-
-    const parsed = JSON.parse(response) as {
-      events: EventData[];
-      eventMetadata?: EventMetadata;
-    };
-
-    if (!parsed.events || !Array.isArray(parsed.events)) {
-      throw new Error("Invalid response format: missing events array");
-    }
-
-    const eventsWithMetadata: EventWithMetadata[] = parsed.events.map(
-      (event: EventData) => ({
-        ...event,
-        eventMetadata: parsed.eventMetadata || {},
-        images: [imageUrl], // Ensure the original image is included
-      }),
-    );
-
-    return {
-      events: eventsWithMetadata,
-      response,
-    };
-  } catch (error) {
-    console.error("Error processing event from image:", error);
-    throw new ConvexError("Failed to process event from image");
-  }
-}
-
-/**
- * Generate structured event data from base64 image using AI
- */
-export async function processEventFromBase64Image(
-  base64Image: string,
-  timezone: string,
-): Promise<ProcessedEventResponse> {
-  // For now, we'll process this similarly to image URL
-  // In a full implementation, you'd want to upload the base64 image first
-  // and then process it, or use a vision API that accepts base64 directly
-
-  const prompt = `Analyze this base64 image and extract any event information. Return it as a JSON object with the following structure:
-{
-  "events": [{
-    "name": "Event Name",
-    "startDate": "YYYY-MM-DD",
-    "endDate": "YYYY-MM-DD", 
-    "startTime": "HH:MM",
-    "endTime": "HH:MM",
-    "timeZone": "${timezone}",
-    "location": "Event Location",
-    "description": "Event Description",
-    "images": []
-  }],
-  "eventMetadata": {
-    "category": "category",
-    "tags": ["tag1", "tag2"],
-    "source": "image",
-    "confidence": 0.9
-  }
-}
-
-If no event information can be extracted, return an empty events array.`;
-
-  try {
-    const response = await generateText({
-      prompt: `${prompt}\n\nBase64 image provided (truncated for processing)`,
-      temperature: 0.2,
-      maxTokens: 2000,
-    });
-
-    const parsed = JSON.parse(response) as {
-      events: EventData[];
-      eventMetadata?: EventMetadata;
-    };
-
-    if (!parsed.events || !Array.isArray(parsed.events)) {
-      throw new Error("Invalid response format: missing events array");
-    }
-
-    const eventsWithMetadata: EventWithMetadata[] = parsed.events.map(
-      (event: EventData) => ({
-        ...event,
-        eventMetadata: parsed.eventMetadata || {},
-      }),
-    );
-
-    return {
-      events: eventsWithMetadata,
-      response,
-    };
-  } catch (error) {
-    console.error("Error processing event from base64 image:", error);
-    throw new ConvexError("Failed to process event from base64 image");
-  }
-}
-
-/**
- * Fetch content from URL and process for events
- */
-export async function processEventFromUrl(
-  url: string,
-  timezone: string,
-): Promise<ProcessedEventResponse> {
-  try {
-    // Use Jina Reader to extract text content from URL
-    const jinaResponse = await fetch(`https://r.jina.ai/${url}`, {
-      method: "GET",
-    });
-
-    if (!jinaResponse.ok) {
-      throw new Error(
-        `Failed to fetch content from URL: ${jinaResponse.statusText}`,
-      );
-    }
-
-    const rawText = await jinaResponse.text();
-
-    if (!rawText || rawText.trim().length === 0) {
-      throw new Error("No content found at the provided URL");
-    }
-
-    // Process the extracted text
-    return await processEventFromRawText(rawText, timezone);
-  } catch (error) {
-    console.error("Error processing event from URL:", error);
-    throw new ConvexError("Failed to process event from URL");
-  }
-}
-
-/**
  * Upload base64 image to CDN
  */
 export async function uploadImageToCDNFromBase64(
@@ -397,25 +143,6 @@ export async function uploadImageToCDNFromBase64(
 }
 
 /**
- * Validate that the first event in the array is valid
- */
-export function validateFirstEvent(
-  events: EventWithMetadata[],
-): EventWithMetadata {
-  if (!events.length) {
-    throw new ConvexError("No events found in response");
-  }
-
-  const firstEvent = events[0];
-
-  if (!firstEvent.name || !firstEvent.startDate) {
-    throw new ConvexError("Invalid event data: missing required fields");
-  }
-
-  return firstEvent;
-}
-
-/**
  * Get day bounds for a given timezone
  */
 export function getDayBounds(_timezone: string) {
@@ -430,4 +157,135 @@ export function getDayBounds(_timezone: string) {
     start: startOfDay,
     end: endOfDay,
   };
+} /**
+ * Generate structured event data from base64 image using AI
+ * Extracted from eventFromImageBase64ThenCreate in ai router
+ */
+
+export async function processEventFromBase64Image(
+  ctx: ActionCtx,
+  input: {
+    base64Image: string;
+    timezone: string;
+  },
+): Promise<{
+  events: EventWithMetadata[];
+  response: string;
+}> {
+  try {
+    const aiResult = await fetchAndProcessEvent({
+      ctx,
+      input,
+      fnName: "eventFromImageBase64ThenCreate",
+    });
+
+    return aiResult;
+  } catch (error) {
+    console.error("Error in processEventFromBase64Image:", error); // Log the actual error
+    throw new ConvexError(
+      error instanceof Error
+        ? error.message
+        : "Unknown error occurred while processing image event",
+    );
+  }
+}
+/**
+ * Generate structured event data from URL using AI
+ * Extracted from eventFromUrlThenCreateThenNotification in ai router
+ */
+
+export async function processEventFromUrl(
+  ctx: QueryCtx | MutationCtx,
+  input: {
+    url: string;
+    timezone: string;
+    userId: string;
+    username: string;
+    comment?: string;
+    lists: { value: string }[];
+    visibility?: "public" | "private";
+    sendNotification?: boolean;
+  },
+): Promise<{
+  events: EventWithMetadata[];
+  validatedEvent: EventWithMetadata;
+}> {
+  try {
+    const { events } = await fetchAndProcessEvent({
+      ctx,
+      input,
+      fnName: "eventFromUrlThenCreateThenNotification",
+    });
+
+    const validatedEvent = validateFirstEvent(events);
+
+    return {
+      events,
+      validatedEvent,
+    };
+  } catch (error) {
+    console.error("Error in processEventFromUrl:", error); // Log the actual error
+    throw new ConvexError(
+      error instanceof Error
+        ? error.message
+        : "Unknown error occurred while processing URL event",
+    );
+  }
+}
+/**
+ * Generate structured event data from raw text using AI
+ * Extracted from eventFromRawTextThenCreateThenNotification in ai router
+ */
+
+export async function processEventFromText(
+  ctx: QueryCtx | MutationCtx,
+  input: {
+    rawText: string;
+    timezone: string;
+    userId: string;
+    username: string;
+    comment?: string;
+    lists: { value: string }[];
+    visibility?: "public" | "private";
+    sendNotification?: boolean;
+  },
+): Promise<{
+  events: EventWithMetadata[];
+  validatedEvent: EventWithMetadata;
+}> {
+  try {
+    const { events } = await fetchAndProcessEvent({
+      ctx,
+      input,
+      fnName: "eventFromRawTextThenCreateThenNotification",
+    });
+
+    const validatedEvent = validateFirstEvent(events);
+
+    return {
+      events,
+      validatedEvent,
+    };
+  } catch (error) {
+    console.error("Error in processEventFromText:", error); // Log the actual error
+    throw new ConvexError(
+      error instanceof Error
+        ? error.message
+        : "Unknown error occurred while processing text event",
+    );
+  }
+}
+
+export function validateFirstEvent(events: unknown[]) {
+  if (!events.length) {
+    throw new ConvexError("No events found in response");
+  }
+
+  try {
+    // This will throw if validation fails
+    const validatedEvent = EventWithMetadataSchema.parse(events[0]);
+    return validatedEvent;
+  } catch (error) {
+    throw new ConvexError("Invalid event data received");
+  }
 }

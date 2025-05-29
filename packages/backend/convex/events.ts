@@ -501,9 +501,103 @@ export const insertEvent = internalAction({
     username: v.string(),
   },
   returns: v.string(), // eventId
+  handler: async (ctx, args): Promise<string> => {
+    const { firstEvent, uploadedImageUrl, comment, lists, visibility } = args;
+
+    // Add uploaded image to event if available
+    const eventData = {
+      ...firstEvent,
+      ...(uploadedImageUrl && {
+        images: [
+          uploadedImageUrl,
+          uploadedImageUrl,
+          uploadedImageUrl,
+          uploadedImageUrl,
+        ],
+      }),
+    };
+
+    const result = await ctx.runMutation(internal.events.createEventInternal, {
+      userId: args.userId,
+      username: args.username,
+      eventData,
+      eventMetadata: firstEvent.eventMetadata,
+      comment,
+      lists,
+      visibility,
+    });
+
+    return result.id;
+  },
+});
+
+/**
+ * Internal mutation to create an event (called from workflow)
+ */
+export const createEventInternal = internalMutation({
+  args: {
+    userId: v.string(),
+    username: v.string(),
+    eventData: v.any(),
+    eventMetadata: v.optional(v.any()),
+    comment: v.optional(v.string()),
+    lists: v.array(v.object({ value: v.string() })),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+  },
+  returns: v.object({ id: v.string() }),
   handler: async (ctx, args) => {
-    // TODO: Implement event insertion logic
-    // This will extract the DB write logic from aiHelpers.createEventAndNotify
-    return "stub-event-id";
+    return await Events.createEvent(
+      ctx,
+      args.userId,
+      args.username,
+      args.eventData,
+      args.eventMetadata,
+      args.comment,
+      args.lists,
+      args.visibility,
+    );
+  },
+});
+
+/**
+ * Internal query to get an event by ID (called from workflow)
+ */
+export const getEventByIdInternal = internalQuery({
+  args: { eventId: v.string() },
+  returns: v.union(v.object({ name: v.string() }), v.null()),
+  handler: async (ctx, args) => {
+    const event = await Events.getEventById(ctx, args.eventId);
+    if (!event || !event.name) {
+      return null;
+    }
+    return { name: event.name };
+  },
+});
+
+/**
+ * Internal query to get today's events count for a user (called from workflow)
+ */
+export const getTodayEventsCountInternal = internalQuery({
+  args: { userId: v.string() },
+  returns: v.array(v.object({ id: v.string() })),
+  handler: async (ctx, args) => {
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) =>
+        q.and(
+          q.gte(q.field("created_at"), startOfDay.toISOString()),
+          q.lte(q.field("created_at"), endOfDay.toISOString()),
+        ),
+      )
+      .collect();
+
+    return events.map((event) => ({ id: event.id }));
   },
 });

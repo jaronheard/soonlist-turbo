@@ -10,11 +10,11 @@ import { logError } from "~/utils/errorLogging";
 
 /**
  * Hook to manage the flow of adding new events via the image picker.
- * Encapsulates paywall checks, image selection, and event queuing.
+ * Encapsulates paywall checks, image selection, and event creation.
  */
 export function useAddEventFlow() {
   const { user } = useUser();
-  const { enqueueEvents } = useCreateEvent();
+  const { createMultipleEvents } = useCreateEvent();
   const { setIsCapturing } = useInFlightEventStore();
 
   const triggerAddEventFlow = useCallback(async () => {
@@ -39,7 +39,6 @@ export function useAddEventFlow() {
 
         // Ensure user info is available before proceeding
         if (!username || !userId) {
-          // Set capturing state to false if there's an error
           setIsCapturing(false);
           toast.error("User information not available");
           logError(
@@ -53,22 +52,25 @@ export function useAddEventFlow() {
         // Respect the 20‑image limit in case the platform ignores selectionLimit
         const assets = result.assets.slice(0, 20);
 
-        // Queue the jobs – they'll keep running even if the app backgrounds
+        // Create events for all selected images
         // Medium impact to confirm jobs queued
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        void enqueueEvents(
-          assets.map((asset) => ({
-            imageUri: asset.uri,
-            userId,
-            username,
-          })),
-        ).catch((err) => {
-          // Handle potential synchronous errors during queuing
-          logError("Failed to enqueue events", err, { userId, username });
+
+        try {
+          await createMultipleEvents(
+            assets.map((asset) => ({
+              imageUri: asset.uri,
+              userId,
+              username,
+            })),
+          );
+        } catch (err) {
+          // Handle potential errors during event creation
+          logError("Failed to create events", err, { userId, username });
           toast.error("Failed to start adding events. Please try again.");
-          // Set capturing state to false if there's an error
+        } finally {
           setIsCapturing(false);
-        });
+        }
       } else {
         // User canceled or didn't select any images
         setIsCapturing(false);
@@ -77,10 +79,9 @@ export function useAddEventFlow() {
       // Permissions shouldn't be an issue here, but we'll log it
       logError("Error in triggerAddEventFlow photo picker", err);
       toast.error("Failed to open photo picker. Please try again.");
-      // Set capturing state to false if there's an error
       setIsCapturing(false);
     }
-  }, [user, enqueueEvents, setIsCapturing]);
+  }, [user, createMultipleEvents, setIsCapturing]);
 
   return { triggerAddEventFlow };
 }

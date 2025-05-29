@@ -12,8 +12,6 @@ export const uploadImage = internalAction({
   },
   returns: v.union(v.string(), v.null()),
   handler: async (ctx, args) => {
-    // TODO: Implement image upload logic from model/ai.ts
-    // This will call AI.uploadImageToCDNFromBase64
-    return null; // Stub return
+    return await AI.uploadImageToCDNFromBase64(args.base64Image);
   },
 });

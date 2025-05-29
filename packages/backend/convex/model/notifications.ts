@@ -1,4 +1,6 @@
 import type { QueryCtx } from "../_generated/server";
+import { generatePublicId } from "../utils";
+import { createDeepLink } from "./utils/urlScheme";
 
 // Types for notification operations
 export interface NotificationResult {
@@ -14,23 +16,6 @@ export interface BatchNotificationResult {
   totalProcessed: number;
   successfulNotifications: number;
   errors: { userId?: string; error: string }[];
-}
-
-/**
- * Generate a unique notification ID
- */
-export function generateNotificationId(): string {
-  return `not_${crypto.randomUUID().replace(/-/g, "").substring(0, 12)}`;
-}
-
-/**
- * Create a deep link URL with the proper scheme based on environment
- */
-export function createDeepLink(path: string): string {
-  const isDev = process.env.NODE_ENV !== "production";
-  const scheme = isDev ? "soonlist.dev" : "soonlist";
-  const cleanPath = path.startsWith("/") ? path.substring(1) : path;
-  return `${scheme}://${cleanPath}`;
 }
 
 /**
@@ -238,4 +223,8 @@ export async function generateWeeklyNotificationContent(
     message: `${prefix}${summary}`,
     link,
   };
+}
+
+export function generateNotificationId() {
+  return `not_${generatePublicId()}`;
 }

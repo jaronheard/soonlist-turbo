@@ -2,8 +2,7 @@ import { useCallback } from "react";
 import * as Haptics from "expo-haptics";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
-import { useAction, useMutation } from "convex/react";
-import pMap from "p-map";
+import { useMutation } from "convex/react";
 import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -14,16 +13,15 @@ import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 
 interface CreateEventOptions {
-  rawText?: string;
-  linkPreview?: string;
   imageUri?: string;
   userId: string;
   username: string;
   sendNotification?: boolean;
   suppressCapturing?: boolean;
+  // Legacy fields for text/URL events (not yet implemented with workflows)
+  rawText?: string;
+  linkPreview?: string;
 }
-
-const CONCURRENCY_LIMIT = 4; // tweak as needed
 
 // Optimize image off the main JS thread and return a base64 string
 async function optimizeImage(uri: string): Promise<string> {
@@ -50,220 +48,66 @@ async function optimizeImage(uri: string): Promise<string> {
   }
 }
 
-export async function enqueueEvents(
-  tasks: CreateEventOptions[],
-  deps: {
-    createSingle: (o: CreateEventOptions) => Promise<string | undefined>;
-    setIsCapturing: (b: boolean) => void;
-    logError: (
-      message: string,
-      error: unknown,
-      context?: Record<string, unknown>,
-    ) => void;
-    hasNotificationPermission: boolean;
-  },
-) {
-  const {
-    createSingle,
-    setIsCapturing,
-    logError: log,
-    hasNotificationPermission,
-  } = deps;
-  if (!tasks.length) return;
-
-  // We don't set isCapturing to true here anymore as it's already set in triggerAddEventFlow
-  // setIsCapturing(true);
-  const results = {
-    successCount: 0,
-    failureCount: 0,
-  };
-
-  try {
-    await pMap(
-      tasks,
-      async (task) => {
-        try {
-          // Attempt to create the single event
-          const eventId = await createSingle({
-            ...task,
-            suppressCapturing: true,
-          });
-          if (eventId) {
-            results.successCount++;
-          } else {
-            // This case might occur if createSingle returns undefined without throwing,
-            // e.g., due to paywall or other handled conditions within createSingle.
-            results.failureCount++;
-            log(
-              "Event creation returned no ID (handled failure)",
-              new Error("createSingle returned undefined"),
-              { task },
-            );
-          }
-        } catch (error) {
-          // Log the error for the specific task and increment failure count
-          results.failureCount++;
-          log("Error processing single event in enqueueEvents batch", error, {
-            task,
-          });
-          // We don't rethrow here, so pMap continues with other tasks
-        }
-      },
-      { concurrency: CONCURRENCY_LIMIT },
-    );
-  } finally {
-    setIsCapturing(false);
-    // Optionally, provide feedback based on results
-    if (results.failureCount > 0) {
-      toast.error(
-        `${results.failureCount} event(s) failed to process. ${results.successCount} succeeded.`,
-      );
-    } else if (results.successCount > 0) {
-      if (!hasNotificationPermission) {
-        toast.success(
-          `${results.successCount} event${results.successCount > 1 ? "s" : ""} captured successfully!`,
-        );
-      }
-      // If notifications are enabled, we rely on the native notification.
-    }
-  }
-}
-
 export function useCreateEvent() {
-  const { setIsImageLoading } = useAppStore();
+  const { setIsImageLoading, addWorkflowId } = useAppStore();
   const { setIsCapturing } = useInFlightEventStore();
   const { hasNotificationPermission } = useOneSignal();
   const userTimezone = useUserTimezone();
 
-  const eventFromUrl = useMutation(
-    api.ai.eventFromUrlThenCreateThenNotification,
-  );
-  const eventFromImageBase64 = useAction(api.ai.eventFromImageBase64ThenCreate);
-  const eventFromRaw = useMutation(
-    api.ai.eventFromRawTextThenCreateThenNotification,
+  const eventFromImageBase64 = useMutation(
+    api.ai.eventFromImageBase64ThenCreate,
   );
 
   const createEvent = useCallback(
-    async (options: CreateEventOptions): Promise<string | undefined> => {
+    async (options: CreateEventOptions): Promise<string> => {
       const {
-        rawText,
-        linkPreview,
         imageUri,
         userId,
         username,
         sendNotification = true,
+        suppressCapturing = false,
+        rawText,
+        linkPreview,
       } = options;
 
       try {
-        if (!options.suppressCapturing) {
+        if (!suppressCapturing) {
           setIsCapturing(true);
         }
-        // URL flow
-        if (linkPreview) {
-          const result = await eventFromUrl({
-            url: linkPreview,
-            userId,
-            username,
-            lists: [],
-            timezone: userTimezone,
-            visibility: "private",
-            sendNotification,
-          });
 
-          if (
-            result.success &&
-            result.event &&
-            typeof result.event === "object" &&
-            "id" in result.event
-          ) {
-            void Haptics.notificationAsync(
-              Haptics.NotificationFeedbackType.Success,
-            );
-            if (sendNotification && !hasNotificationPermission) {
-              toast.success("Event captured successfully!");
-            }
-            return result.event.id;
-          }
-          return undefined;
-        }
-
-        // Image flow
+        // Check if we have an image to process
         if (imageUri) {
           // Set loading state for both routes since we don't know which one is active
           setIsImageLoading(true, "add");
           setIsImageLoading(true, "new");
 
-          try {
-            // Convert photo library URI to file URI if needed
-            let fileUri = imageUri;
-            if (imageUri.startsWith("ph://")) {
-              const assetId = imageUri.replace("ph://", "").split("/")[0];
-              if (!assetId) {
-                throw new Error("Invalid photo library asset ID");
-              }
-              const asset = await MediaLibrary.getAssetInfoAsync(assetId);
-              if (!asset.localUri) {
-                throw new Error(
-                  "Could not get local URI for photo library asset",
-                );
-              }
-              fileUri = asset.localUri;
+          // Convert photo library URI to file URI if needed
+          let fileUri = imageUri;
+          if (imageUri.startsWith("ph://")) {
+            const assetId = imageUri.replace("ph://", "").split("/")[0];
+            if (!assetId) {
+              throw new Error("Invalid photo library asset ID");
             }
-
-            // Validate image URI
-            if (!fileUri.startsWith("file://")) {
-              throw new Error("Invalid image URI format");
-            }
-
-            // 1. Optimize image and get base64
-            const base64 = await optimizeImage(fileUri);
-
-            // 2. Create event with base64 image (backend handles upload now)
-            const eventResult = await eventFromImageBase64({
-              base64Image: base64,
-              userId,
-              username,
-              lists: [],
-              timezone: userTimezone,
-              visibility: "private",
-              sendNotification,
-            });
-
-            if (!eventResult.success) {
-              throw new Error(eventResult.error ?? "Failed to create event");
-            }
-
-            if (
-              eventResult.event &&
-              typeof eventResult.event === "object" &&
-              "id" in eventResult.event
-            ) {
-              void Haptics.notificationAsync(
-                Haptics.NotificationFeedbackType.Success,
+            const asset = await MediaLibrary.getAssetInfoAsync(assetId);
+            if (!asset.localUri) {
+              throw new Error(
+                "Could not get local URI for photo library asset",
               );
-              if (sendNotification && !hasNotificationPermission) {
-                toast.success("Event captured successfully!");
-              }
-              return eventResult.event.id as string;
             }
-            return undefined;
-          } catch (error) {
-            logError("Error processing image", error);
-            void Haptics.notificationAsync(
-              Haptics.NotificationFeedbackType.Error,
-            );
-            throw error; // Rethrow to trigger mutation's onError
-          } finally {
-            // Reset loading state for both routes
-            setIsImageLoading(false, "add");
-            setIsImageLoading(false, "new");
+            fileUri = asset.localUri;
           }
-        }
 
-        // Raw text flow
-        if (rawText) {
-          const result = await eventFromRaw({
-            rawText,
+          // Validate image URI
+          if (!fileUri.startsWith("file://")) {
+            throw new Error("Invalid image URI format");
+          }
+
+          // 1. Optimize image and get base64
+          const base64 = await optimizeImage(fileUri);
+
+          // 2. Create event with base64 image (backend handles upload now)
+          const startWorkflow = await eventFromImageBase64({
+            base64Image: base64,
             userId,
             username,
             lists: [],
@@ -272,49 +116,83 @@ export function useCreateEvent() {
             sendNotification,
           });
 
-          if (
-            result.success &&
-            result.event &&
-            typeof result.event === "object" &&
-            "id" in result.event
-          ) {
-            void Haptics.notificationAsync(
-              Haptics.NotificationFeedbackType.Success,
-            );
-            if (sendNotification && !hasNotificationPermission) {
-              toast.success("Event captured successfully!");
-            }
-            return result.event.id;
-          }
-          return undefined;
+          // 3. Track the workflow in our store
+          addWorkflowId(startWorkflow.workflowId);
+
+          return startWorkflow.workflowId;
         }
 
-        return undefined;
+        // Handle text/URL events (not yet implemented with workflows)
+        if (rawText || linkPreview) {
+          throw new Error(
+            "Text and URL-based event creation is not yet supported with the new workflow system. Please use an image for now.",
+          );
+        }
+
+        throw new Error("No image, text, or URL provided for event creation");
+      } catch (error) {
+        logError("Error processing event", error);
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        throw error; // Rethrow to trigger mutation's onError
       } finally {
-        if (!options.suppressCapturing) {
+        // Reset loading state for both routes
+        setIsImageLoading(false, "add");
+        setIsImageLoading(false, "new");
+
+        if (!suppressCapturing) {
           setIsCapturing(false);
         }
       }
     },
     [
-      eventFromUrl,
       userTimezone,
       setIsImageLoading,
       eventFromImageBase64,
-      eventFromRaw,
       setIsCapturing,
-      hasNotificationPermission,
+      addWorkflowId,
     ],
+  );
+
+  // Simplified batch creation - just call createEvent for each image
+  const createMultipleEvents = useCallback(
+    async (tasks: CreateEventOptions[]): Promise<void> => {
+      if (!tasks.length) return;
+
+      let successCount = 0;
+      let failureCount = 0;
+
+      // Process all images in parallel - Convex workflows handle the reliability
+      const promises = tasks.map(async (task) => {
+        try {
+          await createEvent({ ...task, suppressCapturing: true });
+          successCount++;
+        } catch (error) {
+          failureCount++;
+          logError("Error creating event from image", error, { task });
+        }
+      });
+
+      await Promise.allSettled(promises);
+
+      // Provide user feedback
+      if (failureCount > 0) {
+        toast.error(
+          `${failureCount} event(s) failed to process. ${successCount} succeeded.`,
+        );
+      } else if (successCount > 0) {
+        if (!hasNotificationPermission) {
+          toast.success(
+            `${successCount} event${successCount > 1 ? "s" : ""} captured successfully!`,
+          );
+        }
+        // If notifications are enabled, we rely on the native notification.
+      }
+    },
+    [createEvent, hasNotificationPermission],
   );
 
   return {
     createEvent,
-    enqueueEvents: (tasks: CreateEventOptions[]) =>
-      enqueueEvents(tasks, {
-        createSingle: createEvent,
-        setIsCapturing,
-        logError,
-        hasNotificationPermission,
-      }),
+    createMultipleEvents,
   };
 }

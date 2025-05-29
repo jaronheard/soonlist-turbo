@@ -156,6 +156,12 @@ interface AppState {
   setOnboardingData: (data: Partial<OnboardingData>) => void;
   currentOnboardingStep: OnboardingStep | null;
   setCurrentOnboardingStep: (step: OnboardingStep | null) => void;
+
+  // Workflow state
+  workflowIds: string[];
+  addWorkflowId: (workflowId: string) => void;
+  removeWorkflowId: (workflowId: string) => void;
+  clearAllWorkflowIds: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -390,6 +396,16 @@ export const useAppStore = create<AppState>()(
           lastTimestampUpdate: Date.now(),
           onboardingData: {},
           currentOnboardingStep: null,
+          workflowIds: [],
+          addWorkflowId: (workflowId) =>
+            set((state) => ({
+              workflowIds: [...state.workflowIds, workflowId],
+            })),
+          removeWorkflowId: (workflowId) =>
+            set((state) => ({
+              workflowIds: state.workflowIds.filter((id) => id !== workflowId),
+            })),
+          clearAllWorkflowIds: () => set({ workflowIds: [] }),
         }),
 
       // Stable timestamp for query filtering
@@ -417,6 +433,18 @@ export const useAppStore = create<AppState>()(
 
         return state.stableTimestamp;
       },
+
+      // Workflow state
+      workflowIds: [],
+      addWorkflowId: (workflowId) =>
+        set((state) => ({
+          workflowIds: [...state.workflowIds, workflowId],
+        })),
+      removeWorkflowId: (workflowId) =>
+        set((state) => ({
+          workflowIds: state.workflowIds.filter((id) => id !== workflowId),
+        })),
+      clearAllWorkflowIds: () => set({ workflowIds: [] }),
     }),
     {
       name: "app-storage",

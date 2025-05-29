@@ -1,10 +1,11 @@
 import { WorkflowManager } from "@convex-dev/workflow";
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
 
-import { api, components, internal } from "./_generated/api";
-import { action, internalAction, mutation, query } from "./_generated/server";
+import { EventWithMetadata } from "@soonlist/cal";
+
+import { components, internal } from "./_generated/api";
+import { internalAction, mutation, query } from "./_generated/server";
 import * as AI from "./model/ai";
-import * as Events from "./model/events";
 
 // Create workflow manager instance
 const workflow = new WorkflowManager(components.workflow);
@@ -212,16 +213,15 @@ export const eventFromImageBase64ThenCreate = mutation({
     success: v.boolean(),
     workflowId: v.string(),
   }),
-  handler: async (ctx, args) => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ success: boolean; workflowId: string }> => {
     // Start the workflow
-    const workflowId = await workflow.start(
+    const workflowId: string = await workflow.start(
       ctx,
       internal.workflows.eventIngestion.eventFromImageBase64Workflow,
       args,
-      {
-        onComplete: internal.workflows.onComplete.handleEventIngestionComplete,
-        context: { userId: args.userId },
-      },
     );
 
     return {
@@ -238,7 +238,7 @@ export const eventFromImageBase64ThenCreate = mutation({
 /**
  * Extract event data from base64 image using AI
  */
-export const extractEvent = internalAction({
+export const extractEventFromBase64Image = internalAction({
   args: {
     base64Image: v.string(),
     timezone: v.string(),
@@ -247,13 +247,14 @@ export const extractEvent = internalAction({
     events: v.array(v.any()), // TODO: Use proper event validator
     response: v.string(),
   }),
-  handler: async (ctx, args) => {
-    // TODO: Implement AI extraction logic from model/ai.ts
-    // This will call AI.processEventFromBase64Image
-    return {
-      events: [],
-      response: "Stub response",
-    };
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ events: EventWithMetadata[]; response: string }> => {
+    return await AI.processEventFromBase64Image(ctx, {
+      base64Image: args.base64Image,
+      timezone: args.timezone,
+    });
   },
 });
 
@@ -265,12 +266,7 @@ export const validateFirstEvent = internalAction({
     events: v.array(v.any()),
   },
   returns: v.any(), // TODO: Use proper event validator
-  handler: async (ctx, args) => {
-    // TODO: Implement validation logic from model/ai.ts
-    // This will call AI.validateFirstEvent
-    if (args.events.length === 0) {
-      throw new Error("No events found in response");
-    }
-    return args.events[0];
+  handler: (ctx, args) => {
+    return AI.validateFirstEvent(args.events);
   },
 });

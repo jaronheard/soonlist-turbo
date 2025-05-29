@@ -5,6 +5,7 @@ import { action, internalAction, internalQuery } from "./_generated/server";
 import * as AI from "./model/ai";
 import * as Notifications from "./model/notifications";
 import * as OneSignal from "./model/oneSignal";
+import { createDeepLink } from "./model/utils/urlScheme";
 
 /**
  * Send a single notification to a specific user
@@ -212,7 +213,7 @@ export const sendTrialExpirationReminders = action({
       userIds,
       title: "2 days left on your trial",
       body: "Your subscription will change from trial to Soonlist Unlimited soon. Keep capturing your possibilities!",
-      url: Notifications.createDeepLink("settings/subscription"),
+      url: createDeepLink("settings/subscription"),
       data: {
         type: "trial_expiration",
       },
@@ -387,11 +388,69 @@ export const push = internalAction({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    // TODO: Implement notification logic
-    // This will extract the notification logic from aiHelpers.createEventAndNotify
+    const { eventId, userId } = args;
+
+    // Get the event to extract the name for notification
+    const event = await ctx.runQuery(internal.events.getEventByIdInternal, {
+      eventId,
+    });
+
+    if (!event) {
+      return {
+        success: false,
+        error: "Event not found",
+      };
+    }
+
+    // Get today's event count for this user
+    const todayEvents = await ctx.runQuery(
+      internal.events.getTodayEventsCountInternal,
+      { userId },
+    );
+    const eventCount = todayEvents.length;
+
+    // Generate notification content based on count
+    let title: string;
+    let subtitle: string;
+    let body: string;
+
+    if (eventCount === 1) {
+      title = "Event captured ✨";
+      body = "First capture today! 🤔 What's next?";
+      subtitle = event.name;
+    } else if (eventCount === 2) {
+      title = "Event captured ✨";
+      body = "2 captures today! ✌️ Keep 'em coming!";
+      subtitle = event.name;
+    } else if (eventCount === 3) {
+      title = "Event captured ✨";
+      body = "3 captures today! 🔥 You're on fire!";
+      subtitle = event.name;
+    } else {
+      title = "Event captured ✨";
+      body = `${eventCount} captures today! 🌌 The sky's the limit!`;
+      subtitle = event.name;
+    }
+
+    // Create deep link
+    const url = createDeepLink(`event/${eventId}`);
+
+    // Send notification
+    const result = await OneSignal.sendNotification({
+      userId,
+      title,
+      subtitle,
+      body,
+      url,
+      eventId,
+      source: "workflow",
+      method: "image",
+    });
+
     return {
-      success: true,
-      id: "stub-notification-id",
+      success: result.success,
+      id: result.id,
+      error: result.error,
     };
   },
 });

@@ -12,11 +12,13 @@ import type * as ai from "../ai.js";
 import type * as crons from "../crons.js";
 import type * as events from "../events.js";
 import type * as files from "../files.js";
-import type * as internal_events from "../internal/events.js";
 import type * as model_ai from "../model/ai.js";
+import type * as model_aiHelpers from "../model/aiHelpers.js";
 import type * as model_events from "../model/events.js";
+import type * as model_notificationHelpers from "../model/notificationHelpers.js";
 import type * as model_notifications from "../model/notifications.js";
 import type * as model_oneSignal from "../model/oneSignal.js";
+import type * as model_utils_urlScheme from "../model/utils/urlScheme.js";
 import type * as notifications from "../notifications.js";
 import type * as users from "../users.js";
 import type * as utils from "../utils.js";
@@ -42,11 +44,13 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   events: typeof events;
   files: typeof files;
-  "internal/events": typeof internal_events;
   "model/ai": typeof model_ai;
+  "model/aiHelpers": typeof model_aiHelpers;
   "model/events": typeof model_events;
+  "model/notificationHelpers": typeof model_notificationHelpers;
   "model/notifications": typeof model_notifications;
   "model/oneSignal": typeof model_oneSignal;
+  "model/utils/urlScheme": typeof model_utils_urlScheme;
   notifications: typeof notifications;
   users: typeof users;
   utils: typeof utils;
@@ -278,6 +282,58 @@ export declare const components: {
             workflowHandle: string;
           };
         }
+      >;
+    };
+  };
+  eventIngestionWorkpool: {
+    lib: {
+      cancel: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          id: string;
+          logLevel: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      cancelAll: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          before?: number;
+          logLevel: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      enqueue: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism: number;
+          };
+          fnArgs: any;
+          fnHandle: string;
+          fnName: string;
+          fnType: "action" | "mutation" | "query";
+          onComplete?: { context?: any; fnHandle: string };
+          retryBehavior?: {
+            base: number;
+            initialBackoffMs: number;
+            maxAttempts: number;
+          };
+          runAt: number;
+        },
+        string
+      >;
+      status: FunctionReference<
+        "query",
+        "internal",
+        { id: string },
+        | { previousAttempts: number; state: "pending" }
+        | { previousAttempts: number; state: "running" }
+        | { state: "finished" }
       >;
     };
   };
