@@ -2,36 +2,13 @@ import { WorkflowManager } from "@convex-dev/workflow";
 import { ConvexError, v } from "convex/values";
 
 import { components, internal } from "../_generated/api";
-import { internalAction, internalMutation, query } from "../_generated/server";
+import { query } from "../_generated/server";
 
 const workflow = new WorkflowManager(components.workflow);
 
 // Validators for complex types
 const listValidator = v.object({
   value: v.string(),
-});
-
-// Validators for workflow onComplete arguments
-const eventFromImageBase64WorkflowValidator = v.object({
-  base64Image: v.string(),
-  timezone: v.string(),
-  comment: v.optional(v.string()),
-  lists: v.array(v.object({ value: v.string() })),
-  visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
-  sendNotification: v.optional(v.boolean()),
-  userId: v.string(),
-  username: v.string(),
-});
-
-const eventFromUrlWorkflowValidator = v.object({
-  url: v.string(),
-  timezone: v.string(),
-  comment: v.optional(v.string()),
-  lists: v.array(listValidator),
-  visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
-  sendNotification: v.optional(v.boolean()),
-  userId: v.string(),
-  username: v.string(),
 });
 
 export const eventFromImageBase64Workflow = workflow.define({
