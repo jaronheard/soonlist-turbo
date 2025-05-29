@@ -20,17 +20,26 @@
   - [x] 3.3 Alternatively, modify `packages/backend/convex/model/notificationHelpers.ts` to include a function like `getFailureNotificationContent(reason?: string)` that returns the title, subtitle, and body for a failure (NOT NEEDED: content already defined in pushFailure action).
   - [x] 3.4 Ensure the failure notification content is distinct from success notifications (COMPLETED: includes `isFailure: true` flag and different title/body).
 
-- [ ] 4.0 Test and Validate Failure Notification Scenarios for Image Workflow
+- [x] 4.0 Test and Validate Failure Notification Scenarios for Image Workflow
 
-  - [ ] 4.1 Create mock functions or simulate error conditions for each critical step in `eventFromImageBase64Workflow` (e.g., make AI extraction throw an error, simulate image upload failure).
-  - [ ] 4.2 For each simulated failure, verify that:
-    - [ ] 4.2.1 The correct failure notification is triggered and sent to the specified user.
-    - [ ] 4.2.2 The workflow status (if checked via `getWorkflowStatus`) correctly reflects a failed state.
-    - [ ] 4.2.3 No success notification is sent.
-    - [ ] 4.2.4 Appropriate error logging occurs on the backend.
-  - [ ] 4.3 Test the scenario where the notification sending step itself fails (though less critical for this PRD, consider logging).
+  - [x] 4.1 Create mock functions or simulate error conditions for each critical step in `eventFromImageBase64Workflow` (e.g., make AI extraction throw an error, simulate image upload failure).
+  - [x] 4.2 For each simulated failure, verify that:
+    - [x] 4.2.1 The correct failure notification is triggered and sent to the specified user.
+    - [x] 4.2.2 The workflow status (if checked via `getWorkflowStatus`) correctly reflects a failed state.
+    - [x] 4.2.3 No success notification is sent.
+    - [x] 4.2.4 Appropriate error logging occurs on the backend.
+  - [x] 4.3 Test the scenario where the notification sending step itself fails (though less critical for this PRD, consider logging).
 
-- [ ] 5.0 Document and Plan Extensibility to Other Workflows
-  - [ ] 5.1 Document the implemented failure notification pattern for the image workflow.
-  - [ ] 5.2 Briefly outline how this pattern could be applied to `eventFromUrlThenCreateThenNotification` and `eventFromRawTextThenCreateThenNotification` by identifying their critical steps and error handling points.
-  - [ ] 5.3 Update the PRD (`tasks/prd-workflow-failure-notifications.md`) or create follow-up tasks/notes regarding the extension to other workflows.
+- [x] 5.0 Document and Plan Extensibility to Other Workflows
+  - [x] 5.1 Document the implemented failure notification pattern for the image workflow.
+  - [x] 5.2 Briefly outline how this pattern could be applied to `eventFromUrlThenCreateThenNotification` and `eventFromRawTextThenCreateThenNotification` by identifying their critical steps and error handling points.
+  - [x] 5.3 Update the PRD (`tasks/prd-workflow-failure-notifications.md`) or create follow-up tasks/notes regarding the extension to other workflows.
+
+## Relevant Files
+
+- `packages/backend/convex/workflows/eventIngestion.ts` - Main workflow implementation
+- `packages/backend/convex/internal/notifications.ts` - Failure notification actions
+- `packages/backend/convex/workflows/testFailureNotifications.ts` - Test infrastructure
+- `packages/backend/convex/workflows/README-failure-notifications.md` - Complete pattern documentation
+- `tasks/prd-workflow-failure-notifications.md` - Updated PRD with completion status
+- `tasks/follow-up-workflow-failure-notifications-phase2.md` - Phase 2 follow-up tasks

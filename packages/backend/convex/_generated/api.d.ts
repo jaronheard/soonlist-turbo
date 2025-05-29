@@ -24,6 +24,8 @@ import type * as users from "../users.js";
 import type * as utils from "../utils.js";
 import type * as workflows_eventIngestion from "../workflows/eventIngestion.js";
 import type * as workflows_onComplete from "../workflows/onComplete.js";
+import type * as workflows_testFailures from "../workflows/testFailures.js";
+import type * as workflows_testingGuide from "../workflows/testingGuide.js";
 
 import type {
   ApiFromModules,
@@ -56,6 +58,8 @@ declare const fullApi: ApiFromModules<{
   utils: typeof utils;
   "workflows/eventIngestion": typeof workflows_eventIngestion;
   "workflows/onComplete": typeof workflows_onComplete;
+  "workflows/testFailures": typeof workflows_testFailures;
+  "workflows/testingGuide": typeof workflows_testingGuide;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

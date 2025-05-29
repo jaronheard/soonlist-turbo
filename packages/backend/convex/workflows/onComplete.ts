@@ -1,11 +1,12 @@
+import { vWorkflowId } from "@convex-dev/workflow";
 import { v } from "convex/values";
 
 import { internal } from "../_generated/api";
-import { mutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 
-export const handleEventIngestionComplete = mutation({
+export const handleEventIngestionComplete = internalMutation({
   args: {
-    workflowId: v.string(), // TODO: Use proper workflow ID validator when available
+    workflowId: vWorkflowId,
     result: v.any(), // TODO: Use proper result validator when available
     context: v.object({
       userId: v.string(),

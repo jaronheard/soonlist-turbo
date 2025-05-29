@@ -597,6 +597,25 @@ export default function EditProfileScreen() {
               })()}
             </View>
 
+            {__DEV__ && (
+              <View className="mt-12">
+                <Text className="mb-2 text-base font-semibold text-blue-600">
+                  Development Testing
+                </Text>
+                <TouchableOpacity
+                  onPress={() => router.push("/settings/workflow-test")}
+                  className="mt-2 rounded-md bg-blue-100 p-4"
+                >
+                  <Text className="text-base text-blue-800">
+                    Workflow Failure Tests
+                  </Text>
+                  <Text className="text-sm text-blue-600">
+                    Test workflow failure notifications
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             <View className="mt-12">
               <Text className="mb-2 text-base font-semibold text-red-500">
                 Danger Zone

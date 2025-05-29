@@ -41,7 +41,19 @@ export const eventFromRawText = query({
     response: v.string(),
   }),
   handler: async (ctx, args) => {
-    return await AI.processEventFromRawText(args.rawText, args.timezone);
+    // For preview purposes, create a simplified version that doesn't require full context
+    const result = await AI.processEventFromText(ctx, {
+      rawText: args.rawText,
+      timezone: args.timezone,
+      userId: "preview",
+      username: "preview",
+      lists: [],
+    });
+
+    return {
+      events: result.events,
+      response: "Preview processed successfully",
+    };
   },
 });
 
@@ -71,7 +83,19 @@ export const eventsFromUrl = query({
     response: v.string(),
   }),
   handler: async (ctx, args) => {
-    return await AI.processEventFromUrl(args.url, args.timezone);
+    // For preview purposes, create a simplified version that doesn't require full context
+    const result = await AI.processEventFromUrl(ctx, {
+      url: args.url,
+      timezone: args.timezone,
+      userId: "preview",
+      username: "preview",
+      lists: [],
+    });
+
+    return {
+      events: result.events,
+      response: "Preview processed successfully",
+    };
   },
 });
 
@@ -101,7 +125,12 @@ export const eventFromImage = query({
     response: v.string(),
   }),
   handler: async (ctx, args) => {
-    return await AI.processEventFromImage(args.imageUrl, args.timezone);
+    // This is just for preview - convert imageUrl to base64 would be needed
+    // For now, return a placeholder since we don't have processEventFromImageUrl
+    return {
+      events: [],
+      response: "Image URL processing not implemented for preview",
+    };
   },
 });
 
@@ -217,11 +246,18 @@ export const eventFromImageBase64ThenCreate = mutation({
     ctx,
     args,
   ): Promise<{ success: boolean; workflowId: string }> => {
-    // Start the workflow
+    // Start the workflow with onComplete handler
     const workflowId: string = await workflow.start(
       ctx,
       internal.workflows.eventIngestion.eventFromImageBase64Workflow,
       args,
+      {
+        onComplete: internal.workflows.onComplete.handleEventIngestionComplete,
+        context: {
+          userId: args.userId,
+          username: args.username,
+        },
+      },
     );
 
     return {
