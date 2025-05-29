@@ -454,3 +454,47 @@ export const push = internalAction({
     };
   },
 });
+
+/**
+ * Send failure notification for event creation
+ */
+export const pushFailure = internalAction({
+  args: {
+    userId: v.string(),
+    userName: v.string(),
+    failureReason: v.optional(v.string()),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    id: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const { userId, failureReason } = args;
+
+    // Create failure notification content
+    const title = "Event creation failed";
+    const body =
+      "We couldn't create your event from the image. Please try again.";
+
+    // Send notification
+    const result = await OneSignal.sendNotification({
+      userId,
+      title,
+      body,
+      url: undefined,
+      data: {
+        isFailure: true,
+        failureReason: failureReason || "Unknown error",
+      },
+      source: "workflow",
+      method: "failure",
+    });
+
+    return {
+      success: result.success,
+      id: result.id,
+      error: result.error,
+    };
+  },
+});
