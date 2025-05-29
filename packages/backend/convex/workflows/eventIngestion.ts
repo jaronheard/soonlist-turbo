@@ -170,6 +170,70 @@ export const eventFromUrlWorkflow = workflow.define({
   returns: v.string(),
 });
 
+export const eventFromTextWorkflow = workflow.define({
+  args: {
+    rawText: v.string(),
+    timezone: v.string(),
+    comment: v.optional(v.string()),
+    lists: v.array(listValidator),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+    sendNotification: v.optional(v.boolean()),
+    userId: v.string(),
+    username: v.string(),
+  },
+  handler: async (step, args): Promise<string> => {
+    const eventArgs = {
+      ...args,
+      rawText: undefined,
+      sendNotification: undefined,
+    };
+
+    // ── step 1: Extract content from URL and process with AI
+    const aiResult = await step.runAction(
+      internal.ai.extractEventFromText,
+      {
+        rawText: args.rawText,
+        timezone: args.timezone,
+      },
+      { name: "extractEventFromUrl" },
+    );
+
+    // ── step 2: Validate first event
+    const firstEvent = await step.runAction(
+      internal.ai.validateFirstEvent,
+      { events: aiResult.events },
+      { name: "validateEvent" },
+    );
+
+    if (!firstEvent) {
+      throw new ConvexError("No events found in response");
+    }
+
+    // ── step 3: Write to database
+    const eventId = await step.runAction(
+      internal.events.insertEvent,
+      {
+        firstEvent,
+        uploadedImageUrl: null, // URLs don't need image upload
+        ...eventArgs,
+      },
+      { name: "insertEvent" },
+    );
+
+    // ── step 4: Send push notification
+    if (args.sendNotification ?? true) {
+      await step.runAction(
+        internal.notifications.push,
+        { eventId, userId: args.userId, userName: args.username },
+        { name: "sendPush" },
+      );
+    }
+
+    return eventId;
+  },
+  returns: v.string(),
+});
+
 /**
  * Get workflow status for client-side tracking
  */

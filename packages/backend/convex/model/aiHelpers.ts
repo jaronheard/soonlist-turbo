@@ -685,16 +685,66 @@ export async function createEvent(
 }
 
 export function validateFirstEvent(events: unknown[]) {
-  if (!events.length) {
-    throw new ConvexError("No events found in response");
+  if (!events || events.length === 0) {
+    throw new ConvexError("No events found");
   }
 
-  try {
-    // This will throw if validation fails
-    const validatedEvent = EventWithMetadataSchema.parse(events[0]);
-    return validatedEvent;
-  } catch (error) {
-    throw new ConvexError("Invalid event data received");
+  const firstEvent = events[0];
+  if (!firstEvent || typeof firstEvent !== "object") {
+    throw new ConvexError("Invalid event data");
+  }
+
+  return firstEvent as EventWithMetadata;
+}
+
+/**
+ * Validates Jina API response for common error patterns and content issues
+ */
+export function validateJinaResponse(aiResult: {
+  events: EventWithMetadata[];
+  response: string;
+}): void {
+  const responseText = aiResult.response.toLowerCase();
+
+  // 1. Check for Jina/network error responses
+  if (
+    responseText.includes("failed to fetch") ||
+    responseText.includes("network error") ||
+    responseText.includes("dns resolution failed") ||
+    responseText.includes("connection refused") ||
+    responseText.includes("timeout")
+  ) {
+    throw new ConvexError("URL fetch failed: Network error or invalid domain");
+  }
+
+  // 2. Check for HTTP error content
+  if (
+    responseText.includes("500 internal server error") ||
+    responseText.includes("404 not found") ||
+    responseText.includes("503 service unavailable") ||
+    responseText.includes("error 500") ||
+    responseText.includes("error 404")
+  ) {
+    throw new ConvexError(
+      "URL content parsing failed: HTTP error status received",
+    );
+  }
+
+  // 3. Check for robots.txt content specifically
+  if (
+    responseText.includes("user-agent:") &&
+    responseText.includes("disallow:")
+  ) {
+    throw new ConvexError(
+      "AI processing failed: Content is robots.txt file, not event information",
+    );
+  }
+
+  // 4. Check for minimal/empty content that Jina couldn't process
+  if (responseText.trim().length < 100) {
+    throw new ConvexError(
+      "URL content parsing failed: Insufficient content retrieved",
+    );
   }
 }
 

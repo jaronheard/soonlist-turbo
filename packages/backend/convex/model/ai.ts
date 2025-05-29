@@ -217,7 +217,12 @@ export async function processEventFromUrl(
       fnName: "eventFromUrlThenCreateThenNotification",
     });
 
-    const validatedEvent = validateFirstEvent(events);
+    // Validate that we have at least one event
+    if (!events || events.length === 0) {
+      throw new ConvexError("No events found in response");
+    }
+
+    const validatedEvent = validateEvent(events[0]);
 
     return {
       events,
@@ -260,7 +265,12 @@ export async function processEventFromText(
       fnName: "eventFromRawTextThenCreateThenNotification",
     });
 
-    const validatedEvent = validateFirstEvent(events);
+    // Validate that we have at least one event
+    if (!events || events.length === 0) {
+      throw new ConvexError("No events found in response");
+    }
+
+    const validatedEvent = validateEvent(events[0]);
 
     return {
       events,
@@ -276,14 +286,74 @@ export async function processEventFromText(
   }
 }
 
-export function validateFirstEvent(events: unknown[]) {
-  if (!events.length) {
-    throw new ConvexError("No events found in response");
+export function validateEvent(event: unknown) {
+  if (!event) {
+    throw new ConvexError("No event provided for validation");
+  }
+
+  // Cast to EventWithMetadata for validation
+  const eventData = event as EventWithMetadata;
+
+  // 1. Check if event has proper date/time information
+  if (
+    !eventData.startDate ||
+    eventData.startDate === "TBD" ||
+    eventData.startDate === "Unknown" ||
+    eventData.startDate === "" ||
+    eventData.startDate.toLowerCase().includes("error")
+  ) {
+    throw new ConvexError(
+      "Event validation failed: Event lacks valid date information",
+    );
+  }
+
+  // 2. Check for extremely generic event names that suggest hallucination
+  const name = eventData.name?.toLowerCase() || "";
+  const description = eventData.description?.toLowerCase() || "";
+
+  // Invalid names (exact matches)
+  const invalidNames = [
+    "title",
+    "name",
+    "event name",
+    "event title",
+    "event description",
+  ];
+
+  // Very specific patterns that indicate the AI made something up from error/test content
+  const invalidPatterns = [
+    "paramvalidationerror",
+    "domain resolution error",
+    "domains could not be resolved",
+    "domain could not be resolved",
+    "domain resolution error",
+    "robots.txt",
+    "error page",
+    "page not found",
+    "server error",
+    "httpbin test",
+    "example page",
+    "test content",
+    "http error",
+  ];
+
+  const isInvalidName = invalidNames.some((invalid) => name.includes(invalid));
+
+  const isInvalidPattern = invalidPatterns.some(
+    (invalid) => name.includes(invalid) || description.includes(invalid),
+  );
+
+  const isTooShort = name.trim().length < 3;
+
+  if (isInvalidName || isTooShort || isInvalidPattern) {
+    throw new ConvexError(
+      "Event validation failed: Event appears to be hallucinated from non-event content",
+    );
   }
 
   try {
     // This will throw if validation fails
-    const validatedEvent = EventWithMetadataSchema.parse(events[0]);
+    const validatedEvent = EventWithMetadataSchema.parse(event);
     return validatedEvent;
   } catch (error) {
     throw new ConvexError("Invalid event data received");

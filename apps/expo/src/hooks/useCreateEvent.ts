@@ -58,6 +58,7 @@ export function useCreateEvent() {
     api.ai.eventFromImageBase64ThenCreate,
   );
   const eventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
+  const eventFromText = useMutation(api.ai.eventFromTextThenCreate);
 
   const createEvent = useCallback(
     async (options: CreateEventOptions): Promise<string> => {
@@ -144,9 +145,20 @@ export function useCreateEvent() {
 
         // Handle text events (not yet implemented with workflows)
         if (rawText) {
-          throw new Error(
-            "Text-based event creation is not yet supported with the new workflow system. Please use an image or URL for now.",
-          );
+          const startWorkflow = await eventFromText({
+            rawText,
+            userId,
+            username,
+            lists: [],
+            timezone: userTimezone,
+            visibility: "private",
+            sendNotification,
+          });
+
+          // Track the workflow in our store
+          addWorkflowId(startWorkflow.workflowId);
+
+          return startWorkflow.workflowId;
         }
 
         throw new Error("No image, URL, or text provided for event creation");
@@ -165,12 +177,13 @@ export function useCreateEvent() {
       }
     },
     [
-      userTimezone,
+      setIsCapturing,
       setIsImageLoading,
       eventFromImageBase64,
-      eventFromUrl,
-      setIsCapturing,
+      userTimezone,
       addWorkflowId,
+      eventFromUrl,
+      eventFromText,
     ],
   );
 

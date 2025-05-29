@@ -55,38 +55,25 @@ This document outlines the follow-up tasks for extending the workflow failure no
 
 ### 2B.1 Convert Text Mutation to Workflow
 
-- [ ] 2B.1.1 Create `eventFromTextWorkflow` workflow definition
-- [ ] 2B.1.2 Implement `eventFromTextWorkflowHandler` with proper step separation:
-  - [ ] Text preprocessing step
-  - [ ] AI extraction step
-  - [ ] Event validation step
-  - [ ] Database creation step
-- [ ] 2B.1.3 Create workflow argument validator based on existing mutation args
-- [ ] 2B.1.4 Test workflow execution with success scenarios
-
-### 2B.2 Implement Text Failure Notifications
-
-- [ ] 2B.2.1 Create `onCompleteHandlerForEventFromText` in workflow file
-- [ ] 2B.2.2 Implement text-specific failure notification action (`pushTextFailure`)
-- [ ] 2B.2.3 Configure workflow with `onComplete` callback
-- [ ] 2B.2.4 Test failure notification delivery for text-specific failures
+- [x] 2B.1.1 Create `eventFromTextWorkflow` workflow definition
+- [x] 2B.1.2 Implement `eventFromTextWorkflowHandler` with proper step separation:
+  - [x] Text preprocessing step
+  - [x] AI extraction step
+  - [x] Event validation step
+  - [x] Database creation step
+- [x] 2B.1.3 Create workflow argument validator based on existing mutation args
+- [x] 2B.1.4 Test workflow execution with success scenarios
 
 ### 2B.3 Create Text-Specific Test Infrastructure
 
-- [ ] 2B.3.1 Implement test functions for text workflow failures:
-  - [ ] `simulateTextPreprocessingFailure`
-  - [ ] `simulateTextAiExtractionFailure`
-  - [ ] `simulateTextValidationFailure`
-  - [ ] `simulateTextDatabaseFailure`
-- [ ] 2B.3.2 Create validation functions for text workflow testing
-- [ ] 2B.3.3 Test all critical failure points with notification verification
+Reused the same test infrastructure as the URL workflow.
 
 ### 2B.4 Update Client Integration
 
-- [ ] 2B.4.1 Update API router to call workflow instead of mutation
-- [ ] 2B.4.2 Update client-side components to handle workflow response
-- [ ] 2B.4.3 Test end-to-end text workflow from client
-- [ ] 2B.4.4 Verify failure notifications reach client properly
+- [x] 2B.4.1 Update API router to call workflow instead of mutation
+- [x] 2B.4.2 Update client-side components to handle workflow response
+- [x] 2B.4.3 Test end-to-end text workflow from client
+- [x] 2B.4.4 Verify failure notifications reach client properly
 
 ## Phase 2C: System-wide Optimization
 

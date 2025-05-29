@@ -6,7 +6,7 @@ import { EventWithMetadata } from "@soonlist/cal";
 import { components, internal } from "./_generated/api";
 import { internalAction, mutation, query } from "./_generated/server";
 import * as AI from "./model/ai";
-import { fetchAndProcessEvent } from "./model/aiHelpers";
+import { fetchAndProcessEvent, validateJinaResponse } from "./model/aiHelpers";
 
 // Create workflow manager instance
 const workflow = new WorkflowManager(components.workflow);
@@ -311,6 +311,49 @@ export const eventFromUrlThenCreate = mutation({
   },
 });
 
+/**
+ * Create event from text using workflow
+ */
+export const eventFromTextThenCreate = mutation({
+  args: {
+    rawText: v.string(),
+    timezone: v.string(),
+    comment: v.optional(v.string()),
+    lists: v.array(listValidator),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+    sendNotification: v.optional(v.boolean()),
+    userId: v.string(),
+    username: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    workflowId: v.string(),
+  }),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ success: boolean; workflowId: string }> => {
+    // Start the text workflow with onComplete handler for failure notifications
+    const workflowId: string = await workflow.start(
+      ctx,
+      internal.workflows.eventIngestion.eventFromTextWorkflow,
+      args,
+      {
+        onComplete: internal.workflows.onComplete.handleEventIngestionComplete,
+        context: {
+          userId: args.userId,
+          username: args.username,
+        },
+      },
+    );
+
+    return {
+      success: true,
+      workflowId,
+    };
+  },
+});
+
 // ============================================================================
 // INTERNAL ACTIONS FOR WORKFLOW
 // ============================================================================
@@ -338,9 +381,6 @@ export const extractEventFromBase64Image = internalAction({
   },
 });
 
-/**
- * Extract event data from URL using AI
- */
 export const extractEventFromUrl = internalAction({
   args: {
     url: v.string(),
@@ -370,131 +410,11 @@ export const extractEventFromUrl = internalAction({
         fnName: "eventFromUrlThenCreateThenNotification",
       });
 
-      // Content-based validation: Check what Jina actually returned
-      const responseText = aiResult.response.toLowerCase();
+      // Use the new validateJinaResponse helper for content-based validation
+      validateJinaResponse(aiResult);
 
-      // 1. Check for Jina/network error responses
-      if (
-        responseText.includes("failed to fetch") ||
-        responseText.includes("network error") ||
-        responseText.includes("dns resolution failed") ||
-        responseText.includes("connection refused") ||
-        responseText.includes("timeout")
-      ) {
-        throw new ConvexError(
-          "URL fetch failed: Network error or invalid domain",
-        );
-      }
-
-      // 2. Check for HTTP error content
-      if (
-        responseText.includes("500 internal server error") ||
-        responseText.includes("404 not found") ||
-        responseText.includes("503 service unavailable") ||
-        responseText.includes("error 500") ||
-        responseText.includes("error 404")
-      ) {
-        throw new ConvexError(
-          "URL content parsing failed: HTTP error status received",
-        );
-      }
-
-      // 3. Check for robots.txt content specifically
-      if (
-        responseText.includes("user-agent:") &&
-        responseText.includes("disallow:")
-      ) {
-        throw new ConvexError(
-          "AI processing failed: Content is robots.txt file, not event information",
-        );
-      }
-
-      // 4. Check for minimal/empty content that Jina couldn't process
-      if (responseText.trim().length < 100) {
-        throw new ConvexError(
-          "URL content parsing failed: Insufficient content retrieved",
-        );
-      }
-
-      // 5. Validate that we got meaningful events
-      if (!aiResult.events || aiResult.events.length === 0) {
-        throw new ConvexError(
-          "Event validation failed: No events could be extracted from content",
-        );
-      }
-
-      // 6. More strict validation: Check if ALL events lack proper date/time information
-      const eventsWithValidDates = aiResult.events.filter((event) => {
-        return (
-          event.startDate &&
-          event.startDate !== "TBD" &&
-          event.startDate !== "Unknown" &&
-          event.startDate !== "" &&
-          !event.startDate.toLowerCase().includes("error")
-        );
-      });
-
-      if (eventsWithValidDates.length === 0) {
-        throw new ConvexError(
-          "Event validation failed: No events with valid dates found",
-        );
-      }
-
-      // 7. Check for extremely generic event names that suggest hallucination
-      const eventsWithMeaningfulNames = aiResult.events.filter((event) => {
-        const name = event.name?.toLowerCase() || "";
-        const description = event.description?.toLowerCase() || "";
-
-        // Invalid names (not patterns, so should be exact matches)
-        const invalidNames = [
-          "title",
-          "name",
-          "event name",
-          "event title",
-          "event description",
-          "event name",
-          "event title",
-          "event description",
-          "event name",
-          "event title",
-          "event description",
-        ];
-
-        // Very specific patterns that indicate the AI made something up from error/test content
-        const invalidPatterns = [
-          "paramvalidationerror",
-          "domain resolution error",
-          "domains could not be resolved",
-          "domain could not be resolved",
-          "domain resolution error",
-          "robots.txt",
-          "error page",
-          "page not found",
-          "server error",
-          "httpbin test",
-          "example page",
-          "test content",
-          "http error",
-        ];
-
-        const isInvalidName = invalidNames.some((invalid) =>
-          name.includes(invalid),
-        );
-
-        const isInvalidPattern = invalidPatterns.some(
-          (invalid) => name.includes(invalid) || description.includes(invalid),
-        );
-
-        const isTooShort = name.trim().length < 3;
-
-        return !isInvalidName && !isTooShort && !isInvalidPattern;
-      });
-
-      if (eventsWithMeaningfulNames.length === 0) {
-        throw new ConvexError(
-          "Event validation failed: All extracted events appear to be hallucinated from non-event content",
-        );
-      }
+      // Use the enhanced validateEvent function for event-specific validations
+      AI.validateEvent(aiResult.events);
 
       return aiResult;
     } catch (error) {
@@ -512,6 +432,31 @@ export const extractEventFromUrl = internalAction({
   },
 });
 
+export const extractEventFromText = internalAction({
+  args: {
+    rawText: v.string(),
+    timezone: v.string(),
+  },
+  returns: v.object({
+    events: v.array(v.any()), // TODO: Use proper event validator
+    response: v.string(),
+  }),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ events: EventWithMetadata[]; response: string }> => {
+    const result = await fetchAndProcessEvent({
+      ctx,
+      input: {
+        rawText: args.rawText,
+        timezone: args.timezone,
+      },
+      fnName: "eventFromRawTextThenCreateThenNotification",
+    });
+    return result;
+  },
+});
+
 /**
  * Validate that we have at least one valid event
  */
@@ -521,6 +466,9 @@ export const validateFirstEvent = internalAction({
   },
   returns: v.any(), // TODO: Use proper event validator
   handler: (ctx, args) => {
-    return AI.validateFirstEvent(args.events);
+    if (!args.events || args.events.length === 0) {
+      throw new ConvexError("No events found in response");
+    }
+    return AI.validateEvent(args.events[0]);
   },
 });
