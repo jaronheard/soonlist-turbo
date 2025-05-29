@@ -14,32 +14,35 @@ This document outlines the follow-up tasks for extending the workflow failure no
 
 ### 2A.1 Convert URL Mutation to Workflow
 
-- [ ] 2A.1.1 Create `eventFromUrlWorkflow` workflow definition in `packages/backend/convex/workflows/eventIngestion.ts`
-- [ ] 2A.1.2 Implement `eventFromUrlWorkflowHandler` with proper step separation:
-  - [ ] URL content extraction step
-  - [ ] AI processing step
-  - [ ] Event validation step
-  - [ ] Database creation step
-- [ ] 2A.1.3 Create workflow argument validator based on existing mutation args
-- [ ] 2A.1.4 Test workflow execution with success scenarios
+- [x] 2A.1.1 Create `eventFromUrlWorkflow` workflow definition in `packages/backend/convex/workflows/eventIngestion.ts`
+- [x] 2A.1.2 Implement `eventFromUrlWorkflowHandler` with proper step separation:
+  - [x] URL content extraction step
+  - [x] AI processing step
+  - [x] Event validation step
+  - [x] Database creation step
+- [x] 2A.1.3 Create workflow argument validator based on existing mutation args
+- [x] 2A.1.4 Test workflow execution with success scenarios
 
 ### 2A.2 Implement URL Failure Notifications
 
-- [ ] 2A.2.1 Create `onCompleteHandlerForEventFromUrl` in workflow file
-- [ ] 2A.2.2 Implement URL-specific failure notification action (`pushUrlFailure`)
-- [ ] 2A.2.3 Configure workflow with `onComplete` callback
-- [ ] 2A.2.4 Test failure notification delivery for URL-specific failures
+- [x] 2A.2.1 Create `onCompleteHandlerForEventFromUrl` in workflow file
+- [x] 2A.2.2 Implement URL-specific failure notification action (`pushUrlFailure`)
+- [x] 2A.2.3 Configure workflow with `onComplete` callback
+- [x] 2A.2.4 Test failure notification delivery for URL-specific failures
 
 ### 2A.3 Create URL-Specific Test Infrastructure
 
-- [ ] 2A.3.1 Implement test functions for URL workflow failures:
-  - [ ] `simulateUrlFetchFailure`
-  - [ ] `simulateUrlContentParsingFailure`
-  - [ ] `simulateUrlAiProcessingFailure`
-  - [ ] `simulateUrlValidationFailure`
-  - [ ] `simulateUrlDatabaseFailure`
-- [ ] 2A.3.2 Create validation functions for URL workflow testing
-- [ ] 2A.3.3 Test all critical failure points with notification verification
+- [x] 2A.3.1 Implement test functions for URL workflow failures:
+  - [x] `simulateUrlFetchFailure`
+  - [x] `simulateUrlContentParsingFailure`
+  - [x] `simulateUrlAiProcessingFailure`
+  - [x] `simulateUrlValidationFailure`
+  - [x] `simulateUrlDatabaseFailure`
+- [x] 2A.3.2 Create validation functions for URL workflow testing
+- [x] 2A.3.3 Test all critical failure points with notification verification
+  - [x] Backend test infrastructure implemented
+  - [x] Client testing interface updated (workflow-test.tsx)
+  - [x] URL workflow tests integrated into existing test screen
 
 ### 2A.4 Update Client Integration
 

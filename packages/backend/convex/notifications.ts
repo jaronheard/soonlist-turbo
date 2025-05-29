@@ -474,8 +474,7 @@ export const pushFailure = internalAction({
 
     // Create failure notification content
     const title = "Event creation failed";
-    const body =
-      "We couldn't create your event from the image. Please try again.";
+    const body = "We couldn't create your event. Please try again.";
 
     // Send notification
     const result = await OneSignal.sendNotification({

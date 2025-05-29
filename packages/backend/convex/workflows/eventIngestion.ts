@@ -2,9 +2,37 @@ import { WorkflowManager } from "@convex-dev/workflow";
 import { ConvexError, v } from "convex/values";
 
 import { components, internal } from "../_generated/api";
-import { query } from "../_generated/server";
+import { internalAction, internalMutation, query } from "../_generated/server";
 
 const workflow = new WorkflowManager(components.workflow);
+
+// Validators for complex types
+const listValidator = v.object({
+  value: v.string(),
+});
+
+// Validators for workflow onComplete arguments
+const eventFromImageBase64WorkflowValidator = v.object({
+  base64Image: v.string(),
+  timezone: v.string(),
+  comment: v.optional(v.string()),
+  lists: v.array(v.object({ value: v.string() })),
+  visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+  sendNotification: v.optional(v.boolean()),
+  userId: v.string(),
+  username: v.string(),
+});
+
+const eventFromUrlWorkflowValidator = v.object({
+  url: v.string(),
+  timezone: v.string(),
+  comment: v.optional(v.string()),
+  lists: v.array(listValidator),
+  visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+  sendNotification: v.optional(v.boolean()),
+  userId: v.string(),
+  username: v.string(),
+});
 
 export const eventFromImageBase64Workflow = workflow.define({
   args: {
@@ -65,6 +93,70 @@ export const eventFromImageBase64Workflow = workflow.define({
     );
 
     // ── step 4 push notification
+    if (args.sendNotification ?? true) {
+      await step.runAction(
+        internal.notifications.push,
+        { eventId, userId: args.userId, userName: args.username },
+        { name: "sendPush" },
+      );
+    }
+
+    return eventId;
+  },
+  returns: v.string(),
+});
+
+export const eventFromUrlWorkflow = workflow.define({
+  args: {
+    url: v.string(),
+    timezone: v.string(),
+    comment: v.optional(v.string()),
+    lists: v.array(listValidator),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+    sendNotification: v.optional(v.boolean()),
+    userId: v.string(),
+    username: v.string(),
+  },
+  handler: async (step, args): Promise<string> => {
+    const eventArgs = {
+      ...args,
+      url: undefined,
+      sendNotification: undefined,
+    };
+
+    // ── step 1: Extract content from URL and process with AI
+    const aiResult = await step.runAction(
+      internal.ai.extractEventFromUrl,
+      {
+        url: args.url,
+        timezone: args.timezone,
+      },
+      { name: "extractEventFromUrl" },
+    );
+
+    // ── step 2: Validate first event
+    const firstEvent = await step.runAction(
+      internal.ai.validateFirstEvent,
+      { events: aiResult.events },
+      { name: "validateEvent" },
+    );
+
+    if (!firstEvent) {
+      throw new ConvexError("No events found in response");
+    }
+
+    // ── step 3: Write to database
+    const eventId = await step.runAction(
+      internal.events.insertEvent,
+      {
+        firstEvent,
+        uploadedImageUrl: null, // URLs don't need image upload
+        ...eventArgs,
+      },
+      { name: "insertEvent" },
+    );
+
+    // ── step 4: Send push notification
     if (args.sendNotification ?? true) {
       await step.runAction(
         internal.notifications.push,

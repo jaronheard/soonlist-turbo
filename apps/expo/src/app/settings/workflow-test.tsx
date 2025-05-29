@@ -43,6 +43,23 @@ export default function WorkflowTestScreen() {
     api.workflows.testFailures.testNotificationSystemDirectly,
   );
 
+  // Mutations for testing URL workflows
+  const testUrlFetchFailure = useMutation(
+    api.workflows.testFailures.simulateUrlFetchFailure,
+  );
+  const testUrlContentParsingFailure = useMutation(
+    api.workflows.testFailures.simulateUrlContentParsingFailure,
+  );
+  const testUrlAiProcessingFailure = useMutation(
+    api.workflows.testFailures.simulateUrlAiProcessingFailure,
+  );
+  const testUrlValidationFailure = useMutation(
+    api.workflows.testFailures.simulateUrlValidationFailure,
+  );
+  const testUrlWorkflowSuccess = useMutation(
+    api.workflows.testFailures.testUrlWorkflowSuccess,
+  );
+
   const userId = user?.id;
   const username = user?.username;
 
@@ -118,6 +135,32 @@ export default function WorkflowTestScreen() {
   const testValidation = () =>
     runTest("Validation Failure", () =>
       testValidationFailure({ userId, username }),
+    );
+
+  // URL workflow test functions
+  const testUrlFetch = () =>
+    runTest("URL Fetch Failure", () =>
+      testUrlFetchFailure({ userId, username }),
+    );
+
+  const testUrlContentParsing = () =>
+    runTest("URL Content Parsing Failure", () =>
+      testUrlContentParsingFailure({ userId, username }),
+    );
+
+  const testUrlAiProcessing = () =>
+    runTest("URL AI Processing Failure", () =>
+      testUrlAiProcessingFailure({ userId, username }),
+    );
+
+  const testUrlValidation = () =>
+    runTest("URL Validation Failure", () =>
+      testUrlValidationFailure({ userId, username }),
+    );
+
+  const testUrlSuccess = () =>
+    runTest("URL Workflow Success", () =>
+      testUrlWorkflowSuccess({ userId, username }),
     );
 
   const testNotification = async () => {
@@ -287,6 +330,181 @@ export default function WorkflowTestScreen() {
             </Button>
           </View>
 
+          {/* Image Workflow Test Buttons */}
+          <View className="mb-6">
+            <Text className="mb-3 text-lg font-semibold text-gray-900">
+              Image Workflow Tests
+            </Text>
+            <View className="space-y-3">
+              <Button
+                onPress={testAI}
+                disabled={runningTests.has("AI Extraction Failure")}
+                className="flex-row items-center justify-center"
+              >
+                {runningTests.has("AI Extraction Failure") && (
+                  <ActivityIndicator
+                    size="small"
+                    color="white"
+                    className="mr-2"
+                  />
+                )}
+                <Text className="font-medium text-white">
+                  Test AI Extraction Failure
+                </Text>
+              </Button>
+
+              <Button
+                onPress={testUpload}
+                disabled={runningTests.has("Image Upload Failure")}
+                className="flex-row items-center justify-center"
+              >
+                {runningTests.has("Image Upload Failure") && (
+                  <ActivityIndicator
+                    size="small"
+                    color="white"
+                    className="mr-2"
+                  />
+                )}
+                <Text className="font-medium text-white">
+                  Test Image Upload Failure
+                </Text>
+              </Button>
+
+              <Button
+                onPress={testValidation}
+                disabled={runningTests.has("Validation Failure")}
+                className="flex-row items-center justify-center"
+              >
+                {runningTests.has("Validation Failure") && (
+                  <ActivityIndicator
+                    size="small"
+                    color="white"
+                    className="mr-2"
+                  />
+                )}
+                <Text className="font-medium text-white">
+                  Test Validation Failure
+                </Text>
+              </Button>
+            </View>
+          </View>
+
+          {/* URL Workflow Test Buttons */}
+          <View className="mb-6">
+            <Text className="mb-3 text-lg font-semibold text-gray-900">
+              URL Workflow Tests
+            </Text>
+            <View className="space-y-3">
+              <Button
+                onPress={testUrlFetch}
+                disabled={runningTests.has("URL Fetch Failure")}
+                className="flex-row items-center justify-center bg-blue-600"
+              >
+                {runningTests.has("URL Fetch Failure") && (
+                  <ActivityIndicator
+                    size="small"
+                    color="white"
+                    className="mr-2"
+                  />
+                )}
+                <Text className="font-medium text-white">
+                  Test URL Fetch Failure
+                </Text>
+              </Button>
+
+              <Button
+                onPress={testUrlContentParsing}
+                disabled={runningTests.has("URL Content Parsing Failure")}
+                className="flex-row items-center justify-center bg-blue-600"
+              >
+                {runningTests.has("URL Content Parsing Failure") && (
+                  <ActivityIndicator
+                    size="small"
+                    color="white"
+                    className="mr-2"
+                  />
+                )}
+                <Text className="font-medium text-white">
+                  Test URL Content Parsing Failure
+                </Text>
+              </Button>
+
+              <Button
+                onPress={testUrlAiProcessing}
+                disabled={runningTests.has("URL AI Processing Failure")}
+                className="flex-row items-center justify-center bg-blue-600"
+              >
+                {runningTests.has("URL AI Processing Failure") && (
+                  <ActivityIndicator
+                    size="small"
+                    color="white"
+                    className="mr-2"
+                  />
+                )}
+                <Text className="font-medium text-white">
+                  Test URL AI Processing Failure
+                </Text>
+              </Button>
+
+              <Button
+                onPress={testUrlValidation}
+                disabled={runningTests.has("URL Validation Failure")}
+                className="flex-row items-center justify-center bg-blue-600"
+              >
+                {runningTests.has("URL Validation Failure") && (
+                  <ActivityIndicator
+                    size="small"
+                    color="white"
+                    className="mr-2"
+                  />
+                )}
+                <Text className="font-medium text-white">
+                  Test URL Validation Failure
+                </Text>
+              </Button>
+
+              <Button
+                onPress={testUrlSuccess}
+                disabled={runningTests.has("URL Workflow Success")}
+                className="flex-row items-center justify-center bg-green-600"
+              >
+                {runningTests.has("URL Workflow Success") && (
+                  <ActivityIndicator
+                    size="small"
+                    color="white"
+                    className="mr-2"
+                  />
+                )}
+                <Text className="font-medium text-white">
+                  Test URL Workflow Success
+                </Text>
+              </Button>
+            </View>
+          </View>
+
+          {/* Direct Notification Test */}
+          <View className="mb-6">
+            <Text className="mb-3 text-lg font-semibold text-gray-900">
+              Direct Notification Test
+            </Text>
+            <Button
+              onPress={testNotification}
+              disabled={runningTests.has("Direct Notification")}
+              className="flex-row items-center justify-center bg-purple-600"
+            >
+              {runningTests.has("Direct Notification") && (
+                <ActivityIndicator
+                  size="small"
+                  color="white"
+                  className="mr-2"
+                />
+              )}
+              <Text className="font-medium text-white">
+                Test Direct Notification
+              </Text>
+            </Button>
+          </View>
+
           {/* Results */}
           {testResults.length > 0 && (
             <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
@@ -363,7 +581,10 @@ export default function WorkflowTestScreen() {
             <Text className="mb-2 font-semibold text-blue-900">
               Expected Results
             </Text>
-            <View className="space-y-1">
+            <Text className="mb-2 text-sm font-medium text-blue-800">
+              Image Workflow Tests:
+            </Text>
+            <View className="mb-3 space-y-1">
               <Text className="text-sm text-blue-700">
                 • AI Extraction: Fails due to invalid base64 data
               </Text>
@@ -373,10 +594,31 @@ export default function WorkflowTestScreen() {
               <Text className="text-sm text-blue-700">
                 • Validation: Fails due to no extractable events (1x1 pixel)
               </Text>
+            </View>
+            <Text className="mb-2 text-sm font-medium text-blue-800">
+              URL Workflow Tests:
+            </Text>
+            <View className="mb-3 space-y-1">
               <Text className="text-sm text-blue-700">
-                • Direct Notification: Tests notification system directly
+                • URL Fetch: Fails due to invalid domain
+              </Text>
+              <Text className="text-sm text-blue-700">
+                • Content Parsing: Fails due to HTTP 500 error
+              </Text>
+              <Text className="text-sm text-blue-700">
+                • AI Processing: Fails due to non-event content (robots.txt)
+              </Text>
+              <Text className="text-sm text-blue-700">
+                • Validation: Fails due to no extractable events
+              </Text>
+              <Text className="text-sm text-blue-700">
+                • Success Test: Should complete successfully (no failure
+                notification)
               </Text>
             </View>
+            <Text className="text-sm text-blue-700">
+              • Direct Notification: Tests notification system directly
+            </Text>
           </View>
 
           {/* Development Notes */}
