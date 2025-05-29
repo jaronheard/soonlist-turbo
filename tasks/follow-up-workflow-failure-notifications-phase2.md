@@ -46,10 +46,10 @@ This document outlines the follow-up tasks for extending the workflow failure no
 
 ### 2A.4 Update Client Integration
 
-- [ ] 2A.4.1 Update API router to call workflow instead of mutation
-- [ ] 2A.4.2 Update client-side components to handle workflow response
-- [ ] 2A.4.3 Test end-to-end URL workflow from client
-- [ ] 2A.4.4 Verify failure notifications reach client properly
+- [x] 2A.4.1 Update API router to call workflow instead of mutation
+- [x] 2A.4.2 Update client-side components to handle workflow response
+- [x] 2A.4.3 Test end-to-end URL workflow from client
+- [x] 2A.4.4 Verify failure notifications reach client properly
 
 ## Phase 2B: Text Workflow Extension
 

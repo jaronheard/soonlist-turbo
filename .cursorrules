@@ -40,6 +40,7 @@ React:
 
 - Always question if an effect (e.g. useEffect, useLayoutEffect) is needed. Generally only use if it's synchonizing with an external system.
 - Prefer using React Query (@tanstack/react-query) for synchronizing with external systems.
+- Use Convex for backend and state management. Convex is reactive and handles data fetching, caching, and state management.
 - Avoid prematurely optimizing and using useMemo, useCallback, etc, but do use them when necessary.
 
 UI and Styling:
@@ -50,7 +51,7 @@ UI and Styling:
 
 Key Conventions:
 
-- Use tRPC for type-safe API calls between client and server
+- Use Convex for backend and state management. We are migrating off of tRPC.
 - Implement Clerk for authentication in both Next.js and Expo apps
 - Use Lucide icons for Next.js (lucide-react) and Expo (lucide-react-native)
 - Implement error tracking with Sentry in both apps

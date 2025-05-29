@@ -18,7 +18,7 @@ interface CreateEventOptions {
   username: string;
   sendNotification?: boolean;
   suppressCapturing?: boolean;
-  // Legacy fields for text/URL events (not yet implemented with workflows)
+  // Legacy field for text events (not yet implemented with workflows)
   rawText?: string;
   linkPreview?: string;
 }
@@ -57,6 +57,7 @@ export function useCreateEvent() {
   const eventFromImageBase64 = useMutation(
     api.ai.eventFromImageBase64ThenCreate,
   );
+  const eventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
 
   const createEvent = useCallback(
     async (options: CreateEventOptions): Promise<string> => {
@@ -122,14 +123,33 @@ export function useCreateEvent() {
           return startWorkflow.workflowId;
         }
 
-        // Handle text/URL events (not yet implemented with workflows)
-        if (rawText || linkPreview) {
+        // Handle URL events with workflow
+        if (linkPreview) {
+          // Start URL workflow
+          const startWorkflow = await eventFromUrl({
+            url: linkPreview,
+            userId,
+            username,
+            lists: [],
+            timezone: userTimezone,
+            visibility: "private",
+            sendNotification,
+          });
+
+          // Track the workflow in our store
+          addWorkflowId(startWorkflow.workflowId);
+
+          return startWorkflow.workflowId;
+        }
+
+        // Handle text events (not yet implemented with workflows)
+        if (rawText) {
           throw new Error(
-            "Text and URL-based event creation is not yet supported with the new workflow system. Please use an image for now.",
+            "Text-based event creation is not yet supported with the new workflow system. Please use an image or URL for now.",
           );
         }
 
-        throw new Error("No image, text, or URL provided for event creation");
+        throw new Error("No image, URL, or text provided for event creation");
       } catch (error) {
         logError("Error processing event", error);
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -148,6 +168,7 @@ export function useCreateEvent() {
       userTimezone,
       setIsImageLoading,
       eventFromImageBase64,
+      eventFromUrl,
       setIsCapturing,
       addWorkflowId,
     ],
