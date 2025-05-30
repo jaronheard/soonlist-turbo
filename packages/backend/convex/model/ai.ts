@@ -137,11 +137,13 @@ export async function processEventFromBase64Image(
     return aiResult;
   } catch (error) {
     console.error("Error in processEventFromBase64Image:", error); // Log the actual error
-    throw new ConvexError(
-      error instanceof Error
-        ? error.message
-        : "Unknown error occurred while processing image event",
-    );
+    throw new ConvexError({
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unknown error occurred while processing image event",
+      data: { input },
+    });
   }
 }
 /**
@@ -174,7 +176,10 @@ export async function processEventFromUrl(
 
     // Validate that we have at least one event
     if (!events || events.length === 0) {
-      throw new ConvexError("No events found in response");
+      throw new ConvexError({
+        message: "No events found in response",
+        data: { input },
+      });
     }
 
     const validatedEvent = validateEvent(events[0]);
@@ -185,11 +190,13 @@ export async function processEventFromUrl(
     };
   } catch (error) {
     console.error("Error in processEventFromUrl:", error); // Log the actual error
-    throw new ConvexError(
-      error instanceof Error
-        ? error.message
-        : "Unknown error occurred while processing URL event",
-    );
+    throw new ConvexError({
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unknown error occurred while processing URL event",
+      data: { input },
+    });
   }
 }
 /**
@@ -222,7 +229,10 @@ export async function processEventFromText(
 
     // Validate that we have at least one event
     if (!events || events.length === 0) {
-      throw new ConvexError("No events found in response");
+      throw new ConvexError({
+        message: "No events found in response",
+        data: { input },
+      });
     }
 
     const validatedEvent = validateEvent(events[0]);
@@ -233,17 +243,22 @@ export async function processEventFromText(
     };
   } catch (error) {
     console.error("Error in processEventFromText:", error); // Log the actual error
-    throw new ConvexError(
-      error instanceof Error
-        ? error.message
-        : "Unknown error occurred while processing text event",
-    );
+    throw new ConvexError({
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unknown error occurred while processing text event",
+      data: { input },
+    });
   }
 }
 
 export function validateEvent(event: unknown) {
   if (!event) {
-    throw new ConvexError("No event provided for validation");
+    throw new ConvexError({
+      message: "No event provided for validation",
+      data: { event },
+    });
   }
 
   // Cast to EventWithMetadata for validation
@@ -257,9 +272,10 @@ export function validateEvent(event: unknown) {
     eventData.startDate === "" ||
     eventData.startDate.toLowerCase().includes("error")
   ) {
-    throw new ConvexError(
-      "Event validation failed: Event lacks valid date information",
-    );
+    throw new ConvexError({
+      message: "Event validation failed: Event lacks valid date information",
+      data: { event: eventData },
+    });
   }
 
   // 2. Check for extremely generic event names that suggest hallucination
@@ -301,9 +317,11 @@ export function validateEvent(event: unknown) {
   const isTooShort = name.trim().length < 3;
 
   if (isInvalidName || isTooShort || isInvalidPattern) {
-    throw new ConvexError(
-      "Event validation failed: Event appears to be hallucinated from non-event content",
-    );
+    throw new ConvexError({
+      message:
+        "Event validation failed: Event appears to be hallucinated from non-event content",
+      data: { event: eventData },
+    });
   }
 
   try {
@@ -311,6 +329,9 @@ export function validateEvent(event: unknown) {
     const validatedEvent = EventWithMetadataSchema.parse(event);
     return validatedEvent;
   } catch (error) {
-    throw new ConvexError("Invalid event data received");
+    throw new ConvexError({
+      message: "Invalid event data received",
+      data: { event },
+    });
   }
 }

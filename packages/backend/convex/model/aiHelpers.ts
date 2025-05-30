@@ -119,7 +119,10 @@ function createLoggedObjectGenerator({
         },
       });
       waitUntil(langfuse.flushAsync());
-      throw new ConvexError("Failed to generate AI response");
+      throw new ConvexError({
+        message: "Failed to generate AI response",
+        data: { error },
+      });
     }
   };
 }
@@ -296,7 +299,10 @@ export async function fetchAndProcessEvent({
     });
     const rawText = await jinaReader.text();
     if (!rawText) {
-      throw new ConvexError("Failed to fetch the text from the URL");
+      throw new ConvexError({
+        message: "Failed to fetch the text from the URL",
+        data: { url: input.url },
+      });
     }
     eventMessages = constructMessagesRawText({
       systemPrompt: systemPromptEvent.text,
@@ -310,7 +316,10 @@ export async function fetchAndProcessEvent({
       rawText: rawText,
     });
   } else {
-    throw new ConvexError("No input provided");
+    throw new ConvexError({
+      message: "No input provided",
+      data: { input },
+    });
   }
 
   const [event, metadata] = await Promise.all([
@@ -388,11 +397,17 @@ export async function createEventAndNotify(
   const shouldNotify = input.sendNotification !== false;
 
   if (!userId) {
-    throw new ConvexError("No user id found in session");
+    throw new ConvexError({
+      message: "No user id found in session",
+      data: { input },
+    });
   }
 
   if (!username) {
-    throw new ConvexError("No username found in session");
+    throw new ConvexError({
+      message: "No username found in session",
+      data: { input },
+    });
   }
 
   const hasComment = input.comment && input.comment.length > 0;
@@ -496,7 +511,10 @@ export async function createEventAndNotify(
     .unique();
 
   if (!createdEvent) {
-    throw new ConvexError("Failed to create event");
+    throw new ConvexError({
+      message: "Failed to create event",
+      data: { eventid },
+    });
   }
 
   // Resolve daily events
@@ -563,11 +581,17 @@ export async function createEvent(
   const { userId, username } = input;
 
   if (!userId) {
-    throw new ConvexError("No user id found in session");
+    throw new ConvexError({
+      message: "No user id found in session",
+      data: { input },
+    });
   }
 
   if (!username) {
-    throw new ConvexError("No username found in session");
+    throw new ConvexError({
+      message: "No username found in session",
+      data: { input },
+    });
   }
 
   const hasComment = input.comment && input.comment.length > 0;
@@ -674,7 +698,10 @@ export async function createEvent(
     .unique();
 
   if (!createdEvent) {
-    throw new ConvexError("Failed to create event");
+    throw new ConvexError({
+      message: "Failed to create event",
+      data: { eventid },
+    });
   }
 
   return {
@@ -686,12 +713,18 @@ export async function createEvent(
 
 export function validateFirstEvent(events: unknown[]) {
   if (!events || events.length === 0) {
-    throw new ConvexError("No events found");
+    throw new ConvexError({
+      message: "No events found",
+      data: { events },
+    });
   }
 
   const firstEvent = events[0];
   if (!firstEvent || typeof firstEvent !== "object") {
-    throw new ConvexError("Invalid event data");
+    throw new ConvexError({
+      message: "Invalid event data",
+      data: { firstEvent },
+    });
   }
 
   return firstEvent as EventWithMetadata;
@@ -714,7 +747,10 @@ export function validateJinaResponse(aiResult: {
     responseText.includes("connection refused") ||
     responseText.includes("timeout")
   ) {
-    throw new ConvexError("URL fetch failed: Network error or invalid domain");
+    throw new ConvexError({
+      message: "URL fetch failed: Network error or invalid domain",
+      data: { responseText },
+    });
   }
 
   // 2. Check for HTTP error content
@@ -725,9 +761,10 @@ export function validateJinaResponse(aiResult: {
     responseText.includes("error 500") ||
     responseText.includes("error 404")
   ) {
-    throw new ConvexError(
-      "URL content parsing failed: HTTP error status received",
-    );
+    throw new ConvexError({
+      message: "URL content parsing failed: HTTP error status received",
+      data: { responseText },
+    });
   }
 
   // 3. Check for robots.txt content specifically
@@ -735,16 +772,19 @@ export function validateJinaResponse(aiResult: {
     responseText.includes("user-agent:") &&
     responseText.includes("disallow:")
   ) {
-    throw new ConvexError(
-      "AI processing failed: Content is robots.txt file, not event information",
-    );
+    throw new ConvexError({
+      message:
+        "AI processing failed: Content is robots.txt file, not event information",
+      data: { responseText },
+    });
   }
 
   // 4. Check for minimal/empty content that Jina couldn't process
   if (responseText.trim().length < 100) {
-    throw new ConvexError(
-      "URL content parsing failed: Insufficient content retrieved",
-    );
+    throw new ConvexError({
+      message: "URL content parsing failed: Insufficient content retrieved",
+      data: { responseText },
+    });
   }
 }
 

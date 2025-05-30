@@ -55,7 +55,10 @@ export const eventFromImageBase64Workflow = workflow.define({
     );
 
     if (!firstEvent) {
-      throw new ConvexError("No events found in response");
+      throw new ConvexError({
+        message: "No events found in response",
+        data: { aiResult },
+      });
     }
 
     // ── step 3 write DB
@@ -119,7 +122,10 @@ export const eventFromUrlWorkflow = workflow.define({
     );
 
     if (!firstEvent) {
-      throw new ConvexError("No events found in response");
+      throw new ConvexError({
+        message: "No events found in response",
+        data: { aiResult },
+      });
     }
 
     // ── step 3: Write to database
@@ -183,7 +189,10 @@ export const eventFromTextWorkflow = workflow.define({
     );
 
     if (!firstEvent) {
-      throw new ConvexError("No events found in response");
+      throw new ConvexError({
+        message: "No events found in response",
+        data: { aiResult },
+      });
     }
 
     // ── step 3: Write to database
