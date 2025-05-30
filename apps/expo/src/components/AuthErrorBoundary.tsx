@@ -1,4 +1,7 @@
-import React, { useEffect } from "react";
+// AuthErrorBoundary.tsx
+import type { ReactNode } from "react";
+import React, { Component, createContext, useContext } from "react";
+import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
@@ -6,51 +9,73 @@ import { toast } from "sonner-native";
 import { deleteAuthData } from "~/hooks/useAuthSync";
 import { logError } from "~/utils/errorLogging";
 
-interface AuthErrorBoundaryProps {
-  children: React.ReactNode;
+type Handler = () => Promise<void>;
+const AuthErrCtx = createContext<Handler>(() => Promise.resolve());
+
+interface AuthErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
 }
 
-// Extend global interface for our auth error handler
-declare global {
-  // eslint-disable-next-line no-var
-  var __handleAuthError: (() => Promise<void>) | undefined;
+export function useAuthErrorHandler() {
+  return useContext(AuthErrCtx);
 }
 
-export function AuthErrorBoundary({ children }: AuthErrorBoundaryProps) {
+export class AuthErrorBoundary extends Component<
+  { children: ReactNode },
+  AuthErrorBoundaryState
+> {
+  static contextType = AuthErrCtx;
+  declare context: React.ContextType<typeof AuthErrCtx>;
+
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): AuthErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
+    logError("UI error", { error, errorInfo });
+    void this.context(); // delegate to shared handler
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View className="flex-1 items-center justify-center p-4">
+          <Text className="mb-2 text-lg font-semibold text-red-600">
+            Something went wrong
+          </Text>
+          <Text className="text-center text-sm text-gray-600">
+            We're redirecting you to sign in again...
+          </Text>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export function AuthErrorProvider({ children }: { children: ReactNode }) {
   const { signOut } = useAuth();
 
-  const handleAuthenticationError = async () => {
+  const handleAuthenticationError: Handler = async () => {
     try {
-      logError("Authentication session expired", new Error("User signed out"));
-
-      // Clear stored auth data
       await deleteAuthData();
-
-      // Sign out from Clerk
-      await signOut();
-
-      // Show user-friendly message
-      toast.error("Your session has expired. Please sign in again.");
-
-      // Redirect to sign in
-      router.replace("/sign-in");
-    } catch (error) {
-      logError("Error handling authentication error", error);
-
-      // Fallback: force redirect to sign in
+      await signOut(); // clerk flush + revoke
+      toast.error("Session expired. Please sign in again.");
+    } finally {
       router.replace("/sign-in");
     }
   };
 
-  // Expose the error handler for manual use
-  useEffect(() => {
-    // Store the handler globally so it can be called from error boundaries
-    global.__handleAuthError = handleAuthenticationError;
-
-    return () => {
-      global.__handleAuthError = undefined;
-    };
-  }, []);
-
-  return <>{children}</>;
+  return (
+    <AuthErrCtx.Provider value={handleAuthenticationError}>
+      <AuthErrorBoundary>{children}</AuthErrorBoundary>
+    </AuthErrCtx.Provider>
+  );
 }
