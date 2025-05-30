@@ -31,21 +31,6 @@ convex/
 
 These functions can be called from external systems (e.g., cron jobs, webhooks):
 
-#### `sendMarketingNotification`
-
-Send a marketing notification to all users.
-
-```typescript
-import { api } from "../convex/_generated/api";
-
-await convex.action(api.notifications.sendMarketingNotification, {
-  cronSecret: "your-cron-secret",
-  title: "New Feature Available!",
-  body: "Check out our latest update",
-  url: "/updates",
-  data: { type: "marketing" },
-});
-```
 
 #### `sendSingleNotification`
 
@@ -126,12 +111,9 @@ import { api } from "../convex/_generated/api";
 
 const convex = new ConvexHttpClient(process.env.CONVEX_URL!);
 
-// Send a marketing notification
-await convex.action(api.notifications.sendMarketingNotification, {
+// Trigger weekly notifications
+await convex.action(api.notifications.sendWeeklyNotifications, {
   cronSecret: process.env.CRON_SECRET!,
-  title: "Weekly Update",
-  body: "Here's what's new this week",
-  url: "/updates",
 });
 ```
 

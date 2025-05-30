@@ -111,12 +111,18 @@ function EventList({ userName }: { userName: string }) {
 
 - `api.events.getForUser` - Get events for a specific user
 - `api.events.getUpcomingForUser` - Get upcoming events for a user
-- `api.events.getFollowingForUser` - Get events from followed users/lists
-- `api.events.getSavedForUser` - Get saved events
+- `api.events.getCreatedForUser` - Get events created by a user
+- `api.events.getFollowingForUser` - Get events from followed users
+- `api.events.getFollowingUpcomingForUser` - Get upcoming events from followed users
+- `api.events.getSavedForUser` - Get saved events for a user
+- `api.events.getSavedIdsForUser` - Get IDs of saved events
+- `api.events.getPossibleDuplicates` - Find potential duplicate events
 - `api.events.get` - Get single event by ID
 - `api.events.getAll` - Get all events
 - `api.events.getNext` - Get next upcoming events
-- `api.events.getDiscover` - Get discover events (authenticated)
+- `api.events.getDiscoverPaginated` - Discover events with pagination
+- `api.events.getEventsForUser` - Paginated events for profile pages
+- `api.events.getEventsForUserPaginated` - Convex paginated version of profile events
 - `api.events.getStats` - Get user statistics
 
 #### Mutations (Write operations)
@@ -126,8 +132,6 @@ function EventList({ userName }: { userName: string }) {
 - `api.events.deleteEvent` - Delete event
 - `api.events.follow` - Follow an event
 - `api.events.unfollow` - Unfollow an event
-- `api.events.addToList` - Add event to list
-- `api.events.removeFromList` - Remove event from list
 - `api.events.toggleVisibility` - Toggle event visibility
 
 ### Example Usage Patterns
@@ -164,8 +168,8 @@ await followEvent({ id: "event-id-123" });
 
 ```typescript
 const { results, status, loadMore } = usePaginatedQuery(
-  api.events.getDiscoverInfinite,
-  { limit: 20 },
+  api.events.getDiscoverPaginated,
+  { paginationOpts: { numItems: 20 } },
   { initialNumItems: 20 },
 );
 ```

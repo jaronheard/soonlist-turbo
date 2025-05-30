@@ -16,7 +16,7 @@ This document describes the failure notification pattern implemented for Convex 
 
 2. **Failure Notification Action** (`pushFailure`)
 
-   - Located in `packages/backend/convex/internal/notifications.ts`
+   - Located in `packages/backend/convex/notifications.ts`
    - Sends push notifications for workflow failures
    - Includes failure-specific content and metadata
 
