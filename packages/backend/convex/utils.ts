@@ -60,17 +60,17 @@ export function safeStringify(value: unknown): string {
     return JSON.stringify(value);
   } catch {
     // If JSON.stringify fails, try to get a meaningful string representation
-    if (typeof value === "object" && value !== null) {
+    if (typeof value === "object") {
       // For objects, try to get constructor name or use toString
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      const constructor = (value as Record<string, unknown>).constructor as
-        | { name?: string }
-        | undefined;
-      if (constructor?.name && constructor.name !== "Object") {
-        return `[${constructor.name} object]`;
+      const objectConstructor = (value as Record<string, unknown>)
+        .constructor as { name?: string } | undefined;
+      if (objectConstructor?.name && objectConstructor.name !== "Object") {
+        return `[${objectConstructor.name} object]`;
       }
       // Use toString() which might be more informative than [object Object]
       try {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         const stringValue = (value as { toString?: () => string }).toString?.();
         return stringValue && stringValue !== "[object Object]"
           ? stringValue

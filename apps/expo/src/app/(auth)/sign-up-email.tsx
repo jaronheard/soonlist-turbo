@@ -1,3 +1,4 @@
+import type { ClerkAPIError } from "@clerk/types";
 import React from "react";
 import { Linking, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -5,7 +6,6 @@ import { Redirect, router, Stack } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth } from "convex/react";
-import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -14,6 +14,8 @@ import { Logo } from "../../components/Logo";
 import { logError } from "../../utils/errorLogging";
 
 const signUpSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   emailAddress: z.string().email("Invalid email format"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   username: z
@@ -28,7 +30,6 @@ export default function SignUpScreen() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [generalError, setGeneralError] = React.useState("");
   const { isLoaded, signUp } = useSignUp();
-  const posthog = usePostHog();
   const { isAuthenticated } = useConvexAuth();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
@@ -40,6 +41,8 @@ export default function SignUpScreen() {
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
+      firstName: "",
+      lastName: "",
       emailAddress: "",
       password: "",
       username: "",
@@ -56,6 +59,7 @@ export default function SignUpScreen() {
   const onSignUpPress = async (data: SignUpFormData) => {
     if (!isLoaded) return;
     setGeneralError("");
+    setIsSubmitting(true);
 
     try {
       await signUp.create(data);
@@ -83,6 +87,7 @@ export default function SignUpScreen() {
         setGeneralError("An error occurred during sign up.");
       }
     }
+    setIsSubmitting(false);
   };
 
   if (!isLoaded) {
@@ -264,10 +269,11 @@ export default function SignUpScreen() {
 
           <Pressable
             onPress={handleSubmit(onSignUpPress)}
-            className="w-full rounded-full bg-interactive-1 px-6 py-3"
+            className={`w-full rounded-full px-6 py-3 ${isSubmitting || !isValid ? "bg-gray-400" : "bg-interactive-1"}`}
+            disabled={isSubmitting || !isValid}
           >
             <Text className="text-center text-lg font-bold text-white">
-              Sign Up
+              {isSubmitting ? "Signing Up..." : "Sign Up"}
             </Text>
           </Pressable>
 

@@ -1,5 +1,3 @@
-"use client";
-
 import { ActivityIndicator, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";

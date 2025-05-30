@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
