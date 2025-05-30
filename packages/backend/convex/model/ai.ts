@@ -3,7 +3,8 @@
 import { Buffer } from "buffer";
 import { ConvexError } from "convex/values";
 
-import { EventWithMetadata, EventWithMetadataSchema } from "@soonlist/cal";
+import type { EventWithMetadata } from "@soonlist/cal";
+import { EventWithMetadataSchema } from "@soonlist/cal";
 
 import type { ActionCtx, MutationCtx, QueryCtx } from "../_generated/server";
 import { fetchAndProcessEvent } from "./aiHelpers";
@@ -331,7 +332,11 @@ export function validateEvent(event: unknown) {
   } catch (error) {
     throw new ConvexError({
       message: "Invalid event data received",
-      data: { event },
+      data: {
+        parseError: error instanceof Error ? error.message : String(error),
+        originalEvent: JSON.stringify(event),
+        errorName: error instanceof Error ? error.name : "UnknownError",
+      },
     });
   }
 }
