@@ -226,6 +226,102 @@ export interface ProcessedEventResponse {
   response: string;
 }
 
+/**
+ * Validates a URL to prevent SSRF attacks
+ * @param url - The URL to validate
+ * @throws ConvexError if the URL is invalid or potentially dangerous
+ */
+function validateUrl(url: string): void {
+  let parsedUrl: URL;
+
+  // Check if URL is well-formed
+  try {
+    parsedUrl = new URL(url);
+  } catch (error) {
+    throw new ConvexError({
+      message: "Invalid URL format",
+      data: {
+        url,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
+  }
+
+  // Only allow http and https protocols
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    throw new ConvexError({
+      message: "Only HTTP and HTTPS protocols are allowed",
+      data: { url, protocol: parsedUrl.protocol },
+    });
+  }
+
+  const hostname = parsedUrl.hostname.toLowerCase();
+
+  // Prevent localhost access
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1"
+  ) {
+    throw new ConvexError({
+      message: "Access to localhost is not allowed",
+      data: { url, hostname },
+    });
+  }
+
+  // Prevent access to private IP ranges
+  const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+  const ipv4Match = ipv4Regex.exec(hostname);
+
+  if (ipv4Match) {
+    const [, a, b, _c, _d] = ipv4Match.map(Number);
+
+    // Check for private IP ranges
+    if (
+      // 10.0.0.0/8
+      a === 10 ||
+      // 172.16.0.0/12
+      (a === 172 && b >= 16 && b <= 31) ||
+      // 192.168.0.0/16
+      (a === 192 && b === 168) ||
+      // 169.254.0.0/16 (link-local)
+      (a === 169 && b === 254) ||
+      // 127.0.0.0/8 (additional loopback check)
+      a === 127
+    ) {
+      throw new ConvexError({
+        message: "Access to private IP ranges is not allowed",
+        data: { url, hostname },
+      });
+    }
+  }
+
+  // Prevent access to common cloud metadata endpoints
+  const blockedHosts = [
+    "metadata.google.internal",
+    "169.254.169.254", // AWS/Azure/GCP metadata
+    "metadata.azure.com",
+    "metadata.packet.net",
+    "metadata.digitalocean.com",
+  ];
+
+  if (blockedHosts.includes(hostname)) {
+    throw new ConvexError({
+      message: "Access to cloud metadata endpoints is not allowed",
+      data: { url, hostname },
+    });
+  }
+
+  // Optional: Add domain whitelist if needed
+  // const allowedDomains = ['example.com', 'api.example.com'];
+  // if (!allowedDomains.some(domain => hostname === domain || hostname.endsWith('.' + domain))) {
+  //   throw new ConvexError({
+  //     message: "Domain not in whitelist",
+  //     data: { url, hostname },
+  //   });
+  // }
+}
+
 export async function fetchAndProcessEvent({
   ctx,
   input,
@@ -292,27 +388,58 @@ export async function fetchAndProcessEvent({
       imageUrl: input.imageUrl,
     });
   } else if (input.url) {
-    const jinaReader = await fetch(`https://r.jina.ai/${input.url}`, {
-      method: "GET",
-    });
-    const rawText = await jinaReader.text();
-    if (!rawText) {
+    try {
+      // Validate URL to prevent SSRF attacks
+      validateUrl(input.url);
+
+      const jinaReader = await fetch(`https://r.jina.ai/${input.url}`, {
+        method: "GET",
+      });
+
+      if (!jinaReader.ok) {
+        throw new ConvexError({
+          message: `Failed to fetch content from Jina Reader API: ${jinaReader.status} ${jinaReader.statusText}`,
+          data: {
+            url: input.url,
+            status: jinaReader.status,
+            statusText: jinaReader.statusText,
+          },
+        });
+      }
+
+      const rawText = await jinaReader.text();
+      if (!rawText) {
+        throw new ConvexError({
+          message: "Failed to fetch the text from the URL",
+          data: { url: input.url },
+        });
+      }
+      eventMessages = constructMessagesRawText({
+        systemPrompt: systemPromptEvent.text,
+        prompt: prompt.text,
+        rawText: rawText,
+      });
+
+      metadataMessages = constructMessagesRawText({
+        systemPrompt: systemPromptMetadata.text,
+        prompt: prompt.textMetadata,
+        rawText: rawText,
+      });
+    } catch (error) {
+      // If the error is already a ConvexError, re-throw it
+      if (error instanceof ConvexError) {
+        throw error;
+      }
+
+      // Handle network errors and other fetch failures
       throw new ConvexError({
-        message: "Failed to fetch the text from the URL",
-        data: { url: input.url },
+        message: "Network error when fetching content from Jina Reader API",
+        data: {
+          url: input.url,
+          error: error instanceof Error ? error.message : String(error),
+        },
       });
     }
-    eventMessages = constructMessagesRawText({
-      systemPrompt: systemPromptEvent.text,
-      prompt: prompt.text,
-      rawText: rawText,
-    });
-
-    metadataMessages = constructMessagesRawText({
-      systemPrompt: systemPromptMetadata.text,
-      prompt: prompt.textMetadata,
-      rawText: rawText,
-    });
   } else {
     throw new ConvexError({
       message: "No input provided",

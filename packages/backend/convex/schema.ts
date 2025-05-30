@@ -70,7 +70,8 @@ export default defineSchema({
     description: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
-    .index("by_custom_id", ["id"]),
+    .index("by_custom_id", ["id"])
+    .index("by_user_and_startDateTime", ["userId", "startDateTime"]),
 
   eventToLists: defineTable({
     eventId: v.string(),

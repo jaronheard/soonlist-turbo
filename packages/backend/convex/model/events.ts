@@ -984,75 +984,42 @@ export async function getEventsForUserPaginated(
   ctx: QueryCtx,
   userName: string,
   filter: "upcoming" | "past",
-  limit: number,
-  offset: number,
+  paginationOpts: { numItems: number; cursor: string | null },
 ) {
-  const now = new Date();
-
   const user = await ctx.db
     .query("users")
     .withIndex("by_username", (q) => q.eq("username", userName))
     .unique();
 
   if (!user) {
-    throw new ConvexError("User not found");
+    return { page: [], isDone: true, continueCursor: null };
   }
 
-  // Get user's own events
-  const ownEvents = await ctx.db
-    .query("events")
-    .withIndex("by_user", (q) => q.eq("userId", user.id))
-    .collect();
+  const now = new Date().toISOString();
 
-  // Get followed events
-  const eventFollows = await ctx.db
-    .query("eventFollows")
-    .withIndex("by_user", (q) => q.eq("userId", user.id))
-    .collect();
+  let queryBuilder;
 
-  const followedEvents = [];
-  for (const follow of eventFollows) {
-    const event = await ctx.db
+  if (filter === "upcoming") {
+    queryBuilder = ctx.db
       .query("events")
-      .withIndex("by_custom_id", (q) => q.eq("id", follow.eventId))
-      .unique();
-    if (event) {
-      followedEvents.push(event);
-    }
+      .withIndex("by_user_and_startDateTime", (q) => q.eq("userId", user.id))
+      // Index provides ascending order by startDateTime by default as it's the second field.
+      .filter((q) => q.gte(q.field("startDateTime"), now));
+  } else {
+    // "past"
+    queryBuilder = ctx.db
+      .query("events")
+      .withIndex("by_user_and_startDateTime", (q) => q.eq("userId", user.id))
+      .order("desc") // Reverse the natural index order to get most recent past events first
+      .filter((q) => q.lt(q.field("startDateTime"), now));
   }
 
-  const allEvents = [...ownEvents, ...followedEvents];
+  const result = await queryBuilder.paginate(paginationOpts);
 
-  // Filter by upcoming/past
-  const filteredEvents = allEvents.filter((event) => {
-    if (filter === "upcoming") {
-      return new Date(event.endDateTime) >= now;
-    } else {
-      return new Date(event.endDateTime) < now;
-    }
-  });
-
-  // Sort events
-  const sortedEvents = filteredEvents.sort((a, b) => {
-    if (filter === "upcoming") {
-      return (
-        new Date(a.startDateTime).getTime() -
-        new Date(b.startDateTime).getTime()
-      );
-    } else {
-      return (
-        new Date(b.startDateTime).getTime() -
-        new Date(a.startDateTime).getTime()
-      );
-    }
-  });
-
-  // Apply pagination
-  const paginatedEvents = sortedEvents.slice(offset, offset + limit);
-  const hasMore = sortedEvents.length > offset + limit;
+  const enrichedEvents = await enrichEventsAndFilterNulls(ctx, result.page);
 
   return {
-    events: paginatedEvents,
-    hasMore,
+    ...result,
+    page: enrichedEvents,
   };
 }

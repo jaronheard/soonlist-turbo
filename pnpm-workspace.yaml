@@ -12,6 +12,8 @@ catalog:
 
   # Backend
   convex: ^1.13.0
+  "@convex-dev/workflow": ^0.2.4
+  "@convex-dev/workpool": ^0.2.10
 
   # Misc
   zod: ^3.23.0
@@ -148,6 +150,7 @@ catalog:
   "@types/uuid": ^9.0.8
   "@types/babel__core": ^7.20.5
   "@types/invariant": ^2.2.37
+  "@types/ssrf-req-filter": ^1.1.1
 
   # Build Tools
   turbo: ^2.5.3

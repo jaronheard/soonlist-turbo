@@ -209,35 +209,6 @@ export const getDiscoverPaginated = query({
 });
 
 /**
- * Get events for user with pagination
- */
-export const getEventsForUser = query({
-  args: {
-    userName: v.string(),
-    filter: v.union(v.literal("upcoming"), v.literal("past")),
-    limit: v.number(),
-    cursor: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const { userName, filter, limit, cursor } = args;
-    const offset = cursor || 0;
-
-    const result = await Events.getEventsForUserPaginated(
-      ctx,
-      userName,
-      filter,
-      limit,
-      offset,
-    );
-
-    return {
-      events: result.events,
-      nextCursor: result.hasMore ? offset + limit : undefined,
-    };
-  },
-});
-
-/**
  * Get events for user with Convex pagination (upcoming or past)
  * This efficiently queries both owned and followed events in a single operation
  */
