@@ -31,7 +31,6 @@ convex/
 
 These functions can be called from external systems (e.g., cron jobs, webhooks):
 
-
 #### `sendSingleNotification`
 
 Send a notification to a specific user.
