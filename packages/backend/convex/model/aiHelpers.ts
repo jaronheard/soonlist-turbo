@@ -245,7 +245,14 @@ function validateUrl(url: string): void {
   const ipv4Match = ipv4Regex.exec(hostname);
 
   if (ipv4Match) {
-    const [, a, b, _c, _d] = ipv4Match.map(Number);
+    const octetsAsTuple = ipv4Match.map(Number) as [
+      number,
+      number,
+      number,
+      number,
+      number,
+    ];
+    const [, a, b, _c, _d] = octetsAsTuple;
 
     // Check for private IP ranges
     if (

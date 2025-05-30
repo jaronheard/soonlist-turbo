@@ -18,7 +18,8 @@ export function generateNumericId(): number {
   // Add cryptographically secure random digits for additional entropy
   const randomArray = new Uint32Array(1);
   crypto.getRandomValues(randomArray);
-  const randomPart = randomArray[0] % 1000; // Get last 3 digits (0-999)
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-non-null-assertion
+  const randomPart = randomArray[0]! % 1000; // Get last 3 digits (0-999)
 
   // Combine relative timestamp with random part
   // This creates a smaller number that stays within safe integer range

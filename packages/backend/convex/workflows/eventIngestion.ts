@@ -266,8 +266,11 @@ export const getWorkflowStatus = query({
       const totalSteps = 4; // Based on our workflow: extract+upload (parallel), validate, insert, notify
 
       if (inProgressSteps.length > 0) {
-        const latestStep = inProgressSteps[inProgressSteps.length - 1];
-        currentStep = latestStep.step.name || "Processing";
+        const latestStep = inProgressSteps[inProgressSteps.length - 1] || {
+          step: { name: "Processing" },
+          stepNumber: 0,
+        };
+        currentStep = latestStep.step.name;
 
         // Calculate progress based on completed steps
         const completedSteps = latestStep.stepNumber || 0;
