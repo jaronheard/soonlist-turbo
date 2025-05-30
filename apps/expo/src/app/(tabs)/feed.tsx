@@ -15,7 +15,6 @@ import { useStableTimestamp } from "~/store";
 
 function MyFeedContent() {
   const { user } = useUser();
-  // const { hasCompletedOnboarding } = useAppStore();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
@@ -52,12 +51,6 @@ function MyFeedContent() {
       loadMore(20);
     }
   }, [status, loadMore]);
-
-  // Check onboarding status after all hooks
-  // const dbHasCompletedOnboarding = !!userQuery.data?.onboardingCompletedAt;
-  // if (!hasCompletedOnboarding && !dbHasCompletedOnboarding) {
-  //   return <Redirect href="/(onboarding)/onboarding" />;
-  // }
 
   return (
     <View className="flex-1 bg-white">
