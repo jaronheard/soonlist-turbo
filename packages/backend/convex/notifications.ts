@@ -6,6 +6,7 @@ import * as AI from "./model/ai";
 import * as Notifications from "./model/notifications";
 import * as OneSignal from "./model/oneSignal";
 import { createDeepLink } from "./model/utils/urlScheme";
+import { generateNotificationId } from "./utils";
 
 /**
  * Send a single notification to a specific user
@@ -26,7 +27,7 @@ export const sendSingleNotification = action({
   handler: async (_ctx, args) => {
     const { userId, title, body, url, data } = args;
 
-    const notificationId = Notifications.generateNotificationId();
+    const notificationId = generateNotificationId();
 
     try {
       const result = await OneSignal.sendNotification({
@@ -126,7 +127,7 @@ export const sendWeeklyNotifications = internalAction({
                 error instanceof Error
                   ? error.message
                   : "Unknown error occurred",
-              notificationId: Notifications.generateNotificationId(),
+              notificationId: generateNotificationId(),
               userId: user.id,
             };
 

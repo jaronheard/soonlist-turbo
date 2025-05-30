@@ -1,5 +1,4 @@
 import type { QueryCtx } from "../_generated/server";
-import { generatePublicId } from "../utils";
 
 // Types for notification operations
 export interface NotificationResult {
@@ -221,8 +220,4 @@ export async function generateWeeklyNotificationContent(
     message: `${prefix}${summary}`,
     link,
   };
-}
-
-export function generateNotificationId() {
-  return `not_${generatePublicId()}`;
 }

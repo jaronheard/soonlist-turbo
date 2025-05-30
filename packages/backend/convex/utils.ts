@@ -83,3 +83,7 @@ export function safeStringify(value: unknown): string {
     return `[${typeof value}]`;
   }
 }
+
+export function generateNotificationId() {
+  return `not_${generatePublicId()}`;
+}

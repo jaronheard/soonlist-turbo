@@ -397,15 +397,6 @@ export const useAppStore = create<AppState>()(
           onboardingData: {},
           currentOnboardingStep: null,
           workflowIds: [],
-          addWorkflowId: (workflowId) =>
-            set((state) => ({
-              workflowIds: [...state.workflowIds, workflowId],
-            })),
-          removeWorkflowId: (workflowId) =>
-            set((state) => ({
-              workflowIds: state.workflowIds.filter((id) => id !== workflowId),
-            })),
-          clearAllWorkflowIds: () => set({ workflowIds: [] }),
         }),
 
       // Stable timestamp for query filtering
