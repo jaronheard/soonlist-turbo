@@ -14,27 +14,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "catalog:",
     "@ai-sdk/openai": "catalog:",
     "@clerk/nextjs": "catalog:",
-    "@convex-dev/workflow": "^0.2.4",
-    "@convex-dev/workpool": "^0.2.10",
-    "@sentry/nextjs": "catalog:",
-    "@sentry/node": "catalog:",
+    "@convex-dev/workflow": "catalog:",
+    "@convex-dev/workpool": "catalog:",
     "@soonlist/cal": "workspace:*",
-    "@soonlist/db": "workspace:*",
-    "@soonlist/validators": "workspace:*",
-    "@trpc/server": "catalog:",
-    "@vercel/functions": "catalog:",
     "ai": "catalog:",
     "convex": "catalog:",
-    "date-fns-tz": "catalog:",
-    "expo-server-sdk": "catalog:",
     "langfuse": "catalog:",
-    "nanoid": "catalog:",
-    "posthog-node": "catalog:",
-    "superjson": "catalog:",
-    "zod": "catalog:"
+    "nanoid": "catalog:"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",
