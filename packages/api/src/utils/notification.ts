@@ -11,7 +11,3 @@ export interface NotificationMetadata {
 export function generateNotificationId(): string {
   return `not_${generatePublicId()}`;
 }
-
-export function generateNotificationId() {
-  return `not_${generatePublicId()}`;
-}
