@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 import { internalAction } from "./_generated/server";
 import * as Files from "./model/files";
@@ -10,8 +10,19 @@ export const uploadImage = internalAction({
   args: {
     base64Image: v.string(),
   },
-  returns: v.union(v.string(), v.null()),
+  returns: v.string(),
   handler: async (_, args) => {
-    return await Files.uploadImageToCDNFromBase64(args.base64Image);
+    try {
+      const result = await Files.uploadImageToCDNFromBase64(args.base64Image);
+      if (!result) {
+        throw new ConvexError("Failed to upload image to CDN");
+      }
+      return result;
+    } catch (error) {
+      if (error instanceof ConvexError) {
+        throw error;
+      }
+      throw new ConvexError("Failed to upload image to CDN");
+    }
   },
 });

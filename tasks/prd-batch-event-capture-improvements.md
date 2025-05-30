@@ -29,6 +29,12 @@ The goal of this feature is to provide clearer, more accurate feedback to the us
     - Each notification SHOULD clearly identify the event it pertains to (e.g., event name or a piece of captured information if available).
     - Each notification SHOULD confirm success.
     - Each notification SHOULD include a call to action to "Capture more events."
+    - **Failure Handling:** If any individual event fails during processing:
+      - The system MUST send a separate error notification for each failed event, clearly indicating the failure and the specific event affected.
+      - Error notifications SHOULD include a brief, user-friendly explanation of the failure reason when possible (e.g., "Image upload failed," "Processing error").
+      - Error notifications MUST include a "Retry" call to action that allows the user to re-attempt capturing that specific event.
+      - Failed events SHOULD NOT trigger automatic retry attempts; user intervention is required.
+      - If multiple events fail, each failure generates its own individual error notification (maintaining the 1-3 event individual notification principle).
 2.  **FR1.2:** If a user adds more than 3 events simultaneously, the system MUST send a single summary push notification once all events in that batch have finished processing (successfully or with failures).
     - The summary notification MUST state the total number of events successfully added (e.g., "5 events added successfully!").
     - If there were any failures, this could be mentioned generally (e.g., "5 of 7 events added successfully.") or detailed in the target screen.
