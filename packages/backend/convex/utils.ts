@@ -9,6 +9,29 @@ export function generatePublicId() {
   return nanoid();
 }
 
+export function generateNumericId(): number {
+  // Use a base timestamp relative to a more recent epoch to reduce digits
+  // Using Jan 1, 2024 as base: 1704067200000
+  const baseEpoch = 1704067200000;
+  const relativeTimestamp = Date.now() - baseEpoch;
+
+  // Add cryptographically secure random digits for additional entropy
+  const randomArray = new Uint32Array(1);
+  crypto.getRandomValues(randomArray);
+  const randomPart = randomArray[0] % 1000; // Get last 3 digits (0-999)
+
+  // Combine relative timestamp with random part
+  // This creates a smaller number that stays within safe integer range
+  const result = relativeTimestamp * 1000 + randomPart;
+
+  // Ensure we don't exceed MAX_SAFE_INTEGER
+  if (result > Number.MAX_SAFE_INTEGER) {
+    throw new Error("Generated ID would exceed safe integer range");
+  }
+
+  return result;
+}
+
 export function missingEnvVariableUrl(envVarName: string, whereToGet: string) {
   const deployment = deploymentName();
   if (!deployment) return `Missing ${envVarName} in environment variables.`;

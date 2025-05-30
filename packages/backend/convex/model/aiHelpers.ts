@@ -18,7 +18,7 @@ import {
 
 import type { Doc } from "../_generated/dataModel";
 import type { ActionCtx, MutationCtx } from "../_generated/server";
-import { generatePublicId } from "../utils";
+import { generateNumericId, generatePublicId } from "../utils";
 import {
   getNotificationContent,
   sendNotification,
@@ -599,7 +599,7 @@ export async function createEventAndNotify(
       eventId: eventid,
       content: input.comment ?? "",
       userId,
-      id: Math.floor(Math.random() * 1000000), // temporary numeric id
+      id: generateNumericId(),
       oldId: null,
       created_at: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -783,7 +783,7 @@ export async function createEvent(
       eventId: eventid,
       content: input.comment ?? "",
       userId,
-      id: Math.floor(Math.random() * 1000000), // temporary numeric id
+      id: generateNumericId(), // temporary numeric id
       oldId: null,
       created_at: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
