@@ -1,7 +1,6 @@
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
-import type { QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import {
   internalAction,
@@ -11,21 +10,7 @@ import {
   query,
 } from "./_generated/server";
 import * as Events from "./model/events";
-
-// Helper function to enrich events and filter out nulls
-async function enrichEventsAndFilterNulls(
-  ctx: QueryCtx,
-  events: { id: string }[],
-) {
-  const enrichedEventsWithNulls = await Promise.all(
-    events.map(async (event) => {
-      return await Events.getEventById(ctx, event.id);
-    }),
-  );
-
-  // Filter out null values
-  return enrichedEventsWithNulls.filter((event) => event !== null);
-}
+import { enrichEventsAndFilterNulls } from "./model/events";
 
 // Validators for complex types
 const eventDataValidator = v.object({
@@ -488,7 +473,7 @@ export const toggleVisibility = mutation({
 /**
  * Insert event into database
  */
-export const insertEvent = internalAction({
+export const insertEvent = internalMutation({
   args: {
     firstEvent: v.any(), // TODO: Use proper event validator
     uploadedImageUrl: v.union(v.string(), v.null()),
@@ -516,15 +501,16 @@ export const insertEvent = internalAction({
       }),
     };
 
-    const result = await ctx.runMutation(internal.events.createEventInternal, {
-      userId: args.userId,
-      username: args.username,
+    const result = await Events.createEvent(
+      ctx,
+      args.userId,
+      args.username,
       eventData,
-      eventMetadata: firstEvent.eventMetadata,
+      firstEvent.eventMetadata as Record<string, unknown> | undefined,
       comment,
       lists,
       visibility,
-    });
+    );
 
     return result.id;
   },
