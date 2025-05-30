@@ -59,7 +59,7 @@ export const eventFromImageBase64Workflow = workflow.define({
     }
 
     // ── step 3 write DB
-    const eventId = await step.runAction(
+    const eventId = await step.runMutation(
       internal.events.insertEvent,
       {
         firstEvent,
@@ -123,7 +123,7 @@ export const eventFromUrlWorkflow = workflow.define({
     }
 
     // ── step 3: Write to database
-    const eventId = await step.runAction(
+    const eventId = await step.runMutation(
       internal.events.insertEvent,
       {
         firstEvent,
@@ -187,7 +187,7 @@ export const eventFromTextWorkflow = workflow.define({
     }
 
     // ── step 3: Write to database
-    const eventId = await step.runAction(
+    const eventId = await step.runMutation(
       internal.events.insertEvent,
       {
         firstEvent,

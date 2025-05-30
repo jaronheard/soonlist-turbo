@@ -1,6 +1,8 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { ConvexError } from "convex/values";
 
+import { generatePublicId } from "../utils";
+
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 
@@ -18,14 +20,6 @@ interface EventData {
   [key: string]: unknown;
 }
 
-// Helper function to generate public IDs (similar to the original)
-function generatePublicId(): string {
-  return (
-    Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15)
-  );
-}
-
 // Helper function to filter duplicates
 function filterDuplicates<T extends { id: string }>(items: T[]): T[] {
   const seen = new Set<string>();
@@ -36,6 +30,22 @@ function filterDuplicates<T extends { id: string }>(items: T[]): T[] {
     seen.add(item.id);
     return true;
   });
+}
+
+// Helper used by paginated queries to hydrate events
+export async function enrichEventsAndFilterNulls(
+  ctx: QueryCtx,
+  events: { id: string }[],
+) {
+  const enrichedEventsWithNulls = await Promise.all(
+    events.map(async (event) => {
+      return await getEventById(ctx, event.id);
+    }),
+  );
+
+  return enrichedEventsWithNulls.filter(
+    (event): event is NonNullable<typeof event> => event !== null,
+  );
 }
 
 // Helper function to parse date/time with timezone using Temporal
