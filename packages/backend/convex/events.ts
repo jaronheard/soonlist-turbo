@@ -376,8 +376,8 @@ export const update = mutation({
       });
     }
 
-    // Check if user is admin (you may need to implement this based on your auth system)
-    const isAdmin = false; // TODO: Implement admin check
+    // Check if user is admin
+    const isAdmin = isUserAdmin(identity);
 
     return await Events.updateEvent(
       ctx,
@@ -407,8 +407,8 @@ export const deleteEvent = mutation({
       });
     }
 
-    // Check if user is admin (you may need to implement this based on your auth system)
-    const isAdmin = false; // TODO: Implement admin check
+    // Check if user is admin
+    const isAdmin = isUserAdmin(identity);
 
     return await Events.deleteEvent(ctx, identity.subject, args.id, isAdmin);
   },
@@ -475,6 +475,69 @@ export const toggleVisibility = mutation({
     );
   },
 });
+
+// ============================================================================
+// ADMIN HELPERS
+// ============================================================================
+
+/**
+ * ADMIN ROLE SETUP:
+ *
+ * To use the admin functionality, you need to configure roles in Clerk:
+ *
+ * 1. In your Clerk Dashboard, go to JWT Templates
+ * 2. Edit your Convex template (or create custom claims)
+ * 3. Add roles to the JWT claims, mapping to unsafe_metadata:
+ *    - Add a "roles" claim that maps to user.unsafe_metadata.roles
+ *
+ * The admin check will look for "admin" in the roles array from the
+ * unsafe_metadata property in the JWT identity object.
+ */
+
+/**
+ * Helper function to safely extract roles from an object
+ */
+function extractRolesFromObject(obj: unknown): string[] {
+  if (!obj || typeof obj !== "object") {
+    return [];
+  }
+
+  const typedObj = obj as Record<string, unknown>;
+  const roles = typedObj.roles;
+
+  if (Array.isArray(roles) && roles.every((role) => typeof role === "string")) {
+    return roles;
+  }
+
+  return [];
+}
+
+/**
+ * Check if the current user is an admin based on their Clerk session claims
+ */
+function isUserAdmin(identity: Record<string, unknown> | null): boolean {
+  try {
+    if (!identity) {
+      return false;
+    }
+
+    const possibleLocations = [
+      identity.unsafe_metadata, // Unsafe metadata (less common)
+    ];
+
+    for (const location of possibleLocations) {
+      const roles = extractRolesFromObject(location);
+      if (roles.includes("admin")) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    return false;
+  }
+}
 
 // ============================================================================
 // INTERNAL ACTIONS FOR WORKFLOW

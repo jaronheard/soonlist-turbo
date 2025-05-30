@@ -157,14 +157,14 @@ export const eventFromTextWorkflow = workflow.define({
       sendNotification: undefined,
     };
 
-    // ── step 1: Extract content from URL and process with AI
+    // ── step 1: Extract content from raw text and process with AI
     const aiResult = await step.runAction(
       internal.ai.extractEventFromText,
       {
         rawText: args.rawText,
         timezone: args.timezone,
       },
-      { name: "extractEventFromUrl" },
+      { name: "extractEventFromText" },
     );
 
     // ── step 2: Validate first event
@@ -179,7 +179,7 @@ export const eventFromTextWorkflow = workflow.define({
       internal.events.insertEvent,
       {
         firstEvent,
-        uploadedImageUrl: null, // URLs don't need image upload
+        uploadedImageUrl: null, // Text input don't need image upload
         ...eventArgs,
       },
       { name: "insertEvent" },
