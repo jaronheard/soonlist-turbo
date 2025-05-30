@@ -109,18 +109,11 @@ The users module provides the following functions:
 
 - `getById(id: string)` - Get a user by their ID
 - `getByUsername(userName: string)` - Get a user by their username
-- `getAll()` - Get all users ordered by username
-- `getFollowing(userName: string)` - Get users that a given user is following
-- `getIfFollowing(followerId: string, followingId: string)` - Check if one user is following another
-- `getAllTakenEmojis()` - Get all emojis currently in use
 - `getOnboardingData(userId: string)` - Get onboarding data for a user
 
 ### Mutations (Write Operations)
 
-- `follow(followerId: string, followingId: string)` - Follow a user
-- `unfollow(followerId: string, followingId: string)` - Unfollow a user
 - `updateAdditionalInfo(userId: string, info: UserAdditionalInfo)` - Update user profile info
-- `updateEmoji(userId: string, emoji: string | null)` - Update user emoji
 - `saveOnboardingData(userId: string, data: OnboardingData)` - Save onboarding data
 - `deleteAccount(userId: string)` - Delete a user account and all related data
 - `resetOnboarding(userId: string)` - Reset onboarding for a user
@@ -135,10 +128,6 @@ import { api } from "../convex/_generated/api";
 
 // Get a user by username
 const user = useQuery(api.users.getByUsername, { userName: "john_doe" });
-
-// Follow a user
-const followUser = useMutation(api.users.follow);
-await followUser({ followerId: "user1", followingId: "user2" });
 
 // Update user profile
 const updateProfile = useMutation(api.users.updateAdditionalInfo);
