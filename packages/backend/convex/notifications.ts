@@ -23,7 +23,7 @@ export const sendSingleNotification = action({
     id: v.optional(v.string()),
     error: v.optional(v.string()),
   }),
-  handler: async (ctx, args) => {
+  handler: async (_ctx, args) => {
     const { userId, title, body, url, data } = args;
 
     const notificationId = Notifications.generateNotificationId();
@@ -469,7 +469,7 @@ export const pushFailure = internalAction({
     id: v.optional(v.string()),
     error: v.optional(v.string()),
   }),
-  handler: async (ctx, args) => {
+  handler: async (_ctx, args) => {
     const { userId, failureReason } = args;
 
     // Create failure notification content

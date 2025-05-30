@@ -261,7 +261,7 @@ export const validateFirstEvent = internalAction({
   },
   returns: v.any(), // TODO: Use proper event validator
   handler: (_, args) => {
-    if (!args.events || args.events.length === 0) {
+    if (args.events.length === 0) {
       throw new ConvexError({
         message: "No events found in response",
         data: { args },

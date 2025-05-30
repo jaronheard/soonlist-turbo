@@ -6,6 +6,7 @@ import type { EventWithMetadata } from "@soonlist/cal";
 import { EventWithMetadataSchema } from "@soonlist/cal";
 
 import type { ActionCtx } from "../_generated/server";
+import { safeStringify } from "../utils";
 import { fetchAndProcessEvent } from "./aiHelpers";
 
 export interface GenerateTextParams {
@@ -176,7 +177,7 @@ export async function processEventFromUrl(
     });
 
     // Validate that we have at least one event
-    if (!events || events.length === 0) {
+    if (events.length === 0) {
       throw new ConvexError({
         message: "No events found in response",
         data: { input },
@@ -229,7 +230,7 @@ export async function processEventFromText(
     });
 
     // Validate that we have at least one event
-    if (!events || events.length === 0) {
+    if (events.length === 0) {
       throw new ConvexError({
         message: "No events found in response",
         data: { input },
@@ -259,12 +260,7 @@ export function validateEvent(event: unknown) {
     throw new ConvexError({
       message: "No event provided for validation",
       data: {
-        event:
-          event === null
-            ? "null"
-            : event === undefined
-              ? "undefined"
-              : String(event),
+        event: safeStringify(event),
       },
     });
   }
@@ -279,12 +275,7 @@ export function validateEvent(event: unknown) {
       console.error("Zod validation failed:", e.message);
     }
 
-    let originalEventString: string;
-    try {
-      originalEventString = JSON.stringify(event);
-    } catch {
-      originalEventString = String(event);
-    }
+    const originalEventString = safeStringify(event);
 
     throw new ConvexError({
       message: "Invalid event data received: Failed basic structure validation",
@@ -304,12 +295,7 @@ export function validateEvent(event: unknown) {
     validatedEvent.startDate === "" ||
     validatedEvent.startDate.toLowerCase().includes("error")
   ) {
-    let eventString: string;
-    try {
-      eventString = JSON.stringify(event);
-    } catch {
-      eventString = String(event);
-    }
+    const eventString = safeStringify(event);
 
     throw new ConvexError({
       message: "Event validation failed: Event lacks valid date information",
@@ -356,12 +342,7 @@ export function validateEvent(event: unknown) {
   const isTooShort = name.trim().length < 3;
 
   if (isInvalidName || isTooShort || isInvalidPattern) {
-    let eventString: string;
-    try {
-      eventString = JSON.stringify(event);
-    } catch {
-      eventString = String(event);
-    }
+    const eventString = safeStringify(event);
 
     throw new ConvexError({
       message:

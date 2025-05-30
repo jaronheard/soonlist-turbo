@@ -703,25 +703,6 @@ export async function createEvent(
   };
 }
 
-export function validateFirstEvent(events: unknown[]) {
-  if (!events || events.length === 0) {
-    throw new ConvexError({
-      message: "No events found",
-      data: { events: JSON.stringify(events) },
-    });
-  }
-
-  const firstEvent = events[0];
-  if (!firstEvent || typeof firstEvent !== "object") {
-    throw new ConvexError({
-      message: "Invalid event data",
-      data: { firstEvent: JSON.stringify(firstEvent) },
-    });
-  }
-
-  return firstEvent as EventWithMetadata;
-}
-
 /**
  * Validates Jina API response for common error patterns and content issues
  */
