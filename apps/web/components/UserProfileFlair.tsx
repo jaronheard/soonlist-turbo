@@ -2,9 +2,8 @@
 
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import { useQuery } from "convex/react";
 
-import { api } from "@soonlist/backend/convex/_generated/api";
+import { api } from "~/trpc/react";
 
 type Size = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 
@@ -34,10 +33,8 @@ function UserEmoji({
   flairClassName: string;
   size: Size;
 }) {
-  const userData = useQuery(api.users.getByUsername, {
-    userName: username,
-  });
-  const userEmoji = userData?.emoji || null;
+  const userData = api.user.getByUsername.useQuery({ userName: username });
+  const userEmoji = userData.data?.emoji || null;
 
   if (!userEmoji) return null;
 
