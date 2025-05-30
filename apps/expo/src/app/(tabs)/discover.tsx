@@ -54,11 +54,6 @@ function DiscoverContent() {
     savedEventsQueryArgs,
   );
 
-  const onRefresh = useCallback(async () => {
-    // Convex queries are automatically reactive, so we don't need manual refresh
-    // The usePaginatedQuery will automatically update when data changes
-  }, []);
-
   const handleLoadMore = useCallback(() => {
     if (status === "CanLoadMore") {
       loadMore(20);
@@ -94,8 +89,6 @@ function DiscoverContent() {
         <View className="flex-1">
           <UserEventsList
             events={events}
-            isRefetching={status === "LoadingMore"}
-            onRefresh={onRefresh}
             onEndReached={handleLoadMore}
             isFetchingNextPage={status === "LoadingMore"}
             ActionButton={SaveButtonWrapper}

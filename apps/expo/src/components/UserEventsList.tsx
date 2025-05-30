@@ -1,10 +1,9 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  RefreshControl,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -509,8 +508,6 @@ interface UserEventsListProps {
   events: Event[];
   ActionButton?: React.ComponentType<ActionButtonProps>;
   showCreator: ShowCreatorOption;
-  isRefetching: boolean;
-  onRefresh: () => Promise<void>;
   onEndReached: () => void;
   isFetchingNextPage: boolean;
   promoCard?: PromoCardProps;
@@ -525,8 +522,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     events,
     ActionButton,
     showCreator,
-    isRefetching,
-    onRefresh,
     onEndReached,
     isFetchingNextPage,
     promoCard,
@@ -535,19 +530,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     hideDiscoverableButton = false,
   } = props;
   const { user } = useUser();
-
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await onRefresh();
-  };
-
-  useEffect(() => {
-    if (!isRefetching && isRefreshing) {
-      setIsRefreshing(false);
-    }
-  }, [isRefetching, isRefreshing]);
 
   const collapsedEvents = useMemo(
     () => collapseSimilarEvents(events, user?.id),
@@ -644,13 +626,6 @@ export default function UserEventsList(props: UserEventsListProps) {
             />
           );
         }}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor="#5A32FB"
-          />
-        }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         style={{ backgroundColor: "#F4F1FF" }}

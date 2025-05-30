@@ -48,11 +48,6 @@ function PastEventsContent() {
     }
   }, [status, loadMore]);
 
-  const onRefresh = useCallback(async () => {
-    // Convex queries are automatically reactive, so we don't need manual refresh
-    // The usePaginatedQuery will automatically update when data changes
-  }, []);
-
   return (
     <View className="flex-1 bg-white">
       {isLoading && status === "LoadingFirstPage" ? (
@@ -61,10 +56,8 @@ function PastEventsContent() {
         <View className="flex-1">
           <UserEventsList
             events={events}
-            onRefresh={onRefresh}
             onEndReached={handleLoadMore}
             showCreator="savedFromOthers"
-            isRefetching={status === "LoadingMore"}
             isFetchingNextPage={status === "LoadingMore"}
             hasUnlimited={hasUnlimited}
           />
