@@ -1,9 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
-import { internal } from "./_generated/api";
 import {
-  internalAction,
   internalMutation,
   internalQuery,
   mutation,
@@ -350,7 +348,7 @@ export const create = mutation({
       identity.subject,
       user.username,
       args.event,
-      args.eventMetadata as Record<string, unknown> | undefined,
+      args.eventMetadata,
       args.comment,
       args.lists,
       args.visibility,
@@ -384,7 +382,7 @@ export const update = mutation({
       identity.subject,
       args.id,
       args.event,
-      args.eventMetadata as Record<string, unknown> | undefined,
+      args.eventMetadata,
       args.comment,
       args.lists,
       args.visibility,
@@ -475,7 +473,7 @@ export const toggleVisibility = mutation({
  */
 export const insertEvent = internalMutation({
   args: {
-    firstEvent: v.any(), // TODO: Use proper event validator
+    firstEvent: eventDataValidator,
     uploadedImageUrl: v.union(v.string(), v.null()),
     timezone: v.string(),
     comment: v.optional(v.string()),
@@ -500,13 +498,14 @@ export const insertEvent = internalMutation({
         ],
       }),
     };
+    const eventMetadata = undefined; // No metadata for now
 
     const result = await Events.createEvent(
       ctx,
       args.userId,
       args.username,
       eventData,
-      firstEvent.eventMetadata as Record<string, unknown> | undefined,
+      eventMetadata,
       comment,
       lists,
       visibility,

@@ -61,7 +61,7 @@ export const sendSingleNotification = action({
 /**
  * Send weekly notifications to all users
  */
-export const sendWeeklyNotifications = action({
+export const sendWeeklyNotifications = internalAction({
   args: { cronSecret: v.string() },
   returns: v.object({
     success: v.boolean(),
@@ -153,7 +153,7 @@ export const sendWeeklyNotifications = action({
 /**
  * Send trial expiration reminders to users who started their trial 5 days ago
  */
-export const sendTrialExpirationReminders = action({
+export const sendTrialExpirationReminders = internalAction({
   args: { cronSecret: v.string() },
   returns: v.object({
     success: v.boolean(),
