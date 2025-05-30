@@ -7,6 +7,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
+import { logError } from "~/utils/errorLogging";
 import { deleteAuthData } from "./useAuthSync";
 
 interface SignOutOptions {
@@ -34,7 +35,11 @@ export const useSignOut = () => {
       revenueCatLogout(),
       deleteAuthData(),
       OneSignal.logout(),
-      options?.shouldDeleteAccount ? deleteAccount({ userId }) : undefined,
+      options?.shouldDeleteAccount
+        ? deleteAccount({ userId }).catch((error) => {
+            logError("Failed to delete account", error);
+          })
+        : undefined,
       signOut(),
     ]);
 

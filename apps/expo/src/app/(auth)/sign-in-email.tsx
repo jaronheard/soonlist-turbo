@@ -204,9 +204,9 @@ const SignInEmail = () => {
 
           <Pressable
             onPress={handleSubmit(onSignInPress)}
-            disabled={isSigningIn || !errors.email || !errors.password}
+            disabled={isSigningIn || !!errors.email || !!errors.password}
             className={`w-full rounded-full px-6 py-3 ${
-              isSigningIn || !errors.email || !errors.password
+              isSigningIn || !!errors.email || !!errors.password
                 ? "bg-gray-400"
                 : "bg-interactive-1"
             }`}
