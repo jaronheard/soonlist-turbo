@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, TouchableOpacity } from "react-native";
 
-import type { ImageSource } from "~/components/demoData";
+import type { ImageSource } from "~/utils/images";
 import { Sparkles } from "~/components/icons";
 import { cn } from "~/utils/cn";
 

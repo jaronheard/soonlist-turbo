@@ -3,7 +3,7 @@ import { Animated, Pressable, useWindowDimensions } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 
 import { Heart } from "~/components/icons";
-import { api } from "~/utils/api";
+import { useEventSaveActions } from "~/hooks/useEventActions";
 
 interface SaveButtonProps {
   eventId: string;
@@ -11,74 +11,28 @@ interface SaveButtonProps {
 }
 
 export default function SaveButton({ eventId, isSaved }: SaveButtonProps) {
-  const { isLoaded, user } = useUser();
-  const username = user?.username || "";
+  const { isLoaded } = useUser();
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const { fontScale } = useWindowDimensions();
   const iconSize = 16 * fontScale;
 
-  const utils = api.useUtils();
-  const saveEventMutation = api.event.follow.useMutation({
-    async onMutate(newSavedEvent) {
-      await utils.event.getSavedIdsForUser.cancel();
-      const prevData = utils.event.getSavedIdsForUser.getData({
-        userName: username,
-      });
-
-      utils.event.getSavedIdsForUser.setData({ userName: username }, (old) =>
-        old ? [...old, { id: newSavedEvent.id }] : [{ id: newSavedEvent.id }],
-      );
-
-      return { prevData };
-    },
-    onError(err, newSavedEvent, ctx) {
-      utils.event.getSavedIdsForUser.setData(
-        { userName: username },
-        ctx?.prevData,
-      );
-    },
-    onSettled() {
-      void utils.event.getSavedIdsForUser.invalidate();
-      void utils.event.getEventsForUser.invalidate();
-      void utils.event.getStats.invalidate();
-    },
-  });
-
-  const unsaveEventMutation = api.event.unfollow.useMutation({
-    async onMutate(unsavedEvent) {
-      await utils.event.getSavedIdsForUser.cancel();
-      const prevData = utils.event.getSavedIdsForUser.getData({
-        userName: username,
-      });
-
-      utils.event.getSavedIdsForUser.setData({ userName: username }, (old) =>
-        old ? old.filter((event) => event.id !== unsavedEvent.id) : [],
-      );
-
-      return { prevData };
-    },
-    onError(err, unsavedEvent, ctx) {
-      utils.event.getSavedIdsForUser.setData(
-        { userName: username },
-        ctx?.prevData,
-      );
-    },
-    onSettled() {
-      void utils.event.getSavedIdsForUser.invalidate();
-      void utils.event.getEventsForUser.invalidate();
-      void utils.event.getStats.invalidate();
-    },
-  });
+  // Use the simplified event save actions hook
+  const { handleFollow, handleUnfollow } = useEventSaveActions(
+    eventId,
+    isSaved,
+  );
 
   const handlePress = () => {
     if (!isLoaded) return;
 
+    // Use the event actions
     if (isSaved) {
-      unsaveEventMutation.mutate({ id: eventId });
+      void handleUnfollow();
     } else {
-      saveEventMutation.mutate({ id: eventId });
+      void handleFollow();
     }
 
+    // Animate the button
     Animated.sequence([
       Animated.timing(scaleAnim, {
         toValue: 1.2,

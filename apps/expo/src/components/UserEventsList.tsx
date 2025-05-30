@@ -1,9 +1,9 @@
+import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  RefreshControl,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -13,11 +13,10 @@ import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useMutationState, useQueryClient } from "@tanstack/react-query";
 
+import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
-import type { RouterOutputs } from "~/utils/api";
 import {
   CalendarPlus,
   Copy,
@@ -30,7 +29,6 @@ import {
 } from "~/components/icons";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
-import { api } from "~/utils/api";
 import { cn } from "~/utils/cn";
 import {
   formatEventDateRange,
@@ -40,8 +38,6 @@ import {
 } from "~/utils/dates";
 import { getEventEmoji } from "~/utils/eventEmoji";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
-import { logError } from "../utils/errorLogging";
-import { EventListItemSkeleton } from "./EventListItemSkeleton";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
@@ -49,9 +45,9 @@ import { UserProfileFlair } from "./UserProfileFlair";
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 
 // Define the type for the stats data based on the expected query output
-type EventStatsData = RouterOutputs["event"]["getStats"];
+type EventStatsData = FunctionReturnType<typeof api.events.getStats>;
 
-type Event = RouterOutputs["event"]["getDiscoverInfinite"]["events"][number];
+type Event = NonNullable<FunctionReturnType<typeof api.events.get>>;
 
 interface ActionButtonProps {
   event: Event;
@@ -89,7 +85,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const {
     handleDirections,
     handleAddToCal,
-    handleToggleVisibility: toggleVisibilityAction,
+    handleToggleVisibility,
     showDiscover,
   } = useEventActions({ event, isSaved, demoMode });
   const id = event.id;
@@ -126,17 +122,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
     return formatRelativeTime(startDateInfo);
   }, [startDateInfo, eventIsOver]);
 
-  const queryClient = useQueryClient();
-
-  const toggleVisibilityMutation = api.event.toggleVisibility.useMutation({
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: [["event"]] });
-    },
-    onError: (error) => {
-      logError("Error toggling event visibility", error);
-    },
-  });
-
   const isHappeningNow = relativeTime === "Happening now" && !eventIsOver;
 
   const { user: currentUser } = useUser();
@@ -146,7 +131,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
     const threeHoursAgoTimestamp = Date.now() - 3 * 60 * 60 * 1000;
 
     // Convert potential date strings to Date objects before comparison
-    const createdAtDate = event.createdAt ? new Date(event.createdAt) : null;
+    const createdAtDate = event.created_at ? new Date(event.created_at) : null;
     const savedAtDate = isSaved && savedAt ? new Date(savedAt) : null;
 
     // Check if the conversion resulted in a valid date and compare timestamps
@@ -165,7 +150,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
       return true;
     }
     return false;
-  }, [event.createdAt, savedAt, isSaved]);
+  }, [event.created_at, savedAt, isSaved]);
 
   const iconSize = 16 * fontScale;
   const imageWidth = 90 * fontScale;
@@ -366,9 +351,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   onPress={() => {
                     const nextVisibility =
                       event.visibility === "public" ? "private" : "public";
-                    void toggleVisibilityAction(nextVisibility);
+                    void handleToggleVisibility(nextVisibility);
                   }}
-                  disabled={toggleVisibilityMutation.isPending}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   {event.visibility === "public" ? (
@@ -524,8 +508,6 @@ interface UserEventsListProps {
   events: Event[];
   ActionButton?: React.ComponentType<ActionButtonProps>;
   showCreator: ShowCreatorOption;
-  isRefetching: boolean;
-  onRefresh: () => Promise<void>;
   onEndReached: () => void;
   isFetchingNextPage: boolean;
   promoCard?: PromoCardProps;
@@ -540,8 +522,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     events,
     ActionButton,
     showCreator,
-    isRefetching,
-    onRefresh,
     onEndReached,
     isFetchingNextPage,
     promoCard,
@@ -550,39 +530,13 @@ export default function UserEventsList(props: UserEventsListProps) {
     hideDiscoverableButton = false,
   } = props;
   const { user } = useUser();
-  const queryClient = useQueryClient();
-  const username = user?.username || "";
-
-  const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
-    userName: username,
-  });
 
   const collapsedEvents = useMemo(
     () => collapseSimilarEvents(events, user?.id),
     [events, user?.id],
   );
 
-  const pendingAIMutations = useMutationState(
-    {
-      filters: {
-        mutationKey: [["ai"]],
-      },
-      select: (mutation) => mutation.state.status,
-    },
-    queryClient,
-  );
-  const isAddingEvent =
-    pendingAIMutations.filter((mutation) => mutation === "pending").length > 0;
-
   const renderEmptyState = () => {
-    if ((isAddingEvent || isRefetching) && collapsedEvents.length === 0) {
-      return (
-        <View className="flex-1">
-          <EventListItemSkeleton />
-        </View>
-      );
-    }
-
     return (
       <View className="flex-1 items-center justify-center px-6">
         <Image
@@ -608,6 +562,10 @@ export default function UserEventsList(props: UserEventsListProps) {
     );
   };
 
+  if (collapsedEvents.length === 0) {
+    return renderEmptyState();
+  }
+
   const renderFooter = () => (
     <>
       {isFetchingNextPage ? (
@@ -622,19 +580,6 @@ export default function UserEventsList(props: UserEventsListProps) {
       ) : null}
     </>
   );
-
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    if (!isRefetching && isRefreshing) {
-      setIsRefreshing(false);
-    }
-  }, [isRefetching, isRefreshing]);
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await onRefresh();
-  };
 
   const renderHeader = () => {
     if (!stats) {
@@ -659,12 +604,8 @@ export default function UserEventsList(props: UserEventsListProps) {
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
           const eventData = item.event;
-          const savedEventEntry: { id: string; savedAt?: Date } | undefined =
-            savedIdsQuery.data?.find(
-              (savedEvent) => savedEvent.id === eventData.id,
-            );
-          const isSaved = !!savedEventEntry;
-          const savedAt = savedEventEntry?.savedAt;
+          const isSaved = eventData.user?.id === user?.id;
+          // TODO: Add savedAt
 
           const similarEventsCount = item.similarEvents.length;
 
@@ -674,7 +615,8 @@ export default function UserEventsList(props: UserEventsListProps) {
               ActionButton={ActionButton}
               showCreator={showCreator}
               isSaved={isSaved}
-              savedAt={savedAt}
+              // TODO: Add savedAt
+              savedAt={undefined}
               similarEventsCount={
                 similarEventsCount > 0 ? similarEventsCount : undefined
               }
@@ -684,13 +626,6 @@ export default function UserEventsList(props: UserEventsListProps) {
             />
           );
         }}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor="#5A32FB"
-          />
-        }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         style={{ backgroundColor: "#F4F1FF" }}

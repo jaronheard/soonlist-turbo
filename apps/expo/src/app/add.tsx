@@ -7,7 +7,7 @@ import { router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
-import type { ImageSource } from "~/components/demoData";
+import type { ImageSource } from "~/utils/images";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
 import { EventPreview } from "~/components/EventPreview";
 import { NewEventHeader } from "~/components/NewEventHeader";

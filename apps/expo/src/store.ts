@@ -1,16 +1,58 @@
+import type { FunctionReturnType } from "convex/server";
 import type * as Calendar from "expo-calendar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import type { api } from "@soonlist/backend/convex/_generated/api";
+
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
-import type { RouterOutputs } from "~/utils/api";
 import { getUserTimeZone } from "./utils/dates";
 
 export interface RecentPhoto {
   id: string;
   uri: string;
 }
+
+// Helper function to create a stable timestamp (rounded to 15-minute intervals)
+function createStableTimestamp(): string {
+  const now = new Date();
+  const minutes = now.getMinutes();
+  const roundedMinutes = Math.floor(minutes / 15) * 15;
+  const stableTime = new Date(now);
+  stableTime.setMinutes(roundedMinutes, 0, 0); // Set seconds and milliseconds to 0
+  return stableTime.toISOString();
+}
+
+/**
+ * Stable Timestamp System
+ *
+ * This system provides a timestamp that updates every 15 minutes, designed for use
+ * in paginated queries that filter by time (e.g., upcoming vs past events).
+ *
+ * Benefits:
+ * - Prevents InvalidCursor errors during pagination by keeping the filter stable
+ * - Maintains optimistic updates since Convex queries remain reactive
+ * - Automatically updates every 15 minutes to keep data relatively fresh
+ * - Can be manually refreshed when switching screens or on user action
+ *
+ * Usage:
+ * ```tsx
+ * const stableTimestamp = useStableTimestamp();
+ * const refreshTimestamp = useRefreshStableTimestamp();
+ *
+ * // Use in queries
+ * const queryArgs = {
+ *   filter: "upcoming",
+ *   beforeThisDateTime: stableTimestamp,
+ * };
+ *
+ * // Manually refresh when needed (e.g., on screen focus)
+ * useEffect(() => {
+ *   refreshTimestamp();
+ * }, []);
+ * ```
+ */
 
 // Common event input state shared between add and new routes
 interface CommonEventInputState {
@@ -43,6 +85,12 @@ interface AppState {
   ) => void;
   setIsCalendarModalVisible: (isVisible: boolean) => void;
   setShowAllCalendars: (show: boolean) => void;
+
+  // Stable timestamp for query filtering
+  stableTimestamp: string;
+  lastTimestampUpdate: number;
+  refreshStableTimestamp: () => void;
+  getStableTimestamp: () => string;
 
   // Timezone-related state
   userTimezone: string;
@@ -78,15 +126,13 @@ interface AppState {
   // Calendar-related state
   defaultCalendarId: string | null;
   availableCalendars: Calendar.Calendar[];
-  selectedEvent: RouterOutputs["event"]["getUpcomingForUser"][number] | null;
+  selectedEvent: FunctionReturnType<typeof api.events.get>;
   calendarUsage: Record<string, number>;
 
   // Calendar-related actions
   setDefaultCalendarId: (id: string | null) => void;
   setAvailableCalendars: (calendars: Calendar.Calendar[]) => void;
-  setSelectedEvent: (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number] | null,
-  ) => void;
+  setSelectedEvent: (event: FunctionReturnType<typeof api.events.get>) => void;
   setCalendarUsage: (usage: Record<string, number>) => void;
   clearCalendarData: () => void;
 
@@ -110,11 +156,17 @@ interface AppState {
   setOnboardingData: (data: Partial<OnboardingData>) => void;
   currentOnboardingStep: OnboardingStep | null;
   setCurrentOnboardingStep: (step: OnboardingStep | null) => void;
+
+  // Workflow state
+  workflowIds: string[];
+  addWorkflowId: (workflowId: string) => void;
+  removeWorkflowId: (workflowId: string) => void;
+  clearAllWorkflowIds: () => void;
 }
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       filter: "upcoming",
       intentParams: null,
       isCalendarModalVisible: false,
@@ -340,10 +392,50 @@ export const useAppStore = create<AppState>()(
           userPriority: null,
           userTimezone: getUserTimeZone(),
           hasShownTimezoneAlert: false,
-          // note: hasCompletedOnboarding is not reset here, reset in useSignOut
+          stableTimestamp: createStableTimestamp(),
+          lastTimestampUpdate: Date.now(),
           onboardingData: {},
           currentOnboardingStep: null,
+          workflowIds: [],
         }),
+
+      // Stable timestamp for query filtering
+      stableTimestamp: createStableTimestamp(),
+      lastTimestampUpdate: Date.now(),
+      refreshStableTimestamp: () =>
+        set({
+          stableTimestamp: createStableTimestamp(),
+          lastTimestampUpdate: Date.now(),
+        }),
+      getStableTimestamp: (): string => {
+        const state = get();
+        const now = Date.now();
+        const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+        // Auto-update if 15 minutes have passed
+        if (now - state.lastTimestampUpdate > fifteenMinutes) {
+          const newTimestamp = createStableTimestamp();
+          set({
+            stableTimestamp: newTimestamp,
+            lastTimestampUpdate: now,
+          });
+          return newTimestamp;
+        }
+
+        return state.stableTimestamp;
+      },
+
+      // Workflow state
+      workflowIds: [],
+      addWorkflowId: (workflowId) =>
+        set((state) => ({
+          workflowIds: [...state.workflowIds, workflowId],
+        })),
+      removeWorkflowId: (workflowId) =>
+        set((state) => ({
+          workflowIds: state.workflowIds.filter((id) => id !== workflowId),
+        })),
+      clearAllWorkflowIds: () => set({ workflowIds: [] }),
     }),
     {
       name: "app-storage",
@@ -357,3 +449,36 @@ export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
 export const useHasMediaPermission = () =>
   useAppStore((state) => state.hasMediaPermission);
 export const useUserTimezone = () => useAppStore((state) => state.userTimezone);
+
+// Stable timestamp selectors
+export const useStableTimestamp = () =>
+  useAppStore((state) => state.getStableTimestamp());
+export const useRefreshStableTimestamp = () =>
+  useAppStore((state) => state.refreshStableTimestamp);
+
+/**
+ * Hook to refresh the stable timestamp when a screen comes into focus.
+ * Useful for ensuring fresh data when users navigate between screens.
+ *
+ * @example
+ * ```tsx
+ * function MyScreen() {
+ *   useRefreshTimestampOnFocus();
+ *   // ... rest of component
+ * }
+ * ```
+ */
+export const useRefreshTimestampOnFocus = () => {
+  const refreshTimestamp = useRefreshStableTimestamp();
+
+  // You can uncomment this if you want to use react-navigation's focus events
+  // const isFocused = useIsFocused();
+  //
+  // React.useEffect(() => {
+  //   if (isFocused) {
+  //     refreshTimestamp();
+  //   }
+  // }, [isFocused, refreshTimestamp]);
+
+  return refreshTimestamp;
+};

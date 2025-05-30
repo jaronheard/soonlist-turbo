@@ -18,9 +18,12 @@ import * as MediaLibrary from "expo-media-library";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
 import { DatePickerField, TimePickerField } from "~/components/date-picker";
@@ -28,7 +31,6 @@ import { EyeOff, Globe2, Image as ImageIcon } from "~/components/icons";
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
-import { api } from "~/utils/api";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
 
@@ -78,33 +80,9 @@ export default function EditEventScreen() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
 
-  const eventQuery = api.event.get.useQuery(
-    { eventId: id || "" },
-    { enabled: Boolean(id) },
-  );
+  const eventQuery = useQuery(api.events.get, id ? { eventId: id } : "skip");
 
-  const utils = api.useUtils();
-
-  const updateEventMutation = api.event.update.useMutation({
-    onMutate: () => setIsSubmitting(true),
-    onSettled: () => setIsSubmitting(false),
-    onSuccess: () => {
-      toast.success("Event updated successfully");
-      void Promise.all([
-        utils.event.get.invalidate({ eventId: id || "" }),
-        utils.event.getEventsForUser.invalidate(),
-        utils.event.getSavedIdsForUser.invalidate(),
-        utils.event.getStats.invalidate(),
-        utils.event.invalidate(),
-      ]);
-      router.back();
-    },
-    onError: (error) => {
-      toast.error("Failed to update event", {
-        description: error.message,
-      });
-    },
-  });
+  const updateEventMutation = useMutation(api.events.update);
 
   const {
     control,
@@ -143,32 +121,9 @@ export default function EditEventScreen() {
   });
 
   useEffect(() => {
-    if (eventQuery.data) {
-      const event = eventQuery.data;
-
-      const eventData = event.event || {
-        name: "",
-        description: "",
-        startDate: "",
-        endDate: "",
-        startTime: "",
-        endTime: "",
-        timeZone: "",
-        location: "",
-        images: [] as string[],
-      };
-
-      const eventMetadata = event.eventMetadata || {
-        eventType: "",
-        eventCategory: "",
-        priceType: "",
-        price: "",
-        ageRestriction: "",
-        performers: "",
-        accessibility: [] as string[],
-      };
-
-      const typedEventData = eventData as {
+    if (eventQuery) {
+      // Use the properly typed event data
+      const eventData = eventQuery.event as {
         name?: string;
         description?: string;
         startDate?: string;
@@ -180,62 +135,65 @@ export default function EditEventScreen() {
         images?: string[];
       };
 
-      const typedEventMetadata = eventMetadata as {
+      const eventMetadata = eventQuery.eventMetadata as {
         eventType?: string;
         eventCategory?: string;
         priceType?: string;
         price?: string;
         ageRestriction?: string;
-        performers?: string;
-        accessibility?: string[];
+        performers?: string | string[];
+        accessibility?: string | string[];
       };
 
       reset({
         event: {
-          name: typedEventData.name || "",
-          description: typedEventData.description || "",
-          startDate: typedEventData.startDate || "",
-          endDate: typedEventData.endDate || "",
-          startTime: typedEventData.startTime || "",
-          endTime: typedEventData.endTime || "",
-          timeZone: typedEventData.timeZone || "",
-          location: typedEventData.location || "",
-          images: typedEventData.images || [],
+          name: eventData?.name || "",
+          description: eventData?.description || "",
+          startDate: eventData?.startDate || "",
+          endDate: eventData?.endDate || "",
+          startTime: eventData?.startTime || "",
+          endTime: eventData?.endTime || "",
+          timeZone: eventData?.timeZone || "",
+          location: eventData?.location || "",
+          images: eventData?.images || [],
         },
         eventMetadata: {
-          eventType: typedEventMetadata.eventType || "",
-          eventCategory: typedEventMetadata.eventCategory || "",
-          priceType: typedEventMetadata.priceType || "",
-          price: typedEventMetadata.price || "",
-          ageRestriction: typedEventMetadata.ageRestriction || "",
-          performers: Array.isArray(typedEventMetadata.performers)
-            ? typedEventMetadata.performers.join(", ")
-            : typeof typedEventMetadata.performers === "string"
-              ? typedEventMetadata.performers
+          eventType: eventMetadata?.eventType || "",
+          eventCategory: eventMetadata?.eventCategory || "",
+          priceType: eventMetadata?.priceType || "",
+          price: eventMetadata?.price || "",
+          ageRestriction: eventMetadata?.ageRestriction || "",
+          performers: Array.isArray(eventMetadata?.performers)
+            ? eventMetadata.performers.join(", ")
+            : typeof eventMetadata?.performers === "string"
+              ? eventMetadata.performers
               : "",
-          accessibility: Array.isArray(typedEventMetadata.accessibility)
-            ? typedEventMetadata.accessibility.join(", ")
-            : "",
+          accessibility: Array.isArray(eventMetadata?.accessibility)
+            ? eventMetadata.accessibility.join(", ")
+            : typeof eventMetadata?.accessibility === "string"
+              ? eventMetadata.accessibility
+              : "",
         },
         comment: "",
         lists: [],
         visibility:
-          event.visibility === "public" || event.visibility === "private"
-            ? event.visibility
+          eventQuery.visibility === "public" ||
+          eventQuery.visibility === "private"
+            ? eventQuery.visibility
             : ("private" as const),
       });
 
       if (
-        typedEventData.images &&
-        typedEventData.images.length > 0 &&
-        typedEventData.images[0]
+        eventData?.images &&
+        eventData.images.length > 0 &&
+        eventData.images[0]
       ) {
-        const initialImage = typedEventData.images[0];
+        const initialImage = eventData.images[0];
         setSelectedImage(initialImage);
         setOriginalImage(initialImage);
       }
     }
-  }, [eventQuery.data, reset, setSelectedImage]);
+  }, [eventQuery, reset, setSelectedImage]);
 
   const uploadImage = async (localUri: string): Promise<string> => {
     setIsUploadingImage(true);
@@ -431,19 +389,22 @@ export default function EditEventScreen() {
           },
           comment: data.comment || "",
           lists: (data.lists || []).map((list) => ({
-            [list.value]: list.label,
-          })) as Record<string, string>[],
+            value: list.value,
+          })),
           visibility: data.visibility,
         };
 
-        await updateEventMutation.mutateAsync(updatedData);
+        await updateEventMutation(updatedData);
 
         toast.dismiss(loadingToastId);
+        toast.success("Event updated successfully");
+        router.back();
       } catch (error) {
         logError("Error updating event", error);
         toast.error("Failed to update event", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
+      } finally {
         setIsSubmitting(false);
       }
     },
@@ -465,7 +426,7 @@ export default function EditEventScreen() {
     );
   }
 
-  if (eventQuery.isLoading) {
+  if (eventQuery === undefined) {
     return (
       <View className="flex-1 bg-white">
         <LoadingSpinner />
@@ -473,7 +434,7 @@ export default function EditEventScreen() {
     );
   }
 
-  if (!eventQuery.data) {
+  if (!eventQuery) {
     return (
       <View className="flex-1 bg-white">
         <Text>Event not found</Text>

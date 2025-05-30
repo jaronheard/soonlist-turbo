@@ -1,6 +1,39 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+// Define reusable validators
+export const priorityValidator = v.object({
+  text: v.string(),
+  emoji: v.string(),
+});
+
+export const onboardingDataValidator = v.object({
+  notificationsEnabled: v.optional(v.boolean()),
+  ageRange: v.optional(
+    v.union(
+      v.literal("Under 24"),
+      v.literal("25-34"),
+      v.literal("35-44"),
+      v.literal("45-54"),
+      v.literal("55-64"),
+      v.literal("65+"),
+    ),
+  ),
+  source: v.optional(v.string()),
+  discoveryMethod: v.optional(v.string()),
+  screenshotEvents: v.optional(v.string()),
+  priority: v.optional(priorityValidator),
+  completedAt: v.optional(v.string()), // ISO date string
+});
+
+export const userAdditionalInfoValidator = v.object({
+  bio: v.optional(v.string()),
+  publicEmail: v.optional(v.string()),
+  publicPhone: v.optional(v.string()),
+  publicInsta: v.optional(v.string()),
+  publicWebsite: v.optional(v.string()),
+});
+
 export default defineSchema({
   comments: defineTable({
     content: v.string(),
@@ -19,6 +52,7 @@ export default defineSchema({
     userId: v.string(),
     userName: v.string(),
     event: v.any(), // JSON field
+    eventMetadata: v.optional(v.any()), // JSON field for event metadata
     endDateTime: v.string(), // ISO date string
     startDateTime: v.string(), // ISO date string
     visibility: v.union(v.literal("public"), v.literal("private")),
@@ -36,7 +70,10 @@ export default defineSchema({
     description: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
-    .index("by_custom_id", ["id"]),
+    .index("by_custom_id", ["id"])
+    .index("by_user_and_startDateTime", ["userId", "startDateTime"])
+    .index("by_startDateTime", ["startDateTime"])
+    .index("by_visibility_and_startDateTime", ["visibility", "startDateTime"]),
 
   eventToLists: defineTable({
     eventId: v.string(),
@@ -95,8 +132,8 @@ export default defineSchema({
     publicWebsite: v.union(v.string(), v.null()),
     publicMetadata: v.union(v.any(), v.null()), // JSON field
     emoji: v.union(v.string(), v.null()),
-    // Onboarding fields
-    onboardingData: v.union(v.any(), v.null()), // JSON field
+    // Onboarding fields - now properly typed
+    onboardingData: v.union(onboardingDataValidator, v.null()),
     onboardingCompletedAt: v.union(v.string(), v.null()), // ISO date string or null
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null

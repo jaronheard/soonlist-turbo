@@ -1,74 +1,89 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
+import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { api } from "~/utils/api";
+import { useStableTimestamp } from "~/store";
 
-export default function PastEvents() {
-  const { user, isLoaded, isSignedIn } = useUser();
+function PastEventsContent() {
+  const { user } = useUser();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
-    {
-      userName: user?.username ?? "",
-      filter: "past",
-      limit: 20,
-    },
-    {
-      enabled: !!user,
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    },
-  );
+  // Use the stable timestamp from the store that updates every 15 minutes
+  // This prevents InvalidCursor errors while still filtering for past events
+  const stableTimestamp = useStableTimestamp();
 
-  const loadMore = useCallback(() => {
-    if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
-      void eventsQuery.fetchNextPage();
+  // Memoize query args to prevent unnecessary re-renders
+  const queryArgs = useMemo(() => {
+    if (!user?.username) return "skip";
+    return {
+      userName: user.username,
+      filter: "past" as const,
+      beforeThisDateTime: stableTimestamp,
+    };
+  }, [user?.username, stableTimestamp]);
+
+  const {
+    results: events,
+    status,
+    loadMore,
+    isLoading,
+  } = useStablePaginatedQuery(api.events.getEventsForUserPaginated, queryArgs, {
+    initialNumItems: 20,
+  });
+
+  const handleLoadMore = useCallback(() => {
+    if (status === "CanLoadMore") {
+      loadMore(20);
     }
-  }, [eventsQuery]);
-
-  const onRefresh = useCallback(async () => {
-    await eventsQuery.refetch();
-  }, [eventsQuery]);
-
-  const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
-
-  if (!isLoaded) {
-    return (
-      <View className="flex-1 bg-white">
-        <LoadingSpinner />
-      </View>
-    );
-  }
-
-  if (!isSignedIn) {
-    return <Redirect href="/sign-in" />;
-  }
+  }, [status, loadMore]);
 
   return (
     <View className="flex-1 bg-white">
-      {eventsQuery.isPending && !eventsQuery.isRefetching ? (
+      {isLoading && status === "LoadingFirstPage" ? (
         <LoadingSpinner />
       ) : (
         <View className="flex-1">
           <UserEventsList
             events={events}
-            onRefresh={onRefresh}
-            onEndReached={loadMore}
+            onEndReached={handleLoadMore}
             showCreator="savedFromOthers"
-            isRefetching={eventsQuery.isRefetching}
-            isFetchingNextPage={eventsQuery.isFetchingNextPage}
+            isFetchingNextPage={status === "LoadingMore"}
             hasUnlimited={hasUnlimited}
           />
           <AddEventButton showChevron={false} />
         </View>
       )}
     </View>
+  );
+}
+
+export default function PastEvents() {
+  return (
+    <>
+      <AuthLoading>
+        <View className="flex-1 bg-white">
+          <LoadingSpinner />
+        </View>
+      </AuthLoading>
+
+      <Unauthenticated>
+        <Redirect href="/sign-in" />
+      </Unauthenticated>
+
+      <Authenticated>
+        <PastEventsContent />
+      </Authenticated>
+    </>
   );
 }

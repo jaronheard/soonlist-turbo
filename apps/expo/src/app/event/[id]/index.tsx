@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   Pressable,
-  RefreshControl,
   Image as RNImage,
   ScrollView,
   Text,
@@ -12,16 +11,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { useQuery } from "convex/react";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
-import type { RouterOutputs } from "~/utils/api";
 import { EventMenu } from "~/components/EventMenu";
 import { EyeOff, Globe2, MapPin, User } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import ShareButton from "~/components/ShareButton";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
-import { api } from "~/utils/api";
+import { useEventActions } from "~/hooks/useEventActions";
 import { formatEventDateRange } from "~/utils/dates";
 import { logError } from "../../../utils/errorLogging";
 
@@ -31,56 +31,32 @@ export default function Page() {
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
 
-  const [refreshing, setRefreshing] = useState(false);
   // Store the aspect ratio for the main event image
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
   // Track whether the image is fully loaded (for a fade-in)
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
-  const username = currentUser?.username || "";
+  const event = useQuery(api.events.get, { eventId: id });
 
-  // Get the utils at the top level of the component
-  const utils = api.useUtils();
+  const isSaved =
+    event && currentUser ? event.userId !== currentUser.id : false;
 
-  // Load the event data
-  const eventQuery = api.event.get.useQuery(
-    { eventId: id || "" },
-    {
-      // Only run this query if 'id' is defined
-      enabled: Boolean(id),
-    },
-  );
-  // Check saved events
-  const savedIdsQuery = api.event.getSavedIdsForUser.useQuery({
-    userName: username,
-  });
-
-  // Mutations
-  const deleteEventMutation = api.event.delete.useMutation({
-    onSuccess: () => {
-      // Use the utils reference from above instead of calling useUtils() here
-      void utils.event.invalidate();
-      router.replace("/");
-    },
+  const { handleDelete } = useEventActions({
+    event,
+    isSaved,
   });
 
   // Handlers
-  const handleDelete = useCallback(async () => {
-    if (id && typeof id === "string") {
-      await deleteEventMutation.mutateAsync({ id });
-    }
-  }, [deleteEventMutation, id]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    void eventQuery.refetch().then(() => setRefreshing(false));
-  }, [eventQuery]);
+  const handleDeleteAndRedirect = useCallback(async () => {
+    await handleDelete();
+    router.replace("/");
+  }, [handleDelete]);
 
   // Pre-calculate the aspect ratio of the event image, if it exists
   useEffect(() => {
-    const eventData = eventQuery.data?.event as
-      | AddToCalendarButtonPropsRestricted
-      | undefined;
+    if (!event?.event) return;
+
+    const eventData = event.event as AddToCalendarButtonPropsRestricted;
     const eventImage = eventData?.images?.[3];
     if (!eventImage) {
       return;
@@ -97,30 +73,27 @@ export default function Page() {
         logError("Failed to get image size", err);
       },
     );
-  }, [eventQuery.data?.event]);
+  }, [event?.event]);
 
   // Build the header-right UI if we have data
   const HeaderRight = useCallback(() => {
-    const data = eventQuery.data;
-    if (!data) return null;
-    const isSaved = savedIdsQuery.data?.some(
-      (savedEvent) => savedEvent.id === data.id,
-    );
-    const isOwner = data.userId === currentUser?.id;
+    if (!event) return null;
+
+    const isOwner = event.userId === currentUser?.id;
 
     return (
       <View className="flex-row items-center gap-2">
         <EventMenu
-          event={data as RouterOutputs["event"]["getUpcomingForUser"][number]}
+          event={event}
           isOwner={isOwner}
-          isSaved={Boolean(isSaved)}
+          isSaved={isSaved}
           menuType="popup"
-          onDelete={handleDelete}
+          onDelete={handleDeleteAndRedirect}
         />
         <ShareButton webPath={`/event/${id}`} />
       </View>
     );
-  }, [eventQuery.data, savedIdsQuery.data, currentUser?.id, id, handleDelete]);
+  }, [event, isSaved, currentUser?.id, id, handleDeleteAndRedirect]);
 
   // Early return if the 'id' is missing or invalid
   if (!id || typeof id !== "string") {
@@ -135,7 +108,7 @@ export default function Page() {
   }
 
   // Loading state
-  if (eventQuery.isLoading) {
+  if (event === undefined) {
     return (
       <>
         <Stack.Screen options={{ headerRight: () => null }} />
@@ -147,7 +120,7 @@ export default function Page() {
   }
 
   // Not found or error
-  if (!eventQuery.data) {
+  if (event === null) {
     return (
       <>
         <Stack.Screen options={{ headerRight: () => null }} />
@@ -159,7 +132,6 @@ export default function Page() {
   }
 
   // Normal render
-  const event = eventQuery.data;
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const isCurrentUserEvent = currentUser?.id === event.userId;
 
@@ -179,9 +151,6 @@ export default function Page() {
         contentContainerStyle={{
           paddingBottom: insets.bottom + 36,
         }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
         maximumZoomScale={5}
       >
         <View className="p-4">
@@ -229,8 +198,11 @@ export default function Page() {
               </View>
             ) : (
               <View className="flex-row items-center gap-2">
-                <UserProfileFlair username={event.user.username} size="xs">
-                  {event.user.userImage ? (
+                <UserProfileFlair
+                  username={event.user?.username || ""}
+                  size="xs"
+                >
+                  {event.user?.userImage ? (
                     <ExpoImage
                       source={{ uri: event.user.userImage }}
                       style={{ width: 20, height: 20, borderRadius: 10 }}
@@ -244,7 +216,7 @@ export default function Page() {
                   )}
                 </UserProfileFlair>
                 <Text className="text-sm text-neutral-2">
-                  @{event.user.username}
+                  @{event.user?.username || "unknown"}
                 </Text>
               </View>
             )}

@@ -15,10 +15,12 @@ import * as ImagePicker from "expo-image-picker";
 import { router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
 import { Globe, Instagram, Mail, Phone } from "~/components/icons";
@@ -27,7 +29,6 @@ import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
-import { api } from "~/utils/api";
 import { logError } from "../../utils/errorLogging";
 
 const profileSchema = z.object({
@@ -53,11 +54,10 @@ export default function EditProfileScreen() {
     user?.imageUrl ?? null,
   );
   const { showProPaywallIfNeeded } = useRevenueCat();
-  const { data: userData } = api.user.getByUsername.useQuery(
-    { userName: user?.username ?? "" },
-    { enabled: !!user?.username },
+  const userData = useQuery(
+    api.users.getByUsername,
+    user?.username ? { userName: user.username } : "skip",
   );
-  const queryClient = useQueryClient();
   const {
     resetOnboarding: resetOnboardingStore,
     userTimezone,
@@ -95,14 +95,9 @@ export default function EditProfileScreen() {
     }
   }, [userData, user, reset]);
 
-  const updateProfile = api.user.updateAdditionalInfo.useMutation({
-    onMutate: () => setIsSubmitting(true),
-    onSettled: () => setIsSubmitting(false),
-    onSuccess: () =>
-      router.canGoBack() ? router.back() : router.navigate("/feed"),
-  });
+  const updateProfile = useMutation(api.users.updateAdditionalInfo);
 
-  const resetOnboardingMutation = api.user.resetOnboarding.useMutation();
+  const resetOnboardingMutation = useMutation(api.users.resetOnboarding);
 
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
@@ -112,9 +107,23 @@ export default function EditProfileScreen() {
         if (data.username !== user?.username) {
           await user?.update({ username: data.username });
         }
-        await updateProfile.mutateAsync(data);
+        if (user?.id) {
+          await updateProfile({
+            userId: user.id,
+            bio: data.bio,
+            publicEmail: data.publicEmail,
+            publicPhone: data.publicPhone,
+            publicInsta: data.publicInsta,
+            publicWebsite: data.publicWebsite,
+          });
+        }
         toast.dismiss(loadingToastId);
         toast.success("Profile updated successfully");
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.navigate("/feed");
+        }
       } catch (error) {
         logError("Error updating profile", error);
         toast.dismiss(loadingToastId);
@@ -244,12 +253,9 @@ export default function EditProfileScreen() {
             const loadingToastId = toast.loading("Restarting onboarding...");
             void (async () => {
               try {
-                // Execute the mutation
-                await resetOnboardingMutation.mutateAsync();
-
-                // Invalidate all user-related queries at once
-                await queryClient.invalidateQueries({ queryKey: ["user"] });
-
+                if (user?.id) {
+                  await resetOnboardingMutation({ userId: user.id });
+                }
                 // Reset client-side onboarding state in Zustand store
                 resetOnboardingStore();
 
@@ -267,7 +273,7 @@ export default function EditProfileScreen() {
         },
       ],
     );
-  }, [resetOnboardingMutation, queryClient, resetOnboardingStore]);
+  }, [resetOnboardingMutation, resetOnboardingStore, user?.id]);
 
   return (
     <KeyboardAvoidingView
@@ -561,7 +567,7 @@ export default function EditProfileScreen() {
                       className="mt-2 rounded-md bg-neutral-100 p-4"
                     >
                       <Text className="text-base">
-                        View subscription in  Settings
+                        View subscription in Settings
                       </Text>
                     </TouchableOpacity>
                   );
@@ -594,6 +600,25 @@ export default function EditProfileScreen() {
                 );
               })()}
             </View>
+
+            {__DEV__ && (
+              <View className="mt-12">
+                <Text className="mb-2 text-base font-semibold text-blue-600">
+                  Development Testing
+                </Text>
+                <TouchableOpacity
+                  onPress={() => router.push("/settings/workflow-test")}
+                  className="mt-2 rounded-md bg-blue-100 p-4"
+                >
+                  <Text className="text-base text-blue-800">
+                    Workflow Failure Tests
+                  </Text>
+                  <Text className="text-sm text-blue-600">
+                    Test workflow failure notifications
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             <View className="mt-12">
               <Text className="mb-2 text-base font-semibold text-red-500">

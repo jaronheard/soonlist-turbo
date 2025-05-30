@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 
-import type { ImageSource } from "~/components/demoData";
+import type { ImageSource } from "~/utils/images";
 import { Image, Link as LinkIcon, X } from "~/components/icons";
 import { cn } from "~/utils/cn";
 

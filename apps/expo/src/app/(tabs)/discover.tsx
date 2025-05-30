@@ -1,66 +1,66 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import {
+  Authenticated,
+  AuthLoading,
+  Unauthenticated,
+  useQuery,
+} from "convex/react";
 
-import type { RouterOutputs } from "~/utils/api";
+import { api } from "@soonlist/backend/convex/_generated/api";
+
 import AddEventButton from "~/components/AddEventButton";
-import { ConvexAuthExample } from "~/components/ConvexAuthExample";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
+import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { api } from "~/utils/api";
+import { useStableTimestamp } from "~/store";
 import { getPlanStatusFromUser } from "~/utils/plan";
 
-export default function Page() {
-  const { user, isLoaded, isSignedIn } = useUser();
+function DiscoverContent() {
+  const { user } = useUser();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  const eventsQuery = api.event.getDiscoverInfinite.useInfiniteQuery(
+  // Use the stable timestamp from the store that updates every 15 minutes
+  // This prevents InvalidCursor errors while still filtering for upcoming events
+  const stableTimestamp = useStableTimestamp();
+
+  const {
+    results: events,
+    status,
+    loadMore,
+    isLoading,
+  } = useStablePaginatedQuery(
+    api.events.getDiscoverPaginated,
+    { beforeThisDateTime: stableTimestamp },
     {
-      limit: 20,
-    },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialNumItems: 20,
     },
   );
 
-  const savedEventIdsQuery = api.event.getSavedIdsForUser.useQuery(
-    {
-      userName: user?.username ?? "",
-    },
-    {
-      enabled: isLoaded && isSignedIn && !!user && !!user.username,
-    },
+  // Memoize saved events query args to prevent unnecessary re-renders
+  const savedEventsQueryArgs = useMemo(() => {
+    if (!user?.username) return "skip";
+    return { userName: user.username };
+  }, [user?.username]);
+
+  const savedEventIdsQuery = useQuery(
+    api.events.getSavedIdsForUser,
+    savedEventsQueryArgs,
   );
 
-  const onRefresh = useCallback(async () => {
-    await eventsQuery.refetch();
-  }, [eventsQuery]);
-
-  const loadMore = useCallback(() => {
-    if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
-      void eventsQuery.fetchNextPage();
+  const handleLoadMore = useCallback(() => {
+    if (status === "CanLoadMore") {
+      loadMore(20);
     }
-  }, [eventsQuery]);
+  }, [status, loadMore]);
 
-  const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
-
-  if (!isLoaded) {
-    return (
-      <View className="flex-1 bg-white">
-        <LoadingSpinner />
-      </View>
-    );
-  }
-
-  if (!isSignedIn) {
-    return <Redirect href="/sign-in" />;
-  }
-
+  // Check if user has access to discover feature after all hooks
   if (!user) {
     return <Redirect href="/sign-in" />;
   }
@@ -72,14 +72,10 @@ export default function Page() {
   }
 
   const savedEventIds = new Set(
-    savedEventIdsQuery.data?.map((event) => event.id),
+    savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
-  function SaveButtonWrapper({
-    event,
-  }: {
-    event: RouterOutputs["event"]["getDiscoverInfinite"]["events"][number];
-  }) {
+  function SaveButtonWrapper({ event }: { event: { id: string } }) {
     return (
       <SaveButton eventId={event.id} isSaved={savedEventIds.has(event.id)} />
     );
@@ -87,17 +83,14 @@ export default function Page() {
 
   return (
     <View className="flex-1 bg-white">
-      <ConvexAuthExample />
-      {eventsQuery.isPending && !eventsQuery.isRefetching ? (
+      {isLoading && status === "LoadingFirstPage" ? (
         <LoadingSpinner />
       ) : (
         <View className="flex-1">
           <UserEventsList
             events={events}
-            isRefetching={eventsQuery.isRefetching}
-            onRefresh={onRefresh}
-            onEndReached={loadMore}
-            isFetchingNextPage={eventsQuery.isFetchingNextPage}
+            onEndReached={handleLoadMore}
+            isFetchingNextPage={status === "LoadingMore"}
             ActionButton={SaveButtonWrapper}
             showCreator="always"
             hasUnlimited={hasUnlimited}
@@ -107,5 +100,23 @@ export default function Page() {
         </View>
       )}
     </View>
+  );
+}
+
+export default function Page() {
+  return (
+    <>
+      <AuthLoading>
+        <View className="flex-1 bg-white"></View>
+      </AuthLoading>
+
+      <Unauthenticated>
+        <Redirect href="/sign-in" />
+      </Unauthenticated>
+
+      <Authenticated>
+        <DiscoverContent />
+      </Authenticated>
+    </>
   );
 }

@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
+import { useQuery } from "convex/react";
 
-import { api } from "~/utils/api";
+import { api } from "@soonlist/backend/convex/_generated/api";
+
 import { cn } from "~/utils/cn";
 
 type Size = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
@@ -33,9 +35,10 @@ function UserEmoji({
   flairClassName: string;
   size: Size;
 }) {
-  const { data: userData } = api.user.getByUsername.useQuery({
-    userName: username,
-  });
+  const userData = useQuery(
+    api.users.getByUsername,
+    !!username && username.trim() !== "" ? { userName: username } : "skip",
+  );
   const userEmoji = userData?.emoji || null;
 
   if (!userEmoji) return null;

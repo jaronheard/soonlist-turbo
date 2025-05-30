@@ -3,16 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": {
-    ".": {
-      "types": "./convex/_generated/api.d.ts",
-      "default": "./convex/_generated/api.js"
-    },
-    "./convex/*": "./convex/*"
-  },
-  "license": "MIT",
   "scripts": {
-    "build": "convex build",
+    "build": "echo 'Using committed generated files'",
     "dev": "convex dev",
     "setup": "convex dev --until-success",
     "clean": "git clean -xdf .cache .turbo node_modules",
@@ -22,8 +14,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/openai": "catalog:",
+    "@clerk/nextjs": "catalog:",
+    "@convex-dev/workflow": "catalog:",
+    "@convex-dev/workpool": "catalog:",
+    "@soonlist/cal": "workspace:*",
+    "ai": "catalog:",
     "convex": "catalog:",
-    "openai": "^4.45.0"
+    "langfuse": "catalog:",
+    "nanoid": "catalog:"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",

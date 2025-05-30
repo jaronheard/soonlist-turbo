@@ -4,6 +4,7 @@ import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
+import { useConvexAuth } from "convex/react";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
 import { LogOut, MessageCircle, ShareIcon, User } from "~/components/icons";
@@ -13,6 +14,7 @@ import { UserProfileFlair } from "./UserProfileFlair";
 
 export function ProfileMenu() {
   const { user } = useUser();
+  const { isAuthenticated } = useConvexAuth();
   const signOut = useSignOut();
 
   const handleEditProfile = () => {
@@ -36,31 +38,41 @@ export function ProfileMenu() {
     });
   };
 
+  const profileImage = (
+    <>
+      {user?.imageUrl ? (
+        <ExpoImage
+          source={{ uri: user.imageUrl }}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 9999,
+            borderWidth: 2,
+            borderColor: "#FEEA9F",
+          }}
+          contentFit="cover"
+          contentPosition="center"
+          cachePolicy="disk"
+          transition={100}
+        />
+      ) : (
+        <View className="h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+          <User size={20} color="#5A32FB" />
+        </View>
+      )}
+    </>
+  );
+
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
-        <UserProfileFlair username={user?.username ?? ""} size="sm">
-          {user?.imageUrl ? (
-            <ExpoImage
-              source={{ uri: user.imageUrl }}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 9999,
-                borderWidth: 2,
-                borderColor: "#FEEA9F",
-              }}
-              contentFit="cover"
-              contentPosition="center"
-              cachePolicy="disk"
-              transition={100}
-            />
-          ) : (
-            <View className="h-10 w-10 items-center justify-center rounded-full bg-gray-200">
-              <User size={20} color="#5A32FB" />
-            </View>
-          )}
-        </UserProfileFlair>
+        {user?.username && isAuthenticated ? (
+          <UserProfileFlair username={user.username} size="sm">
+            {profileImage}
+          </UserProfileFlair>
+        ) : (
+          profileImage
+        )}
       </DropdownMenu.Trigger>
 
       <DropdownMenu.Content>

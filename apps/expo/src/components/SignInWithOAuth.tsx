@@ -63,16 +63,29 @@ const SignInWithOAuth = () => {
       if (result.createdSessionId) {
         if (result.signIn?.status === "complete") {
           await setActiveSignIn({ session: result.createdSessionId });
-          const email = Clerk.session?.user.emailAddresses[0]?.emailAddress;
-          const userId = Clerk.session?.user.id;
-          const _ = await Intercom.loginUserWithUserAttributes({
-            email,
-            userId,
-          });
-          if (email) {
-            posthog.identify(email, {
-              email,
-            });
+
+          // Wait a bit for the session to be fully initialized
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          // Safely access session data
+          const session = Clerk.session;
+          if (session?.user) {
+            const email = session.user.emailAddresses[0]?.emailAddress;
+            const userId = session.user.id;
+
+            if (email && userId) {
+              try {
+                await Intercom.loginUserWithUserAttributes({
+                  email,
+                  userId,
+                });
+                posthog.identify(email, {
+                  email,
+                });
+              } catch (intercomError) {
+                logError("Intercom login error", intercomError);
+              }
+            }
           }
         } else if (result.signUp?.status === "missing_requirements") {
           setPendingSignUp(result.signUp);

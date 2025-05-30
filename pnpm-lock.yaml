@@ -39,6 +39,12 @@ catalogs:
     '@clerk/nextjs':
       specifier: ^6.20.0
       version: 6.20.0
+    '@convex-dev/workflow':
+      specifier: ^0.2.4
+      version: 0.2.4
+    '@convex-dev/workpool':
+      specifier: ^0.2.10
+      version: 0.2.10
     '@hookform/resolvers':
       specifier: ^3.3.4
       version: 3.10.0
@@ -330,9 +336,6 @@ catalogs:
     onesignal-expo-plugin:
       specifier: ^2.0.3
       version: 2.0.3
-    p-map:
-      specifier: ^7.0.3
-      version: 7.0.3
     postcss:
       specifier: ^8.4.38
       version: 8.5.3
@@ -566,6 +569,9 @@ importers:
       '@soonlist/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@soonlist/backend':
+        specifier: workspace:*
+        version: link:../../packages/backend
       '@soonlist/cal':
         specifier: workspace:*
         version: link:../../packages/cal
@@ -596,6 +602,9 @@ importers:
       convex:
         specifier: 'catalog:'
         version: 1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
+      convex-helpers:
+        specifier: ^0.1.89
+        version: 0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28)
       expo:
         specifier: 'catalog:'
         version: 53.0.9(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
@@ -698,9 +707,6 @@ importers:
       onesignal-expo-plugin:
         specifier: 'catalog:'
         version: 2.0.3(encoding@0.1.13)
-      p-map:
-        specifier: 'catalog:'
-        version: 7.0.3
       posthog-react-native:
         specifier: 'catalog:'
         version: 3.15.4(d384a8725056aeeebab980c559c61c4a)
@@ -1091,12 +1097,33 @@ importers:
 
   packages/backend:
     dependencies:
+      '@ai-sdk/openai':
+        specifier: 'catalog:'
+        version: 0.0.18(zod@3.25.28)
+      '@clerk/nextjs':
+        specifier: 'catalog:'
+        version: 6.20.0(next@15.1.8(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(svix@1.66.0(encoding@0.1.13))
+      '@convex-dev/workflow':
+        specifier: 'catalog:'
+        version: 0.2.4(@convex-dev/workpool@0.2.10(convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28))(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)))(convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28))(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))
+      '@convex-dev/workpool':
+        specifier: 'catalog:'
+        version: 0.2.10(convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28))(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))
+      '@soonlist/cal':
+        specifier: workspace:*
+        version: link:../cal
+      ai:
+        specifier: 3.1.22
+        version: 3.1.22(openai@4.103.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.28))(react@19.0.0)(solid-js@1.9.7)(svelte@5.33.1)(vue@3.5.14(typescript@5.8.3))(zod@3.25.28)
       convex:
         specifier: 'catalog:'
         version: 1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
-      openai:
-        specifier: ^4.45.0
-        version: 4.103.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.28)
+      langfuse:
+        specifier: 'catalog:'
+        version: 3.37.2
+      nanoid:
+        specifier: 'catalog:'
+        version: 5.1.5
     devDependencies:
       '@soonlist/eslint-config':
         specifier: workspace:*
@@ -2285,6 +2312,19 @@ packages:
 
   '@coinbase/wallet-sdk@4.3.0':
     resolution: {integrity: sha512-T3+SNmiCw4HzDm4we9wCHCxlP0pqCiwKe4sOwPH3YAK2KSKjxPRydKu6UQJrdONFVLG7ujXvbd/6ZqmvJb8rkw==}
+
+  '@convex-dev/workflow@0.2.4':
+    resolution: {integrity: sha512-KfUWxYmdM29qD4xRFAoKduN54xOsU4Gso3reU3Av4X0kHLGfPRsQ0EKFiEFYTuk7eo7AqTBvRNuGrKQxWCPpQA==}
+    peerDependencies:
+      '@convex-dev/workpool': ^0.2.9
+      convex: '>=1.21.0 <1.35.0'
+      convex-helpers: ^0.1.77
+
+  '@convex-dev/workpool@0.2.10':
+    resolution: {integrity: sha512-BUqSVy0YJB+1OFoEn3lyvivU/FX6qZ8v/vUr8fiKaVFKKdy5HhTy1Xo0flQPqJVPpHuAz/bEuwMoqWhgoHjskw==}
+    peerDependencies:
+      convex: '>=1.17.0 <1.25.0'
+      convex-helpers: ^0.1.71
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -5232,6 +5272,9 @@ packages:
     resolution: {integrity: sha512-x1FCFnFifvYDDzTaLII71vG5uvDwgtmDTEVWAxrgeiR8VjMONcCXJx7E+USjDtHlwFmt9MysbqgF9b9Vjr6w+w==}
     engines: {node: '>=4'}
 
+  async-channel@0.2.0:
+    resolution: {integrity: sha512-BJyjI/sfKlyijaBt2hbOSxT28xGNtLR0QLzAKO1Hlnv5BULY7sAoYoTPW3lfr1ZIC7y+FxabxO9T8GXpyoofGg==}
+
   async-function@1.0.0:
     resolution: {integrity: sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==}
     engines: {node: '>= 0.4'}
@@ -5663,6 +5706,28 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+
+  convex-helpers@0.1.89:
+    resolution: {integrity: sha512-G/rfndoWBAChChDe6d1UTD27YadwTi0vzZrwy59gERCnumFVOJVS6VItMmlVr4yCOTXZwd69YEVbVoP8BvssJw==}
+    hasBin: true
+    peerDependencies:
+      '@standard-schema/spec': ^1.0.0
+      convex: ^1.13.0
+      hono: ^4.0.5
+      react: 19.0.0
+      typescript: ^5.5
+      zod: ^3.22.4
+    peerDependenciesMeta:
+      '@standard-schema/spec':
+        optional: true
+      hono:
+        optional: true
+      react:
+        optional: true
+      typescript:
+        optional: true
+      zod:
+        optional: true
 
   convex@1.24.1:
     resolution: {integrity: sha512-LucaIBktohO7KuKKsxLXxGhKoxYqcLUFqOXoC2p0HU4f8lWKNmDv1ackTB4DU5u/thnh/tIOvySEVNdoAdGXAw==}
@@ -8291,10 +8356,6 @@ packages:
   p-map@3.0.0:
     resolution: {integrity: sha512-d3qXVTF/s+W+CdJ5A29wywV2n8CQQYahlgz2bFiA+4eVNJbHJodPZ+/gXwPGh0bOqA+j8S+6+ckmvLGPk1QpxQ==}
     engines: {node: '>=8'}
-
-  p-map@7.0.3:
-    resolution: {integrity: sha512-VkndIv2fIB99swvQoA65bm+fsmt6UNdGeIB0oxBs+WhAhdh08QA04JXpI7rbB9r08/nkbysKoya9rtDERYOYMA==}
-    engines: {node: '>=18'}
 
   p-try@2.2.0:
     resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
@@ -11389,6 +11450,18 @@ snapshots:
       eventemitter3: 5.0.1
       preact: 10.26.7
 
+  '@convex-dev/workflow@0.2.4(@convex-dev/workpool@0.2.10(convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28))(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)))(convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28))(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))':
+    dependencies:
+      '@convex-dev/workpool': 0.2.10(convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28))(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))
+      async-channel: 0.2.0
+      convex: 1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
+      convex-helpers: 0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28)
+
+  '@convex-dev/workpool@0.2.10(convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28))(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))':
+    dependencies:
+      convex: 1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
+      convex-helpers: 0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28)
+
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
@@ -14132,12 +14205,14 @@ snapshots:
 
   '@types/node-fetch@2.6.12':
     dependencies:
-      '@types/node': 18.19.103
+      '@types/node': 22.15.21
       form-data: 4.0.2
+    optional: true
 
   '@types/node@18.19.103':
     dependencies:
       undici-types: 5.26.5
+    optional: true
 
   '@types/node@20.12.7':
     dependencies:
@@ -14472,6 +14547,7 @@ snapshots:
   agentkeepalive@4.6.0:
     dependencies:
       humanize-ms: 1.2.1
+    optional: true
 
   aggregate-error@3.1.0:
     dependencies:
@@ -14668,6 +14744,8 @@ snapshots:
   ast-types@0.13.4:
     dependencies:
       tslib: 2.8.1
+
+  async-channel@0.2.0: {}
 
   async-function@1.0.0: {}
 
@@ -15208,6 +15286,14 @@ snapshots:
   convert-source-map@1.9.0: {}
 
   convert-source-map@2.0.0: {}
+
+  convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28):
+    dependencies:
+      convex: 1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
+    optionalDependencies:
+      react: 19.0.0
+      typescript: 5.8.3
+      zod: 3.25.28
 
   convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0):
     dependencies:
@@ -16614,7 +16700,8 @@ snapshots:
       cross-spawn: 7.0.6
       signal-exit: 4.1.0
 
-  form-data-encoder@1.7.2: {}
+  form-data-encoder@1.7.2:
+    optional: true
 
   form-data@4.0.2:
     dependencies:
@@ -16627,6 +16714,7 @@ snapshots:
     dependencies:
       node-domexception: 1.0.0
       web-streams-polyfill: 4.0.0-beta.3
+    optional: true
 
   forwarded-parse@2.1.2: {}
 
@@ -16902,6 +16990,7 @@ snapshots:
   humanize-ms@1.2.1:
     dependencies:
       ms: 2.1.3
+    optional: true
 
   iconv-lite@0.4.24:
     dependencies:
@@ -17974,7 +18063,8 @@ snapshots:
       lower-case: 2.0.2
       tslib: 2.8.1
 
-  node-domexception@1.0.0: {}
+  node-domexception@1.0.0:
+    optional: true
 
   node-fetch@2.7.0(encoding@0.1.13):
     dependencies:
@@ -18127,6 +18217,7 @@ snapshots:
       zod: 3.25.28
     transitivePeerDependencies:
       - encoding
+    optional: true
 
   optionator@0.9.4:
     dependencies:
@@ -18196,8 +18287,6 @@ snapshots:
   p-map@3.0.0:
     dependencies:
       aggregate-error: 3.1.0
-
-  p-map@7.0.3: {}
 
   p-try@2.2.0: {}
 
@@ -20090,7 +20179,8 @@ snapshots:
     dependencies:
       defaults: 1.0.4
 
-  web-streams-polyfill@4.0.0-beta.3: {}
+  web-streams-polyfill@4.0.0-beta.3:
+    optional: true
 
   web-vitals@4.2.4: {}
 

@@ -5,6 +5,7 @@ import { Linking } from "react-native";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { useAuth } from "@clerk/clerk-expo";
+import { useConvexAuth } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { toast } from "sonner-native";
 
@@ -32,6 +33,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+  const { isAuthenticated } = useConvexAuth();
   const { userId } = useAuth();
   const { hasNotificationPermission } = useOneSignal();
   const posthog = usePostHog();
@@ -61,10 +63,10 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
 
   // Handle Clerk user ID changes, but only after initialization
   useMountEffect(() => {
-    if (isInitialized && userId) {
+    if (isInitialized && isAuthenticated && userId) {
       void loginInternal(userId);
     }
-  }, [isInitialized, userId]);
+  }, [isInitialized, isAuthenticated, userId]);
 
   // Internal login function that doesn't depend on the PostHog context
   const loginInternal = async (userIdToLogin: string) => {

@@ -1,11 +1,12 @@
+import type { FunctionReturnType } from "convex/server";
 import { Alert, Linking, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
 import { Temporal } from "@js-temporal/polyfill";
 import { toast } from "sonner-native";
 
+import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
-import type { RouterOutputs } from "~/utils/api";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
@@ -30,7 +31,7 @@ export function useCalendar() {
   } = useAppStore();
 
   const handleAddToCal = async (
-    event: RouterOutputs["event"]["getUpcomingForUser"][number],
+    event: NonNullable<FunctionReturnType<typeof api.events.get>>,
   ) => {
     try {
       const { status } = await Calendar.requestCalendarPermissionsAsync();

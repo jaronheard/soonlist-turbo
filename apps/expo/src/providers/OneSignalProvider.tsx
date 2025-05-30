@@ -11,6 +11,7 @@ import {
 } from "react-native-onesignal";
 import Constants from "expo-constants";
 import { useAuth } from "@clerk/clerk-expo";
+import { useConvexAuth } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 
 import { logError, logMessage } from "~/utils/errorLogging";
@@ -116,7 +117,8 @@ const handleNavigation = (url: string) => {
 };
 
 export function OneSignalProvider({ children }: OneSignalProviderProps) {
-  const { userId, isSignedIn } = useAuth();
+  const { isAuthenticated } = useConvexAuth();
+  const { userId } = useAuth();
   const [hasNotificationPermission, setHasNotificationPermission] =
     useState(false);
   const posthog = usePostHog();
@@ -234,7 +236,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
 
   // Set external user ID when user signs in
   useEffect(() => {
-    if (isSignedIn && userId) {
+    if (isAuthenticated && userId) {
       // Set the external user ID
       OneSignal.login(userId);
 
@@ -247,7 +249,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
       // Logout when user signs out
       OneSignal.logout();
     }
-  }, [userId, isSignedIn]);
+  }, [userId, isAuthenticated]);
 
   // Function to check notification permission status
   const checkPermissionStatus = async (): Promise<boolean> => {

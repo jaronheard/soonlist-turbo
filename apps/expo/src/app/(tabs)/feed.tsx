@@ -1,108 +1,87 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useMutationState } from "@tanstack/react-query";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
+import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore } from "~/store";
-import { api } from "~/utils/api";
+import { useStableTimestamp } from "~/store";
 
-function MyFeed() {
-  const { user, isLoaded, isSignedIn } = useUser();
-  const { hasCompletedOnboarding } = useAppStore();
+function MyFeedContent() {
+  const { user } = useUser();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  const userQuery = api.user.getById.useQuery(
-    { id: user?.id ?? "" },
-    { enabled: isLoaded && isSignedIn && !!user.id },
-  );
+  // Use the stable timestamp from the store that updates every 15 minutes
+  // This prevents InvalidCursor errors while still filtering for upcoming events
+  const stableTimestamp = useStableTimestamp();
 
-  const eventsQuery = api.event.getEventsForUser.useInfiniteQuery(
-    {
-      userName: user?.username ?? "",
-      filter: "upcoming",
-      limit: 20,
-    },
-    {
-      enabled: isLoaded && !!user && isSignedIn,
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    },
-  );
+  // Memoize query args to prevent unnecessary re-renders
+  const queryArgs = useMemo(() => {
+    if (!user?.username) return "skip";
+    return {
+      userName: user.username,
+      filter: "upcoming" as const,
+      beforeThisDateTime: stableTimestamp,
+    };
+  }, [user?.username, stableTimestamp]);
 
-  const statsQuery = api.event.getStats.useQuery({
-    userName: user?.username ?? "",
+  const {
+    results: events,
+    status,
+    loadMore,
+  } = useStablePaginatedQuery(api.events.getEventsForUserPaginated, queryArgs, {
+    initialNumItems: 20,
   });
 
-  const onRefresh = useCallback(async () => {
-    await eventsQuery.refetch();
-  }, [eventsQuery]);
-
-  const loadMore = useCallback(() => {
-    if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
-      void eventsQuery.fetchNextPage();
+  const handleLoadMore = useCallback(() => {
+    if (status === "CanLoadMore") {
+      loadMore(20);
     }
-  }, [eventsQuery]);
-
-  const events = eventsQuery.data?.pages.flatMap((page) => page.events) ?? [];
-
-  const pendingAIMutations = useMutationState({
-    filters: {
-      mutationKey: ["ai"],
-      status: "pending",
-    },
-  });
-
-  const isAddingEvent = pendingAIMutations.length > 0;
-
-  const noLifetimeCaptures = statsQuery.data?.allTimeEvents === 0;
-
-  if (!isLoaded) {
-    return (
-      <View className="flex-1 bg-white">
-        <LoadingSpinner />
-      </View>
-    );
-  }
-
-  if (!isSignedIn) {
-    return <Redirect href="/sign-in" />;
-  }
-
-  const dbHasCompletedOnboarding = !!userQuery.data?.onboardingCompletedAt;
-  if (!hasCompletedOnboarding && !dbHasCompletedOnboarding) {
-    return <Redirect href="/(onboarding)/onboarding" />;
-  }
+  }, [status, loadMore]);
 
   return (
     <View className="flex-1 bg-white">
-      {eventsQuery.isPending && !eventsQuery.isRefetching && !isAddingEvent ? (
-        <LoadingSpinner />
-      ) : (
-        <View className="flex-1">
-          <UserEventsList
-            events={events}
-            isRefetching={eventsQuery.isRefetching}
-            onRefresh={onRefresh}
-            onEndReached={loadMore}
-            isFetchingNextPage={eventsQuery.isFetchingNextPage}
-            showCreator="savedFromOthers"
-            stats={statsQuery.data}
-            promoCard={{ type: "addEvents" }}
-            hasUnlimited={hasUnlimited}
-          />
-          <AddEventButton
-            showChevron={noLifetimeCaptures}
-            stats={statsQuery.data}
-          />
-        </View>
-      )}
+      <View className="flex-1">
+        <UserEventsList
+          events={events}
+          onEndReached={handleLoadMore}
+          isFetchingNextPage={status === "LoadingMore"}
+          showCreator="savedFromOthers"
+          stats={undefined}
+          promoCard={{ type: "addEvents" }}
+          hasUnlimited={hasUnlimited}
+        />
+        <AddEventButton stats={undefined} />
+      </View>
     </View>
+  );
+}
+
+function MyFeed() {
+  return (
+    <>
+      <AuthLoading>
+        <View className="flex-1 bg-white">
+          <LoadingSpinner />
+        </View>
+      </AuthLoading>
+
+      <Unauthenticated>
+        <Redirect href="/sign-in" />
+      </Unauthenticated>
+
+      <Authenticated>
+        <MyFeedContent />
+      </Authenticated>
+    </>
   );
 }
 
