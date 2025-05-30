@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutation } from "convex/react";
@@ -264,69 +257,37 @@ export default function WorkflowTestScreen() {
             <Button
               onPress={testAI}
               disabled={runningTests.has("AI Extraction Failure")}
+              loading={runningTests.has("AI Extraction Failure")}
               className="flex-row items-center justify-center"
             >
-              {runningTests.has("AI Extraction Failure") && (
-                <ActivityIndicator
-                  size="small"
-                  color="white"
-                  className="mr-2"
-                />
-              )}
-              <Text className="font-medium text-white">
-                Test AI Extraction Failure
-              </Text>
+              Test AI Extraction Failure
             </Button>
 
             <Button
               onPress={testUpload}
               disabled={runningTests.has("Image Upload Failure")}
+              loading={runningTests.has("Image Upload Failure")}
               className="flex-row items-center justify-center"
             >
-              {runningTests.has("Image Upload Failure") && (
-                <ActivityIndicator
-                  size="small"
-                  color="white"
-                  className="mr-2"
-                />
-              )}
-              <Text className="font-medium text-white">
-                Test Image Upload Failure
-              </Text>
+              Test Image Upload Failure
             </Button>
 
             <Button
               onPress={testValidation}
               disabled={runningTests.has("Validation Failure")}
+              loading={runningTests.has("Validation Failure")}
               className="flex-row items-center justify-center"
             >
-              {runningTests.has("Validation Failure") && (
-                <ActivityIndicator
-                  size="small"
-                  color="white"
-                  className="mr-2"
-                />
-              )}
-              <Text className="font-medium text-white">
-                Test Validation Failure
-              </Text>
+              Test Validation Failure
             </Button>
 
             <Button
               onPress={testNotification}
               disabled={runningTests.has("Direct Notification")}
+              loading={runningTests.has("Direct Notification")}
               className="flex-row items-center justify-center bg-purple-600"
             >
-              {runningTests.has("Direct Notification") && (
-                <ActivityIndicator
-                  size="small"
-                  color="white"
-                  className="mr-2"
-                />
-              )}
-              <Text className="font-medium text-white">
-                Test Direct Notification
-              </Text>
+              Test Direct Notification
             </Button>
           </View>
 
@@ -339,52 +300,28 @@ export default function WorkflowTestScreen() {
               <Button
                 onPress={testAI}
                 disabled={runningTests.has("AI Extraction Failure")}
+                loading={runningTests.has("AI Extraction Failure")}
                 className="flex-row items-center justify-center"
               >
-                {runningTests.has("AI Extraction Failure") && (
-                  <ActivityIndicator
-                    size="small"
-                    color="white"
-                    className="mr-2"
-                  />
-                )}
-                <Text className="font-medium text-white">
-                  Test AI Extraction Failure
-                </Text>
+                Test AI Extraction Failure
               </Button>
 
               <Button
                 onPress={testUpload}
                 disabled={runningTests.has("Image Upload Failure")}
+                loading={runningTests.has("Image Upload Failure")}
                 className="flex-row items-center justify-center"
               >
-                {runningTests.has("Image Upload Failure") && (
-                  <ActivityIndicator
-                    size="small"
-                    color="white"
-                    className="mr-2"
-                  />
-                )}
-                <Text className="font-medium text-white">
-                  Test Image Upload Failure
-                </Text>
+                Test Image Upload Failure
               </Button>
 
               <Button
                 onPress={testValidation}
                 disabled={runningTests.has("Validation Failure")}
+                loading={runningTests.has("Validation Failure")}
                 className="flex-row items-center justify-center"
               >
-                {runningTests.has("Validation Failure") && (
-                  <ActivityIndicator
-                    size="small"
-                    color="white"
-                    className="mr-2"
-                  />
-                )}
-                <Text className="font-medium text-white">
-                  Test Validation Failure
-                </Text>
+                Test Validation Failure
               </Button>
             </View>
           </View>
@@ -398,86 +335,46 @@ export default function WorkflowTestScreen() {
               <Button
                 onPress={testUrlFetch}
                 disabled={runningTests.has("URL Fetch Failure")}
+                loading={runningTests.has("URL Fetch Failure")}
                 className="flex-row items-center justify-center bg-blue-600"
               >
-                {runningTests.has("URL Fetch Failure") && (
-                  <ActivityIndicator
-                    size="small"
-                    color="white"
-                    className="mr-2"
-                  />
-                )}
-                <Text className="font-medium text-white">
-                  Test URL Fetch Failure
-                </Text>
+                Test URL Fetch Failure
               </Button>
 
               <Button
                 onPress={testUrlContentParsing}
                 disabled={runningTests.has("URL Content Parsing Failure")}
+                loading={runningTests.has("URL Content Parsing Failure")}
                 className="flex-row items-center justify-center bg-blue-600"
               >
-                {runningTests.has("URL Content Parsing Failure") && (
-                  <ActivityIndicator
-                    size="small"
-                    color="white"
-                    className="mr-2"
-                  />
-                )}
-                <Text className="font-medium text-white">
-                  Test URL Content Parsing Failure
-                </Text>
+                Test URL Content Parsing Failure
               </Button>
 
               <Button
                 onPress={testUrlAiProcessing}
                 disabled={runningTests.has("URL AI Processing Failure")}
+                loading={runningTests.has("URL AI Processing Failure")}
                 className="flex-row items-center justify-center bg-blue-600"
               >
-                {runningTests.has("URL AI Processing Failure") && (
-                  <ActivityIndicator
-                    size="small"
-                    color="white"
-                    className="mr-2"
-                  />
-                )}
-                <Text className="font-medium text-white">
-                  Test URL AI Processing Failure
-                </Text>
+                Test URL AI Processing Failure
               </Button>
 
               <Button
                 onPress={testUrlValidation}
                 disabled={runningTests.has("URL Validation Failure")}
+                loading={runningTests.has("URL Validation Failure")}
                 className="flex-row items-center justify-center bg-blue-600"
               >
-                {runningTests.has("URL Validation Failure") && (
-                  <ActivityIndicator
-                    size="small"
-                    color="white"
-                    className="mr-2"
-                  />
-                )}
-                <Text className="font-medium text-white">
-                  Test URL Validation Failure
-                </Text>
+                Test URL Validation Failure
               </Button>
 
               <Button
                 onPress={testUrlSuccess}
                 disabled={runningTests.has("URL Workflow Success")}
+                loading={runningTests.has("URL Workflow Success")}
                 className="flex-row items-center justify-center bg-green-600"
               >
-                {runningTests.has("URL Workflow Success") && (
-                  <ActivityIndicator
-                    size="small"
-                    color="white"
-                    className="mr-2"
-                  />
-                )}
-                <Text className="font-medium text-white">
-                  Test URL Workflow Success
-                </Text>
+                Test URL Workflow Success
               </Button>
             </View>
           </View>
@@ -490,18 +387,10 @@ export default function WorkflowTestScreen() {
             <Button
               onPress={testNotification}
               disabled={runningTests.has("Direct Notification")}
+              loading={runningTests.has("Direct Notification")}
               className="flex-row items-center justify-center bg-purple-600"
             >
-              {runningTests.has("Direct Notification") && (
-                <ActivityIndicator
-                  size="small"
-                  color="white"
-                  className="mr-2"
-                />
-              )}
-              <Text className="font-medium text-white">
-                Test Direct Notification
-              </Text>
+              Test Direct Notification
             </Button>
           </View>
 

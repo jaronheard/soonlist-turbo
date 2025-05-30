@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   Pressable,
-  RefreshControl,
   Image as RNImage,
   ScrollView,
   Text,
@@ -32,7 +31,6 @@ export default function Page() {
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
 
-  const [refreshing, setRefreshing] = useState(false);
   // Store the aspect ratio for the main event image
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
   // Track whether the image is fully loaded (for a fade-in)
@@ -53,12 +51,6 @@ export default function Page() {
     await handleDelete();
     router.replace("/");
   }, [handleDelete]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    // The query will automatically refetch
-    setRefreshing(false);
-  }, []);
 
   // Pre-calculate the aspect ratio of the event image, if it exists
   useEffect(() => {
@@ -159,9 +151,6 @@ export default function Page() {
         contentContainerStyle={{
           paddingBottom: insets.bottom + 36,
         }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
         maximumZoomScale={5}
       >
         <View className="p-4">
