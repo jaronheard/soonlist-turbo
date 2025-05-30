@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "convex codegen",
+    "build": "echo 'Using committed generated files'",
     "dev": "convex dev",
     "setup": "convex dev --until-success",
     "clean": "git clean -xdf .cache .turbo node_modules",
