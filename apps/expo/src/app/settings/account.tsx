@@ -119,7 +119,11 @@ export default function EditProfileScreen() {
         }
         toast.dismiss(loadingToastId);
         toast.success("Profile updated successfully");
-        void (router.canGoBack() ? router.back() : router.navigate("/feed"));
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.navigate("/feed");
+        }
       } catch (error) {
         logError("Error updating profile", error);
         toast.dismiss(loadingToastId);

@@ -19,6 +19,8 @@ export function useConvexErrorHandler() {
         logError("Convex authentication error detected", error);
 
         // Call the global auth error handler if available
+        // This handler is set by AuthErrorBoundary component and handles
+        // auth cleanup, user sign-out, and navigation to sign-in page
         if (global.__handleAuthError) {
           void global.__handleAuthError();
         }
@@ -39,6 +41,9 @@ export function useConvexErrorHandler() {
       ) {
         logError("Authentication error detected", error);
 
+        // Call the global auth error handler if available
+        // This handler is set by AuthErrorBoundary component and handles
+        // auth cleanup, user sign-out, and navigation to sign-in page
         if (global.__handleAuthError) {
           void global.__handleAuthError();
         }
