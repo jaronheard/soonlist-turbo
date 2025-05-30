@@ -1,5 +1,12 @@
 import React from "react";
-import { Linking, Pressable, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Linking,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, router, Stack } from "expo-router";
 import { useSignIn } from "@clerk/clerk-expo";
@@ -23,7 +30,7 @@ type SignInFormData = z.infer<typeof signInSchema>;
 const SignInEmail = () => {
   const [isSigningIn, setIsSigningIn] = React.useState(false);
   const [generalError, setGeneralError] = React.useState("");
-  const { signIn, setActive } = useSignIn();
+  const { signIn, setActive, isLoaded } = useSignIn();
   const posthog = usePostHog();
   const { isAuthenticated } = useConvexAuth();
   const hasCompletedOnboarding = useAppStore(
@@ -40,6 +47,14 @@ const SignInEmail = () => {
       password: "",
     },
   });
+
+  if (!isLoaded) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
 
   if (isAuthenticated && hasCompletedOnboarding) {
     return <Redirect href="/feed" />;

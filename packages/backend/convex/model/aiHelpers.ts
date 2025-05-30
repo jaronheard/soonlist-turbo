@@ -1,6 +1,5 @@
 import type { CoreMessage } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { Temporal } from "@js-temporal/polyfill";
 import { waitUntil } from "@vercel/functions";
 import { generateObject } from "ai";
 import { ConvexError } from "convex/values";
@@ -16,14 +15,7 @@ import {
   getSystemMessageMetadata,
 } from "@soonlist/cal";
 
-import type { Doc } from "../_generated/dataModel";
-import type { ActionCtx, MutationCtx } from "../_generated/server";
-import { generateNumericId, generatePublicId } from "../utils";
-import {
-  getNotificationContent,
-  sendNotification,
-} from "./notificationHelpers";
-import { createDeepLink } from "./utils/urlScheme";
+import type { ActionCtx } from "../_generated/server";
 
 const langfuse = new Langfuse({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY || "",
