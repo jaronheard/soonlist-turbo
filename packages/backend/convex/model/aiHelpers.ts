@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import type { CoreMessage } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { Temporal } from "@js-temporal/polyfill";
@@ -12,7 +11,6 @@ import {
   addCommonAddToCalendarProps,
   EventMetadataSchema,
   EventSchema,
-  EventWithMetadataSchema,
   getPrompt,
   getSystemMessage,
   getSystemMessageMetadata,
@@ -397,7 +395,6 @@ export async function createEventAndNotify(
 
   const hasComment = input.comment && input.comment.length > 0;
   const hasLists = input.lists.length > 0;
-  const hasVisibility = input.visibility && input.visibility.length > 0;
 
   let { startTime, endTime, timeZone } = firstEvent;
   if (!timeZone) {
@@ -436,9 +433,7 @@ export async function createEventAndNotify(
     eventMetadata: firstEvent.eventMetadata,
     startDateTime: startUtcDate.toISOString(),
     endDateTime: endUtcDate.toISOString(),
-    visibility: (hasVisibility ? input.visibility : "public") as
-      | "public"
-      | "private",
+    visibility: input.visibility ?? "public",
     created_at: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     // Extract fields from event object for indexing
@@ -572,7 +567,6 @@ export async function createEvent(
 
   const hasComment = input.comment && input.comment.length > 0;
   const hasLists = input.lists.length > 0;
-  const hasVisibility = input.visibility && input.visibility.length > 0;
 
   let { startTime, endTime, timeZone } = firstEvent;
   if (!timeZone) {
@@ -614,9 +608,7 @@ export async function createEvent(
     eventMetadata: firstEvent.eventMetadata,
     startDateTime: startUtcDate.toISOString(),
     endDateTime: endUtcDate.toISOString(),
-    visibility: (hasVisibility ? input.visibility : "public") as
-      | "public"
-      | "private",
+    visibility: input.visibility ?? "public",
     created_at: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     // Extract fields from event object for indexing
@@ -684,19 +676,6 @@ export async function createEvent(
   };
 }
 
-export function validateFirstEvent(events: unknown[]) {
-  if (!events || events.length === 0) {
-    throw new ConvexError("No events found");
-  }
-
-  const firstEvent = events[0];
-  if (!firstEvent || typeof firstEvent !== "object") {
-    throw new ConvexError("Invalid event data");
-  }
-
-  return firstEvent as EventWithMetadata;
-}
-
 /**
  * Validates Jina API response for common error patterns and content issues
  */
@@ -747,4 +726,3 @@ export function validateJinaResponse(aiResult: {
     );
   }
 }
-

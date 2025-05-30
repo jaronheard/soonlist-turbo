@@ -1,10 +1,11 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { ConvexError } from "convex/values";
 
-import { generatePublicId } from "../utils";
+import type { EventMetadataLoose } from "@soonlist/cal";
 
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { generatePublicId } from "../utils";
 
 // Type for event data (based on AddToCalendarButtonProps)
 interface EventData {
@@ -546,7 +547,7 @@ export async function createEvent(
   userId: string,
   userName: string,
   eventData: EventData,
-  eventMetadata?: Record<string, unknown>,
+  eventMetadata?: EventMetadataLoose,
   comment?: string,
   lists?: { value: string }[],
   visibility?: "public" | "private",

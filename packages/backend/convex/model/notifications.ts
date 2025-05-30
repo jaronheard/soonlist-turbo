@@ -1,6 +1,5 @@
 import type { QueryCtx } from "../_generated/server";
 import { generatePublicId } from "../utils";
-import { createDeepLink } from "./utils/urlScheme";
 
 // Types for notification operations
 export interface NotificationResult {

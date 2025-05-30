@@ -1,11 +1,11 @@
 "use node";
 
-import { Buffer } from "buffer";
 import { ConvexError } from "convex/values";
 
-import { EventWithMetadata, EventWithMetadataSchema } from "@soonlist/cal";
+import type { EventWithMetadata } from "@soonlist/cal";
+import { EventWithMetadataSchema } from "@soonlist/cal";
 
-import type { ActionCtx, MutationCtx, QueryCtx } from "../_generated/server";
+import type { ActionCtx } from "../_generated/server";
 import { fetchAndProcessEvent } from "./aiHelpers";
 
 export interface GenerateTextParams {
@@ -80,6 +80,7 @@ export async function generateText({
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const result = (await response.json()) as AnthropicResponse;
 
     const textContent = result.content.find(
@@ -173,7 +174,7 @@ export async function processEventFromUrl(
     });
 
     // Validate that we have at least one event
-    if (!events || events.length === 0) {
+    if (events.length === 0) {
       throw new ConvexError("No events found in response");
     }
 
@@ -221,7 +222,7 @@ export async function processEventFromText(
     });
 
     // Validate that we have at least one event
-    if (!events || events.length === 0) {
+    if (events.length === 0) {
       throw new ConvexError("No events found in response");
     }
 
@@ -246,16 +247,27 @@ export function validateEvent(event: unknown) {
     throw new ConvexError("No event provided for validation");
   }
 
-  // Cast to EventWithMetadata for validation
-  const eventData = event as EventWithMetadata;
+  let validatedEvent: EventWithMetadata;
+  try {
+    validatedEvent = EventWithMetadataSchema.parse(event);
+  } catch (e) {
+    // If Zod parsing fails, it's invalid event data
+    if (e instanceof Error) {
+      // You could log e.message here if more detail is needed for debugging
+      console.error("Zod validation failed:", e.message);
+    }
+    throw new ConvexError(
+      "Invalid event data received: Failed basic structure validation",
+    );
+  }
 
   // 1. Check if event has proper date/time information
   if (
-    !eventData.startDate ||
-    eventData.startDate === "TBD" ||
-    eventData.startDate === "Unknown" ||
-    eventData.startDate === "" ||
-    eventData.startDate.toLowerCase().includes("error")
+    !validatedEvent.startDate ||
+    validatedEvent.startDate === "TBD" ||
+    validatedEvent.startDate === "Unknown" ||
+    validatedEvent.startDate === "" ||
+    validatedEvent.startDate.toLowerCase().includes("error")
   ) {
     throw new ConvexError(
       "Event validation failed: Event lacks valid date information",
@@ -263,8 +275,8 @@ export function validateEvent(event: unknown) {
   }
 
   // 2. Check for extremely generic event names that suggest hallucination
-  const name = eventData.name?.toLowerCase() || "";
-  const description = eventData.description?.toLowerCase() || "";
+  const name = validatedEvent.name.toLowerCase() || "";
+  const description = validatedEvent.description.toLowerCase() || "";
 
   // Invalid names (exact matches)
   const invalidNames = [
@@ -295,7 +307,7 @@ export function validateEvent(event: unknown) {
   const isInvalidName = invalidNames.some((invalid) => name.includes(invalid));
 
   const isInvalidPattern = invalidPatterns.some(
-    (invalid) => name.includes(invalid) || description.includes(invalid),
+    (invalid) => name.includes(invalid) || description.includes(invalid), // Use optional chaining for description
   );
 
   const isTooShort = name.trim().length < 3;
@@ -306,11 +318,6 @@ export function validateEvent(event: unknown) {
     );
   }
 
-  try {
-    // This will throw if validation fails
-    const validatedEvent = EventWithMetadataSchema.parse(event);
-    return validatedEvent;
-  } catch (error) {
-    throw new ConvexError("Invalid event data received");
-  }
+  // If all checks pass, return the Zod-validated event
+  return validatedEvent;
 }

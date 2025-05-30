@@ -391,7 +391,7 @@ export const push = internalAction({
     const { eventId, userId } = args;
 
     // Get the event to extract the name for notification
-    const event = await ctx.runQuery(internal.events.getEventByIdInternal, {
+    const event = await ctx.runQuery(internal.events.getEventById, {
       eventId,
     });
 
@@ -404,7 +404,7 @@ export const push = internalAction({
 
     // Get today's event count for this user
     const todayEvents = await ctx.runQuery(
-      internal.events.getTodayEventsCountInternal,
+      internal.events.getTodayEventsCount,
       { userId },
     );
     const eventCount = todayEvents.length;

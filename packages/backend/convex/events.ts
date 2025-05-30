@@ -23,6 +23,22 @@ const eventDataValidator = v.object({
   images: v.optional(v.array(v.string())),
 });
 
+const eventMetadataValidator = v.optional(
+  v.object({
+    accessibility: v.optional(v.array(v.string())),
+    accessibilityNotes: v.optional(v.string()),
+    ageRestriction: v.optional(v.string()),
+    category: v.optional(v.string()),
+    mentions: v.optional(v.array(v.string())),
+    performers: v.optional(v.array(v.string())),
+    priceMax: v.optional(v.number()),
+    priceMin: v.optional(v.number()),
+    priceType: v.optional(v.string()),
+    source: v.optional(v.string()),
+    type: v.optional(v.string()),
+  }),
+);
+
 const listValidator = v.object({
   value: v.string(),
 });
@@ -322,7 +338,7 @@ export const getStats = query({
 export const create = mutation({
   args: {
     event: eventDataValidator,
-    eventMetadata: v.optional(v.any()),
+    eventMetadata: eventMetadataValidator,
     comment: v.optional(v.string()),
     lists: v.array(listValidator),
     visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
@@ -363,7 +379,7 @@ export const update = mutation({
   args: {
     id: v.string(),
     event: eventDataValidator,
-    eventMetadata: v.optional(v.any()),
+    eventMetadata: eventMetadataValidator,
     comment: v.optional(v.string()),
     lists: v.array(listValidator),
     visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
@@ -518,12 +534,12 @@ export const insertEvent = internalMutation({
 /**
  * Internal mutation to create an event (called from workflow)
  */
-export const createEventInternal = internalMutation({
+export const createEvent = internalMutation({
   args: {
     userId: v.string(),
     username: v.string(),
-    eventData: v.any(),
-    eventMetadata: v.optional(v.any()),
+    eventData: eventDataValidator,
+    eventMetadata: eventMetadataValidator,
     comment: v.optional(v.string()),
     lists: v.array(v.object({ value: v.string() })),
     visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
@@ -546,12 +562,12 @@ export const createEventInternal = internalMutation({
 /**
  * Internal query to get an event by ID (called from workflow)
  */
-export const getEventByIdInternal = internalQuery({
+export const getEventById = internalQuery({
   args: { eventId: v.string() },
   returns: v.union(v.object({ name: v.string() }), v.null()),
   handler: async (ctx, args) => {
     const event = await Events.getEventById(ctx, args.eventId);
-    if (!event || !event.name) {
+    if (!event?.name) {
       return null;
     }
     return { name: event.name };
@@ -561,7 +577,7 @@ export const getEventByIdInternal = internalQuery({
 /**
  * Internal query to get today's events count for a user (called from workflow)
  */
-export const getTodayEventsCountInternal = internalQuery({
+export const getTodayEventsCount = internalQuery({
   args: { userId: v.string() },
   returns: v.array(v.object({ id: v.string() })),
   handler: async (ctx, args) => {

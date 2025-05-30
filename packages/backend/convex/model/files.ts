@@ -35,6 +35,7 @@ export async function uploadImageToCDNFromBase64(
       return null;
     }
 
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const parsedResponse = (await response.json()) as { fileUrl: string };
     return parsedResponse.fileUrl;
   } catch (error) {

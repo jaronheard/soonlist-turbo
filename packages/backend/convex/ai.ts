@@ -1,7 +1,7 @@
 import { WorkflowManager } from "@convex-dev/workflow";
 import { ConvexError, v } from "convex/values";
 
-import { EventWithMetadata } from "@soonlist/cal";
+import type { EventWithMetadata } from "@soonlist/cal";
 
 import { components, internal } from "./_generated/api";
 import { internalAction, mutation } from "./_generated/server";
@@ -257,7 +257,7 @@ export const validateFirstEvent = internalAction({
   },
   returns: v.any(), // TODO: Use proper event validator
   handler: (_, args) => {
-    if (!args.events || args.events.length === 0) {
+    if (args.events.length === 0) {
       throw new ConvexError("No events found in response");
     }
     return AI.validateEvent(args.events[0]);

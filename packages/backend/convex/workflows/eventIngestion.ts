@@ -1,5 +1,5 @@
 import { WorkflowManager } from "@convex-dev/workflow";
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
 
 import { components, internal } from "../_generated/api";
 import { query } from "../_generated/server";
@@ -53,10 +53,6 @@ export const eventFromImageBase64Workflow = workflow.define({
       { events: aiResult.events },
       { name: "validateEvent" },
     );
-
-    if (!firstEvent) {
-      throw new ConvexError("No events found in response");
-    }
 
     // ── step 3 write DB
     const eventId = await step.runMutation(
@@ -118,10 +114,6 @@ export const eventFromUrlWorkflow = workflow.define({
       { name: "validateEvent" },
     );
 
-    if (!firstEvent) {
-      throw new ConvexError("No events found in response");
-    }
-
     // ── step 3: Write to database
     const eventId = await step.runMutation(
       internal.events.insertEvent,
@@ -181,10 +173,6 @@ export const eventFromTextWorkflow = workflow.define({
       { events: aiResult.events },
       { name: "validateEvent" },
     );
-
-    if (!firstEvent) {
-      throw new ConvexError("No events found in response");
-    }
 
     // ── step 3: Write to database
     const eventId = await step.runMutation(
@@ -252,7 +240,8 @@ export const getWorkflowStatus = query({
             status: "completed" as const,
             currentStep: "Complete",
             progress: 100,
-            result: runResult.returnValue,
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+            result: runResult.returnValue as unknown,
             startedAt: status.workflow._creationTime,
           };
         } else if (runResult.kind === "failed") {
@@ -262,7 +251,8 @@ export const getWorkflowStatus = query({
             error: runResult.error,
             startedAt: status.workflow._creationTime,
           };
-        } else if (runResult.kind === "canceled") {
+        } else {
+          // cancelled case
           return {
             workflowId: args.workflowId,
             status: "canceled" as const,
@@ -277,10 +267,10 @@ export const getWorkflowStatus = query({
 
       if (inProgressSteps.length > 0) {
         const latestStep = inProgressSteps[inProgressSteps.length - 1];
-        currentStep = latestStep?.step.name || "Processing";
+        currentStep = latestStep.step.name || "Processing";
 
         // Calculate progress based on completed steps
-        const completedSteps = latestStep?.stepNumber || 0;
+        const completedSteps = latestStep.stepNumber || 0;
         progress = Math.min((completedSteps / totalSteps) * 100, 90); // Cap at 90% until complete
       } else {
         currentStep = "Starting";

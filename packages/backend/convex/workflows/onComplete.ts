@@ -1,4 +1,5 @@
 import { vWorkflowId } from "@convex-dev/workflow";
+import { vResultValidator } from "@convex-dev/workpool";
 import { v } from "convex/values";
 
 import { internal } from "../_generated/api";
@@ -7,7 +8,7 @@ import { internalMutation } from "../_generated/server";
 export const handleEventIngestionComplete = internalMutation({
   args: {
     workflowId: vWorkflowId,
-    result: v.any(), // TODO: Use proper result validator when available
+    result: vResultValidator,
     context: v.object({
       userId: v.string(),
       username: v.string(),
@@ -26,7 +27,7 @@ export const handleEventIngestionComplete = internalMutation({
         await ctx.scheduler.runAfter(0, internal.notifications.pushFailure, {
           userId: context.userId,
           userName: context.username,
-          failureReason: result.error || "Unknown error occurred",
+          failureReason: result.error,
         });
         console.log("Failure notification scheduled for user:", context.userId);
       } catch (notificationError) {
@@ -35,7 +36,8 @@ export const handleEventIngestionComplete = internalMutation({
           notificationError,
         );
       }
-    } else if (result.kind === "canceled") {
+    } else {
+      // Cancelled case
       console.log("Event ingestion was canceled");
       // Optionally send cancellation notification
     }

@@ -108,6 +108,7 @@ export async function sendNotification({
       body: JSON.stringify(payload),
     });
 
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const result = (await response.json()) as OneSignalResponse;
 
     if (!response.ok) {
@@ -189,6 +190,7 @@ export async function sendBatchNotifications({
       body: JSON.stringify(payload),
     });
 
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const result = (await response.json()) as OneSignalResponse;
 
     if (!response.ok) {
