@@ -71,7 +71,9 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"])
-    .index("by_user_and_startDateTime", ["userId", "startDateTime"]),
+    .index("by_user_and_startDateTime", ["userId", "startDateTime"])
+    .index("by_startDateTime", ["startDateTime"])
+    .index("by_visibility_and_startDateTime", ["visibility", "startDateTime"]),
 
   eventToLists: defineTable({
     eventId: v.string(),

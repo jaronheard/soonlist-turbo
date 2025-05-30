@@ -420,7 +420,7 @@ export const simulateUrlValidationFailure = mutation({
       ctx,
       internal.workflows.eventIngestion.eventFromUrlWorkflow,
       {
-        url: "boobs", // invalid URL, must start with http
+        url: "not-a-url", // invalid URL, must start with http
         timezone: "America/New_York",
         comment: "Test URL validation failure",
         lists: [],
@@ -1062,7 +1062,7 @@ export const testAllUrlWorkflowFailurePoints = mutation({
 /**
  * Verify notification delivery for failed URL workflows
  */
-export const verifyUrlWorkflowNotificationDelivery = mutation({
+export const simulateUrlWorkflowNotificationDelivery = mutation({
   args: {
     userId: v.string(),
     testWorkflowIds: v.array(v.string()),
@@ -1165,14 +1165,14 @@ export const getUrlWorkflowTestingInstructions = mutation({
         "For complete URL workflow failure testing with notification verification, run the following functions in sequence:",
       testingSteps: [
         "1. Run testAllUrlWorkflowFailurePoints to execute all critical failure tests",
-        "2. Run verifyUrlWorkflowNotificationDelivery with the returned workflow IDs",
+        "2. Run simulateUrlWorkflowNotificationDelivery with the returned workflow IDs",
         "3. Run comprehensiveUrlWorkflowValidation for each test case",
         "4. Review results and implement any necessary fixes",
         "5. Verify that URL-specific failure notifications are properly formatted and delivered",
       ],
       availableFunctions: [
         "testAllUrlWorkflowFailurePoints",
-        "verifyUrlWorkflowNotificationDelivery",
+        "simulateUrlWorkflowNotificationDelivery",
         "comprehensiveUrlWorkflowValidation",
         "simulateUrlFetchFailure",
         "simulateUrlContentParsingFailure",

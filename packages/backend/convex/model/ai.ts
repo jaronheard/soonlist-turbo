@@ -100,21 +100,6 @@ export async function generateText({
 }
 
 /**
- * Get day bounds for a given timezone
- */
-export function getDayBounds(_timezone: string) {
-  const now = new Date();
-  const startOfDay = new Date(now);
-  startOfDay.setHours(0, 0, 0, 0);
-
-  const endOfDay = new Date(now);
-  endOfDay.setHours(23, 59, 59, 999);
-
-  return {
-    start: startOfDay,
-    end: endOfDay,
-  };
-} /**
  * Generate structured event data from base64 image using AI
  * Extracted from eventFromImageBase64ThenCreate in ai router
  */

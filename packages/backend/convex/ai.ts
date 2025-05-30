@@ -5,6 +5,7 @@ import type { EventWithMetadata } from "@soonlist/cal";
 
 import { components, internal } from "./_generated/api";
 import { internalAction, mutation } from "./_generated/server";
+import { eventDataValidator } from "./events";
 import * as AI from "./model/ai";
 import { fetchAndProcessEvent, validateJinaResponse } from "./model/aiHelpers";
 
@@ -158,7 +159,7 @@ export const extractEventFromBase64Image = internalAction({
     timezone: v.string(),
   },
   returns: v.object({
-    events: v.array(v.any()), // TODO: Use proper event validator
+    events: v.array(eventDataValidator),
     response: v.string(),
   }),
   handler: async (
@@ -178,7 +179,7 @@ export const extractEventFromUrl = internalAction({
     timezone: v.string(),
   },
   returns: v.object({
-    events: v.array(v.any()), // TODO: Use proper event validator
+    events: v.array(eventDataValidator),
     response: v.string(),
   }),
   handler: async (
@@ -233,7 +234,7 @@ export const extractEventFromText = internalAction({
     timezone: v.string(),
   },
   returns: v.object({
-    events: v.array(v.any()), // TODO: Use proper event validator
+    events: v.array(eventDataValidator),
     response: v.string(),
   }),
   handler: async (
@@ -257,9 +258,9 @@ export const extractEventFromText = internalAction({
  */
 export const validateFirstEvent = internalAction({
   args: {
-    events: v.array(v.any()),
+    events: v.array(eventDataValidator),
   },
-  returns: v.any(), // TODO: Use proper event validator
+  returns: eventDataValidator,
   handler: (_, args) => {
     if (args.events.length === 0) {
       throw new ConvexError({

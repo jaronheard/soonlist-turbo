@@ -11,7 +11,7 @@ import * as Events from "./model/events";
 import { enrichEventsAndFilterNulls } from "./model/events";
 
 // Validators for complex types
-const eventDataValidator = v.object({
+export const eventDataValidator = v.object({
   name: v.string(),
   startDate: v.string(),
   endDate: v.string(),

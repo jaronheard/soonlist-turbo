@@ -5,7 +5,7 @@ import type { EventMetadataLoose } from "@soonlist/cal";
 
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { generatePublicId } from "../utils";
+import { generateNumericId, generatePublicId } from "../utils";
 
 // Type for event data (based on AddToCalendarButtonProps)
 interface EventData {
@@ -404,15 +404,17 @@ export async function getPossibleDuplicateEvents(
   const startDateTimeUpperBound = new Date(startDateTime);
   startDateTimeUpperBound.setHours(startDateTime.getHours() + 1);
 
-  const events = await ctx.db.query("events").collect();
+  // Use range query with index instead of fetching all events and filtering
+  const events = await ctx.db
+    .query("events")
+    .withIndex("by_startDateTime", (q) =>
+      q
+        .gte("startDateTime", startDateTimeLowerBound.toISOString())
+        .lte("startDateTime", startDateTimeUpperBound.toISOString()),
+    )
+    .collect();
 
-  return events.filter((event) => {
-    const eventStart = new Date(event.startDateTime);
-    return (
-      eventStart >= startDateTimeLowerBound &&
-      eventStart <= startDateTimeUpperBound
-    );
-  });
+  return events;
 }
 
 /**
@@ -490,15 +492,24 @@ export async function getNextEvents(
   excludeCurrent?: boolean,
 ) {
   const now = new Date();
-  const events = await ctx.db.query("events").collect();
 
-  const filteredEvents = events.filter((event) => {
+  // Use range query with index instead of fetching all events and filtering
+  const query = ctx.db.query("events").withIndex("by_startDateTime", (q) => {
     if (excludeCurrent) {
-      return new Date(event.endDateTime) >= now;
+      // Filter by endDateTime for excludeCurrent, but we need to fetch and filter
+      // since we don't have an endDateTime index
+      return q.gte("startDateTime", now.toISOString());
     } else {
-      return new Date(event.startDateTime) >= now;
+      return q.gte("startDateTime", now.toISOString());
     }
   });
+
+  const events = await query.collect();
+
+  // Additional filtering for excludeCurrent since we can't efficiently query endDateTime
+  const filteredEvents = excludeCurrent
+    ? events.filter((event) => new Date(event.endDateTime) >= now)
+    : events;
 
   const sortedEvents = filteredEvents.sort(
     (a, b) =>
@@ -518,17 +529,23 @@ export async function getDiscoverEvents(
   excludeCurrent?: boolean,
 ) {
   const now = new Date();
-  const events = await ctx.db.query("events").collect();
+
+  // Use compound index to filter by visibility and startDateTime efficiently
+  const query = ctx.db
+    .query("events")
+    .withIndex("by_visibility_and_startDateTime", (q) =>
+      q.eq("visibility", "public").gte("startDateTime", now.toISOString()),
+    );
+
+  const events = await query.collect();
 
   const filteredEvents = events.filter((event) => {
     if (event.userId === userId) return false;
-    if (event.visibility !== "public") return false;
 
     if (excludeCurrent) {
       return new Date(event.endDateTime) >= now;
-    } else {
-      return new Date(event.startDateTime) >= now;
     }
+    return true; // visibility and startDateTime filters already applied in query
   });
 
   const sortedEvents = filteredEvents.sort(
@@ -592,7 +609,7 @@ export async function createEvent(
       content: comment,
       userId,
       eventId,
-      id: Date.now(), // Simple numeric ID
+      id: generateNumericId(),
       oldId: null,
       created_at: new Date().toISOString(),
       updatedAt: null,
@@ -696,7 +713,7 @@ export async function updateEvent(
         content: comment,
         userId,
         eventId,
-        id: Date.now(),
+        id: generateNumericId(),
         oldId: null,
         created_at: new Date().toISOString(),
         updatedAt: null,

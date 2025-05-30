@@ -63,7 +63,7 @@ export const sendSingleNotification = action({
  * Send weekly notifications to all users
  */
 export const sendWeeklyNotifications = internalAction({
-  args: { cronSecret: v.string() },
+  args: {},
   returns: v.object({
     success: v.boolean(),
     totalProcessed: v.number(),
@@ -77,18 +77,13 @@ export const sendWeeklyNotifications = internalAction({
   }),
   handler: async (
     ctx,
-    args,
+    _args,
   ): Promise<{
     success: boolean;
     totalProcessed: number;
     successfulNotifications: number;
     errors: { userId: string; error: string }[];
   }> => {
-    // Check if the provided cronSecret matches the environment variable
-    if (args.cronSecret !== process.env.CRON_SECRET) {
-      throw new Error("Invalid CRON_SECRET");
-    }
-
     // Get all users
     const allUsers: {
       id: string;
@@ -121,6 +116,7 @@ export const sendWeeklyNotifications = internalAction({
             );
             return result;
           } catch (error) {
+            console.error("Error processing user weekly notification:", error);
             const errorResult = {
               success: false,
               error:
@@ -155,7 +151,7 @@ export const sendWeeklyNotifications = internalAction({
  * Send trial expiration reminders to users who started their trial 5 days ago
  */
 export const sendTrialExpirationReminders = internalAction({
-  args: { cronSecret: v.string() },
+  args: {},
   returns: v.object({
     success: v.boolean(),
     totalProcessed: v.number(),
@@ -168,18 +164,13 @@ export const sendTrialExpirationReminders = internalAction({
   }),
   handler: async (
     ctx,
-    args,
+    _args,
   ): Promise<{
     success: boolean;
     totalProcessed: number;
     successfulNotifications: number;
     errors: { error: string }[];
   }> => {
-    // Check if the provided cronSecret matches the environment variable
-    if (args.cronSecret !== process.env.CRON_SECRET) {
-      throw new Error("Invalid CRON_SECRET");
-    }
-
     // Get users who started their trial 5 days ago
     const trialUsers: {
       id: string;
@@ -244,7 +235,7 @@ export const processUserWeeklyNotification = internalAction({
     userId: v.string(),
   }),
   handler: async (ctx, args) => {
-    const notificationId = Notifications.generateNotificationId();
+    const notificationId = generateNotificationId();
 
     try {
       // Get notification content for the user
