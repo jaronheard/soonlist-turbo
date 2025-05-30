@@ -168,7 +168,10 @@ export const getDiscoverPaginated = query({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError("User must be logged in to discover events");
+      throw new ConvexError({
+        message: "User must be logged in to discover events",
+        data: { args },
+      });
     }
 
     const { beforeThisDateTime } = args;
@@ -254,7 +257,10 @@ export const getEventsForUserPaginated = query({
       .unique();
 
     if (!user) {
-      throw new ConvexError("User not found");
+      throw new ConvexError({
+        message: "User not found",
+        data: { args },
+      });
     }
 
     // Get followed event IDs efficiently
@@ -346,7 +352,10 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError("User must be logged in to create events");
+      throw new ConvexError({
+        message: "User must be logged in to create events",
+        data: { args },
+      });
     }
 
     // Get user info
@@ -356,7 +365,10 @@ export const create = mutation({
       .unique();
 
     if (!user) {
-      throw new ConvexError("User not found");
+      throw new ConvexError({
+        message: "User not found",
+        data: { userId: identity.subject },
+      });
     }
 
     return await Events.createEvent(
@@ -387,7 +399,10 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError("User must be logged in to update events");
+      throw new ConvexError({
+        message: "User must be logged in to update events",
+        data: { args },
+      });
     }
 
     // Check if user is admin (you may need to implement this based on your auth system)
@@ -415,7 +430,10 @@ export const deleteEvent = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError("User must be logged in to delete events");
+      throw new ConvexError({
+        message: "User must be logged in to delete events",
+        data: { args },
+      });
     }
 
     // Check if user is admin (you may need to implement this based on your auth system)
@@ -433,7 +451,10 @@ export const follow = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError("User must be logged in to follow events");
+      throw new ConvexError({
+        message: "User must be logged in to follow events",
+        data: { args },
+      });
     }
 
     return await Events.followEvent(ctx, identity.subject, args.id);
@@ -448,7 +469,10 @@ export const unfollow = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError("User must be logged in to unfollow events");
+      throw new ConvexError({
+        message: "User must be logged in to unfollow events",
+        data: { args },
+      });
     }
 
     return await Events.unfollowEvent(ctx, identity.subject, args.id);
@@ -466,9 +490,10 @@ export const toggleVisibility = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError(
-        "User must be logged in to change event visibility",
-      );
+      throw new ConvexError({
+        message: "User must be logged in to change event visibility",
+        data: { args },
+      });
     }
 
     return await Events.toggleEventVisibility(

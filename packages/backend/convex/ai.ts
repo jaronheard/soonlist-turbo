@@ -188,7 +188,10 @@ export const extractEventFromUrl = internalAction({
     try {
       // Check if the URL is a valid URL
       if (!args.url.startsWith("http")) {
-        throw new ConvexError("Invalid URL: URL must start with http");
+        throw new ConvexError({
+          message: "Invalid URL: URL must start with http",
+          data: { args },
+        });
       }
 
       // Let Jina API process the URL and get the actual response
@@ -216,9 +219,10 @@ export const extractEventFromUrl = internalAction({
 
       // Handle any unexpected errors from the Jina API or AI processing
       console.error("Unexpected error in extractEventFromUrl:", error);
-      throw new ConvexError(
-        `URL processing failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      throw new ConvexError({
+        message: `URL processing failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        data: { args },
+      });
     }
   },
 });
@@ -257,8 +261,11 @@ export const validateFirstEvent = internalAction({
   },
   returns: v.any(), // TODO: Use proper event validator
   handler: (_, args) => {
-    if (args.events.length === 0) {
-      throw new ConvexError("No events found in response");
+    if (!args.events || args.events.length === 0) {
+      throw new ConvexError({
+        message: "No events found in response",
+        data: { args },
+      });
     }
     return AI.validateEvent(args.events[0]);
   },
