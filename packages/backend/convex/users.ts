@@ -41,6 +41,25 @@ export const updateAdditionalInfo = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        message: "User must be logged in to update profile",
+        data: { args },
+      });
+    }
+
+    // Verify that the authenticated user's ID matches the userId being updated
+    if (identity.subject !== args.userId) {
+      throw new ConvexError({
+        message: "Unauthorized: You can only update your own profile",
+        data: {
+          authenticatedUserId: identity.subject,
+          requestedUserId: args.userId,
+        },
+      });
+    }
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", args.userId))
@@ -73,6 +92,25 @@ export const saveOnboardingData = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        message: "User must be logged in to save onboarding data",
+        data: { args },
+      });
+    }
+
+    // Verify that the authenticated user's ID matches the userId being updated
+    if (identity.subject !== args.userId) {
+      throw new ConvexError({
+        message: "Unauthorized: You can only update your own onboarding data",
+        data: {
+          authenticatedUserId: identity.subject,
+          requestedUserId: args.userId,
+        },
+      });
+    }
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", args.userId))
@@ -113,7 +151,7 @@ export const getOnboardingData = query({
       .unique();
 
     if (!user) {
-      throw new ConvexError("User not found");
+      return null;
     }
 
     return user.onboardingData;
@@ -127,6 +165,17 @@ export const deleteAccount = mutation({
   args: { userId: v.string() },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new ConvexError("User not authenticated");
+    }
+
+    // Verify that the authenticated user's ID matches the userId being deleted
+    if (identity.subject !== args.userId) {
+      throw new ConvexError("User not authorized to delete this account");
+    }
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", args.userId))
@@ -166,6 +215,25 @@ export const resetOnboarding = mutation({
   args: { userId: v.string() },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        message: "User must be logged in to reset onboarding",
+        data: { args },
+      });
+    }
+
+    // Verify that the authenticated user's ID matches the userId being updated
+    if (identity.subject !== args.userId) {
+      throw new ConvexError({
+        message: "Unauthorized: You can only reset your own onboarding",
+        data: {
+          authenticatedUserId: identity.subject,
+          requestedUserId: args.userId,
+        },
+      });
+    }
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", args.userId))
@@ -195,6 +263,25 @@ export const setOnboardingCompletedAt = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        message: "User must be logged in to set onboarding completion",
+        data: { args },
+      });
+    }
+
+    // Verify that the authenticated user's ID matches the userId being updated
+    if (identity.subject !== args.userId) {
+      throw new ConvexError({
+        message: "Unauthorized: You can only update your own onboarding status",
+        data: {
+          authenticatedUserId: identity.subject,
+          requestedUserId: args.userId,
+        },
+      });
+    }
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", args.userId))
