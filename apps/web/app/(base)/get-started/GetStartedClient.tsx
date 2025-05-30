@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useClerk, useUser } from "@clerk/nextjs";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import QRCode from "react-qr-code";
 
-import { api } from "@soonlist/backend/convex/_generated/api";
 import { Badge } from "@soonlist/ui/badge";
 import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
@@ -14,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 import { FullPageLoadingSpinner } from "~/components/FullPageLoadingSpinner";
 import { HelpButton } from "~/components/HelpButton";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
+import { api } from "~/trpc/react";
 import { OnboardingTabs } from "./OnboardingTabs";
 
 const HOST =
@@ -96,15 +95,16 @@ export function TestFlightInstall({ title }: TestFlightInstallProps) {
 }
 
 export function GetStartedClient() {
-  const { isLoading } = useConvexAuth();
+  const { isLoaded } = useAuth();
   const { user: activeUser } = useUser();
   const { openUserProfile } = useClerk();
 
-  const user = useQuery(api.users.getByUsername, {
-    userName: activeUser?.username || "",
-  });
+  const { data: user, isLoading } = api.user.getByUsername.useQuery(
+    { userName: activeUser?.username || "" },
+    { enabled: !!activeUser?.username },
+  );
 
-  if (isLoading || !user) {
+  if (!isLoaded || isLoading) {
     return <FullPageLoadingSpinner />;
   }
 
