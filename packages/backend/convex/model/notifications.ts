@@ -73,9 +73,8 @@ export async function getUpcomingEventsForUser(ctx: QueryCtx, userId: string) {
 
   // Combine and deduplicate events
   const allEvents = [...userEvents, ...validFollowedEvents];
-  const uniqueEvents = allEvents.filter(
-    (event, index, self) => index === self.findIndex((e) => e.id === event.id),
-  );
+  const eventMap = new Map(allEvents.map((event) => [event.id, event]));
+  const uniqueEvents = Array.from(eventMap.values());
 
   return uniqueEvents;
 }
