@@ -111,6 +111,7 @@ catalog:
 
   # React Native Additional packages
   "@react-native-async-storage/async-storage": 2.1.2
+  "@react-native-community/netinfo": ^11.1.0
   "@react-native-community/datetimepicker": ^8.3.0
   "react-native-appsflyer": ^6.15.3
   "react-native-ios-context-menu": ^3.1.0
