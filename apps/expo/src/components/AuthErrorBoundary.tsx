@@ -26,7 +26,6 @@ export class AuthErrorBoundary extends Component<
   AuthErrorBoundaryState
 > {
   static contextType = AuthErrCtx;
-  declare context: React.ContextType<typeof AuthErrCtx>;
 
   constructor(props: { children: ReactNode }) {
     super(props);
@@ -39,7 +38,7 @@ export class AuthErrorBoundary extends Component<
 
   componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
     logError("UI error", { error, errorInfo });
-    void this.context(); // delegate to shared handler
+    void (this.context as Handler)(); // delegate to shared handler
   }
 
   render() {
