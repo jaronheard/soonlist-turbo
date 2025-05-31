@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { SignedIn, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
+import { Authenticated } from "convex/react";
 import { Pencil } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
@@ -25,24 +26,24 @@ export function EditButton(props: EditButtonProps) {
 
   if (props.type === "icon") {
     return (
-      <SignedIn>
+      <Authenticated>
         <Button size={"icon"} asChild variant={"outline"}>
           <Link href={`/event/${props.id}/edit`}>
             <Pencil className="size-6" />
           </Link>
         </Button>
-      </SignedIn>
+      </Authenticated>
     );
   }
 
   return (
-    <SignedIn>
+    <Authenticated>
       <DropdownMenuItem asChild>
         <Link href={`/event/${props.id}/edit`}>
           <Pencil className="mr-2 size-4" />
           Edit
         </Link>
       </DropdownMenuItem>
-    </SignedIn>
+    </Authenticated>
   );
 }
