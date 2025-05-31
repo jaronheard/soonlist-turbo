@@ -176,6 +176,10 @@ export const useAppStore = create<AppState>()(
       userTimezone: getUserTimeZone(),
       hasShownTimezoneAlert: false,
 
+      // Initialize stable timestamp state
+      stableTimestamp: createStableTimestamp(),
+      lastTimestampUpdate: Date.now(),
+
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
       setIsCalendarModalVisible: (isVisible) =>
@@ -347,6 +351,9 @@ export const useAppStore = create<AppState>()(
       onboardingData: {},
       currentOnboardingStep: null,
 
+      // Workflow state
+      workflowIds: [],
+
       // Onboarding actions
       setHasCompletedOnboarding: (status) =>
         set({ hasCompletedOnboarding: status }),
@@ -400,41 +407,40 @@ export const useAppStore = create<AppState>()(
           workflowIds: [],
         }),
 
-        // Stable timestamp methods
-        refreshStableTimestamp: () =>
+      // Stable timestamp methods
+      refreshStableTimestamp: () =>
+        set({
+          stableTimestamp: createStableTimestamp(),
+          lastTimestampUpdate: Date.now(),
+        }),
+      getStableTimestamp: (): string => {
+        const state = get();
+        const now = Date.now();
+        const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+        // Auto-update if 15 minutes have passed
+        if (now - state.lastTimestampUpdate > fifteenMinutes) {
+          const newTimestamp = createStableTimestamp();
           set({
-            stableTimestamp: createStableTimestamp(),
-            lastTimestampUpdate: Date.now(),
-          }),
-        getStableTimestamp: (): string => {
-          const state = get();
-          const now = Date.now();
-          const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
+            stableTimestamp: newTimestamp,
+            lastTimestampUpdate: now,
+          });
+          return newTimestamp;
+        }
 
-          // Auto-update if 15 minutes have passed
-          if (now - state.lastTimestampUpdate > fifteenMinutes) {
-            const newTimestamp = createStableTimestamp();
-            set({
-              stableTimestamp: newTimestamp,
-              lastTimestampUpdate: now,
-            });
-            return newTimestamp;
-          }
+        return state.stableTimestamp;
+      },
 
-          return state.stableTimestamp;
-        },
-
-        // Workflow state methods
-        addWorkflowId: (workflowId) =>
-          set((state) => ({
-            workflowIds: [...state.workflowIds, workflowId],
-          })),
-        removeWorkflowId: (workflowId) =>
-          set((state) => ({
-            workflowIds: state.workflowIds.filter((id) => id !== workflowId),
-          })),
-        clearAllWorkflowIds: () => set({ workflowIds: [] }),
-      }),
+      // Workflow state methods
+      addWorkflowId: (workflowId) =>
+        set((state) => ({
+          workflowIds: [...state.workflowIds, workflowId],
+        })),
+      removeWorkflowId: (workflowId) =>
+        set((state) => ({
+          workflowIds: state.workflowIds.filter((id) => id !== workflowId),
+        })),
+      clearAllWorkflowIds: () => set({ workflowIds: [] }),
     }),
     {
       name: "app-storage",
@@ -452,11 +458,11 @@ export const useHasMediaPermission = () =>
 export const useStableTimestamp = () => {
   const [stableTimestamp, setStableTimestamp] = useState<string>("");
   const getStableTimestamp = useAppStore((state) => state.getStableTimestamp);
-  
+
   useEffect(() => {
     setStableTimestamp(getStableTimestamp());
   }, [getStableTimestamp]);
-  
+
   return stableTimestamp;
 };
 export const useRefreshStableTimestamp = () =>

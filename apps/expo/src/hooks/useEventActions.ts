@@ -36,11 +36,11 @@ export function useEventActions({
   const { user } = useUser();
   const isOwner = demoMode || (event && user?.id === event.user?.id);
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
-  
+
   // Get the stable timestamp in an effect to avoid setState during render
   const [stableTimestamp, setStableTimestamp] = useState<string>("");
   const getStableTimestamp = useAppStore((state) => state.getStableTimestamp);
-  
+
   useEffect(() => {
     setStableTimestamp(getStableTimestamp());
   }, [getStableTimestamp]);
