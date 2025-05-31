@@ -12,7 +12,7 @@ import { toast } from "sonner-native";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { useAppStore } from "~/store";
+import { useStableTimestamp } from "~/store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
@@ -35,7 +35,7 @@ export function useEventActions({
   const { user } = useUser();
   const isOwner = demoMode || (event && user?.id === event.user?.id);
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
-  const stableTimestamp = useAppStore((state) => state.getStableTimestamp());
+  const stableTimestamp = useStableTimestamp();
 
   const deleteEventMutation = useMutation(api.events.deleteEvent);
   const unfollowEventMutation = useMutation(api.events.unfollow);
