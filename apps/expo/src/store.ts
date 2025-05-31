@@ -1,3 +1,4 @@
+import React from "react";
 import type { FunctionReturnType } from "convex/server";
 import type * as Calendar from "expo-calendar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -409,19 +410,6 @@ export const useAppStore = create<AppState>()(
         }),
       getStableTimestamp: (): string => {
         const state = get();
-        const now = Date.now();
-        const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
-
-        // Auto-update if 15 minutes have passed
-        if (now - state.lastTimestampUpdate > fifteenMinutes) {
-          const newTimestamp = createStableTimestamp();
-          set({
-            stableTimestamp: newTimestamp,
-            lastTimestampUpdate: now,
-          });
-          return newTimestamp;
-        }
-
         return state.stableTimestamp;
       },
 
@@ -451,8 +439,28 @@ export const useHasMediaPermission = () =>
 export const useUserTimezone = () => useAppStore((state) => state.userTimezone);
 
 // Stable timestamp selectors
-export const useStableTimestamp = () =>
-  useAppStore((state) => state.getStableTimestamp());
+export const useStableTimestamp = () => {
+  const {
+    stableTimestamp,
+    lastTimestampUpdate,
+    refreshStableTimestamp,
+  } = useAppStore((state) => ({
+    stableTimestamp: state.stableTimestamp,
+    lastTimestampUpdate: state.lastTimestampUpdate,
+    refreshStableTimestamp: state.refreshStableTimestamp,
+  }));
+
+  React.useEffect(() => {
+    const now = Date.now();
+    const fifteenMinutes = 15 * 60 * 1000; // 15 minutes
+
+    if (now - lastTimestampUpdate > fifteenMinutes) {
+      refreshStableTimestamp();
+    }
+  }, [lastTimestampUpdate, refreshStableTimestamp]);
+
+  return stableTimestamp;
+};
 export const useRefreshStableTimestamp = () =>
   useAppStore((state) => state.refreshStableTimestamp);
 
