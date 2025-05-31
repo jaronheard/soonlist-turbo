@@ -1,13 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { SignedIn } from "@clerk/nextjs";
+import React from "react";
+import { Authenticated } from "convex/react";
 import { Heart, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@soonlist/ui/button";
 
-import { api } from "~/trpc/react";
+import { api } from "@soonlist/backend/convex/_generated/api";
+import { useMutation } from "convex/react";
 import { DropdownMenuItem } from "./DropdownMenu";
 
 export function FollowEventDropdownButton({
@@ -18,36 +20,31 @@ export function FollowEventDropdownButton({
   following?: boolean;
 }) {
   const router = useRouter();
-  const follow = api.event.follow.useMutation({
-    onError: () => {
-      toast.error("Event not saved. Please try again.");
-    },
-    onSuccess: () => {
-      toast.success("Event saved.");
+  const follow = useMutation(api.events.follow);
+  const unfollow = useMutation(api.events.unfollow);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  async function handleToggle() {
+    setIsLoading(true);
+    try {
+      if (following) {
+        await unfollow({ id: eventId });
+        toast.success("Event unsaved.");
+      } else {
+        await follow({ id: eventId });
+        toast.success("Event saved.");
+      }
       router.refresh();
-    },
-  });
-  const unfollow = api.event.unfollow.useMutation({
-    onError: () => {
-      toast.error("Event not unsaved. Please try again.");
-    },
-    onSuccess: () => {
-      toast.success("Event unsaved.");
-      router.refresh();
-    },
-  });
-  const isLoading = follow.isPending || unfollow.isPending;
+    } catch {
+      toast.error(`Event not ${following ? "unsaved" : "saved"}. Please try again.`);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
-    <SignedIn>
-      <DropdownMenuItem
-        onSelect={() =>
-          following
-            ? unfollow.mutate({ id: eventId })
-            : follow.mutate({ id: eventId })
-        }
-        disabled={isLoading}
-      >
+    <Authenticated>
+      <DropdownMenuItem onSelect={() => void handleToggle()} disabled={isLoading}>
         {isLoading && (
           <>
             <Loader2 className="mr-2 size-4 animate-spin" />
@@ -67,7 +64,7 @@ export function FollowEventDropdownButton({
           </>
         )}
       </DropdownMenuItem>
-    </SignedIn>
+    </Authenticated>
   );
 }
 
@@ -81,35 +78,33 @@ export function FollowEventButton({
   type?: "button" | "icon";
 }) {
   const router = useRouter();
-  const follow = api.event.follow.useMutation({
-    onError: () => {
-      toast.error("Event not saved. Please try again.");
-    },
-    onSuccess: () => {
-      toast.success("Event saved.");
+  const follow = useMutation(api.events.follow);
+  const unfollow = useMutation(api.events.unfollow);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  async function handleToggle() {
+    setIsLoading(true);
+    try {
+      if (following) {
+        await unfollow({ id: eventId });
+        toast.success("Event unsaved.");
+      } else {
+        await follow({ id: eventId });
+        toast.success("Event saved.");
+      }
       router.refresh();
-    },
-  });
-  const unfollow = api.event.unfollow.useMutation({
-    onError: () => {
-      toast.error("Event not unsaved. Please try again.");
-    },
-    onSuccess: () => {
-      toast.success("Event unsaved.");
-      router.refresh();
-    },
-  });
-  const isLoading = follow.isPending || unfollow.isPending;
+    } catch {
+      toast.error(`Event not ${following ? "unsaved" : "saved"}. Please try again.`);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   if (type === "icon") {
     return (
-      <SignedIn>
+      <Authenticated>
         <Button
-          onClick={() =>
-            following
-              ? unfollow.mutate({ id: eventId })
-              : follow.mutate({ id: eventId })
-          }
+          onClick={() => void handleToggle()}
           disabled={isLoading}
           variant="ghost"
           size="icon"
@@ -120,18 +115,14 @@ export function FollowEventButton({
             <Heart className={`size-4 ${following ? "fill-current" : ""}`} />
           )}
         </Button>
-      </SignedIn>
+      </Authenticated>
     );
   }
 
   return (
-    <SignedIn>
+    <Authenticated>
       <Button
-        onClick={() =>
-          following
-            ? unfollow.mutate({ id: eventId })
-            : follow.mutate({ id: eventId })
-        }
+        onClick={() => void handleToggle()}
         disabled={isLoading}
         className="bg-interactive-3 text-interactive-1 hover:bg-interactive-3/90"
       >
@@ -150,6 +141,6 @@ export function FollowEventButton({
           </>
         )}
       </Button>
-    </SignedIn>
+    </Authenticated>
   );
 }

@@ -1,10 +1,11 @@
 import { Globe2 } from "lucide-react";
 
 import { EventList } from "~/components/EventList";
-import { api } from "~/trpc/server";
+import { preloadQuery } from "convex/nextjs";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 export default async function Page() {
-  const events = await api.event.getNext({ limit: 50 });
+  const events = await preloadQuery(api.events.getNext, { limit: 50 });
 
   const pastEvents = events.filter((item) => item.endDateTime < new Date());
 
