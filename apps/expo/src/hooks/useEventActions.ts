@@ -8,6 +8,7 @@ import {
   useMutation,
 } from "convex/react";
 import { toast } from "sonner-native";
+import { useEffect, useState } from "react";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -35,7 +36,14 @@ export function useEventActions({
   const { user } = useUser();
   const isOwner = demoMode || (event && user?.id === event.user?.id);
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
-  const stableTimestamp = useAppStore((state) => state.getStableTimestamp());
+  
+  // Get the stable timestamp in an effect to avoid setState during render
+  const [stableTimestamp, setStableTimestamp] = useState<string>("");
+  const getStableTimestamp = useAppStore((state) => state.getStableTimestamp);
+  
+  useEffect(() => {
+    setStableTimestamp(getStableTimestamp());
+  }, [getStableTimestamp]);
 
   const deleteEventMutation = useMutation(api.events.deleteEvent);
   const unfollowEventMutation = useMutation(api.events.unfollow);

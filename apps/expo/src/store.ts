@@ -3,6 +3,7 @@ import type * as Calendar from "expo-calendar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { useEffect, useState } from "react";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -399,43 +400,41 @@ export const useAppStore = create<AppState>()(
           workflowIds: [],
         }),
 
-      // Stable timestamp for query filtering
-      stableTimestamp: createStableTimestamp(),
-      lastTimestampUpdate: Date.now(),
-      refreshStableTimestamp: () =>
-        set({
-          stableTimestamp: createStableTimestamp(),
-          lastTimestampUpdate: Date.now(),
-        }),
-      getStableTimestamp: (): string => {
-        const state = get();
-        const now = Date.now();
-        const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
-
-        // Auto-update if 15 minutes have passed
-        if (now - state.lastTimestampUpdate > fifteenMinutes) {
-          const newTimestamp = createStableTimestamp();
+        // Stable timestamp methods
+        refreshStableTimestamp: () =>
           set({
-            stableTimestamp: newTimestamp,
-            lastTimestampUpdate: now,
-          });
-          return newTimestamp;
-        }
+            stableTimestamp: createStableTimestamp(),
+            lastTimestampUpdate: Date.now(),
+          }),
+        getStableTimestamp: (): string => {
+          const state = get();
+          const now = Date.now();
+          const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
 
-        return state.stableTimestamp;
-      },
+          // Auto-update if 15 minutes have passed
+          if (now - state.lastTimestampUpdate > fifteenMinutes) {
+            const newTimestamp = createStableTimestamp();
+            set({
+              stableTimestamp: newTimestamp,
+              lastTimestampUpdate: now,
+            });
+            return newTimestamp;
+          }
 
-      // Workflow state
-      workflowIds: [],
-      addWorkflowId: (workflowId) =>
-        set((state) => ({
-          workflowIds: [...state.workflowIds, workflowId],
-        })),
-      removeWorkflowId: (workflowId) =>
-        set((state) => ({
-          workflowIds: state.workflowIds.filter((id) => id !== workflowId),
-        })),
-      clearAllWorkflowIds: () => set({ workflowIds: [] }),
+          return state.stableTimestamp;
+        },
+
+        // Workflow state methods
+        addWorkflowId: (workflowId) =>
+          set((state) => ({
+            workflowIds: [...state.workflowIds, workflowId],
+          })),
+        removeWorkflowId: (workflowId) =>
+          set((state) => ({
+            workflowIds: state.workflowIds.filter((id) => id !== workflowId),
+          })),
+        clearAllWorkflowIds: () => set({ workflowIds: [] }),
+      }),
     }),
     {
       name: "app-storage",
@@ -448,11 +447,18 @@ export const useAppStore = create<AppState>()(
 export const useRecentPhotos = () => useAppStore((state) => state.recentPhotos);
 export const useHasMediaPermission = () =>
   useAppStore((state) => state.hasMediaPermission);
-export const useUserTimezone = () => useAppStore((state) => state.userTimezone);
 
 // Stable timestamp selectors
-export const useStableTimestamp = () =>
-  useAppStore((state) => state.getStableTimestamp());
+export const useStableTimestamp = () => {
+  const [stableTimestamp, setStableTimestamp] = useState<string>("");
+  const getStableTimestamp = useAppStore((state) => state.getStableTimestamp);
+  
+  useEffect(() => {
+    setStableTimestamp(getStableTimestamp());
+  }, [getStableTimestamp]);
+  
+  return stableTimestamp;
+};
 export const useRefreshStableTimestamp = () =>
   useAppStore((state) => state.refreshStableTimestamp);
 
@@ -482,3 +488,5 @@ export const useRefreshTimestampOnFocus = () => {
 
   return refreshTimestamp;
 };
+
+export const useUserTimezone = () => useAppStore((state) => state.userTimezone);
