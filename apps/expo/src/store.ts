@@ -1,6 +1,6 @@
-import React from "react";
 import type { FunctionReturnType } from "convex/server";
 import type * as Calendar from "expo-calendar";
+import React from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -440,15 +440,12 @@ export const useUserTimezone = () => useAppStore((state) => state.userTimezone);
 
 // Stable timestamp selectors
 export const useStableTimestamp = () => {
-  const {
-    stableTimestamp,
-    lastTimestampUpdate,
-    refreshStableTimestamp,
-  } = useAppStore((state) => ({
-    stableTimestamp: state.stableTimestamp,
-    lastTimestampUpdate: state.lastTimestampUpdate,
-    refreshStableTimestamp: state.refreshStableTimestamp,
-  }));
+  const { stableTimestamp, lastTimestampUpdate, refreshStableTimestamp } =
+    useAppStore((state) => ({
+      stableTimestamp: state.stableTimestamp,
+      lastTimestampUpdate: state.lastTimestampUpdate,
+      refreshStableTimestamp: state.refreshStableTimestamp,
+    }));
 
   React.useEffect(() => {
     const now = Date.now();
