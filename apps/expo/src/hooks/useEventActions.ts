@@ -1,7 +1,7 @@
 import type { FunctionReturnType } from "convex/server";
 import { Linking, Share } from "react-native";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { router, useSegments } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
   optimisticallyUpdateValueInPaginatedQuery,
@@ -17,6 +17,7 @@ import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { useCalendar } from "./useCalendar";
+import { trackEvent } from "~/utils/analytics";
 
 interface UseEventActionsProps {
   event: FunctionReturnType<typeof api.events.get> | undefined;
@@ -101,9 +102,21 @@ export function useEventActions({
     return false;
   };
 
+  // Retrieve the current navigation segments so we can attribute events to the correct screen
+  const segments = useSegments();
+  const screen = segments.join("/");
+
   const handleShare = async () => {
     if (!event || checkDemoMode()) return;
     triggerHaptic();
+    trackEvent({
+      name: "event_share",
+      properties: {
+        component: "useEventActions",
+        screen,
+        eventId: event.id,
+      },
+    });
     try {
       await Share.share({
         url: `${Config.apiBaseUrl}/event/${event.id}`,
@@ -116,6 +129,14 @@ export function useEventActions({
   const handleDirections = () => {
     if (!event || checkDemoMode()) return;
     triggerHaptic();
+    trackEvent({
+      name: "event_get_directions",
+      properties: {
+        component: "useEventActions",
+        screen,
+        eventId: event.id,
+      },
+    });
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     if (eventData.location) {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
@@ -133,6 +154,14 @@ export function useEventActions({
   const handleAddToCal = async () => {
     if (!event || checkDemoMode()) return;
     triggerHaptic();
+    trackEvent({
+      name: "event_add_to_calendar",
+      properties: {
+        component: "useEventActions",
+        screen,
+        eventId: event.id,
+      },
+    });
     await addToCalendar(event);
   };
 
@@ -141,6 +170,15 @@ export function useEventActions({
   ) => {
     if (!event || checkDemoMode() || !isOwner) return;
     triggerHaptic();
+    trackEvent({
+      name: "event_toggle_visibility",
+      properties: {
+        component: "useEventActions",
+        screen,
+        eventId: event.id,
+        newVisibility,
+      },
+    });
     try {
       await toggleVisibilityMutation({
         id: event.id,
@@ -156,12 +194,28 @@ export function useEventActions({
   const handleEdit = () => {
     if (!event || checkDemoMode() || !isOwner) return;
     triggerHaptic();
+    trackEvent({
+      name: "event_edit",
+      properties: {
+        component: "useEventActions",
+        screen,
+        eventId: event.id,
+      },
+    });
     router.push(`/event/${event.id}/edit`);
   };
 
   const handleDelete = async () => {
     if (!event || checkDemoMode() || !isOwner) return;
     triggerHaptic();
+    trackEvent({
+      name: "event_delete_attempt",
+      properties: {
+        component: "useEventActions",
+        screen,
+        eventId: event.id,
+      },
+    });
     const loadingToastId = toast.loading("Deleting event...");
     try {
       if (onDelete) {
@@ -169,45 +223,120 @@ export function useEventActions({
       } else {
         await deleteEventMutation({ id: event.id });
       }
+      trackEvent({
+        name: "event_delete_success",
+        properties: {
+          component: "useEventActions",
+          screen,
+          eventId: event.id,
+        },
+      });
       toast.dismiss(loadingToastId);
       toast.success("Event deleted successfully");
     } catch (error) {
       toast.dismiss(loadingToastId);
       toast.error(`Failed to delete event: ${(error as Error).message}`);
+      trackEvent({
+        name: "event_delete_error",
+        properties: {
+          component: "useEventActions",
+          screen,
+          eventId: event.id,
+          error: (error as Error).message,
+        },
+      });
     }
   };
 
   const handleFollow = async () => {
     if (!event || checkDemoMode() || isOwner || isSaved) return;
     triggerHaptic();
+    trackEvent({
+      name: "event_follow_attempt",
+      properties: {
+        component: "useEventActions",
+        screen,
+        eventId: event.id,
+      },
+    });
     const loadingToastId = toast.loading("Following event...");
     try {
       await followEventMutation({ id: event.id });
       toast.dismiss(loadingToastId);
       toast.success("Event followed");
+      trackEvent({
+        name: "event_follow_success",
+        properties: {
+          component: "useEventActions",
+          screen,
+          eventId: event.id,
+        },
+      });
     } catch (error) {
       toast.dismiss(loadingToastId);
       toast.error(`Failed to follow event: ${(error as Error).message}`);
+      trackEvent({
+        name: "event_follow_error",
+        properties: {
+          component: "useEventActions",
+          screen,
+          eventId: event.id,
+          error: (error as Error).message,
+        },
+      });
     }
   };
 
   const handleUnfollow = async () => {
     if (!event || checkDemoMode() || isOwner || !isSaved) return;
     triggerHaptic();
+    trackEvent({
+      name: "event_unfollow_attempt",
+      properties: {
+        component: "useEventActions",
+        screen,
+        eventId: event.id,
+      },
+    });
     const loadingToastId = toast.loading("Unfollowing event...");
     try {
       await unfollowEventMutation({ id: event.id });
       toast.dismiss(loadingToastId);
       toast.success("Event unfollowed");
+      trackEvent({
+        name: "event_unfollow_success",
+        properties: {
+          component: "useEventActions",
+          screen,
+          eventId: event.id,
+        },
+      });
     } catch (error) {
       toast.dismiss(loadingToastId);
       toast.error(`Failed to unfollow event: ${(error as Error).message}`);
+      trackEvent({
+        name: "event_unfollow_error",
+        properties: {
+          component: "useEventActions",
+          screen,
+          eventId: event.id,
+          error: (error as Error).message,
+        },
+      });
     }
   };
 
   const handleShowQR = () => {
     if (!event || checkDemoMode()) return;
     triggerHaptic();
+    trackEvent({
+      name: "event_show_qr",
+      properties: {
+        component: "useEventActions",
+        screen,
+        eventId: event.id,
+      },
+    });
     router.push(`/event/${event.id}/qr`);
   };
 
@@ -234,6 +363,10 @@ export function useEventSaveActions(
   const unfollowEventMutation = useMutation(api.events.unfollow);
   const followEventMutation = useMutation(api.events.follow);
 
+  // Retrieve navigation segments for this hook as well (used below in helper hook)
+  const segmentsSave = useSegments();
+  const screenSave = segmentsSave.join("/");
+
   const triggerHaptic = () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
@@ -249,28 +382,78 @@ export function useEventSaveActions(
   const handleFollow = async () => {
     if (checkDemoMode() || isSaved) return;
     triggerHaptic();
+    trackEvent({
+      name: "event_follow_attempt",
+      properties: {
+        component: "useEventSaveActions",
+        screen: screenSave,
+        eventId: eventId,
+      },
+    });
     const loadingToastId = toast.loading("Following event...");
     try {
       await followEventMutation({ id: eventId });
       toast.dismiss(loadingToastId);
       toast.success("Event followed");
+      trackEvent({
+        name: "event_follow_success",
+        properties: {
+          component: "useEventSaveActions",
+          screen: screenSave,
+          eventId: eventId,
+        },
+      });
     } catch (error) {
       toast.dismiss(loadingToastId);
       toast.error(`Failed to follow event: ${(error as Error).message}`);
+      trackEvent({
+        name: "event_follow_error",
+        properties: {
+          component: "useEventSaveActions",
+          screen: screenSave,
+          eventId: eventId,
+          error: (error as Error).message,
+        },
+      });
     }
   };
 
   const handleUnfollow = async () => {
     if (checkDemoMode() || !isSaved) return;
     triggerHaptic();
+    trackEvent({
+      name: "event_unfollow_attempt",
+      properties: {
+        component: "useEventSaveActions",
+        screen: screenSave,
+        eventId: eventId,
+      },
+    });
     const loadingToastId = toast.loading("Unfollowing event...");
     try {
       await unfollowEventMutation({ id: eventId });
       toast.dismiss(loadingToastId);
       toast.success("Event unfollowed");
+      trackEvent({
+        name: "event_unfollow_success",
+        properties: {
+          component: "useEventSaveActions",
+          screen: screenSave,
+          eventId: eventId,
+        },
+      });
     } catch (error) {
       toast.dismiss(loadingToastId);
       toast.error(`Failed to unfollow event: ${(error as Error).message}`);
+      trackEvent({
+        name: "event_unfollow_error",
+        properties: {
+          component: "useEventSaveActions",
+          screen: screenSave,
+          eventId: eventId,
+          error: (error as Error).message,
+        },
+      });
     }
   };
 
