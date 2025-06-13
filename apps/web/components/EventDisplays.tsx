@@ -28,7 +28,6 @@ import type {
   AddToCalendarButtonPropsRestricted,
   ATCBActionEventConfig,
 } from "@soonlist/cal/types";
-import type { Comment, EventFollow, List, User } from "@soonlist/db/types";
 import {
   eventTimesAreDefined,
   formatCompactTimeRange,
@@ -41,6 +40,12 @@ import { Label } from "@soonlist/ui/label";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
+import type {
+  MinimalComment,
+  MinimalEventFollow,
+  MinimalList,
+  MinimalUserInfo,
+} from "~/types/minimal";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { feedback } from "~/lib/intercom/intercom";
 import { cn } from "~/lib/utils";
@@ -53,12 +58,13 @@ import { buildDefaultUrl } from "./ImageUpload";
 import { ShareButton } from "./ShareButton";
 import { UserProfileFlair } from "./UserProfileFlair";
 
+// Minimal prop types for display-only components
 interface EventListItemProps {
-  list?: List; // this is the list that this is a part of
+  list?: MinimalList;
   variant?: "card" | "minimal";
-  user?: User;
-  eventFollows: EventFollow[];
-  comments: Comment[];
+  user?: MinimalUserInfo;
+  eventFollows: MinimalEventFollow[];
+  comments: MinimalComment[];
   id: string;
   createdAt?: Date;
   event: AddToCalendarCardProps;
@@ -71,13 +77,13 @@ interface EventListItemProps {
   }[];
   filePath?: string;
   happeningNow?: boolean;
-  lists?: List[]; // this is all lists that this event is a part of
+  lists?: MinimalList[];
 }
 
 interface EventPageProps {
-  user?: User;
-  eventFollows: EventFollow[];
-  comments: Comment[];
+  user?: MinimalUserInfo;
+  eventFollows: MinimalEventFollow[];
+  comments: MinimalComment[];
   id: string;
   createdAt?: Date;
   event: AddToCalendarButtonPropsRestricted;
@@ -90,9 +96,87 @@ interface EventPageProps {
     event: EventWithUser;
     similarityDetails: SimilarityDetails;
   }[];
-  lists?: List[];
+  lists?: MinimalList[];
   children?: React.ReactNode;
   eventMetadata?: EventMetadataDisplay;
+}
+
+// Component prop interfaces - smallest to largest
+interface HappeningSoonBadgeProps {
+  startDateInfo: DateInfo;
+}
+
+interface EventDateDisplaySimpleProps {
+  startDate?: string;
+  startTime?: string;
+  endDate?: string;
+  endTime?: string;
+  timezone: string;
+}
+
+interface EventAccessibilityProps {
+  metadata?: EventMetadataDisplay;
+}
+
+interface EventMetadataDisplayProps {
+  metadata?: EventMetadataDisplay;
+}
+
+interface UserInfoMiniProps {
+  username: string;
+  userImage: string;
+}
+
+interface DateAndTimeDisplayProps {
+  happeningNow?: boolean;
+  endDateInfo: DateInfo;
+  endTime?: string;
+  isClient: boolean;
+  startDateInfo: DateInfo;
+  startTime?: string;
+  variant?: "default" | "compact";
+}
+
+interface EventDetailsCardProps {
+  id: string;
+  name: string;
+  image?: string;
+  startTime: string;
+  startDate: string;
+  endTime: string;
+  endDate: string;
+  timezone: string;
+  description?: string;
+  location?: string;
+}
+
+interface EventDetailsProps {
+  id: string;
+  name: string;
+  startTime: string;
+  startDate: string;
+  endTime: string;
+  endDate: string;
+  timezone: string;
+  description?: string;
+  location?: string;
+  EventActionButtons?: React.ReactNode;
+  preview?: boolean;
+  metadata?: EventMetadataDisplay;
+  variant?: "minimal";
+  happeningNow?: boolean;
+  visibility: "public" | "private";
+}
+
+interface EventActionButtonsProps {
+  user?: MinimalUserInfo;
+  event: AddToCalendarButtonPropsRestricted;
+  id: string;
+  isOwner: boolean;
+  isFollowing?: boolean;
+  visibility: "public" | "private";
+  variant?: "none" | "minimal";
+  size?: "sm";
 }
 
 function EventDateDisplaySimple({
@@ -101,13 +185,7 @@ function EventDateDisplaySimple({
   endDate,
   // endTime,
   timezone,
-}: {
-  startDate?: string;
-  startTime?: string;
-  endDate?: string;
-  endTime?: string;
-  timezone: string;
-}) {
+}: EventDateDisplaySimpleProps) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   if (!startDate || !endDate) {
     console.error("startDate or endDate is missing");
@@ -157,18 +235,7 @@ function EventDetailsCard({
   timezone,
   location,
   description,
-}: {
-  id: string;
-  name: string;
-  image?: string;
-  startTime: string;
-  startDate: string;
-  endTime: string;
-  endDate: string;
-  timezone: string;
-  description?: string;
-  location?: string;
-}) {
+}: EventDetailsCardProps) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
 
@@ -237,7 +304,7 @@ function EventDetailsCard({
   );
 }
 
-function EventAccessibility({ metadata }: { metadata?: EventMetadataDisplay }) {
+function EventAccessibility({ metadata }: EventAccessibilityProps) {
   return (
     <div className="col-span-2 flex flex-col gap-0.5">
       <Label className="flex items-center" htmlFor="accessibility">
@@ -298,11 +365,7 @@ function EventAccessibility({ metadata }: { metadata?: EventMetadataDisplay }) {
   );
 }
 
-function EventMetadataDisplay({
-  metadata,
-}: {
-  metadata?: EventMetadataDisplay;
-}) {
+function EventMetadataDisplay({ metadata }: EventMetadataDisplayProps) {
   const hasPriceMin =
     (metadata?.priceMin && metadata.priceMin > 0) || metadata?.priceMin === 0;
   const hasPriceMax = metadata?.priceMax && metadata.priceMax > 0;
@@ -427,23 +490,7 @@ function EventDetails({
   metadata,
   happeningNow,
   visibility, // Add this prop
-}: {
-  id: string;
-  name: string;
-  startTime: string;
-  startDate: string;
-  endTime: string;
-  endDate: string;
-  timezone: string;
-  description?: string;
-  location?: string;
-  EventActionButtons?: React.ReactNode;
-  preview?: boolean;
-  metadata?: EventMetadataDisplay;
-  variant?: "minimal";
-  happeningNow?: boolean;
-  visibility: "public" | "private"; // Add this to the props type
-}) {
+}: EventDetailsProps) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
 
@@ -534,7 +581,7 @@ function EventDetails({
   );
 }
 
-function HappeningSoonBadge({ startDateInfo }: { startDateInfo: DateInfo }) {
+function HappeningSoonBadge({ startDateInfo }: HappeningSoonBadgeProps) {
   const relativeTimeString = formatRelativeTime(startDateInfo);
   if (!relativeTimeString) {
     return null;
@@ -592,16 +639,7 @@ function EventActionButtons({
   visibility,
   variant,
   size,
-}: {
-  user?: User;
-  event: AddToCalendarButtonPropsRestricted;
-  id: string;
-  isOwner: boolean;
-  isFollowing?: boolean;
-  visibility: "public" | "private";
-  variant?: "none" | "minimal";
-  size?: "sm";
-}) {
+}: EventActionButtonsProps) {
   if (!user) {
     return null;
   }
@@ -684,17 +722,7 @@ function EventActionButtons({
   );
 }
 
-interface UserInfoMiniProps {
-  username: string;
-  displayName: string;
-  userImage: string;
-  showFollowButton?: boolean;
-}
-
-export function UserInfoMini({
-  username,
-  userImage,
-}: Omit<UserInfoMiniProps, "displayName">) {
+export function UserInfoMini({ username, userImage }: UserInfoMiniProps) {
   return (
     <div className="flex items-center gap-0.5">
       <Link
@@ -777,7 +805,6 @@ export function EventListItem(props: EventListItemProps) {
                 <UserInfoMini
                   username={user.username}
                   userImage={user.userImage}
-                  showFollowButton={false}
                 />
               )}
           </div>
@@ -859,11 +886,7 @@ export function EventListItem(props: EventListItemProps) {
       <div className="p-3"></div>
       <div className="absolute bottom-2 left-2 z-10 flex gap-2">
         {user && (
-          <UserInfoMini
-            username={user.username}
-            userImage={user.userImage}
-            showFollowButton={false}
-          />
+          <UserInfoMini username={user.username} userImage={user.userImage} />
         )}
       </div>
       <div className="absolute bottom-2 right-2 z-20">
@@ -931,15 +954,7 @@ function DateAndTimeDisplay({
   startDateInfo,
   startTime,
   variant = "default",
-}: {
-  happeningNow?: boolean;
-  endDateInfo: DateInfo;
-  endTime?: string;
-  isClient: boolean;
-  startDateInfo: DateInfo;
-  startTime?: string;
-  variant?: "default" | "compact";
-}) {
+}: DateAndTimeDisplayProps) {
   return (
     <div className="flex flex-col gap-2 font-medium leading-none">
       {isClient && eventTimesAreDefined(startTime, endTime) && (

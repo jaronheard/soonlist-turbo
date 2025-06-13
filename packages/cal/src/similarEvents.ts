@@ -1,26 +1,27 @@
 import { differenceInMinutes } from "date-fns";
 
-import type {
-  Comment,
-  Event,
-  EventFollow,
-  EventToLists,
-  List,
-  User,
-} from "@soonlist/db/types";
+import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 
 import type { AddToCalendarButtonProps } from "./types";
+
+type Event = Doc<"events">;
+type User = Doc<"users">;
+type EventFollow = Doc<"eventFollows">;
+type Comment = Doc<"comments">;
+type EventToLists = Doc<"eventToLists">;
+type List = Doc<"lists">;
 
 type EventToListsWithList = EventToLists & {
   list: List;
 };
 
-export type EventWithUser = Event & {
+export interface EventWithUser {
+  event: Event;
   user: User;
   eventFollows: EventFollow[];
   comments: Comment[];
   eventToLists?: EventToListsWithList[];
-};
+}
 
 // Cosine Similarity Functions
 function textToVector(text: string): Map<string, number> {
@@ -150,8 +151,8 @@ function collapseSimilarEvents(
       if (index !== otherIndex) {
         // Avoid comparing an event with itself
         const similarityDetails = isEventSimilar(
-          event,
-          otherEvent,
+          event.event,
+          otherEvent.event,
           startTimeThreshold,
           endTimeThreshold,
           nameThreshold,
@@ -179,27 +180,28 @@ function collapseSimilarEvents(
 
   eventsWithSimilarity.forEach((item) => {
     const { event: currentEvent, similarEvents } = item;
-    if (seenEvents.has(currentEvent.id)) {
+    if (seenEvents.has(currentEvent.event.id)) {
       // Skip this event if it has already been seen
       return;
     }
 
     const firstEventWithCurrentUserId = similarEvents.find(
-      ({ event }) => event.userId === currentUserId,
+      ({ event }) => event.user.id === currentUserId,
     );
     const similarEventsHasCurrentUserId =
       firstEventWithCurrentUserId !== undefined;
 
     let earliestEvent = firstEventWithCurrentUserId?.event || currentEvent;
     let earliestCreationDate = new Date(
-      firstEventWithCurrentUserId?.event.createdAt || currentEvent.createdAt,
+      firstEventWithCurrentUserId?.event.event.created_at ||
+        currentEvent.event.created_at,
     );
 
     similarEvents.forEach(({ event: similarEvent }) => {
-      const similarEventCreationDate = new Date(similarEvent.createdAt);
+      const similarEventCreationDate = new Date(similarEvent.event.created_at);
       if (similarEventsHasCurrentUserId) {
         // only set as earlies if it matches the current user
-        if (similarEvent.userId === currentUserId) {
+        if (similarEvent.user.id === currentUserId) {
           if (similarEventCreationDate < earliestCreationDate) {
             earliestEvent = similarEvent;
             earliestCreationDate = similarEventCreationDate;
@@ -213,7 +215,7 @@ function collapseSimilarEvents(
       }
 
       // Mark this similar event as seen
-      seenEvents.add(similarEvent.id);
+      seenEvents.add(similarEvent.event.id);
     });
 
     // Add the earliest event to the filtered list

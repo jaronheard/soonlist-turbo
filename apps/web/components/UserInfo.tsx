@@ -1,11 +1,14 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { currentUser } from "@clerk/nextjs/server";
+import { useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
 import { Instagram, LinkIcon, Mail, MessageSquare } from "lucide-react";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button, buttonVariants } from "@soonlist/ui/button";
 
-import { api } from "~/trpc/server";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 const SAMPLE_BIO = `I haven't written a bio yet... you'll have to find me at one of my events!`;
@@ -23,24 +26,48 @@ function formatUserWebsiteForLink(website: string) {
   return `https://${website}`;
 }
 
-export async function UserInfo(props: UserInfoProps) {
-  const activeUser = await currentUser();
+export function UserInfo(props: UserInfoProps) {
+  const { user: activeUser } = useUser();
+
+  // Always call hooks, but use "skip" when we don't have the required params
+  const userByIdQuery = useQuery(
+    api.users.getById,
+    props.userId ? { id: props.userId } : "skip",
+  );
+
+  const userByUsernameQuery = useQuery(
+    api.users.getByUsername,
+    props.userName ? { userName: props.userName } : "skip",
+  );
+
+  // Early return after hooks are called
   if (!props.userId && !props.userName) {
     return null;
   }
 
-  let user;
-  if (props.userId) {
-    user = await api.user.getById({ id: props.userId });
-  } else if (props.userName) {
-    user = await api.user.getByUsername({ userName: props.userName });
+  // Determine which query result to use
+  const user = props.userId ? userByIdQuery : userByUsernameQuery;
+  const isLoading = props.userId
+    ? userByIdQuery === undefined
+    : userByUsernameQuery === undefined;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="size-9 animate-pulse rounded-full bg-gray-200" />
+        <div className="space-y-1">
+          <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
+          <div className="h-3 w-16 animate-pulse rounded bg-gray-200" />
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
     return null;
   }
 
-  const self = activeUser?.username == user.username;
+  const self = activeUser?.username === user.username;
 
   if (props.variant === "description") {
     return (

@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 // 👉 Import the necessary Clerk hooks
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
+import { useConvexAuth } from "convex/react";
 import { usePostHog } from "posthog-js/react";
 
 export default function PostHogPageView(): null {
@@ -11,9 +12,10 @@ export default function PostHogPageView(): null {
   const searchParams = useSearchParams();
   const posthog = usePostHog();
 
-  // 👉 Add the hooks into the component
-  const { isSignedIn, userId } = useAuth();
+  // 👉 Use Convex auth state
+  const { isAuthenticated } = useConvexAuth();
   const { user } = useUser();
+  const userId = user?.id;
 
   // Track pageviews
   useEffect(() => {
@@ -37,7 +39,7 @@ export default function PostHogPageView(): null {
     }
     // 👉 Check the sign in status and user info,
     //    and identify the user if they aren't already
-    if (isSignedIn && userId && user && !posthog._isIdentified()) {
+    if (isAuthenticated && userId && user && !posthog._isIdentified()) {
       // 👉 Identify the user
       posthog.identify(userId, {
         email: user.primaryEmailAddress?.emailAddress,
@@ -46,7 +48,7 @@ export default function PostHogPageView(): null {
     }
 
     // 👉 Reset the user if they sign out
-    if (!isSignedIn && posthog._isIdentified()) {
+    if (!isAuthenticated && posthog._isIdentified()) {
       posthog.reset();
     }
   }, [posthog, user]);

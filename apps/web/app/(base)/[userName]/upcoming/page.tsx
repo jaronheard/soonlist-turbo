@@ -1,11 +1,13 @@
 import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
+import { fetchQuery } from "convex/nextjs";
 import { CalendarHeart } from "lucide-react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
 import { env } from "~/env";
-import { api } from "~/trpc/server";
 
 interface Props {
   params: Promise<{ userName: string }>;
@@ -16,11 +18,11 @@ export async function generateMetadata(
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const params = await props.params;
-  const events = await api.event.getForUser({
+  const events = await fetchQuery(api.events.getForUser, {
     userName: params.userName,
   });
 
-  if (!events) {
+  if (events.length === 0) {
     return {
       title: "No events found | Soonlist",
       openGraph: {
@@ -30,7 +32,7 @@ export async function generateMetadata(
   }
 
   const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date(),
+    (item) => new Date(item.startDateTime) >= new Date(),
   );
 
   const futureEventsCount = futureEvents.length;
@@ -54,17 +56,19 @@ export default async function Page(props: Props) {
   const params = await props.params;
   const activeUser = await currentUser();
   const self = activeUser?.username === params.userName;
-  const events = await api.event.getUpcomingForUser({
+  const events = await fetchQuery(api.events.getUpcomingForUser, {
     userName: params.userName,
   });
 
   // const pastEvents = events.filter((item) => item.endDateTime < new Date());
 
   const currentEvents = events.filter(
-    (item) => item.startDateTime < new Date() && item.endDateTime > new Date(),
+    (item) =>
+      new Date(item.startDateTime) < new Date() &&
+      new Date(item.endDateTime) > new Date(),
   );
   const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date(),
+    (item) => new Date(item.startDateTime) >= new Date(),
   );
 
   return (
