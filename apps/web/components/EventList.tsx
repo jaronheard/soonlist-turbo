@@ -161,13 +161,13 @@ export async function EventList({
                         (etl: { list: MinimalList }) => etl.list,
                       ) || []
                     }
-                    createdAt={item.createdAt}
+                    createdAt={new Date(item.created_at)}
                     hideCurator={hideCurator}
                     showOtherCurators={showOtherCurators}
                     similarEvents={similarEvents.map((s) => ({
                       event: {
                         id: s.event.id,
-                        createdAt: s.event.createdAt,
+                        createdAt: new Date(s.event.created_at),
                         visibility: s.event.visibility,
                         event: s.event
                           .event as AddToCalendarButtonPropsRestricted,
@@ -236,13 +236,13 @@ export async function EventList({
                         (etl: { list: MinimalList }) => etl.list,
                       ) || []
                     }
-                    createdAt={item.createdAt}
+                    createdAt={new Date(item.created_at)}
                     hideCurator={hideCurator}
                     showOtherCurators={showOtherCurators}
                     similarEvents={similarEvents.map((s) => ({
                       event: {
                         id: s.event.id,
-                        createdAt: s.event.createdAt,
+                        createdAt: new Date(s.event.created_at),
                         visibility: s.event.visibility,
                         event: s.event
                           .event as AddToCalendarButtonPropsRestricted,
@@ -315,13 +315,13 @@ export async function EventList({
                       (etl: { list: MinimalList }) => etl.list,
                     ) || []
                   }
-                  createdAt={item.createdAt}
+                  createdAt={new Date(item.created_at)}
                   hideCurator={hideCurator}
                   showOtherCurators={showOtherCurators}
                   similarEvents={similarEvents.map((s) => ({
                     event: {
                       id: s.event.id,
-                      createdAt: s.event.createdAt,
+                      createdAt: new Date(s.event.created_at),
                       visibility: s.event.visibility,
                       event: s.event
                         .event as AddToCalendarButtonPropsRestricted,

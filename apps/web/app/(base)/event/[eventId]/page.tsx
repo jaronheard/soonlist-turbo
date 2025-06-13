@@ -1,17 +1,17 @@
 import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
+import { fetchQuery } from "convex/nextjs";
 
 import type { EventMetadata } from "@soonlist/cal";
 import type {
   AddToCalendarButtonProps,
   AddToCalendarButtonPropsRestricted,
 } from "@soonlist/cal/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { collapseSimilarEvents } from "@soonlist/cal";
 
-import type { EventWithUser } from "~/components/EventList";
 import { EventPage } from "~/components/EventDisplays";
 import { env } from "~/env";
-import { api } from "~/trpc/server";
 
 interface Props {
   params: Promise<{
@@ -24,7 +24,9 @@ export async function generateMetadata(
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const params = await props.params;
-  const event = await api.event.get({ eventId: params.eventId });
+  const event = await fetchQuery(api.events.get, {
+    eventId: params.eventId,
+  });
   if (!event) {
     return {
       title: "No event found | Soonlist",
@@ -60,7 +62,9 @@ export async function generateMetadata(
 
 export default async function Page(props: Props) {
   const params = await props.params;
-  const event = await api.event.get({ eventId: params.eventId });
+  const event = await fetchQuery(api.events.get, {
+    eventId: params.eventId,
+  });
   const user = await currentUser();
   if (!event) {
     return <p className="text-lg text-gray-500">No event found.</p>;
@@ -69,9 +73,12 @@ export default async function Page(props: Props) {
   const eventMetadata = event.eventMetadata as EventMetadata;
   const fullImageUrl = eventData.images?.[3];
 
-  const possibleDuplicateEvents = (await api.event.getPossibleDuplicates({
-    startDateTime: event.startDateTime,
-  })) as EventWithUser[];
+  const possibleDuplicateEvents = await fetchQuery(
+    api.events.getPossibleDuplicates,
+    {
+      startDateTime: event.startDateTime,
+    },
+  );
 
   // find the event that matches the current event
   const similarEvents = collapseSimilarEvents(
@@ -91,7 +98,7 @@ export default async function Page(props: Props) {
         id={event.id}
         event={eventData}
         eventMetadata={eventMetadata}
-        createdAt={event.createdAt}
+        createdAt={new Date(event.created_at)}
         visibility={event.visibility}
         similarEvents={similarEvents}
         image={fullImageUrl}

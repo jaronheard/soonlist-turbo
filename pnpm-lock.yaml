@@ -1152,9 +1152,9 @@ importers:
       '@js-temporal/polyfill':
         specifier: 'catalog:'
         version: 0.4.4
-      '@soonlist/db':
+      '@soonlist/backend':
         specifier: workspace:*
-        version: link:../db
+        version: link:../backend
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0

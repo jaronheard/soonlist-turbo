@@ -43,3 +43,44 @@ export interface MinimalUserPublicMetadata {
 export interface MinimalUserForPlan {
   publicMetadata: MinimalUserPublicMetadata | null;
 }
+
+// Minimal types that match the actual Convex database structure
+export interface MinimalEvent {
+  id: string;
+  created_at: string; // ISO string from database
+  visibility: "public" | "private";
+  event: Record<string, unknown>; // The event data object
+  userId: string;
+  userName: string;
+  startDateTime: string;
+  endDateTime: string;
+}
+
+export interface MinimalUser {
+  id: string;
+  username: string;
+  displayName: string;
+  userImage: string;
+  emoji?: string;
+}
+
+export interface MinimalEventFollow {
+  id: string;
+  userId: string;
+  eventId: string;
+}
+
+export interface MinimalComment {
+  id: string;
+  content: string;
+  userId: string;
+  eventId: string;
+}
+
+export interface MinimalList {
+  id: string;
+  name: string;
+  description: string;
+  userId: string;
+  visibility: "public" | "private";
+}
