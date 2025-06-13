@@ -32,7 +32,7 @@ import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
 import { useCalendar } from "~/hooks/useCalendar";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
-import { useOTAUpdates } from "~/hooks/useOTAUpdates";
+import { UpdateProvider } from "~/providers/UpdateProvider";
 import { useTimezoneAlert } from "~/hooks/useTimezoneAlert";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
@@ -193,12 +193,12 @@ function RootLayout() {
 export default Sentry.wrap(RootLayout);
 
 const InitialLayout = () => {
-  useOTAUpdates();
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: "#5A32FB",
+    <UpdateProvider>
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: "#5A32FB",
         },
         headerTintColor: "#fff",
         headerTitleStyle: {
@@ -277,7 +277,8 @@ const InitialLayout = () => {
           presentation: "containedModal",
         }}
       />
-    </Stack>
+      </Stack>
+    </UpdateProvider>
   );
 };
 
