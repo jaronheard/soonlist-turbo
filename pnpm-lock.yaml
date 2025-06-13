@@ -846,6 +846,9 @@ importers:
       '@soonlist/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@soonlist/backend':
+        specifier: workspace:*
+        version: link:../../packages/backend
       '@soonlist/cal':
         specifier: workspace:*
         version: link:../../packages/cal
