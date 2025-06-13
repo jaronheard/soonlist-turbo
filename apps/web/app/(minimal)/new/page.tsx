@@ -1,6 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
 
-import { api } from "~/trpc/server";
 import { EventsFromImage } from "./EventsFromImage";
 import { EventsFromRawText } from "./EventsFromRawText";
 import { EventsFromUrl } from "./EventsFromUrl";
@@ -21,14 +20,13 @@ interface Props {
 
 export default async function Page(props: Props) {
   const searchParams = await props.searchParams;
-  const { userId } = await auth.protect({
+  const { userId: _userId } = await auth.protect({
     unauthenticatedUrl: "/sign-in",
     unauthorizedUrl: "/",
   });
 
-  const lists = await api.list.getAllForUserId({
-    userId: userId,
-  });
+  // TODO: Migrate lists functionality to Convex
+  const lists: unknown[] = [];
   const timezone = searchParams.timezone || "America/Los_Angeles";
   // image only
   if (searchParams.filePath && !searchParams.rawText) {
