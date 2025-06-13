@@ -1,7 +1,7 @@
-import type { User, UserPublicMetadata } from "@soonlist/db/types";
+import type { MinimalUserForPlan } from "~/types/minimal";
 
-export const getPlanStatusFromUser = (user: User) => {
-  const publicMetadata = user.publicMetadata as UserPublicMetadata | null;
+export const getPlanStatusFromUser = (user: MinimalUserForPlan) => {
+  const publicMetadata = user.publicMetadata;
   const name = publicMetadata?.plan?.name || "";
   const currentPlanStatus = publicMetadata?.plan?.status || "";
   const active =

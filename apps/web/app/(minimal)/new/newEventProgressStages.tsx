@@ -10,7 +10,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera, EyeOff, Globe2, LinkIcon, Sparkles, Text } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-import type { List } from "@soonlist/db/types";
 import { Button } from "@soonlist/ui/button";
 import {
   Form,
@@ -33,6 +32,7 @@ import { Stepper, StepStatus } from "@soonlist/ui/stepper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 import { Textarea } from "@soonlist/ui/textarea";
 
+import type { MinimalList } from "~/types/minimal";
 import { ImageUpload } from "~/components/ImageUpload";
 import { Logo } from "~/components/Logo";
 import { SaveButton } from "~/components/SaveButton";
@@ -196,7 +196,7 @@ export function ProgressStages({
 }: {
   showUpload?: boolean;
   filePath?: string;
-  lists?: List[];
+  lists?: MinimalList[];
   Preview?: JSX.Element;
 }) {
   const {

@@ -1,17 +1,17 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { clsx } from "clsx";
 
+import type { EventWithUser as CalEventWithUser } from "@soonlist/cal";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
-import type {
-  Comment,
-  Event,
-  EventFollow,
-  EventToLists,
-  List,
-  User,
-} from "@soonlist/db/types";
 import { collapseSimilarEvents } from "@soonlist/cal";
 
+import type {
+  MinimalComment,
+  MinimalEventFollow,
+  MinimalEventToLists,
+  MinimalList,
+  MinimalUserInfo,
+} from "~/types/minimal";
 import {
   Accordion,
   AccordionContent,
@@ -20,6 +20,20 @@ import {
 } from "~/components/Accordian";
 import { EventListItem } from "~/components/EventDisplays";
 import { cn } from "~/lib/utils";
+
+interface MinimalEvent {
+  id: string;
+  createdAt: Date;
+  visibility: "public" | "private";
+  event: AddToCalendarButtonPropsRestricted;
+}
+
+export type EventWithUser = MinimalEvent & {
+  user: MinimalUserInfo;
+  eventFollows: MinimalEventFollow[];
+  comments: MinimalComment[];
+  eventToLists?: MinimalEventToLists[];
+};
 
 function ListContainer({
   children,
@@ -53,17 +67,6 @@ function ListContainer({
   );
 }
 
-type EventToListsWithList = EventToLists & {
-  list: List;
-};
-
-export type EventWithUser = Event & {
-  user: User;
-  eventFollows: EventFollow[];
-  comments: Comment[];
-  eventToLists?: EventToListsWithList[];
-};
-
 export async function EventList({
   currentEvents,
   futureEvents,
@@ -74,9 +77,9 @@ export async function EventList({
   showPrivateEvents,
   forceSingleColumn,
 }: {
-  currentEvents: EventWithUser[];
-  futureEvents: EventWithUser[];
-  pastEvents: EventWithUser[];
+  currentEvents: CalEventWithUser[];
+  futureEvents: CalEventWithUser[];
+  pastEvents: CalEventWithUser[];
   // variant is either "future-minimal" or "card" or undefined
   variant?: "future-minimal" | "card";
   showOtherCurators?: boolean;
@@ -86,7 +89,7 @@ export async function EventList({
   children?: React.ReactNode;
 }) {
   const user = await currentUser();
-  function getVisibleEvents(events: EventWithUser[]) {
+  function getVisibleEvents(events: CalEventWithUser[]) {
     return events.filter(
       (item) => showPrivateEvents || item.visibility === "public",
     );
@@ -139,17 +142,50 @@ export async function EventList({
                   <EventListItem
                     variant={variantForListItems}
                     key={item.id}
-                    user={item.user}
-                    eventFollows={item.eventFollows}
-                    comments={item.comments}
+                    user={{
+                      id: item.userId,
+                      username: item.userName,
+                      displayName: item.userName,
+                      userImage: item.user?.userImage || "",
+                      emoji: item.user?.emoji || undefined,
+                    }}
+                    eventFollows={item.eventFollows || []}
+                    comments={(item.comments || []).map((comment) => ({
+                      id: comment.id.toString(),
+                    }))}
                     id={item.id}
                     event={item.event as AddToCalendarButtonPropsRestricted}
                     visibility={item.visibility}
-                    lists={item.eventToLists?.map((list) => list.list)}
+                    lists={
+                      item.eventToLists?.map(
+                        (etl: { list: MinimalList }) => etl.list,
+                      ) || []
+                    }
                     createdAt={item.createdAt}
                     hideCurator={hideCurator}
                     showOtherCurators={showOtherCurators}
-                    similarEvents={similarEvents}
+                    similarEvents={similarEvents.map((s) => ({
+                      event: {
+                        id: s.event.id,
+                        createdAt: s.event.createdAt,
+                        visibility: s.event.visibility,
+                        event: s.event
+                          .event as AddToCalendarButtonPropsRestricted,
+                        user: {
+                          id: s.event.userId,
+                          username: s.event.userName,
+                          displayName: s.event.userName,
+                          userImage: s.event.user?.userImage || "",
+                          emoji: s.event.user?.emoji || undefined,
+                        },
+                        eventFollows: s.event.eventFollows || [],
+                        comments: (s.event.comments || []).map((c) => ({
+                          id: c.id.toString(),
+                        })),
+                        eventToLists: s.event.eventToLists || [],
+                      },
+                      similarityDetails: s.similarityDetails,
+                    }))}
                   />
                 ))}
               </ListContainer>
@@ -181,17 +217,50 @@ export async function EventList({
                   <EventListItem
                     variant={variantForListItems}
                     key={item.id}
-                    user={item.user}
-                    eventFollows={item.eventFollows}
-                    comments={item.comments}
+                    user={{
+                      id: item.userId,
+                      username: item.userName,
+                      displayName: item.userName,
+                      userImage: item.user?.userImage || "",
+                      emoji: item.user?.emoji || undefined,
+                    }}
+                    eventFollows={item.eventFollows || []}
+                    comments={(item.comments || []).map((comment) => ({
+                      id: comment.id.toString(),
+                    }))}
                     id={item.id}
                     event={item.event as AddToCalendarButtonPropsRestricted}
                     visibility={item.visibility}
-                    lists={item.eventToLists?.map((list) => list.list)}
+                    lists={
+                      item.eventToLists?.map(
+                        (etl: { list: MinimalList }) => etl.list,
+                      ) || []
+                    }
                     createdAt={item.createdAt}
                     hideCurator={hideCurator}
                     showOtherCurators={showOtherCurators}
-                    similarEvents={similarEvents}
+                    similarEvents={similarEvents.map((s) => ({
+                      event: {
+                        id: s.event.id,
+                        createdAt: s.event.createdAt,
+                        visibility: s.event.visibility,
+                        event: s.event
+                          .event as AddToCalendarButtonPropsRestricted,
+                        user: {
+                          id: s.event.userId,
+                          username: s.event.userName,
+                          displayName: s.event.userName,
+                          userImage: s.event.user?.userImage || "",
+                          emoji: s.event.user?.emoji || undefined,
+                        },
+                        eventFollows: s.event.eventFollows || [],
+                        comments: (s.event.comments || []).map((c) => ({
+                          id: c.id.toString(),
+                        })),
+                        eventToLists: s.event.eventToLists || [],
+                      },
+                      similarityDetails: s.similarityDetails,
+                    }))}
                     happeningNow={true}
                   />
                 ))}
@@ -227,17 +296,50 @@ export async function EventList({
                 <EventListItem
                   variant={variantForListItems}
                   key={item.id}
-                  user={item.user}
-                  eventFollows={item.eventFollows}
-                  comments={item.comments}
+                  user={{
+                    id: item.userId,
+                    username: item.userName,
+                    displayName: item.userName,
+                    userImage: item.user?.userImage || "",
+                    emoji: item.user?.emoji || undefined,
+                  }}
+                  eventFollows={item.eventFollows || []}
+                  comments={(item.comments || []).map((comment) => ({
+                    id: comment.id.toString(),
+                  }))}
                   id={item.id}
                   event={item.event as AddToCalendarButtonPropsRestricted}
                   visibility={item.visibility}
-                  lists={item.eventToLists?.map((list) => list.list)}
+                  lists={
+                    item.eventToLists?.map(
+                      (etl: { list: MinimalList }) => etl.list,
+                    ) || []
+                  }
                   createdAt={item.createdAt}
                   hideCurator={hideCurator}
                   showOtherCurators={showOtherCurators}
-                  similarEvents={similarEvents}
+                  similarEvents={similarEvents.map((s) => ({
+                    event: {
+                      id: s.event.id,
+                      createdAt: s.event.createdAt,
+                      visibility: s.event.visibility,
+                      event: s.event
+                        .event as AddToCalendarButtonPropsRestricted,
+                      user: {
+                        id: s.event.userId,
+                        username: s.event.userName,
+                        displayName: s.event.userName,
+                        userImage: s.event.user?.userImage || "",
+                        emoji: s.event.user?.emoji || undefined,
+                      },
+                      eventFollows: s.event.eventFollows || [],
+                      comments: (s.event.comments || []).map((c) => ({
+                        id: c.id.toString(),
+                      })),
+                      eventToLists: s.event.eventToLists || [],
+                    },
+                    similarityDetails: s.similarityDetails,
+                  }))}
                 />
               ))}
             </ListContainer>
