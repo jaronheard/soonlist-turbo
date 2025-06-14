@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -20,7 +19,7 @@ export function EventsFromImage({
   timezone: string;
 }) {
   const router = useRouter();
-  const { user } = useUser();
+  const currentUser = useQuery(api.users.getCurrentUser);
   const { addWorkflowId } = useWorkflowStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +36,7 @@ export function EventsFromImage({
       return;
     }
 
-    if (!user) {
+    if (!currentUser) {
       toast.error("Please sign in to create events");
       return;
     }
@@ -67,8 +66,8 @@ export function EventsFromImage({
       const result = await createEventFromImage({
         base64Image,
         timezone,
-        userId: user.id,
-        username: user.username || user.id,
+        userId: currentUser.id,
+        username: currentUser.username || currentUser.id,
         sendNotification: false, // Web doesn't have push notifications
         visibility: "public",
         lists: [],
@@ -77,7 +76,7 @@ export function EventsFromImage({
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
         // Navigate directly to upcoming page without toast
-        router.push(`/${user.username || user.id}/upcoming`);
+        router.push(`/${currentUser.username || currentUser.id}/upcoming`);
       }
     } catch (err) {
       console.error("Error creating event from image:", err);
@@ -88,7 +87,7 @@ export function EventsFromImage({
     } finally {
       setIsProcessing(false);
     }
-  }, [user, filePath, timezone, createEventFromImage, addWorkflowId, router]);
+  }, [currentUser, filePath, timezone, createEventFromImage, addWorkflowId, router]);
 
   // Automatically process the image when component mounts
   useEffect(() => {

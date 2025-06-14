@@ -2,8 +2,7 @@
 
 import { useContext } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { UploadButton, UploadDropzone } from "@bytescale/upload-widget-react";
 import { Camera, Upload } from "lucide-react";
 
@@ -27,7 +26,7 @@ const widgetOptions = {
 
 export const UploadImageForProcessingDropzone = () => {
   const router = useRouter();
-  const { user } = useUser();
+  const currentUser = useQuery(api.users.getCurrentUser);
   const { timezone } = useContext(TimezoneContext);
   const { addWorkflowId } = useWorkflowStore();
   const createEventFromImage = useMutation(
@@ -35,7 +34,7 @@ export const UploadImageForProcessingDropzone = () => {
   );
 
   const handleImageUpload = async (filePath: string) => {
-    if (!user) return;
+    if (!currentUser) return;
     
     try {
       // Convert image URL to optimized base64
@@ -54,8 +53,8 @@ export const UploadImageForProcessingDropzone = () => {
       const result = await createEventFromImage({
         base64Image,
         timezone,
-        userId: user.id,
-        username: user.username || user.id,
+        userId: currentUser.id,
+        username: currentUser.username || currentUser.id,
         sendNotification: false,
         visibility: "public",
         lists: [],
@@ -64,7 +63,7 @@ export const UploadImageForProcessingDropzone = () => {
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
         // Navigate directly to upcoming page
-        router.push(`/${user.username || user.id}/upcoming`);
+        router.push(`/${currentUser.username || currentUser.id}/upcoming`);
       }
     } catch (error) {
       console.error("Error creating event from image:", error);
@@ -95,7 +94,7 @@ export const UploadImageForProcessingDropzone = () => {
 
 export const UploadImageForProcessingButton = () => {
   const router = useRouter();
-  const { user } = useUser();
+  const currentUser = useQuery(api.users.getCurrentUser);
   const { timezone } = useContext(TimezoneContext);
   const { addWorkflowId } = useWorkflowStore();
   const createEventFromImage = useMutation(
@@ -103,7 +102,7 @@ export const UploadImageForProcessingButton = () => {
   );
 
   const handleImageUpload = async (filePath: string) => {
-    if (!user) return;
+    if (!currentUser) return;
     
     try {
       // Convert image URL to optimized base64
@@ -122,8 +121,8 @@ export const UploadImageForProcessingButton = () => {
       const result = await createEventFromImage({
         base64Image,
         timezone,
-        userId: user.id,
-        username: user.username || user.id,
+        userId: currentUser.id,
+        username: currentUser.username || currentUser.id,
         sendNotification: false,
         visibility: "public",
         lists: [],
@@ -132,7 +131,7 @@ export const UploadImageForProcessingButton = () => {
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
         // Navigate directly to upcoming page
-        router.push(`/${user.username || user.id}/upcoming`);
+        router.push(`/${currentUser.username || currentUser.id}/upcoming`);
       }
     } catch (error) {
       console.error("Error creating event from image:", error);

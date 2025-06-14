@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { Instagram, LinkIcon, Mail, MessageSquare } from "lucide-react";
 
@@ -28,7 +27,7 @@ function formatUserWebsiteForLink(website: string) {
 }
 
 export function UserInfo(props: UserInfoProps) {
-  const { user: activeUser } = useUser();
+  const currentUser = useQuery(api.users.getCurrentUser);
   
   const userById = useQuery(
     api.users.getById,
@@ -46,7 +45,7 @@ export function UserInfo(props: UserInfoProps) {
     return null;
   }
 
-  const self = activeUser?.username === user.username;
+  const self = currentUser?.username === user.username;
 
   if (props.variant === "description") {
     return (

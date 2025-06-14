@@ -1,6 +1,5 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { CalendarHeart } from "lucide-react";
 
@@ -95,8 +94,8 @@ function transformConvexEvent(
 
 
 export default function Page({ params }: Props) {
-  const { user } = useUser();
-  const self = user?.username === params.userName;
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const self = currentUser?.username === params.userName;
   
   const convexEvents = useQuery(api.events.getUpcomingForUser, {
     userName: params.userName,

@@ -1,6 +1,5 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 
 import type { EventMetadata } from "@soonlist/cal";
@@ -41,7 +40,7 @@ function transformConvexEvent(event: any): EventWithUser {
 }
 
 export default function Page({ params }: Props) {
-  const { user } = useUser();
+  const currentUser = useQuery(api.users.getCurrentUser);
   const event = useQuery(api.events.get, { eventId: params.eventId });
   const convexDuplicates = useQuery(
     api.events.getPossibleDuplicates,
@@ -61,7 +60,7 @@ export default function Page({ params }: Props) {
   // find the event that matches the current event
   const similarEvents = collapseSimilarEvents(
     possibleDuplicateEvents,
-    user?.id,
+    currentUser?.id,
   ).find((similarEvent) => similarEvent.event.id === event._id)?.similarEvents;
 
   // TODO: Implement event lists when list functionality is added to Convex
