@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
@@ -26,18 +26,25 @@ export function EventsFromImage({
   const { addWorkflowId } = useWorkflowStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasStarted, setHasStarted] = useState(false);
+  const hasStartedRef = useRef(false);
 
   const createEventFromImage = useMutation(
     api.ai.eventFromImageBase64ThenCreate,
   );
 
   const handleCreateEvent = useCallback(async () => {
+    // Prevent duplicate processing
+    if (hasStartedRef.current) {
+      console.log("Event processing already started, skipping duplicate call");
+      return;
+    }
+    
     if (!user) {
       toast.error("Please sign in to create events");
       return;
     }
 
+    hasStartedRef.current = true;
     setIsProcessing(true);
     setError(null);
 
@@ -75,6 +82,8 @@ export function EventsFromImage({
       console.error("Error creating event from image:", err);
       setError(err instanceof Error ? err.message : "Failed to create event");
       toast.error("Failed to process image");
+      // Reset the ref on error so user can retry
+      hasStartedRef.current = false;
     } finally {
       setIsProcessing(false);
     }
@@ -82,11 +91,10 @@ export function EventsFromImage({
 
   // Automatically process the image when component mounts
   useEffect(() => {
-    if (!hasStarted && !isProcessing && !error) {
-      setHasStarted(true);
+    if (!isProcessing && !error && !hasStartedRef.current) {
       void handleCreateEvent();
     }
-  }, [hasStarted, isProcessing, error, handleCreateEvent]);
+  }, [isProcessing, error, handleCreateEvent]);
 
   return (
     <div className="space-y-4">

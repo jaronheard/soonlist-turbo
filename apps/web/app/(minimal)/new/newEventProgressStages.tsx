@@ -298,8 +298,6 @@ export function ProgressStages({
             </p>
           </div>
           <Organize form={form} filePath={filePath} />
-          {/* This ensures that the event starts being processed by the LLM immediately */}
-          <div className="hidden">{Preview}</div>
         </>
       </ProgressStagesWrapper>
     );
