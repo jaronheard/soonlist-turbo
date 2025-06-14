@@ -1,13 +1,12 @@
 import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
-import { preloadQuery } from "convex/nextjs";
+import { preloadQuery, preloadedQueryResult } from "convex/nextjs";
 
 import type { User } from "@soonlist/db/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { EventWithUser } from "~/components/EventList";
 import { env } from "~/env";
-import { getPublicConvex } from "~/lib/convex-server";
 import { UpcomingClient } from "./UpcomingClient";
 
 interface Props {
@@ -97,15 +96,16 @@ export async function generateMetadata(
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const params = await props.params;
-  const convex = await getPublicConvex();
-  const convexEvents = await convex.query(api.events.getForUser, {
+  const preloadedEvents = await preloadQuery(api.events.getForUser, {
     userName: params.userName,
   });
+  const convexEvents = preloadedQueryResult(preloadedEvents);
 
   // Get user data for the events
-  const userResponse = await convex.query(api.users.getByUsername, {
+  const preloadedUser = await preloadQuery(api.users.getByUsername, {
     userName: params.userName,
   });
+  const userResponse = preloadedQueryResult(preloadedUser);
 
   const events = convexEvents.map((event) =>
     transformConvexEvent(event, userResponse),

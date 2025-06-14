@@ -17,7 +17,3 @@ export async function getAuthenticatedConvex() {
 
   return convex;
 }
-
-export async function getPublicConvex() {
-  return new ConvexHttpClient(env.NEXT_PUBLIC_CONVEX_URL);
-}
