@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
@@ -12,34 +12,7 @@ import { blankEvent } from "@soonlist/cal";
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
 import { buildDefaultUrl } from "~/components/ImageUpload";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
-import { EventPreviewLoadingSpinner } from "./EventPreviewLoadingSpinner";
-import { EventsError } from "./EventsError";
-import { NewEventPreview } from "./NewEventPreview";
-
-// Convert image URL to base64
-async function imageUrlToBase64(url: string): Promise<string> {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === "string") {
-          // Remove the data URL prefix to get just the base64 string
-          const base64 = reader.result.split(",")[1];
-          resolve(base64 || "");
-        } else {
-          reject(new Error("Failed to convert to base64"));
-        }
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.error("Error converting image to base64:", error);
-    throw error;
-  }
-}
+import { optimizeImageToBase64 } from "~/lib/imageOptimization";
 
 export function EventsFromImage({
   filePath,
@@ -53,12 +26,13 @@ export function EventsFromImage({
   const { addWorkflowId } = useWorkflowStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const createEventFromImage = useMutation(
     api.ai.eventFromImageBase64ThenCreate,
   );
 
-  const handleCreateEvent = async () => {
+  const handleCreateEvent = useCallback(async () => {
     if (!user) {
       toast.error("Please sign in to create events");
       return;
@@ -68,9 +42,19 @@ export function EventsFromImage({
     setError(null);
 
     try {
-      // Convert image URL to base64
+      // Convert image URL to optimized base64 (resize to 640px width, 50% quality, WebP)
       const imageUrl = buildDefaultUrl(filePath);
-      const base64Image = await imageUrlToBase64(imageUrl);
+      let base64Image: string;
+      
+      try {
+        // Try to optimize the image
+        base64Image = await optimizeImageToBase64(imageUrl, 640, 0.5);
+      } catch (optimizeError) {
+        console.warn("Failed to optimize image, using fallback:", optimizeError);
+        // Fallback to simple conversion without optimization
+        const { imageUrlToBase64 } = await import("~/lib/imageOptimization");
+        base64Image = await imageUrlToBase64(imageUrl);
+      }
 
       const result = await createEventFromImage({
         base64Image,
@@ -82,7 +66,7 @@ export function EventsFromImage({
         lists: [],
       });
 
-      if (result?.workflowId) {
+      if (result.workflowId) {
         addWorkflowId(result.workflowId);
         toast.success("Processing event from image...");
         router.push("/"); // Navigate to home while processing
@@ -94,32 +78,49 @@ export function EventsFromImage({
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [user, filePath, timezone, createEventFromImage, addWorkflowId, router]);
+
+  // Automatically process the image when component mounts
+  useEffect(() => {
+    if (!hasStarted && !isProcessing && !error) {
+      setHasStarted(true);
+      void handleCreateEvent();
+    }
+  }, [hasStarted, isProcessing, error, handleCreateEvent]);
 
   return (
     <div className="space-y-4">
       <div className="rounded-lg border bg-card p-6">
-        <h3 className="mb-2 text-lg font-semibold">Create Event from Image</h3>
+        <h3 className="mb-2 text-lg font-semibold">Processing Image</h3>
         <img
           src={buildDefaultUrl(filePath)}
           alt="Event preview"
           className="mb-4 max-h-64 w-full rounded-md object-contain"
         />
-        {error && (
-          <div className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-            {error}
+        
+        {isProcessing && (
+          <div className="flex items-center justify-center space-x-2 text-muted-foreground">
+            <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            <span>Extracting event details from image...</span>
           </div>
         )}
-        <button
-          onClick={handleCreateEvent}
-          disabled={isProcessing}
-          className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
-          {isProcessing ? "Processing..." : "Create Event from Image"}
-        </button>
+        
+        {error && (
+          <div className="space-y-2">
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+            <button
+              onClick={handleCreateEvent}
+              className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Show blank event card as preview */}
+      {/* Show blank event card as preview while processing */}
       <AddToCalendarCard {...blankEvent} hideFloatingActionButtons />
     </div>
   );

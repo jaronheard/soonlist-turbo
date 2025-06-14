@@ -61,13 +61,6 @@ function ProgressStagesStepper({ status }: { status: Status }) {
       status: StepStatus.Current,
     },
     {
-      name: "Organize",
-      href: "#",
-      onClick: () => goToStatus(Status.Organize),
-      status: StepStatus.Upcoming,
-      disabled: true,
-    },
-    {
       name: "Review",
       href: "#",
       onClick: () => goToStatus(Status.Preview),
@@ -104,12 +97,6 @@ function ProgressStagesStepper({ status }: { status: Status }) {
       status: StepStatus.Complete,
     },
     {
-      name: "Organize",
-      href: "#",
-      onClick: () => goToStatus(Status.Organize),
-      status: StepStatus.Complete,
-    },
-    {
       name: "Review",
       href: "#",
       onClick: () => goToStatus(Status.Preview),
@@ -121,12 +108,6 @@ function ProgressStagesStepper({ status }: { status: Status }) {
       name: "Upload",
       href: "#",
       onClick: () => goToStatus(Status.Upload),
-      status: StepStatus.Complete,
-    },
-    {
-      name: "Organize",
-      href: "#",
-      onClick: () => goToStatus(Status.Organize),
       status: StepStatus.Complete,
     },
     {
@@ -215,9 +196,12 @@ export function ProgressStages({
   useEffect(() => {
     if (!showUpload && !isShortcut) {
       setIsShortcut(true);
-      setStatus(Status.Organize);
+      // Skip directly to Preview when we have a filePath
+      if (filePath) {
+        setStatus(Status.Preview);
+      }
     }
-  }, [showUpload, setIsShortcut, setMode]);
+  }, [showUpload, setIsShortcut, setMode, filePath, setStatus]);
 
   const hasFilePath = croppedImagesUrls.filePath;
   const hasAllAspectRatios =
@@ -229,10 +213,10 @@ export function ProgressStages({
 
   const imagesFromContext = validImagesFromContext
     ? [
-        croppedImagesUrls.square!,
-        croppedImagesUrls.fourThree!,
-        croppedImagesUrls.sixteenNine!,
-        croppedImagesUrls.cropped!,
+        croppedImagesUrls.square ?? "",
+        croppedImagesUrls.fourThree ?? "",
+        croppedImagesUrls.sixteenNine ?? "",
+        croppedImagesUrls.cropped ?? "",
       ]
     : undefined;
 

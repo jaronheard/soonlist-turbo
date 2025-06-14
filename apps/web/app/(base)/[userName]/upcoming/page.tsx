@@ -16,6 +16,30 @@ interface Props {
   params: Promise<{ userName: string }>;
 }
 
+// Helper to transform Convex user to DB User type
+function transformConvexUser(convexUser: any): User | null {
+  if (!convexUser) return null;
+  
+  return {
+    id: convexUser.id,
+    username: convexUser.username,
+    email: convexUser.email,
+    displayName: convexUser.displayName,
+    userImage: convexUser.userImage,
+    bio: convexUser.bio,
+    publicEmail: convexUser.publicEmail,
+    publicPhone: convexUser.publicPhone,
+    publicInsta: convexUser.publicInsta,
+    publicWebsite: convexUser.publicWebsite,
+    publicMetadata: convexUser.publicMetadata,
+    emoji: convexUser.emoji,
+    onboardingData: convexUser.onboardingData,
+    onboardingCompletedAt: convexUser.onboardingCompletedAt ? new Date(convexUser.onboardingCompletedAt) : null,
+    createdAt: new Date(convexUser.created_at),
+    updatedAt: convexUser.updatedAt ? new Date(convexUser.updatedAt) : null,
+  };
+}
+
 // Transform Convex event to EventWithUser format
 function transformConvexEvent(
   event: {
@@ -30,8 +54,9 @@ function transformConvexEvent(
     startDateTime: string;
     visibility: "public" | "private";
   },
-  user: User | null,
+  convexUser: any,
 ): EventWithUser {
+  const user = transformConvexUser(convexUser);
   return {
     id: event._id,
     userId: event.userId,
