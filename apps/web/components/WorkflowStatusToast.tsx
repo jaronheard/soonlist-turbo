@@ -43,8 +43,7 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
         break;
 
       case "completed": {
-        const result = status.result as { eventId?: string } | undefined;
-        const eventId = result?.eventId;
+        const eventId = status.result as string | undefined;
         if (eventId) {
           toastIdRef.current = toast.success("Event created!", {
             action: {

@@ -24,8 +24,8 @@ export function WorkflowStatus({ workflowId }: WorkflowStatusProps) {
 
   // Navigate to event when workflow completes successfully
   useEffect(() => {
-    if (status?.status === "completed" && (status.result as any)?.eventId) {
-      router.push(`/event/${(status.result as any).eventId}`);
+    if (status?.status === "completed" && status.result) {
+      router.push(`/event/${status.result as string}`);
       // Remove workflow after a short delay to show success state
       setTimeout(() => removeWorkflowId(workflowId), 2000);
     }
