@@ -166,10 +166,21 @@ export const extractEventFromBase64Image = internalAction({
     ctx,
     args,
   ): Promise<{ events: EventWithMetadata[]; response: string }> => {
-    return await AI.processEventFromBase64Image(ctx, {
+    const result = await AI.processEventFromBase64Image(ctx, {
       base64Image: args.base64Image,
       timezone: args.timezone,
     });
+    
+    // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
+    const cleanedEvents = result.events.map(event => {
+      const { buttonStyle, options, ...cleanEvent } = event as any;
+      return cleanEvent as EventWithMetadata;
+    });
+    
+    return {
+      events: cleanedEvents,
+      response: result.response,
+    };
   },
 });
 
@@ -211,7 +222,16 @@ export const extractEventFromUrl = internalAction({
       // Use the enhanced validateEvent function for event-specific validations
       AI.validateEvent(aiResult.events);
 
-      return aiResult;
+      // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
+      const cleanedEvents = aiResult.events.map(event => {
+        const { buttonStyle, options, ...cleanEvent } = event as any;
+        return cleanEvent as EventWithMetadata;
+      });
+      
+      return {
+        events: cleanedEvents,
+        response: aiResult.response,
+      };
     } catch (error) {
       // Re-throw ConvexError as-is, wrap other errors
       if (error instanceof ConvexError) {
@@ -249,7 +269,17 @@ export const extractEventFromText = internalAction({
       },
       fnName: "eventFromRawTextThenCreateThenNotification",
     });
-    return result;
+    
+    // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
+    const cleanedEvents = result.events.map(event => {
+      const { buttonStyle, options, ...cleanEvent } = event as any;
+      return cleanEvent as EventWithMetadata;
+    });
+    
+    return {
+      events: cleanedEvents,
+      response: result.response,
+    };
   },
 });
 
