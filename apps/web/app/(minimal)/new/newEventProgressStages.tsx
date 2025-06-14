@@ -29,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@soonlist/ui/select";
-import { Stepper, StepStatus } from "@soonlist/ui/stepper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 import { Textarea } from "@soonlist/ui/textarea";
 
@@ -50,88 +49,6 @@ import {
   UploadImageForProcessingDropzone,
 } from "./uploadImages";
 
-function ProgressStagesStepper({ status }: { status: Status }) {
-  const { goToStatus } = useNewEventProgressContext();
-
-  const stepsUpload = [
-    {
-      name: "Upload",
-      href: "#",
-      onClick: () => goToStatus(Status.Upload),
-      status: StepStatus.Current,
-    },
-    {
-      name: "Review",
-      href: "#",
-      onClick: () => goToStatus(Status.Preview),
-      status: StepStatus.Upcoming,
-      disabled: true,
-    },
-  ];
-  const stepsOrganize = [
-    {
-      name: "Upload",
-      href: "#",
-      onClick: () => goToStatus(Status.Upload),
-      status: StepStatus.Complete,
-    },
-    {
-      name: "Organize",
-      href: "#",
-      onClick: () => goToStatus(Status.Organize),
-      status: StepStatus.Current,
-      disabled: true,
-    },
-    {
-      name: "Review",
-      href: "#",
-      onClick: () => goToStatus(Status.Preview),
-      status: StepStatus.Upcoming,
-    },
-  ];
-  const stepsPreview = [
-    {
-      name: "Upload",
-      href: "#",
-      onClick: () => goToStatus(Status.Upload),
-      status: StepStatus.Complete,
-    },
-    {
-      name: "Review",
-      href: "#",
-      onClick: () => goToStatus(Status.Preview),
-      status: StepStatus.Current,
-    },
-  ];
-  const stepsPublish = [
-    {
-      name: "Upload",
-      href: "#",
-      onClick: () => goToStatus(Status.Upload),
-      status: StepStatus.Complete,
-    },
-    {
-      name: "Review",
-      href: "#",
-      onClick: () => goToStatus(Status.Preview),
-      status: StepStatus.Complete,
-    },
-  ];
-  function getSteps() {
-    if (status === Status.Upload) {
-      return stepsUpload;
-    }
-    if (status === Status.Organize) {
-      return stepsOrganize;
-    }
-    if (status === Status.Preview) {
-      return stepsPreview;
-    }
-    return stepsPublish;
-  }
-  const steps = getSteps();
-  return <Stepper steps={steps} />;
-}
 
 function ProgressStagesWrapper({
   children,
@@ -161,7 +78,6 @@ function ProgressStagesWrapper({
           <h1 className="text-xl font-semibold text-neutral-2">
             Create an event
           </h1>
-          <ProgressStagesStepper status={status} />
         </div>
         {children}
         {/* Footer should be included in children */}
@@ -273,10 +189,10 @@ export function ProgressStages({
         <>
           <div className="flex flex-col items-center gap-3 text-center">
             <h2 className="text-2xl font-bold text-neutral-1">
-              Upload your event
+              Add your event
             </h2>
             <p className="text-base font-medium leading-5 text-neutral-2">
-              Add your event info. Upload an image, enter text, or add a link.
+              Upload an image, enter text, or add a link.
             </p>
           </div>
           <AddEvent />
