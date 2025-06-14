@@ -24,6 +24,7 @@
     "@clerk/nextjs": "catalog:",
     "@sentry/nextjs": "catalog:",
     "@soonlist/api": "workspace:*",
+    "@soonlist/backend": "workspace:*",
     "@soonlist/cal": "workspace:*",
     "@soonlist/db": "workspace:*",
     "@soonlist/tailwind-config": "workspace:*",

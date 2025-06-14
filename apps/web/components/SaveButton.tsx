@@ -24,23 +24,23 @@ interface SaveButtonProps {
 // Transform AddToCalendarButtonType to Convex event format
 function transformEventData(event: AddToCalendarButtonType) {
   return {
-    name: event.name,
-    startDate: event.startDate,
-    endDate: event.endDate || event.startDate,
+    name: event.name || "",
+    startDate: event.startDate || "",
+    endDate: event.endDate || event.startDate || "",
     startTime: event.startTime,
     endTime: event.endTime,
     timeZone: event.timeZone,
     location: event.location,
     description: event.description,
-    images: event.images,
+    images: Array.isArray(event.images) ? event.images : event.images ? [event.images] : undefined,
   };
 }
 
 // Transform lists array format
 function transformLists(lists: Record<string, string>[]) {
-  return lists.map(list => {
+  return lists.map((list) => {
     const value = Object.values(list)[0];
-    return { value };
+    return { value: value || "" };
   });
 }
 
@@ -71,8 +71,8 @@ export function SaveButton(props: SaveButtonProps) {
                 });
                 toast.success("Event saved.");
                 localStorage.removeItem("updatedProps");
-                router.push(`/event/${eventId}`);
-              } catch (error) {
+                router.push(`/event/${eventId as string}`);
+              } catch {
                 toast.error("Your event was not saved. Please try again.");
               }
             }}

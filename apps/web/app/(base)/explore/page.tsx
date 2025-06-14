@@ -2,12 +2,34 @@ import { Globe2 } from "lucide-react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { getPublicConvex } from "~/lib/convex-server";
 
+// Transform Convex event to EventWithUser format
+function transformConvexEvent(event: any): EventWithUser {
+  return {
+    id: event._id,
+    userId: event.userId,
+    updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+    userName: event.userName,
+    event: event.event,
+    eventMetadata: event.eventMetadata,
+    endDateTime: new Date(event.endDateTime),
+    startDateTime: new Date(event.startDateTime),
+    visibility: event.visibility,
+    createdAt: new Date(event._creationTime),
+    user: event.user,
+    eventFollows: event.eventFollows || [],
+    comments: event.comments || [],
+    eventToLists: event.eventToLists || [],
+  };
+}
+
 export default async function Page() {
   const convex = await getPublicConvex();
-  const events = await convex.query(api.events.getNext, { limit: 50 });
+  const convexEvents = await convex.query(api.events.getNext, { limit: 50 });
+  const events = convexEvents.map(transformConvexEvent);
 
   const pastEvents = events.filter((item) => item.endDateTime < new Date());
 

@@ -6,15 +6,14 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { toast } from "sonner";
 
-import { blankEvent } from "@soonlist/cal";
 import { api } from "@soonlist/backend/convex/_generated/api";
+import { blankEvent } from "@soonlist/cal";
 
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import { EventPreviewLoadingSpinner } from "./EventPreviewLoadingSpinner";
 import { EventsError } from "./EventsError";
 import { NewEventPreview } from "./NewEventPreview";
-
 
 export function EventsFromRawText({
   rawText,
@@ -41,18 +40,18 @@ export function EventsFromRawText({
     setError(null);
 
     try {
-      const workflowId = await createEventFromText({
-        text: rawText,
+      const result = await createEventFromText({
+        rawText,
         timezone,
         userId: user.id,
         username: user.username || user.id,
-        sendPushNotification: false, // Web doesn't have push notifications
+        sendNotification: false, // Web doesn't have push notifications
         visibility: "public",
         lists: [],
       });
 
-      if (workflowId) {
-        addWorkflowId(workflowId);
+      if (result?.workflowId) {
+        addWorkflowId(result.workflowId);
         toast.success("Processing event from text...");
         router.push("/"); // Navigate to home while processing
       }
@@ -85,7 +84,7 @@ export function EventsFromRawText({
           {isProcessing ? "Processing..." : "Create Event from Text"}
         </button>
       </div>
-      
+
       {/* Show blank event card as preview */}
       <AddToCalendarCard {...blankEvent} hideFloatingActionButtons />
     </div>

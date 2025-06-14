@@ -2,6 +2,7 @@
 
 import type { z } from "zod";
 import { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "convex/react";
 import { Check, Globe, Instagram, Mail, Pen, Phone } from "lucide-react";
@@ -36,6 +37,7 @@ function UserProfileForm({
 }: {
   defaultValues: z.infer<typeof userAdditionalInfoSchema>;
 }) {
+  const { user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFormChanged, setIsFormChanged] = useState(false);
   const form = useForm({
@@ -46,12 +48,22 @@ function UserProfileForm({
   const updateAdditionalInfo = useMutation(api.users.updateAdditionalInfo);
 
   async function onSubmit(values: z.infer<typeof userAdditionalInfoSchema>) {
+    if (!user) {
+      toast.error("Please sign in to update your profile");
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
-      await updateAdditionalInfo(values);
+      await updateAdditionalInfo({
+        ...values,
+        userId: user.id,
+      });
       toast.success("Public profile saved.");
     } catch (error) {
-      toast.error(`Public profile not saved: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Public profile not saved: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       setIsSubmitting(false);
     }

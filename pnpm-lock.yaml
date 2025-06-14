@@ -846,6 +846,9 @@ importers:
       '@soonlist/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@soonlist/backend':
+        specifier: workspace:*
+        version: link:../../packages/backend
       '@soonlist/cal':
         specifier: workspace:*
         version: link:../../packages/cal
@@ -957,6 +960,9 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.28
+      zustand:
+        specifier: 'catalog:'
+        version: 4.5.5(@types/react@19.1.5)(react@19.0.0)
     devDependencies:
       '@clerk/backend':
         specifier: 'catalog:'

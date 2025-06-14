@@ -6,8 +6,8 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { toast } from "sonner";
 
-import { blankEvent } from "@soonlist/cal";
 import { api } from "@soonlist/backend/convex/_generated/api";
+import { blankEvent } from "@soonlist/cal";
 
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
 import { buildDefaultUrl } from "~/components/ImageUpload";
@@ -24,19 +24,19 @@ async function imageUrlToBase64(url: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
+        if (typeof reader.result === "string") {
           // Remove the data URL prefix to get just the base64 string
-          const base64 = reader.result.split(',')[1];
-          resolve(base64);
+          const base64 = reader.result.split(",")[1];
+          resolve(base64 || "");
         } else {
-          reject(new Error('Failed to convert to base64'));
+          reject(new Error("Failed to convert to base64"));
         }
       };
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
   } catch (error) {
-    console.error('Error converting image to base64:', error);
+    console.error("Error converting image to base64:", error);
     throw error;
   }
 }
@@ -54,7 +54,9 @@ export function EventsFromImage({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createEventFromImage = useMutation(api.ai.eventFromImageBase64ThenCreate);
+  const createEventFromImage = useMutation(
+    api.ai.eventFromImageBase64ThenCreate,
+  );
 
   const handleCreateEvent = async () => {
     if (!user) {
@@ -70,18 +72,18 @@ export function EventsFromImage({
       const imageUrl = buildDefaultUrl(filePath);
       const base64Image = await imageUrlToBase64(imageUrl);
 
-      const workflowId = await createEventFromImage({
-        imageBase64: base64Image,
+      const result = await createEventFromImage({
+        base64Image,
         timezone,
         userId: user.id,
         username: user.username || user.id,
-        sendPushNotification: false, // Web doesn't have push notifications
+        sendNotification: false, // Web doesn't have push notifications
         visibility: "public",
         lists: [],
       });
 
-      if (workflowId) {
-        addWorkflowId(workflowId);
+      if (result?.workflowId) {
+        addWorkflowId(result.workflowId);
         toast.success("Processing event from image...");
         router.push("/"); // Navigate to home while processing
       }
@@ -98,9 +100,9 @@ export function EventsFromImage({
     <div className="space-y-4">
       <div className="rounded-lg border bg-card p-6">
         <h3 className="mb-2 text-lg font-semibold">Create Event from Image</h3>
-        <img 
-          src={buildDefaultUrl(filePath)} 
-          alt="Event preview" 
+        <img
+          src={buildDefaultUrl(filePath)}
+          alt="Event preview"
           className="mb-4 max-h-64 w-full rounded-md object-contain"
         />
         {error && (
@@ -116,7 +118,7 @@ export function EventsFromImage({
           {isProcessing ? "Processing..." : "Create Event from Image"}
         </button>
       </div>
-      
+
       {/* Show blank event card as preview */}
       <AddToCalendarCard {...blankEvent} hideFloatingActionButtons />
     </div>

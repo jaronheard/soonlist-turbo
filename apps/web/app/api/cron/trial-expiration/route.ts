@@ -18,8 +18,8 @@ export async function GET(request: Request) {
 
   // Trial expiration reminders are handled by Convex cron jobs
   // This endpoint exists for backward compatibility
-  return NextResponse.json({ 
-    success: true, 
-    message: "Trial expiration reminders are handled by Convex cron jobs" 
+  return NextResponse.json({
+    success: true,
+    message: "Trial expiration reminders are handled by Convex cron jobs",
   });
 }

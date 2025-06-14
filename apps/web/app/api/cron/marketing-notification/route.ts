@@ -18,8 +18,8 @@ export async function GET(request: Request) {
 
   // TODO: Implement marketing notifications in Convex
   // This endpoint exists for backward compatibility
-  return NextResponse.json({ 
-    success: true, 
-    message: "Marketing notifications should be implemented in Convex" 
+  return NextResponse.json({
+    success: true,
+    message: "Marketing notifications should be implemented in Convex",
   });
 }

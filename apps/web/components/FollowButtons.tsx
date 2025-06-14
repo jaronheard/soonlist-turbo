@@ -39,7 +39,11 @@ export function FollowEventDropdownButton({
             }
             router.refresh();
           } catch (error) {
-            toast.error(following ? "Event not unsaved. Please try again." : "Event not saved. Please try again.");
+            toast.error(
+              following
+                ? "Event not unsaved. Please try again."
+                : "Event not saved. Please try again.",
+            );
           } finally {
             setIsLoading(false);
           }
@@ -95,7 +99,11 @@ export function FollowEventButton({
       }
       router.refresh();
     } catch (error) {
-      toast.error(following ? "Event not unsaved. Please try again." : "Event not saved. Please try again.");
+      toast.error(
+        following
+          ? "Event not unsaved. Please try again."
+          : "Event not saved. Please try again.",
+      );
     } finally {
       setIsLoading(false);
     }

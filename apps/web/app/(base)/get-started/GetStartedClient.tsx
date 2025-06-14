@@ -102,7 +102,7 @@ export function GetStartedClient() {
 
   const user = useQuery(
     api.users.getByUsername,
-    activeUser?.username ? { userName: activeUser.username } : "skip"
+    activeUser?.username ? { userName: activeUser.username } : "skip",
   );
 
   if (!isLoaded || (!activeUser?.username && user === undefined)) {

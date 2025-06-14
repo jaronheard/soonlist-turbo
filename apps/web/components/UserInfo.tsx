@@ -31,12 +31,14 @@ export async function UserInfo(props: UserInfoProps) {
   }
 
   const convex = await getPublicConvex();
-  
+
   let user;
   if (props.userId) {
     user = await convex.query(api.users.getById, { id: props.userId });
   } else if (props.userName) {
-    user = await convex.query(api.users.getByUsername, { userName: props.userName });
+    user = await convex.query(api.users.getByUsername, {
+      userName: props.userName,
+    });
   }
 
   if (!user) {

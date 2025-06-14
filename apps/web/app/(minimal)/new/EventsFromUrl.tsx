@@ -6,15 +6,14 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { toast } from "sonner";
 
-import { blankEvent } from "@soonlist/cal";
 import { api } from "@soonlist/backend/convex/_generated/api";
+import { blankEvent } from "@soonlist/cal";
 
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import { EventPreviewLoadingSpinner } from "./EventPreviewLoadingSpinner";
 import { EventsError } from "./EventsError";
 import { NewEventPreview } from "./NewEventPreview";
-
 
 export function EventsFromUrl({
   url,
@@ -41,18 +40,18 @@ export function EventsFromUrl({
     setError(null);
 
     try {
-      const workflowId = await createEventFromUrl({
+      const result = await createEventFromUrl({
         url,
         timezone,
         userId: user.id,
         username: user.username || user.id,
-        sendPushNotification: false, // Web doesn't have push notifications
+        sendNotification: false, // Web doesn't have push notifications
         visibility: "public",
         lists: [],
       });
 
-      if (workflowId) {
-        addWorkflowId(workflowId);
+      if (result?.workflowId) {
+        addWorkflowId(result.workflowId);
         toast.success("Processing event from URL...");
         router.push("/"); // Navigate to home while processing
       }
@@ -69,9 +68,7 @@ export function EventsFromUrl({
     <div className="space-y-4">
       <div className="rounded-lg border bg-card p-6">
         <h3 className="mb-2 text-lg font-semibold">Create Event from URL</h3>
-        <p className="mb-4 text-sm text-muted-foreground">
-          URL: {url}
-        </p>
+        <p className="mb-4 text-sm text-muted-foreground">URL: {url}</p>
         {error && (
           <div className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             {error}
@@ -85,7 +82,7 @@ export function EventsFromUrl({
           {isProcessing ? "Processing..." : "Create Event from URL"}
         </button>
       </div>
-      
+
       {/* Show blank event card as preview */}
       <AddToCalendarCard {...blankEvent} hideFloatingActionButtons />
     </div>

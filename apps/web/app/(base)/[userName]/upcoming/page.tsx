@@ -4,6 +4,7 @@ import { CalendarHeart } from "lucide-react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
 import { env } from "~/env";
@@ -13,15 +14,51 @@ interface Props {
   params: Promise<{ userName: string }>;
 }
 
+// Transform Convex event to EventWithUser format
+function transformConvexEvent(event: {
+  _id: string;
+  _creationTime: number;
+  userId: string;
+  updatedAt?: string | null;
+  userName: string;
+  event: unknown;
+  eventMetadata?: unknown;
+  endDateTime: string;
+  startDateTime: string;
+  visibility: "public" | "private";
+  user: any;
+  eventFollows?: any[];
+  comments?: any[];
+  eventToLists?: any[];
+}): EventWithUser {
+  return {
+    id: event._id,
+    userId: event.userId,
+    updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+    userName: event.userName,
+    event: event.event,
+    eventMetadata: event.eventMetadata,
+    endDateTime: new Date(event.endDateTime),
+    startDateTime: new Date(event.startDateTime),
+    visibility: event.visibility,
+    createdAt: new Date(event._creationTime),
+    user: event.user,
+    eventFollows: event.eventFollows || [],
+    comments: event.comments || [],
+    eventToLists: event.eventToLists || [],
+  };
+}
+
 export async function generateMetadata(
   props: Props,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const params = await props.params;
   const convex = await getPublicConvex();
-  const events = await convex.query(api.events.getForUser, {
+  const convexEvents = await convex.query(api.events.getForUser, {
     userName: params.userName,
   });
+  const events = convexEvents.map(transformConvexEvent);
 
   if (!events) {
     return {
@@ -33,7 +70,7 @@ export async function generateMetadata(
   }
 
   const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date(),
+    (item) => new Date(item.startDateTime) >= new Date(),
   );
 
   const futureEventsCount = futureEvents.length;
@@ -58,17 +95,18 @@ export default async function Page(props: Props) {
   const activeUser = await currentUser();
   const self = activeUser?.username === params.userName;
   const convex = await getPublicConvex();
-  const events = await convex.query(api.events.getUpcomingForUser, {
+  const convexEvents = await convex.query(api.events.getUpcomingForUser, {
     userName: params.userName,
   });
+  const events = convexEvents.map(transformConvexEvent);
 
   // const pastEvents = events.filter((item) => item.endDateTime < new Date());
 
   const currentEvents = events.filter(
-    (item) => item.startDateTime < new Date() && item.endDateTime > new Date(),
+    (item) => new Date(item.startDateTime) < new Date() && new Date(item.endDateTime) > new Date(),
   );
   const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date(),
+    (item) => new Date(item.startDateTime) >= new Date(),
   );
 
   return (

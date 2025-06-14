@@ -61,12 +61,12 @@ export function FoundingMemberPricing({
   const planActive = user?.publicMetadata.plan?.status === "active";
 
   const checkoutUrlsMap: Record<string, string> = isSignedIn
-    ? checkoutUrls?.reduce(
-        (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+    ? (checkoutUrls as unknown as any[])?.reduce(
+        (acc: Record<string, string>, curr: any) => ({ ...acc, [curr.plan]: curr.redirectURL }),
         {} as Record<string, string>,
       ) || {}
-    : publicCheckoutUrls?.reduce(
-        (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+    : (publicCheckoutUrls as unknown as any[])?.reduce(
+        (acc: Record<string, string>, curr: any) => ({ ...acc, [curr.plan]: curr.redirectURL }),
         {} as Record<string, string>,
       ) || {};
 
