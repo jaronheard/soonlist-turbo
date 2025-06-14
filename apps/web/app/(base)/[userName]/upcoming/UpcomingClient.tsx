@@ -1,17 +1,21 @@
-import type { Metadata, ResolvingMetadata } from "next/types";
-import { currentUser } from "@clerk/nextjs/server";
-import { preloadQuery } from "convex/nextjs";
+"use client";
+
+import type { Preloaded } from "convex/react";
+import { usePreloadedQuery } from "convex/react";
+import { CalendarHeart } from "lucide-react";
 
 import type { User } from "@soonlist/db/types";
-import { api } from "@soonlist/backend/convex/_generated/api";
+import type { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { EventWithUser } from "~/components/EventList";
-import { env } from "~/env";
-import { getPublicConvex } from "~/lib/convex-server";
-import { UpcomingClient } from "./UpcomingClient";
+import { EventList } from "~/components/EventList";
+import { UserInfo } from "~/components/UserInfo";
 
 interface Props {
-  params: Promise<{ userName: string }>;
+  userName: string;
+  self: boolean;
+  preloadedEvents: Preloaded<typeof api.events.getUpcomingForUser>;
+  preloadedUser: Preloaded<typeof api.users.getByUsername>;
 }
 
 // Helper to transform Convex user to DB User type
@@ -92,70 +96,48 @@ function transformConvexEvent(
   };
 }
 
-export async function generateMetadata(
-  props: Props,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
-  const params = await props.params;
-  const convex = await getPublicConvex();
-  const convexEvents = await convex.query(api.events.getForUser, {
-    userName: params.userName,
-  });
-
-  // Get user data for the events
-  const userResponse = await convex.query(api.users.getByUsername, {
-    userName: params.userName,
-  });
+export function UpcomingClient({ userName, self, preloadedEvents, preloadedUser }: Props) {
+  // These will auto-update when data changes in Convex
+  const convexEvents = usePreloadedQuery(preloadedEvents);
+  const userResponse = usePreloadedQuery(preloadedUser);
 
   const events = convexEvents.map((event) =>
     transformConvexEvent(event, userResponse),
   );
 
-  // events is always an array, even if empty
-
+  const currentEvents = events.filter(
+    (item) =>
+      new Date(item.startDateTime) < new Date() &&
+      new Date(item.endDateTime) > new Date(),
+  );
   const futureEvents = events.filter(
     (item) => new Date(item.startDateTime) >= new Date(),
   );
 
-  const futureEventsCount = futureEvents.length;
-
-  // optionally access and extend (rather than replace) parent metadata
-  const previousImages = (await parent).openGraph?.images || [];
-
-  return {
-    title: `@${params.userName} (${futureEventsCount} upcoming events) | Soonlist`,
-    openGraph: {
-      title: `@${params.userName} (${futureEventsCount} upcoming events)`,
-      description: `See the events that @${params.userName} has saved on Soonlist`,
-      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/events`,
-      type: "article",
-      images: [...previousImages],
-    },
-  };
-}
-
-export default async function Page(props: Props) {
-  const params = await props.params;
-  const activeUser = await currentUser();
-  const self = activeUser?.username === params.userName;
-
-  // Preload the queries for the client component
-  const preloadedEvents = await preloadQuery(
-    api.events.getUpcomingForUser,
-    { userName: params.userName }
-  );
-
-  const preloadedUser = await preloadQuery(
-    api.users.getByUsername,
-    { userName: params.userName }
-  );
-
   return (
-    <UpcomingClient
-      userName={params.userName}
-      self={self}
-      preloadedEvents={preloadedEvents}
-      preloadedUser={preloadedUser}
-    />
+    <div className="mx-auto max-w-2xl">
+      {self ? (
+        <h1 className="mb-4 font-heading text-2xl font-bold leading-[1.08333] tracking-tight text-neutral-1 ">
+          <div className="flex gap-4">
+            <CalendarHeart className="size-6" />
+            My Feed
+          </div>
+        </h1>
+      ) : (
+        <>
+          <UserInfo userName={userName} />
+          <div className="p-2"></div>
+        </>
+      )}
+      <EventList
+        currentEvents={currentEvents}
+        pastEvents={[]}
+        futureEvents={futureEvents}
+        hideCurator
+        showOtherCurators={true}
+        showPrivateEvents={self}
+        variant="future-minimal"
+      />
+    </div>
   );
 }
