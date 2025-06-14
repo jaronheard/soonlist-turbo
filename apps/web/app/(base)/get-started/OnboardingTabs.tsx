@@ -52,7 +52,7 @@ function UserProfileForm({
       toast.error("Please sign in to update your profile");
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       await updateAdditionalInfo({

@@ -36,7 +36,11 @@ function transformEventData(event: AddToCalendarButtonType) {
     timeZone: event.timeZone,
     location: event.location,
     description: event.description,
-    images: Array.isArray(event.images) ? event.images : event.images ? [event.images] : undefined,
+    images: Array.isArray(event.images)
+      ? event.images
+      : event.images
+        ? [event.images]
+        : undefined,
   };
 }
 

@@ -62,11 +62,17 @@ export function FoundingMemberPricing({
 
   const checkoutUrlsMap: Record<string, string> = isSignedIn
     ? (checkoutUrls as unknown as any[])?.reduce(
-        (acc: Record<string, string>, curr: any) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+        (acc: Record<string, string>, curr: any) => ({
+          ...acc,
+          [curr.plan]: curr.redirectURL,
+        }),
         {} as Record<string, string>,
       ) || {}
     : (publicCheckoutUrls as unknown as any[])?.reduce(
-        (acc: Record<string, string>, curr: any) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+        (acc: Record<string, string>, curr: any) => ({
+          ...acc,
+          [curr.plan]: curr.redirectURL,
+        }),
         {} as Record<string, string>,
       ) || {};
 

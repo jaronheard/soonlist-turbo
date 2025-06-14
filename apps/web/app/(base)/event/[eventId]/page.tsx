@@ -112,12 +112,22 @@ export default async function Page(props: Props) {
   return (
     <>
       <EventPage
-        user={event.user ? {
-          ...event.user,
-          createdAt: new Date(event.user.created_at || event.user._creationTime),
-          updatedAt: event.user.updatedAt ? new Date(event.user.updatedAt) : null,
-          onboardingCompletedAt: event.user.onboardingCompletedAt ? new Date(event.user.onboardingCompletedAt) : null,
-        } : undefined}
+        user={
+          event.user
+            ? {
+                ...event.user,
+                createdAt: new Date(
+                  event.user.created_at || event.user._creationTime,
+                ),
+                updatedAt: event.user.updatedAt
+                  ? new Date(event.user.updatedAt)
+                  : null,
+                onboardingCompletedAt: event.user.onboardingCompletedAt
+                  ? new Date(event.user.onboardingCompletedAt)
+                  : null,
+              }
+            : undefined
+        }
         eventFollows={event.eventFollows || []}
         comments={(event.comments || []).map((comment: any) => ({
           ...comment,

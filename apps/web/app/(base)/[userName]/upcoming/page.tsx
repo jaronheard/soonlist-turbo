@@ -103,7 +103,9 @@ export default async function Page(props: Props) {
   // const pastEvents = events.filter((item) => item.endDateTime < new Date());
 
   const currentEvents = events.filter(
-    (item) => new Date(item.startDateTime) < new Date() && new Date(item.endDateTime) > new Date(),
+    (item) =>
+      new Date(item.startDateTime) < new Date() &&
+      new Date(item.endDateTime) > new Date(),
   );
   const futureEvents = events.filter(
     (item) => new Date(item.startDateTime) >= new Date(),
