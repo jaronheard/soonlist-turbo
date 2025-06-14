@@ -7,9 +7,7 @@ import { useMutation } from "convex/react";
 import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
-import { blankEvent } from "@soonlist/cal";
 
-import { AddToCalendarCard } from "~/components/AddToCalendarCard";
 import { buildDefaultUrl } from "~/components/ImageUpload";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import { optimizeImageToBase64 } from "~/lib/imageOptimization";
@@ -97,39 +95,39 @@ export function EventsFromImage({
   }, [isProcessing, error, handleCreateEvent]);
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border bg-card p-6">
-        <h3 className="mb-2 text-lg font-semibold">Processing Image</h3>
-        <img
-          src={buildDefaultUrl(filePath)}
-          alt="Event preview"
-          className="mb-4 max-h-64 w-full rounded-md object-contain"
-        />
-        
-        {isProcessing && (
-          <div className="flex items-center justify-center space-x-2 text-muted-foreground">
-            <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            <span>Extracting event details from image...</span>
-          </div>
-        )}
-        
-        {error && (
-          <div className="space-y-2">
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-4">
+        <div className="rounded-lg border bg-card p-6">
+          <h3 className="mb-2 text-lg font-semibold">Processing Event</h3>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={buildDefaultUrl(filePath)}
+            alt="Event preview"
+            className="mb-4 max-h-64 w-full rounded-md object-contain"
+          />
+          
+          {isProcessing && (
+            <div className="flex items-center justify-center space-x-2 text-muted-foreground">
+              <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              <span>Extracting event details from image...</span>
             </div>
-            <button
-              onClick={handleCreateEvent}
-              className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
-            >
-              Try Again
-            </button>
-          </div>
-        )}
+          )}
+          
+          {error && (
+            <div className="space-y-2">
+              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </div>
+              <button
+                onClick={handleCreateEvent}
+                className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Show blank event card as preview while processing */}
-      <AddToCalendarCard {...blankEvent} hideFloatingActionButtons />
     </div>
   );
 }

@@ -1,19 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
-import { blankEvent } from "@soonlist/cal";
 
-import { AddToCalendarCard } from "~/components/AddToCalendarCard";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
-import { EventPreviewLoadingSpinner } from "./EventPreviewLoadingSpinner";
-import { EventsError } from "./EventsError";
-import { NewEventPreview } from "./NewEventPreview";
 
 export function EventsFromRawText({
   rawText,
@@ -30,7 +25,7 @@ export function EventsFromRawText({
 
   const createEventFromText = useMutation(api.ai.eventFromTextThenCreate);
 
-  const handleCreateEvent = async () => {
+  const handleCreateEvent = useCallback(async () => {
     if (!user) {
       toast.error("Please sign in to create events");
       return;
@@ -50,7 +45,7 @@ export function EventsFromRawText({
         lists: [],
       });
 
-      if (result?.workflowId) {
+      if (result.workflowId) {
         addWorkflowId(result.workflowId);
         toast.success("Processing event from text...");
         router.push("/"); // Navigate to home while processing
@@ -62,31 +57,44 @@ export function EventsFromRawText({
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [user, rawText, timezone, createEventFromText, addWorkflowId, router]);
+
+  // Automatically process when component mounts
+  useEffect(() => {
+    void handleCreateEvent();
+  }, [handleCreateEvent]);
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border bg-card p-6">
-        <h3 className="mb-2 text-lg font-semibold">Create Event from Text</h3>
-        <p className="mb-4 whitespace-pre-wrap text-sm text-muted-foreground">
-          {rawText}
-        </p>
-        {error && (
-          <div className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-            {error}
-          </div>
-        )}
-        <button
-          onClick={handleCreateEvent}
-          disabled={isProcessing}
-          className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
-          {isProcessing ? "Processing..." : "Create Event from Text"}
-        </button>
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-4">
+        <div className="rounded-lg border bg-card p-6">
+          <h3 className="mb-2 text-lg font-semibold">Processing Event</h3>
+          <p className="mb-4 whitespace-pre-wrap text-sm text-muted-foreground">
+            {rawText.length > 200 ? rawText.substring(0, 200) + "..." : rawText}
+          </p>
+          
+          {isProcessing && (
+            <div className="flex items-center justify-center space-x-2 text-muted-foreground">
+              <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              <span>Extracting event details from text...</span>
+            </div>
+          )}
+          
+          {error && (
+            <div className="space-y-2">
+              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </div>
+              <button
+                onClick={handleCreateEvent}
+                className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Show blank event card as preview */}
-      <AddToCalendarCard {...blankEvent} hideFloatingActionButtons />
     </div>
   );
 }

@@ -16,6 +16,7 @@ interface Props {
     filePath?: string;
     timezone?: string;
     edit?: boolean;
+    autoProcess?: string;
   }>;
 }
 
@@ -30,8 +31,19 @@ export default async function Page(props: Props) {
   // For now, using empty array until lists module is migrated
   const lists = getDefaultLists(userId);
   const timezone = searchParams.timezone || "America/Los_Angeles";
+  const autoProcess = searchParams.autoProcess === "true";
+  
   // image only
   if (searchParams.filePath && !searchParams.rawText) {
+    // If autoProcess is true, render EventsFromImage directly without ProgressStages wrapper
+    if (autoProcess) {
+      return (
+        <EventsFromImage
+          timezone={timezone}
+          filePath={searchParams.filePath}
+        />
+      );
+    }
     return (
       <ProgressStages
         filePath={searchParams.filePath}
@@ -48,6 +60,15 @@ export default async function Page(props: Props) {
 
   // text (with or without image)
   if (searchParams.rawText) {
+    // If autoProcess is true, render EventsFromRawText directly without ProgressStages wrapper
+    if (autoProcess) {
+      return (
+        <EventsFromRawText
+          timezone={timezone}
+          rawText={searchParams.rawText}
+        />
+      );
+    }
     return (
       <ProgressStages
         filePath={searchParams.filePath}
@@ -63,6 +84,12 @@ export default async function Page(props: Props) {
   }
   // url
   if (searchParams.url) {
+    // If autoProcess is true, render EventsFromUrl directly without ProgressStages wrapper
+    if (autoProcess) {
+      return (
+        <EventsFromUrl timezone={timezone} url={searchParams.url} />
+      );
+    }
     return (
       <ProgressStages
         filePath={searchParams.filePath}

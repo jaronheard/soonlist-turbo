@@ -8,7 +8,6 @@ import { Camera, Upload } from "lucide-react";
 import { Button } from "@soonlist/ui/button";
 
 import { bytescaleWidgetOptions } from "~/components/ImageUpload";
-import { Status, useNewEventProgressContext } from "~/context/NewEventProgressContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
 
 const widgetOptions = {
@@ -24,7 +23,6 @@ const widgetOptions = {
 export const UploadImageForProcessingDropzone = () => {
   const router = useRouter();
   const { timezone } = useContext(TimezoneContext);
-  const { setStatus } = useNewEventProgressContext();
 
   return (
     <div className="relative">
@@ -39,9 +37,8 @@ export const UploadImageForProcessingDropzone = () => {
           if (uploadedFiles.length > 0) {
             const filePath = uploadedFiles[0]?.filePath;
             if (filePath) {
-              // Skip directly to Preview status (skipping Organize)
-              setStatus(Status.Preview);
-              router.push(`/new?filePath=${filePath}&timezone=${timezone}`, {
+              // Navigate directly to processing page without review step
+              router.push(`/new?filePath=${filePath}&timezone=${timezone}&autoProcess=true`, {
                 scroll: false,
               });
             }
@@ -55,7 +52,6 @@ export const UploadImageForProcessingDropzone = () => {
 export const UploadImageForProcessingButton = () => {
   const router = useRouter();
   const { timezone } = useContext(TimezoneContext);
-  const { setStatus } = useNewEventProgressContext();
 
   return (
     <UploadButton
@@ -64,9 +60,8 @@ export const UploadImageForProcessingButton = () => {
         if (files.length > 0) {
           const filePath = files[0]?.filePath;
           if (filePath) {
-            // Skip directly to Preview status (skipping Organize)
-            setStatus(Status.Preview);
-            router.push(`/new?filePath=${filePath}&timezone=${timezone}`, {
+            // Navigate directly to processing page without review step
+            router.push(`/new?filePath=${filePath}&timezone=${timezone}&autoProcess=true`, {
               scroll: false,
             });
           }
