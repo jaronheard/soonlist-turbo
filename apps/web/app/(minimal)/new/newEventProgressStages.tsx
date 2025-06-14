@@ -9,8 +9,10 @@ import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera, EyeOff, Globe2, LinkIcon, Sparkles, Text } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useMutation, useQuery } from "convex/react";
 
 import type { List } from "@soonlist/db/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "@soonlist/ui/button";
 import {
   Form,
@@ -44,6 +46,7 @@ import {
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
+import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import {
   UploadImageForProcessingButton,
   UploadImageForProcessingDropzone,
@@ -337,30 +340,80 @@ function Organize({
 
 function AddEvent() {
   const router = useRouter();
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const { addWorkflowId } = useWorkflowStore();
 
   // State variables
   const [input, setInput] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
   const { goToNextStatus, uploadOption, setUploadOption } =
     useNewEventProgressContext();
 
   // Context variables
   const { timezone } = useContext(TimezoneContext);
+  
+  // Mutations
+  const createEventFromText = useMutation(api.ai.eventFromTextThenCreate);
+  const createEventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
 
   // Helpers
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
     setInput(e.target.value);
   };
-  const onSubmitText = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Prevent the default form submission behavior
-    router.push(`/new?rawText=${input}&timezone=${timezone}`, {
-      scroll: false,
-    });
+  const onSubmitText = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!currentUser || isProcessing) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      const result = await createEventFromText({
+        rawText: input,
+        timezone,
+        userId: currentUser.id,
+        username: currentUser.username || currentUser.id,
+        sendNotification: false,
+        visibility: "public",
+        lists: [],
+      });
+      
+      if (result.workflowId) {
+        addWorkflowId(result.workflowId);
+        router.push(`/${currentUser.username || currentUser.id}/upcoming`);
+      }
+    } catch (error) {
+      console.error("Error creating event from text:", error);
+      setIsProcessing(false);
+    }
   };
-  const onSubmitUrl = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Prevent the default form submission behavior
-    router.push(`/new?url=${input}&timezone=${timezone}`, {
-      scroll: false,
-    });
+  
+  const onSubmitUrl = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!currentUser || isProcessing) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      const result = await createEventFromUrl({
+        url: input,
+        timezone,
+        userId: currentUser.id,
+        username: currentUser.username || currentUser.id,
+        sendNotification: false,
+        visibility: "public",
+        lists: [],
+      });
+      
+      if (result.workflowId) {
+        addWorkflowId(result.workflowId);
+        router.push(`/${currentUser.username || currentUser.id}/upcoming`);
+      }
+    } catch (error) {
+      console.error("Error creating event from URL:", error);
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -398,6 +451,7 @@ function AddEvent() {
             handleInputChange={handleInputChange}
             input={input}
             onSubmit={onSubmitText}
+            isProcessing={isProcessing}
           />
         </TabsContent>
         <TabsContent value="link" className="mt-11">
@@ -405,6 +459,7 @@ function AddEvent() {
             handleInputChange={handleInputChange}
             input={input}
             onSubmit={onSubmitUrl}
+            isProcessing={isProcessing}
           />
         </TabsContent>
       </Tabs>
@@ -416,12 +471,14 @@ function TextEventForm({
   handleInputChange,
   input,
   onSubmit,
+  isProcessing,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleInputChange: (e: any) => void;
   input: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (e: any) => void;
+  isProcessing: boolean;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleKeyDown = (event: any) => {
@@ -442,9 +499,18 @@ function TextEventForm({
         placeholder={"Paste or type event info..."}
       />
       <ProgressStagesFooter>
-        <Button type="submit" disabled={!input}>
-          <Sparkles className="mr-2 size-4" />
-          Generate from text
+        <Button type="submit" disabled={!input || isProcessing}>
+          {isProcessing ? (
+            <>
+              <div className="mr-2 size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Sparkles className="mr-2 size-4" />
+              Generate from text
+            </>
+          )}
         </Button>
       </ProgressStagesFooter>
     </form>
@@ -455,12 +521,14 @@ export function UrlEventForm({
   handleInputChange,
   input,
   onSubmit,
+  isProcessing,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleInputChange: (e: any) => void;
   input: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (e: any) => void;
+  isProcessing: boolean;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleKeyDown = (event: any) => {
@@ -484,9 +552,18 @@ export function UrlEventForm({
         placeholder={"Enter event URL..."}
       />
       <ProgressStagesFooter>
-        <Button type="submit" disabled={!input}>
-          <Sparkles className="mr-2 size-4" />
-          Generate from link
+        <Button type="submit" disabled={!input || isProcessing}>
+          {isProcessing ? (
+            <>
+              <div className="mr-2 size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Sparkles className="mr-2 size-4" />
+              Generate from link
+            </>
+          )}
         </Button>
       </ProgressStagesFooter>
     </form>

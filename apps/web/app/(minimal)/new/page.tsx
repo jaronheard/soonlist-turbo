@@ -2,8 +2,6 @@ import { auth } from "@clerk/nextjs/server";
 
 import { getDefaultLists } from "~/lib/convex-lists";
 import { EventsFromImage } from "./EventsFromImage";
-import { EventsFromRawText } from "./EventsFromRawText";
-import { EventsFromUrl } from "./EventsFromUrl";
 import { ProgressStages } from "./newEventProgressStages";
 
 export const maxDuration = 60;
@@ -55,18 +53,8 @@ export default async function Page(props: Props) {
     );
   }
 
-  // text (with or without image)
-  if (searchParams.rawText) {
-    // Always process text immediately without review step
-    return (
-      <EventsFromRawText timezone={timezone} rawText={searchParams.rawText} />
-    );
-  }
-  // url
-  if (searchParams.url) {
-    // Always process URL immediately without review step
-    return <EventsFromUrl timezone={timezone} url={searchParams.url} />;
-  }
+  // If we have text or URL params, just show the upload form
+  // The actual processing now happens in the form submission handlers
 
   return <ProgressStages showUpload={true} />;
 }
