@@ -76,10 +76,8 @@ export function EventsFromImage({
 
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
-        toast.loading("Uploading image...", {
-          id: `upload-${result.workflowId}`,
-        });
-        router.push(`/${user.username || user.id}/upcoming`); // Navigate to user's upcoming page while processing
+        // Navigate directly to upcoming page without toast
+        router.push(`/${user.username || user.id}/upcoming`);
       }
     } catch (err) {
       console.error("Error creating event from image:", err);

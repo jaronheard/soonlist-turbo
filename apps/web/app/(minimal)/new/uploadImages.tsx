@@ -2,12 +2,17 @@
 
 import { useContext } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { useMutation } from "convex/react";
 import { UploadButton, UploadDropzone } from "@bytescale/upload-widget-react";
 import { Camera, Upload } from "lucide-react";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "@soonlist/ui/button";
 
-import { bytescaleWidgetOptions } from "~/components/ImageUpload";
+import { buildDefaultUrl, bytescaleWidgetOptions } from "~/components/ImageUpload";
+import { useWorkflowStore } from "~/hooks/useWorkflowStore";
+import { optimizeImageToBase64 } from "~/lib/imageOptimization";
 import { TimezoneContext } from "~/context/TimezoneContext";
 
 const widgetOptions = {
@@ -22,7 +27,49 @@ const widgetOptions = {
 
 export const UploadImageForProcessingDropzone = () => {
   const router = useRouter();
+  const { user } = useUser();
   const { timezone } = useContext(TimezoneContext);
+  const { addWorkflowId } = useWorkflowStore();
+  const createEventFromImage = useMutation(
+    api.ai.eventFromImageBase64ThenCreate,
+  );
+
+  const handleImageUpload = async (filePath: string) => {
+    if (!user) return;
+    
+    try {
+      // Convert image URL to optimized base64
+      const imageUrl = buildDefaultUrl(filePath);
+      let base64Image: string;
+      
+      try {
+        base64Image = await optimizeImageToBase64(imageUrl, 640, 0.5);
+      } catch (optimizeError) {
+        console.warn("Failed to optimize image, using fallback:", optimizeError);
+        const { imageUrlToBase64 } = await import("~/lib/imageOptimization");
+        base64Image = await imageUrlToBase64(imageUrl);
+      }
+      
+      // Start the workflow
+      const result = await createEventFromImage({
+        base64Image,
+        timezone,
+        userId: user.id,
+        username: user.username || user.id,
+        sendNotification: false,
+        visibility: "public",
+        lists: [],
+      });
+      
+      if (result.workflowId) {
+        addWorkflowId(result.workflowId);
+        // Navigate directly to upcoming page
+        router.push(`/${user.username || user.id}/upcoming`);
+      }
+    } catch (error) {
+      console.error("Error creating event from image:", error);
+    }
+  };
 
   return (
     <div className="relative">
@@ -37,13 +84,7 @@ export const UploadImageForProcessingDropzone = () => {
           if (uploadedFiles.length > 0) {
             const filePath = uploadedFiles[0]?.filePath;
             if (filePath) {
-              // Navigate directly to processing page without review step
-              router.push(
-                `/new?filePath=${filePath}&timezone=${timezone}&autoProcess=true`,
-                {
-                  scroll: false,
-                },
-              );
+              void handleImageUpload(filePath);
             }
           }
         }}
@@ -54,7 +95,49 @@ export const UploadImageForProcessingDropzone = () => {
 
 export const UploadImageForProcessingButton = () => {
   const router = useRouter();
+  const { user } = useUser();
   const { timezone } = useContext(TimezoneContext);
+  const { addWorkflowId } = useWorkflowStore();
+  const createEventFromImage = useMutation(
+    api.ai.eventFromImageBase64ThenCreate,
+  );
+
+  const handleImageUpload = async (filePath: string) => {
+    if (!user) return;
+    
+    try {
+      // Convert image URL to optimized base64
+      const imageUrl = buildDefaultUrl(filePath);
+      let base64Image: string;
+      
+      try {
+        base64Image = await optimizeImageToBase64(imageUrl, 640, 0.5);
+      } catch (optimizeError) {
+        console.warn("Failed to optimize image, using fallback:", optimizeError);
+        const { imageUrlToBase64 } = await import("~/lib/imageOptimization");
+        base64Image = await imageUrlToBase64(imageUrl);
+      }
+      
+      // Start the workflow
+      const result = await createEventFromImage({
+        base64Image,
+        timezone,
+        userId: user.id,
+        username: user.username || user.id,
+        sendNotification: false,
+        visibility: "public",
+        lists: [],
+      });
+      
+      if (result.workflowId) {
+        addWorkflowId(result.workflowId);
+        // Navigate directly to upcoming page
+        router.push(`/${user.username || user.id}/upcoming`);
+      }
+    } catch (error) {
+      console.error("Error creating event from image:", error);
+    }
+  };
 
   return (
     <UploadButton
@@ -63,13 +146,7 @@ export const UploadImageForProcessingButton = () => {
         if (files.length > 0) {
           const filePath = files[0]?.filePath;
           if (filePath) {
-            // Navigate directly to processing page without review step
-            router.push(
-              `/new?filePath=${filePath}&timezone=${timezone}&autoProcess=true`,
-              {
-                scroll: false,
-              },
-            );
+            void handleImageUpload(filePath);
           }
         }
       }}
