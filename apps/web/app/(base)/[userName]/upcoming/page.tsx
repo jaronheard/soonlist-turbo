@@ -2,10 +2,12 @@ import type { Metadata, ResolvingMetadata } from "next/types";
 import { currentUser } from "@clerk/nextjs/server";
 import { CalendarHeart } from "lucide-react";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
+
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
 import { env } from "~/env";
-import { api } from "~/trpc/server";
+import { getPublicConvex } from "~/lib/convex-server";
 
 interface Props {
   params: Promise<{ userName: string }>;
@@ -16,7 +18,8 @@ export async function generateMetadata(
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const params = await props.params;
-  const events = await api.event.getForUser({
+  const convex = await getPublicConvex();
+  const events = await convex.query(api.events.getForUser, {
     userName: params.userName,
   });
 
@@ -54,7 +57,8 @@ export default async function Page(props: Props) {
   const params = await props.params;
   const activeUser = await currentUser();
   const self = activeUser?.username === params.userName;
-  const events = await api.event.getUpcomingForUser({
+  const convex = await getPublicConvex();
+  const events = await convex.query(api.events.getUpcomingForUser, {
     userName: params.userName,
   });
 

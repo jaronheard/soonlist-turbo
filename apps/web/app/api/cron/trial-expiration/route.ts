@@ -1,9 +1,4 @@
 import { NextResponse } from "next/server";
-import { TRPCError } from "@trpc/server";
-import { getHTTPStatusCodeFromError } from "@trpc/server/http";
-
-import { appRouter } from "@soonlist/api";
-import { createTRPCContext } from "@soonlist/api/trpc";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -21,30 +16,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const ctx = await createTRPCContext({ headers: new Headers() });
-  const caller = appRouter.createCaller(ctx);
-
-  try {
-    // Pass the CRON_SECRET to the sendTrialExpirationReminders procedure
-    await caller.notification.sendTrialExpirationReminders({
-      cronSecret: process.env.CRON_SECRET || "",
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (cause) {
-    console.error("Error processing trial expiration notifications:", cause);
-
-    if (cause instanceof TRPCError) {
-      const httpStatusCode = getHTTPStatusCodeFromError(cause);
-      return NextResponse.json(
-        { success: false, error: { message: cause.message } },
-        { status: httpStatusCode },
-      );
-    }
-
-    return NextResponse.json(
-      { success: false, error: { message: "Internal Server Error" } },
-      { status: 500 },
-    );
-  }
+  // Trial expiration reminders are handled by Convex cron jobs
+  // This endpoint exists for backward compatibility
+  return NextResponse.json({ 
+    success: true, 
+    message: "Trial expiration reminders are handled by Convex cron jobs" 
+  });
 }

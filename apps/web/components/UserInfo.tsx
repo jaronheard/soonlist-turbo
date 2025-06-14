@@ -3,9 +3,10 @@ import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { Instagram, LinkIcon, Mail, MessageSquare } from "lucide-react";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button, buttonVariants } from "@soonlist/ui/button";
 
-import { api } from "~/trpc/server";
+import { getPublicConvex } from "~/lib/convex-server";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 const SAMPLE_BIO = `I haven't written a bio yet... you'll have to find me at one of my events!`;
@@ -29,11 +30,13 @@ export async function UserInfo(props: UserInfoProps) {
     return null;
   }
 
+  const convex = await getPublicConvex();
+  
   let user;
   if (props.userId) {
-    user = await api.user.getById({ id: props.userId });
+    user = await convex.query(api.users.getById, { id: props.userId });
   } else if (props.userName) {
-    user = await api.user.getByUsername({ userName: props.userName });
+    user = await convex.query(api.users.getByUsername, { userName: props.userName });
   }
 
   if (!user) {

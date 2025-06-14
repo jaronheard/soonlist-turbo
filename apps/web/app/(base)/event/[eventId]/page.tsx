@@ -6,12 +6,13 @@ import type {
   AddToCalendarButtonProps,
   AddToCalendarButtonPropsRestricted,
 } from "@soonlist/cal/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { collapseSimilarEvents } from "@soonlist/cal";
 
 import type { EventWithUser } from "~/components/EventList";
 import { EventPage } from "~/components/EventDisplays";
 import { env } from "~/env";
-import { api } from "~/trpc/server";
+import { getPublicConvex } from "~/lib/convex-server";
 
 interface Props {
   params: Promise<{
@@ -24,7 +25,8 @@ export async function generateMetadata(
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const params = await props.params;
-  const event = await api.event.get({ eventId: params.eventId });
+  const convex = await getPublicConvex();
+  const event = await convex.query(api.events.get, { eventId: params.eventId });
   if (!event) {
     return {
       title: "No event found | Soonlist",
@@ -60,7 +62,8 @@ export async function generateMetadata(
 
 export default async function Page(props: Props) {
   const params = await props.params;
-  const event = await api.event.get({ eventId: params.eventId });
+  const convex = await getPublicConvex();
+  const event = await convex.query(api.events.get, { eventId: params.eventId });
   const user = await currentUser();
   if (!event) {
     return <p className="text-lg text-gray-500">No event found.</p>;
@@ -69,7 +72,7 @@ export default async function Page(props: Props) {
   const eventMetadata = event.eventMetadata as EventMetadata;
   const fullImageUrl = eventData.images?.[3];
 
-  const possibleDuplicateEvents = (await api.event.getPossibleDuplicates({
+  const possibleDuplicateEvents = (await convex.query(api.events.getPossibleDuplicates, {
     startDateTime: event.startDateTime,
   })) as EventWithUser[];
 
@@ -79,7 +82,8 @@ export default async function Page(props: Props) {
     user?.id,
   ).find((similarEvent) => similarEvent.event.id === event.id)?.similarEvents;
 
-  const lists = event.eventToLists.map((list) => list.list);
+  // TODO: Implement event lists when list functionality is added to Convex
+  const lists = [];
 
   return (
     <>
@@ -97,7 +101,7 @@ export default async function Page(props: Props) {
         image={fullImageUrl}
         singleEvent
         hideCurator
-        lists={lists}
+        lists={[]}
       />
     </>
   );

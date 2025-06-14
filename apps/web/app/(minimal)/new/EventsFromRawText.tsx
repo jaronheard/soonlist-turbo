@@ -1,24 +1,20 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { useMutation } from "convex/react";
+import { toast } from "sonner";
+
 import { blankEvent } from "@soonlist/cal";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
-import { api } from "~/trpc/react";
+import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import { EventPreviewLoadingSpinner } from "./EventPreviewLoadingSpinner";
 import { EventsError } from "./EventsError";
 import { NewEventPreview } from "./NewEventPreview";
 
-const queryOptions = {
-  // only retry once
-  retry: 1,
-  retryDelay: 250,
-  // don't refetch on mount, window focus, or reconnect
-  refetchOnMount: false,
-  refetchOnWindowFocus: false,
-  refetchOnReconnect: false,
-  // stale time of 1 day
-  staleTime: 1000 * 60 * 60 * 24,
-};
 
 export function EventsFromRawText({
   rawText,
@@ -27,37 +23,71 @@ export function EventsFromRawText({
   rawText: string;
   timezone: string;
 }) {
-  const fromRawText = api.ai.eventFromRawText.useQuery(
-    {
-      rawText,
-      timezone,
-    },
-    queryOptions,
-  );
+  const router = useRouter();
+  const { user } = useUser();
+  const { addWorkflowId } = useWorkflowStore();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { events, response } = fromRawText.data ?? {};
+  const createEventFromText = useMutation(api.ai.eventFromTextThenCreate);
 
-  if (fromRawText.isPending) {
-    return <EventPreviewLoadingSpinner className="h-64" />;
-  }
+  const handleCreateEvent = async () => {
+    if (!user) {
+      toast.error("Please sign in to create events");
+      return;
+    }
 
-  if (!events || events.length === 0) {
-    return (
-      <>
-        <EventsError rawText={rawText} response={response || undefined} />
-        <div className="p-4"></div>
-        <AddToCalendarCard {...blankEvent} hideFloatingActionButtons />
-      </>
-    );
-  }
+    setIsProcessing(true);
+    setError(null);
 
-  if (events.length >= 0) {
-    return (
-      <div className="flex flex-wrap items-center gap-8">
-        {events.map((props) => (
-          <NewEventPreview key={props.name} {...props} />
-        ))}
+    try {
+      const workflowId = await createEventFromText({
+        text: rawText,
+        timezone,
+        userId: user.id,
+        username: user.username || user.id,
+        sendPushNotification: false, // Web doesn't have push notifications
+        visibility: "public",
+        lists: [],
+      });
+
+      if (workflowId) {
+        addWorkflowId(workflowId);
+        toast.success("Processing event from text...");
+        router.push("/"); // Navigate to home while processing
+      }
+    } catch (err) {
+      console.error("Error creating event from text:", err);
+      setError(err instanceof Error ? err.message : "Failed to create event");
+      toast.error("Failed to process text");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border bg-card p-6">
+        <h3 className="mb-2 text-lg font-semibold">Create Event from Text</h3>
+        <p className="mb-4 whitespace-pre-wrap text-sm text-muted-foreground">
+          {rawText}
+        </p>
+        {error && (
+          <div className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+        <button
+          onClick={handleCreateEvent}
+          disabled={isProcessing}
+          className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+        >
+          {isProcessing ? "Processing..." : "Create Event from Text"}
+        </button>
       </div>
-    );
-  }
+      
+      {/* Show blank event card as preview */}
+      <AddToCalendarCard {...blankEvent} hideFloatingActionButtons />
+    </div>
+  );
 }

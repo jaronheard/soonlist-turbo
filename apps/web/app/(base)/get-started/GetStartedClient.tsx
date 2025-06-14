@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useAuth, useClerk, useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
 import QRCode from "react-qr-code";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Badge } from "@soonlist/ui/badge";
 import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
@@ -12,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 import { FullPageLoadingSpinner } from "~/components/FullPageLoadingSpinner";
 import { HelpButton } from "~/components/HelpButton";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
-import { api } from "~/trpc/react";
 import { OnboardingTabs } from "./OnboardingTabs";
 
 const HOST =
@@ -99,12 +100,12 @@ export function GetStartedClient() {
   const { user: activeUser } = useUser();
   const { openUserProfile } = useClerk();
 
-  const { data: user, isLoading } = api.user.getByUsername.useQuery(
-    { userName: activeUser?.username || "" },
-    { enabled: !!activeUser?.username },
+  const user = useQuery(
+    api.users.getByUsername,
+    activeUser?.username ? { userName: activeUser.username } : "skip"
   );
 
-  if (!isLoaded || isLoading) {
+  if (!isLoaded || (!activeUser?.username && user === undefined)) {
     return <FullPageLoadingSpinner />;
   }
 

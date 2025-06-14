@@ -60,7 +60,8 @@
     "timezone-soft": "catalog:",
     "uuid": "catalog:",
     "yet-another-react-lightbox": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@clerk/backend": "catalog:",

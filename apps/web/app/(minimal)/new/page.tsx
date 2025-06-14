@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 
-import { api } from "~/trpc/server";
+import { getDefaultLists } from "~/lib/convex-lists";
 import { EventsFromImage } from "./EventsFromImage";
 import { EventsFromRawText } from "./EventsFromRawText";
 import { EventsFromUrl } from "./EventsFromUrl";
@@ -26,9 +26,9 @@ export default async function Page(props: Props) {
     unauthorizedUrl: "/",
   });
 
-  const lists = await api.list.getAllForUserId({
-    userId: userId,
-  });
+  // TODO: Implement list queries in Convex backend
+  // For now, using empty array until lists module is migrated
+  const lists = getDefaultLists(userId);
   const timezone = searchParams.timezone || "America/Los_Angeles";
   // image only
   if (searchParams.filePath && !searchParams.rawText) {

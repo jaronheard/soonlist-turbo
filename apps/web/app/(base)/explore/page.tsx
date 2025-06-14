@@ -1,10 +1,13 @@
 import { Globe2 } from "lucide-react";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
+
 import { EventList } from "~/components/EventList";
-import { api } from "~/trpc/server";
+import { getPublicConvex } from "~/lib/convex-server";
 
 export default async function Page() {
-  const events = await api.event.getNext({ limit: 50 });
+  const convex = await getPublicConvex();
+  const events = await convex.query(api.events.getNext, { limit: 50 });
 
   const pastEvents = events.filter((item) => item.endDateTime < new Date());
 

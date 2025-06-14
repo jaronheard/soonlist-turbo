@@ -1,13 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SignedIn } from "@clerk/nextjs";
+import { useMutation } from "convex/react";
 import { Heart, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "@soonlist/ui/button";
 
-import { api } from "~/trpc/react";
 import { DropdownMenuItem } from "./DropdownMenu";
 
 export function FollowEventDropdownButton({
@@ -18,34 +20,30 @@ export function FollowEventDropdownButton({
   following?: boolean;
 }) {
   const router = useRouter();
-  const follow = api.event.follow.useMutation({
-    onError: () => {
-      toast.error("Event not saved. Please try again.");
-    },
-    onSuccess: () => {
-      toast.success("Event saved.");
-      router.refresh();
-    },
-  });
-  const unfollow = api.event.unfollow.useMutation({
-    onError: () => {
-      toast.error("Event not unsaved. Please try again.");
-    },
-    onSuccess: () => {
-      toast.success("Event unsaved.");
-      router.refresh();
-    },
-  });
-  const isLoading = follow.isPending || unfollow.isPending;
+  const follow = useMutation(api.events.follow);
+  const unfollow = useMutation(api.events.unfollow);
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <SignedIn>
       <DropdownMenuItem
-        onSelect={() =>
-          following
-            ? unfollow.mutate({ id: eventId })
-            : follow.mutate({ id: eventId })
-        }
+        onSelect={async () => {
+          setIsLoading(true);
+          try {
+            if (following) {
+              await unfollow({ id: eventId });
+              toast.success("Event unsaved.");
+            } else {
+              await follow({ id: eventId });
+              toast.success("Event saved.");
+            }
+            router.refresh();
+          } catch (error) {
+            toast.error(following ? "Event not unsaved. Please try again." : "Event not saved. Please try again.");
+          } finally {
+            setIsLoading(false);
+          }
+        }}
         disabled={isLoading}
       >
         {isLoading && (
@@ -81,35 +79,33 @@ export function FollowEventButton({
   type?: "button" | "icon";
 }) {
   const router = useRouter();
-  const follow = api.event.follow.useMutation({
-    onError: () => {
-      toast.error("Event not saved. Please try again.");
-    },
-    onSuccess: () => {
-      toast.success("Event saved.");
+  const follow = useMutation(api.events.follow);
+  const unfollow = useMutation(api.events.unfollow);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleFollowToggle = async () => {
+    setIsLoading(true);
+    try {
+      if (following) {
+        await unfollow({ id: eventId });
+        toast.success("Event unsaved.");
+      } else {
+        await follow({ id: eventId });
+        toast.success("Event saved.");
+      }
       router.refresh();
-    },
-  });
-  const unfollow = api.event.unfollow.useMutation({
-    onError: () => {
-      toast.error("Event not unsaved. Please try again.");
-    },
-    onSuccess: () => {
-      toast.success("Event unsaved.");
-      router.refresh();
-    },
-  });
-  const isLoading = follow.isPending || unfollow.isPending;
+    } catch (error) {
+      toast.error(following ? "Event not unsaved. Please try again." : "Event not saved. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (type === "icon") {
     return (
       <SignedIn>
         <Button
-          onClick={() =>
-            following
-              ? unfollow.mutate({ id: eventId })
-              : follow.mutate({ id: eventId })
-          }
+          onClick={handleFollowToggle}
           disabled={isLoading}
           variant="ghost"
           size="icon"
@@ -127,11 +123,7 @@ export function FollowEventButton({
   return (
     <SignedIn>
       <Button
-        onClick={() =>
-          following
-            ? unfollow.mutate({ id: eventId })
-            : follow.mutate({ id: eventId })
-        }
+        onClick={handleFollowToggle}
         disabled={isLoading}
         className="bg-interactive-3 text-interactive-1 hover:bg-interactive-3/90"
       >
