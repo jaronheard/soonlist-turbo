@@ -50,7 +50,7 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
               label: "View",
               onClick: () => router.push(`/event/${eventId}`),
             },
-            duration: 5000,
+            duration: 10000,
           });
           // Cleanup after showing success
           setTimeout(() => removeWorkflowId(workflowId), 1000);
