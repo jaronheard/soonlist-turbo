@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import { useQuery } from "convex/react";
 import { CalendarHeart } from "lucide-react";
 
@@ -11,7 +12,7 @@ import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
 
 interface Props {
-  params: { userName: string };
+  params: Promise<{ userName: string }>;
 }
 
 // Helper to transform Convex user to DB User type
@@ -94,15 +95,16 @@ function transformConvexEvent(
 
 
 export default function Page({ params }: Props) {
+  const { userName } = use(params);
   const currentUser = useQuery(api.users.getCurrentUser);
-  const self = currentUser?.username === params.userName;
+  const self = currentUser?.username === userName;
   
   const convexEvents = useQuery(api.events.getUpcomingForUser, {
-    userName: params.userName,
+    userName,
   });
   
   const userResponse = useQuery(api.users.getByUsername, {
-    userName: params.userName,
+    userName,
   });
 
   if (!convexEvents || !userResponse) {
@@ -133,7 +135,7 @@ export default function Page({ params }: Props) {
         </h1>
       ) : (
         <>
-          <UserInfo userName={params.userName} />
+          <UserInfo userName={userName} />
           <div className="p-2"></div>
         </>
       )}

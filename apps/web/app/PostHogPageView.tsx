@@ -2,18 +2,20 @@
 
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-// 👉 Import the necessary Clerk hooks
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
 import { usePostHog } from "posthog-js/react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 export default function PostHogPageView(): null {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const posthog = usePostHog();
 
-  // 👉 Add the hooks into the component
-  const { isSignedIn, userId } = useAuth();
-  const { user } = useUser();
+  // Get current user from Convex
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const isSignedIn = !!currentUser;
+  const userId = currentUser?.id;
 
   // Track pageviews
   useEffect(() => {
@@ -35,13 +37,13 @@ export default function PostHogPageView(): null {
     if (process.env.NODE_ENV == "development") {
       return;
     }
-    // 👉 Check the sign in status and user info,
-    //    and identify the user if they aren't already
-    if (isSignedIn && userId && user && !posthog._isIdentified()) {
-      // 👉 Identify the user
+    // Check the sign in status and user info,
+    // and identify the user if they aren't already
+    if (isSignedIn && userId && currentUser && !posthog._isIdentified()) {
+      // Identify the user
       posthog.identify(userId, {
-        email: user.primaryEmailAddress?.emailAddress,
-        username: user.username,
+        email: currentUser.email,
+        username: currentUser.username,
       });
     }
 
@@ -49,7 +51,7 @@ export default function PostHogPageView(): null {
     if (!isSignedIn && posthog._isIdentified()) {
       posthog.reset();
     }
-  }, [posthog, user]);
+  }, [posthog, currentUser, isSignedIn, userId]);
 
   return null;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import { useQuery } from "convex/react";
 
 import type { EventMetadata } from "@soonlist/cal";
@@ -13,9 +14,9 @@ import type { EventWithUser } from "~/components/EventList";
 import { EventPage } from "~/components/EventDisplays";
 
 interface Props {
-  params: {
+  params: Promise<{
     eventId: string;
-  };
+  }>;
 }
 
 
@@ -40,8 +41,9 @@ function transformConvexEvent(event: any): EventWithUser {
 }
 
 export default function Page({ params }: Props) {
+  const { eventId } = use(params);
   const currentUser = useQuery(api.users.getCurrentUser);
-  const event = useQuery(api.events.get, { eventId: params.eventId });
+  const event = useQuery(api.events.get, { eventId });
   const convexDuplicates = useQuery(
     api.events.getPossibleDuplicates,
     event ? { startDateTime: event.startDateTime } : "skip"
