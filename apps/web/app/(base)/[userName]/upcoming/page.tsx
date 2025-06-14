@@ -4,6 +4,8 @@ import { CalendarHeart } from "lucide-react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import type { User } from "@soonlist/db/types";
+
 import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
@@ -28,7 +30,7 @@ function transformConvexEvent(
     startDateTime: string;
     visibility: "public" | "private";
   },
-  user: any,
+  user: User | null,
 ): EventWithUser {
   return {
     id: event._id,
@@ -41,7 +43,7 @@ function transformConvexEvent(
     startDateTime: new Date(event.startDateTime),
     visibility: event.visibility,
     createdAt: new Date(event._creationTime),
-    user: user || {
+    user: user ?? {
       id: event.userId,
       username: event.userName,
       displayName: event.userName,
@@ -82,14 +84,7 @@ export async function generateMetadata(
   
   const events = convexEvents.map((event) => transformConvexEvent(event, userResponse));
 
-  if (!events) {
-    return {
-      title: "No events found | Soonlist",
-      openGraph: {
-        images: [],
-      },
-    };
-  }
+  // events is always an array, even if empty
 
   const futureEvents = events.filter(
     (item) => new Date(item.startDateTime) >= new Date(),
