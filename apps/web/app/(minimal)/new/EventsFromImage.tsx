@@ -76,8 +76,7 @@ export function EventsFromImage({
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
         toast.success("Processing event from image...");
-        // Navigate to user's upcoming feed
-        router.push(`/${user.username || user.id}/upcoming`);
+        router.push("/"); // Navigate to home while processing
       }
     } catch (err) {
       console.error("Error creating event from image:", err);

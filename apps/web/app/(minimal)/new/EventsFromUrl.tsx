@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
@@ -27,7 +27,6 @@ export function EventsFromUrl({
   const { addWorkflowId } = useWorkflowStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hasStartedRef = useRef(false);
 
   const createEventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
 
@@ -36,12 +35,6 @@ export function EventsFromUrl({
       toast.error("Please sign in to create events");
       return;
     }
-
-    // Prevent duplicate creation
-    if (hasStartedRef.current) {
-      return;
-    }
-    hasStartedRef.current = true;
 
     setIsProcessing(true);
     setError(null);
@@ -60,15 +53,12 @@ export function EventsFromUrl({
       if (result?.workflowId) {
         addWorkflowId(result.workflowId);
         toast.success("Processing event from URL...");
-        // Navigate to user's upcoming feed
-        router.push(`/${user.username || user.id}/upcoming`);
+        router.push("/"); // Navigate to home while processing
       }
     } catch (err) {
       console.error("Error creating event from URL:", err);
       setError(err instanceof Error ? err.message : "Failed to create event");
       toast.error("Failed to process URL");
-      // Reset on error to allow retry
-      hasStartedRef.current = false;
     } finally {
       setIsProcessing(false);
     }
