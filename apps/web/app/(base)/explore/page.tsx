@@ -32,7 +32,7 @@ export default function Page() {
   const convexEvents = useQuery(api.events.getNext, { limit: 50 });
   
   if (!convexEvents) {
-    return <div>Loading...</div>;
+    return null;
   }
   
   const events = convexEvents.map(transformConvexEvent);

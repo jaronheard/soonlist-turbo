@@ -32,23 +32,7 @@ export function WorkflowStatus({ workflowId }: WorkflowStatusProps) {
   }, [status, router, workflowId, removeWorkflowId]);
 
   if (!status) {
-    return (
-      <div className="mb-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
-        <div className="flex items-center justify-between">
-          <span className="flex-1 font-medium text-blue-800">
-            Loading workflow status...
-          </span>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6"
-            onClick={() => removeWorkflowId(workflowId)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const getStatusColor = () => {

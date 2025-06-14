@@ -51,7 +51,7 @@ export function FoundingMemberPricing({
   const emojisData = { takenEmojis: [] };
 
   if (!isLoaded) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   // @ts-expect-error - types are wrong

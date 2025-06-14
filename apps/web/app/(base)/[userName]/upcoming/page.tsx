@@ -108,7 +108,7 @@ export default function Page({ params }: Props) {
   });
 
   if (!convexEvents || !userResponse) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   const events = convexEvents.map((event) =>
