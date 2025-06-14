@@ -52,8 +52,8 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
             },
             duration: 10000,
           });
-          // Cleanup after showing success
-          setTimeout(() => removeWorkflowId(workflowId), 1000);
+          // Cleanup after toast duration expires
+          setTimeout(() => removeWorkflowId(workflowId), 10000);
         }
         break;
       }
