@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
@@ -72,14 +72,14 @@ export function EventsFromRawText({
           <p className="mb-4 whitespace-pre-wrap text-sm text-muted-foreground">
             {rawText.length > 200 ? rawText.substring(0, 200) + "..." : rawText}
           </p>
-          
+
           {isProcessing && (
             <div className="flex items-center justify-center space-x-2 text-muted-foreground">
               <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               <span>Extracting event details from text...</span>
             </div>
           )}
-          
+
           {error && (
             <div className="space-y-2">
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">

@@ -38,9 +38,12 @@ export const UploadImageForProcessingDropzone = () => {
             const filePath = uploadedFiles[0]?.filePath;
             if (filePath) {
               // Navigate directly to processing page without review step
-              router.push(`/new?filePath=${filePath}&timezone=${timezone}&autoProcess=true`, {
-                scroll: false,
-              });
+              router.push(
+                `/new?filePath=${filePath}&timezone=${timezone}&autoProcess=true`,
+                {
+                  scroll: false,
+                },
+              );
             }
           }
         }}
@@ -61,9 +64,12 @@ export const UploadImageForProcessingButton = () => {
           const filePath = files[0]?.filePath;
           if (filePath) {
             // Navigate directly to processing page without review step
-            router.push(`/new?filePath=${filePath}&timezone=${timezone}&autoProcess=true`, {
-              scroll: false,
-            });
+            router.push(
+              `/new?filePath=${filePath}&timezone=${timezone}&autoProcess=true`,
+              {
+                scroll: false,
+              },
+            );
           }
         }
       }}

@@ -36,7 +36,7 @@ export function EventsFromImage({
       console.log("Event processing already started, skipping duplicate call");
       return;
     }
-    
+
     if (!user) {
       toast.error("Please sign in to create events");
       return;
@@ -50,12 +50,15 @@ export function EventsFromImage({
       // Convert image URL to optimized base64 (resize to 640px width, 50% quality, WebP)
       const imageUrl = buildDefaultUrl(filePath);
       let base64Image: string;
-      
+
       try {
         // Try to optimize the image
         base64Image = await optimizeImageToBase64(imageUrl, 640, 0.5);
       } catch (optimizeError) {
-        console.warn("Failed to optimize image, using fallback:", optimizeError);
+        console.warn(
+          "Failed to optimize image, using fallback:",
+          optimizeError,
+        );
         // Fallback to simple conversion without optimization
         const { imageUrlToBase64 } = await import("~/lib/imageOptimization");
         base64Image = await imageUrlToBase64(imageUrl);
@@ -73,13 +76,15 @@ export function EventsFromImage({
 
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
-        toast.success("Processing event from image...");
+        toast.loading("Uploading image...", {
+          id: `upload-${result.workflowId}`,
+        });
         router.push(`/${user.username || user.id}/upcoming`); // Navigate to user's upcoming page while processing
       }
     } catch (err) {
       console.error("Error creating event from image:", err);
       setError(err instanceof Error ? err.message : "Failed to create event");
-      toast.error("Failed to process image");
+      toast.error("Failed to upload image");
       // Reset the ref on error so user can retry
       hasStartedRef.current = false;
     } finally {
@@ -105,14 +110,14 @@ export function EventsFromImage({
             alt="Event preview"
             className="mb-4 max-h-64 w-full rounded-md object-contain"
           />
-          
+
           {isProcessing && (
             <div className="flex items-center justify-center space-x-2 text-muted-foreground">
               <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               <span>Extracting event details from image...</span>
             </div>
           )}
-          
+
           {error && (
             <div className="space-y-2">
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">

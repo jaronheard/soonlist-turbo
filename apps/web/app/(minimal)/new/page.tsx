@@ -32,16 +32,13 @@ export default async function Page(props: Props) {
   const lists = getDefaultLists(userId);
   const timezone = searchParams.timezone || "America/Los_Angeles";
   const autoProcess = searchParams.autoProcess === "true";
-  
+
   // image only
   if (searchParams.filePath && !searchParams.rawText) {
     // If autoProcess is true, render EventsFromImage directly without ProgressStages wrapper
     if (autoProcess) {
       return (
-        <EventsFromImage
-          timezone={timezone}
-          filePath={searchParams.filePath}
-        />
+        <EventsFromImage timezone={timezone} filePath={searchParams.filePath} />
       );
     }
     return (
@@ -63,10 +60,7 @@ export default async function Page(props: Props) {
     // If autoProcess is true, render EventsFromRawText directly without ProgressStages wrapper
     if (autoProcess) {
       return (
-        <EventsFromRawText
-          timezone={timezone}
-          rawText={searchParams.rawText}
-        />
+        <EventsFromRawText timezone={timezone} rawText={searchParams.rawText} />
       );
     }
     return (
@@ -86,9 +80,7 @@ export default async function Page(props: Props) {
   if (searchParams.url) {
     // If autoProcess is true, render EventsFromUrl directly without ProgressStages wrapper
     if (autoProcess) {
-      return (
-        <EventsFromUrl timezone={timezone} url={searchParams.url} />
-      );
+      return <EventsFromUrl timezone={timezone} url={searchParams.url} />;
     }
     return (
       <ProgressStages

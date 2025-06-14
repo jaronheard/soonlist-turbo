@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
@@ -72,14 +72,14 @@ export function EventsFromUrl({
           <p className="mb-4 text-sm text-muted-foreground">
             URL: {url.length > 50 ? url.substring(0, 50) + "..." : url}
           </p>
-          
+
           {isProcessing && (
             <div className="flex items-center justify-center space-x-2 text-muted-foreground">
               <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               <span>Extracting event details from URL...</span>
             </div>
           )}
-          
+
           {error && (
             <div className="space-y-2">
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
