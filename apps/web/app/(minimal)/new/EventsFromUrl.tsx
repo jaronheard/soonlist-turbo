@@ -22,6 +22,7 @@ export function EventsFromUrl({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasStartedRef = useRef(false);
+  const hasNavigatedRef = useRef(false);
 
   const createEventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
 
@@ -59,21 +60,26 @@ export function EventsFromUrl({
       console.error("Error creating event from URL:", err);
       setError(err instanceof Error ? err.message : "Failed to create event");
       toast.error("Failed to process URL");
-      // Reset the ref on error so user can retry
-      hasStartedRef.current = false;
+      // Don't reset the ref - no retries needed
     } finally {
       setIsProcessing(false);
     }
   }, [currentUser, url, timezone, createEventFromUrl, addWorkflowId, router]);
 
-  // Automatically process the URL when component mounts and navigate immediately
+  // Navigate immediately on mount, only once
   useEffect(() => {
-    if (!isProcessing && !error && !hasStartedRef.current && currentUser) {
-      void handleCreateEvent();
-      // Navigate immediately to upcoming page
+    if (currentUser && !hasNavigatedRef.current) {
+      hasNavigatedRef.current = true;
       router.push(`/${currentUser.username || currentUser.id}/upcoming`);
     }
-  }, [isProcessing, error, handleCreateEvent, currentUser, router]);
+  }, [currentUser, router]);
+
+  // Process the URL on mount, only once
+  useEffect(() => {
+    if (currentUser && !hasStartedRef.current) {
+      void handleCreateEvent();
+    }
+  }, [currentUser]); // Remove handleCreateEvent from deps to prevent re-runs
 
   // This component immediately navigates away, so we don't render anything
   return null;
