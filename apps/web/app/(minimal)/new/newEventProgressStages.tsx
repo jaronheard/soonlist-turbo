@@ -436,14 +436,12 @@ function AddEvent() {
   };
   const onSubmitText = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Prevent the default form submission behavior
-    goToNextStatus();
     router.push(`/new?rawText=${input}&timezone=${timezone}`, {
       scroll: false,
     });
   };
   const onSubmitUrl = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Prevent the default form submission behavior
-    goToNextStatus();
     router.push(`/new?url=${input}&timezone=${timezone}`, {
       scroll: false,
     });

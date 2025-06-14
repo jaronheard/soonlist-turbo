@@ -54,8 +54,6 @@ export function EventsFromRawText({
 
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
-        // Navigate directly to upcoming page without extra toast
-        router.push(`/${currentUser.username || currentUser.id}/upcoming`);
       }
     } catch (err) {
       console.error("Error creating event from text:", err);
@@ -68,44 +66,15 @@ export function EventsFromRawText({
     }
   }, [currentUser, rawText, timezone, createEventFromText, addWorkflowId, router]);
 
-  // Automatically process the text when component mounts
+  // Automatically process the text when component mounts and navigate immediately
   useEffect(() => {
-    if (!isProcessing && !error && !hasStartedRef.current) {
+    if (!isProcessing && !error && !hasStartedRef.current && currentUser) {
       void handleCreateEvent();
+      // Navigate immediately to upcoming page
+      router.push(`/${currentUser.username || currentUser.id}/upcoming`);
     }
-  }, [isProcessing, error, handleCreateEvent]);
+  }, [isProcessing, error, handleCreateEvent, currentUser, router]);
 
-  return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-4">
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="mb-2 text-lg font-semibold">Processing Event</h3>
-          <p className="mb-4 whitespace-pre-wrap text-sm text-muted-foreground">
-            {rawText.length > 200 ? rawText.substring(0, 200) + "..." : rawText}
-          </p>
-
-          {isProcessing && (
-            <div className="flex items-center justify-center space-x-2 text-muted-foreground">
-              <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              <span>Extracting event details from text...</span>
-            </div>
-          )}
-
-          {error && (
-            <div className="space-y-2">
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {error}
-              </div>
-              <button
-                onClick={handleCreateEvent}
-                className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  // This component immediately navigates away, so we don't render anything
+  return null;
 }
