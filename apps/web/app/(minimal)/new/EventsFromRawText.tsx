@@ -48,7 +48,7 @@ export function EventsFromRawText({
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
         toast.success("Processing event from text...");
-        router.push("/"); // Navigate to home while processing
+        router.push(`/${user.username || user.id}/upcoming`); // Navigate to user's upcoming page while processing
       }
     } catch (err) {
       console.error("Error creating event from text:", err);
