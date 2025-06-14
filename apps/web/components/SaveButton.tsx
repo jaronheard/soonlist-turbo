@@ -75,7 +75,7 @@ export function SaveButton(props: SaveButtonProps) {
                 });
                 toast.success("Event saved.");
                 localStorage.removeItem("updatedProps");
-                router.push(`/event/${eventId as string}`);
+                router.push(`/event/${eventId}`);
               } catch {
                 toast.error("Your event was not saved. Please try again.");
               }

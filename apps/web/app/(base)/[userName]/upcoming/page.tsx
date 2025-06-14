@@ -15,22 +15,21 @@ interface Props {
 }
 
 // Transform Convex event to EventWithUser format
-function transformConvexEvent(event: {
-  _id: string;
-  _creationTime: number;
-  userId: string;
-  updatedAt?: string | null;
-  userName: string;
-  event: unknown;
-  eventMetadata?: unknown;
-  endDateTime: string;
-  startDateTime: string;
-  visibility: "public" | "private";
-  user: any;
-  eventFollows?: any[];
-  comments?: any[];
-  eventToLists?: any[];
-}): EventWithUser {
+function transformConvexEvent(
+  event: {
+    _id: string;
+    _creationTime: number;
+    userId: string;
+    updatedAt?: string | null;
+    userName: string;
+    event: unknown;
+    eventMetadata?: unknown;
+    endDateTime: string;
+    startDateTime: string;
+    visibility: "public" | "private";
+  },
+  user: any,
+): EventWithUser {
   return {
     id: event._id,
     userId: event.userId,
@@ -42,10 +41,27 @@ function transformConvexEvent(event: {
     startDateTime: new Date(event.startDateTime),
     visibility: event.visibility,
     createdAt: new Date(event._creationTime),
-    user: event.user,
-    eventFollows: event.eventFollows || [],
-    comments: event.comments || [],
-    eventToLists: event.eventToLists || [],
+    user: user || {
+      id: event.userId,
+      username: event.userName,
+      displayName: event.userName,
+      email: "",
+      userImage: "",
+      bio: null,
+      publicEmail: null,
+      publicPhone: null,
+      publicInsta: null,
+      publicWebsite: null,
+      publicMetadata: null,
+      emoji: null,
+      onboardingData: null,
+      onboardingCompletedAt: null,
+      createdAt: new Date(),
+      updatedAt: null,
+    },
+    eventFollows: [],
+    comments: [],
+    eventToLists: [],
   };
 }
 
@@ -58,7 +74,13 @@ export async function generateMetadata(
   const convexEvents = await convex.query(api.events.getForUser, {
     userName: params.userName,
   });
-  const events = convexEvents.map(transformConvexEvent);
+  
+  // Get user data for the events
+  const userResponse = await convex.query(api.users.getByUsername, {
+    userName: params.userName,
+  });
+  
+  const events = convexEvents.map((event) => transformConvexEvent(event, userResponse));
 
   if (!events) {
     return {
@@ -98,7 +120,13 @@ export default async function Page(props: Props) {
   const convexEvents = await convex.query(api.events.getUpcomingForUser, {
     userName: params.userName,
   });
-  const events = convexEvents.map(transformConvexEvent);
+  
+  // Get user data for the events
+  const userResponse = await convex.query(api.users.getByUsername, {
+    userName: params.userName,
+  });
+  
+  const events = convexEvents.map((event) => transformConvexEvent(event, userResponse));
 
   // const pastEvents = events.filter((item) => item.endDateTime < new Date());
 
