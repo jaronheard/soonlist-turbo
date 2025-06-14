@@ -220,7 +220,18 @@ export const extractEventFromUrl = internalAction({
       validateJinaResponse(aiResult);
 
       // Use the enhanced validateEvent function for event-specific validations
-      AI.validateEvent(aiResult.events);
+      // The AI returns an array of events, validate each one
+      if (!Array.isArray(aiResult.events)) {
+        throw new ConvexError({
+          message: "Invalid response: expected events array",
+          data: { events: aiResult.events }
+        });
+      }
+      
+      // Validate each event in the array
+      for (const event of aiResult.events) {
+        AI.validateEvent(event);
+      }
 
       // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
       const cleanedEvents = aiResult.events.map(event => {
