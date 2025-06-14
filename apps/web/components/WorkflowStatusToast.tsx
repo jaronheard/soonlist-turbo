@@ -37,16 +37,23 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
 
     switch (status.status) {
       case "inProgress":
-        // Skip the processing toast - user is already on upcoming page
+        toastIdRef.current = toast.loading("Processing event...", {
+          duration: Infinity,
+        });
         break;
 
       case "completed": {
         const eventId = typeof status.result === "string" ? status.result : undefined;
         if (eventId) {
-          // Navigate directly to event page without success toast
-          router.push(`/event/${eventId}`);
-          // Cleanup immediately
-          removeWorkflowId(workflowId);
+          toastIdRef.current = toast.success("Event created!", {
+            action: {
+              label: "View",
+              onClick: () => router.push(`/event/${eventId}`),
+            },
+            duration: 5000,
+          });
+          // Cleanup after showing success
+          setTimeout(() => removeWorkflowId(workflowId), 1000);
         }
         break;
       }
