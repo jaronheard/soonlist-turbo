@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -18,19 +17,27 @@ export function EventsFromRawText({
   timezone: string;
 }) {
   const router = useRouter();
-  const { user } = useUser();
+  const currentUser = useQuery(api.users.getCurrentUser);
   const { addWorkflowId } = useWorkflowStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasStartedRef = useRef(false);
 
   const createEventFromText = useMutation(api.ai.eventFromTextThenCreate);
 
   const handleCreateEvent = useCallback(async () => {
-    if (!user) {
+    // Prevent duplicate processing
+    if (hasStartedRef.current) {
+      console.log("Event processing already started, skipping duplicate call");
+      return;
+    }
+
+    if (!currentUser) {
       toast.error("Please sign in to create events");
       return;
     }
 
+    hasStartedRef.current = true;
     setIsProcessing(true);
     setError(null);
 
@@ -38,8 +45,8 @@ export function EventsFromRawText({
       const result = await createEventFromText({
         rawText,
         timezone,
-        userId: user.id,
-        username: user.username || user.id,
+        userId: currentUser.id,
+        username: currentUser.username || currentUser.id,
         sendNotification: false, // Web doesn't have push notifications
         visibility: "public",
         lists: [],
@@ -47,22 +54,26 @@ export function EventsFromRawText({
 
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
-        toast.success("Processing event from text...");
-        router.push(`/${user.username || user.id}/upcoming`); // Navigate to user's upcoming page while processing
+        // Navigate directly to upcoming page without extra toast
+        router.push(`/${currentUser.username || currentUser.id}/upcoming`);
       }
     } catch (err) {
       console.error("Error creating event from text:", err);
       setError(err instanceof Error ? err.message : "Failed to create event");
       toast.error("Failed to process text");
+      // Reset the ref on error so user can retry
+      hasStartedRef.current = false;
     } finally {
       setIsProcessing(false);
     }
-  }, [user, rawText, timezone, createEventFromText, addWorkflowId, router]);
+  }, [currentUser, rawText, timezone, createEventFromText, addWorkflowId, router]);
 
-  // Automatically process when component mounts
+  // Automatically process the text when component mounts
   useEffect(() => {
-    void handleCreateEvent();
-  }, [handleCreateEvent]);
+    if (!isProcessing && !error && !hasStartedRef.current) {
+      void handleCreateEvent();
+    }
+  }, [isProcessing, error, handleCreateEvent]);
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">

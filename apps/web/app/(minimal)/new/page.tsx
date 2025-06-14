@@ -57,38 +57,15 @@ export default async function Page(props: Props) {
 
   // text (with or without image)
   if (searchParams.rawText) {
-    // If autoProcess is true, render EventsFromRawText directly without ProgressStages wrapper
-    if (autoProcess) {
-      return (
-        <EventsFromRawText timezone={timezone} rawText={searchParams.rawText} />
-      );
-    }
+    // Always process text immediately without review step
     return (
-      <ProgressStages
-        filePath={searchParams.filePath}
-        lists={lists}
-        Preview={
-          <EventsFromRawText
-            timezone={timezone}
-            rawText={searchParams.rawText}
-          />
-        }
-      ></ProgressStages>
+      <EventsFromRawText timezone={timezone} rawText={searchParams.rawText} />
     );
   }
   // url
   if (searchParams.url) {
-    // If autoProcess is true, render EventsFromUrl directly without ProgressStages wrapper
-    if (autoProcess) {
-      return <EventsFromUrl timezone={timezone} url={searchParams.url} />;
-    }
-    return (
-      <ProgressStages
-        filePath={searchParams.filePath}
-        lists={lists}
-        Preview={<EventsFromUrl timezone={timezone} url={searchParams.url} />}
-      ></ProgressStages>
-    );
+    // Always process URL immediately without review step
+    return <EventsFromUrl timezone={timezone} url={searchParams.url} />;
   }
 
   return <ProgressStages showUpload={true} />;
