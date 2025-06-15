@@ -9,8 +9,10 @@ import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera, EyeOff, Globe2, LinkIcon, Sparkles, Text } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useMutation, useQuery } from "convex/react";
 
 import type { List } from "@soonlist/db/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "@soonlist/ui/button";
 import {
   Form,
@@ -29,7 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@soonlist/ui/select";
-import { Stepper, StepStatus } from "@soonlist/ui/stepper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 import { Textarea } from "@soonlist/ui/textarea";
 
@@ -45,112 +46,12 @@ import {
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
+import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import {
   UploadImageForProcessingButton,
   UploadImageForProcessingDropzone,
 } from "./uploadImages";
 
-function ProgressStagesStepper({ status }: { status: Status }) {
-  const { goToStatus } = useNewEventProgressContext();
-
-  const stepsUpload = [
-    {
-      name: "Upload",
-      href: "#",
-      onClick: () => goToStatus(Status.Upload),
-      status: StepStatus.Current,
-    },
-    {
-      name: "Organize",
-      href: "#",
-      onClick: () => goToStatus(Status.Organize),
-      status: StepStatus.Upcoming,
-      disabled: true,
-    },
-    {
-      name: "Review",
-      href: "#",
-      onClick: () => goToStatus(Status.Preview),
-      status: StepStatus.Upcoming,
-      disabled: true,
-    },
-  ];
-  const stepsOrganize = [
-    {
-      name: "Upload",
-      href: "#",
-      onClick: () => goToStatus(Status.Upload),
-      status: StepStatus.Complete,
-    },
-    {
-      name: "Organize",
-      href: "#",
-      onClick: () => goToStatus(Status.Organize),
-      status: StepStatus.Current,
-      disabled: true,
-    },
-    {
-      name: "Review",
-      href: "#",
-      onClick: () => goToStatus(Status.Preview),
-      status: StepStatus.Upcoming,
-    },
-  ];
-  const stepsPreview = [
-    {
-      name: "Upload",
-      href: "#",
-      onClick: () => goToStatus(Status.Upload),
-      status: StepStatus.Complete,
-    },
-    {
-      name: "Organize",
-      href: "#",
-      onClick: () => goToStatus(Status.Organize),
-      status: StepStatus.Complete,
-    },
-    {
-      name: "Review",
-      href: "#",
-      onClick: () => goToStatus(Status.Preview),
-      status: StepStatus.Current,
-    },
-  ];
-  const stepsPublish = [
-    {
-      name: "Upload",
-      href: "#",
-      onClick: () => goToStatus(Status.Upload),
-      status: StepStatus.Complete,
-    },
-    {
-      name: "Organize",
-      href: "#",
-      onClick: () => goToStatus(Status.Organize),
-      status: StepStatus.Complete,
-    },
-    {
-      name: "Review",
-      href: "#",
-      onClick: () => goToStatus(Status.Preview),
-      status: StepStatus.Complete,
-    },
-  ];
-  function getSteps() {
-    if (status === Status.Upload) {
-      return stepsUpload;
-    }
-    if (status === Status.Organize) {
-      return stepsOrganize;
-    }
-    if (status === Status.Preview) {
-      return stepsPreview;
-    }
-    return stepsPublish;
-  }
-  const steps = getSteps();
-  return <Stepper steps={steps} />;
-}
 
 function ProgressStagesWrapper({
   children,
@@ -180,7 +81,6 @@ function ProgressStagesWrapper({
           <h1 className="text-xl font-semibold text-neutral-2">
             Create an event
           </h1>
-          <ProgressStagesStepper status={status} />
         </div>
         {children}
         {/* Footer should be included in children */}
@@ -215,9 +115,12 @@ export function ProgressStages({
   useEffect(() => {
     if (!showUpload && !isShortcut) {
       setIsShortcut(true);
-      setStatus(Status.Organize);
+      // Skip directly to Preview when we have a filePath
+      if (filePath) {
+        setStatus(Status.Preview);
+      }
     }
-  }, [showUpload, setIsShortcut, setMode]);
+  }, [showUpload, setIsShortcut, setMode, filePath, setStatus]);
 
   const hasFilePath = croppedImagesUrls.filePath;
   const hasAllAspectRatios =
@@ -229,10 +132,10 @@ export function ProgressStages({
 
   const imagesFromContext = validImagesFromContext
     ? [
-        croppedImagesUrls.square!,
-        croppedImagesUrls.fourThree!,
-        croppedImagesUrls.sixteenNine!,
-        croppedImagesUrls.cropped!,
+        croppedImagesUrls.square ?? "",
+        croppedImagesUrls.fourThree ?? "",
+        croppedImagesUrls.sixteenNine ?? "",
+        croppedImagesUrls.cropped ?? "",
       ]
     : undefined;
 
@@ -289,10 +192,10 @@ export function ProgressStages({
         <>
           <div className="flex flex-col items-center gap-3 text-center">
             <h2 className="text-2xl font-bold text-neutral-1">
-              Upload your event
+              Add your event
             </h2>
             <p className="text-base font-medium leading-5 text-neutral-2">
-              Add your event info. Upload an image, enter text, or add a link.
+              Upload an image, enter text, or add a link.
             </p>
           </div>
           <AddEvent />
@@ -314,8 +217,6 @@ export function ProgressStages({
             </p>
           </div>
           <Organize form={form} filePath={filePath} />
-          {/* This ensures that the event starts being processed by the LLM immediately */}
-          <div className="hidden">{Preview}</div>
         </>
       </ProgressStagesWrapper>
     );
@@ -439,32 +340,80 @@ function Organize({
 
 function AddEvent() {
   const router = useRouter();
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const { addWorkflowId } = useWorkflowStore();
 
   // State variables
   const [input, setInput] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
   const { goToNextStatus, uploadOption, setUploadOption } =
     useNewEventProgressContext();
 
   // Context variables
   const { timezone } = useContext(TimezoneContext);
+  
+  // Mutations
+  const createEventFromText = useMutation(api.ai.eventFromTextThenCreate);
+  const createEventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
 
   // Helpers
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
     setInput(e.target.value);
   };
-  const onSubmitText = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Prevent the default form submission behavior
-    goToNextStatus();
-    router.push(`/new?rawText=${input}&timezone=${timezone}`, {
-      scroll: false,
-    });
+  const onSubmitText = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!currentUser || isProcessing) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      const result = await createEventFromText({
+        rawText: input,
+        timezone,
+        userId: currentUser.id,
+        username: currentUser.username || currentUser.id,
+        sendNotification: false,
+        visibility: "public",
+        lists: [],
+      });
+      
+      if (result.workflowId) {
+        addWorkflowId(result.workflowId);
+        router.push(`/${currentUser.username || currentUser.id}/upcoming`);
+      }
+    } catch (error) {
+      console.error("Error creating event from text:", error);
+      setIsProcessing(false);
+    }
   };
-  const onSubmitUrl = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Prevent the default form submission behavior
-    goToNextStatus();
-    router.push(`/new?url=${input}&timezone=${timezone}`, {
-      scroll: false,
-    });
+  
+  const onSubmitUrl = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!currentUser || isProcessing) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      const result = await createEventFromUrl({
+        url: input,
+        timezone,
+        userId: currentUser.id,
+        username: currentUser.username || currentUser.id,
+        sendNotification: false,
+        visibility: "public",
+        lists: [],
+      });
+      
+      if (result.workflowId) {
+        addWorkflowId(result.workflowId);
+        router.push(`/${currentUser.username || currentUser.id}/upcoming`);
+      }
+    } catch (error) {
+      console.error("Error creating event from URL:", error);
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -502,6 +451,7 @@ function AddEvent() {
             handleInputChange={handleInputChange}
             input={input}
             onSubmit={onSubmitText}
+            isProcessing={isProcessing}
           />
         </TabsContent>
         <TabsContent value="link" className="mt-11">
@@ -509,6 +459,7 @@ function AddEvent() {
             handleInputChange={handleInputChange}
             input={input}
             onSubmit={onSubmitUrl}
+            isProcessing={isProcessing}
           />
         </TabsContent>
       </Tabs>
@@ -520,12 +471,14 @@ function TextEventForm({
   handleInputChange,
   input,
   onSubmit,
+  isProcessing,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleInputChange: (e: any) => void;
   input: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (e: any) => void;
+  isProcessing: boolean;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleKeyDown = (event: any) => {
@@ -546,9 +499,18 @@ function TextEventForm({
         placeholder={"Paste or type event info..."}
       />
       <ProgressStagesFooter>
-        <Button type="submit" disabled={!input}>
-          <Sparkles className="mr-2 size-4" />
-          Generate from text
+        <Button type="submit" disabled={!input || isProcessing}>
+          {isProcessing ? (
+            <>
+              <div className="mr-2 size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Sparkles className="mr-2 size-4" />
+              Generate from text
+            </>
+          )}
         </Button>
       </ProgressStagesFooter>
     </form>
@@ -559,12 +521,14 @@ export function UrlEventForm({
   handleInputChange,
   input,
   onSubmit,
+  isProcessing,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleInputChange: (e: any) => void;
   input: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (e: any) => void;
+  isProcessing: boolean;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleKeyDown = (event: any) => {
@@ -588,9 +552,18 @@ export function UrlEventForm({
         placeholder={"Enter event URL..."}
       />
       <ProgressStagesFooter>
-        <Button type="submit" disabled={!input}>
-          <Sparkles className="mr-2 size-4" />
-          Generate from link
+        <Button type="submit" disabled={!input || isProcessing}>
+          {isProcessing ? (
+            <>
+              <div className="mr-2 size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Sparkles className="mr-2 size-4" />
+              Generate from link
+            </>
+          )}
         </Button>
       </ProgressStagesFooter>
     </form>

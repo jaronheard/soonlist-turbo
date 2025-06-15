@@ -1,70 +1,119 @@
-import type { Metadata, ResolvingMetadata } from "next/types";
-import { currentUser } from "@clerk/nextjs/server";
+"use client";
+
+import { use } from "react";
+import { useQuery } from "convex/react";
 import { CalendarHeart } from "lucide-react";
 
+import type { User } from "@soonlist/db/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
+
+import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
-import { env } from "~/env";
-import { api } from "~/trpc/server";
 
 interface Props {
   params: Promise<{ userName: string }>;
 }
 
-export async function generateMetadata(
-  props: Props,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
-  const params = await props.params;
-  const events = await api.event.getForUser({
-    userName: params.userName,
-  });
-
-  if (!events) {
-    return {
-      title: "No events found | Soonlist",
-      openGraph: {
-        images: [],
-      },
-    };
-  }
-
-  const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date(),
-  );
-
-  const futureEventsCount = futureEvents.length;
-
-  // optionally access and extend (rather than replace) parent metadata
-  const previousImages = (await parent).openGraph?.images || [];
+// Helper to transform Convex user to DB User type
+function transformConvexUser(convexUser: any): User | null {
+  if (!convexUser) return null;
 
   return {
-    title: `@${params.userName} (${futureEventsCount} upcoming events) | Soonlist`,
-    openGraph: {
-      title: `@${params.userName} (${futureEventsCount} upcoming events)`,
-      description: `See the events that @${params.userName} has saved on Soonlist`,
-      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/events`,
-      type: "article",
-      images: [...previousImages],
-    },
+    id: convexUser.id,
+    username: convexUser.username,
+    email: convexUser.email,
+    displayName: convexUser.displayName,
+    userImage: convexUser.userImage,
+    bio: convexUser.bio,
+    publicEmail: convexUser.publicEmail,
+    publicPhone: convexUser.publicPhone,
+    publicInsta: convexUser.publicInsta,
+    publicWebsite: convexUser.publicWebsite,
+    publicMetadata: convexUser.publicMetadata,
+    emoji: convexUser.emoji,
+    onboardingData: convexUser.onboardingData,
+    onboardingCompletedAt: convexUser.onboardingCompletedAt
+      ? new Date(convexUser.onboardingCompletedAt)
+      : null,
+    createdAt: new Date(convexUser.created_at),
+    updatedAt: convexUser.updatedAt ? new Date(convexUser.updatedAt) : null,
   };
 }
 
-export default async function Page(props: Props) {
-  const params = await props.params;
-  const activeUser = await currentUser();
-  const self = activeUser?.username === params.userName;
-  const events = await api.event.getUpcomingForUser({
-    userName: params.userName,
+// Transform Convex event to EventWithUser format
+function transformConvexEvent(
+  event: any,
+  convexUser: any,
+): EventWithUser {
+  const user = transformConvexUser(convexUser);
+  return {
+    id: event.id,
+    userId: event.userId,
+    updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+    userName: event.userName,
+    event: event.event,
+    eventMetadata: event.eventMetadata,
+    endDateTime: new Date(event.endDateTime),
+    startDateTime: new Date(event.startDateTime),
+    visibility: event.visibility,
+    createdAt: new Date(event._creationTime),
+    user: user ?? {
+      id: event.userId,
+      username: event.userName,
+      displayName: event.userName,
+      email: "",
+      userImage: "",
+      bio: null,
+      publicEmail: null,
+      publicPhone: null,
+      publicInsta: null,
+      publicWebsite: null,
+      publicMetadata: null,
+      emoji: null,
+      onboardingData: null,
+      onboardingCompletedAt: null,
+      createdAt: new Date(),
+      updatedAt: null,
+    },
+    eventFollows: [],
+    comments: [],
+    eventToLists: [],
+  };
+}
+
+
+export default function Page({ params }: Props) {
+  const { userName } = use(params);
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const self = currentUser?.username === userName;
+  
+  const convexEvents = useQuery(api.events.getUpcomingForUser, {
+    userName,
+  });
+  
+  const userResponse = useQuery(api.users.getByUsername, {
+    userName,
   });
 
-  // const pastEvents = events.filter((item) => item.endDateTime < new Date());
+  if (!convexEvents || !userResponse) {
+    return null;
+  }
+
+  const events = convexEvents.map((event) => {
+    console.log("Raw event from Convex:", event);
+    const transformed = transformConvexEvent(event, userResponse);
+    console.log("Transformed event ID:", transformed.id);
+    return transformed;
+  });
 
   const currentEvents = events.filter(
-    (item) => item.startDateTime < new Date() && item.endDateTime > new Date(),
+    (item) =>
+      new Date(item.startDateTime) < new Date() &&
+      new Date(item.endDateTime) > new Date(),
   );
   const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date(),
+    (item) => new Date(item.startDateTime) >= new Date(),
   );
 
   return (
@@ -78,7 +127,7 @@ export default async function Page(props: Props) {
         </h1>
       ) : (
         <>
-          <UserInfo userName={params.userName} />
+          <UserInfo userName={userName} />
           <div className="p-2"></div>
         </>
       )}

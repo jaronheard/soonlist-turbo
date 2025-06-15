@@ -32,6 +32,25 @@ export const getByUsername = query({
 });
 
 /**
+ * Get the current authenticated user
+ */
+export const getCurrentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+    
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", identity.subject))
+      .unique();
+    return user || null;
+  },
+});
+
+/**
  * Update user additional info (bio, public contact info)
  */
 export const updateAdditionalInfo = mutation({

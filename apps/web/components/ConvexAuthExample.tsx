@@ -15,7 +15,7 @@ export function ConvexAuthExample() {
       <h3 className="mb-2 text-lg font-semibold">Convex Auth Status</h3>
 
       <AuthLoading>
-        <div className="text-gray-500">Loading authentication...</div>
+        {null}
       </AuthLoading>
 
       <Authenticated>
@@ -35,7 +35,7 @@ export function ConvexAuthExample() {
       <div className="mt-2 text-xs text-gray-500">
         Hook status:{" "}
         {isLoading
-          ? "Loading..."
+          ? null
           : isAuthenticated
             ? "Authenticated"
             : "Not authenticated"}

@@ -24,6 +24,7 @@
     "@clerk/nextjs": "catalog:",
     "@sentry/nextjs": "catalog:",
     "@soonlist/api": "workspace:*",
+    "@soonlist/backend": "workspace:*",
     "@soonlist/cal": "workspace:*",
     "@soonlist/db": "workspace:*",
     "@soonlist/tailwind-config": "workspace:*",
@@ -60,7 +61,8 @@
     "timezone-soft": "catalog:",
     "uuid": "catalog:",
     "yet-another-react-lightbox": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@clerk/backend": "catalog:",

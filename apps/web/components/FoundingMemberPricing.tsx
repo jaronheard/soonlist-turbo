@@ -9,8 +9,6 @@ import { cn } from "@soonlist/ui";
 import { Badge } from "@soonlist/ui/badge";
 import { Button, buttonVariants } from "@soonlist/ui/button";
 
-import { api } from "~/trpc/react";
-
 interface PricingProps {
   hideEmojiDetails?: boolean;
 }
@@ -45,27 +43,15 @@ export function FoundingMemberPricing({
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
 
-  const { data: checkoutUrls } =
-    api.stripe.getSubscriptionCheckoutUrls.useQuery(undefined, {
-      enabled: isLoaded && isSignedIn,
-    });
-
-  const { data: publicCheckoutUrls } =
-    api.stripe.getPublicSubscriptionCheckoutUrls.useQuery(undefined, {
-      enabled: isLoaded && !isSignedIn,
-    });
-
-  const { data: portalUrl } = api.stripe.getCustomerPortalUrl.useQuery(
-    undefined,
-    { enabled: isLoaded && isSignedIn },
-  );
-
-  const { data: emojisData } = api.user.getAllTakenEmojis.useQuery(undefined, {
-    enabled: isLoaded,
-  });
+  // TODO: Implement Stripe checkout and emoji queries in Convex
+  // For now, using placeholder data
+  const checkoutUrls = undefined;
+  const publicCheckoutUrls = undefined;
+  const portalUrl = undefined;
+  const emojisData = { takenEmojis: [] };
 
   if (!isLoaded) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   // @ts-expect-error - types are wrong
@@ -75,12 +61,18 @@ export function FoundingMemberPricing({
   const planActive = user?.publicMetadata.plan?.status === "active";
 
   const checkoutUrlsMap: Record<string, string> = isSignedIn
-    ? checkoutUrls?.reduce(
-        (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+    ? (checkoutUrls as unknown as any[])?.reduce(
+        (acc: Record<string, string>, curr: any) => ({
+          ...acc,
+          [curr.plan]: curr.redirectURL,
+        }),
         {} as Record<string, string>,
       ) || {}
-    : publicCheckoutUrls?.reduce(
-        (acc, curr) => ({ ...acc, [curr.plan]: curr.redirectURL }),
+    : (publicCheckoutUrls as unknown as any[])?.reduce(
+        (acc: Record<string, string>, curr: any) => ({
+          ...acc,
+          [curr.plan]: curr.redirectURL,
+        }),
         {} as Record<string, string>,
       ) || {};
 
