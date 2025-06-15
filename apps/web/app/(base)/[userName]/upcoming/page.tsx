@@ -43,23 +43,12 @@ function transformConvexUser(convexUser: any): User | null {
 
 // Transform Convex event to EventWithUser format
 function transformConvexEvent(
-  event: {
-    _id: string;
-    _creationTime: number;
-    userId: string;
-    updatedAt?: string | null;
-    userName: string;
-    event: unknown;
-    eventMetadata?: unknown;
-    endDateTime: string;
-    startDateTime: string;
-    visibility: "public" | "private";
-  },
+  event: any,
   convexUser: any,
 ): EventWithUser {
   const user = transformConvexUser(convexUser);
   return {
-    id: event._id,
+    id: event.id,
     userId: event.userId,
     updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
     userName: event.userName,
@@ -111,9 +100,12 @@ export default function Page({ params }: Props) {
     return null;
   }
 
-  const events = convexEvents.map((event) =>
-    transformConvexEvent(event, userResponse),
-  );
+  const events = convexEvents.map((event) => {
+    console.log("Raw event from Convex:", event);
+    const transformed = transformConvexEvent(event, userResponse);
+    console.log("Transformed event ID:", transformed.id);
+    return transformed;
+  });
 
   const currentEvents = events.filter(
     (item) =>

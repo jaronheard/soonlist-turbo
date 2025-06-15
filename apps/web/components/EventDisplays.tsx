@@ -81,7 +81,7 @@ interface EventPageProps {
   id: string;
   createdAt?: Date;
   event: AddToCalendarButtonPropsRestricted;
-  image?: string;
+  image?: string | null;
   visibility: "public" | "private";
   singleEvent?: boolean;
   hideCurator?: boolean;
@@ -1030,7 +1030,7 @@ export function EventPage(props: EventPageProps) {
       eventTime={formatCompactTimeRange(startDateInfo, endDateInfo)}
       eventLocation={location || ""}
       eventDescription={description || ""}
-      eventImage={image || ""}
+      eventImage={image || null}
       calendarButton={
         <CalendarButton
           event={event as ATCBActionEventConfig}

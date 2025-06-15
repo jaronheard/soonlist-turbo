@@ -11,7 +11,7 @@ import { EventList } from "~/components/EventList";
 // Transform Convex event to EventWithUser format
 function transformConvexEvent(event: any): EventWithUser {
   return {
-    id: event._id,
+    id: event.id,
     userId: event.userId,
     updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
     userName: event.userName,

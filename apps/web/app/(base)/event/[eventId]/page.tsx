@@ -4,9 +4,7 @@ import { use } from "react";
 import { useQuery } from "convex/react";
 
 import type { EventMetadata } from "@soonlist/cal";
-import type {
-  AddToCalendarButtonPropsRestricted,
-} from "@soonlist/cal/types";
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 import { collapseSimilarEvents } from "@soonlist/cal";
 
@@ -19,11 +17,10 @@ interface Props {
   }>;
 }
 
-
 // Transform Convex event to EventWithUser format
 function transformConvexEvent(event: any): EventWithUser {
   return {
-    id: event._id,
+    id: event.id,
     userId: event.userId,
     updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
     userName: event.userName,
@@ -46,24 +43,36 @@ export default function Page({ params }: Props) {
   const event = useQuery(api.events.get, { eventId });
   const convexDuplicates = useQuery(
     api.events.getPossibleDuplicates,
-    event ? { startDateTime: event.startDateTime } : "skip"
+    event ? { startDateTime: event.startDateTime } : "skip",
   );
 
-  if (!event) {
-    return <p className="text-lg text-gray-500">No event found.</p>;
+  console.log("Event ID from URL:", eventId);
+  console.log("Event from query:", event);
+
+  // Loading state - useQuery returns undefined while loading
+  if (event === undefined) {
+    return null;
+  }
+
+  // Event not found - useQuery returns null when the query completes but finds no data
+  if (event === null) {
+    return (
+      <p className="text-lg text-gray-500">No event found for ID: {eventId}</p>
+    );
   }
 
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const eventMetadata = event.eventMetadata as EventMetadata;
-  const fullImageUrl = eventData.images?.[3];
+  const fullImageUrl = eventData.images?.[3] || null;
 
-  const possibleDuplicateEvents = convexDuplicates?.map(transformConvexEvent) || [];
+  const possibleDuplicateEvents =
+    convexDuplicates?.map(transformConvexEvent) || [];
 
   // find the event that matches the current event
   const similarEvents = collapseSimilarEvents(
     possibleDuplicateEvents,
     currentUser?.id,
-  ).find((similarEvent) => similarEvent.event.id === event._id)?.similarEvents;
+  ).find((similarEvent) => similarEvent.event.id === event.id)?.similarEvents;
 
   // TODO: Implement event lists when list functionality is added to Convex
   const lists = [];
@@ -93,8 +102,8 @@ export default function Page({ params }: Props) {
           createdAt: new Date(comment.created_at || comment._creationTime),
           updatedAt: comment.updatedAt ? new Date(comment.updatedAt) : null,
         }))}
-        key={event._id}
-        id={event._id}
+        key={event.id}
+        id={event.id}
         event={eventData}
         eventMetadata={eventMetadata}
         createdAt={new Date(event._creationTime)}
