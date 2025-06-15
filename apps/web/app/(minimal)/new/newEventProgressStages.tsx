@@ -345,6 +345,7 @@ function AddEvent() {
   // State variables
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [waitingForUser, setWaitingForUser] = useState(false);
   const { goToNextStatus, uploadOption, setUploadOption } =
     useNewEventProgressContext();
 
@@ -364,7 +365,21 @@ function AddEvent() {
   const onSubmitText = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!currentUser || isProcessing) return;
+    if (!currentUser) {
+      setWaitingForUser(true);
+      // Try again after a short delay
+      setTimeout(() => {
+        if (!currentUser) {
+          setWaitingForUser(false);
+          alert(
+            "Unable to verify your account. Please refresh the page and try again.",
+          );
+        }
+      }, 5000);
+      return;
+    }
+
+    if (isProcessing) return;
 
     setIsProcessing(true);
 
@@ -392,7 +407,21 @@ function AddEvent() {
   const onSubmitUrl = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!currentUser || isProcessing) return;
+    if (!currentUser) {
+      setWaitingForUser(true);
+      // Try again after a short delay
+      setTimeout(() => {
+        if (!currentUser) {
+          setWaitingForUser(false);
+          alert(
+            "Unable to verify your account. Please refresh the page and try again.",
+          );
+        }
+      }, 5000);
+      return;
+    }
+
+    if (isProcessing) return;
 
     setIsProcessing(true);
 
@@ -452,7 +481,7 @@ function AddEvent() {
             handleInputChange={handleInputChange}
             input={input}
             onSubmit={onSubmitText}
-            isProcessing={isProcessing}
+            isProcessing={isProcessing || waitingForUser}
           />
         </TabsContent>
         <TabsContent value="link" className="mt-11">
@@ -460,7 +489,7 @@ function AddEvent() {
             handleInputChange={handleInputChange}
             input={input}
             onSubmit={onSubmitUrl}
-            isProcessing={isProcessing}
+            isProcessing={isProcessing || waitingForUser}
           />
         </TabsContent>
       </Tabs>

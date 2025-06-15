@@ -42,6 +42,7 @@ export default async function Page(props: {
             eventLists={[]}
             comment={mostRecentComment}
             visibility={event.visibility}
+            hideNotes
           />
           <div className="p-4"></div>
           <ImageUpload images={eventData.images as string[]} />
@@ -52,6 +53,8 @@ export default async function Page(props: {
             key={event.id}
             update
             updateId={params.eventId}
+            hideEventMetadata
+            hideSourceLink
           />
         </>
       ) : (

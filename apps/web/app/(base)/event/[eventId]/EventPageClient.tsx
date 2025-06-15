@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "convex/react";
 
 import type { EventMetadata } from "@soonlist/cal";
@@ -37,6 +38,11 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
     api.events.getPossibleDuplicates,
     event ? { startDateTime: event.startDateTime } : "skip",
   );
+
+  // Scroll to top when navigating to this page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [eventId]);
 
   console.log("Event ID from URL:", eventId);
   console.log("Event from query:", event);

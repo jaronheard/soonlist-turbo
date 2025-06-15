@@ -39,11 +39,13 @@ export function YourDetails({
   comment,
   visibility,
   eventLists,
+  hideNotes = false,
 }: {
   lists?: List[];
   comment?: string;
   visibility?: "public" | "private";
   eventLists?: List[];
+  hideNotes?: boolean;
 }) {
   const eventListOptions = eventLists?.map((list) => ({
     label: list.name,
@@ -89,26 +91,28 @@ export function YourDetails({
         <CardContent>
           <Form {...form}>
             <form className="flex flex-col gap-6">
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Note</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Example: My friend Sarah hosts this dance party every year and its so fun!"
-                        defaultValue={field.value}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Add a personal note about this event for others to see.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!hideNotes && (
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Note</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Example: My friend Sarah hosts this dance party every year and its so fun!"
+                          defaultValue={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Add a personal note about this event for others to see.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="visibility"

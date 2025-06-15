@@ -263,7 +263,9 @@ const UserMenu = () => {
             <MobileLink href={"/account/plans"}>Manage Plan</MobileLink>
           )}
           {!activePaid && (
-            <MobileLink href={"/account/plans"}>Upgrade</MobileLink>
+            <MobileLink href={"https://apps.apple.com/us/app/soonlist/id6670222216"} target="_blank">
+              Download iOS app
+            </MobileLink>
           )}
         </div>
         <DropdownMenuSeparator />
@@ -357,14 +359,26 @@ export function MobileNav() {
               </div>
             </button>
             <div className="pt-3">
-              <MobileLink
-                key={"user-nav-plans"}
-                href="/account/plans"
-                onOpenChange={setOpen}
-                className="w-full justify-start py-0 pl-0 text-neutral-2"
-              >
-                {planName ? "Founding Member" : "Upgrade"}
-              </MobileLink>
+              {planName ? (
+                <MobileLink
+                  key={"user-nav-plans"}
+                  href="/account/plans"
+                  onOpenChange={setOpen}
+                  className="w-full justify-start py-0 pl-0 text-neutral-2"
+                >
+                  Founding Member
+                </MobileLink>
+              ) : (
+                <MobileLink
+                  key={"user-nav-upgrade"}
+                  href="https://apps.apple.com/us/app/soonlist/id6670222216"
+                  onOpenChange={setOpen}
+                  className="w-full justify-start py-0 pl-0 text-neutral-2"
+                  target="_blank"
+                >
+                  Download iOS app
+                </MobileLink>
+              )}
             </div>
           </SignedIn>
           <Separator className="my-3" />
@@ -465,6 +479,7 @@ interface MobileLinkProps {
   className?: string;
   signedInOnly?: boolean;
   signedOutOnly?: boolean;
+  target?: string;
 }
 
 function MobileLink({

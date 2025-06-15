@@ -49,11 +49,15 @@ export type AddToCalendarCardProps = AddToCalendarButtonType & {
   onUpdate?: (props: AddToCalendarButtonType) => void;
   hideFloatingActionButtons?: boolean;
   hideBorder?: boolean;
+  hideEventMetadata?: boolean;
+  hideSourceLink?: boolean;
 };
 
 export function AddToCalendarCard({
   firstInputRef,
   hideBorder,
+  hideEventMetadata = false,
+  hideSourceLink = false,
   ...initialProps
 }: AddToCalendarCardProps) {
   const { user } = useUser();
@@ -351,17 +355,18 @@ export function AddToCalendarCard({
             </a>
           </InputDescription>
         </div>
-        <div className="col-span-full">
-          <Card className="w-full max-w-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Shapes className="mr-2 size-6" />
-                  Event Metadata
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
+        {!hideEventMetadata && (
+          <div className="col-span-full">
+            <Card className="w-full max-w-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Shapes className="mr-2 size-6" />
+                    Event Metadata
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="type">Event Type</Label>
                 <div className="flex items-center justify-between">
@@ -534,16 +539,19 @@ export function AddToCalendarCard({
             </CardContent>
           </Card>
         </div>
-        <div className="col-span-full">
-          <Label htmlFor="location">Source Link (optional)</Label>
-          <Input
-            type="url"
-            name="link"
-            id="link"
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-          />
-        </div>
+        )}
+        {!hideSourceLink && (
+          <div className="col-span-full">
+            <Label htmlFor="location">Source Link (optional)</Label>
+            <Input
+              type="url"
+              name="link"
+              id="link"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+            />
+          </div>
+        )}
         {!initialProps.onUpdate && !initialProps.hideFloatingActionButtons && (
           <div className="fixed bottom-4 left-1/2 flex -translate-x-1/2 transform gap-3">
             {!initialProps.update && (
