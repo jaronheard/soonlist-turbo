@@ -31,7 +31,7 @@ export function buildDefaultUrl(filePath: string) {
   });
 }
 
-export const bytescaleWidgetOptions = {
+export const bytescaleWidgetOptions: any = {
   apiKey: "public_12a1yekATNiLj4VVnREZ8c7LM8V8",
   editor: {
     images: {
@@ -55,6 +55,50 @@ export const bytescaleWidgetOptions = {
     "image/tiff",
     "image/webp",
   ],
+  maxFileCount: 1,
+  maxFileSizeBytes: 10485760, // 10MB limit before processing
+  onPreUpload: async (file: File) => {
+    // Only process image files
+    if (!file.type.startsWith("image/")) {
+      return { transformedFile: file };
+    }
+
+    try {
+      // Use the same optimization settings as event creation
+      // This prevents re-downloading and re-optimizing later
+      // Width: 640px, Quality: 0.5, Format: WebP
+      const { optimizeFileToBase64 } = await import("~/lib/imageOptimization");
+      const base64 = await optimizeFileToBase64(file, 640, 0.5);
+
+      // Convert base64 back to blob for upload
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const optimizedBlob = new Blob([bytes], { type: "image/webp" });
+
+      // Create a new File object from the optimized blob
+      const optimizedFile = new File(
+        [optimizedBlob],
+        file.name.replace(/\.[^/.]+$/, ".webp"),
+        {
+          type: "image/webp",
+          lastModified: Date.now(),
+        },
+      );
+
+      console.log(
+        `Image optimized: ${file.size} bytes -> ${optimizedFile.size} bytes`,
+      );
+
+      return { transformedFile: optimizedFile };
+    } catch (error) {
+      console.error("Failed to optimize image:", error);
+      // If optimization fails, upload the original file
+      return { transformedFile: file };
+    }
+  },
   styles: {
     colors: {
       active: "#E0D9FF",

@@ -263,7 +263,10 @@ const UserMenu = () => {
             <MobileLink href={"/account/plans"}>Manage Plan</MobileLink>
           )}
           {!activePaid && (
-            <MobileLink href={"https://apps.apple.com/us/app/soonlist/id6670222216"} target="_blank">
+            <MobileLink
+              href={"https://apps.apple.com/us/app/soonlist/id6670222216"}
+              target="_blank"
+            >
               Download iOS app
             </MobileLink>
           )}

@@ -3,7 +3,6 @@ import * as Haptics from "expo-haptics";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
 import { useMutation } from "convex/react";
-import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -51,7 +50,7 @@ async function optimizeImage(uri: string): Promise<string> {
 export function useCreateEvent() {
   const { setIsImageLoading, addWorkflowId } = useAppStore();
   const { setIsCapturing } = useInFlightEventStore();
-  const { hasNotificationPermission } = useOneSignal();
+  const { hasNotificationPermission: _ } = useOneSignal();
   const userTimezone = useUserTimezone();
 
   const eventFromImageBase64 = useMutation(
@@ -177,56 +176,15 @@ export function useCreateEvent() {
       }
     },
     [
-      setIsCapturing,
-      setIsImageLoading,
-      eventFromImageBase64,
       userTimezone,
       addWorkflowId,
+      setIsImageLoading,
+      setIsCapturing,
+      eventFromImageBase64,
       eventFromUrl,
       eventFromText,
     ],
   );
 
-  // Simplified batch creation - just call createEvent for each image
-  const createMultipleEvents = useCallback(
-    async (tasks: CreateEventOptions[]): Promise<void> => {
-      if (!tasks.length) return;
-
-      let successCount = 0;
-      let failureCount = 0;
-
-      // Process all images in parallel - Convex workflows handle the reliability
-      const promises = tasks.map(async (task) => {
-        try {
-          await createEvent({ ...task, suppressCapturing: true });
-          successCount++;
-        } catch (error) {
-          failureCount++;
-          logError("Error creating event from image", error, { task });
-        }
-      });
-
-      await Promise.allSettled(promises);
-
-      // Provide user feedback
-      if (failureCount > 0) {
-        toast.error(
-          `${failureCount} event(s) failed to process. ${successCount} succeeded.`,
-        );
-      } else if (successCount > 0) {
-        if (!hasNotificationPermission) {
-          toast.success(
-            `${successCount} event${successCount > 1 ? "s" : ""} captured successfully!`,
-          );
-        }
-        // If notifications are enabled, we rely on the native notification.
-      }
-    },
-    [createEvent, hasNotificationPermission],
-  );
-
-  return {
-    createEvent,
-    createMultipleEvents,
-  };
+  return createEvent;
 }

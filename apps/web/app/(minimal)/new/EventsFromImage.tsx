@@ -11,6 +11,9 @@ import { buildDefaultUrl } from "~/components/ImageUpload";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import { optimizeImageToBase64 } from "~/lib/imageOptimization";
 
+// Maximum base64 size to prevent journal overflow (900KB to be safe with 1MB limit)
+const MAX_BASE64_SIZE = 900 * 1024;
+
 export function EventsFromImage({
   filePath,
   timezone,
@@ -46,22 +49,37 @@ export function EventsFromImage({
     setError(null);
 
     try {
-      // Convert image URL to optimized base64 (resize to 640px width, 50% quality, WebP)
       const imageUrl = buildDefaultUrl(filePath);
       let base64Image: string;
 
+      // Optimize the image using jsquash/webp which works in Safari
       try {
-        // Try to optimize the image
         base64Image = await optimizeImageToBase64(imageUrl, 640, 0.5);
       } catch (optimizeError) {
-        console.warn(
-          "Failed to optimize image, using fallback:",
-          optimizeError,
-        );
-        // Fallback to simple conversion without optimization
-        const { imageUrlToBase64 } = await import("~/lib/imageOptimization");
-        base64Image = await imageUrlToBase64(imageUrl);
+        console.error("Failed to optimize image:", optimizeError);
+        // If optimization fails, try to at least convert the image without resizing
+        try {
+          const { imageUrlToBase64 } = await import("~/lib/imageOptimization");
+          base64Image = await imageUrlToBase64(imageUrl);
+        } catch (fallbackError) {
+          console.error("Fallback conversion also failed:", fallbackError);
+          throw new Error(
+            "Failed to process image. Please try a different image.",
+          );
+        }
       }
+
+      // Validate base64 size
+      const base64SizeBytes = base64Image.length;
+      if (base64SizeBytes > MAX_BASE64_SIZE) {
+        throw new Error(
+          `Image too large after optimization: ${Math.round(base64SizeBytes / 1024)}KB (max ${Math.round(MAX_BASE64_SIZE / 1024)}KB). Please use a smaller image.`,
+        );
+      }
+
+      console.log(
+        `Sending base64 image of size: ${Math.round(base64SizeBytes / 1024)}KB`,
+      );
 
       const result = await createEventFromImage({
         base64Image,
@@ -81,7 +99,9 @@ export function EventsFromImage({
     } catch (err) {
       console.error("Error creating event from image:", err);
       setError(err instanceof Error ? err.message : "Failed to create event");
-      toast.error("Failed to upload image");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to upload image",
+      );
       // Reset the ref on error so user can retry
       hasStartedRef.current = false;
     } finally {
@@ -139,4 +159,83 @@ export function EventsFromImage({
       </div>
     </div>
   );
+}
+
+/**
+ * Fallback optimization using JPEG format with aggressive compression
+ */
+async function optimizeImageToJPEGBase64(
+  file: File,
+  maxWidth = 640,
+  quality = 0.3,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const img = new Image();
+
+      img.onload = () => {
+        try {
+          // Calculate new dimensions
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth) {
+            const aspectRatio = height / width;
+            width = maxWidth;
+            height = Math.round(width * aspectRatio);
+          }
+
+          // Create canvas
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Failed to get canvas context"));
+            return;
+          }
+
+          // Draw resized image
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to JPEG format with low quality for smaller size
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Failed to convert canvas to blob"));
+                return;
+              }
+
+              // Convert blob to base64
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                if (typeof reader.result === "string") {
+                  // Remove the data URL prefix to get just the base64 string
+                  const base64 = reader.result.split(",")[1];
+                  resolve(base64 || "");
+                } else {
+                  reject(new Error("Failed to convert to base64"));
+                }
+              };
+              reader.onerror = () => reject(new Error("FileReader error"));
+              reader.readAsDataURL(blob);
+            },
+            "image/jpeg",
+            quality,
+          );
+        } catch (error) {
+          reject(error instanceof Error ? error : new Error(String(error)));
+        }
+      };
+
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = e.target?.result as string;
+    };
+
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
 }

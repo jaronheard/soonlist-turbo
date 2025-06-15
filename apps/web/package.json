@@ -22,6 +22,8 @@
     "@bytescale/sdk": "catalog:",
     "@bytescale/upload-widget-react": "catalog:",
     "@clerk/nextjs": "catalog:",
+    "@jsquash/resize": "^2.1.0",
+    "@jsquash/webp": "^1.5.0",
     "@sentry/nextjs": "catalog:",
     "@soonlist/api": "workspace:*",
     "@soonlist/backend": "workspace:*",

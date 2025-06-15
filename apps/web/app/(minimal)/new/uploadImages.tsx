@@ -1,31 +1,16 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { UploadButton, UploadDropzone } from "@bytescale/upload-widget-react";
 import { useMutation, useQuery } from "convex/react";
 import { Camera, Upload } from "lucide-react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "@soonlist/ui/button";
 
-import {
-  buildDefaultUrl,
-  bytescaleWidgetOptions,
-} from "~/components/ImageUpload";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
-import { optimizeImageToBase64 } from "~/lib/imageOptimization";
-
-const widgetOptions = {
-  ...bytescaleWidgetOptions,
-  editor: {
-    images: {
-      crop: false,
-      preview: false,
-    },
-  },
-};
+import { optimizeFileToBase64 } from "~/lib/imageOptimization";
 
 export const UploadImageForProcessingDropzone = () => {
   const router = useRouter();
@@ -36,26 +21,34 @@ export const UploadImageForProcessingDropzone = () => {
   const createEventFromImage = useMutation(
     api.ai.eventFromImageBase64ThenCreate,
   );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = async (filePath: string) => {
+  const handleFileSelect = async (file: File) => {
     if (!currentUser) return;
 
     setIsProcessing(true);
 
     try {
-      // Convert image URL to optimized base64
-      const imageUrl = buildDefaultUrl(filePath);
+      // Process image directly from file (matching Expo app approach)
       let base64Image: string;
 
       try {
-        base64Image = await optimizeImageToBase64(imageUrl, 640, 0.5);
+        base64Image = await optimizeFileToBase64(file, 640, 0.5);
       } catch (optimizeError) {
         console.warn(
           "Failed to optimize image, using fallback:",
           optimizeError,
         );
-        const { imageUrlToBase64 } = await import("~/lib/imageOptimization");
-        base64Image = await imageUrlToBase64(imageUrl);
+        // Fallback: read file without optimization
+        base64Image = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            resolve(result.split(",")[1] || "");
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
       }
 
       // Start the workflow
@@ -82,6 +75,18 @@ export const UploadImageForProcessingDropzone = () => {
 
   return (
     <div className="relative">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            void handleFileSelect(file);
+          }
+        }}
+        className="hidden"
+      />
       {isProcessing ? (
         <div className="absolute inset-0 z-50 flex items-center justify-center rounded-sm bg-white/80">
           <div className="flex flex-col items-center gap-2">
@@ -95,18 +100,29 @@ export const UploadImageForProcessingDropzone = () => {
           strokeWidth={1.5}
         />
       )}
-      <UploadDropzone
-        className="[&>div>div>div>div>label]:upload-label max-h-48 [&>div>div>div>div>label]:!mb-0 [&>div>div>div>div>label]:!inline-flex [&>div>div>div>div>label]:!h-11 [&>div>div>div>div>label]:!items-center [&>div>div>div>div>label]:!justify-center [&>div>div>div>div>label]:!whitespace-nowrap [&>div>div>div>div>label]:!rounded-lg [&>div>div>div>div>label]:!border-0 [&>div>div>div>div>label]:!bg-transparent [&>div>div>div>div>label]:!px-8 [&>div>div>div>div>label]:!text-lg [&>div>div>div>div>label]:!font-medium [&>div>div>div>div>label]:!leading-none [&>div>div>div>div>label]:!text-transparent [&>div>div>div>div>label]:!ring-offset-background [&>div>div>div>div>label]:!transition-colors [&>div>div>div>div>label]:hover:!bg-transparent [&>div>div>div>div>label]:focus-visible:!outline-none [&>div>div>div>div>label]:focus-visible:!ring-2 [&>div>div>div>div>label]:focus-visible:!ring-transparent [&>div>div>div>div>label]:focus-visible:!ring-offset-2 [&>div>div>div>div>label]:disabled:!pointer-events-none [&>div>div>div>div>label]:disabled:!opacity-50 [&>div>div>div>div>p]:!hidden [&>div>div>div>div]:!rounded-sm [&>div>div>div>div]:!bg-interactive-3 [&>div>div>div]:!inset-0 [&>div>div>div]:!rounded-sm [&>div>div>div]:!border [&>div>div>div]:!border-interactive-2"
-        options={widgetOptions}
-        onUpdate={({ uploadedFiles }) => {
-          if (uploadedFiles.length > 0) {
-            const filePath = uploadedFiles[0]?.filePath;
-            if (filePath) {
-              void handleImageUpload(filePath);
-            }
+      <div
+        onClick={() => fileInputRef.current?.click()}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const file = e.dataTransfer.files[0];
+          if (file?.type.startsWith("image/")) {
+            void handleFileSelect(file);
           }
         }}
-      />
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        className="flex h-48 cursor-pointer items-center justify-center rounded-sm border border-interactive-2 bg-interactive-3 transition-colors hover:bg-interactive-2"
+      >
+        <div className="text-center">
+          <p className="text-lg font-medium text-primary">Tap to upload</p>
+          <p className="text-sm text-muted-foreground">
+            or drag and drop an image
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
@@ -120,26 +136,34 @@ export const UploadImageForProcessingButton = () => {
   const createEventFromImage = useMutation(
     api.ai.eventFromImageBase64ThenCreate,
   );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = async (filePath: string) => {
+  const handleFileSelect = async (file: File) => {
     if (!currentUser) return;
 
     setIsProcessing(true);
 
     try {
-      // Convert image URL to optimized base64
-      const imageUrl = buildDefaultUrl(filePath);
+      // Process image directly from file (matching Expo app approach)
       let base64Image: string;
 
       try {
-        base64Image = await optimizeImageToBase64(imageUrl, 640, 0.5);
+        base64Image = await optimizeFileToBase64(file, 640, 0.5);
       } catch (optimizeError) {
         console.warn(
           "Failed to optimize image, using fallback:",
           optimizeError,
         );
-        const { imageUrlToBase64 } = await import("~/lib/imageOptimization");
-        base64Image = await imageUrlToBase64(imageUrl);
+        // Fallback: read file without optimization
+        base64Image = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            resolve(result.split(",")[1] || "");
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
       }
 
       // Start the workflow
@@ -165,37 +189,37 @@ export const UploadImageForProcessingButton = () => {
   };
 
   return (
-    <UploadButton
-      options={widgetOptions}
-      onComplete={(files) => {
-        if (files.length > 0) {
-          const filePath = files[0]?.filePath;
-          if (filePath) {
-            void handleImageUpload(filePath);
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            void handleFileSelect(file);
           }
-        }
-      }}
-    >
-      {({ onClick }) => (
-        <Button
-          onClick={onClick}
-          variant="default"
-          className="flex w-full items-center gap-2"
-          disabled={isProcessing}
-        >
-          {isProcessing ? (
-            <>
-              <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              Processing...
-            </>
-          ) : (
-            <>
-              <Upload className="size-4" />
-              Upload an image
-            </>
-          )}
-        </Button>
-      )}
-    </UploadButton>
+        }}
+        className="hidden"
+      />
+      <Button
+        onClick={() => fileInputRef.current?.click()}
+        variant="default"
+        className="flex w-full items-center gap-2"
+        disabled={isProcessing}
+      >
+        {isProcessing ? (
+          <>
+            <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            Processing...
+          </>
+        ) : (
+          <>
+            <Upload className="size-4" />
+            Upload an image
+          </>
+        )}
+      </Button>
+    </>
   );
 };
