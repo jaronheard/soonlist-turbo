@@ -41,7 +41,7 @@ export const getCurrentUser = query({
     if (!identity) {
       return null;
     }
-    
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", identity.subject))
@@ -344,7 +344,7 @@ export const syncFromClerk = internalMutation({
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", args.id))
       .unique();
-    
+
     const userData = {
       id: args.id,
       username: args.username,
@@ -354,7 +354,7 @@ export const syncFromClerk = internalMutation({
       publicMetadata: args.publicMetadata || {},
       updatedAt: new Date().toISOString(),
     };
-    
+
     if (existing) {
       await ctx.db.patch(existing._id, userData);
     } else {

@@ -54,13 +54,16 @@ http.route({
     }
 
     const eventType = evt.type;
-    
+
     if (eventType === "user.created" || eventType === "user.updated") {
       const userId = evt.data.external_id || evt.data.id;
       const userData = {
         id: userId,
         username: evt.data.username || "",
-        displayName: generateDisplayName(evt.data.first_name, evt.data.last_name),
+        displayName: generateDisplayName(
+          evt.data.first_name,
+          evt.data.last_name,
+        ),
         userImage: evt.data.image_url,
         email: evt.data.email_addresses[0]?.email_address || "",
         publicMetadata: evt.data.public_metadata,
@@ -76,7 +79,10 @@ http.route({
   }),
 });
 
-function generateDisplayName(firstName?: string | null, lastName?: string | null) {
+function generateDisplayName(
+  firstName?: string | null,
+  lastName?: string | null,
+) {
   if (!firstName && !lastName) return "anonymous";
 
   const first = firstName || "";
