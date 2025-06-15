@@ -3,13 +3,13 @@ import { ConvexHttpClient } from "convex/browser";
 import { db } from "@soonlist/db";
 import { users } from "@soonlist/db/schema";
 
-import { api } from "../_generated/api";
+import { api } from "../packages/backend/convex/_generated/api";
 
 /**
  * Migration script to sync existing users from MySQL to Convex
  * Run this after deploying the user sync functionality
  *
- * Usage: pnpm tsx packages/backend/convex/migrations/syncExistingUsers.ts
+ * Usage: pnpm tsx scripts/sync-users-to-convex.ts
  */
 async function syncExistingUsers() {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
