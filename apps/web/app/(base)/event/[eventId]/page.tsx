@@ -1,15 +1,10 @@
-"use client";
+import type { Metadata } from "next";
 
-import { use } from "react";
-import { useQuery } from "convex/react";
-
-import type { EventMetadata } from "@soonlist/cal";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
-import { collapseSimilarEvents } from "@soonlist/cal";
 
-import type { EventWithUser } from "~/components/EventList";
-import { EventPage } from "~/components/EventDisplays";
+import { getAuthenticatedConvex } from "~/lib/convex-server";
+import EventPageClient from "./EventPageClient";
 
 interface Props {
   params: Promise<{
@@ -17,103 +12,66 @@ interface Props {
   }>;
 }
 
-// Transform Convex event to EventWithUser format
-function transformConvexEvent(event: any): EventWithUser {
-  return {
-    id: event.id,
-    userId: event.userId,
-    updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
-    userName: event.userName,
-    event: event.event,
-    eventMetadata: event.eventMetadata,
-    endDateTime: new Date(event.endDateTime),
-    startDateTime: new Date(event.startDateTime),
-    visibility: event.visibility,
-    createdAt: new Date(event._creationTime),
-    user: event.user,
-    eventFollows: event.eventFollows || [],
-    comments: event.comments || [],
-    eventToLists: event.eventToLists || [],
-  };
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { eventId } = await params;
+  
+  try {
+    // Get an authenticated Convex client for server-side fetching
+    const convex = await getAuthenticatedConvex();
+    
+    // Fetch the event data on the server
+    const event = await convex.query(api.events.get, { eventId });
+    
+    if (!event) {
+      return {
+        title: "Event Not Found | Soonlist",
+        description: "The requested event could not be found.",
+      };
+    }
+    
+    const eventData = event.event as AddToCalendarButtonPropsRestricted;
+    const eventImage = eventData.images?.[3];
+    
+    // Generate Open Graph metadata
+    return {
+      title: `${eventData.name} | Soonlist`,
+      description: eventData.description || `Join ${eventData.name} on Soonlist`,
+      openGraph: {
+        title: eventData.name || "Event on Soonlist",
+        description: eventData.description || `Join ${eventData.name} on Soonlist`,
+        type: "website",
+        images: eventImage
+          ? [
+              {
+                url: eventImage,
+                width: 1200,
+                height: 630,
+                alt: eventData.name || "Event image",
+              },
+            ]
+          : [],
+        locale: "en_US",
+        siteName: "Soonlist",
+      },
+      twitter: {
+        card: eventImage ? "summary_large_image" : "summary",
+        title: eventData.name || "Event on Soonlist",
+        description: eventData.description || `Join ${eventData.name} on Soonlist`,
+        images: eventImage ? [eventImage] : undefined,
+      },
+    };
+  } catch (error) {
+    console.error("Error generating metadata for event:", error);
+    
+    return {
+      title: "Event | Soonlist",
+      description: "Discover and share events on Soonlist",
+    };
+  }
 }
 
-export default function Page({ params }: Props) {
-  const { eventId } = use(params);
-  const currentUser = useQuery(api.users.getCurrentUser);
-  const event = useQuery(api.events.get, { eventId });
-  const convexDuplicates = useQuery(
-    api.events.getPossibleDuplicates,
-    event ? { startDateTime: event.startDateTime } : "skip",
-  );
-
-  console.log("Event ID from URL:", eventId);
-  console.log("Event from query:", event);
-
-  // Loading state - useQuery returns undefined while loading
-  if (event === undefined) {
-    return null;
-  }
-
-  // Event not found - useQuery returns null when the query completes but finds no data
-  if (event === null) {
-    return (
-      <p className="text-lg text-gray-500">No event found for ID: {eventId}</p>
-    );
-  }
-
-  const eventData = event.event as AddToCalendarButtonPropsRestricted;
-  const eventMetadata = event.eventMetadata as EventMetadata;
-  const fullImageUrl = eventData.images?.[3] || null;
-
-  const possibleDuplicateEvents =
-    convexDuplicates?.map(transformConvexEvent) || [];
-
-  // find the event that matches the current event
-  const similarEvents = collapseSimilarEvents(
-    possibleDuplicateEvents,
-    currentUser?.id,
-  ).find((similarEvent) => similarEvent.event.id === event.id)?.similarEvents;
-
-  // TODO: Implement event lists when list functionality is added to Convex
-  const lists = [];
-
-  return (
-    <>
-      <EventPage
-        user={
-          event.user
-            ? {
-                ...event.user,
-                createdAt: new Date(
-                  event.user.created_at || event.user._creationTime,
-                ),
-                updatedAt: event.user.updatedAt
-                  ? new Date(event.user.updatedAt)
-                  : null,
-                onboardingCompletedAt: event.user.onboardingCompletedAt
-                  ? new Date(event.user.onboardingCompletedAt)
-                  : null,
-              }
-            : undefined
-        }
-        eventFollows={event.eventFollows || []}
-        comments={(event.comments || []).map((comment: any) => ({
-          ...comment,
-          createdAt: new Date(comment.created_at || comment._creationTime),
-          updatedAt: comment.updatedAt ? new Date(comment.updatedAt) : null,
-        }))}
-        key={event.id}
-        id={event.id}
-        event={eventData}
-        eventMetadata={eventMetadata}
-        createdAt={new Date(event._creationTime)}
-        visibility={event.visibility}
-        similarEvents={similarEvents}
-        image={fullImageUrl}
-        singleEvent
-        hideCurator
-        lists={[]}
-      />
-    </>
-  );
+export default async function Page({ params }: Props) {
+  const { eventId } = await params;
+  
+  return <EventPageClient eventId={eventId} />;
 }
