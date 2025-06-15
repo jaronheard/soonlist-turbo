@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { action, internalMutation, mutation, query } from "./_generated/server";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
 /**
@@ -408,5 +409,41 @@ export const deleteUser = internalMutation({
 
     // Delete the user record
     await ctx.db.delete(user._id);
+  },
+});
+
+/**
+ * Action to sync multiple users - useful for migrations
+ */
+export const syncMultipleUsers = action({
+  args: {
+    users: v.array(
+      v.object({
+        id: v.string(),
+        username: v.string(),
+        email: v.string(),
+        displayName: v.string(),
+        userImage: v.string(),
+        publicMetadata: v.optional(v.object({})),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const results = [];
+
+    for (const user of args.users) {
+      try {
+        await ctx.runMutation(internal.users.syncFromClerk, user);
+        results.push({ userId: user.id, success: true });
+      } catch (error) {
+        results.push({
+          userId: user.id,
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    return results;
   },
 });
