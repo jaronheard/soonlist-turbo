@@ -42,10 +42,7 @@ function transformConvexUser(convexUser: any): User | null {
 }
 
 // Transform Convex event to EventWithUser format
-function transformConvexEvent(
-  event: any,
-  convexUser: any,
-): EventWithUser {
+function transformConvexEvent(event: any, convexUser: any): EventWithUser {
   const user = transformConvexUser(convexUser);
   return {
     id: event.id,
@@ -82,16 +79,15 @@ function transformConvexEvent(
   };
 }
 
-
 export default function Page({ params }: Props) {
   const { userName } = use(params);
   const currentUser = useQuery(api.users.getCurrentUser);
   const self = currentUser?.username === userName;
-  
+
   const convexEvents = useQuery(api.events.getUpcomingForUser, {
     userName,
   });
-  
+
   const userResponse = useQuery(api.users.getByUsername, {
     userName,
   });

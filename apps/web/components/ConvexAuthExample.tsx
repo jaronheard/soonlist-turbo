@@ -14,9 +14,7 @@ export function ConvexAuthExample() {
     <div className="rounded-lg border p-4">
       <h3 className="mb-2 text-lg font-semibold">Convex Auth Status</h3>
 
-      <AuthLoading>
-        {null}
-      </AuthLoading>
+      <AuthLoading>{null}</AuthLoading>
 
       <Authenticated>
         <div className="text-green-600">✅ Authenticated with Convex</div>

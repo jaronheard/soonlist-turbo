@@ -18,7 +18,6 @@ interface UserInfoProps {
   variant?: "default" | "description";
 }
 
-
 function formatUserWebsiteForLink(website: string) {
   if (website.startsWith("http")) {
     return website;
@@ -28,19 +27,19 @@ function formatUserWebsiteForLink(website: string) {
 
 export function UserInfo(props: UserInfoProps) {
   const currentUser = useQuery(api.users.getCurrentUser);
-  
+
   const userById = useQuery(
     api.users.getById,
-    props.userId ? { id: props.userId } : "skip"
+    props.userId ? { id: props.userId } : "skip",
   );
-  
+
   const userByUsername = useQuery(
     api.users.getByUsername,
-    props.userName ? { userName: props.userName } : "skip"
+    props.userName ? { userName: props.userName } : "skip",
   );
-  
+
   const user = userById || userByUsername;
-  
+
   if (!user) {
     return null;
   }

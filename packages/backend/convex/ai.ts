@@ -170,13 +170,13 @@ export const extractEventFromBase64Image = internalAction({
       base64Image: args.base64Image,
       timezone: args.timezone,
     });
-    
+
     // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
-    const cleanedEvents = result.events.map(event => {
+    const cleanedEvents = result.events.map((event) => {
       const { buttonStyle, options, ...cleanEvent } = event as any;
       return cleanEvent as EventWithMetadata;
     });
-    
+
     return {
       events: cleanedEvents,
       response: result.response,
@@ -224,21 +224,21 @@ export const extractEventFromUrl = internalAction({
       if (!Array.isArray(aiResult.events)) {
         throw new ConvexError({
           message: "Invalid response: expected events array",
-          data: { events: aiResult.events }
+          data: { events: aiResult.events },
         });
       }
-      
+
       // Validate each event in the array
       for (const event of aiResult.events) {
         AI.validateEvent(event);
       }
 
       // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
-      const cleanedEvents = aiResult.events.map(event => {
+      const cleanedEvents = aiResult.events.map((event) => {
         const { buttonStyle, options, ...cleanEvent } = event as any;
         return cleanEvent as EventWithMetadata;
       });
-      
+
       return {
         events: cleanedEvents,
         response: aiResult.response,
@@ -280,13 +280,13 @@ export const extractEventFromText = internalAction({
       },
       fnName: "eventFromRawTextThenCreateThenNotification",
     });
-    
+
     // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
-    const cleanedEvents = result.events.map(event => {
+    const cleanedEvents = result.events.map((event) => {
       const { buttonStyle, options, ...cleanEvent } = event as any;
       return cleanEvent as EventWithMetadata;
     });
-    
+
     return {
       events: cleanedEvents,
       response: result.response,

@@ -87,7 +87,14 @@ export function EventsFromImage({
     } finally {
       setIsProcessing(false);
     }
-  }, [currentUser, filePath, timezone, createEventFromImage, addWorkflowId, router]);
+  }, [
+    currentUser,
+    filePath,
+    timezone,
+    createEventFromImage,
+    addWorkflowId,
+    router,
+  ]);
 
   // Automatically process the image when component mounts
   useEffect(() => {

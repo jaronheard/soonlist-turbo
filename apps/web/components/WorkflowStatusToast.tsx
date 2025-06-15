@@ -28,16 +28,20 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
 
     // Only show toast if status has changed
     if (lastStatusRef.current === status.status) return;
-    
+
     // If this is the first render and the workflow is already finished,
     // just remove it without showing a toast (it was likely shown before)
-    if (lastStatusRef.current === null && 
-        (status.status === "completed" || status.status === "failed" || status.status === "canceled")) {
+    if (
+      lastStatusRef.current === null &&
+      (status.status === "completed" ||
+        status.status === "failed" ||
+        status.status === "canceled")
+    ) {
       lastStatusRef.current = status.status;
       removeWorkflowId(workflowId);
       return;
     }
-    
+
     lastStatusRef.current = status.status;
 
     // Dismiss previous toast if exists
@@ -53,7 +57,8 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
         break;
 
       case "completed": {
-        const eventId = typeof status.result === "string" ? status.result : undefined;
+        const eventId =
+          typeof status.result === "string" ? status.result : undefined;
         if (eventId) {
           toastIdRef.current = toast.success("Event created!", {
             action: {

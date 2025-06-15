@@ -30,11 +30,11 @@ function transformConvexEvent(event: any): EventWithUser {
 
 export default function Page() {
   const convexEvents = useQuery(api.events.getNext, { limit: 50 });
-  
+
   if (!convexEvents) {
     return null;
   }
-  
+
   const events = convexEvents.map(transformConvexEvent);
 
   const pastEvents = events.filter((item) => item.endDateTime < new Date());

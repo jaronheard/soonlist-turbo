@@ -7,9 +7,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "convex/react";
 import { Camera, EyeOff, Globe2, LinkIcon, Sparkles, Text } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { useMutation, useQuery } from "convex/react";
 
 import type { List } from "@soonlist/db/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -51,7 +51,6 @@ import {
   UploadImageForProcessingButton,
   UploadImageForProcessingDropzone,
 } from "./uploadImages";
-
 
 function ProgressStagesWrapper({
   children,
@@ -351,22 +350,24 @@ function AddEvent() {
 
   // Context variables
   const { timezone } = useContext(TimezoneContext);
-  
+
   // Mutations
   const createEventFromText = useMutation(api.ai.eventFromTextThenCreate);
   const createEventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
 
   // Helpers
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
+  ) => {
     setInput(e.target.value);
   };
   const onSubmitText = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!currentUser || isProcessing) return;
-    
+
     setIsProcessing(true);
-    
+
     try {
       const result = await createEventFromText({
         rawText: input,
@@ -377,7 +378,7 @@ function AddEvent() {
         visibility: "public",
         lists: [],
       });
-      
+
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
         router.push(`/${currentUser.username || currentUser.id}/upcoming`);
@@ -387,14 +388,14 @@ function AddEvent() {
       setIsProcessing(false);
     }
   };
-  
+
   const onSubmitUrl = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!currentUser || isProcessing) return;
-    
+
     setIsProcessing(true);
-    
+
     try {
       const result = await createEventFromUrl({
         url: input,
@@ -405,7 +406,7 @@ function AddEvent() {
         visibility: "public",
         lists: [],
       });
-      
+
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
         router.push(`/${currentUser.username || currentUser.id}/upcoming`);

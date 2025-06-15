@@ -2,17 +2,20 @@
 
 import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "convex/react";
 import { UploadButton, UploadDropzone } from "@bytescale/upload-widget-react";
+import { useMutation, useQuery } from "convex/react";
 import { Camera, Upload } from "lucide-react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "@soonlist/ui/button";
 
-import { buildDefaultUrl, bytescaleWidgetOptions } from "~/components/ImageUpload";
+import {
+  buildDefaultUrl,
+  bytescaleWidgetOptions,
+} from "~/components/ImageUpload";
+import { TimezoneContext } from "~/context/TimezoneContext";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import { optimizeImageToBase64 } from "~/lib/imageOptimization";
-import { TimezoneContext } from "~/context/TimezoneContext";
 
 const widgetOptions = {
   ...bytescaleWidgetOptions,
@@ -36,22 +39,25 @@ export const UploadImageForProcessingDropzone = () => {
 
   const handleImageUpload = async (filePath: string) => {
     if (!currentUser) return;
-    
+
     setIsProcessing(true);
-    
+
     try {
       // Convert image URL to optimized base64
       const imageUrl = buildDefaultUrl(filePath);
       let base64Image: string;
-      
+
       try {
         base64Image = await optimizeImageToBase64(imageUrl, 640, 0.5);
       } catch (optimizeError) {
-        console.warn("Failed to optimize image, using fallback:", optimizeError);
+        console.warn(
+          "Failed to optimize image, using fallback:",
+          optimizeError,
+        );
         const { imageUrlToBase64 } = await import("~/lib/imageOptimization");
         base64Image = await imageUrlToBase64(imageUrl);
       }
-      
+
       // Start the workflow
       const result = await createEventFromImage({
         base64Image,
@@ -62,7 +68,7 @@ export const UploadImageForProcessingDropzone = () => {
         visibility: "public",
         lists: [],
       });
-      
+
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
         // Navigate directly to upcoming page
@@ -117,22 +123,25 @@ export const UploadImageForProcessingButton = () => {
 
   const handleImageUpload = async (filePath: string) => {
     if (!currentUser) return;
-    
+
     setIsProcessing(true);
-    
+
     try {
       // Convert image URL to optimized base64
       const imageUrl = buildDefaultUrl(filePath);
       let base64Image: string;
-      
+
       try {
         base64Image = await optimizeImageToBase64(imageUrl, 640, 0.5);
       } catch (optimizeError) {
-        console.warn("Failed to optimize image, using fallback:", optimizeError);
+        console.warn(
+          "Failed to optimize image, using fallback:",
+          optimizeError,
+        );
         const { imageUrlToBase64 } = await import("~/lib/imageOptimization");
         base64Image = await imageUrlToBase64(imageUrl);
       }
-      
+
       // Start the workflow
       const result = await createEventFromImage({
         base64Image,
@@ -143,7 +152,7 @@ export const UploadImageForProcessingButton = () => {
         visibility: "public",
         lists: [],
       });
-      
+
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
         // Navigate directly to upcoming page
