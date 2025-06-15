@@ -160,7 +160,6 @@ export function EventsFromImage({
     </div>
   );
 }
-
 /**
  * Fallback optimization using JPEG format with aggressive compression
  */
