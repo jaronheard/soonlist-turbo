@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
 /**
@@ -324,5 +324,89 @@ export const setOnboardingCompletedAt = mutation({
     });
 
     return null;
+  },
+});
+
+/**
+ * Internal mutation to sync user data from Clerk webhook
+ */
+export const syncFromClerk = internalMutation({
+  args: {
+    id: v.string(),
+    username: v.string(),
+    email: v.string(),
+    displayName: v.string(),
+    userImage: v.string(),
+    publicMetadata: v.optional(v.object({})),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", args.id))
+      .unique();
+    
+    const userData = {
+      id: args.id,
+      username: args.username,
+      email: args.email,
+      displayName: args.displayName,
+      userImage: args.userImage,
+      publicMetadata: args.publicMetadata || {},
+      updatedAt: new Date().toISOString(),
+    };
+    
+    if (existing) {
+      await ctx.db.patch(existing._id, userData);
+    } else {
+      await ctx.db.insert("users", {
+        ...userData,
+        created_at: new Date().toISOString(),
+        bio: null,
+        publicEmail: null,
+        publicPhone: null,
+        publicInsta: null,
+        publicWebsite: null,
+        emoji: null,
+        onboardingData: null,
+        onboardingCompletedAt: null,
+      });
+    }
+  },
+});
+
+/**
+ * Internal mutation to delete user from Clerk webhook
+ */
+export const deleteUser = internalMutation({
+  args: { id: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", args.id))
+      .unique();
+
+    if (!user) {
+      console.warn(`User ${args.id} not found for deletion`);
+      return;
+    }
+
+    // Delete user follows (both as follower and following)
+    const followsAsFollower = await ctx.db
+      .query("userFollows")
+      .withIndex("by_follower", (q) => q.eq("followerId", args.id))
+      .collect();
+
+    const followsAsFollowing = await ctx.db
+      .query("userFollows")
+      .withIndex("by_following", (q) => q.eq("followingId", args.id))
+      .collect();
+
+    // Delete all follow relationships
+    for (const follow of [...followsAsFollower, ...followsAsFollowing]) {
+      await ctx.db.delete(follow._id);
+    }
+
+    // Delete the user record
+    await ctx.db.delete(user._id);
   },
 });
