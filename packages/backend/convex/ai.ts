@@ -172,7 +172,14 @@ export const extractEventFromBase64Image = internalAction({
 
     // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
     const cleanedEvents = result.events.map((event) => {
-      const { buttonStyle: _buttonStyle, options: _options, ...cleanEvent } = event as EventWithMetadata & { buttonStyle?: unknown; options?: unknown };
+      const {
+        buttonStyle: _buttonStyle,
+        options: _options,
+        ...cleanEvent
+      } = event as EventWithMetadata & {
+        buttonStyle?: unknown;
+        options?: unknown;
+      };
       return cleanEvent;
     });
 
@@ -234,7 +241,14 @@ export const extractEventFromUrl = internalAction({
 
       // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
       const cleanedEvents = aiResult.events.map((event) => {
-        const { buttonStyle: _buttonStyle, options: _options, ...cleanEvent } = event as EventWithMetadata & { buttonStyle?: unknown; options?: unknown };
+        const {
+          buttonStyle: _buttonStyle,
+          options: _options,
+          ...cleanEvent
+        } = event as EventWithMetadata & {
+          buttonStyle?: unknown;
+          options?: unknown;
+        };
         return cleanEvent;
       });
 
@@ -282,7 +296,14 @@ export const extractEventFromText = internalAction({
 
     // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
     const cleanedEvents = result.events.map((event) => {
-      const { buttonStyle: _buttonStyle, options: _options, ...cleanEvent } = event as EventWithMetadata & { buttonStyle?: unknown; options?: unknown };
+      const {
+        buttonStyle: _buttonStyle,
+        options: _options,
+        ...cleanEvent
+      } = event as EventWithMetadata & {
+        buttonStyle?: unknown;
+        options?: unknown;
+      };
       return cleanEvent;
     });
 
