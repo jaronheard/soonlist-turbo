@@ -18,6 +18,39 @@ import { env } from "~/env";
 
 export const dynamic = "force-dynamic";
 
+async function forwardToConvex(
+  body: string,
+  headers: {
+    "svix-id": string;
+    "svix-timestamp": string;
+    "svix-signature": string;
+  },
+) {
+  try {
+    const convexUrl = env.NEXT_PUBLIC_CONVEX_URL.replace(
+      /\.convex\.cloud$/,
+      ".convex.site",
+    );
+    const response = await fetch(`${convexUrl}/clerk-webhook`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "svix-id": headers["svix-id"],
+        "svix-timestamp": headers["svix-timestamp"],
+        "svix-signature": headers["svix-signature"],
+      },
+      body: body,
+    });
+
+    if (!response.ok) {
+      console.error("Failed to sync to Convex:", await response.text());
+    }
+  } catch (error) {
+    console.error("Error syncing to Convex:", error);
+    // Don't throw - we don't want to fail the MySQL sync if Convex sync fails
+  }
+}
+
 export async function POST(req: Request) {
   // You can find this in the Clerk Dashboard -> Webhooks -> choose the webhook
   // different for each environment
@@ -98,6 +131,13 @@ export async function POST(req: Request) {
             publicMetadata: evt.data.public_metadata,
           })
           .where(eq(users.id, userId));
+
+        // Forward to Convex after successful MySQL update
+        await forwardToConvex(body, {
+          "svix-id": svix_id,
+          "svix-timestamp": svix_timestamp,
+          "svix-signature": svix_signature,
+        });
       }
 
       // 👉 If the type is "user.created" create a record in the users table
@@ -113,6 +153,13 @@ export async function POST(req: Request) {
           userImage: evt.data.image_url,
           email: evt.data.email_addresses[0]?.email_address || "",
           publicMetadata: evt.data.public_metadata,
+        });
+
+        // Forward to Convex after successful MySQL insert
+        await forwardToConvex(body, {
+          "svix-id": svix_id,
+          "svix-timestamp": svix_timestamp,
+          "svix-signature": svix_signature,
         });
       }
 
@@ -130,6 +177,13 @@ export async function POST(req: Request) {
           db.delete(userFollows).where(eq(userFollows.followingId, userId)),
           // TODO: doesn't delete eventToLists, but should
         ]);
+
+        // Forward to Convex after successful MySQL deletes
+        await forwardToConvex(body, {
+          "svix-id": svix_id,
+          "svix-timestamp": svix_timestamp,
+          "svix-signature": svix_signature,
+        });
       }
 
       return new Response("", { status: 201 });

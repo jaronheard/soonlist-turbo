@@ -12,8 +12,13 @@ export async function uploadImageToCDNFromBase64(
 
     const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
 
-    // Convert base64 string to Buffer
-    const imageBuffer = Buffer.from(base64Data, "base64");
+    // Convert base64 string to Uint8Array (Convex doesn't have Buffer)
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const imageBuffer = bytes;
 
     const response = await fetch(
       "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",

@@ -21,6 +21,7 @@ export const eventDataValidator = v.object({
   location: v.optional(v.string()),
   description: v.optional(v.string()),
   images: v.optional(v.array(v.string())),
+  eventMetadata: v.optional(v.any()), // Allow eventMetadata to pass through
 });
 
 const eventMetadataValidator = v.optional(

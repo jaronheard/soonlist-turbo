@@ -7,7 +7,7 @@ import { Card } from "@soonlist/ui/card";
 import LightboxImage from "./LightboxImage";
 
 export default function EventCard(props: {
-  eventImage: string;
+  eventImage: string | null;
   eventTitle?: string;
   eventName?: string;
   eventDate: string;
@@ -78,15 +78,17 @@ export default function EventCard(props: {
       {/* Event Card - Self-contained with just event details */}
       <Card className="overflow-hidden border border-interactive-3 bg-white p-6 shadow-md">
         <div className="space-y-6">
-          <div className="relative aspect-square w-full overflow-hidden rounded-lg">
-            <LightboxImage
-              src={`${eventImage}`}
-              alt="Event flyer"
-              width={600}
-              height={600}
-              className="h-full w-full object-cover"
-            />
-          </div>
+          {eventImage && (
+            <div className="relative aspect-square w-full overflow-hidden rounded-lg">
+              <LightboxImage
+                src={eventImage}
+                alt="Event flyer"
+                width={600}
+                height={600}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
 
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-neutral-1">

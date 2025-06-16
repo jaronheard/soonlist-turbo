@@ -1,5 +1,7 @@
-import { currentUser } from "@clerk/nextjs/server";
+"use client";
+
 import { clsx } from "clsx";
+import { useQuery } from "convex/react";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type {
@@ -10,6 +12,7 @@ import type {
   List,
   User,
 } from "@soonlist/db/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { collapseSimilarEvents } from "@soonlist/cal";
 
 import {
@@ -64,7 +67,7 @@ export type EventWithUser = Event & {
   eventToLists?: EventToListsWithList[];
 };
 
-export async function EventList({
+export function EventList({
   currentEvents,
   futureEvents,
   pastEvents,
@@ -85,7 +88,7 @@ export async function EventList({
   forceSingleColumn?: boolean;
   children?: React.ReactNode;
 }) {
-  const user = await currentUser();
+  const currentUser = useQuery(api.users.getCurrentUser);
   function getVisibleEvents(events: EventWithUser[]) {
     return events.filter(
       (item) => showPrivateEvents || item.visibility === "public",
@@ -94,15 +97,15 @@ export async function EventList({
 
   const currentEventsToUse = collapseSimilarEvents(
     getVisibleEvents(currentEvents),
-    user?.id,
+    currentUser?.id,
   );
   const pastEventsToUse = collapseSimilarEvents(
     getVisibleEvents(pastEvents),
-    user?.id,
+    currentUser?.id,
   );
   const futureEventsToUse = collapseSimilarEvents(
     getVisibleEvents(futureEvents),
-    user?.id,
+    currentUser?.id,
   );
   const showPastEvents =
     variant !== "future-minimal" && pastEventsToUse.length > 0;

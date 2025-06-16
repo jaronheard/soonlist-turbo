@@ -49,11 +49,15 @@ export type AddToCalendarCardProps = AddToCalendarButtonType & {
   onUpdate?: (props: AddToCalendarButtonType) => void;
   hideFloatingActionButtons?: boolean;
   hideBorder?: boolean;
+  hideEventMetadata?: boolean;
+  hideSourceLink?: boolean;
 };
 
 export function AddToCalendarCard({
   firstInputRef,
   hideBorder,
+  hideEventMetadata = false,
+  hideSourceLink = false,
   ...initialProps
 }: AddToCalendarCardProps) {
   const { user } = useUser();
@@ -351,163 +355,166 @@ export function AddToCalendarCard({
             </a>
           </InputDescription>
         </div>
-        <div className="col-span-full">
-          <Card className="w-full max-w-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Shapes className="mr-2 size-6" />
-                  Event Metadata
+        {!hideEventMetadata && (
+          <div className="col-span-full">
+            <Card className="w-full max-w-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Shapes className="mr-2 size-6" />
+                    Event Metadata
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="type">Event Type</Label>
+                  <div className="flex items-center justify-between">
+                    <Select name="type" value={type} onValueChange={setType}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EVENT_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            <span className="capitalize">{type}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size={"sm"}
+                      className="ml-2 h-12"
+                      onClick={() => feedback("Suggested Event Type")}
+                    >
+                      Add
+                    </Button>
+                  </div>
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="type">Event Type</Label>
-                <div className="flex items-center justify-between">
-                  <Select name="type" value={type} onValueChange={setType}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EVENT_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          <span className="capitalize">{type}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size={"sm"}
-                    className="ml-2 h-12"
-                    onClick={() => feedback("Suggested Event Type")}
-                  >
-                    Add
-                  </Button>
+                <div className="grid gap-2">
+                  <Label htmlFor="category">Category</Label>
+                  <div className="flex items-center justify-between">
+                    <Select
+                      defaultValue="unknown"
+                      name="category"
+                      value={category}
+                      onValueChange={setCategory}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EVENT_CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            <span className="capitalize">{category}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size={"sm"}
+                      className="ml-2 h-12"
+                      onClick={() => feedback("Suggested Event Category")}
+                    >
+                      Add
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="category">Category</Label>
-                <div className="flex items-center justify-between">
+                <div className="grid gap-2">
+                  <Label htmlFor="price-type">Payment</Label>
                   <Select
                     defaultValue="unknown"
-                    name="category"
-                    value={category}
-                    onValueChange={setCategory}
+                    name="price-type"
+                    value={priceType}
+                    onValueChange={setPriceType}
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue />
+                      <SelectValue placeholder="Free" />
                     </SelectTrigger>
                     <SelectContent>
-                      {EVENT_CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          <span className="capitalize">{category}</span>
+                      {PRICE_TYPE.map((priceType) => (
+                        <SelectItem key={priceType} value={priceType}>
+                          <span className="capitalize">{priceType}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size={"sm"}
-                    className="ml-2 h-12"
-                    onClick={() => feedback("Suggested Event Category")}
-                  >
-                    Add
-                  </Button>
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="price-type">Payment</Label>
-                <Select
-                  defaultValue="unknown"
-                  name="price-type"
-                  value={priceType}
-                  onValueChange={setPriceType}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Free" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PRICE_TYPE.map((priceType) => (
-                      <SelectItem key={priceType} value={priceType}>
-                        <span className="capitalize">{priceType}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="price">Price Min($)</Label>
-                <Input
-                  id="price"
-                  placeholder="Enter lowest possible price"
-                  value={priceMin}
-                  // type="number"
-                  onChange={(e) => setPriceMin(Number(e.target.value))}
-                  className="w-[180px]"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="price">Price Max($)</Label>
-                <Input
-                  id="price"
-                  placeholder="Enter highest possible price"
-                  value={priceMax}
-                  // type="number"
-                  onChange={(e) => setPriceMax(Number(e.target.value))}
-                  className="w-[180px]"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="age-restriction">Ages</Label>
-                <Select
-                  defaultValue="All Ages"
-                  name="age-restriction"
-                  value={ageRestriction}
-                  onValueChange={setAgeRestriction}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All Ages" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all-ages">All Ages</SelectItem>
-                    <SelectItem value="18+">18+</SelectItem>
-                    <SelectItem value="21+">21+</SelectItem>
-                    <SelectItem value="unknown">Unknown</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="performers">Performers</Label>
-                <InputTags
-                  id="performers"
-                  placeholder="e.g. @sza, @tylerthecreator"
-                  value={performers}
-                  onChange={setPerformers}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="performers">Accessibility</Label>
-                <MultiSelect
-                  options={ACCESSIBILITY_TYPES_OPTIONS}
-                  selected={accessibility}
-                  onChange={setAccessibility}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="accessibility-notes">Accessibility Notes</Label>
-                <Textarea
-                  id="accessibility-notes"
-                  name="accessibility-notes"
-                  rows={3}
-                  value={accessibilityNotes}
-                  onChange={(e) => setAccessibilityNotes(e.target.value)}
-                />
-              </div>
-              {/* <div className="grid gap-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="price">Price Min($)</Label>
+                  <Input
+                    id="price"
+                    placeholder="Enter lowest possible price"
+                    value={priceMin}
+                    // type="number"
+                    onChange={(e) => setPriceMin(Number(e.target.value))}
+                    className="w-[180px]"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="price">Price Max($)</Label>
+                  <Input
+                    id="price"
+                    placeholder="Enter highest possible price"
+                    value={priceMax}
+                    // type="number"
+                    onChange={(e) => setPriceMax(Number(e.target.value))}
+                    className="w-[180px]"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="age-restriction">Ages</Label>
+                  <Select
+                    defaultValue="All Ages"
+                    name="age-restriction"
+                    value={ageRestriction}
+                    onValueChange={setAgeRestriction}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="All Ages" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all-ages">All Ages</SelectItem>
+                      <SelectItem value="18+">18+</SelectItem>
+                      <SelectItem value="21+">21+</SelectItem>
+                      <SelectItem value="unknown">Unknown</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="performers">Performers</Label>
+                  <InputTags
+                    id="performers"
+                    placeholder="e.g. @sza, @tylerthecreator"
+                    value={performers}
+                    onChange={setPerformers}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="performers">Accessibility</Label>
+                  <MultiSelect
+                    options={ACCESSIBILITY_TYPES_OPTIONS}
+                    selected={accessibility}
+                    onChange={setAccessibility}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="accessibility-notes">
+                    Accessibility Notes
+                  </Label>
+                  <Textarea
+                    id="accessibility-notes"
+                    name="accessibility-notes"
+                    rows={3}
+                    value={accessibilityNotes}
+                    onChange={(e) => setAccessibilityNotes(e.target.value)}
+                  />
+                </div>
+                {/* <div className="grid gap-2">
                 <Label htmlFor="source">Social Platform</Label>
                 <Select name="source" value={source} onValueChange={setSource}>
                   <SelectTrigger className="w-[180px]">
@@ -531,19 +538,22 @@ export function AddToCalendarCard({
                   onChange={setMentions}
                 />
               </div> */}
-            </CardContent>
-          </Card>
-        </div>
-        <div className="col-span-full">
-          <Label htmlFor="location">Source Link (optional)</Label>
-          <Input
-            type="url"
-            name="link"
-            id="link"
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-          />
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+        {!hideSourceLink && (
+          <div className="col-span-full">
+            <Label htmlFor="location">Source Link (optional)</Label>
+            <Input
+              type="url"
+              name="link"
+              id="link"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+            />
+          </div>
+        )}
         {!initialProps.onUpdate && !initialProps.hideFloatingActionButtons && (
           <div className="fixed bottom-4 left-1/2 flex -translate-x-1/2 transform gap-3">
             {!initialProps.update && (
