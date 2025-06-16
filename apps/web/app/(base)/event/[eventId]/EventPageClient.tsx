@@ -44,9 +44,6 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
     window.scrollTo(0, 0);
   }, [eventId]);
 
-  console.log("Event ID from URL:", eventId);
-  console.log("Event from query:", event);
-
   // Loading state - useQuery returns undefined while loading
   if (event === undefined) {
     return null;

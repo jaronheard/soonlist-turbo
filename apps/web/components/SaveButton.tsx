@@ -40,7 +40,7 @@ function transformEventData(event: AddToCalendarButtonType) {
   };
 }
 
-// Transform lists array format
+// TODO: this is not used anywhere
 function transformLists(lists: Record<string, string>[]) {
   return lists.map((list) => {
     const value = Object.values(list)[0];
@@ -90,7 +90,6 @@ export function SaveButton(props: SaveButtonProps) {
         <SignInButton>
           <Button
             onClick={() => {
-              console.log("props", props);
               localStorage.setItem("updatedProps", JSON.stringify(props));
             }}
           >
