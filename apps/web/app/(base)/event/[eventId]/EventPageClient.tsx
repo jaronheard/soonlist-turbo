@@ -3,41 +3,27 @@
 import { useEffect } from "react";
 import { useQuery } from "convex/react";
 
+import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import type { EventMetadata } from "@soonlist/cal";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+import type { User } from "@soonlist/db/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
-import { collapseSimilarEvents } from "@soonlist/cal";
 
-import type { EventWithUser } from "~/components/EventList";
 import { EventPage } from "~/components/EventDisplays";
 
-// Transform Convex event to EventWithUser format
-function transformConvexEvent(event: any): EventWithUser {
+const transformConvexUser = (user: Doc<"users">): User => {
   return {
-    id: event.id,
-    userId: event.userId,
-    updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
-    userName: event.userName,
-    event: event.event,
-    eventMetadata: event.eventMetadata,
-    endDateTime: new Date(event.endDateTime),
-    startDateTime: new Date(event.startDateTime),
-    visibility: event.visibility,
-    createdAt: new Date(event._creationTime),
-    user: event.user,
-    eventFollows: event.eventFollows || [],
-    comments: event.comments || [],
-    eventToLists: event.eventToLists || [],
+    ...user,
+    createdAt: new Date(user.created_at),
+    updatedAt: user.updatedAt ? new Date(user.updatedAt) : null,
+    onboardingCompletedAt: user.onboardingCompletedAt
+      ? new Date(user.onboardingCompletedAt)
+      : null,
   };
-}
+};
 
 export default function EventPageClient({ eventId }: { eventId: string }) {
-  const currentUser = useQuery(api.users.getCurrentUser);
   const event = useQuery(api.events.get, { eventId });
-  const convexDuplicates = useQuery(
-    api.events.getPossibleDuplicates,
-    event ? { startDateTime: event.startDateTime } : "skip",
-  );
 
   // Scroll to top when navigating to this page
   useEffect(() => {
@@ -60,50 +46,19 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
   const eventMetadata = event.eventMetadata as EventMetadata;
   const fullImageUrl = eventData.images?.[3] || null;
 
-  const possibleDuplicateEvents =
-    convexDuplicates?.map(transformConvexEvent) || [];
-
-  // find the event that matches the current event
-  const similarEvents = collapseSimilarEvents(
-    possibleDuplicateEvents,
-    currentUser?.id,
-  ).find((similarEvent) => similarEvent.event.id === event.id)?.similarEvents;
-
-  // TODO: Implement event lists when list functionality is added to Convex
-  const lists = [];
-
   return (
     <>
       <EventPage
-        user={
-          event.user
-            ? {
-                ...event.user,
-                createdAt: new Date(
-                  event.user.created_at || event.user._creationTime,
-                ),
-                updatedAt: event.user.updatedAt
-                  ? new Date(event.user.updatedAt)
-                  : null,
-                onboardingCompletedAt: event.user.onboardingCompletedAt
-                  ? new Date(event.user.onboardingCompletedAt)
-                  : null,
-              }
-            : undefined
-        }
-        eventFollows={event.eventFollows || []}
-        comments={(event.comments || []).map((comment: any) => ({
-          ...comment,
-          createdAt: new Date(comment.created_at || comment._creationTime),
-          updatedAt: comment.updatedAt ? new Date(comment.updatedAt) : null,
-        }))}
+        user={transformConvexUser(event.user!)}
+        eventFollows={[]}
+        comments={[]}
         key={event.id}
         id={event.id}
         event={eventData}
         eventMetadata={eventMetadata}
         createdAt={new Date(event._creationTime)}
         visibility={event.visibility}
-        similarEvents={similarEvents}
+        similarEvents={undefined}
         image={fullImageUrl}
         singleEvent
         hideCurator

@@ -39,6 +39,7 @@ export function FollowEventDropdownButton({
             }
             router.refresh();
           } catch (error) {
+            console.error(error);
             toast.error(
               following
                 ? "Event not unsaved. Please try again."
@@ -99,6 +100,7 @@ export function FollowEventButton({
       }
       router.refresh();
     } catch (error) {
+      console.error(error);
       toast.error(
         following
           ? "Event not unsaved. Please try again."

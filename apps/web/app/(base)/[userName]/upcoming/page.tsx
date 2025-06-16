@@ -1,114 +1,94 @@
 "use client";
 
+import type { FunctionReturnType } from "convex/server";
 import { use } from "react";
 import { useQuery } from "convex/react";
 import { CalendarHeart } from "lucide-react";
 
+import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import type { User } from "@soonlist/db/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
+import {
+  useStablePaginatedQuery,
+  useStableTimestamp,
+} from "~/hooks/useStableQuery";
 
 interface Props {
   params: Promise<{ userName: string }>;
 }
 
-// Helper to transform Convex user to DB User type
-function transformConvexUser(convexUser: any): User | null {
-  if (!convexUser) return null;
-
+const transformConvexUser = (user: Doc<"users">): User => {
   return {
-    id: convexUser.id,
-    username: convexUser.username,
-    email: convexUser.email,
-    displayName: convexUser.displayName,
-    userImage: convexUser.userImage,
-    bio: convexUser.bio,
-    publicEmail: convexUser.publicEmail,
-    publicPhone: convexUser.publicPhone,
-    publicInsta: convexUser.publicInsta,
-    publicWebsite: convexUser.publicWebsite,
-    publicMetadata: convexUser.publicMetadata,
-    emoji: convexUser.emoji,
-    onboardingData: convexUser.onboardingData,
-    onboardingCompletedAt: convexUser.onboardingCompletedAt
-      ? new Date(convexUser.onboardingCompletedAt)
+    ...user,
+    createdAt: new Date(user.created_at),
+    updatedAt: user.updatedAt ? new Date(user.updatedAt) : null,
+    onboardingCompletedAt: user.onboardingCompletedAt
+      ? new Date(user.onboardingCompletedAt)
       : null,
-    createdAt: new Date(convexUser.created_at),
-    updatedAt: convexUser.updatedAt ? new Date(convexUser.updatedAt) : null,
   };
-}
+};
 
-// Transform Convex event to EventWithUser format
-function transformConvexEvent(event: any, convexUser: any): EventWithUser {
-  const user = transformConvexUser(convexUser);
-  return {
+// Transform Convex events to EventWithUser format
+function transformConvexEvents(
+  events: FunctionReturnType<
+    typeof api.events.getEventsForUserPaginated
+  >["page"],
+): EventWithUser[] {
+  return events.map((event) => ({
     id: event.id,
     userId: event.userId,
     updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
     userName: event.userName,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     event: event.event,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     eventMetadata: event.eventMetadata,
     endDateTime: new Date(event.endDateTime),
     startDateTime: new Date(event.startDateTime),
     visibility: event.visibility,
     createdAt: new Date(event._creationTime),
-    user: user ?? {
-      id: event.userId,
-      username: event.userName,
-      displayName: event.userName,
-      email: "",
-      userImage: "",
-      bio: null,
-      publicEmail: null,
-      publicPhone: null,
-      publicInsta: null,
-      publicWebsite: null,
-      publicMetadata: null,
-      emoji: null,
-      onboardingData: null,
-      onboardingCompletedAt: null,
-      createdAt: new Date(),
-      updatedAt: null,
-    },
+    user: transformConvexUser(event.user!),
     eventFollows: [],
     comments: [],
     eventToLists: [],
-  };
+  }));
 }
 
 export default function Page({ params }: Props) {
   const { userName } = use(params);
   const currentUser = useQuery(api.users.getCurrentUser);
   const self = currentUser?.username === userName;
+  const stableNow = useStableTimestamp();
 
-  const convexEvents = useQuery(api.events.getUpcomingForUser, {
-    userName,
-  });
+  const { results: convexEvents } = useStablePaginatedQuery(
+    api.events.getEventsForUserPaginated,
+    {
+      userName,
+      filter: "upcoming",
+    },
+    {
+      initialNumItems: 100,
+    },
+  );
 
-  const userResponse = useQuery(api.users.getByUsername, {
-    userName,
-  });
-
-  if (!convexEvents || !userResponse) {
+  if (!convexEvents) {
     return null;
   }
 
-  const events = convexEvents.map((event) => {
-    const transformed = transformConvexEvent(event, userResponse);
-    return transformed;
-  });
+  const events = transformConvexEvents(convexEvents);
 
   const currentEvents = events.filter((item) => {
-    const now = new Date();
     const isCurrent =
-      new Date(item.startDateTime) < now && new Date(item.endDateTime) > now;
+      new Date(item.startDateTime) < stableNow &&
+      new Date(item.endDateTime) > stableNow;
     return isCurrent;
   });
   const futureEvents = events.filter(
-    (item) => new Date(item.startDateTime) >= new Date(),
+    (item) => new Date(item.startDateTime) >= stableNow,
   );
 
   return (

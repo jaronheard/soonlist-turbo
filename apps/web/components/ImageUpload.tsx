@@ -31,7 +31,7 @@ export function buildDefaultUrl(filePath: string) {
   });
 }
 
-export const bytescaleWidgetOptions: any = {
+export const bytescaleWidgetOptions = {
   apiKey: "public_12a1yekATNiLj4VVnREZ8c7LM8V8",
   editor: {
     images: {

@@ -32,7 +32,7 @@ export default async function Page(props: {
     .filter((comment) => comment.content)
     .pop()?.content;
   // TODO: Implement event lists when list functionality is added to Convex
-  const eventLists = [];
+  // const eventLists = [];
   return (
     <div className="flex flex-col items-center">
       {event.event ? (

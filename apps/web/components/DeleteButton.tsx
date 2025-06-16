@@ -29,9 +29,15 @@ export function DeleteButton(props: DeleteButtonProps) {
     try {
       await deleteEvent({ id: props.id });
       toast.success("Event deleted.");
-      router.push(`/${user?.username}/upcoming`);
-      router.refresh();
+      if (user?.username) {
+        router.push(`/${user.username}/upcoming`);
+        router.refresh();
+      } else {
+        router.push("/");
+        router.refresh();
+      }
     } catch (error) {
+      console.error(error);
       toast.error("Your event was not deleted. Please try again.");
     } finally {
       setIsDeleting(false);

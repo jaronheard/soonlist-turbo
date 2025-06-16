@@ -1,50 +1,72 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import { usePaginatedQuery } from "convex/react";
 import { Globe2 } from "lucide-react";
 
+import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
+import type { User } from "@soonlist/db/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
+import { useStableTimestamp } from "~/hooks/useStableQuery";
 
-// Transform Convex event to EventWithUser format
-function transformConvexEvent(event: any): EventWithUser {
+const transformConvexUser = (user: Doc<"users">): User => {
   return {
+    ...user,
+    createdAt: new Date(user.created_at),
+    updatedAt: user.updatedAt ? new Date(user.updatedAt) : null,
+    onboardingCompletedAt: user.onboardingCompletedAt
+      ? new Date(user.onboardingCompletedAt)
+      : null,
+  };
+};
+
+// Transform Convex events to EventWithUser format
+function transformConvexEvents(
+  events: FunctionReturnType<typeof api.events.getDiscoverPaginated>["page"],
+): EventWithUser[] {
+  return events.map((event) => ({
     id: event.id,
     userId: event.userId,
     updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
     userName: event.userName,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     event: event.event,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     eventMetadata: event.eventMetadata,
     endDateTime: new Date(event.endDateTime),
     startDateTime: new Date(event.startDateTime),
     visibility: event.visibility,
     createdAt: new Date(event._creationTime),
-    user: event.user,
-    eventFollows: event.eventFollows || [],
-    comments: event.comments || [],
-    eventToLists: event.eventToLists || [],
-  };
+    user: transformConvexUser(event.user!),
+    eventFollows: [],
+    comments: [],
+    eventToLists: [],
+  }));
 }
 
 export default function Page() {
-  const convexEvents = useQuery(api.events.getNext, { limit: 50 });
+  const stableNow = useStableTimestamp();
+  const { results } = usePaginatedQuery(
+    api.events.getDiscoverPaginated,
+    {},
+    { initialNumItems: 50 },
+  );
 
-  if (!convexEvents) {
+  if (!results || results.length === 0) {
     return null;
   }
 
-  const events = convexEvents.map(transformConvexEvent);
+  const events = transformConvexEvents(results);
 
-  const pastEvents = events.filter((item) => item.endDateTime < new Date());
+  const pastEvents = events.filter((item) => item.endDateTime < stableNow);
 
   const currentEvents = events.filter(
-    (item) => item.startDateTime < new Date() && item.endDateTime > new Date(),
+    (item) => item.startDateTime < stableNow && item.endDateTime > stableNow,
   );
-  const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date(),
-  );
+  const futureEvents = events.filter((item) => item.startDateTime >= stableNow);
 
   return (
     <div className="mx-auto max-w-2xl">

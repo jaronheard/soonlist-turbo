@@ -59,7 +59,6 @@ function ProgressStagesWrapper({
   children: JSX.Element;
 }) {
   const { user } = useUser();
-  const { status } = useNewEventProgressContext();
 
   return (
     <>
@@ -346,8 +345,7 @@ function AddEvent() {
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [waitingForUser, setWaitingForUser] = useState(false);
-  const { goToNextStatus, uploadOption, setUploadOption } =
-    useNewEventProgressContext();
+  const { uploadOption, setUploadOption } = useNewEventProgressContext();
 
   // Context variables
   const { timezone } = useContext(TimezoneContext);
