@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@js-temporal/polyfill": "catalog:",
-    "@soonlist/db": "workspace:*",
+    "@soonlist/backend": "workspace:*",
     "date-fns": "catalog:",
     "timezone-soft": "catalog:",
     "zod": "catalog:",

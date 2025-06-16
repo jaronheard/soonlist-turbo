@@ -2,11 +2,14 @@
 
 import type { z } from "zod";
 import { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "convex/react";
 import { Check, Globe, Instagram, Mail, Pen, Phone } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "@soonlist/ui/button";
 import {
   Form,
@@ -21,8 +24,6 @@ import { Input } from "@soonlist/ui/input";
 import { Textarea } from "@soonlist/ui/textarea";
 import { userAdditionalInfoSchema } from "@soonlist/validators";
 
-import { api } from "~/trpc/react";
-
 export function OnboardingTabs({
   additionalInfo,
 }: {
@@ -36,7 +37,7 @@ function UserProfileForm({
 }: {
   defaultValues: z.infer<typeof userAdditionalInfoSchema>;
 }) {
-  const utils = api.useUtils();
+  const { user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFormChanged, setIsFormChanged] = useState(false);
   const form = useForm({
@@ -44,23 +45,28 @@ function UserProfileForm({
     resolver: zodResolver(userAdditionalInfoSchema),
   });
 
-  const updateAdditionalInfo = api.user.updateAdditionalInfo.useMutation({
-    onMutate: () => {
-      setIsSubmitting(true);
-    },
-    onError: (error) => {
-      setIsSubmitting(false);
-      toast.error(`Public profile not saved: ${error.message}`);
-    },
-    onSuccess: () => {
-      setIsSubmitting(false);
-      toast.success("Public profile saved.");
-      void utils.user.invalidate();
-    },
-  });
+  const updateAdditionalInfo = useMutation(api.users.updateAdditionalInfo);
 
-  function onSubmit(values: z.infer<typeof userAdditionalInfoSchema>) {
-    updateAdditionalInfo.mutate(values);
+  async function onSubmit(values: z.infer<typeof userAdditionalInfoSchema>) {
+    if (!user?.id) {
+      toast.error("User not found. Please sign in again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await updateAdditionalInfo({
+        userId: user.id,
+        ...values,
+      });
+      toast.success("Public profile saved.");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Public profile not saved: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const renderIcon = (
