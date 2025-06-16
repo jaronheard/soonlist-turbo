@@ -462,6 +462,13 @@ export async function getEventById(ctx: QueryCtx, eventId: string) {
     }
   }
 
+  // If the user is not found, still return the event but log a warning
+  if (!user) {
+    console.warn(
+      `User not found for event ${eventId} with userId ${event.userId}`,
+    );
+  }
+
   return {
     ...event,
     user,

@@ -49,7 +49,7 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
   return (
     <>
       <EventPage
-        user={transformConvexUser(event.user!)}
+        user={event.user ? transformConvexUser(event.user) : undefined}
         eventFollows={[]}
         comments={[]}
         key={event.id}
