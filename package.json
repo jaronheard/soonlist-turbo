@@ -73,6 +73,16 @@
     },
     "patchedDependencies": {
       "xcode@3.0.1": "patches/xcode@3.0.1.patch"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@clerk/shared",
+      "@sentry/cli",
+      "browser-tabs-lock",
+      "core-js",
+      "core-js-pure",
+      "es5-ext",
+      "esbuild",
+      "sharp"
+    ]
   }
 }

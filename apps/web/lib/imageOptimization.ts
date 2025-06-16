@@ -8,20 +8,15 @@ const DEFAULT_DISPLAY_WIDTH = 1284;
 const DEFAULT_DISPLAY_QUALITY = 0.8;
 
 /**
- * Efficiently converts ArrayBuffer to base64 string.
- * Uses chunked processing to avoid memory issues with large buffers.
+ * Converts ArrayBuffer to base64 string.
  */
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
-  const chunkSize = 0x8000; // 32KB chunks
-  const chunks: string[] = [];
-
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, i + chunkSize);
-    chunks.push(String.fromCharCode(...chunk));
-  }
-
-  return btoa(chunks.join(""));
+  const binaryString = bytes.reduce(
+    (acc, byte) => acc + String.fromCharCode(byte),
+    ""
+  );
+  return btoa(binaryString);
 }
 
 /**
@@ -38,6 +33,7 @@ function validateParameters(maxWidth: number, quality: number): void {
 
 /**
  * Gets ImageData from a URL or File.
+ * Note: Canvas is required here to convert image sources to ImageData for jsquash.
  *
  * @param source - The image source (URL string or File object)
  * @returns Promise resolving to ImageData
@@ -49,7 +45,7 @@ async function getImageData(source: string | File): Promise<ImageData> {
     source instanceof File ? URL.createObjectURL(source) : source;
 
   try {
-    // Only set crossOrigin for URLs, not for object URLs
+    // Only set crossOrigin for external URLs
     if (typeof source === "string" && !source.startsWith("blob:")) {
       img.crossOrigin = "anonymous";
     }
@@ -60,32 +56,18 @@ async function getImageData(source: string | File): Promise<ImageData> {
       img.src = objectUrl;
     });
 
-    // Create canvas to extract ImageData
+    // Create minimal canvas just for ImageData extraction
     const canvas = document.createElement("canvas");
     canvas.width = img.width;
     canvas.height = img.height;
-    const ctx = canvas.getContext("2d", {
-      willReadFrequently: true,
-      alpha: true,
-    });
+    const ctx = canvas.getContext("2d");
 
     if (!ctx) {
       throw new Error("Failed to get canvas 2D context");
     }
 
     ctx.drawImage(img, 0, 0);
-    const imageData = ctx.getImageData(0, 0, img.width, img.height);
-
-    // Clean up
-    canvas.width = 0;
-    canvas.height = 0;
-    img.src = "";
-
-    return imageData;
-  } catch (error) {
-    throw new Error(
-      `Failed to get image data: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    return ctx.getImageData(0, 0, img.width, img.height);
   } finally {
     // Always revoke object URLs
     if (source instanceof File) {
@@ -95,8 +77,7 @@ async function getImageData(source: string | File): Promise<ImageData> {
 }
 
 /**
- * Internal function to optimize image data to base64.
- * Shared logic for both URL and File inputs.
+ * Optimizes image using jsquash and returns base64 string.
  */
 async function optimizeToBase64Internal(
   source: string | File,
@@ -105,38 +86,24 @@ async function optimizeToBase64Internal(
 ): Promise<string> {
   validateParameters(maxWidth, quality);
 
-  try {
-    const imageData = await getImageData(source);
-    const { width: originalWidth, height: originalHeight } = imageData;
+  const imageData = await getImageData(source);
+  const { width: originalWidth, height: originalHeight } = imageData;
 
-    // Calculate new dimensions while maintaining aspect ratio
-    let targetWidth = originalWidth;
-    let targetHeight = originalHeight;
-    if (originalWidth > maxWidth) {
-      const aspectRatio = originalHeight / originalWidth;
-      targetWidth = maxWidth;
-      targetHeight = Math.round(targetWidth * aspectRatio);
-    }
+  // Calculate new dimensions while maintaining aspect ratio
+  const shouldResize = originalWidth > maxWidth;
+  const resizedData = shouldResize
+    ? await resize(imageData, {
+        width: maxWidth,
+        height: Math.round((originalHeight / originalWidth) * maxWidth),
+      })
+    : imageData;
 
-    // Resize if needed
-    const resizedData =
-      targetWidth === originalWidth && targetHeight === originalHeight
-        ? imageData
-        : await resize(imageData, {
-            width: targetWidth,
-            height: targetHeight,
-          });
-
-    // Encode to WebP using jsquash
-    const webpBuffer = await encode(resizedData, {
-      quality: quality * 100,
-    });
-    return arrayBufferToBase64(webpBuffer);
-  } catch (error) {
-    throw new Error(
-      `Image optimization failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
-  }
+  // Encode to WebP using jsquash
+  const webpBuffer = await encode(resizedData, {
+    quality: quality * 100,
+  });
+  
+  return arrayBufferToBase64(webpBuffer);
 }
 
 /**
@@ -184,47 +151,19 @@ export async function optimizeFileToBase64(
  * @throws Error if conversion fails
  */
 export async function imageUrlToBase64(url: string): Promise<string> {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.statusText}`);
-    }
-
-    const blob = await response.blob();
-
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onloadend = () => {
-        if (typeof reader.result === "string") {
-          // Remove the data URL prefix to get just the base64 string
-          const base64 = reader.result.split(",")[1];
-          if (!base64) {
-            reject(new Error("Failed to extract base64 from data URL"));
-          } else {
-            resolve(base64);
-          }
-        } else {
-          reject(new Error("FileReader did not return a string"));
-        }
-      };
-
-      reader.onerror = () => {
-        reject(new Error("FileReader failed to read blob"));
-      };
-
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    throw new Error(
-      `Failed to convert image URL to base64: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${response.statusText}`);
   }
+
+  const blob = await response.blob();
+  const arrayBuffer = await blob.arrayBuffer();
+  
+  return arrayBufferToBase64(arrayBuffer);
 }
 
 /**
  * Optimize image for high-quality display (event edit page).
- * Similar to the Expo app's event edit image processing.
  *
  * @param file - The File object to optimize
  * @param maxWidth - Maximum width in pixels (default: 1284)
@@ -239,37 +178,22 @@ export async function optimizeImageForDisplay(
 ): Promise<Blob> {
   validateParameters(maxWidth, quality);
 
-  try {
-    const imageData = await getImageData(file);
-    const { width: originalWidth, height: originalHeight } = imageData;
+  const imageData = await getImageData(file);
+  const { width: originalWidth, height: originalHeight } = imageData;
 
-    // Calculate new dimensions while maintaining aspect ratio
-    let targetWidth = originalWidth;
-    let targetHeight = originalHeight;
-    if (originalWidth > maxWidth) {
-      const aspectRatio = originalHeight / originalWidth;
-      targetWidth = maxWidth;
-      targetHeight = Math.round(targetWidth * aspectRatio);
-    }
+  // Resize if needed
+  const shouldResize = originalWidth > maxWidth;
+  const resizedData = shouldResize
+    ? await resize(imageData, {
+        width: maxWidth,
+        height: Math.round((originalHeight / originalWidth) * maxWidth),
+      })
+    : imageData;
 
-    // Resize if needed
-    const resizedData =
-      targetWidth === originalWidth && targetHeight === originalHeight
-        ? imageData
-        : await resize(imageData, {
-            width: targetWidth,
-            height: targetHeight,
-          });
+  // Encode to WebP using jsquash
+  const webpBuffer = await encode(resizedData, {
+    quality: quality * 100,
+  });
 
-    // Encode to WebP
-    const webpBuffer = await encode(resizedData, {
-      quality: quality * 100,
-    });
-
-    return new Blob([webpBuffer], { type: "image/webp" });
-  } catch (error) {
-    throw new Error(
-      `Failed to optimize image for display: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
-  }
+  return new Blob([webpBuffer], { type: "image/webp" });
 }
