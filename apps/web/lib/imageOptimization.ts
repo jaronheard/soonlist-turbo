@@ -14,7 +14,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   const binaryString = bytes.reduce(
     (acc, byte) => acc + String.fromCharCode(byte),
-    ""
+    "",
   );
   return btoa(binaryString);
 }
@@ -102,7 +102,7 @@ async function optimizeToBase64Internal(
   const webpBuffer = await encode(resizedData, {
     quality: quality * 100,
   });
-  
+
   return arrayBufferToBase64(webpBuffer);
 }
 
@@ -158,7 +158,7 @@ export async function imageUrlToBase64(url: string): Promise<string> {
 
   const blob = await response.blob();
   const arrayBuffer = await blob.arrayBuffer();
-  
+
   return arrayBufferToBase64(arrayBuffer);
 }
 
