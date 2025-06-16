@@ -97,17 +97,16 @@ export default function Page({ params }: Props) {
   }
 
   const events = convexEvents.map((event) => {
-    console.log("Raw event from Convex:", event);
     const transformed = transformConvexEvent(event, userResponse);
-    console.log("Transformed event ID:", transformed.id);
     return transformed;
   });
 
-  const currentEvents = events.filter(
-    (item) =>
-      new Date(item.startDateTime) < new Date() &&
-      new Date(item.endDateTime) > new Date(),
-  );
+  const currentEvents = events.filter((item) => {
+    const now = new Date();
+    const isCurrent =
+      new Date(item.startDateTime) < now && new Date(item.endDateTime) > now;
+    return isCurrent;
+  });
   const futureEvents = events.filter(
     (item) => new Date(item.startDateTime) >= new Date(),
   );
