@@ -157,4 +157,11 @@ export default defineSchema({
     zipcode: v.string(),
     why: v.string(),
   }).index("by_email", ["email"]),
+
+  syncState: defineTable({
+    key: v.string(),
+    lastSyncedAt: v.string(), // ISO date string
+    status: v.union(v.literal("success"), v.literal("failed")),
+    error: v.optional(v.string()),
+  }).index("by_key", ["key"]),
 });

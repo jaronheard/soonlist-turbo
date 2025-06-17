@@ -1112,6 +1112,9 @@ importers:
       '@soonlist/cal':
         specifier: workspace:*
         version: link:../cal
+      '@soonlist/db':
+        specifier: workspace:*
+        version: link:../db
       ai:
         specifier: 3.1.22
         version: 3.1.22(openai@4.103.0(encoding@0.1.13)(ws@8.18.2)(zod@3.25.28))(react@19.0.0)(solid-js@1.9.7)(svelte@5.33.1)(vue@3.5.14(typescript@5.8.3))(zod@3.25.28)

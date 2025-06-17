@@ -1,6 +1,7 @@
 import { cronJobs } from "convex/server";
 
 import { internal } from "./_generated/api";
+import { syncAll } from "./planetscaleSync";
 
 const crons = cronJobs();
 
@@ -17,6 +18,14 @@ crons.cron(
   "trial expiration reminders",
   "0 10 * * *", // Every day at 10:00 AM
   internal.notifications.sendTrialExpirationReminders,
+  {},
+);
+
+// Sync data from PlanetScale every 5 minutes
+crons.cron(
+  "planetscale sync",
+  "*/5 * * * *", // Every 5 minutes
+  syncAll,
   {},
 );
 

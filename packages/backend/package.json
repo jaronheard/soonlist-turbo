@@ -19,6 +19,7 @@
     "@convex-dev/workflow": "catalog:",
     "@convex-dev/workpool": "catalog:",
     "@soonlist/cal": "workspace:*",
+    "@soonlist/db": "workspace:*",
     "ai": "catalog:",
     "convex": "catalog:",
     "langfuse": "catalog:",
