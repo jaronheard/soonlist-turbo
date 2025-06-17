@@ -51,17 +51,14 @@ function transformConvexEvents(
 
 export default function Page() {
   const stableNow = useStableTimestamp();
-  const { results } = usePaginatedQuery(
+  const { results, status } = usePaginatedQuery(
     api.events.getDiscoverPaginated,
     {},
     { initialNumItems: 50 },
   );
 
-  if (!results || results.length === 0) {
-    return null;
-  }
-
-  const events = transformConvexEvents(results);
+  const isLoading = status === "LoadingFirstPage";
+  const events = results ? transformConvexEvents(results) : [];
 
   const pastEvents = events.filter((item) => item.endDateTime < stableNow);
 
@@ -83,6 +80,7 @@ export default function Page() {
         futureEvents={futureEvents}
         pastEvents={pastEvents}
         variant="future-minimal"
+        isLoading={isLoading}
       />
       <div className="p-6"></div>
     </div>

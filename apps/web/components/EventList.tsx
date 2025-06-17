@@ -76,6 +76,7 @@ export function EventList({
   showOtherCurators,
   showPrivateEvents,
   forceSingleColumn,
+  isLoading,
 }: {
   currentEvents: EventWithUser[];
   futureEvents: EventWithUser[];
@@ -86,6 +87,7 @@ export function EventList({
   hideCurator?: boolean;
   showPrivateEvents?: boolean;
   forceSingleColumn?: boolean;
+  isLoading?: boolean;
   children?: React.ReactNode;
 }) {
   const currentUser = useQuery(api.users.getCurrentUser);
@@ -173,8 +175,12 @@ export function EventList({
             </AccordionTrigger>
           )}
           <AccordionContent className="-mx-6 rounded-xl">
-            {currentEventsToUse.length === 0 ? (
-              <p className="mx-6 text-lg text-gray-500">No future events.</p>
+            {isLoading ? (
+              <div className="mx-6 flex items-center justify-center py-8">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-3 border-t-interactive-1"></div>
+              </div>
+            ) : currentEventsToUse.length === 0 ? (
+              <p className="mx-6 text-lg text-gray-500">No events happening now.</p>
             ) : (
               <ListContainer
                 variant={variantToUse}
@@ -219,7 +225,11 @@ export function EventList({
           </AccordionTrigger>
         )}
         <AccordionContent className="-mx-6 rounded-xl">
-          {futureEventsToUse.length === 0 ? (
+          {isLoading ? (
+            <div className="mx-6 flex items-center justify-center py-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-3 border-t-interactive-1"></div>
+            </div>
+          ) : futureEventsToUse.length === 0 ? (
             <p className="mx-6 text-lg text-gray-500">No future events.</p>
           ) : (
             <ListContainer

@@ -66,7 +66,7 @@ export default function Page({ params }: Props) {
   const self = currentUser?.username === userName;
   const stableNow = useStableTimestamp();
 
-  const { results: convexEvents } = useStablePaginatedQuery(
+  const { results: convexEvents, status } = useStablePaginatedQuery(
     api.events.getEventsForUserPaginated,
     {
       userName,
@@ -77,11 +77,8 @@ export default function Page({ params }: Props) {
     },
   );
 
-  if (!convexEvents) {
-    return null;
-  }
-
-  const events = transformConvexEvents(convexEvents);
+  const isLoading = status === "LoadingFirstPage";
+  const events = convexEvents ? transformConvexEvents(convexEvents) : [];
 
   const currentEvents = events.filter((item) => {
     const isCurrent =
@@ -116,6 +113,7 @@ export default function Page({ params }: Props) {
         showOtherCurators={true}
         showPrivateEvents={self}
         variant="future-minimal"
+        isLoading={isLoading}
       />
     </div>
   );
