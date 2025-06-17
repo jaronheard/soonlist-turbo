@@ -22,6 +22,7 @@ import {
   AccordionTrigger,
 } from "~/components/Accordian";
 import { EventListItem } from "~/components/EventDisplays";
+import { FullPageLoadingSpinner } from "~/components/FullPageLoadingSpinner";
 import { cn } from "~/lib/utils";
 
 function ListContainer({
@@ -176,9 +177,7 @@ export function EventList({
           )}
           <AccordionContent className="-mx-6 rounded-xl">
             {isLoading ? (
-              <div className="mx-6 flex items-center justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-3 border-t-interactive-1"></div>
-              </div>
+              <FullPageLoadingSpinner />
             ) : currentEventsToUse.length === 0 ? (
               <p className="mx-6 text-lg text-gray-500">No events happening now.</p>
             ) : (
@@ -226,9 +225,7 @@ export function EventList({
         )}
         <AccordionContent className="-mx-6 rounded-xl">
           {isLoading ? (
-            <div className="mx-6 flex items-center justify-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-3 border-t-interactive-1"></div>
-            </div>
+            <FullPageLoadingSpinner />
           ) : futureEventsToUse.length === 0 ? (
             <p className="mx-6 text-lg text-gray-500">No future events.</p>
           ) : (
