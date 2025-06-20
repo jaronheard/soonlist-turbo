@@ -1,11 +1,24 @@
 import { v } from "convex/values";
 
-import { and, db, eventFollows, events, gt, or, sql } from "@soonlist/db";
+import {
+  and,
+  db,
+  eventFollows,
+  events,
+  gt,
+  or,
+  sql,
+  users,
+} from "@soonlist/db";
 
-import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import {
+  internalAction,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
 
-// Get the last sync timestamp
-export const getLastSyncTime = internalQuery({
+// Get the last sync state
+export const getLastSyncState = internalQuery({
   args: { key: v.string() },
   handler: async (ctx, { key }) => {
     const syncState = await ctx.db
@@ -13,7 +26,7 @@ export const getLastSyncTime = internalQuery({
       .withIndex("by_key", (q) => q.eq("key", key))
       .first();
 
-    return syncState?.lastSyncedAt || null;
+    return syncState;
   },
 });
 
@@ -24,6 +37,8 @@ export const updateSyncState = internalMutation({
     lastSyncedAt: v.string(),
     status: v.union(v.literal("success"), v.literal("failed")),
     error: v.optional(v.string()),
+    offset: v.optional(v.number()),
+    metadata: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -36,6 +51,8 @@ export const updateSyncState = internalMutation({
         lastSyncedAt: args.lastSyncedAt,
         status: args.status,
         error: args.error,
+        offset: args.offset,
+        metadata: args.metadata,
       });
     } else {
       await ctx.db.insert("syncState", args);
@@ -50,10 +67,11 @@ export const syncEvents = internalAction({
     const SYNC_KEY = "events";
 
     try {
-      // Get last sync time
-      const lastSyncTime = await ctx.runQuery(getLastSyncTime, {
+      // Get last sync state
+      const syncState = await ctx.runQuery(getLastSyncState, {
         key: SYNC_KEY,
       });
+      const lastSyncTime = syncState?.lastSyncedAt || null;
       const syncStartTime = new Date().toISOString();
 
       // Query for new or updated events
@@ -84,15 +102,30 @@ export const syncEvents = internalAction({
           });
 
           if (!existingUser) {
-            // Create a minimal user record
-            await ctx.runMutation(upsertUser, {
-              id: event.userId,
-              username: event.userName,
-              email: `${event.userId}@placeholder.com`, // Placeholder since we don't have it
-              displayName: event.userName,
-              userImage: "",
-              created_at: event.createdAt.toISOString(),
-            });
+            // Fetch the actual user from PlanetScale
+            const [planetScaleUser] = await db
+              .select()
+              .from(users)
+              .where(sql`${users.id} = ${event.userId}`)
+              .limit(1);
+
+            if (planetScaleUser) {
+              // Create user with actual data from PlanetScale
+              await ctx.runMutation(upsertUser, {
+                id: planetScaleUser.id,
+                username: planetScaleUser.username,
+                email: planetScaleUser.email,
+                displayName: planetScaleUser.displayName,
+                userImage: planetScaleUser.userImage,
+                created_at: planetScaleUser.createdAt.toISOString(),
+              });
+            } else {
+              // Skip this event if user doesn't exist in PlanetScale
+              console.warn(
+                `User ${event.userId} not found in PlanetScale, skipping event ${event.id}`,
+              );
+              continue;
+            }
           }
 
           // Extract event data for flattened fields
@@ -158,48 +191,63 @@ export const syncEventFollows = internalAction({
     const SYNC_KEY = "eventFollows";
 
     try {
-      // Get last sync time
-      const lastSyncTime = await ctx.runQuery(getLastSyncTime, {
-        key: SYNC_KEY,
-      });
+      // Since EventFollows doesn't have timestamps, we need to fetch all follows
+      // and check which ones already exist in Convex to avoid duplicates
       const syncStartTime = new Date().toISOString();
 
-      // For event follows, we need to join with events to get timestamps
-      // since EventFollows table doesn't have timestamps
-      let newFollows: Array<{ userId: string; eventId: string }> = [];
+      // Get the last processed offset from sync state
+      const syncState = await ctx.runQuery(getLastSyncState, {
+        key: SYNC_KEY,
+      });
 
-      if (lastSyncTime) {
-        // Join with events to filter by event creation time
-        const results = await db
-          .select({
-            userId: eventFollows.userId,
-            eventId: eventFollows.eventId,
-          })
-          .from(eventFollows)
-          .innerJoin(events, sql`${eventFollows.eventId} = ${events.id}`)
-          .where(gt(events.createdAt, new Date(lastSyncTime)))
-          .limit(100);
-        newFollows = results;
-      } else {
-        const results = await db
-          .select({
-            userId: eventFollows.userId,
-            eventId: eventFollows.eventId,
-          })
-          .from(eventFollows)
-          .limit(100);
-        newFollows = results;
-      }
+      // Use offset from sync state or start from 0
+      const lastOffset = syncState?.offset || 0;
+      const batchSize = 1000; // Larger batch since we're doing offset-based pagination
 
-      console.log(`Found ${newFollows.length} event follows to sync`);
+      // Fetch a batch of event follows using offset
+      const newFollows = await db
+        .select({
+          userId: eventFollows.userId,
+          eventId: eventFollows.eventId,
+        })
+        .from(eventFollows)
+        .limit(batchSize)
+        .offset(lastOffset);
+
+      console.log(
+        `Found ${newFollows.length} event follows to sync (offset: ${lastOffset})`,
+      );
+
+      let syncedCount = 0;
 
       // Process each follow
       for (const follow of newFollows) {
         try {
-          await ctx.runMutation(upsertEventFollow, {
-            userId: follow.userId,
-            eventId: follow.eventId,
-          });
+          // Check if both user and event exist in Convex before creating follow
+          const [userExists, eventExists] = await Promise.all([
+            ctx.runQuery(getUserById, { userId: follow.userId }),
+            ctx.runQuery(getEventById, { eventId: follow.eventId }),
+          ]);
+
+          if (userExists && eventExists) {
+            await ctx.runMutation(upsertEventFollow, {
+              userId: follow.userId,
+              eventId: follow.eventId,
+            });
+            syncedCount++;
+          } else {
+            // Skip if user or event doesn't exist yet
+            if (!userExists) {
+              console.log(
+                `Skipping follow - user ${follow.userId} not found in Convex`,
+              );
+            }
+            if (!eventExists) {
+              console.log(
+                `Skipping follow - event ${follow.eventId} not found in Convex`,
+              );
+            }
+          }
         } catch (error) {
           console.error(
             `Error syncing event follow ${follow.userId}-${follow.eventId}:`,
@@ -209,14 +257,29 @@ export const syncEventFollows = internalAction({
         }
       }
 
-      // Update sync state
+      // Update sync state with new offset
+      // If we got a full batch, there might be more data
+      const hasMore = newFollows.length === batchSize;
+      const newOffset = hasMore ? lastOffset + batchSize : lastOffset;
+
       await ctx.runMutation(updateSyncState, {
         key: SYNC_KEY,
         lastSyncedAt: syncStartTime,
         status: "success",
+        offset: newOffset,
+        metadata: {
+          hasMore,
+          lastBatchSize: newFollows.length,
+          syncedCount,
+        },
       });
 
-      return { synced: newFollows.length };
+      return {
+        synced: syncedCount,
+        processed: newFollows.length,
+        hasMore,
+        nextOffset: hasMore ? newOffset : null,
+      };
     } catch (error) {
       console.error("Error during event follows sync:", error);
 
@@ -337,6 +400,17 @@ export const getUserById = internalQuery({
     return await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", userId))
+      .first();
+  },
+});
+
+// Internal query to check if event exists
+export const getEventById = internalQuery({
+  args: { eventId: v.string() },
+  handler: async (ctx, { eventId }) => {
+    return await ctx.db
+      .query("events")
+      .withIndex("by_custom_id", (q) => q.eq("id", eventId))
       .first();
   },
 });

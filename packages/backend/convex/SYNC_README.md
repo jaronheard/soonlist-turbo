@@ -30,8 +30,12 @@ curl https://your-convex-deployment.convex.site/sync/health
 ## What Gets Synced
 
 1. **Events**: New events (created_at > last sync) and updated events (updatedAt > last sync)
-2. **Event Follows**: New event follows (saves from discover)
-3. **Users**: Minimal user records are created if they don't exist
+   - Uses timestamp-based incremental sync
+2. **Event Follows**: All event follows using offset-based pagination
+   - Since EventFollows table lacks timestamps, uses offset tracking
+   - Processes in batches of 1000 records
+   - Only syncs follows where both user and event exist in Convex
+3. **Users**: Fetched from PlanetScale when needed (no placeholder emails)
 
 ## Monitoring
 
