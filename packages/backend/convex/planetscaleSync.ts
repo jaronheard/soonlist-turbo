@@ -74,100 +74,168 @@ export const syncEvents = internalAction({
       const lastSyncTime = syncState?.lastSyncedAt || null;
       const syncStartTime = new Date().toISOString();
 
-      // Query for new or updated events
-      let query = db.select().from(events);
+      const allProcessedEvents = [];
+      let hasMore = true;
+      let offset = 0;
+      const batchSize = 100;
 
-      if (lastSyncTime) {
-        query = query.where(
-          or(
-            gt(events.createdAt, new Date(lastSyncTime)),
-            and(
-              sql`${events.updatedAt} IS NOT NULL`,
-              gt(sql`${events.updatedAt}`, new Date(lastSyncTime)),
+      while (hasMore) {
+        // Query for new or updated events with stable ordering
+        let query = db.select().from(events);
+
+        if (lastSyncTime) {
+          query = query.where(
+            or(
+              gt(events.createdAt, new Date(lastSyncTime)),
+              and(
+                sql`${events.updatedAt} IS NOT NULL`,
+                gt(sql`${events.updatedAt}`, new Date(lastSyncTime)),
+              ),
             ),
-          ),
+          );
+        }
+
+        // Add stable ordering and pagination
+        const changedEvents = await query
+          .orderBy(events.createdAt, events.id) // Stable order by createdAt, then id
+          .limit(batchSize)
+          .offset(offset);
+
+        console.log(
+          `Processing batch: ${changedEvents.length} events (offset: ${offset})`,
         );
+
+        if (changedEvents.length === 0) {
+          hasMore = false;
+          break;
+        }
+
+        let successCount = 0;
+        let failedCount = 0;
+        let maxProcessedTimestamp = lastSyncTime || "1970-01-01T00:00:00.000Z";
+
+        // Process each event
+        for (const event of changedEvents) {
+          try {
+            // Check if user exists in Convex, if not create a basic user record
+            const existingUser = await ctx.runQuery(getUserById, {
+              userId: event.userId,
+            });
+
+            if (!existingUser) {
+              // Fetch the actual user from PlanetScale
+              const [planetScaleUser] = await db
+                .select()
+                .from(users)
+                .where(sql`${users.id} = ${event.userId}`)
+                .limit(1);
+
+              if (planetScaleUser) {
+                // Create user with actual data from PlanetScale
+                await ctx.runMutation(upsertUser, {
+                  id: planetScaleUser.id,
+                  username: planetScaleUser.username,
+                  email: planetScaleUser.email,
+                  displayName: planetScaleUser.displayName,
+                  userImage: planetScaleUser.userImage,
+                  created_at: planetScaleUser.createdAt.toISOString(),
+                });
+              } else {
+                // Skip this event if user doesn't exist in PlanetScale
+                console.warn(
+                  `User ${event.userId} not found in PlanetScale, skipping event ${event.id}`,
+                );
+                continue;
+              }
+            }
+
+            // Extract event data for flattened fields
+            const eventData = event.event as Record<string, unknown>;
+
+            // Upsert event
+            await ctx.runMutation(upsertEvent, {
+              id: event.id,
+              userId: event.userId,
+              userName: event.userName,
+              event: event.event,
+              eventMetadata: event.eventMetadata || undefined,
+              endDateTime: event.endDateTime.toISOString(),
+              startDateTime: event.startDateTime.toISOString(),
+              visibility: event.visibility,
+              created_at: event.createdAt.toISOString(),
+              updatedAt: event.updatedAt?.toISOString() || null,
+              // Flattened fields from event object
+              name: eventData?.name as string | undefined,
+              image: (eventData?.images as string[] | undefined)?.[0] || null,
+              endDate: eventData?.endDate as string | undefined,
+              endTime: eventData?.endTime as string | undefined,
+              location: eventData?.location as string | undefined,
+              timeZone: eventData?.timeZone as string | undefined,
+              startDate: eventData?.startDate as string | undefined,
+              startTime: eventData?.startTime as string | undefined,
+              description: eventData?.description as string | undefined,
+            });
+            successCount++;
+
+            // Track the maximum timestamp from processed events
+            const eventTimestamp = event.updatedAt || event.createdAt;
+            if (eventTimestamp.toISOString() > maxProcessedTimestamp) {
+              maxProcessedTimestamp = eventTimestamp.toISOString();
+            }
+          } catch (error) {
+            console.error(`Error syncing event ${event.id}:`, error);
+            failedCount++;
+            // Continue with other events
+          }
+        }
+
+        // Add results to overall tracking
+        allProcessedEvents.push({
+          successCount,
+          failedCount,
+          maxProcessedTimestamp,
+        });
+
+        // Check if we should continue
+        if (changedEvents.length < batchSize) {
+          hasMore = false;
+        } else {
+          offset += batchSize;
+        }
       }
 
-      const changedEvents = await query.limit(100); // Process in batches
+      // Calculate totals from all batches
+      let totalSuccess = 0;
+      let totalFailed = 0;
+      let overallMaxTimestamp = lastSyncTime || "1970-01-01T00:00:00.000Z";
 
-      console.log(`Found ${changedEvents.length} events to sync`);
-
-      // Process each event
-      for (const event of changedEvents) {
-        try {
-          // Check if user exists in Convex, if not create a basic user record
-          const existingUser = await ctx.runQuery(getUserById, {
-            userId: event.userId,
-          });
-
-          if (!existingUser) {
-            // Fetch the actual user from PlanetScale
-            const [planetScaleUser] = await db
-              .select()
-              .from(users)
-              .where(sql`${users.id} = ${event.userId}`)
-              .limit(1);
-
-            if (planetScaleUser) {
-              // Create user with actual data from PlanetScale
-              await ctx.runMutation(upsertUser, {
-                id: planetScaleUser.id,
-                username: planetScaleUser.username,
-                email: planetScaleUser.email,
-                displayName: planetScaleUser.displayName,
-                userImage: planetScaleUser.userImage,
-                created_at: planetScaleUser.createdAt.toISOString(),
-              });
-            } else {
-              // Skip this event if user doesn't exist in PlanetScale
-              console.warn(
-                `User ${event.userId} not found in PlanetScale, skipping event ${event.id}`,
-              );
-              continue;
-            }
-          }
-
-          // Extract event data for flattened fields
-          const eventData = event.event as Record<string, unknown>;
-
-          // Upsert event
-          await ctx.runMutation(upsertEvent, {
-            id: event.id,
-            userId: event.userId,
-            userName: event.userName,
-            event: event.event,
-            eventMetadata: event.eventMetadata || undefined,
-            endDateTime: event.endDateTime.toISOString(),
-            startDateTime: event.startDateTime.toISOString(),
-            visibility: event.visibility,
-            created_at: event.createdAt.toISOString(),
-            updatedAt: event.updatedAt?.toISOString() || null,
-            // Flattened fields from event object
-            name: eventData?.name as string | undefined,
-            image: (eventData?.images as string[] | undefined)?.[0] || null,
-            endDate: eventData?.endDate as string | undefined,
-            endTime: eventData?.endTime as string | undefined,
-            location: eventData?.location as string | undefined,
-            timeZone: eventData?.timeZone as string | undefined,
-            startDate: eventData?.startDate as string | undefined,
-            startTime: eventData?.startTime as string | undefined,
-            description: eventData?.description as string | undefined,
-          });
-        } catch (error) {
-          console.error(`Error syncing event ${event.id}:`, error);
-          // Continue with other events
+      for (const batch of allProcessedEvents) {
+        totalSuccess += batch.successCount;
+        totalFailed += batch.failedCount;
+        if (batch.maxProcessedTimestamp > overallMaxTimestamp) {
+          overallMaxTimestamp = batch.maxProcessedTimestamp;
         }
       }
 
       // Update sync state
+      const syncStatus =
+        totalFailed > 0 && totalSuccess === 0 ? "failed" : "success";
+      // Only update lastSyncedAt if we successfully processed some events
+      const newSyncTime =
+        totalSuccess > 0 ? overallMaxTimestamp : lastSyncTime || syncStartTime;
+
       await ctx.runMutation(updateSyncState, {
         key: SYNC_KEY,
-        lastSyncedAt: syncStartTime,
-        status: "success",
+        lastSyncedAt: newSyncTime,
+        status: syncStatus,
+        error:
+          totalFailed > 0 ? `Failed to sync ${totalFailed} events` : undefined,
       });
 
-      return { synced: changedEvents.length };
+      console.log(
+        `Sync completed: ${totalSuccess} succeeded, ${totalFailed} failed`,
+      );
+      return { synced: totalSuccess, failed: totalFailed };
     } catch (error) {
       console.error("Error during event sync:", error);
 

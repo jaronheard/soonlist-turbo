@@ -15,8 +15,16 @@ http.route({
       const authHeader = request.headers.get("Authorization");
       const expectedToken = process.env.SYNC_AUTH_TOKEN;
 
-      if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
-        return new Response("Unauthorized", { status: 401 });
+      if (expectedToken) {
+        const providedToken = authHeader?.replace("Bearer ", "") || "";
+        // Constant-time comparison to prevent timing attacks
+        const tokensMatch =
+          providedToken.length === expectedToken.length &&
+          providedToken.split("").every((char, i) => char === expectedToken[i]);
+
+        if (!tokensMatch) {
+          return new Response("Unauthorized", { status: 401 });
+        }
       }
 
       // Run the sync

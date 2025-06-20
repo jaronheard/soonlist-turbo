@@ -21,10 +21,10 @@ crons.cron(
   {},
 );
 
-// Sync data from PlanetScale every 5 minutes
+// Sync data from PlanetScale every 15 minutes
 crons.cron(
   "planetscale sync",
-  "*/5 * * * *", // Every 5 minutes
+  "*/15 * * * *", // Every 15 minutes
   syncAll,
   {},
 );
