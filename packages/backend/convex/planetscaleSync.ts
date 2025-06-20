@@ -2,10 +2,10 @@ import { v } from "convex/values";
 
 import { and, db, eventFollows, events, gt, or, sql } from "@soonlist/db";
 
-import { internalAction, internalMutation } from "./_generated/server";
+import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 
 // Get the last sync timestamp
-export const getLastSyncTime = internalMutation({
+export const getLastSyncTime = internalQuery({
   args: { key: v.string() },
   handler: async (ctx, { key }) => {
     const syncState = await ctx.db
@@ -51,7 +51,7 @@ export const syncEvents = internalAction({
 
     try {
       // Get last sync time
-      const lastSyncTime = await ctx.runMutation(getLastSyncTime, {
+      const lastSyncTime = await ctx.runQuery(getLastSyncTime, {
         key: SYNC_KEY,
       });
       const syncStartTime = new Date().toISOString();
@@ -79,7 +79,7 @@ export const syncEvents = internalAction({
       for (const event of changedEvents) {
         try {
           // Check if user exists in Convex, if not create a basic user record
-          const existingUser = await ctx.runMutation(getUserById, {
+          const existingUser = await ctx.runQuery(getUserById, {
             userId: event.userId,
           });
 
@@ -159,7 +159,7 @@ export const syncEventFollows = internalAction({
 
     try {
       // Get last sync time
-      const lastSyncTime = await ctx.runMutation(getLastSyncTime, {
+      const lastSyncTime = await ctx.runQuery(getLastSyncTime, {
         key: SYNC_KEY,
       });
       const syncStartTime = new Date().toISOString();
@@ -331,7 +331,7 @@ export const upsertUser = internalMutation({
 });
 
 // Internal query to check if user exists
-export const getUserById = internalMutation({
+export const getUserById = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
     return await ctx.db

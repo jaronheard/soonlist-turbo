@@ -58,11 +58,11 @@ http.route({
   handler: httpAction(async (ctx) => {
     try {
       // Get sync states
-      const eventsSyncState = await ctx.runMutation(getLastSyncTime, {
+      const eventsSyncState = await ctx.runQuery(getLastSyncTime, {
         key: "events",
       });
 
-      const eventFollowsSyncState = await ctx.runMutation(getLastSyncTime, {
+      const eventFollowsSyncState = await ctx.runQuery(getLastSyncTime, {
         key: "eventFollows",
       });
 
