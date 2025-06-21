@@ -465,7 +465,10 @@ export const syncEventFollows = internalAction({
       // Update sync state with cursor information instead of offset
       await ctx.runMutation(internal.planetscaleSync.updateSyncState, {
         key: SYNC_KEY,
-        lastSyncedAt: syncedCount > 0 ? syncStartTime : (syncState?.lastSyncedAt || syncStartTime),
+        lastSyncedAt:
+          syncedCount > 0
+            ? syncStartTime
+            : syncState?.lastSyncedAt || syncStartTime,
         status: "success",
         metadata: {
           hasMore,
