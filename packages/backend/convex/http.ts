@@ -1,7 +1,7 @@
 import { httpRouter } from "convex/server";
 
+import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
-import { getLastSyncState, syncAll } from "./planetscaleSync";
 
 const http = httpRouter();
 
@@ -28,7 +28,7 @@ http.route({
       }
 
       // Run the sync
-      const results = await ctx.runAction(syncAll);
+      const results = await ctx.runAction(internal.planetscaleSync.syncAll);
 
       return new Response(
         JSON.stringify({
@@ -66,13 +66,19 @@ http.route({
   handler: httpAction(async (ctx) => {
     try {
       // Get sync states
-      const eventsSyncState = await ctx.runQuery(getLastSyncState, {
-        key: "events",
-      });
+      const eventsSyncState = await ctx.runQuery(
+        internal.planetscaleSync.getLastSyncState,
+        {
+          key: "events",
+        },
+      );
 
-      const eventFollowsSyncState = await ctx.runQuery(getLastSyncState, {
-        key: "eventFollows",
-      });
+      const eventFollowsSyncState = await ctx.runQuery(
+        internal.planetscaleSync.getLastSyncState,
+        {
+          key: "eventFollows",
+        },
+      );
 
       return new Response(
         JSON.stringify({
