@@ -57,6 +57,12 @@ catalogs:
     '@js-temporal/polyfill':
       specifier: ^0.4.4
       version: 0.4.4
+    '@jsquash/resize':
+      specifier: ^2.1.0
+      version: 2.1.0
+    '@jsquash/webp':
+      specifier: ^1.5.0
+      version: 1.5.0
     '@next/eslint-plugin-next':
       specifier: ^14.2.0
       version: 14.2.29
@@ -840,12 +846,21 @@ importers:
       '@clerk/nextjs':
         specifier: 'catalog:'
         version: 6.20.0(next@15.1.8(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(svix@1.66.0(encoding@0.1.13))
+      '@jsquash/resize':
+        specifier: 'catalog:'
+        version: 2.1.0
+      '@jsquash/webp':
+        specifier: 'catalog:'
+        version: 1.5.0
       '@sentry/nextjs':
         specifier: 'catalog:'
         version: 8.55.0(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(encoding@0.1.13)(next@15.1.8(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)(webpack@5.99.9)
       '@soonlist/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@soonlist/backend':
+        specifier: workspace:*
+        version: link:../../packages/backend
       '@soonlist/cal':
         specifier: workspace:*
         version: link:../../packages/cal
@@ -957,6 +972,9 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.28
+      zustand:
+        specifier: 'catalog:'
+        version: 4.5.5(@types/react@19.1.5)(react@19.0.0)
     devDependencies:
       '@clerk/backend':
         specifier: 'catalog:'
@@ -3205,6 +3223,12 @@ packages:
   '@js-temporal/polyfill@0.4.4':
     resolution: {integrity: sha512-2X6bvghJ/JAoZO52lbgyAPFj8uCflhTo2g7nkFzEQdXd/D8rEeD4HtmTEpmtGCva260fcd66YNXBOYdnmHqSOg==}
     engines: {node: '>=12'}
+
+  '@jsquash/resize@2.1.0':
+    resolution: {integrity: sha512-UxF45pe5a84GrleHichsnGHyFAJhOu4Ms9L1UQYXhhmDifRm4U3pMEzgly+m3xDe+h4XZyDlpr9f8FBB1LZ+LA==}
+
+  '@jsquash/webp@1.5.0':
+    resolution: {integrity: sha512-KggLoj2MnRSfIqTeKe1EmbljTX2vuV7mh79k89PCL1pyqiDULcPM1L47twxXt0hkb68F70bXiL31MxsuoZtKFw==}
 
   '@next/env@15.1.8':
     resolution: {integrity: sha512-Kd9zsi2ariJvtAvA5KapkzM/Qp9eXIcVqsuUMQHu9yYmhlGa9kyklf+6TQgVGSCbzsrApKCq9olyk51SmPnyLA==}
@@ -10126,6 +10150,9 @@ packages:
   warn-once@0.1.1:
     resolution: {integrity: sha512-VkQZJbO8zVImzYFteBXvBOZEl1qL175WH8VmZcxF2fZAoudNhNDvHi+doCaAEdU2l2vtcIwa2zn0QK5+I1HQ3Q==}
 
+  wasm-feature-detect@1.8.0:
+    resolution: {integrity: sha512-zksaLKM2fVlnB5jQQDqKXXwYHLQUVH9es+5TOOHwGOVJOCeRBCiPjwSg+3tN2AdTCzjgli4jijCH290kXb/zWQ==}
+
   watchpack@2.4.4:
     resolution: {integrity: sha512-c5EGNOiyxxV5qmTtAB7rbiXxi1ooX1pQKMLX/MIabJjRA0SJBQOjKF+KSVfHkr9U1cADPon0mRiVe/riyaiDUA==}
     engines: {node: '>=10.13.0'}
@@ -12380,6 +12407,12 @@ snapshots:
     dependencies:
       jsbi: 4.3.2
       tslib: 2.8.1
+
+  '@jsquash/resize@2.1.0': {}
+
+  '@jsquash/webp@1.5.0':
+    dependencies:
+      wasm-feature-detect: 1.8.0
 
   '@next/env@15.1.8': {}
 
@@ -20172,6 +20205,8 @@ snapshots:
       makeerror: 1.0.12
 
   warn-once@0.1.1: {}
+
+  wasm-feature-detect@1.8.0: {}
 
   watchpack@2.4.4:
     dependencies:

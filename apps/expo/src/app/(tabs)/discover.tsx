@@ -2,12 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import {
-  Authenticated,
-  AuthLoading,
-  Unauthenticated,
-  useQuery,
-} from "convex/react";
+import { useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -60,15 +55,13 @@ function DiscoverContent() {
     }
   }, [status, loadMore]);
 
-  // Check if user has access to discover feature after all hooks
-  if (!user) {
-    return <Redirect href="/sign-in" />;
-  }
+  // Check if user has access to discover feature (only if authenticated)
+  if (user) {
+    const { showDiscover } = getPlanStatusFromUser(user);
 
-  const { showDiscover } = getPlanStatusFromUser(user);
-
-  if (!showDiscover) {
-    return <Redirect href="/feed" />;
+    if (!showDiscover) {
+      return <Redirect href="/feed" />;
+    }
   }
 
   const savedEventIds = new Set(
@@ -76,6 +69,11 @@ function DiscoverContent() {
   );
 
   function SaveButtonWrapper({ event }: { event: { id: string } }) {
+    // Only show save button for authenticated users
+    if (!user) {
+      return null;
+    }
+
     return (
       <SaveButton eventId={event.id} isSaved={savedEventIds.has(event.id)} />
     );
@@ -96,7 +94,7 @@ function DiscoverContent() {
             hasUnlimited={hasUnlimited}
             hideDiscoverableButton={true}
           />
-          <AddEventButton showChevron={false} />
+          {user && <AddEventButton showChevron={false} />}
         </View>
       )}
     </View>
@@ -104,19 +102,5 @@ function DiscoverContent() {
 }
 
 export default function Page() {
-  return (
-    <>
-      <AuthLoading>
-        <View className="flex-1 bg-white"></View>
-      </AuthLoading>
-
-      <Unauthenticated>
-        <Redirect href="/sign-in" />
-      </Unauthenticated>
-
-      <Authenticated>
-        <DiscoverContent />
-      </Authenticated>
-    </>
-  );
+  return <DiscoverContent />;
 }

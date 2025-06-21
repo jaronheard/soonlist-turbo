@@ -1,17 +1,11 @@
-import type { Metadata, ResolvingMetadata } from "next/types";
-import { currentUser } from "@clerk/nextjs/server";
+import type { Metadata } from "next";
 
-import type { EventMetadata } from "@soonlist/cal";
-import type {
-  AddToCalendarButtonProps,
-  AddToCalendarButtonPropsRestricted,
-} from "@soonlist/cal/types";
-import { collapseSimilarEvents } from "@soonlist/cal";
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
-import type { EventWithUser } from "~/components/EventList";
-import { EventPage } from "~/components/EventDisplays";
-import { env } from "~/env";
-import { api } from "~/trpc/server";
+import { getAuthenticatedConvex } from "~/lib/convex-server";
+import { api as trpcApiServer } from "~/trpc/server";
+import EventPageClient from "./EventPageClient";
 
 interface Props {
   params: Promise<{
@@ -19,86 +13,92 @@ interface Props {
   }>;
 }
 
-export async function generateMetadata(
-  props: Props,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
-  const params = await props.params;
-  const event = await api.event.get({ eventId: params.eventId });
-  if (!event) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { eventId } = await params;
+
+  try {
+    // Get an authenticated Convex client for server-side fetching
+    const convex = await getAuthenticatedConvex();
+
+    // First, try to fetch from Convex
+    let event = await convex.query(api.events.get, { eventId });
+
+    // If not found in Convex, fallback to TRPC
+    if (!event) {
+      const trpcEvent = await trpcApiServer.event.get({ eventId });
+
+      if (trpcEvent) {
+        // Use the tRPC event as-is since we handle differences in the client
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+        event = trpcEvent as any;
+      }
+    }
+
+    if (!event) {
+      return {
+        title: "Event Not Found | Soonlist",
+        description: "The requested event could not be found.",
+      };
+    }
+
+    if (!event.event) {
+      return {
+        title: "Invalid Event Data | Soonlist",
+        description: "The event data is corrupted or incomplete.",
+      };
+    }
+
+    const eventData = event.event as AddToCalendarButtonPropsRestricted;
+    const eventImage = eventData.images?.[0];
+
+    // Generate Open Graph metadata
     return {
-      title: "No event found | Soonlist",
+      title: `${eventData.name} | Soonlist`,
+      description:
+        eventData.description || `Join ${eventData.name} on Soonlist`,
       openGraph: {
-        images: [],
+        title: eventData.name || "Event on Soonlist",
+        description:
+          eventData.description || `Join ${eventData.name} on Soonlist`,
+        type: "website",
+        images: eventImage
+          ? [
+              {
+                url: eventImage,
+                width: 1200,
+                height: 630,
+                alt: eventData.name || "Event image",
+              },
+            ]
+          : [],
+        locale: "en_US",
+        siteName: "Soonlist",
+      },
+      twitter: {
+        card: eventImage ? "summary_large_image" : "summary",
+        title: eventData.name || "Event on Soonlist",
+        description:
+          eventData.description || `Join ${eventData.name} on Soonlist`,
+        images: eventImage ? [eventImage] : undefined,
+      },
+    };
+  } catch (error) {
+    console.error("Error generating metadata for event:", error);
+
+    return {
+      title: "Event | Soonlist",
+      description:
+        "An error occurred while loading event information. Please try again later.",
+      robots: {
+        index: false,
+        follow: true,
       },
     };
   }
-
-  const eventData = event.event as AddToCalendarButtonProps;
-  // optionally access and extend (rather than replace) parent metadata
-
-  // For Open Graph, use the first available image with CDN parameters to ensure square crop
-  let previewImage;
-  if (eventData.images && eventData.images.length > 0 && eventData.images[0]) {
-    // Apply CDN parameters to create a square crop anchored to the top
-    const baseUrl = eventData.images[0].replace("/raw/", "/image/");
-    const imageUrl = `${baseUrl}?w=640&h=640&fit=crop&crop=top&f=webp&q=80`;
-    previewImage = [{ url: imageUrl }];
-  }
-
-  return {
-    title: `${eventData.name} | Soonlist`,
-    openGraph: {
-      title: `${eventData.name}`,
-      description: `(${eventData.startDate} ${eventData.startTime}-${eventData.endTime}) ${eventData.description}`,
-      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${event.id}`,
-      type: "article",
-      images: previewImage || (await parent).openGraph?.images || [],
-    },
-  };
 }
 
-export default async function Page(props: Props) {
-  const params = await props.params;
-  const event = await api.event.get({ eventId: params.eventId });
-  const user = await currentUser();
-  if (!event) {
-    return <p className="text-lg text-gray-500">No event found.</p>;
-  }
-  const eventData = event.event as AddToCalendarButtonPropsRestricted;
-  const eventMetadata = event.eventMetadata as EventMetadata;
-  const fullImageUrl = eventData.images?.[3];
+export default async function Page({ params }: Props) {
+  const { eventId } = await params;
 
-  const possibleDuplicateEvents = (await api.event.getPossibleDuplicates({
-    startDateTime: event.startDateTime,
-  })) as EventWithUser[];
-
-  // find the event that matches the current event
-  const similarEvents = collapseSimilarEvents(
-    possibleDuplicateEvents,
-    user?.id,
-  ).find((similarEvent) => similarEvent.event.id === event.id)?.similarEvents;
-
-  const lists = event.eventToLists.map((list) => list.list);
-
-  return (
-    <>
-      <EventPage
-        user={event.user}
-        eventFollows={event.eventFollows}
-        comments={event.comments}
-        key={event.id}
-        id={event.id}
-        event={eventData}
-        eventMetadata={eventMetadata}
-        createdAt={event.createdAt}
-        visibility={event.visibility}
-        similarEvents={similarEvents}
-        image={fullImageUrl}
-        singleEvent
-        hideCurator
-        lists={lists}
-      />
-    </>
-  );
+  return <EventPageClient eventId={eventId} />;
 }

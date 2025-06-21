@@ -2,19 +2,21 @@ import { auth } from "@clerk/nextjs/server";
 
 import type { EventMetadata } from "@soonlist/cal";
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { AddToCalendarCard } from "~/components/AddToCalendarCard";
 import { ImageUpload } from "~/components/ImageUpload";
 import { UserInfo } from "~/components/UserInfo";
 import { YourDetails } from "~/components/YourDetails";
-import { api } from "~/trpc/server";
+import { getAuthenticatedConvex } from "~/lib/convex-server";
 
 export default async function Page(props: {
   params: Promise<{ eventId: string }>;
 }) {
   const params = await props.params;
   const { userId } = await auth.protect();
-  const event = await api.event.get({ eventId: params.eventId });
+  const convex = await getAuthenticatedConvex();
+  const event = await convex.query(api.events.get, { eventId: params.eventId });
 
   if (!event) {
     return <p className="text-lg text-gray-500">No event found.</p>;
@@ -29,16 +31,18 @@ export default async function Page(props: {
   const mostRecentComment = event.comments
     .filter((comment) => comment.content)
     .pop()?.content;
-  const eventLists = event.eventToLists.map((eventToList) => eventToList.list);
+  // TODO: Implement event lists when list functionality is added to Convex
+  // const eventLists = [];
   return (
     <div className="flex flex-col items-center">
       {event.event ? (
         <>
           <YourDetails
-            lists={event.user.lists || undefined}
-            eventLists={eventLists}
+            lists={[]}
+            eventLists={[]}
             comment={mostRecentComment}
             visibility={event.visibility}
+            hideNotes
           />
           <div className="p-4"></div>
           <ImageUpload images={eventData.images as string[]} />
@@ -49,6 +53,8 @@ export default async function Page(props: {
             key={event.id}
             update
             updateId={params.eventId}
+            hideEventMetadata
+            hideSourceLink
           />
         </>
       ) : (

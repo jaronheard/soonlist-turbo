@@ -1,11 +1,13 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { currentUser } from "@clerk/nextjs/server";
+import { useQuery } from "convex/react";
 import { Instagram, LinkIcon, Mail, MessageSquare } from "lucide-react";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button, buttonVariants } from "@soonlist/ui/button";
 
-import { api } from "~/trpc/server";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 const SAMPLE_BIO = `I haven't written a bio yet... you'll have to find me at one of my events!`;
@@ -23,24 +25,26 @@ function formatUserWebsiteForLink(website: string) {
   return `https://${website}`;
 }
 
-export async function UserInfo(props: UserInfoProps) {
-  const activeUser = await currentUser();
-  if (!props.userId && !props.userName) {
-    return null;
-  }
+export function UserInfo(props: UserInfoProps) {
+  const currentUser = useQuery(api.users.getCurrentUser);
 
-  let user;
-  if (props.userId) {
-    user = await api.user.getById({ id: props.userId });
-  } else if (props.userName) {
-    user = await api.user.getByUsername({ userName: props.userName });
-  }
+  const userById = useQuery(
+    api.users.getById,
+    props.userId ? { id: props.userId } : "skip",
+  );
+
+  const userByUsername = useQuery(
+    api.users.getByUsername,
+    props.userName ? { userName: props.userName } : "skip",
+  );
+
+  const user = userById || userByUsername;
 
   if (!user) {
     return null;
   }
 
-  const self = activeUser?.username == user.username;
+  const self = currentUser?.username === user.username;
 
   if (props.variant === "description") {
     return (

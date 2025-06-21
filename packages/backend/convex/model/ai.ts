@@ -206,9 +206,10 @@ export async function processEventFromText(
 ): Promise<{
   events: EventWithMetadata[];
   validatedEvent: EventWithMetadata;
+  response: string;
 }> {
   try {
-    const { events } = await fetchAndProcessEvent({
+    const { events, response } = await fetchAndProcessEvent({
       ctx,
       input,
       fnName: "eventFromRawTextThenCreateThenNotification",
@@ -227,6 +228,7 @@ export async function processEventFromText(
     return {
       events,
       validatedEvent,
+      response,
     };
   } catch (error) {
     console.error("Error in processEventFromText:", error); // Log the actual error

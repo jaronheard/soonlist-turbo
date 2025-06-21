@@ -1,7 +1,8 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { ClerkProvider, useAuth } from "@clerk/nextjs";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { posthog } from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
@@ -23,18 +24,22 @@ export function PHProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
     <ClerkProvider
       appearance={{
         variables: { colorPrimary: "rgb(90, 50, 251)", borderRadius: "16px" },
       }}
     >
-      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-        <Suspense>
-          <IntercomProvider> </IntercomProvider>
-        </Suspense>
-        <ContextProvider>{children}</ContextProvider>
-      </ConvexProviderWithClerk>
+      <QueryClientProvider client={queryClient}>
+        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+          <Suspense>
+            <IntercomProvider> </IntercomProvider>
+          </Suspense>
+          <ContextProvider>{children}</ContextProvider>
+        </ConvexProviderWithClerk>
+      </QueryClientProvider>
     </ClerkProvider>
   );
 }

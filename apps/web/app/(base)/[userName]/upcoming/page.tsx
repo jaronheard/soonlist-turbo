@@ -1,70 +1,93 @@
-import type { Metadata, ResolvingMetadata } from "next/types";
-import { currentUser } from "@clerk/nextjs/server";
+"use client";
+
+import type { FunctionReturnType } from "convex/server";
+import { use } from "react";
+import { useQuery } from "convex/react";
 import { CalendarHeart } from "lucide-react";
 
+import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
+import type { User } from "@soonlist/db/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
+
+import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
-import { env } from "~/env";
-import { api } from "~/trpc/server";
+import {
+  useStablePaginatedQuery,
+  useStableTimestamp,
+} from "~/hooks/useStableQuery";
 
 interface Props {
   params: Promise<{ userName: string }>;
 }
 
-export async function generateMetadata(
-  props: Props,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
-  const params = await props.params;
-  const events = await api.event.getForUser({
-    userName: params.userName,
-  });
-
-  if (!events) {
-    return {
-      title: "No events found | Soonlist",
-      openGraph: {
-        images: [],
-      },
-    };
-  }
-
-  const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date(),
-  );
-
-  const futureEventsCount = futureEvents.length;
-
-  // optionally access and extend (rather than replace) parent metadata
-  const previousImages = (await parent).openGraph?.images || [];
-
+const transformConvexUser = (user: Doc<"users">): User => {
   return {
-    title: `@${params.userName} (${futureEventsCount} upcoming events) | Soonlist`,
-    openGraph: {
-      title: `@${params.userName} (${futureEventsCount} upcoming events)`,
-      description: `See the events that @${params.userName} has saved on Soonlist`,
-      url: `${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${params.userName}/events`,
-      type: "article",
-      images: [...previousImages],
-    },
+    ...user,
+    createdAt: new Date(user.created_at),
+    updatedAt: user.updatedAt ? new Date(user.updatedAt) : null,
+    onboardingCompletedAt: user.onboardingCompletedAt
+      ? new Date(user.onboardingCompletedAt)
+      : null,
   };
+};
+
+// Transform Convex events to EventWithUser format
+function transformConvexEvents(
+  events: FunctionReturnType<
+    typeof api.events.getEventsForUserPaginated
+  >["page"],
+): EventWithUser[] {
+  return events
+    .filter((event) => event.user !== null && event.user !== undefined)
+    .map((event) => ({
+      id: event.id,
+      userId: event.userId,
+      updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+      userName: event.userName,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      event: event.event,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      eventMetadata: event.eventMetadata,
+      endDateTime: new Date(event.endDateTime),
+      startDateTime: new Date(event.startDateTime),
+      visibility: event.visibility,
+      createdAt: new Date(event._creationTime),
+      user: transformConvexUser(event.user!),
+      eventFollows: [],
+      comments: [],
+      eventToLists: [],
+    }));
 }
 
-export default async function Page(props: Props) {
-  const params = await props.params;
-  const activeUser = await currentUser();
-  const self = activeUser?.username === params.userName;
-  const events = await api.event.getUpcomingForUser({
-    userName: params.userName,
-  });
+export default function Page({ params }: Props) {
+  const { userName } = use(params);
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const self = currentUser?.username === userName;
+  const stableNow = useStableTimestamp();
 
-  // const pastEvents = events.filter((item) => item.endDateTime < new Date());
-
-  const currentEvents = events.filter(
-    (item) => item.startDateTime < new Date() && item.endDateTime > new Date(),
+  const { results: convexEvents, status } = useStablePaginatedQuery(
+    api.events.getEventsForUserPaginated,
+    {
+      userName,
+      filter: "upcoming",
+    },
+    {
+      initialNumItems: 100,
+    },
   );
+
+  const isLoading = status === "LoadingFirstPage";
+  const events = convexEvents ? transformConvexEvents(convexEvents) : [];
+
+  const currentEvents = events.filter((item) => {
+    const isCurrent =
+      new Date(item.startDateTime) < stableNow &&
+      new Date(item.endDateTime) > stableNow;
+    return isCurrent;
+  });
   const futureEvents = events.filter(
-    (item) => item.startDateTime >= new Date(),
+    (item) => new Date(item.startDateTime) >= stableNow,
   );
 
   return (
@@ -78,7 +101,7 @@ export default async function Page(props: Props) {
         </h1>
       ) : (
         <>
-          <UserInfo userName={params.userName} />
+          <UserInfo userName={userName} />
           <div className="p-2"></div>
         </>
       )}
@@ -90,6 +113,7 @@ export default async function Page(props: Props) {
         showOtherCurators={true}
         showPrivateEvents={self}
         variant="future-minimal"
+        isLoading={isLoading}
       />
     </div>
   );

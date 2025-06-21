@@ -146,7 +146,6 @@ export const eventFromTextThenCreate = mutation({
   },
 });
 
-// ============================================================================
 // INTERNAL ACTIONS FOR WORKFLOW
 // ============================================================================
 
@@ -166,10 +165,28 @@ export const extractEventFromBase64Image = internalAction({
     ctx,
     args,
   ): Promise<{ events: EventWithMetadata[]; response: string }> => {
-    return await AI.processEventFromBase64Image(ctx, {
+    const result = await AI.processEventFromBase64Image(ctx, {
       base64Image: args.base64Image,
       timezone: args.timezone,
     });
+
+    // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
+    const cleanedEvents = result.events.map((event) => {
+      const {
+        buttonStyle: _buttonStyle,
+        options: _options,
+        ...cleanEvent
+      } = event as EventWithMetadata & {
+        buttonStyle?: unknown;
+        options?: unknown;
+      };
+      return cleanEvent;
+    });
+
+    return {
+      events: cleanedEvents,
+      response: result.response,
+    };
   },
 });
 
@@ -209,20 +226,48 @@ export const extractEventFromUrl = internalAction({
       validateJinaResponse(aiResult);
 
       // Use the enhanced validateEvent function for event-specific validations
-      AI.validateEvent(aiResult.events);
+      // The AI returns an array of events, validate each one
+      if (!Array.isArray(aiResult.events)) {
+        throw new ConvexError({
+          message: "Invalid response: expected events array",
+          data: { events: aiResult.events },
+        });
+      }
 
-      return aiResult;
+      // Validate each event in the array
+      for (const event of aiResult.events) {
+        AI.validateEvent(event);
+      }
+
+      // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
+      const cleanedEvents = aiResult.events.map((event) => {
+        const {
+          buttonStyle: _buttonStyle,
+          options: _options,
+          ...cleanEvent
+        } = event as EventWithMetadata & {
+          buttonStyle?: unknown;
+          options?: unknown;
+        };
+        return cleanEvent;
+      });
+
+      return {
+        events: cleanedEvents,
+        response: aiResult.response,
+      };
     } catch (error) {
       // Re-throw ConvexError as-is, wrap other errors
       if (error instanceof ConvexError) {
         throw error;
       }
 
-      // Handle any unexpected errors from the Jina API or AI processing
-      console.error("Unexpected error in extractEventFromUrl:", error);
       throw new ConvexError({
-        message: `URL processing failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        data: { args },
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unknown error occurred while processing URL",
+        data: { error: error instanceof Error ? error.stack : String(error) },
       });
     }
   },
@@ -241,33 +286,65 @@ export const extractEventFromText = internalAction({
     ctx,
     args,
   ): Promise<{ events: EventWithMetadata[]; response: string }> => {
-    const result = await fetchAndProcessEvent({
-      ctx,
-      input: {
-        rawText: args.rawText,
-        timezone: args.timezone,
-      },
-      fnName: "eventFromRawTextThenCreateThenNotification",
+    const result = await AI.processEventFromText(ctx, {
+      rawText: args.rawText,
+      timezone: args.timezone,
+      userId: "workflow",
+      username: "workflow",
+      lists: [],
     });
-    return result;
+
+    // Strip buttonStyle and options fields that are added by addCommonAddToCalendarProps
+    const cleanedEvents = result.events.map((event) => {
+      const {
+        buttonStyle: _buttonStyle,
+        options: _options,
+        ...cleanEvent
+      } = event as EventWithMetadata & {
+        buttonStyle?: unknown;
+        options?: unknown;
+      };
+      return cleanEvent;
+    });
+
+    return {
+      events: cleanedEvents,
+      response: result.response,
+    };
   },
 });
 
 /**
- * Validate that we have at least one valid event
+ * Validate first event from an array of events
  */
 export const validateFirstEvent = internalAction({
   args: {
     events: v.array(eventDataValidator),
   },
   returns: eventDataValidator,
-  handler: (_, args) => {
+  handler: (_ctx, args) => {
     if (args.events.length === 0) {
       throw new ConvexError({
-        message: "No events found in response",
-        data: { args },
+        message: "No events found to validate",
+        data: { eventsCount: 0 },
       });
     }
-    return AI.validateEvent(args.events[0]);
+
+    const firstEvent = args.events[0];
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- this ensures correct type
+    if (!firstEvent) {
+      throw new ConvexError({
+        message: "No events found to validate",
+        data: { eventsCount: 0 },
+      });
+    }
+
+    // Additional validation can be done here
+    AI.validateEvent(firstEvent);
+
+    // The validator ensures all required fields are present
+    // Return the validated event which now has all required fields populated
+    return firstEvent;
   },
 });
