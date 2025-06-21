@@ -18,6 +18,7 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
   const { removeWorkflowId } = useWorkflowStore();
   const toastIdRef = useRef<string | number | undefined>(undefined);
   const lastStatusRef = useRef<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const status = useQuery(api.workflows.eventIngestion.getWorkflowStatus, {
     workflowId,
@@ -49,6 +50,12 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
       toast.dismiss(toastIdRef.current);
     }
 
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
     switch (status.status) {
       case "inProgress":
         toastIdRef.current = toast.loading("Processing event...", {
@@ -68,7 +75,7 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
             duration: 10000,
           });
           // Cleanup after toast duration expires
-          setTimeout(() => removeWorkflowId(workflowId), 10000);
+          timeoutRef.current = setTimeout(() => removeWorkflowId(workflowId), 10000);
         }
         break;
       }
@@ -81,14 +88,14 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
           },
         );
         // Cleanup after showing error
-        setTimeout(() => removeWorkflowId(workflowId), 5000);
+        timeoutRef.current = setTimeout(() => removeWorkflowId(workflowId), 5000);
         break;
 
       case "canceled":
         toastIdRef.current = toast.info("Event creation canceled", {
           duration: 3000,
         });
-        setTimeout(() => removeWorkflowId(workflowId), 3000);
+        timeoutRef.current = setTimeout(() => removeWorkflowId(workflowId), 3000);
         break;
     }
   }, [status, router, workflowId, removeWorkflowId]);
@@ -98,6 +105,9 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
     return () => {
       if (toastIdRef.current) {
         toast.dismiss(toastIdRef.current);
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
     };
   }, []);
