@@ -5,6 +5,7 @@ import * as schema from "./schema";
 
 export * from "drizzle-orm/sql";
 export { alias } from "drizzle-orm/mysql-core";
+export * from "./schema";
 
 const psClient = new Client({ url: process.env.DATABASE_URL || "" });
 export const db = drizzle(psClient, { schema });

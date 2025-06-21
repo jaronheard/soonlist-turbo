@@ -20,4 +20,12 @@ crons.cron(
   {},
 );
 
+// Sync data from PlanetScale every 15 minutes
+crons.cron(
+  "planetscale sync",
+  "*/15 * * * *", // Every 15 minutes
+  internal.planetscaleSync.syncAll,
+  {},
+);
+
 export default crons;

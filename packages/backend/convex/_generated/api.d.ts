@@ -22,6 +22,7 @@ import type * as model_notifications from "../model/notifications.js";
 import type * as model_oneSignal from "../model/oneSignal.js";
 import type * as model_utils_urlScheme from "../model/utils/urlScheme.js";
 import type * as notifications from "../notifications.js";
+import type * as planetscaleSync from "../planetscaleSync.js";
 import type * as users from "../users.js";
 import type * as utils from "../utils.js";
 import type * as workflows_eventIngestion from "../workflows/eventIngestion.js";
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   "model/oneSignal": typeof model_oneSignal;
   "model/utils/urlScheme": typeof model_utils_urlScheme;
   notifications: typeof notifications;
+  planetscaleSync: typeof planetscaleSync;
   users: typeof users;
   utils: typeof utils;
   "workflows/eventIngestion": typeof workflows_eventIngestion;
