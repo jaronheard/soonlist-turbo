@@ -75,7 +75,10 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
             duration: 10000,
           });
           // Cleanup after toast duration expires
-          timeoutRef.current = setTimeout(() => removeWorkflowId(workflowId), 10000);
+          timeoutRef.current = setTimeout(
+            () => removeWorkflowId(workflowId),
+            10000,
+          );
         }
         break;
       }
@@ -88,14 +91,20 @@ export function WorkflowStatusToast({ workflowId }: WorkflowStatusToastProps) {
           },
         );
         // Cleanup after showing error
-        timeoutRef.current = setTimeout(() => removeWorkflowId(workflowId), 5000);
+        timeoutRef.current = setTimeout(
+          () => removeWorkflowId(workflowId),
+          5000,
+        );
         break;
 
       case "canceled":
         toastIdRef.current = toast.info("Event creation canceled", {
           duration: 3000,
         });
-        timeoutRef.current = setTimeout(() => removeWorkflowId(workflowId), 3000);
+        timeoutRef.current = setTimeout(
+          () => removeWorkflowId(workflowId),
+          3000,
+        );
         break;
     }
   }, [status, router, workflowId, removeWorkflowId]);
