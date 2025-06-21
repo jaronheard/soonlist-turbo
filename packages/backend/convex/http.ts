@@ -71,7 +71,7 @@ http.route({
 
       await ctx.runMutation(internal.users.syncFromClerk, userData);
     } else if (eventType === "user.deleted") {
-      const userId = evt.data.id;
+      const userId = evt.data.external_id || evt.data.id;
       await ctx.runMutation(internal.users.deleteUser, { id: userId });
     }
 
