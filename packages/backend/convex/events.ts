@@ -168,23 +168,22 @@ export const getDiscoverPaginated = query({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        message: "User must be logged in to discover events",
-        data: { args },
-      });
-    }
-
     const { beforeThisDateTime } = args;
 
-    // Get all events that are upcoming and public, excluding user's own events
+    // Get all events that are upcoming and public
     const result = await ctx.db
       .query("events")
       .filter((q) => {
-        const baseFilter = q.and(
-          q.eq(q.field("visibility"), "public"),
-          q.neq(q.field("userId"), identity.subject),
-        );
+        // Always filter for public events
+        let baseFilter = q.eq(q.field("visibility"), "public");
+
+        // If authenticated, exclude user's own events
+        if (identity) {
+          baseFilter = q.and(
+            baseFilter,
+            q.neq(q.field("userId"), identity.subject),
+          );
+        }
 
         // Apply date filter only if beforeThisDateTime is provided
         if (beforeThisDateTime) {
