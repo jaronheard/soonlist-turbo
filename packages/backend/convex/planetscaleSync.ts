@@ -1,5 +1,4 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
 
 import {
   and,
@@ -12,6 +11,7 @@ import {
   users,
 } from "@soonlist/db";
 
+import type { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import {
   internalAction,
@@ -123,9 +123,12 @@ export const syncEvents = internalAction({
 
     try {
       // Get last sync state
-      const syncState: SyncState = await ctx.runQuery(internal.planetscaleSync.getLastSyncState, {
-        key: SYNC_KEY,
-      });
+      const syncState: SyncState = await ctx.runQuery(
+        internal.planetscaleSync.getLastSyncState,
+        {
+          key: SYNC_KEY,
+        },
+      );
       const lastSyncTime = syncState?.lastSyncedAt || null;
       const syncStartTime = new Date().toISOString();
 
@@ -142,17 +145,18 @@ export const syncEvents = internalAction({
         // Query for new or updated events with stable ordering
         const baseQuery = db.select().from(events);
 
-        const changedEvents = await (lastSyncTime
-          ? baseQuery.where(
-              or(
-                gt(events.createdAt, new Date(lastSyncTime)),
-                and(
-                  sql`${events.updatedAt} IS NOT NULL`,
-                  gt(sql`${events.updatedAt}`, new Date(lastSyncTime)),
+        const changedEvents = await (
+          lastSyncTime
+            ? baseQuery.where(
+                or(
+                  gt(events.createdAt, new Date(lastSyncTime)),
+                  and(
+                    sql`${events.updatedAt} IS NOT NULL`,
+                    gt(sql`${events.updatedAt}`, new Date(lastSyncTime)),
+                  ),
                 ),
-              ),
-            )
-          : baseQuery
+              )
+            : baseQuery
         )
           .orderBy(events.createdAt, events.id) // Stable order by createdAt, then id
           .limit(batchSize)
@@ -212,22 +216,34 @@ export const syncEvents = internalAction({
             }
 
             // Extract event data for flattened fields
-            const isObject = (value: unknown): value is Record<string, unknown> => {
-              return typeof value === 'object' && value !== null && !Array.isArray(value);
+            const isObject = (
+              value: unknown,
+            ): value is Record<string, unknown> => {
+              return (
+                typeof value === "object" &&
+                value !== null &&
+                !Array.isArray(value)
+              );
             };
-            
-            const eventData: Record<string, unknown> = isObject(event.event) ? event.event : {};
+
+            const eventData: Record<string, unknown> = isObject(event.event)
+              ? event.event
+              : {};
 
             // Helper function to safely get string value
             const getStringField = (key: string): string | undefined => {
               const value = eventData[key];
-              return typeof value === 'string' ? value : undefined;
+              return typeof value === "string" ? value : undefined;
             };
 
             // Helper function to safely get first image
             const getFirstImage = (): string | null => {
               const images = eventData.images;
-              if (Array.isArray(images) && images.length > 0 && typeof images[0] === 'string') {
+              if (
+                Array.isArray(images) &&
+                images.length > 0 &&
+                typeof images[0] === "string"
+              ) {
                 return images[0];
               }
               return null;
@@ -246,15 +262,15 @@ export const syncEvents = internalAction({
               created_at: event.createdAt.toISOString(),
               updatedAt: event.updatedAt?.toISOString() || null,
               // Flattened fields from event object
-              name: getStringField('name'),
+              name: getStringField("name"),
               image: getFirstImage(),
-              endDate: getStringField('endDate'),
-              endTime: getStringField('endTime'),
-              location: getStringField('location'),
-              timeZone: getStringField('timeZone'),
-              startDate: getStringField('startDate'),
-              startTime: getStringField('startTime'),
-              description: getStringField('description'),
+              endDate: getStringField("endDate"),
+              endTime: getStringField("endTime"),
+              location: getStringField("location"),
+              timeZone: getStringField("timeZone"),
+              startDate: getStringField("startDate"),
+              startTime: getStringField("startTime"),
+              description: getStringField("description"),
             });
             successCount++;
 
