@@ -1,7 +1,6 @@
 import { cronJobs } from "convex/server";
 
 import { internal } from "./_generated/api";
-import { syncAll } from "./planetscaleSync";
 
 const crons = cronJobs();
 
@@ -25,7 +24,7 @@ crons.cron(
 crons.cron(
   "planetscale sync",
   "*/15 * * * *", // Every 15 minutes
-  syncAll,
+  internal.planetscaleSync.syncAll,
   {},
 );
 
