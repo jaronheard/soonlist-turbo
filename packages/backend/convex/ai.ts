@@ -309,7 +309,7 @@ export const extractEventFromText = internalAction({
 
     return {
       events: cleanedEvents,
-      response: "",
+      response: result.response,
     };
   },
 });
@@ -322,7 +322,7 @@ export const validateFirstEvent = internalAction({
     events: v.array(eventDataValidator),
   },
   returns: eventDataValidator,
-  handler: async (_ctx, args) => {
+  handler: (_ctx, args) => {
     if (args.events.length === 0) {
       throw new ConvexError({
         message: "No events found to validate",
@@ -331,12 +331,6 @@ export const validateFirstEvent = internalAction({
     }
 
     const firstEvent = args.events[0];
-    if (!firstEvent) {
-      throw new ConvexError({
-        message: "First event is undefined",
-        data: { events: args.events },
-      });
-    }
 
     // Additional validation can be done here
     AI.validateEvent(firstEvent);
