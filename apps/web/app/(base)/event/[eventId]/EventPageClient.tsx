@@ -10,7 +10,7 @@ import type { User } from "@soonlist/db/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { EventPage } from "~/components/EventDisplays";
-import { api as trpcApi } from "~/lib/api";
+import { api as trpcApi } from "~/trpc/react";
 
 const transformConvexUser = (user: Doc<"users">): User => {
   return {
