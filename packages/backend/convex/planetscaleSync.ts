@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 
 import {
   and,
@@ -11,15 +12,55 @@ import {
   users,
 } from "@soonlist/db";
 
+import { internal } from "./_generated/api";
 import {
   internalAction,
   internalMutation,
   internalQuery,
 } from "./_generated/server";
 
+// Type for sync state
+type SyncState = {
+  _id: Id<"syncState">;
+  _creationTime: number;
+  key: string;
+  lastSyncedAt: string;
+  status: "success" | "failed";
+  error?: string;
+  offset?: number;
+  metadata?: {
+    hasMore?: boolean;
+    lastBatchSize?: number;
+    syncedCount?: number;
+    lastProcessedUserId?: string;
+    lastProcessedEventId?: string;
+  };
+} | null;
+
 // Get the last sync state
 export const getLastSyncState = internalQuery({
   args: { key: v.string() },
+  returns: v.union(
+    v.object({
+      _id: v.id("syncState"),
+      _creationTime: v.number(),
+      key: v.string(),
+      lastSyncedAt: v.string(),
+      status: v.union(v.literal("success"), v.literal("failed")),
+      error: v.optional(v.string()),
+      offset: v.optional(v.number()),
+      metadata: v.optional(
+        v.object({
+          hasMore: v.optional(v.boolean()),
+          lastBatchSize: v.optional(v.number()),
+          syncedCount: v.optional(v.number()),
+          lastProcessedUserId: v.optional(v.string()),
+          lastProcessedEventId: v.optional(v.string()),
+        }),
+      ),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, { key }) => {
     const syncState = await ctx.db
       .query("syncState")
@@ -38,8 +79,17 @@ export const updateSyncState = internalMutation({
     status: v.union(v.literal("success"), v.literal("failed")),
     error: v.optional(v.string()),
     offset: v.optional(v.number()),
-    metadata: v.optional(v.any()),
+    metadata: v.optional(
+      v.object({
+        hasMore: v.optional(v.boolean()),
+        lastBatchSize: v.optional(v.number()),
+        syncedCount: v.optional(v.number()),
+        lastProcessedUserId: v.optional(v.string()),
+        lastProcessedEventId: v.optional(v.string()),
+      }),
+    ),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("syncState")
@@ -57,46 +107,53 @@ export const updateSyncState = internalMutation({
     } else {
       await ctx.db.insert("syncState", args);
     }
+    return null;
   },
 });
 
 // Sync events from PlanetScale to Convex
 export const syncEvents = internalAction({
   args: {},
+  returns: v.object({
+    synced: v.number(),
+    failed: v.number(),
+  }),
   handler: async (ctx) => {
     const SYNC_KEY = "events";
 
     try {
       // Get last sync state
-      const syncState = await ctx.runQuery(getLastSyncState, {
+      const syncState: SyncState = await ctx.runQuery(internal.planetscaleSync.getLastSyncState, {
         key: SYNC_KEY,
       });
       const lastSyncTime = syncState?.lastSyncedAt || null;
       const syncStartTime = new Date().toISOString();
 
-      const allProcessedEvents = [];
+      const allProcessedEvents: {
+        successCount: number;
+        failedCount: number;
+        maxProcessedTimestamp: string;
+      }[] = [];
       let hasMore = true;
       let offset = 0;
       const batchSize = 100;
 
       while (hasMore) {
         // Query for new or updated events with stable ordering
-        let query = db.select().from(events);
+        const baseQuery = db.select().from(events);
 
-        if (lastSyncTime) {
-          query = query.where(
-            or(
-              gt(events.createdAt, new Date(lastSyncTime)),
-              and(
-                sql`${events.updatedAt} IS NOT NULL`,
-                gt(sql`${events.updatedAt}`, new Date(lastSyncTime)),
+        const changedEvents = await (lastSyncTime
+          ? baseQuery.where(
+              or(
+                gt(events.createdAt, new Date(lastSyncTime)),
+                and(
+                  sql`${events.updatedAt} IS NOT NULL`,
+                  gt(sql`${events.updatedAt}`, new Date(lastSyncTime)),
+                ),
               ),
-            ),
-          );
-        }
-
-        // Add stable ordering and pagination
-        const changedEvents = await query
+            )
+          : baseQuery
+        )
           .orderBy(events.createdAt, events.id) // Stable order by createdAt, then id
           .limit(batchSize)
           .offset(offset);
@@ -118,42 +175,66 @@ export const syncEvents = internalAction({
         for (const event of changedEvents) {
           try {
             // Check if user exists in Convex, if not create a basic user record
-            const existingUser = await ctx.runQuery(getUserById, {
-              userId: event.userId,
-            });
+            const existingUser = await ctx.runQuery(
+              internal.planetscaleSync.getUserById,
+              {
+                userId: event.userId,
+              },
+            );
 
             if (!existingUser) {
               // Fetch the actual user from PlanetScale
-              const [planetScaleUser] = await db
+              const planetScaleUsers = await db
                 .select()
                 .from(users)
                 .where(sql`${users.id} = ${event.userId}`)
                 .limit(1);
+              const planetScaleUser = planetScaleUsers[0];
 
-              if (planetScaleUser) {
-                // Create user with actual data from PlanetScale
-                await ctx.runMutation(upsertUser, {
-                  id: planetScaleUser.id,
-                  username: planetScaleUser.username,
-                  email: planetScaleUser.email,
-                  displayName: planetScaleUser.displayName,
-                  userImage: planetScaleUser.userImage,
-                  created_at: planetScaleUser.createdAt.toISOString(),
-                });
-              } else {
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+              if (!planetScaleUser) {
                 // Skip this event if user doesn't exist in PlanetScale
                 console.warn(
                   `User ${event.userId} not found in PlanetScale, skipping event ${event.id}`,
                 );
                 continue;
               }
+
+              // Create user with actual data from PlanetScale
+              await ctx.runMutation(internal.planetscaleSync.upsertUser, {
+                id: planetScaleUser.id,
+                username: planetScaleUser.username,
+                email: planetScaleUser.email,
+                displayName: planetScaleUser.displayName,
+                userImage: planetScaleUser.userImage,
+                created_at: planetScaleUser.createdAt.toISOString(),
+              });
             }
 
             // Extract event data for flattened fields
-            const eventData = event.event as Record<string, unknown>;
+            const isObject = (value: unknown): value is Record<string, unknown> => {
+              return typeof value === 'object' && value !== null && !Array.isArray(value);
+            };
+            
+            const eventData: Record<string, unknown> = isObject(event.event) ? event.event : {};
+
+            // Helper function to safely get string value
+            const getStringField = (key: string): string | undefined => {
+              const value = eventData[key];
+              return typeof value === 'string' ? value : undefined;
+            };
+
+            // Helper function to safely get first image
+            const getFirstImage = (): string | null => {
+              const images = eventData.images;
+              if (Array.isArray(images) && images.length > 0 && typeof images[0] === 'string') {
+                return images[0];
+              }
+              return null;
+            };
 
             // Upsert event
-            await ctx.runMutation(upsertEvent, {
+            await ctx.runMutation(internal.planetscaleSync.upsertEvent, {
               id: event.id,
               userId: event.userId,
               userName: event.userName,
@@ -165,15 +246,15 @@ export const syncEvents = internalAction({
               created_at: event.createdAt.toISOString(),
               updatedAt: event.updatedAt?.toISOString() || null,
               // Flattened fields from event object
-              name: eventData?.name as string | undefined,
-              image: (eventData?.images as string[] | undefined)?.[0] || null,
-              endDate: eventData?.endDate as string | undefined,
-              endTime: eventData?.endTime as string | undefined,
-              location: eventData?.location as string | undefined,
-              timeZone: eventData?.timeZone as string | undefined,
-              startDate: eventData?.startDate as string | undefined,
-              startTime: eventData?.startTime as string | undefined,
-              description: eventData?.description as string | undefined,
+              name: getStringField('name'),
+              image: getFirstImage(),
+              endDate: getStringField('endDate'),
+              endTime: getStringField('endTime'),
+              location: getStringField('location'),
+              timeZone: getStringField('timeZone'),
+              startDate: getStringField('startDate'),
+              startTime: getStringField('startTime'),
+              description: getStringField('description'),
             });
             successCount++;
 
@@ -224,7 +305,7 @@ export const syncEvents = internalAction({
       const newSyncTime =
         totalSuccess > 0 ? overallMaxTimestamp : lastSyncTime || syncStartTime;
 
-      await ctx.runMutation(updateSyncState, {
+      await ctx.runMutation(internal.planetscaleSync.updateSyncState, {
         key: SYNC_KEY,
         lastSyncedAt: newSyncTime,
         status: syncStatus,
@@ -240,7 +321,7 @@ export const syncEvents = internalAction({
       console.error("Error during event sync:", error);
 
       // Update sync state with error
-      await ctx.runMutation(updateSyncState, {
+      await ctx.runMutation(internal.planetscaleSync.updateSyncState, {
         key: SYNC_KEY,
         lastSyncedAt: new Date().toISOString(),
         status: "failed",
@@ -252,53 +333,84 @@ export const syncEvents = internalAction({
   },
 });
 
-// Sync event follows from PlanetScale to Convex
+// Sync event follows from PlanetScale to Convex - IMPROVED VERSION
 export const syncEventFollows = internalAction({
   args: {},
+  returns: v.object({
+    synced: v.number(),
+    processed: v.number(),
+    hasMore: v.boolean(),
+    nextOffset: v.union(v.number(), v.null()),
+  }),
   handler: async (ctx) => {
     const SYNC_KEY = "eventFollows";
 
     try {
-      // Since EventFollows doesn't have timestamps, we need to fetch all follows
-      // and check which ones already exist in Convex to avoid duplicates
       const syncStartTime = new Date().toISOString();
 
-      // Get the last processed offset from sync state
-      const syncState = await ctx.runQuery(getLastSyncState, {
-        key: SYNC_KEY,
-      });
+      // Get the last processed composite key from sync state
+      const syncState: SyncState = await ctx.runQuery(
+        internal.planetscaleSync.getLastSyncState,
+        {
+          key: SYNC_KEY,
+        },
+      );
 
-      // Use offset from sync state or start from 0
-      const lastOffset = syncState?.offset || 0;
-      const batchSize = 1000; // Larger batch since we're doing offset-based pagination
+      // Use metadata to track the last processed composite key instead of offset
+      const metadata = syncState?.metadata;
+      const lastProcessedUserId: string = metadata?.lastProcessedUserId ?? "";
+      const lastProcessedEventId: string = metadata?.lastProcessedEventId ?? "";
 
-      // Fetch a batch of event follows using offset
-      const newFollows = await db
+      const batchSize = 1000;
+
+      // Fetch a batch of event follows using composite key cursor pagination
+      // This is more reliable than offset-based pagination
+      const baseQuery = db
         .select({
           userId: eventFollows.userId,
           eventId: eventFollows.eventId,
         })
-        .from(eventFollows)
-        .limit(batchSize)
-        .offset(lastOffset);
+        .from(eventFollows);
+
+      const newFollows: { userId: string; eventId: string }[] = await (
+        lastProcessedUserId && lastProcessedEventId
+          ? baseQuery.where(
+              or(
+                gt(eventFollows.userId, lastProcessedUserId),
+                and(
+                  sql`${eventFollows.userId} = ${lastProcessedUserId}`,
+                  gt(eventFollows.eventId, lastProcessedEventId),
+                ),
+              ),
+            )
+          : baseQuery
+      )
+        .orderBy(eventFollows.userId, eventFollows.eventId) // Stable ordering by composite key
+        .limit(batchSize);
 
       console.log(
-        `Found ${newFollows.length} event follows to sync (offset: ${lastOffset})`,
+        `Found ${newFollows.length} event follows to sync (after userId: ${lastProcessedUserId}, eventId: ${lastProcessedEventId})`,
       );
 
       let syncedCount = 0;
+      let lastUserId: string = lastProcessedUserId;
+      let lastEventId: string = lastProcessedEventId;
 
       // Process each follow
       for (const follow of newFollows) {
         try {
           // Check if both user and event exist in Convex before creating follow
           const [userExists, eventExists] = await Promise.all([
-            ctx.runQuery(getUserById, { userId: follow.userId }),
-            ctx.runQuery(getEventById, { eventId: follow.eventId }),
+            ctx.runQuery(internal.planetscaleSync.getUserById, {
+              userId: follow.userId,
+            }),
+            ctx.runQuery(internal.planetscaleSync.getEventById, {
+              eventId: follow.eventId,
+            }),
           ]);
 
           if (userExists && eventExists) {
-            await ctx.runMutation(upsertEventFollow, {
+            await ctx.runMutation(internal.planetscaleSync.upsertEventFollow, {
               userId: follow.userId,
               eventId: follow.eventId,
             });
@@ -316,6 +428,10 @@ export const syncEventFollows = internalAction({
               );
             }
           }
+
+          // Track the last processed keys
+          lastUserId = follow.userId;
+          lastEventId = follow.eventId;
         } catch (error) {
           console.error(
             `Error syncing event follow ${follow.userId}-${follow.eventId}:`,
@@ -325,20 +441,20 @@ export const syncEventFollows = internalAction({
         }
       }
 
-      // Update sync state with new offset
-      // If we got a full batch, there might be more data
+      // Determine if there are more records
       const hasMore = newFollows.length === batchSize;
-      const newOffset = hasMore ? lastOffset + batchSize : lastOffset;
 
-      await ctx.runMutation(updateSyncState, {
+      // Update sync state with cursor information instead of offset
+      await ctx.runMutation(internal.planetscaleSync.updateSyncState, {
         key: SYNC_KEY,
         lastSyncedAt: syncStartTime,
         status: "success",
-        offset: newOffset,
         metadata: {
           hasMore,
           lastBatchSize: newFollows.length,
           syncedCount,
+          lastProcessedUserId: lastUserId,
+          lastProcessedEventId: lastEventId,
         },
       });
 
@@ -346,13 +462,13 @@ export const syncEventFollows = internalAction({
         synced: syncedCount,
         processed: newFollows.length,
         hasMore,
-        nextOffset: hasMore ? newOffset : null,
+        nextOffset: null, // We no longer use offset, so return null
       };
     } catch (error) {
       console.error("Error during event follows sync:", error);
 
       // Update sync state with error
-      await ctx.runMutation(updateSyncState, {
+      await ctx.runMutation(internal.planetscaleSync.updateSyncState, {
         key: SYNC_KEY,
         lastSyncedAt: new Date().toISOString(),
         status: "failed",
@@ -388,6 +504,7 @@ export const upsertEvent = internalMutation({
     startTime: v.optional(v.string()),
     description: v.optional(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Check if event already exists
     const existing = await ctx.db
@@ -402,6 +519,7 @@ export const upsertEvent = internalMutation({
       // Insert new event
       await ctx.db.insert("events", args);
     }
+    return null;
   },
 });
 
@@ -410,6 +528,7 @@ export const upsertEventFollow = internalMutation({
     userId: v.string(),
     eventId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Check if follow already exists
     const existing = await ctx.db
@@ -423,6 +542,7 @@ export const upsertEventFollow = internalMutation({
       // Insert new follow
       await ctx.db.insert("eventFollows", args);
     }
+    return null;
   },
 });
 
@@ -435,6 +555,7 @@ export const upsertUser = internalMutation({
     userImage: v.string(),
     created_at: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Check if user already exists
     const existing = await ctx.db
@@ -458,12 +579,36 @@ export const upsertUser = internalMutation({
         updatedAt: null,
       });
     }
+    return null;
   },
 });
 
 // Internal query to check if user exists
 export const getUserById = internalQuery({
   args: { userId: v.string() },
+  returns: v.union(
+    v.object({
+      _id: v.id("users"),
+      _creationTime: v.number(),
+      id: v.string(),
+      created_at: v.string(),
+      updatedAt: v.union(v.string(), v.null()),
+      username: v.string(),
+      email: v.string(),
+      displayName: v.string(),
+      userImage: v.string(),
+      bio: v.union(v.string(), v.null()),
+      publicEmail: v.union(v.string(), v.null()),
+      publicPhone: v.union(v.string(), v.null()),
+      publicInsta: v.union(v.string(), v.null()),
+      publicWebsite: v.union(v.string(), v.null()),
+      publicMetadata: v.union(v.any(), v.null()),
+      emoji: v.union(v.string(), v.null()),
+      onboardingData: v.union(v.any(), v.null()),
+      onboardingCompletedAt: v.union(v.string(), v.null()),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, { userId }) => {
     return await ctx.db
       .query("users")
@@ -475,6 +620,33 @@ export const getUserById = internalQuery({
 // Internal query to check if event exists
 export const getEventById = internalQuery({
   args: { eventId: v.string() },
+  returns: v.union(
+    v.object({
+      _id: v.id("events"),
+      _creationTime: v.number(),
+      id: v.string(),
+      userId: v.string(),
+      userName: v.string(),
+      event: v.any(),
+      eventMetadata: v.optional(v.any()),
+      endDateTime: v.string(),
+      startDateTime: v.string(),
+      visibility: v.union(v.literal("public"), v.literal("private")),
+      created_at: v.string(),
+      updatedAt: v.union(v.string(), v.null()),
+      // Flattened fields
+      name: v.optional(v.string()),
+      image: v.optional(v.union(v.string(), v.null())),
+      endDate: v.optional(v.string()),
+      endTime: v.optional(v.string()),
+      location: v.optional(v.string()),
+      timeZone: v.optional(v.string()),
+      startDate: v.optional(v.string()),
+      startTime: v.optional(v.string()),
+      description: v.optional(v.string()),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, { eventId }) => {
     return await ctx.db
       .query("events")
@@ -486,15 +658,30 @@ export const getEventById = internalQuery({
 // Combined sync function
 export const syncAll = internalAction({
   args: {},
+  returns: v.object({
+    events: v.object({
+      synced: v.number(),
+      error: v.union(v.string(), v.null()),
+    }),
+    eventFollows: v.object({
+      synced: v.number(),
+      error: v.union(v.string(), v.null()),
+    }),
+  }),
   handler: async (ctx) => {
-    const results = {
-      events: { synced: 0, error: null as string | null },
-      eventFollows: { synced: 0, error: null as string | null },
+    const results: {
+      events: { synced: number; error: string | null };
+      eventFollows: { synced: number; error: string | null };
+    } = {
+      events: { synced: 0, error: null },
+      eventFollows: { synced: 0, error: null },
     };
 
     // Sync events
     try {
-      const eventResult = await ctx.runAction(syncEvents);
+      const eventResult = await ctx.runAction(
+        internal.planetscaleSync.syncEvents,
+      );
       results.events.synced = eventResult.synced;
     } catch (error) {
       results.events.error = String(error);
@@ -502,7 +689,9 @@ export const syncAll = internalAction({
 
     // Sync event follows
     try {
-      const followResult = await ctx.runAction(syncEventFollows);
+      const followResult = await ctx.runAction(
+        internal.planetscaleSync.syncEventFollows,
+      );
       results.eventFollows.synced = followResult.synced;
     } catch (error) {
       results.eventFollows.error = String(error);
