@@ -41,6 +41,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       };
     }
 
+    if (!event.event) {
+      return {
+        title: "Invalid Event Data | Soonlist",
+        description: "The event data is corrupted or incomplete.",
+      };
+    }
+
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     const eventImage = eventData.images?.[0];
 
@@ -80,7 +87,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     return {
       title: "Event | Soonlist",
-      description: "Discover and share events on Soonlist",
+      description:
+        "An error occurred while loading event information. Please try again later.",
+      robots: {
+        index: false,
+        follow: true,
+      },
     };
   }
 }
