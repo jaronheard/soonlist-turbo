@@ -179,7 +179,9 @@ export function EventList({
             {isLoading ? (
               <FullPageLoadingSpinner />
             ) : currentEventsToUse.length === 0 ? (
-              <p className="mx-6 text-lg text-gray-500">No events happening now.</p>
+              <p className="mx-6 text-lg text-gray-500">
+                No events happening now.
+              </p>
             ) : (
               <ListContainer
                 variant={variantToUse}
