@@ -120,6 +120,7 @@ export const syncEvents = internalAction({
   }),
   handler: async (ctx) => {
     const SYNC_KEY = "events";
+    let lastSyncTime: string | null = null;
 
     try {
       // Get last sync state
@@ -129,7 +130,7 @@ export const syncEvents = internalAction({
           key: SYNC_KEY,
         },
       );
-      const lastSyncTime = syncState?.lastSyncedAt || null;
+      lastSyncTime = syncState?.lastSyncedAt || null;
       const syncStartTime = new Date().toISOString();
 
       const allProcessedEvents: {
@@ -339,7 +340,7 @@ export const syncEvents = internalAction({
       // Update sync state with error
       await ctx.runMutation(internal.planetscaleSync.updateSyncState, {
         key: SYNC_KEY,
-        lastSyncedAt: new Date().toISOString(),
+        lastSyncedAt: lastSyncTime || new Date().toISOString(),
         status: "failed",
         error: String(error),
       });
@@ -360,12 +361,13 @@ export const syncEventFollows = internalAction({
   }),
   handler: async (ctx) => {
     const SYNC_KEY = "eventFollows";
+    let syncState: SyncState = null;
 
     try {
       const syncStartTime = new Date().toISOString();
 
       // Get the last processed composite key from sync state
-      const syncState: SyncState = await ctx.runQuery(
+      syncState = await ctx.runQuery(
         internal.planetscaleSync.getLastSyncState,
         {
           key: SYNC_KEY,
@@ -463,7 +465,7 @@ export const syncEventFollows = internalAction({
       // Update sync state with cursor information instead of offset
       await ctx.runMutation(internal.planetscaleSync.updateSyncState, {
         key: SYNC_KEY,
-        lastSyncedAt: syncStartTime,
+        lastSyncedAt: syncedCount > 0 ? syncStartTime : (syncState?.lastSyncedAt || syncStartTime),
         status: "success",
         metadata: {
           hasMore,
@@ -486,7 +488,7 @@ export const syncEventFollows = internalAction({
       // Update sync state with error
       await ctx.runMutation(internal.planetscaleSync.updateSyncState, {
         key: SYNC_KEY,
-        lastSyncedAt: new Date().toISOString(),
+        lastSyncedAt: syncState?.lastSyncedAt || new Date().toISOString(),
         status: "failed",
         error: String(error),
       });
