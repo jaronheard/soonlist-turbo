@@ -1,0 +1,113 @@
+import { httpRouter } from "convex/server";
+
+import { internal } from "./_generated/api";
+import { httpAction } from "./_generated/server";
+
+const http = httpRouter();
+
+// Manual sync endpoint - useful for testing
+http.route({
+  path: "/sync/planetscale",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      // Check for a simple auth token in headers (optional)
+      const authHeader = request.headers.get("Authorization");
+      const expectedToken = process.env.SYNC_AUTH_TOKEN;
+
+      if (expectedToken) {
+        const providedToken = authHeader?.replace("Bearer ", "") || "";
+        // Constant-time comparison to prevent timing attacks
+        const tokensMatch =
+          providedToken.length === expectedToken.length &&
+          providedToken.split("").every((char, i) => char === expectedToken[i]);
+
+        if (!tokensMatch) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+      }
+
+      // Run the sync
+      const results = await ctx.runAction(internal.planetscaleSync.syncAll);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          results,
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    } catch (error) {
+      console.error("Manual sync error:", error);
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: String(error),
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+  }),
+});
+
+// Health check endpoint
+http.route({
+  path: "/sync/health",
+  method: "GET",
+  handler: httpAction(async (ctx) => {
+    try {
+      // Get sync states
+      const eventsSyncState = await ctx.runQuery(
+        internal.planetscaleSync.getLastSyncState,
+        {
+          key: "events",
+        },
+      );
+
+      const eventFollowsSyncState = await ctx.runQuery(
+        internal.planetscaleSync.getLastSyncState,
+        {
+          key: "eventFollows",
+        },
+      );
+
+      return new Response(
+        JSON.stringify({
+          status: "healthy",
+          syncStates: {
+            events: eventsSyncState,
+            eventFollows: eventFollowsSyncState,
+          },
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          status: "error",
+          error: String(error),
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+  }),
+});
+
+export default http;
