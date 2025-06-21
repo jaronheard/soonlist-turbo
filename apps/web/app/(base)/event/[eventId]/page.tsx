@@ -30,6 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
       if (trpcEvent) {
         // Use the tRPC event as-is since we handle differences in the client
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
         event = trpcEvent as any;
       }
     }
