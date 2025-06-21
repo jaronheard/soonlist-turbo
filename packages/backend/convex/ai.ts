@@ -332,6 +332,14 @@ export const validateFirstEvent = internalAction({
 
     const firstEvent = args.events[0];
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- this ensures correct type
+    if (!firstEvent) {
+      throw new ConvexError({
+        message: "No events found to validate",
+        data: { eventsCount: 0 },
+      });
+    }
+
     // Additional validation can be done here
     AI.validateEvent(firstEvent);
 
