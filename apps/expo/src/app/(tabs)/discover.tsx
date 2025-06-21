@@ -58,7 +58,7 @@ function DiscoverContent() {
   // Check if user has access to discover feature (only if authenticated)
   if (user) {
     const { showDiscover } = getPlanStatusFromUser(user);
-    
+
     if (!showDiscover) {
       return <Redirect href="/feed" />;
     }
@@ -73,7 +73,7 @@ function DiscoverContent() {
     if (!user) {
       return null;
     }
-    
+
     return (
       <SaveButton eventId={event.id} isSaved={savedEventIds.has(event.id)} />
     );
