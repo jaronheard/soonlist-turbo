@@ -98,17 +98,21 @@ export function EventList({
     );
   }
 
+  if (!currentUser) {
+    return null;
+  }
+
   const currentEventsToUse = collapseSimilarEvents(
     getVisibleEvents(currentEvents),
-    currentUser?.id,
+    currentUser.id,
   );
   const pastEventsToUse = collapseSimilarEvents(
     getVisibleEvents(pastEvents),
-    currentUser?.id,
+    currentUser.id,
   );
   const futureEventsToUse = collapseSimilarEvents(
     getVisibleEvents(futureEvents),
-    currentUser?.id,
+    currentUser.id,
   );
   const showPastEvents =
     variant !== "future-minimal" && pastEventsToUse.length > 0;
@@ -176,7 +180,7 @@ export function EventList({
             </AccordionTrigger>
           )}
           <AccordionContent className="-mx-6 rounded-xl">
-            {isLoading ? (
+            {isLoading && currentEventsToUse.length === 0 ? (
               <FullPageLoadingSpinner />
             ) : currentEventsToUse.length === 0 ? (
               <p className="mx-6 text-lg text-gray-500">
@@ -226,7 +230,7 @@ export function EventList({
           </AccordionTrigger>
         )}
         <AccordionContent className="-mx-6 rounded-xl">
-          {isLoading ? (
+          {isLoading && futureEventsToUse.length === 0 ? (
             <FullPageLoadingSpinner />
           ) : futureEventsToUse.length === 0 ? (
             <p className="mx-6 text-lg text-gray-500">No future events.</p>

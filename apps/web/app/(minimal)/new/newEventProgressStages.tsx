@@ -344,7 +344,6 @@ function AddEvent() {
   // State variables
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [waitingForUser, setWaitingForUser] = useState(false);
   const { uploadOption, setUploadOption } = useNewEventProgressContext();
 
   // Context variables
@@ -354,30 +353,10 @@ function AddEvent() {
   const createEventFromText = useMutation(api.ai.eventFromTextThenCreate);
   const createEventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
 
-  // Helpers
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
-  ) => {
-    setInput(e.target.value);
-  };
   const onSubmitText = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!currentUser) {
-      setWaitingForUser(true);
-      // Try again after a short delay
-      setTimeout(() => {
-        if (!currentUser) {
-          setWaitingForUser(false);
-          alert(
-            "Unable to verify your account. Please refresh the page and try again.",
-          );
-        }
-      }, 5000);
-      return;
-    }
-
-    if (isProcessing) return;
+    if (!currentUser || isProcessing) return;
 
     setIsProcessing(true);
 
@@ -405,21 +384,7 @@ function AddEvent() {
   const onSubmitUrl = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!currentUser) {
-      setWaitingForUser(true);
-      // Try again after a short delay
-      setTimeout(() => {
-        if (!currentUser) {
-          setWaitingForUser(false);
-          alert(
-            "Unable to verify your account. Please refresh the page and try again.",
-          );
-        }
-      }, 5000);
-      return;
-    }
-
-    if (isProcessing) return;
+    if (!currentUser || isProcessing) return;
 
     setIsProcessing(true);
 
@@ -437,6 +402,8 @@ function AddEvent() {
       if (result.workflowId) {
         addWorkflowId(result.workflowId);
         router.push(`/${currentUser.username || currentUser.id}/upcoming`);
+      } else {
+        throw new Error("No workflow ID returned");
       }
     } catch (error) {
       console.error("Error creating event from URL:", error);
@@ -476,18 +443,18 @@ function AddEvent() {
         </TabsContent>
         <TabsContent value="text" className="mt-11">
           <TextEventForm
-            handleInputChange={handleInputChange}
             input={input}
             onSubmit={onSubmitText}
-            isProcessing={isProcessing || waitingForUser}
+            isProcessing={isProcessing}
+            onInputChange={setInput}
           />
         </TabsContent>
         <TabsContent value="link" className="mt-11">
           <UrlEventForm
-            handleInputChange={handleInputChange}
             input={input}
             onSubmit={onSubmitUrl}
-            isProcessing={isProcessing || waitingForUser}
+            isProcessing={isProcessing}
+            onInputChange={setInput}
           />
         </TabsContent>
       </Tabs>
@@ -496,17 +463,16 @@ function AddEvent() {
 }
 
 function TextEventForm({
-  handleInputChange,
   input,
   onSubmit,
   isProcessing,
+  onInputChange,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleInputChange: (e: any) => void;
   input: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (e: any) => void;
   isProcessing: boolean;
+  onInputChange: (value: string) => void;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleKeyDown = (event: any) => {
@@ -514,6 +480,10 @@ function TextEventForm({
     if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
       onSubmit(event);
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onInputChange(e.target.value);
   };
 
   return (
@@ -546,17 +516,16 @@ function TextEventForm({
 }
 
 export function UrlEventForm({
-  handleInputChange,
   input,
   onSubmit,
   isProcessing,
+  onInputChange,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleInputChange: (e: any) => void;
   input: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (e: any) => void;
   isProcessing: boolean;
+  onInputChange: (value: string) => void;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleKeyDown = (event: any) => {
@@ -564,6 +533,10 @@ export function UrlEventForm({
     if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
       onSubmit(event);
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onInputChange(e.target.value);
   };
 
   return (
