@@ -119,17 +119,3 @@ export function useStableTimestamp(): Date {
 
   return stableTimestamp;
 }
-
-/**
- * Hook to manually refresh the stable timestamp
- * Useful when you want to force a refresh on certain user actions
- *
- * @returns A function to refresh the timestamp
- */
-export function useRefreshStableTimestamp() {
-  const [, setForceRefresh] = useState(0);
-
-  return () => {
-    setForceRefresh((prev) => prev + 1);
-  };
-}

@@ -24,32 +24,16 @@ export const UploadImageForProcessingDropzone = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (file: File) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      setIsProcessing(false);
+      return;
+    }
 
     setIsProcessing(true);
 
     try {
       // Process image directly from file (matching Expo app approach)
-      let base64Image: string;
-
-      try {
-        base64Image = await optimizeFileToBase64(file, 640, 0.5);
-      } catch (optimizeError) {
-        console.warn(
-          "Failed to optimize image, using fallback:",
-          optimizeError,
-        );
-        // Fallback: read file without optimization
-        base64Image = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const result = reader.result as string;
-            resolve(result.split(",")[1] || "");
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      }
+      const base64Image = await optimizeFileToBase64(file, 640, 0.5);
 
       // Start the workflow
       const result = await createEventFromImage({
@@ -145,26 +129,7 @@ export const UploadImageForProcessingButton = () => {
 
     try {
       // Process image directly from file (matching Expo app approach)
-      let base64Image: string;
-
-      try {
-        base64Image = await optimizeFileToBase64(file, 640, 0.5);
-      } catch (optimizeError) {
-        console.warn(
-          "Failed to optimize image, using fallback:",
-          optimizeError,
-        );
-        // Fallback: read file without optimization
-        base64Image = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const result = reader.result as string;
-            resolve(result.split(",")[1] || "");
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      }
+      const base64Image = await optimizeFileToBase64(file, 640, 0.5);
 
       // Start the workflow
       const result = await createEventFromImage({

@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
-    const eventImage = eventData.images?.[3];
+    const eventImage = eventData.images?.[0];
 
     // Generate Open Graph metadata
     return {

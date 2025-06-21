@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import { ScrollToTop } from "~/components/ScrollToTop";
 
@@ -22,13 +23,13 @@ export default function Page() {
               width={246}
               height={82}
               className="h-[82px] w-[246px] object-contain align-middle"
+              priority={true}
             />
           </a>
           <p className="mt-6 text-sm text-gray-500">
-            Already have an account?{" "}
-            <a href="/sign-in" className="text-blue-600 hover:underline">
+            <Link href="/sign-in" className="text-blue-600 hover:underline">
               Sign in here
-            </a>
+            </Link>
           </p>
         </div>
       </div>
