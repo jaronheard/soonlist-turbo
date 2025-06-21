@@ -101,7 +101,7 @@ export function YourDetails({
                       <FormControl>
                         <Textarea
                           placeholder="Example: My friend Sarah hosts this dance party every year and its so fun!"
-                          defaultValue={field.value}
+                          value={field.value}
                           onChange={field.onChange}
                         />
                       </FormControl>
@@ -119,11 +119,7 @@ export function YourDetails({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Visibility</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Public" />
