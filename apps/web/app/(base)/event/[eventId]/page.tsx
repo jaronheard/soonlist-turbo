@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { createCaller } from "~/lib/api-server";
 import { getAuthenticatedConvex } from "~/lib/convex-server";
 import EventPageClient from "./EventPageClient";
 
@@ -20,7 +21,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const convex = await getAuthenticatedConvex();
 
     // Fetch the event data on the server
-    const event = await convex.query(api.events.get, { eventId });
+    let event = await convex.query(api.events.get, { eventId });
+
+    // If not found in Convex, try PlanetScale
+    if (!event) {
+      const caller = await createCaller();
+      const trpcEvent = await caller.event.get({ eventId });
+
+      if (trpcEvent) {
+        // Use the tRPC event as-is since we handle differences in the client
+        event = trpcEvent as any;
+      }
+    }
 
     if (!event) {
       return {
