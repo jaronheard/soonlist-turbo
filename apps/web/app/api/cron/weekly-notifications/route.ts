@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import { TRPCError } from "@trpc/server";
+import { getHTTPStatusCodeFromError } from "@trpc/server/http";
+
+import { appRouter } from "@soonlist/api";
+import { createTRPCContext } from "@soonlist/api/trpc";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -16,10 +21,30 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Weekly notifications are handled by Convex cron jobs
-  // This endpoint exists for backward compatibility
-  return NextResponse.json({
-    success: true,
-    message: "Weekly notifications are handled by Convex cron jobs",
-  });
+  const ctx = await createTRPCContext({ headers: new Headers() });
+  const caller = appRouter.createCaller(ctx);
+
+  try {
+    // Pass the CRON_SECRET to the sendWeeklyNotifications procedure
+    await caller.notification.sendWeeklyNotifications({
+      cronSecret: process.env.CRON_SECRET || "",
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (cause) {
+    console.error("Error processing weekly notifications:", cause);
+
+    if (cause instanceof TRPCError) {
+      const httpStatusCode = getHTTPStatusCodeFromError(cause);
+      return NextResponse.json(
+        { success: false, error: { message: cause.message } },
+        { status: httpStatusCode },
+      );
+    }
+
+    return NextResponse.json(
+      { success: false, error: { message: "Internal Server Error" } },
+      { status: 500 },
+    );
+  }
 }
