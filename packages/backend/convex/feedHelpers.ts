@@ -139,17 +139,13 @@ export const removeEventFromFeeds = internalMutation({
     }
     
     for (const entry of feedEntries) {
-      // Skip creator's feed if requested
-      if (keepCreatorFeed && entry.feedId.startsWith("user_") && event) {
-        if (entry.feedId === `user_${event.userId}`) {
-          continue;
-        }
+      // If keepCreatorFeed is true, skip only the creator's feed
+      if (keepCreatorFeed && event && entry.feedId === `user_${event.userId}`) {
+        continue;
       }
       
-      // Remove from discover feed and other user feeds
-      if (entry.feedId === "discover" || !keepCreatorFeed) {
-        await ctx.db.delete(entry._id);
-      }
+      // Delete all other entries (including discover and other user feeds)
+      await ctx.db.delete(entry._id);
     }
   },
 });
