@@ -91,8 +91,7 @@ export const addEventToUserFeed = internalMutation({
       .first();
     
     if (!event) {
-      console.error(`Event ${eventId} not found`);
-      return;
+      throw new Error(`Event ${eventId} not found`);
     }
     
     const feedId = `user_${userId}`;
@@ -127,18 +126,22 @@ export const removeEventFromFeeds = internalMutation({
     // Get all feed entries for this event
     const feedEntries = await ctx.db
       .query("userFeeds")
-      .filter(q => q.eq(q.field("eventId"), eventId))
+      .withIndex("by_event", q => q.eq("eventId", eventId))
       .collect();
+    
+    // Fetch the event once if we need to check creator
+    let event = null;
+    if (keepCreatorFeed) {
+      event = await ctx.db
+        .query("events")
+        .withIndex("by_custom_id", q => q.eq("id", eventId))
+        .first();
+    }
     
     for (const entry of feedEntries) {
       // Skip creator's feed if requested
-      if (keepCreatorFeed && entry.feedId.startsWith("user_")) {
-        const event = await ctx.db
-          .query("events")
-          .withIndex("by_custom_id", q => q.eq("id", eventId))
-          .first();
-        
-        if (event && entry.feedId === `user_${event.userId}`) {
+      if (keepCreatorFeed && entry.feedId.startsWith("user_") && event) {
+        if (entry.feedId === `user_${event.userId}`) {
           continue;
         }
       }

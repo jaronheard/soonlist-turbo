@@ -175,5 +175,6 @@ export default defineSchema({
     addedAt: v.number(), // When added to feed (timestamp)
   })
     .index("by_feed_time", ["feedId", "eventStartTime"])
-    .index("by_feed_event", ["feedId", "eventId"]), // For deduplication checks
+    .index("by_feed_event", ["feedId", "eventId"]) // For deduplication checks
+    .index("by_event", ["eventId"]), // For event removal across all feeds
 });
