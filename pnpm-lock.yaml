@@ -39,6 +39,9 @@ catalogs:
     '@clerk/nextjs':
       specifier: ^6.20.0
       version: 6.20.0
+    '@convex-dev/migrations':
+      specifier: ^0.2.9
+      version: 0.2.9
     '@convex-dev/workflow':
       specifier: ^0.2.4
       version: 0.2.4
@@ -1121,6 +1124,9 @@ importers:
       '@clerk/nextjs':
         specifier: 'catalog:'
         version: 6.20.0(next@15.1.8(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(svix@1.66.0(encoding@0.1.13))
+      '@convex-dev/migrations':
+        specifier: 'catalog:'
+        version: 0.2.9(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))
       '@convex-dev/workflow':
         specifier: 'catalog:'
         version: 0.2.4(@convex-dev/workpool@0.2.10(convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28))(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)))(convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28))(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))
@@ -2333,6 +2339,11 @@ packages:
 
   '@coinbase/wallet-sdk@4.3.0':
     resolution: {integrity: sha512-T3+SNmiCw4HzDm4we9wCHCxlP0pqCiwKe4sOwPH3YAK2KSKjxPRydKu6UQJrdONFVLG7ujXvbd/6ZqmvJb8rkw==}
+
+  '@convex-dev/migrations@0.2.9':
+    resolution: {integrity: sha512-HfIv6/F8VbtJ1NVT2bQRTumJGdaqROl/+s5IOnubHm7vvgie0RjcfO6YiB7JoLFWwS19vjDQDKl63ihoA08zOA==}
+    peerDependencies:
+      convex: ~1.16.5 || >=1.17.0 <1.35.0
 
   '@convex-dev/workflow@0.2.4':
     resolution: {integrity: sha512-KfUWxYmdM29qD4xRFAoKduN54xOsU4Gso3reU3Av4X0kHLGfPRsQ0EKFiEFYTuk7eo7AqTBvRNuGrKQxWCPpQA==}
@@ -11479,6 +11490,10 @@ snapshots:
       clsx: 1.2.1
       eventemitter3: 5.0.1
       preact: 10.26.7
+
+  '@convex-dev/migrations@0.2.9(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))':
+    dependencies:
+      convex: 1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
 
   '@convex-dev/workflow@0.2.4(@convex-dev/workpool@0.2.10(convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28))(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)))(convex-helpers@0.1.89(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(zod@3.25.28))(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))':
     dependencies:
