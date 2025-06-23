@@ -167,4 +167,13 @@ export default defineSchema({
     offset: v.optional(v.number()), // For offset-based pagination
     metadata: v.optional(v.any()), // For any additional sync metadata
   }).index("by_key", ["key"]),
+
+  userFeeds: defineTable({
+    feedId: v.string(), // Feed identifier (user_${userId}, discover, curated_${topic}, etc.)
+    eventId: v.string(), // Event in the feed
+    eventStartTime: v.number(), // For chronological ordering (timestamp)
+    addedAt: v.number(), // When added to feed (timestamp)
+  })
+    .index("by_feed_time", ["feedId", "eventStartTime"])
+    .index("by_feed_event", ["feedId", "eventId"]), // For deduplication checks
 });
