@@ -536,7 +536,7 @@ export const upsertEvent = internalMutation({
     if (existing) {
       // Update existing event
       await ctx.db.patch(existing._id, args);
-      
+
       // Update feeds if visibility or time changed
       const visibilityChanged = existing.visibility !== args.visibility;
       const timeChanged = existing.startDateTime !== args.startDateTime;
@@ -549,7 +549,7 @@ export const upsertEvent = internalMutation({
             keepCreatorFeed: true,
           });
         }
-        
+
         // Update event in feeds with new visibility and/or time
         await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
           eventId: args.id,
@@ -561,7 +561,7 @@ export const upsertEvent = internalMutation({
     } else {
       // Insert new event
       await ctx.db.insert("events", args);
-      
+
       // Add event to feeds
       await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
         eventId: args.id,
@@ -592,7 +592,7 @@ export const upsertEventFollow = internalMutation({
     if (!existing) {
       // Insert new follow
       await ctx.db.insert("eventFollows", args);
-      
+
       // Add event to user's feed
       await ctx.runMutation(internal.feedHelpers.addEventToUserFeed, {
         userId: args.userId,

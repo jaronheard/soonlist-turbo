@@ -763,8 +763,10 @@ export async function updateEvent(
   }
 
   // Update feeds if visibility or time changed
-  const visibilityChanged = visibility && existingEvent.visibility !== visibility;
-  const timeChanged = existingEvent.startDateTime !== startDateTime.toISOString();
+  const visibilityChanged =
+    visibility && existingEvent.visibility !== visibility;
+  const timeChanged =
+    existingEvent.startDateTime !== startDateTime.toISOString();
 
   if (visibilityChanged || timeChanged) {
     // If changing to private, remove from discover feed
@@ -774,7 +776,7 @@ export async function updateEvent(
         keepCreatorFeed: true,
       });
     }
-    
+
     // Update event in feeds with new visibility and/or time
     await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
       eventId,

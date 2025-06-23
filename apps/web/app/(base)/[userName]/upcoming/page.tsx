@@ -2,7 +2,7 @@
 
 import type { FunctionReturnType } from "convex/server";
 import { use } from "react";
-import { useQuery, usePaginatedQuery } from "convex/react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import { CalendarHeart } from "lucide-react";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
@@ -31,8 +31,9 @@ const transformConvexUser = (user: Doc<"users">): User => {
 
 // Transform Convex events to EventWithUser format
 function transformConvexEvents(
-  events: FunctionReturnType<typeof api.feeds.getMyFeed>["page"] | 
-         FunctionReturnType<typeof api.feeds.getUserCreatedEvents>["page"],
+  events:
+    | FunctionReturnType<typeof api.feeds.getMyFeed>["page"]
+    | FunctionReturnType<typeof api.feeds.getUserCreatedEvents>["page"],
 ): EventWithUser[] {
   return events.map((event) => ({
     id: event.id,
@@ -67,17 +68,29 @@ export default function Page({ params }: Props) {
     filter: "upcoming" as const,
     beforeThisDateTime: stableNow.toISOString(),
   };
-  
-  const userCreatedArgs = targetUser ? {
-    userId: targetUser.id,
-    filter: "upcoming" as const,
-    beforeThisDateTime: stableNow.toISOString(),
-  } : "skip";
 
-  const myFeedQuery = usePaginatedQuery(api.feeds.getMyFeed, self ? myFeedArgs : "skip", { initialNumItems: 100 });
-  const userCreatedQuery = usePaginatedQuery(api.feeds.getUserCreatedEvents, !self ? userCreatedArgs : "skip", { initialNumItems: 100 });
-  
-  const { results: convexEvents, status } = self ? myFeedQuery : userCreatedQuery;
+  const userCreatedArgs = targetUser
+    ? {
+        userId: targetUser.id,
+        filter: "upcoming" as const,
+        beforeThisDateTime: stableNow.toISOString(),
+      }
+    : "skip";
+
+  const myFeedQuery = usePaginatedQuery(
+    api.feeds.getMyFeed,
+    self ? myFeedArgs : "skip",
+    { initialNumItems: 100 },
+  );
+  const userCreatedQuery = usePaginatedQuery(
+    api.feeds.getUserCreatedEvents,
+    !self ? userCreatedArgs : "skip",
+    { initialNumItems: 100 },
+  );
+
+  const { results: convexEvents, status } = self
+    ? myFeedQuery
+    : userCreatedQuery;
 
   const isLoading = status === "LoadingFirstPage" || (!self && !targetUser);
   const events = convexEvents ? transformConvexEvents(convexEvents) : [];

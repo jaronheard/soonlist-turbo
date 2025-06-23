@@ -35,21 +35,21 @@ import { usePaginatedQuery } from "convex/react";
 const { results, status } = usePaginatedQuery(
   api.feeds.getMyFeed,
   {},
-  { initialNumItems: 50 }
+  { initialNumItems: 50 },
 );
 
 // Get discover feed
 const { results, status } = usePaginatedQuery(
   api.feeds.getDiscoverFeed,
   {},
-  { initialNumItems: 50 }
+  { initialNumItems: 50 },
 );
 
 // Get user's created events only (for public profiles)
 const { results, status } = usePaginatedQuery(
   api.feeds.getUserCreatedEvents,
   { userId: "user_123" },
-  { initialNumItems: 50 }
+  { initialNumItems: 50 },
 );
 ```
 
