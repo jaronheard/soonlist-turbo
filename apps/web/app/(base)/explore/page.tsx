@@ -25,7 +25,7 @@ const transformConvexUser = (user: Doc<"users">): User => {
 
 // Transform Convex events to EventWithUser format
 function transformConvexEvents(
-  events: FunctionReturnType<typeof api.events.getDiscoverPaginated>["page"],
+  events: FunctionReturnType<typeof api.feeds.getDiscoverFeed>["page"],
 ): EventWithUser[] {
   return events.map((event) => ({
     id: event.id,
@@ -50,16 +50,18 @@ function transformConvexEvents(
 export default function Page() {
   const stableNow = useStableTimestamp();
   const { results, status } = usePaginatedQuery(
-    api.events.getDiscoverPaginated,
-    {},
+    api.feeds.getDiscoverFeed,
+    {
+      filter: "upcoming",
+      beforeThisDateTime: stableNow.toISOString(),
+    },
     { initialNumItems: 50 },
   );
 
   const isLoading = status === "LoadingFirstPage";
   const events = results ? transformConvexEvents(results) : [];
 
-  const pastEvents = events.filter((item) => item.endDateTime < stableNow);
-
+  // Events are already filtered by the query, just separate current vs future
   const currentEvents = events.filter(
     (item) => item.startDateTime < stableNow && item.endDateTime > stableNow,
   );
@@ -76,7 +78,7 @@ export default function Page() {
       <EventList
         currentEvents={currentEvents}
         futureEvents={futureEvents}
-        pastEvents={pastEvents}
+        pastEvents={[]}
         variant="future-minimal"
         isLoading={isLoading}
       />

@@ -29,25 +29,28 @@ userFeeds: {
 
 ```typescript
 import { api } from "@soonlist/backend/convex/_generated/api";
+import { usePaginatedQuery } from "convex/react";
 
-// Get user's personal feed
-const myFeed = useQuery(api.feeds.getMyFeed, { 
-  cursor: continueCursor,
-  limit: 50 
-});
+// Get user's personal feed (includes followed events)
+const { results, status } = usePaginatedQuery(
+  api.feeds.getMyFeed,
+  {},
+  { initialNumItems: 50 }
+);
 
 // Get discover feed
-const discoverFeed = useQuery(api.feeds.getDiscoverFeed, {
-  cursor: continueCursor,
-  limit: 50
-});
+const { results, status } = usePaginatedQuery(
+  api.feeds.getDiscoverFeed,
+  {},
+  { initialNumItems: 50 }
+);
 
-// Get specific feed (internal use)
-const feed = useQuery(api.feeds.getFeed, {
-  feedId: "user_123",
-  cursor: continueCursor,
-  limit: 50
-});
+// Get user's created events only (for public profiles)
+const { results, status } = usePaginatedQuery(
+  api.feeds.getUserCreatedEvents,
+  { userId: "user_123" },
+  { initialNumItems: 50 }
+);
 ```
 
 ### Updating Feeds
