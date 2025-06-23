@@ -536,9 +536,39 @@ export const upsertEvent = internalMutation({
     if (existing) {
       // Update existing event
       await ctx.db.patch(existing._id, args);
+      
+      // Update feeds if visibility or time changed
+      const visibilityChanged = existing.visibility !== args.visibility;
+      const timeChanged = existing.startDateTime !== args.startDateTime;
+
+      if (visibilityChanged || timeChanged) {
+        // If changing to private, remove from discover feed
+        if (args.visibility === "private" && existing.visibility === "public") {
+          await ctx.runMutation(internal.feedHelpers.removeEventFromFeeds, {
+            eventId: args.id,
+            keepCreatorFeed: true,
+          });
+        }
+        
+        // Update event in feeds with new visibility and/or time
+        await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
+          eventId: args.id,
+          userId: args.userId,
+          visibility: args.visibility,
+          startDateTime: args.startDateTime,
+        });
+      }
     } else {
       // Insert new event
       await ctx.db.insert("events", args);
+      
+      // Add event to feeds
+      await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
+        eventId: args.id,
+        userId: args.userId,
+        visibility: args.visibility,
+        startDateTime: args.startDateTime,
+      });
     }
     return null;
   },
@@ -562,6 +592,12 @@ export const upsertEventFollow = internalMutation({
     if (!existing) {
       // Insert new follow
       await ctx.db.insert("eventFollows", args);
+      
+      // Add event to user's feed
+      await ctx.runMutation(internal.feedHelpers.addEventToUserFeed, {
+        userId: args.userId,
+        eventId: args.eventId,
+      });
     }
     return null;
   },
