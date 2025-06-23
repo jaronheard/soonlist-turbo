@@ -2,7 +2,7 @@
 
 import type { FunctionReturnType } from "convex/server";
 import { use } from "react";
-import { useQuery } from "convex/react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import { CalendarHeart } from "lucide-react";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
@@ -12,10 +12,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
-import {
-  useStablePaginatedQuery,
-  useStableTimestamp,
-} from "~/hooks/useStableQuery";
+import { useStableTimestamp } from "~/hooks/useStableQuery";
 
 interface Props {
   params: Promise<{ userName: string }>;
@@ -34,9 +31,9 @@ const transformConvexUser = (user: Doc<"users">): User => {
 
 // Transform Convex events to EventWithUser format
 function transformConvexEvents(
-  events: FunctionReturnType<
-    typeof api.events.getEventsForUserPaginated
-  >["page"],
+  events:
+    | FunctionReturnType<typeof api.feeds.getMyFeed>["page"]
+    | FunctionReturnType<typeof api.feeds.getUserCreatedEvents>["page"],
 ): EventWithUser[] {
   return events.map((event) => ({
     id: event.id,
@@ -61,23 +58,44 @@ function transformConvexEvents(
 export default function Page({ params }: Props) {
   const { userName } = use(params);
   const currentUser = useQuery(api.users.getCurrentUser);
+  const targetUser = useQuery(api.users.getByUsername, { userName });
   const self = currentUser?.username === userName;
   const stableNow = useStableTimestamp();
 
-  const { results: convexEvents, status } = useStablePaginatedQuery(
-    api.events.getEventsForUserPaginated,
-    {
-      userName,
-      filter: "upcoming",
-    },
-    {
-      initialNumItems: 100,
-    },
+  // For the authenticated user viewing their own feed, use getMyFeed (includes followed events)
+  // For viewing another user's feed, only show their created events
+  const myFeedArgs = {
+    filter: "upcoming" as const,
+    beforeThisDateTime: stableNow.toISOString(),
+  };
+
+  const userCreatedArgs = targetUser
+    ? {
+        userId: targetUser.id,
+        filter: "upcoming" as const,
+        beforeThisDateTime: stableNow.toISOString(),
+      }
+    : "skip";
+
+  const myFeedQuery = usePaginatedQuery(
+    api.feeds.getMyFeed,
+    self ? myFeedArgs : "skip",
+    { initialNumItems: 100 },
+  );
+  const userCreatedQuery = usePaginatedQuery(
+    api.feeds.getUserCreatedEvents,
+    !self ? userCreatedArgs : "skip",
+    { initialNumItems: 100 },
   );
 
-  const isLoading = status === "LoadingFirstPage";
+  const { results: convexEvents, status } = self
+    ? myFeedQuery
+    : userCreatedQuery;
+
+  const isLoading = status === "LoadingFirstPage" || (!self && !targetUser);
   const events = convexEvents ? transformConvexEvents(convexEvents) : [];
 
+  // Events are already filtered by the query, just separate current vs future
   const currentEvents = events.filter((item) => {
     const isCurrent =
       new Date(item.startDateTime) < stableNow &&

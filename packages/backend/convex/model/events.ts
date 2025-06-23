@@ -5,6 +5,7 @@ import type { EventMetadataLoose } from "@soonlist/cal";
 
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { internal } from "../_generated/api";
 import { generateNumericId, generatePublicId } from "../utils";
 
 // Type for event data (based on AddToCalendarButtonProps)
@@ -635,6 +636,14 @@ export async function createEvent(
     }
   }
 
+  // Add event to feeds
+  await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
+    eventId,
+    userId,
+    visibility: visibility || "public",
+    startDateTime: startDateTime.toISOString(),
+  });
+
   return { id: eventId };
 }
 
@@ -753,6 +762,30 @@ export async function updateEvent(
     }
   }
 
+  // Update feeds if visibility or time changed
+  const visibilityChanged =
+    visibility && existingEvent.visibility !== visibility;
+  const timeChanged =
+    existingEvent.startDateTime !== startDateTime.toISOString();
+
+  if (visibilityChanged || timeChanged) {
+    // If changing to private, remove from discover feed
+    if (visibility === "private" && existingEvent.visibility === "public") {
+      await ctx.runMutation(internal.feedHelpers.removeEventFromFeeds, {
+        eventId,
+        keepCreatorFeed: true,
+      });
+    }
+
+    // Update event in feeds with new visibility and/or time
+    await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
+      eventId,
+      userId: existingEvent.userId,
+      visibility: visibility || existingEvent.visibility,
+      startDateTime: startDateTime.toISOString(),
+    });
+  }
+
   return { id: eventId };
 }
 
@@ -807,6 +840,12 @@ export async function deleteEvent(
     await ctx.db.delete(etl._id);
   }
 
+  // Remove event from all feeds
+  await ctx.runMutation(internal.feedHelpers.removeEventFromFeeds, {
+    eventId,
+    keepCreatorFeed: false,
+  });
+
   // Delete the event
   await ctx.db.delete(event._id);
 
@@ -834,6 +873,20 @@ export async function followEvent(
       userId,
       eventId,
     });
+
+    // Get event to add to user's feed
+    const event = await ctx.db
+      .query("events")
+      .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+      .unique();
+
+    if (event) {
+      // Add to user's feed
+      await ctx.runMutation(internal.feedHelpers.addEventToUserFeed, {
+        userId,
+        eventId,
+      });
+    }
   }
 
   return await getEventById(ctx, eventId);
@@ -856,6 +909,19 @@ export async function unfollowEvent(
 
   if (existingFollow) {
     await ctx.db.delete(existingFollow._id);
+
+    // Remove from user's feed
+    const feedId = `user_${userId}`;
+    const feedEntry = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_event", (q) =>
+        q.eq("feedId", feedId).eq("eventId", eventId),
+      )
+      .unique();
+
+    if (feedEntry) {
+      await ctx.db.delete(feedEntry._id);
+    }
   }
 
   return await getEventById(ctx, eventId);

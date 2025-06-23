@@ -11,8 +11,11 @@
 import type * as ai from "../ai.js";
 import type * as crons from "../crons.js";
 import type * as events from "../events.js";
+import type * as feedHelpers from "../feedHelpers.js";
+import type * as feeds from "../feeds.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as migrations_populateUserFeeds from "../migrations/populateUserFeeds.js";
 import type * as model_ai from "../model/ai.js";
 import type * as model_aiHelpers from "../model/aiHelpers.js";
 import type * as model_events from "../model/events.js";
@@ -47,8 +50,11 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   crons: typeof crons;
   events: typeof events;
+  feedHelpers: typeof feedHelpers;
+  feeds: typeof feeds;
   files: typeof files;
   http: typeof http;
+  "migrations/populateUserFeeds": typeof migrations_populateUserFeeds;
   "model/ai": typeof model_ai;
   "model/aiHelpers": typeof model_aiHelpers;
   "model/events": typeof model_events;
