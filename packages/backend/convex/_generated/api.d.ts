@@ -15,7 +15,7 @@ import type * as feedHelpers from "../feedHelpers.js";
 import type * as feeds from "../feeds.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
-import type * as migrations_populateUserFeeds from "../migrations/populateUserFeeds.js";
+import type * as migrations_userFeedsMigration from "../migrations/userFeedsMigration.js";
 import type * as model_ai from "../model/ai.js";
 import type * as model_aiHelpers from "../model/aiHelpers.js";
 import type * as model_events from "../model/events.js";
@@ -54,7 +54,7 @@ declare const fullApi: ApiFromModules<{
   feeds: typeof feeds;
   files: typeof files;
   http: typeof http;
-  "migrations/populateUserFeeds": typeof migrations_populateUserFeeds;
+  "migrations/userFeedsMigration": typeof migrations_userFeedsMigration;
   "model/ai": typeof model_ai;
   "model/aiHelpers": typeof model_aiHelpers;
   "model/events": typeof model_events;
@@ -348,6 +348,91 @@ export declare const components: {
         | { previousAttempts: number; state: "pending" }
         | { previousAttempts: number; state: "running" }
         | { state: "finished" }
+      >;
+    };
+  };
+  migrations: {
+    lib: {
+      cancel: FunctionReference<
+        "mutation",
+        "internal",
+        { name: string },
+        {
+          batchSize?: number;
+          cursor?: string | null;
+          error?: string;
+          isDone: boolean;
+          latestEnd?: number;
+          latestStart: number;
+          name: string;
+          next?: Array<string>;
+          processed: number;
+          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
+        }
+      >;
+      cancelAll: FunctionReference<
+        "mutation",
+        "internal",
+        { sinceTs?: number },
+        Array<{
+          batchSize?: number;
+          cursor?: string | null;
+          error?: string;
+          isDone: boolean;
+          latestEnd?: number;
+          latestStart: number;
+          name: string;
+          next?: Array<string>;
+          processed: number;
+          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
+        }>
+      >;
+      clearAll: FunctionReference<
+        "mutation",
+        "internal",
+        { before?: number },
+        null
+      >;
+      getStatus: FunctionReference<
+        "query",
+        "internal",
+        { limit?: number; names?: Array<string> },
+        Array<{
+          batchSize?: number;
+          cursor?: string | null;
+          error?: string;
+          isDone: boolean;
+          latestEnd?: number;
+          latestStart: number;
+          name: string;
+          next?: Array<string>;
+          processed: number;
+          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
+        }>
+      >;
+      migrate: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          batchSize?: number;
+          cursor?: string | null;
+          dryRun: boolean;
+          fnHandle: string;
+          name: string;
+          next?: Array<{ fnHandle: string; name: string }>;
+        },
+        {
+          batchSize?: number;
+          cursor?: string | null;
+          error?: string;
+          isDone: boolean;
+          latestEnd?: number;
+          latestStart: number;
+          name: string;
+          next?: Array<string>;
+          processed: number;
+          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
+        }
       >;
     };
   };

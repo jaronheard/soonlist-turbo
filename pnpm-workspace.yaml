@@ -12,6 +12,7 @@ catalog:
 
   # Backend
   convex: ^1.13.0
+  "@convex-dev/migrations": ^0.2.9
   "@convex-dev/workflow": ^0.2.4
   "@convex-dev/workpool": ^0.2.10
 
