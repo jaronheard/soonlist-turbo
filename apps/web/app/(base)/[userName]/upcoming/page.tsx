@@ -74,9 +74,10 @@ export default function Page({ params }: Props) {
     beforeThisDateTime: stableNow.toISOString(),
   } : "skip";
 
-  const { results: convexEvents, status } = self
-    ? usePaginatedQuery(api.feeds.getMyFeed, myFeedArgs, { initialNumItems: 100 })
-    : usePaginatedQuery(api.feeds.getUserCreatedEvents, userCreatedArgs, { initialNumItems: 100 });
+  const myFeedQuery = usePaginatedQuery(api.feeds.getMyFeed, self ? myFeedArgs : "skip", { initialNumItems: 100 });
+  const userCreatedQuery = usePaginatedQuery(api.feeds.getUserCreatedEvents, !self ? userCreatedArgs : "skip", { initialNumItems: 100 });
+  
+  const { results: convexEvents, status } = self ? myFeedQuery : userCreatedQuery;
 
   const isLoading = status === "LoadingFirstPage" || (!self && !targetUser);
   const events = convexEvents ? transformConvexEvents(convexEvents) : [];
