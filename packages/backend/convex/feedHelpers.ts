@@ -1,0 +1,152 @@
+import { internalMutation } from "./_generated/server";
+import { v } from "convex/values";
+
+// Helper to add an event to feeds when it's created or updated
+export const updateEventInFeeds = internalMutation({
+  args: {
+    eventId: v.string(),
+    userId: v.string(),
+    visibility: v.union(v.literal("public"), v.literal("private")),
+    startDateTime: v.string(),
+  },
+  handler: async (ctx, { eventId, userId, visibility, startDateTime }) => {
+    const eventStartTime = new Date(startDateTime).getTime();
+    
+    // 1. Always add to creator's personal feed
+    const creatorFeedId = `user_${userId}`;
+    const existingCreatorEntry = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_event", q => 
+        q.eq("feedId", creatorFeedId).eq("eventId", eventId)
+      )
+      .first();
+    
+    if (!existingCreatorEntry) {
+      await ctx.db.insert("userFeeds", {
+        feedId: creatorFeedId,
+        eventId,
+        eventStartTime,
+        addedAt: Date.now(),
+      });
+    }
+    
+    // 2. Add to discover feed if public
+    if (visibility === "public") {
+      const discoverFeedId = "discover";
+      const existingDiscoverEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", q => 
+          q.eq("feedId", discoverFeedId).eq("eventId", eventId)
+        )
+        .first();
+      
+      if (!existingDiscoverEntry) {
+        await ctx.db.insert("userFeeds", {
+          feedId: discoverFeedId,
+          eventId,
+          eventStartTime,
+          addedAt: Date.now(),
+        });
+      }
+    }
+    
+    // 3. Add to feeds of users who follow this event
+    const eventFollows = await ctx.db
+      .query("eventFollows")
+      .withIndex("by_event", q => q.eq("eventId", eventId))
+      .collect();
+    
+    for (const follow of eventFollows) {
+      const followerFeedId = `user_${follow.userId}`;
+      const existingFollowerEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", q => 
+          q.eq("feedId", followerFeedId).eq("eventId", eventId)
+        )
+        .first();
+      
+      if (!existingFollowerEntry) {
+        await ctx.db.insert("userFeeds", {
+          feedId: followerFeedId,
+          eventId,
+          eventStartTime,
+          addedAt: Date.now(),
+        });
+      }
+    }
+  },
+});
+
+// Helper to add event to a user's feed when they follow it
+export const addEventToUserFeed = internalMutation({
+  args: {
+    userId: v.string(),
+    eventId: v.string(),
+  },
+  handler: async (ctx, { userId, eventId }) => {
+    // Get the event to get its start time
+    const event = await ctx.db
+      .query("events")
+      .withIndex("by_custom_id", q => q.eq("id", eventId))
+      .first();
+    
+    if (!event) {
+      console.error(`Event ${eventId} not found`);
+      return;
+    }
+    
+    const feedId = `user_${userId}`;
+    const eventStartTime = new Date(event.startDateTime).getTime();
+    
+    // Check if already in feed
+    const existing = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_event", q => 
+        q.eq("feedId", feedId).eq("eventId", eventId)
+      )
+      .first();
+    
+    if (!existing) {
+      await ctx.db.insert("userFeeds", {
+        feedId,
+        eventId,
+        eventStartTime,
+        addedAt: Date.now(),
+      });
+    }
+  },
+});
+
+// Helper to remove event from feeds (e.g., when visibility changes to private)
+export const removeEventFromFeeds = internalMutation({
+  args: {
+    eventId: v.string(),
+    keepCreatorFeed: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { eventId, keepCreatorFeed = true }) => {
+    // Get all feed entries for this event
+    const feedEntries = await ctx.db
+      .query("userFeeds")
+      .filter(q => q.eq(q.field("eventId"), eventId))
+      .collect();
+    
+    for (const entry of feedEntries) {
+      // Skip creator's feed if requested
+      if (keepCreatorFeed && entry.feedId.startsWith("user_")) {
+        const event = await ctx.db
+          .query("events")
+          .withIndex("by_custom_id", q => q.eq("id", eventId))
+          .first();
+        
+        if (event && entry.feedId === `user_${event.userId}`) {
+          continue;
+        }
+      }
+      
+      // Remove from discover feed and other user feeds
+      if (entry.feedId === "discover" || !keepCreatorFeed) {
+        await ctx.db.delete(entry._id);
+      }
+    }
+  },
+});
