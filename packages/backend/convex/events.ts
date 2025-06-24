@@ -228,9 +228,17 @@ export const getEventsForUserPaginated = query({
       .unique();
 
     if (!user) {
+      // Check if this might be a sync issue by looking at the auth context
+      const identity = await ctx.auth.getUserIdentity();
+      const isAuthenticatedUser = identity?.tokenIdentifier?.includes(userName);
+
       throw new ConvexError({
         message: "User not found",
-        data: { args },
+        data: {
+          args,
+          possibleSyncIssue: isAuthenticatedUser,
+          userName,
+        },
       });
     }
 
