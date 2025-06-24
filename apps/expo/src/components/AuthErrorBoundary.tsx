@@ -6,7 +6,7 @@ import { router } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
-import { deleteAuthData } from "~/hooks/useAuthSync";
+import { deleteAuthData } from "~/components/AuthAndTokenSync";
 import { logError } from "~/utils/errorLogging";
 
 type Handler = () => Promise<void>;
