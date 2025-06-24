@@ -1,7 +1,7 @@
 import { Migrations } from "@convex-dev/migrations";
 
 import type { DataModel } from "../_generated/dataModel.js";
-import { components } from "../_generated/api.js";
+import { components, internal } from "../_generated/api.js";
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
@@ -124,8 +124,10 @@ export const populateUserFeeds = migrations.define({
   },
 });
 
-// Runner function for the migration
-export const runPopulateUserFeeds = migrations.runner();
+// Specific runner for the populateUserFeeds migration
+export const runPopulateUserFeeds = migrations.runner(
+  internal.migrations.userFeedsMigration.populateUserFeeds,
+);
 
 // Optional: cleanup migration for orphaned entries
 export const cleanupOrphanedFeedEntries = migrations.define({
@@ -163,4 +165,6 @@ export const cleanupOrphanedFeedEntries = migrations.define({
   },
 });
 
-export const runCleanupOrphanedFeedEntries = migrations.runner();
+export const runCleanupOrphanedFeedEntries = migrations.runner(
+  internal.migrations.userFeedsMigration.cleanupOrphanedFeedEntries,
+);
