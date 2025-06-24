@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -15,6 +15,7 @@ import { useStableTimestamp } from "~/store";
 
 function MyFeedContent() {
   const { user } = useUser();
+  const currentUser = useQuery(api.users.getCurrentUser);
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
@@ -25,13 +26,13 @@ function MyFeedContent() {
 
   // Memoize query args to prevent unnecessary re-renders
   const queryArgs = useMemo(() => {
-    if (!user?.username) return "skip";
+    if (!user?.username || !currentUser) return "skip";
     return {
       userName: user.username,
       filter: "upcoming" as const,
       beforeThisDateTime: stableTimestamp,
     };
-  }, [user?.username, stableTimestamp]);
+  }, [user?.username, currentUser, stableTimestamp]);
 
   const {
     results: events,
