@@ -1,4 +1,3 @@
-import type { FunctionReference, PaginatedQueryArgs } from "convex/server";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePaginatedQuery } from "convex/react";
 import { ConvexError } from "convex/values";
@@ -22,13 +21,11 @@ interface UserAwarePaginatedQueryResult<T> {
  * with exponential backoff retry logic. This addresses the race condition
  * between Clerk authentication and Convex user synchronization.
  */
-export function useUserAwarePaginatedQuery<
-  Query extends FunctionReference<"query", "public", Record<string, unknown>, { page: unknown[]; status: string; loadMore: (numItems: number) => void }>,
->(
-  query: Query,
-  args: Query["_args"] | "skip",
+export function useUserAwarePaginatedQuery<T>(
+  query: Parameters<typeof usePaginatedQuery>[0],
+  args: Parameters<typeof usePaginatedQuery>[1],
   options?: { initialNumItems?: number; maxRetries?: number },
-): UserAwarePaginatedQueryResult<Query["_returnType"]["page"][number]> {
+): UserAwarePaginatedQueryResult<T> {
   const { maxRetries = 5, initialNumItems = 10 } = options ?? {};
 
   const [retryState, setRetryState] = useState<RetryState>({
@@ -40,7 +37,9 @@ export function useUserAwarePaginatedQuery<
   const [queryError, setQueryError] = useState<Error | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const mountedRef = useRef(true);
-  const stableResultRef = useRef<Query["_returnType"] | undefined>(undefined);
+  const stableResultRef = useRef<
+    ReturnType<typeof usePaginatedQuery> | undefined
+  >(undefined);
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -68,8 +67,8 @@ export function useUserAwarePaginatedQuery<
 
   // Always call the hook, but conditionally skip
   const queryResult = usePaginatedQuery(
-    shouldSkipQuery ? "skip" : query,
-    queryArgs,
+    shouldSkipQuery ? ("skip" as const) : query,
+    queryArgs as Parameters<typeof usePaginatedQuery>[1],
     { initialNumItems },
   );
 
@@ -166,9 +165,11 @@ export function useUserAwarePaginatedQuery<
   return {
     results: queryResult?.results,
     status: queryResult?.status ?? "LoadingFirstPage",
-    loadMore: queryResult?.loadMore ?? ((_numItems: number) => {
-      // No-op function when query is not available
-    }),
+    loadMore:
+      queryResult?.loadMore ??
+      ((_numItems: number) => {
+        // No-op function when query is not available
+      }),
     isUserSyncing,
     syncError,
   };

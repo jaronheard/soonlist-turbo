@@ -31,7 +31,8 @@ function safeStringify(obj: unknown): string {
  */
 function isUserSyncError(error: unknown): boolean {
   if (error instanceof ConvexError) {
-    const message = (error.data as { message?: string })?.message || error.message;
+    const message =
+      (error.data as { message?: string })?.message || error.message;
     return typeof message === "string" && message.includes("User not found");
   }
 
