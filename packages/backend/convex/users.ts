@@ -328,6 +328,65 @@ export const setOnboardingCompletedAt = mutation({
 });
 
 /**
+ * Helper function to ensure a user exists in the database.
+ * If the user doesn't exist, creates them using data from Clerk identity.
+ * This helps handle race conditions between Clerk auth and webhook sync.
+ */
+export const ensureUserExists = internalMutation({
+  args: {
+    username: v.string(),
+    clerkUserId: v.string(),
+    email: v.optional(v.string()),
+    displayName: v.optional(v.string()),
+    userImage: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // First check if user already exists
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", args.username))
+      .unique();
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    // Also check by Clerk ID in case username changed
+    const existingByClerkId = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", args.clerkUserId))
+      .unique();
+
+    if (existingByClerkId) {
+      return existingByClerkId;
+    }
+
+    // User doesn't exist, create them
+    const now = new Date().toISOString();
+    const newUserId = await ctx.db.insert("users", {
+      id: args.clerkUserId,
+      username: args.username,
+      email: args.email || "",
+      displayName: args.displayName || args.username,
+      userImage: args.userImage || "",
+      publicMetadata: {},
+      created_at: now,
+      updatedAt: now,
+      bio: null,
+      publicEmail: null,
+      publicPhone: null,
+      publicInsta: null,
+      publicWebsite: null,
+      emoji: null,
+      onboardingData: null,
+      onboardingCompletedAt: null,
+    });
+
+    return await ctx.db.get(newUserId);
+  },
+});
+
+/**
  * Internal mutation to sync user data from Clerk webhook
  */
 export const syncFromClerk = internalMutation({

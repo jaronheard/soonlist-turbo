@@ -9,6 +9,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
+import { UserSyncErrorBoundary } from "~/components/UserSyncErrorBoundary";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useStableTimestamp } from "~/store";
@@ -79,7 +80,9 @@ function MyFeed() {
       </Unauthenticated>
 
       <Authenticated>
-        <MyFeedContent />
+        <UserSyncErrorBoundary maxRetries={5}>
+          <MyFeedContent />
+        </UserSyncErrorBoundary>
       </Authenticated>
     </>
   );

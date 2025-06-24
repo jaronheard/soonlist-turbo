@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react-native";
+import { ConvexError } from "convex/values";
 
 /**
  * Safely stringifies an object, handling circular references
@@ -24,7 +25,26 @@ function safeStringify(obj: unknown): string {
 }
 
 /**
+ * Checks if an error is likely due to user sync delays between Clerk and Convex
+ * @param error The error to check
+ * @returns true if this appears to be a user sync delay error
+ */
+function isUserSyncError(error: unknown): boolean {
+  if (error instanceof ConvexError) {
+    const message = error.data?.message || error.message;
+    return typeof message === "string" && message.includes("User not found");
+  }
+  
+  if (error instanceof Error) {
+    return error.message?.includes("User not found") ?? false;
+  }
+  
+  return false;
+}
+
+/**
  * Logs an error to Sentry and optionally to the console in development.
+ * Handles user sync errors differently to avoid noise in error tracking.
  *
  * @param message A descriptive message about the error context
  * @param error The error object or string
@@ -64,9 +84,19 @@ export function logError(
     };
   }
 
+  // Check if this is a user sync error and handle differently
+  const isSyncError = isUserSyncError(error);
+  
   // Add the message as a tag for better categorization
   Sentry.withScope((scope) => {
     scope.setTag("errorContext", message);
+    
+    if (isSyncError) {
+      scope.setTag("errorType", "userSyncDelay");
+      scope.setLevel("info"); // Treat sync delays as info, not errors
+    } else {
+      scope.setTag("errorType", "application");
+    }
 
     if (additionalData) {
       Object.entries(additionalData).forEach(([key, value]) => {
@@ -74,7 +104,12 @@ export function logError(
       });
     }
 
-    Sentry.captureException(errorData);
+    if (isSyncError) {
+      // For sync errors, capture as a message rather than exception to reduce noise
+      Sentry.captureMessage(`User sync delay: ${message}`, "info");
+    } else {
+      Sentry.captureException(errorData);
+    }
   });
 }
 

@@ -1,6 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
+import { internal } from "./_generated/api";
 import {
   internalMutation,
   internalQuery,
@@ -222,16 +223,38 @@ export const getEventsForUserPaginated = query({
   handler: async (ctx, args) => {
     const { userName, filter, beforeThisDateTime } = args;
 
-    const user = await ctx.db
+    let user = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", userName))
       .unique();
 
+    // If user not found, try to create them using current auth identity
     if (!user) {
-      throw new ConvexError({
-        message: "User not found",
-        data: { args },
-      });
+      const identity = await ctx.auth.getUserIdentity();
+      
+      if (identity && identity.username === userName) {
+        // User is authenticated and requesting their own data, create the user record
+        try {
+          user = await ctx.runMutation(internal.users.ensureUserExists, {
+            username: userName,
+            clerkUserId: identity.subject,
+            email: identity.email,
+            displayName: identity.name || identity.given_name || identity.family_name || userName,
+            userImage: identity.picture || "",
+          });
+        } catch (error) {
+          console.error("Failed to create user on-demand:", error);
+          // Fall through to original error if user creation fails
+        }
+      }
+      
+      // If we still don't have a user, throw the original error
+      if (!user) {
+        throw new ConvexError({
+          message: "User not found",
+          data: { args },
+        });
+      }
     }
 
     // Get followed event IDs efficiently
