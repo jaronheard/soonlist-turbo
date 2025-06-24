@@ -1,4 +1,5 @@
-import React, { Component, ReactNode } from "react";
+import React, { Component } from "react";
+import type { ReactNode } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { ConvexError } from "convex/values";
 
@@ -70,12 +71,12 @@ export class UserSyncErrorBoundary extends Component<
   private isUserNotFoundError(error: Error): boolean {
     // Check for ConvexError with "User not found" message
     if (error instanceof ConvexError) {
-      const message = error.data?.message || error.message;
+      const message = (error.data as { message?: string })?.message || error.message;
       return typeof message === "string" && message.includes("User not found");
     }
 
     // Check for regular Error with "User not found" in message
-    return error.message?.includes("User not found") ?? false;
+    return error.message.includes("User not found");
   }
 
   private scheduleRetry = () => {

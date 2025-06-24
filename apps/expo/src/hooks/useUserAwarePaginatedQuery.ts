@@ -23,7 +23,7 @@ interface UserAwarePaginatedQueryResult<T> {
  * between Clerk authentication and Convex user synchronization.
  */
 export function useUserAwarePaginatedQuery<
-  Query extends FunctionReference<"query", "public", PaginatedQueryArgs, any>,
+  Query extends FunctionReference<"query", "public", Record<string, unknown>, { page: unknown[]; status: string; loadMore: (numItems: number) => void }>,
 >(
   query: Query,
   args: Query["_args"] | "skip",
@@ -38,9 +38,9 @@ export function useUserAwarePaginatedQuery<
   });
 
   const [queryError, setQueryError] = useState<Error | null>(null);
-  const retryTimeoutRef = useRef<NodeJS.Timeout>();
+  const retryTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const mountedRef = useRef(true);
-  const stableResultRef = useRef<any>(undefined);
+  const stableResultRef = useRef<Query["_returnType"] | undefined>(undefined);
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -66,14 +66,15 @@ export function useUserAwarePaginatedQuery<
   const shouldSkipQuery = args === "skip" || retryState.isRetrying;
   const queryArgs = shouldSkipQuery ? "skip" : args;
 
-  // Use a try-catch wrapper to capture ConvexErrors
-  let queryResult;
-  try {
-    queryResult = usePaginatedQuery(query, queryArgs, {
-      initialNumItems,
-    });
+  // Always call the hook, but conditionally skip
+  const queryResult = usePaginatedQuery(
+    shouldSkipQuery ? "skip" : query,
+    queryArgs,
+    { initialNumItems },
+  );
 
-    // Clear any previous error if query succeeds
+  // Handle query results and errors in effects
+  useEffect(() => {
     if (queryResult && queryError) {
       setQueryError(null);
     }
@@ -86,15 +87,7 @@ export function useUserAwarePaginatedQuery<
     ) {
       stableResultRef.current = queryResult;
     }
-  } catch (error) {
-    // Capture the error for retry logic
-    if (error instanceof Error) {
-      setQueryError(error);
-    }
-
-    // Return stable results while handling error
-    queryResult = stableResultRef.current;
-  }
+  }, [queryResult, queryError]);
 
   const scheduleRetry = useCallback(
     (error: Error, attempt: number) => {
@@ -118,7 +111,7 @@ export function useUserAwarePaginatedQuery<
 
       retryTimeoutRef.current = setTimeout(() => {
         if (mountedRef.current) {
-          setRetryState((prev) => ({
+          setRetryState((_prev) => ({
             attempt: attempt + 1,
             isRetrying: false,
             lastError: null,
@@ -173,7 +166,9 @@ export function useUserAwarePaginatedQuery<
   return {
     results: queryResult?.results,
     status: queryResult?.status ?? "LoadingFirstPage",
-    loadMore: queryResult?.loadMore ?? (() => {}),
+    loadMore: queryResult?.loadMore ?? ((_numItems: number) => {
+      // No-op function when query is not available
+    }),
     isUserSyncing,
     syncError,
   };

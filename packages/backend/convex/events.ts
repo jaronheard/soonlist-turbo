@@ -1,7 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
-import { internal } from "./_generated/api";
+
 import {
   internalMutation,
   internalQuery,
@@ -223,12 +223,12 @@ export const getEventsForUserPaginated = query({
   handler: async (ctx, args) => {
     const { userName, filter, beforeThisDateTime } = args;
 
-    let user = await ctx.db
+    const user = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", userName))
       .unique();
 
-    // If user not found, try to create them using current auth identity
+    // If user not found, check if this might be a sync delay issue
     if (!user) {
       const identity = await ctx.auth.getUserIdentity();
 
@@ -256,7 +256,24 @@ export const getEventsForUserPaginated = query({
       if (!user) {
         throw new ConvexError({
           message: "User not found",
-          data: { args },
+          data: {
+            args,
+            errorType: "user_sync_delay",
+            isAuthenticated: true,
+            requestedUser: userName,
+            authenticatedUser: identity.username,
+          },
+        });
+      } else {
+        // User genuinely doesn't exist or user is not authenticated
+        throw new ConvexError({
+          message: "User not found",
+          data: {
+            args,
+            errorType: "user_not_found",
+            isAuthenticated: !!identity,
+            requestedUser: userName,
+          },
         });
       }
     }
