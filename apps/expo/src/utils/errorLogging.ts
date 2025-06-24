@@ -34,11 +34,11 @@ function isUserSyncError(error: unknown): boolean {
     const message = error.data?.message || error.message;
     return typeof message === "string" && message.includes("User not found");
   }
-  
+
   if (error instanceof Error) {
     return error.message?.includes("User not found") ?? false;
   }
-  
+
   return false;
 }
 
@@ -86,11 +86,11 @@ export function logError(
 
   // Check if this is a user sync error and handle differently
   const isSyncError = isUserSyncError(error);
-  
+
   // Add the message as a tag for better categorization
   Sentry.withScope((scope) => {
     scope.setTag("errorContext", message);
-    
+
     if (isSyncError) {
       scope.setTag("errorType", "userSyncDelay");
       scope.setLevel("info"); // Treat sync delays as info, not errors

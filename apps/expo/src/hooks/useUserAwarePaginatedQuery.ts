@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionReference, PaginatedQueryArgs } from "convex/server";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePaginatedQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 
@@ -27,10 +27,10 @@ export function useUserAwarePaginatedQuery<
 >(
   query: Query,
   args: Query["_args"] | "skip",
-  options?: { initialNumItems?: number; maxRetries?: number }
+  options?: { initialNumItems?: number; maxRetries?: number },
 ): UserAwarePaginatedQueryResult<Query["_returnType"]["page"][number]> {
   const { maxRetries = 5, initialNumItems = 10 } = options ?? {};
-  
+
   const [retryState, setRetryState] = useState<RetryState>({
     attempt: 0,
     isRetrying: false,
@@ -72,14 +72,18 @@ export function useUserAwarePaginatedQuery<
     queryResult = usePaginatedQuery(query, queryArgs, {
       initialNumItems,
     });
-    
+
     // Clear any previous error if query succeeds
     if (queryResult && queryError) {
       setQueryError(null);
     }
-    
+
     // Store successful results for stable returns
-    if (queryResult && queryResult.status !== "LoadingMore" && queryResult.status !== "LoadingFirstPage") {
+    if (
+      queryResult &&
+      queryResult.status !== "LoadingMore" &&
+      queryResult.status !== "LoadingFirstPage"
+    ) {
       stableResultRef.current = queryResult;
     }
   } catch (error) {
@@ -87,71 +91,84 @@ export function useUserAwarePaginatedQuery<
     if (error instanceof Error) {
       setQueryError(error);
     }
-    
+
     // Return stable results while handling error
     queryResult = stableResultRef.current;
   }
 
-  const scheduleRetry = useCallback((error: Error, attempt: number) => {
-    if (attempt >= maxRetries || !mountedRef.current) {
-      setRetryState(prev => ({
+  const scheduleRetry = useCallback(
+    (error: Error, attempt: number) => {
+      if (attempt >= maxRetries || !mountedRef.current) {
+        setRetryState((prev) => ({
+          ...prev,
+          isRetrying: false,
+          lastError: error,
+        }));
+        return;
+      }
+
+      // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+      const delay = Math.min(1000 * Math.pow(2, attempt), 16000);
+
+      setRetryState((prev) => ({
         ...prev,
-        isRetrying: false,
+        isRetrying: true,
         lastError: error,
       }));
-      return;
-    }
 
-    // Exponential backoff: 1s, 2s, 4s, 8s, 16s
-    const delay = Math.min(1000 * Math.pow(2, attempt), 16000);
-    
-    setRetryState(prev => ({
-      ...prev,
-      isRetrying: true,
-      lastError: error,
-    }));
-
-    retryTimeoutRef.current = setTimeout(() => {
-      if (mountedRef.current) {
-        setRetryState(prev => ({
-          attempt: attempt + 1,
-          isRetrying: false,
-          lastError: null,
-        }));
-      }
-    }, delay);
-  }, [maxRetries]);
+      retryTimeoutRef.current = setTimeout(() => {
+        if (mountedRef.current) {
+          setRetryState((prev) => ({
+            attempt: attempt + 1,
+            isRetrying: false,
+            lastError: null,
+          }));
+        }
+      }, delay);
+    },
+    [maxRetries],
+  );
 
   // Check for "User not found" errors and handle retries
   useEffect(() => {
     if (!queryError || retryState.isRetrying) return;
 
-    const isUserNotFoundError = 
-      queryError instanceof ConvexError &&
-      (queryError.data?.message === "User not found" ||
-       (typeof queryError.data === "object" && 
-        queryError.data !== null && 
-        "message" in queryError.data && 
-        queryError.data.message === "User not found")) ||
+    const isUserNotFoundError =
+      (queryError instanceof ConvexError &&
+        (queryError.data?.message === "User not found" ||
+          (typeof queryError.data === "object" &&
+            queryError.data !== null &&
+            "message" in queryError.data &&
+            queryError.data.message === "User not found"))) ||
       queryError.message?.includes("User not found");
 
     if (isUserNotFoundError && retryState.attempt < maxRetries) {
       scheduleRetry(queryError, retryState.attempt);
     } else if (!isUserNotFoundError) {
       // For non-user-not-found errors, don't retry
-      setRetryState(prev => ({
+      setRetryState((prev) => ({
         ...prev,
         lastError: queryError,
       }));
     }
-  }, [queryError, retryState.isRetrying, retryState.attempt, scheduleRetry, maxRetries]);
+  }, [
+    queryError,
+    retryState.isRetrying,
+    retryState.attempt,
+    scheduleRetry,
+    maxRetries,
+  ]);
 
   // Determine if we're in a user syncing state
-  const isUserSyncing = retryState.isRetrying || 
-    (retryState.attempt > 0 && retryState.attempt < maxRetries && !retryState.lastError);
+  const isUserSyncing =
+    retryState.isRetrying ||
+    (retryState.attempt > 0 &&
+      retryState.attempt < maxRetries &&
+      !retryState.lastError);
 
   // If we've exhausted retries and have a user not found error, treat it as sync error
-  const syncError = retryState.attempt >= maxRetries ? retryState.lastError : null;
+  const syncError =
+    retryState.attempt >= maxRetries ? retryState.lastError : null;
 
   return {
     results: queryResult?.results,
@@ -161,4 +178,3 @@ export function useUserAwarePaginatedQuery<
     syncError,
   };
 }
-
