@@ -67,7 +67,7 @@ export function useUserAwarePaginatedQuery<T>(
 
   // Always call the hook, but conditionally skip
   const queryResult = usePaginatedQuery(
-    shouldSkipQuery ? ("skip" as const) : query,
+    (shouldSkipQuery ? "skip" : query) as Parameters<typeof usePaginatedQuery>[0],
     queryArgs as Parameters<typeof usePaginatedQuery>[1],
     { initialNumItems },
   );
