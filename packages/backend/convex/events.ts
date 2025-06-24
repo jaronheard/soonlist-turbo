@@ -227,11 +227,35 @@ export const getEventsForUserPaginated = query({
       .withIndex("by_username", (q) => q.eq("username", userName))
       .unique();
 
+    // If user not found, check if this might be a sync delay issue
     if (!user) {
-      throw new ConvexError({
-        message: "User not found",
-        data: { args },
-      });
+      const identity = await ctx.auth.getUserIdentity();
+
+      if (identity && identity.username === userName) {
+        // User is authenticated but not yet synced to Convex
+        // This is likely a race condition between Clerk auth and webhook sync
+        throw new ConvexError({
+          message: "User not found",
+          data: {
+            args,
+            errorType: "user_sync_delay",
+            isAuthenticated: true,
+            requestedUser: userName,
+            authenticatedUser: identity.username,
+          },
+        });
+      } else {
+        // User genuinely doesn't exist or user is not authenticated
+        throw new ConvexError({
+          message: "User not found",
+          data: {
+            args,
+            errorType: "user_not_found",
+            isAuthenticated: !!identity,
+            requestedUser: userName,
+          },
+        });
+      }
     }
 
     // Get followed event IDs efficiently
