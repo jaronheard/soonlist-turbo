@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useMutation } from "convex/react";
@@ -7,6 +14,7 @@ import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { getAuthData } from "~/components/AuthAndTokenSync";
 import { Button } from "~/components/Button";
 
 interface TestResult {
@@ -183,6 +191,26 @@ export default function WorkflowTestScreen() {
         newSet.delete("Direct Notification");
         return newSet;
       });
+    }
+  };
+
+  const testAccessGroups = async () => {
+    try {
+      const authData = await getAuthData();
+      if (authData) {
+        console.log("✅ Access groups working! Auth data:", {
+          username: authData.username,
+          hasToken: !!authData.authToken,
+          email: authData.email,
+        });
+        Alert.alert("✅ Access groups working! Check console for details.");
+      } else {
+        console.log("❌ No auth data found");
+        Alert.alert("❌ No auth data found - user may not be logged in");
+      }
+    } catch (error) {
+      console.error("❌ Access groups test failed:", error);
+      Alert.alert("❌ Access groups test failed - check console");
     }
   };
 
@@ -392,6 +420,24 @@ export default function WorkflowTestScreen() {
             >
               Test Direct Notification
             </Button>
+          </View>
+
+          {/* Access Groups Test */}
+          <View className="mb-4 rounded-lg bg-slate-100 p-4">
+            <Text className="mb-2 text-lg font-semibold">
+              Access Groups Test
+            </Text>
+            <Text className="mb-3 text-sm text-slate-600">
+              Test if the share extension can access authentication data.
+            </Text>
+            <Pressable
+              onPress={testAccessGroups}
+              className="rounded-lg bg-blue-500 px-4 py-2"
+            >
+              <Text className="text-center font-medium text-white">
+                Test Access Groups
+              </Text>
+            </Pressable>
           </View>
 
           {/* Results */}

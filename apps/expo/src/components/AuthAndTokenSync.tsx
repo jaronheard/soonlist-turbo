@@ -6,8 +6,8 @@ import { useConvexAuth } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
+import { getAccessGroup } from "~/utils/getAccessGroup";
 
 const saveAuthData = async (authData: {
   username: string | null;
@@ -17,10 +17,7 @@ const saveAuthData = async (authData: {
   try {
     await SecureStore.setItemAsync("authData", JSON.stringify(authData), {
       keychainAccessible: SecureStore.WHEN_UNLOCKED,
-      accessGroup:
-        Config.env === "development"
-          ? "group.com.soonlist.dev"
-          : "group.com.soonlist",
+      accessGroup: getAccessGroup(),
     });
   } catch (error) {
     logError("Error saving auth data", error);
@@ -30,13 +27,33 @@ const saveAuthData = async (authData: {
 export const deleteAuthData = async () => {
   try {
     await SecureStore.deleteItemAsync("authData", {
-      accessGroup:
-        Config.env === "development"
-          ? "group.com.soonlist.dev"
-          : "group.com.soonlist",
+      accessGroup: getAccessGroup(),
     });
   } catch (error: unknown) {
     logError("Error deleting auth data", error);
+  }
+};
+
+// Debug function to verify access group functionality
+export const getAuthData = async (): Promise<{
+  username: string | null;
+  authToken: string | null;
+  email: string | null;
+} | null> => {
+  try {
+    const data = await SecureStore.getItemAsync("authData", {
+      accessGroup: getAccessGroup(),
+    });
+    return data
+      ? (JSON.parse(data) as {
+          username: string | null;
+          authToken: string | null;
+          email: string | null;
+        })
+      : null;
+  } catch (error) {
+    logError("Error getting auth data", error);
+    return null;
   }
 };
 

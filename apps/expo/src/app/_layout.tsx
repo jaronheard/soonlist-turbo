@@ -38,6 +38,7 @@ import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getUserTimeZone } from "~/utils/dates";
 import { logDebug, logError } from "~/utils/errorLogging";
+import { getAccessGroup } from "~/utils/getAccessGroup";
 
 const styles = StyleSheet.create({
   container: {
@@ -77,14 +78,27 @@ export const unstable_settings = {
 const tokenCache = {
   async getToken(key: string) {
     try {
-      return SecureStore.getItemAsync(key);
+      return SecureStore.getItemAsync(key, {
+        accessGroup: getAccessGroup(),
+      });
     } catch {
       return null;
     }
   },
   async saveToken(key: string, value: string) {
     try {
-      return SecureStore.setItemAsync(key, value);
+      return SecureStore.setItemAsync(key, value, {
+        accessGroup: getAccessGroup(),
+      });
+    } catch {
+      return;
+    }
+  },
+  async clearToken(key: string) {
+    try {
+      return SecureStore.deleteItemAsync(key, {
+        accessGroup: getAccessGroup(),
+      });
     } catch {
       return;
     }
