@@ -25,13 +25,13 @@ export default function AuthLayout() {
   return (
     <>
       <AuthLoading>
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" />
         </View>
       </AuthLoading>
       <Unauthenticated>
         {/* Stack for unauthenticated users */}
-        <View style={{ flex: 1 }}>
+        <View className="flex-1">
           <Stack
             screenOptions={{ headerShown: false }}
           >
@@ -40,14 +40,7 @@ export default function AuthLayout() {
             <Stack.Screen name="sign-up-email" />
             <Stack.Screen name="verify-email" />
           </Stack>
-          <View
-            style={{
-              position: "absolute",
-              bottom: 16,
-              width: "100%",
-              alignItems: "center",
-            }}
-          >
+          <View className="absolute bottom-4 w-full items-center">
             <ResetAuthButton />
           </View>
         </View>
@@ -58,7 +51,7 @@ export default function AuthLayout() {
         {/* Now we handle the state of the 'user' query */}
         {user === undefined ? (
           // user query is loading (or was skipped and now isAuthenticated is true, so it's re-fetching)
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" />
           </View>
         ) : !user?.onboardingCompletedAt ? (
