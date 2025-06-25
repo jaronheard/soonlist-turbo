@@ -27,8 +27,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner-native";
 
 import { AuthErrorProvider } from "~/components/AuthErrorBoundary";
-import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
+import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useCalendar } from "~/hooks/useCalendar";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
