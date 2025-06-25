@@ -1,19 +1,24 @@
 import { ActivityIndicator, View } from "react-native";
 import { Redirect, Stack } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
   useConvexAuth,
   useQuery,
+  useMutation,
 } from "convex/react";
+import { useEffect } from "react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { ResetAuthButton } from "~/components/auth/ResetAuthButton";
+import { GUEST_USER_KEY, HAS_GUEST_EVENTS_KEY } from "~/hooks/useGuestUser";
 
 export default function AuthLayout() {
   const { isAuthenticated } = useConvexAuth();
+  const transferGuestEvents = useMutation(api.guestEvents.transferGuestEvents);
 
   // Fetch user data only when authenticated.
   // Pass "skip" to useQuery to prevent it from running if not authenticated.
@@ -21,6 +26,31 @@ export default function AuthLayout() {
     api.users.getCurrentUser,
     isAuthenticated ? {} : "skip",
   );
+
+  // Handle guest event transfer when user becomes authenticated
+  useEffect(() => {
+    const handleGuestEventTransfer = async () => {
+      if (isAuthenticated && user?.onboardingCompletedAt) {
+        try {
+          const hasGuestEvents = await AsyncStorage.getItem(HAS_GUEST_EVENTS_KEY);
+          const guestUserId = await AsyncStorage.getItem(GUEST_USER_KEY);
+
+          if (hasGuestEvents === "true" && guestUserId) {
+            console.log("Transferring guest events for user:", guestUserId);
+            const transferredCount = await transferGuestEvents({ guestUserId });
+            console.log(`Transferred ${transferredCount} guest events`);
+
+            // Clean up guest data after successful transfer
+            await AsyncStorage.multiRemove([HAS_GUEST_EVENTS_KEY, GUEST_USER_KEY]);
+          }
+        } catch (error) {
+          console.error("Failed to transfer guest events:", error);
+        }
+      }
+    };
+
+    handleGuestEventTransfer();
+  }, [isAuthenticated, user?.onboardingCompletedAt, transferGuestEvents]);
 
   return (
     <>

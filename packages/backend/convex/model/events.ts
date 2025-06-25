@@ -432,10 +432,12 @@ export async function getEventById(ctx: QueryCtx, eventId: string) {
   }
 
   // Get related data
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
-    .unique();
+  const user = event.userId
+    ? await ctx.db
+        .query("users")
+        .withIndex("by_custom_id", (q) => q.eq("id", event.userId!))
+        .unique()
+    : null;
 
   const eventFollows = await ctx.db
     .query("eventFollows")
@@ -569,13 +571,15 @@ export async function getDiscoverEvents(
  */
 export async function createEvent(
   ctx: MutationCtx,
-  userId: string,
+  userId: string | undefined,
   userName: string,
   eventData: EventData,
   eventMetadata?: EventMetadataLoose,
   comment?: string,
   lists?: { value: string }[],
   visibility?: "public" | "private",
+  ownerToken?: string,
+  isGuest?: boolean,
 ) {
   const eventId = generatePublicId();
 
@@ -592,6 +596,8 @@ export async function createEvent(
     id: eventId,
     userId,
     userName,
+    ownerToken: ownerToken || userId,
+    isGuest: isGuest || false,
     event: eventData,
     eventMetadata,
     startDateTime: startDateTime.toISOString(),
@@ -611,8 +617,8 @@ export async function createEvent(
     description: eventData.description,
   });
 
-  // Add comment if provided
-  if (comment && comment.length > 0) {
+  // Add comment if provided (only for authenticated users)
+  if (comment && comment.length > 0 && userId) {
     await ctx.db.insert("comments", {
       content: comment,
       userId,
@@ -636,13 +642,15 @@ export async function createEvent(
     }
   }
 
-  // Add event to feeds
-  await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
-    eventId,
-    userId,
-    visibility: visibility || "public",
-    startDateTime: startDateTime.toISOString(),
-  });
+  // Add event to feeds (only for authenticated users)
+  if (userId) {
+    await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
+      eventId,
+      userId,
+      visibility: visibility || "public",
+      startDateTime: startDateTime.toISOString(),
+    });
+  }
 
   return { id: eventId };
 }
@@ -777,13 +785,15 @@ export async function updateEvent(
       });
     }
 
-    // Update event in feeds with new visibility and/or time
-    await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
-      eventId,
-      userId: existingEvent.userId,
-      visibility: visibility || existingEvent.visibility,
-      startDateTime: startDateTime.toISOString(),
-    });
+    // Update event in feeds with new visibility and/or time (only if userId exists)
+    if (existingEvent.userId) {
+      await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
+        eventId,
+        userId: existingEvent.userId,
+        visibility: visibility || existingEvent.visibility,
+        startDateTime: startDateTime.toISOString(),
+      });
+    }
   }
 
   return { id: eventId };

@@ -5,23 +5,21 @@ import { useConvexAuth, useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { useAppStore } from "~/store";
+
 export default function OnboardingIndex() {
   const { user: clerkUser } = useUser();
   const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
+  const hasSeenOnboarding = useAppStore((state) => state.hasSeenOnboarding);
 
-  // Get user data from our database using Convex
+  // Get user data from our database using Convex (only for authenticated users)
   const user = useQuery(
     api.users.getById,
     clerkUser?.id ? { id: clerkUser.id } : "skip",
   );
 
-  // Following Convex + Clerk pattern: combine authentication state with user existence check
-  // Show loading if auth is loading OR if we're authenticated but user data is still loading
-  const isLoading =
-    authLoading || (isAuthenticated && clerkUser?.id && user === undefined);
-
-  // Show loading spinner while authentication is loading or user data is being fetched
-  if (isLoading) {
+  // Show loading only if we're checking authentication
+  if (authLoading) {
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" />
@@ -29,25 +27,17 @@ export default function OnboardingIndex() {
     );
   }
 
-  // If not authenticated, redirect to sign-up
-  if (!isAuthenticated) {
-    return <Redirect href="/(auth)/sign-up" />;
+  // If user has already seen onboarding (guest or authenticated)
+  if (hasSeenOnboarding) {
+    // If authenticated, go to feed
+    if (isAuthenticated && user) {
+      return <Redirect href="/(tabs)/feed" />;
+    }
+    // If not authenticated, go to sign-in
+    return <Redirect href="/(auth)/sign-in" />;
   }
 
-  // If authenticated but user is null (not stored in database yet), redirect to sign-up
-  if (isAuthenticated && user === null) {
-    return <Redirect href="/(auth)/sign-up" />;
-  }
-
-  // At this point, user should be defined
-  if (!user) {
-    return <Redirect href="/(auth)/sign-up" />;
-  }
-
-  if (user.onboardingCompletedAt) {
-    return <Redirect href="/feed" />;
-  }
-
-  // Otherwise, start from the beginning
-  return <Redirect href="/onboarding/01-notifications" />;
+  // New users (guest or authenticated) start onboarding
+  // Start from the welcome screen (to be created)
+  return <Redirect href="/(onboarding)/onboarding/01-notifications" />;
 }

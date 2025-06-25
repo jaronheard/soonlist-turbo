@@ -69,11 +69,13 @@ async function queryFeed(
         if (filter === "past" && eventStartTime >= referenceTime) return null;
       }
 
-      // Fetch the user who created the event
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
-        .first();
+      // Fetch the user who created the event (if userId exists)
+      const user = event.userId
+        ? await ctx.db
+            .query("users")
+            .withIndex("by_custom_id", (q) => q.eq("id", event.userId!))
+            .first()
+        : null;
 
       return {
         ...event,
