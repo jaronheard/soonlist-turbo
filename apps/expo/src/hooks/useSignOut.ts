@@ -40,11 +40,18 @@ export const useSignOut = () => {
 
     // Step 3: Clean up local data and third-party sessions.
     // These should not require auth and can run concurrently.
-    await Promise.all([
+    const logoutResults = await Promise.allSettled([
       Intercom.logout(),
       revenueCatLogout(),
       OneSignal.logout(),
     ]);
+
+    logoutResults.forEach((result, index) => {
+      if (result.status === "rejected") {
+        const services = ["Intercom", "RevenueCat", "OneSignal"];
+        logError(`Failed to logout from ${services[index]}`, result.reason);
+      }
+    });
 
     // Step 4: Reset local app state AFTER successful sign out.
     resetStore();
