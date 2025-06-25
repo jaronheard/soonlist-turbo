@@ -5,7 +5,6 @@ import { useMutation } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { deleteAuthData } from "~/components/AuthAndTokenSync";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { logError } from "~/utils/errorLogging";
@@ -44,7 +43,6 @@ export const useSignOut = () => {
     await Promise.all([
       Intercom.logout(),
       revenueCatLogout(),
-      deleteAuthData(),
       OneSignal.logout(),
     ]);
 

@@ -6,7 +6,6 @@ import { router } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
 import { toast } from "sonner-native";
 
-import { deleteAuthData } from "~/components/AuthAndTokenSync";
 import { logError } from "~/utils/errorLogging";
 
 type Handler = () => Promise<void>;
@@ -64,11 +63,10 @@ export function AuthErrorProvider({ children }: { children: ReactNode }) {
 
   const handleAuthenticationError: Handler = async () => {
     try {
-      await deleteAuthData();
       await signOut(); // clerk flush + revoke
       toast.error("Session expired. Please sign in again.");
     } finally {
-      router.replace("/sign-in");
+      router.replace("/(auth)/sign-in");
     }
   };
 
