@@ -26,9 +26,9 @@ import Constants, { AppOwnership } from "expo-constants";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner-native";
 
-import AuthAndTokenSync from "~/components/AuthAndTokenSync";
-import { AuthErrorBoundary } from "~/components/AuthErrorBoundary";
+import { AuthErrorProvider } from "~/components/AuthErrorBoundary";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
+import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useCalendar } from "~/hooks/useCalendar";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
@@ -74,21 +74,34 @@ export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
 
+// Custom token cache for Clerk
 const tokenCache = {
-  getToken: async (key: string) => {
-    return await SecureStore.getItemAsync(key, {
-      accessGroup: getAccessGroup(),
-    });
+  async getToken(key: string) {
+    try {
+      return SecureStore.getItemAsync(key, {
+        accessGroup: getAccessGroup(),
+      });
+    } catch {
+      return null;
+    }
   },
-  saveToken: (key: string, value: string) => {
-    return SecureStore.setItemAsync(key, value, {
-      accessGroup: getAccessGroup(),
-    });
+  async saveToken(key: string, value: string) {
+    try {
+      return SecureStore.setItemAsync(key, value, {
+        accessGroup: getAccessGroup(),
+      });
+    } catch {
+      return;
+    }
   },
-  clearToken: (key: string) => {
-    return SecureStore.deleteItemAsync(key, {
-      accessGroup: getAccessGroup(),
-    });
+  async clearToken(key: string) {
+    try {
+      return SecureStore.deleteItemAsync(key, {
+        accessGroup: getAccessGroup(),
+      });
+    } catch {
+      return;
+    }
   },
 };
 
@@ -174,6 +187,7 @@ function RootLayout() {
                       },
                     }}
                   >
+                    <PostHogIdentityTracker />
                     <OneSignalProvider>
                       <RevenueCatProvider>
                         <RootLayoutContent />
@@ -297,10 +311,9 @@ function RootLayoutContent() {
 
   return (
     <View style={{ flex: 1 }}>
-      <AuthAndTokenSync />
-      <AuthErrorBoundary>
+      <AuthErrorProvider>
         <InitialLayout />
-      </AuthErrorBoundary>
+      </AuthErrorProvider>
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
       <CalendarSelectionModal
         onSelect={handleCalendarSelect}

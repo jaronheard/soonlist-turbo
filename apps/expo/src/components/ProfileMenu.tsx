@@ -17,6 +17,13 @@ export function ProfileMenu() {
   const { isAuthenticated } = useConvexAuth();
   const signOut = useSignOut();
 
+  const handleSignOut = () => {
+    signOut().catch((error) => {
+      logError("Error during sign out process", error);
+      // Optionally, you could show a toast to the user here
+    });
+  };
+
   const handleEditProfile = () => {
     router.push("/settings/account");
   };
@@ -97,7 +104,7 @@ export function ProfileMenu() {
           <DropdownMenu.ItemTitle>Support</DropdownMenu.ItemTitle>
         </DropdownMenu.Item>
 
-        <DropdownMenu.Item key="sign-out" onSelect={signOut} destructive>
+        <DropdownMenu.Item key="sign-out" onSelect={handleSignOut} destructive>
           <DropdownMenu.ItemIcon
             ios={{
               name: "rectangle.portrait.and.arrow.right",
