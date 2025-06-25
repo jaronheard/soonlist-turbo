@@ -74,7 +74,7 @@ export default function AuthAndTokenSync() {
           if (cancelled) return;
 
           Sentry.setUser({ id: userId, username, email });
-          posthog.identify(userId, { username, email: email || "" });
+          posthog.identify(userId, { username, email: email ?? "" });
         } else if (!isSignedIn) {
           // USER IS SIGNED OUT
           if (cancelled) return;
