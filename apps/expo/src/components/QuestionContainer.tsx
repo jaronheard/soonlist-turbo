@@ -6,6 +6,7 @@ import { ProgressBar } from "./ProgressBar";
 
 interface QuestionContainerProps {
   question: string;
+  subtitle?: string;
   children: React.ReactNode;
   currentStep: number;
   totalSteps: number;
@@ -13,6 +14,7 @@ interface QuestionContainerProps {
 
 export function QuestionContainer({
   question,
+  subtitle,
   children,
   currentStep,
   totalSteps,
@@ -22,11 +24,14 @@ export function QuestionContainer({
       <ProgressBar
         currentStep={currentStep}
         totalSteps={totalSteps}
-        backgroundColor="bg-white"
-        foregroundColor="bg-interactive-2"
+        backgroundColor="bg-neutral-3"
+        foregroundColor="bg-neutral-1"
       />
       <View className="flex-1 px-6 pt-8">
-        <Text className="mb-8 text-2xl font-bold text-white">{question}</Text>
+        <Text className="mb-8 text-3xl font-bold text-white">{question}</Text>
+        {subtitle && (
+          <Text className="-mt-4 mb-4 text-xl font-medium text-white/80">{subtitle}</Text>
+        )}
         {children}
       </View>
     </SafeAreaView>

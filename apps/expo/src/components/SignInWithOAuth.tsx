@@ -2,7 +2,7 @@ import type { ClerkAPIError, OAuthStrategy } from "@clerk/types";
 import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
+import Animated, { Layout } from "react-native-reanimated";
 import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -266,38 +266,30 @@ const SignInWithOAuth = () => {
             className="relative w-full shrink-0"
             layout={Layout.duration(400)}
           >
-            <AppleSignInButton
-              onPress={() => void handleOAuthFlow("oauth_apple")}
-            />
-            <View className="h-3" />
-            <AnimatedPressable
-              onPress={toggleOtherOptions}
-              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
-            >
-              <Text className="text-base font-medium text-gray-700">
-                Other Options
-              </Text>
-              {showOtherOptions && (
-                <View className="absolute right-6">
-                  <X size={20} color="#374151" />
-                </View>
-              )}
-            </AnimatedPressable>
-            {showOtherOptions && (
-              <AnimatedView
-                entering={FadeIn.duration(400)}
-                exiting={FadeOut.duration(300)}
-                layout={Layout.duration(400)}
-                className="absolute bottom-full w-full"
-              >
-                <View className="h-3" />
-                <EmailSignInButton onPress={navigateToEmailSignUp} />
+            {!showOtherOptions ? (
+              <>
+                <AppleSignInButton
+                  onPress={() => void handleOAuthFlow("oauth_apple")}
+                />
                 <View className="h-3" />
                 <GoogleSignInButton
                   onPress={() => void handleOAuthFlow("oauth_google")}
                 />
                 <View className="h-3" />
-              </AnimatedView>
+                <EmailSignInButton onPress={navigateToEmailSignUp} />
+              </>
+            ) : (
+              <AnimatedPressable
+                onPress={toggleOtherOptions}
+                className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
+              >
+                <Text className="text-base font-medium text-gray-700">
+                  Hide Options
+                </Text>
+                <View className="absolute right-6">
+                  <X size={20} color="#374151" />
+                </View>
+              </AnimatedPressable>
             )}
           </AnimatedView>
         </AnimatedView>

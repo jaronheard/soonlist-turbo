@@ -22,7 +22,8 @@ export const onboardingDataValidator = v.object({
   source: v.optional(v.string()),
   discoveryMethod: v.optional(v.string()),
   screenshotEvents: v.optional(v.string()),
-  priority: v.optional(priorityValidator),
+  goals: v.optional(v.array(v.string())), // Multi-select goals
+  priority: v.optional(priorityValidator), // Keep for backward compatibility
   completedAt: v.optional(v.string()), // ISO date string
 });
 

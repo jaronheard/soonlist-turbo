@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { Stack } from "expo-router";
 
-export const TOTAL_ONBOARDING_STEPS = 10;
+export const TOTAL_ONBOARDING_STEPS = 12;
 
 export default function OnboardingLayout() {
   return (

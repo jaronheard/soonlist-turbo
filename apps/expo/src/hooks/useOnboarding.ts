@@ -10,20 +10,24 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import { useAppStore } from "~/store";
 import { logError } from "~/utils/errorLogging";
+import { useGuestUser } from "./useGuestUser";
 
 export function useOnboarding() {
   const { user } = useUser();
+  const { guestUserId } = useGuestUser();
   const posthog = usePostHog();
   const {
     setOnboardingData,
     setCurrentOnboardingStep,
     setHasCompletedOnboarding,
+    setHasSeenOnboarding,
   } = useAppStore();
 
   const saveOnboardingDataMutation = useMutation(api.users.saveOnboardingData);
   const setOnboardingCompletedAtMutation = useMutation(
     api.users.setOnboardingCompletedAt,
   );
+  const saveGuestOnboardingDataMutation = useMutation(api.guestOnboarding.saveGuestOnboardingData);
 
   // Query to get current onboarding data (for invalidation purposes)
   const onboardingData = useQuery(
@@ -32,15 +36,20 @@ export function useOnboarding() {
   );
 
   const completeOnboarding = useCallback(async () => {
+    const completedAt = new Date().toISOString();
+    
+    // For guest users, just mark onboarding as seen
     if (!user?.id) {
-      logError(
-        "Cannot complete onboarding: user ID not available",
-        new Error("User ID not available"),
-      );
+      setHasSeenOnboarding(true);
+      posthog.capture("onboarding_completed", {
+        userId: guestUserId,
+        isGuest: true,
+        completedAt,
+      });
       return;
     }
 
-    const completedAt = new Date().toISOString();
+    // For authenticated users, save to database
     setHasCompletedOnboarding(true);
 
     try {
@@ -64,7 +73,9 @@ export function useOnboarding() {
     posthog,
     setOnboardingCompletedAtMutation,
     user?.id,
+    guestUserId,
     setHasCompletedOnboarding,
+    setHasSeenOnboarding,
   ]);
 
   const saveStep = useCallback(
@@ -73,42 +84,44 @@ export function useOnboarding() {
       data: Pick<OnboardingData, T>,
       nextStep?: string,
     ) => {
-      if (!user?.id) {
-        logError(
-          "Cannot save onboarding step: user ID not available",
-          new Error("User ID not available"),
-        );
-        return;
-      }
-
       // Update store immediately for optimistic UI
       setOnboardingData(data);
       setCurrentOnboardingStep(step);
 
       // Navigate immediately if nextStep is provided
       if (nextStep) {
-        router.push(nextStep as Href);
+        void router.push(nextStep as Href);
       }
 
       // Handle saving in the background
       void (async () => {
         try {
-          // Save to Convex database
-          await saveOnboardingDataMutation({
-            userId: user.id,
-            ...data,
-          });
+          if (user?.id) {
+            // Save to Convex database for authenticated users
+            await saveOnboardingDataMutation({
+              userId: user.id,
+              ...data,
+            });
+          } else if (guestUserId) {
+            // Save to guest onboarding data for guest users
+            await saveGuestOnboardingDataMutation({
+              guestUserId,
+              data,
+            });
+          }
 
           // Track in PostHog
           posthog.capture("onboarding_step_completed", {
             step,
-            userId: user.id,
+            userId: user?.id || guestUserId,
+            isGuest: !user?.id,
             ...data,
           });
         } catch (error) {
           logError("Failed to save onboarding step", error, {
             step,
-            userId: user.id,
+            userId: user?.id || guestUserId,
+            isGuest: !user?.id,
             data,
           });
           // Note: We don't revert the optimistic update here since the user has already navigated
@@ -119,7 +132,9 @@ export function useOnboarding() {
     [
       posthog,
       saveOnboardingDataMutation,
+      saveGuestOnboardingDataMutation,
       user?.id,
+      guestUserId,
       setOnboardingData,
       setCurrentOnboardingStep,
     ],

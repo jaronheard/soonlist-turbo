@@ -52,16 +52,8 @@ export default function NotificationsScreen() {
 
     try {
       if (hasNotificationPermission) {
-        toast.success("Notifications already enabled", {
-          action: {
-            label: "Continue",
-            onClick: () => {
-              router.push("/onboarding/02-age");
-              toast.dismiss();
-            },
-          },
-        });
-        setIsLoading(false);
+        // Already has permission, just continue
+        router.push("/(onboarding)/onboarding/08-demo-intro");
         return;
       }
 
@@ -74,7 +66,7 @@ export default function NotificationsScreen() {
         {
           notificationsEnabled: isPermissionGranted,
         },
-        "/onboarding/02-age",
+        "/(onboarding)/onboarding/08-demo-intro",
       );
     } catch (error) {
       logError("Failed to save notifications", error);
@@ -88,50 +80,57 @@ export default function NotificationsScreen() {
 
   return (
     <QuestionContainer
-      question=""
-      currentStep={1}
+      question="Let's get started!"
+      subtitle="Turn on notifications to save events, get reminders, and never miss what's coming up."
+      currentStep={7}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
-      <View className="mx-12 -mt-24 flex-1 items-center justify-center">
-        <View className="relative">
-          <View className="rounded-2xl bg-white">
-            <View className="px-2 pb-3 pt-4">
-              <Text className="mb-2 px-4 text-center text-xl font-semibold leading-6">
-                Turn on Push Notifications to capture and remember.
-              </Text>
-              <Text className="mb-2 px-4 text-center text-sm leading-5">
-                Soonlist notifies you when events are created, and to help you
-                build a habit of capturing events.
-              </Text>
-            </View>
-            <View className="flex-row border-t border-[#3c3c43]/30">
-              <Pressable className="w-1/2 py-3" disabled>
-                <Text className="text-center text-lg font-normal text-blue-500/30">
-                  Don't Allow
+      <View className="flex-1">
+        <View className="flex-1 items-center justify-center px-12">
+          <View className="relative">
+            <View className="rounded-2xl bg-white">
+              <View className="px-2 pb-3 pt-4">
+                <Text className="mb-2 px-4 text-center text-xl font-semibold leading-6">
+                  Turn on Push Notifications to capture and remember.
                 </Text>
-              </Pressable>
-              <View className="w-1/2">
-                <Pressable
-                  className="w-full border-l border-[#3c3c43]/30 py-3"
-                  onPress={handleNotificationPermission}
-                  hitSlop={40}
-                  disabled={isLoading}
-                >
-                  <Text
-                    className={`text-center text-lg font-bold ${
-                      isLoading ? "text-blue-500/50" : "text-blue-500"
-                    }`}
-                  >
-                    {isLoading ? "Loading..." : "Allow"}
+                <Text className="mb-2 px-4 text-center text-sm leading-5">
+                  Soonlist notifies you when events are created, and to help you
+                  build a habit of capturing events.
+                </Text>
+              </View>
+              <View className="flex-row border-t border-[#3c3c43]/30">
+                <Pressable className="w-1/2 py-3" disabled>
+                  <Text className="text-center text-lg font-normal text-blue-500/30">
+                    Don't Allow
                   </Text>
                 </Pressable>
-                <Animated.View style={animatedStyle}>
-                  <ChevronUp size={64} color="#FFF" strokeWidth={4} />
-                </Animated.View>
+                <View className="w-1/2">
+                  <Pressable
+                    className="w-full border-l border-[#3c3c43]/30 py-3"
+                    onPress={handleNotificationPermission}
+                    hitSlop={40}
+                    disabled={isLoading}
+                  >
+                    <Text
+                      className={`text-center text-lg font-bold ${
+                        isLoading ? "text-blue-500/50" : "text-blue-500"
+                      }`}
+                    >
+                      {isLoading ? "Loading..." : "Allow"}
+                    </Text>
+                  </Pressable>
+                  <Animated.View style={animatedStyle}>
+                    <ChevronUp size={64} color="#FFF" strokeWidth={4} />
+                  </Animated.View>
+                </View>
               </View>
             </View>
           </View>
         </View>
+        
+        <Text className="text-center text-sm text-white/60 px-6 pb-4">
+          You can always update this later in your settings!
+        </Text>
       </View>
     </QuestionContainer>
   );

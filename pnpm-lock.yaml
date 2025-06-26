@@ -689,6 +689,9 @@ importers:
       expo-router:
         specifier: 'catalog:'
         version: 5.0.7(94a2610d5e375cfdaad48846de9e22b0)
+      expo-screen-capture:
+        specifier: ~7.1.4
+        version: 7.1.4(expo@53.0.9(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))(react@19.0.0)
       expo-secure-store:
         specifier: 'catalog:'
         version: 14.2.3(expo@53.0.9(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))
@@ -6779,6 +6782,12 @@ packages:
         optional: true
       react-native-reanimated:
         optional: true
+
+  expo-screen-capture@7.1.4:
+    resolution: {integrity: sha512-MfKZiaNy3AdKog7gU19dCo9lSJMurmQUDzoN9K41vvIsani2xRCMKujEv4DhvEdagjIIz4bjlCnu35aiYiHb2g==}
+    peerDependencies:
+      expo: '*'
+      react: 19.0.0
 
   expo-secure-store@14.2.3:
     resolution: {integrity: sha512-hYBbaAD70asKTFd/eZBKVu+9RTo9OSTMMLqXtzDF8ndUGjpc6tmRCoZtrMHlUo7qLtwL5jm+vpYVBWI8hxh/1Q==}
@@ -16500,6 +16509,11 @@ snapshots:
       - react
       - react-native
       - supports-color
+
+  expo-screen-capture@7.1.4(expo@53.0.9(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))(react@19.0.0):
+    dependencies:
+      expo: 53.0.9(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
+      react: 19.0.0
 
   expo-secure-store@14.2.3(expo@53.0.9(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)):
     dependencies:

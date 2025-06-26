@@ -7,15 +7,17 @@ import Intercom from "@intercom/intercom-react-native";
 import { useConvexAuth } from "convex/react";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
-import { LogOut, MessageCircle, ShareIcon, User } from "~/components/icons";
+import { LogOut, MessageCircle, ShareIcon, User, RefreshCw } from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
 import { logError } from "../utils/errorLogging";
 import { UserProfileFlair } from "./UserProfileFlair";
+import { useAppStore } from "~/store";
 
 export function ProfileMenu() {
   const { user } = useUser();
   const { isAuthenticated } = useConvexAuth();
   const signOut = useSignOut();
+  const { setHasSeenOnboarding, setHasCompletedOnboarding } = useAppStore();
 
   const handleSignOut = () => {
     signOut().catch((error) => {
@@ -43,6 +45,15 @@ export function ProfileMenu() {
       message: "Check out Soonlist on the App Store!",
       url: url,
     });
+  };
+
+  const handleResetOnboarding = () => {
+    // Reset onboarding state
+    setHasSeenOnboarding(false);
+    setHasCompletedOnboarding(false);
+    
+    // Navigate to onboarding
+    router.replace("/(onboarding)/onboarding");
   };
 
   const profileImage = (
@@ -103,6 +114,15 @@ export function ProfileMenu() {
           </DropdownMenu.ItemIcon>
           <DropdownMenu.ItemTitle>Support</DropdownMenu.ItemTitle>
         </DropdownMenu.Item>
+
+        {__DEV__ && (
+          <DropdownMenu.Item key="reset-onboarding" onSelect={handleResetOnboarding}>
+            <DropdownMenu.ItemIcon ios={{ name: "arrow.counterclockwise" }}>
+              <RefreshCw />
+            </DropdownMenu.ItemIcon>
+            <DropdownMenu.ItemTitle>Reset Onboarding (Dev)</DropdownMenu.ItemTitle>
+          </DropdownMenu.Item>
+        )}
 
         <DropdownMenu.Item key="sign-out" onSelect={handleSignOut} destructive>
           <DropdownMenu.ItemIcon

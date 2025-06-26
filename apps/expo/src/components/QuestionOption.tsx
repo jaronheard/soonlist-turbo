@@ -25,7 +25,7 @@ export function QuestionOption({
       onPress={onPress}
       disabled={disabled}
       className={cn(
-        "mb-3 w-full flex-row items-center justify-between rounded-xl border-2 p-4",
+        "mb-3 w-full flex-row items-center justify-between rounded-3xl border-2 p-4",
         isSelected
           ? "border-interactive-1/30 bg-interactive-2"
           : "border-gray-200 bg-white",
@@ -43,7 +43,11 @@ export function QuestionOption({
         {label}
       </Text>
       {rightIcon && (
-        <Text className={cn("text-xl", disabled && "opacity-100")}>
+        <Text className={cn(
+          "text-xl",
+          isSelected && "text-interactive-1",
+          disabled && "opacity-100"
+        )}>
           {rightIcon}
         </Text>
       )}

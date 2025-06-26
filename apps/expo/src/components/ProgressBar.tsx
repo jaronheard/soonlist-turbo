@@ -25,7 +25,7 @@ export function ProgressBar({
   }));
 
   return (
-    <View className={`h-1 w-full ${backgroundColor}`}>
+    <View className={`h-1 mx-6 ${backgroundColor}`}>
       <Animated.View
         className={`h-full ${foregroundColor}`}
         style={progressStyle}

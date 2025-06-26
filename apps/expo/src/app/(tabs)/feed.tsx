@@ -75,7 +75,7 @@ function MyFeed() {
       </AuthLoading>
 
       <Unauthenticated>
-        <Redirect href="/sign-in" />
+        <Redirect href="/(onboarding)/onboarding" />
       </Unauthenticated>
 
       <Authenticated>

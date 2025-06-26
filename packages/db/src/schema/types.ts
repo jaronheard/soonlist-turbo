@@ -84,9 +84,10 @@ export interface OnboardingData {
     | "Walking around town"
     | "Facebook";
   screenshotEvents?: "Yes" | "Not yet";
+  goals?: string[]; // Multi-select goals replacing priority
   priority?: {
     text: string;
     emoji: string;
-  };
+  }; // Keep for backward compatibility
   completedAt?: Date;
 }

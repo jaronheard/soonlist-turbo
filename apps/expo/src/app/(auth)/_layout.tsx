@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Redirect, Stack } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -6,10 +7,9 @@ import {
   AuthLoading,
   Unauthenticated,
   useConvexAuth,
-  useQuery,
   useMutation,
+  useQuery,
 } from "convex/react";
-import { useEffect } from "react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -32,7 +32,8 @@ export default function AuthLayout() {
     const handleGuestEventTransfer = async () => {
       if (isAuthenticated && user?.onboardingCompletedAt) {
         try {
-          const hasGuestEvents = await AsyncStorage.getItem(HAS_GUEST_EVENTS_KEY);
+          const hasGuestEvents =
+            await AsyncStorage.getItem(HAS_GUEST_EVENTS_KEY);
           const guestUserId = await AsyncStorage.getItem(GUEST_USER_KEY);
 
           if (hasGuestEvents === "true" && guestUserId) {
@@ -41,7 +42,10 @@ export default function AuthLayout() {
             console.log(`Transferred ${transferredCount} guest events`);
 
             // Clean up guest data after successful transfer
-            await AsyncStorage.multiRemove([HAS_GUEST_EVENTS_KEY, GUEST_USER_KEY]);
+            await AsyncStorage.multiRemove([
+              HAS_GUEST_EVENTS_KEY,
+              GUEST_USER_KEY,
+            ]);
           }
         } catch (error) {
           console.error("Failed to transfer guest events:", error);
@@ -49,7 +53,7 @@ export default function AuthLayout() {
       }
     };
 
-    handleGuestEventTransfer();
+    void handleGuestEventTransfer();
   }, [isAuthenticated, user?.onboardingCompletedAt, transferGuestEvents]);
 
   return (
