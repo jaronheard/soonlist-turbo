@@ -10,6 +10,7 @@ interface QuestionContainerProps {
   children: React.ReactNode;
   currentStep: number;
   totalSteps: number;
+  safeAreaEdges?: Array<"top" | "bottom" | "left" | "right">;
 }
 
 export function QuestionContainer({
@@ -18,9 +19,10 @@ export function QuestionContainer({
   children,
   currentStep,
   totalSteps,
+  safeAreaEdges = ["top", "bottom", "left", "right"],
 }: QuestionContainerProps) {
   return (
-    <SafeAreaView className="flex-1 bg-interactive-1">
+    <SafeAreaView className="flex-1 bg-interactive-1" edges={safeAreaEdges}>
       <ProgressBar
         currentStep={currentStep}
         totalSteps={totalSteps}

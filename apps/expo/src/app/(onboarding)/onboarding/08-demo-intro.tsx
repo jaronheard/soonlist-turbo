@@ -25,7 +25,7 @@ export default function DemoIntroScreen() {
           className="bg-white py-4 rounded-full"
         >
           <Text className="text-interactive-1 text-center font-semibold text-lg">
-            Show Me How
+            Show me how
           </Text>
         </Pressable>
       </View>
