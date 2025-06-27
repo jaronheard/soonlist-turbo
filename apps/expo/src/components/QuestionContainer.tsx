@@ -1,6 +1,5 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ProgressBar } from "./ProgressBar";
 
@@ -10,7 +9,6 @@ interface QuestionContainerProps {
   children: React.ReactNode;
   currentStep: number;
   totalSteps: number;
-  safeAreaEdges?: Array<"top" | "bottom" | "left" | "right">;
 }
 
 export function QuestionContainer({
@@ -19,10 +17,9 @@ export function QuestionContainer({
   children,
   currentStep,
   totalSteps,
-  safeAreaEdges = ["top", "bottom", "left", "right"],
 }: QuestionContainerProps) {
   return (
-    <SafeAreaView className="flex-1 bg-interactive-1" edges={safeAreaEdges}>
+    <View className="flex-1 bg-interactive-1">
       <ProgressBar
         currentStep={currentStep}
         totalSteps={totalSteps}
@@ -36,6 +33,6 @@ export function QuestionContainer({
         )}
         {children}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

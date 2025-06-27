@@ -105,7 +105,6 @@ catalog:
   "expo-localization": ~16.1.5
   "expo-media-library": ~17.1.6
   "expo-notifications": ~0.31.2
-  "expo-screen-capture": ~7.1.4
   "expo-splash-screen": ~0.30.8
   "expo-task-manager": ~13.1.5
   "expo-updates": ~0.28.13
