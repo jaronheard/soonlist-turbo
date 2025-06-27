@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, View, Pressable } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
@@ -22,7 +22,7 @@ export default function GoalsScreen() {
   const { saveStep } = useOnboarding();
   const { onboardingData } = useAppStore();
   const [selectedGoals, setSelectedGoals] = useState<string[]>(
-    onboardingData.goals || []
+    onboardingData.goals || [],
   );
 
   const toggleGoal = (goal: string) => {
@@ -44,7 +44,11 @@ export default function GoalsScreen() {
     setIsLoading(true);
 
     try {
-      saveStep("goals", { goals: selectedGoals }, "/(onboarding)/onboarding/03-screenshot-habit");
+      saveStep(
+        "goals",
+        { goals: selectedGoals },
+        "/(onboarding)/onboarding/03-screenshot-habit",
+      );
     } catch (error) {
       logError("Failed to save goals", error);
       toast.error("Something went wrong", {
@@ -79,17 +83,15 @@ export default function GoalsScreen() {
         <Pressable
           onPress={handleContinue}
           disabled={isLoading || selectedGoals.length === 0}
-          className={`py-4 rounded-full ${
-            selectedGoals.length > 0 
-              ? "bg-white" 
-              : "bg-white/30"
+          className={`rounded-full py-4 ${
+            selectedGoals.length > 0 ? "bg-white" : "bg-white/30"
           }`}
         >
-          <Text className={`text-center font-semibold text-lg ${
-            selectedGoals.length > 0 
-              ? "text-interactive-1" 
-              : "text-white/50"
-          }`}>
+          <Text
+            className={`text-center text-lg font-semibold ${
+              selectedGoals.length > 0 ? "text-interactive-1" : "text-white/50"
+            }`}
+          >
             Continue
           </Text>
         </Pressable>
