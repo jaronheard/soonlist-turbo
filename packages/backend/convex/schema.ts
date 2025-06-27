@@ -50,10 +50,8 @@ export default defineSchema({
 
   events: defineTable({
     id: v.string(), // custom id field from Planetscale
-    userId: v.optional(v.string()), // Optional for guest users
-    userName: v.optional(v.string()), // Optional for guest users
-    ownerToken: v.optional(v.string()), // Can be userId or guestId
-    isGuest: v.optional(v.boolean()), // Track guest events
+    userId: v.string(),
+    userName: v.string(),
     event: v.any(), // JSON field
     eventMetadata: v.optional(v.any()), // JSON field for event metadata
     endDateTime: v.string(), // ISO date string
@@ -75,7 +73,6 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"])
     .index("by_user_and_startDateTime", ["userId", "startDateTime"])
-    .index("by_owner", ["ownerToken"])
     .index("by_startDateTime", ["startDateTime"])
     .index("by_visibility_and_startDateTime", ["visibility", "startDateTime"]),
 
@@ -145,15 +142,6 @@ export default defineSchema({
     .index("by_username", ["username"])
     .index("by_email", ["email"])
     .index("by_custom_id", ["id"]),
-
-  guestOnboardingData: defineTable({
-    ownerToken: v.string(), // Guest user ID
-    isGuest: v.boolean(),
-    data: onboardingDataValidator,
-    createdAt: v.string(), // ISO date string
-    updatedAt: v.string(), // ISO date string
-  })
-    .index("by_owner", ["ownerToken"]),
 
   pushTokens: defineTable({
     userId: v.string(),
