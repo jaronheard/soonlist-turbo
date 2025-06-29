@@ -262,11 +262,11 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               layout={Layout.duration(400)}
             >
               <Text className="mb-2 text-center font-heading text-4xl font-bold text-gray-700">
-                Save events{" "}
-                <Text className="text-interactive-1">instantly</Text>
+                Turn screenshots into{" "}
+                <Text className="text-interactive-1">plans</Text>
               </Text>
               <Text className="mb-4 text-center text-lg text-gray-500">
-                Screenshots → list of possibilities
+                Save events in one tap. All in one place.
               </Text>
             </AnimatedView>
           </View>
