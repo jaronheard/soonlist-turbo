@@ -9,11 +9,15 @@ import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
+import { useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { X } from "~/components/icons";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { logError } from "../utils/errorLogging";
+import { transferGuestData } from "../utils/guestDataTransfer";
 import { AppleSignInButton } from "./AppleSignInButton";
 import { EmailSignInButton } from "./EmailSignInButton"; // You'll need to create this component
 import { GoogleSignInButton } from "./GoogleSignInButton";
@@ -31,6 +35,9 @@ interface SignInWithOAuthProps {
 const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
+  const transferGuestOnboardingData = useMutation(
+    api.guestOnboarding.transferGuestOnboardingData,
+  );
 
   const { signIn, setActive: setActiveSignIn } = useSignIn();
   const { signUp, setActive: setActiveSignUp } = useSignUp();
@@ -97,6 +104,12 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               } catch (intercomError) {
                 logError("Intercom login error", intercomError);
               }
+
+              // Transfer guest data after successful sign in
+              await transferGuestData({
+                userId,
+                transferGuestOnboardingData,
+              });
             }
           }
         } else if (result.signUp?.status === "missing_requirements") {
@@ -137,6 +150,15 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
         await Intercom.loginUnidentifiedUser();
         setShowUsernameInput(false);
         setPendingSignUp(null);
+
+        // Transfer guest data after successful sign up
+        const session = Clerk.session;
+        if (session?.user?.id) {
+          await transferGuestData({
+            userId: session.user.id,
+            transferGuestOnboardingData,
+          });
+        }
       } else if (res.status === "missing_requirements") {
         setUsernameError(
           "There are other pending requirements for your account.",

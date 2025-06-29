@@ -29,7 +29,6 @@ import { Toaster } from "sonner-native";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { AuthErrorProvider } from "~/components/AuthErrorBoundary";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
-import { GuestDataTransferHandler } from "~/components/GuestDataTransferHandler";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useCalendar } from "~/hooks/useCalendar";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
@@ -193,7 +192,6 @@ function RootLayout() {
                     <OneSignalProvider>
                       <RevenueCatProvider>
                         <AuthAndTokenSync />
-                        <GuestDataTransferHandler />
                         <RootLayoutContent />
                       </RevenueCatProvider>
                     </OneSignalProvider>

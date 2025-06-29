@@ -9,16 +9,19 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, router, Stack } from "expo-router";
-import { useSignIn } from "@clerk/clerk-expo";
+import { Clerk, useSignIn } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
+
 import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
 import { logError } from "../../utils/errorLogging";
+import { transferGuestData } from "../../utils/guestDataTransfer";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -35,6 +38,9 @@ const SignInEmail = () => {
   const { isAuthenticated } = useConvexAuth();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
+  );
+  const transferGuestOnboardingData = useMutation(
+    api.guestOnboarding.transferGuestOnboardingData,
   );
   const {
     control,
@@ -78,6 +84,19 @@ const SignInEmail = () => {
             email: data.email,
           });
           await setActive({ session: completeSignIn.createdSessionId });
+
+          // Transfer guest data after successful sign in
+          // Wait a bit for the session to be fully initialized
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          // Safely access session data
+          const session = Clerk.session;
+          if (session?.user?.id) {
+            await transferGuestData({
+              userId: session.user.id,
+              transferGuestOnboardingData,
+            });
+          }
         } else {
           setGeneralError("Additional verification required");
         }
