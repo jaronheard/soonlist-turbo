@@ -1,7 +1,7 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+
 import { mutation } from "./_generated/server";
 import { onboardingDataValidator } from "./schema";
-import { ConvexError } from "convex/values";
 
 /**
  * Save onboarding data for a guest user
