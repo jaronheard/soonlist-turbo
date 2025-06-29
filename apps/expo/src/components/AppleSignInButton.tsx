@@ -9,7 +9,7 @@ interface AppleSignInButtonProps {
 export const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
   onPress,
 }) => (
-  <TouchableOpacity style={styles.button} onPress={onPress}>
+  <TouchableOpacity style={styles.button} onPress={onPress} activeOpacity={0.7}>
     <View style={styles.contentContainer}>
       <Ionicons name="logo-apple" size={24} color="white" style={styles.icon} />
       <Text style={styles.text}>Continue with Apple</Text>

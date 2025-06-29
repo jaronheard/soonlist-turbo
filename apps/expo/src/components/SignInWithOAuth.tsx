@@ -231,7 +231,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
 
           <Pressable
             onPress={handleUsernameSubmit}
-            className="rounded-full bg-interactive-1 px-6 py-3"
+            className="rounded-full bg-interactive-1 px-6 py-3 active:opacity-70"
           >
             <Text className="text-center text-lg font-bold text-white">
               Continue
@@ -295,7 +295,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
             <View className="h-3" />
             <AnimatedPressable
               onPress={toggleOtherOptions}
-              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
+              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 active:opacity-70"
             >
               <Text className="text-base font-medium text-gray-700">
                 Other Options
