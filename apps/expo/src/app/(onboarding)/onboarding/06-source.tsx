@@ -31,7 +31,11 @@ export default function SourceScreen() {
     setIsLoading(true);
 
     try {
-      saveStep("source", { source }, "/(onboarding)/onboarding/07-notifications");
+      saveStep(
+        "source",
+        { source },
+        "/(onboarding)/onboarding/07-notifications",
+      );
     } catch (error) {
       logError("Failed to save source", error);
       toast.error("Something went wrong", {

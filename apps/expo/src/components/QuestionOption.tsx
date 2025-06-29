@@ -43,11 +43,13 @@ export function QuestionOption({
         {label}
       </Text>
       {rightIcon && (
-        <Text className={cn(
-          "text-xl",
-          isSelected && "text-interactive-1",
-          disabled && "opacity-100"
-        )}>
+        <Text
+          className={cn(
+            "text-xl",
+            isSelected && "text-interactive-1",
+            disabled && "opacity-100",
+          )}
+        >
           {rightIcon}
         </Text>
       )}

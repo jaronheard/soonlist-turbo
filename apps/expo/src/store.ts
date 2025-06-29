@@ -353,8 +353,7 @@ export const useAppStore = create<AppState>()(
       // Onboarding actions
       setHasCompletedOnboarding: (status) =>
         set({ hasCompletedOnboarding: status }),
-      setHasSeenOnboarding: (seen) =>
-        set({ hasSeenOnboarding: seen }),
+      setHasSeenOnboarding: (seen) => set({ hasSeenOnboarding: seen }),
       setOnboardingData: (data) =>
         set((state) => ({
           onboardingData: { ...state.onboardingData, ...data },

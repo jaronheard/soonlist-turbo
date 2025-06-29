@@ -2,8 +2,8 @@ import type { ClerkAPIError, OAuthStrategy } from "@clerk/types";
 import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -65,13 +65,13 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
           : startAppleOAuthFlow;
 
       const result = await startOAuthFlow();
-      
+
       // Add null check for result
       if (!result) {
         logError("OAuth flow returned null result", { strategy });
         return;
       }
-      
+
       if (result.createdSessionId) {
         if (result.signIn?.status === "complete") {
           await setActiveSignIn({ session: result.createdSessionId });
@@ -111,10 +111,12 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
       // Handle error with more context
       console.error("OAuth flow error details:", err);
       logError("OAuth flow error", err);
-      
+
       // Check if it's a JSON parse error
       if (err instanceof Error && err.message?.includes("JSON Parse error")) {
-        console.error("OAuth response might be HTML instead of JSON. This could indicate a configuration issue.");
+        console.error(
+          "OAuth response might be HTML instead of JSON. This could indicate a configuration issue.",
+        );
       }
     }
   };
@@ -241,12 +243,12 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   }
 
   const Container = banner ? SafeAreaView : View;
-  
+
   return (
     <Container className="flex-1 bg-interactive-3">
       <Stack.Screen options={{ headerShown: false }} />
       {banner}
-      <View className={`flex-1 px-4 pb-8 ${banner ? 'pt-0' : 'pt-24'}`}>
+      <View className={`flex-1 px-4 pb-8 ${banner ? "pt-0" : "pt-24"}`}>
         <AnimatedView className="flex-1" layout={Layout.duration(400)}>
           <View className="shrink-0">
             <AnimatedView

@@ -54,6 +54,7 @@ function MyFeedContent() {
           events={events}
           onEndReached={handleLoadMore}
           isFetchingNextPage={status === "LoadingMore"}
+          isLoadingFirstPage={status === "LoadingFirstPage"}
           showCreator="savedFromOthers"
           stats={undefined}
           promoCard={{ type: "addEvents" }}

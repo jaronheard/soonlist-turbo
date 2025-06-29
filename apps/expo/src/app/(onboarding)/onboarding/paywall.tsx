@@ -1,8 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, Pressable, ActivityIndicator, ScrollView } from "react-native";
-import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
@@ -21,49 +27,49 @@ export default function PaywallScreen() {
         case PAYWALL_RESULT.PURCHASED:
         case PAYWALL_RESULT.RESTORED:
           // User subscribed successfully
-          setOnboardingData({ 
-            subscribed: true, 
-            subscribedAt: new Date().toISOString() 
+          setOnboardingData({
+            subscribed: true,
+            subscribedAt: new Date().toISOString(),
           });
           // Mark onboarding as seen
           useAppStore.getState().setHasSeenOnboarding(true);
           // Navigate to sign-in screen with subscription status
           router.push({
             pathname: "/sign-in",
-            params: { fromPaywall: "true", subscribed: "true" }
+            params: { fromPaywall: "true", subscribed: "true" },
           });
           break;
-          
+
         case PAYWALL_RESULT.CANCELLED:
         case PAYWALL_RESULT.ERROR:
           // User cancelled or error occurred - enter trial mode
-          setOnboardingData({ 
-            subscribed: false, 
+          setOnboardingData({
+            subscribed: false,
             trialMode: true,
-            trialStartedAt: new Date().toISOString() 
+            trialStartedAt: new Date().toISOString(),
           });
           // Mark onboarding as seen
           useAppStore.getState().setHasSeenOnboarding(true);
           // Navigate to sign-in screen in trial mode
           router.push({
             pathname: "/sign-in",
-            params: { fromPaywall: "true", trial: "true" }
+            params: { fromPaywall: "true", trial: "true" },
           });
           break;
       }
     } catch (error) {
       console.error("Error presenting paywall:", error);
       // On error, continue to sign-up in trial mode
-      setOnboardingData({ 
-        subscribed: false, 
+      setOnboardingData({
+        subscribed: false,
         trialMode: true,
-        trialStartedAt: new Date().toISOString() 
+        trialStartedAt: new Date().toISOString(),
       });
       // Mark onboarding as seen
       useAppStore.getState().setHasSeenOnboarding(true);
       router.push({
         pathname: "/sign-in",
-        params: { fromPaywall: "true", trial: "true" }
+        params: { fromPaywall: "true", trial: "true" },
       });
     }
   }, [setOnboardingData]);
@@ -79,37 +85,37 @@ export default function PaywallScreen() {
     if (!showMockPaywall) {
       // Paywall will dismiss automatically
     }
-    
+
     // Save that they're in trial mode
-    setOnboardingData({ 
-      subscribed: false, 
+    setOnboardingData({
+      subscribed: false,
       trialMode: true,
-      trialStartedAt: new Date().toISOString() 
+      trialStartedAt: new Date().toISOString(),
     });
-    
+
     // Mark onboarding as seen
     useAppStore.getState().setHasSeenOnboarding(true);
-    
+
     // Navigate to sign-in screen
     router.push({
       pathname: "/sign-in",
-      params: { fromPaywall: "true", trial: "true" }
+      params: { fromPaywall: "true", trial: "true" },
     });
   };
 
   const handleMockSubscribe = (plan: string) => {
     // Mock subscription for simulator
-    setOnboardingData({ 
-      subscribed: true, 
+    setOnboardingData({
+      subscribed: true,
       subscribedAt: new Date().toISOString(),
-      subscriptionPlan: plan
+      subscriptionPlan: plan,
     });
     // Mark onboarding as seen
     useAppStore.getState().setHasSeenOnboarding(true);
     // Navigate to sign-in screen
     router.push({
       pathname: "/sign-in",
-      params: { fromPaywall: "true", subscribed: "true", plan }
+      params: { fromPaywall: "true", subscribed: "true", plan },
     });
   };
 
@@ -137,7 +143,9 @@ export default function PaywallScreen() {
               >
                 <View className="flex-row items-center justify-between">
                   <View>
-                    <Text className="text-lg font-semibold text-white">Monthly</Text>
+                    <Text className="text-lg font-semibold text-white">
+                      Monthly
+                    </Text>
                     <Text className="text-white/80">Cancel anytime</Text>
                   </View>
                   <View className="items-end">
@@ -153,16 +161,22 @@ export default function PaywallScreen() {
               >
                 <View className="flex-row items-center justify-between">
                   <View>
-                    <Text className="text-lg font-semibold text-white">Yearly</Text>
+                    <Text className="text-lg font-semibold text-white">
+                      Yearly
+                    </Text>
                     <Text className="text-white/80">Save 50% - Best value</Text>
                   </View>
                   <View className="items-end">
-                    <Text className="text-2xl font-bold text-white">$59.99</Text>
+                    <Text className="text-2xl font-bold text-white">
+                      $59.99
+                    </Text>
                     <Text className="text-sm text-white/60">/year</Text>
                   </View>
                 </View>
                 <View className="mt-2 self-start rounded-full bg-accent-yellow px-3 py-1">
-                  <Text className="text-sm font-semibold text-black">BEST VALUE</Text>
+                  <Text className="text-sm font-semibold text-black">
+                    BEST VALUE
+                  </Text>
                 </View>
               </Pressable>
             </View>

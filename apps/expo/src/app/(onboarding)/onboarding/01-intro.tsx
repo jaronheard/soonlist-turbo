@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
@@ -19,12 +19,12 @@ export default function IntroScreen() {
     >
       <View className="flex-1 justify-center">
         <View className="flex-1" />
-        
+
         <Pressable
           onPress={handleContinue}
-          className="bg-white py-4 rounded-full"
+          className="rounded-full bg-white py-4"
         >
-          <Text className="text-interactive-1 text-center font-semibold text-lg">
+          <Text className="text-center text-lg font-semibold text-interactive-1">
             Continue
           </Text>
         </Pressable>

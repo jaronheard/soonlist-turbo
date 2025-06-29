@@ -1,9 +1,9 @@
-import React from "react";
-import { View, Text, Pressable } from "react-native";
 import type { ImageSourcePropType } from "react-native";
-import { router, Stack } from "expo-router";
-import { Image as ExpoImage } from "expo-image";
+import React from "react";
+import { Pressable, Text, View } from "react-native";
 import Animated, { Layout } from "react-native-reanimated";
+import { Image as ExpoImage } from "expo-image";
+import { router, Stack } from "expo-router";
 
 import { Logo } from "~/components/Logo";
 import { useAppStore } from "~/store";
@@ -19,7 +19,7 @@ export default function WelcomeScreen() {
     // Mark as seen onboarding so they skip it after sign-in
     const setHasSeenOnboarding = useAppStore.getState().setHasSeenOnboarding;
     setHasSeenOnboarding(true);
-    
+
     // Navigate to sign-in screen
     router.push("/sign-in");
   };
@@ -56,7 +56,9 @@ export default function WelcomeScreen() {
           >
             <ExpoImage
               // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
-              source={require("../../../assets/feed.png") as ImageSourcePropType}
+              source={
+                require("../../../assets/feed.png") as ImageSourcePropType
+              }
               style={{ width: "100%", height: "100%" }}
               contentFit="contain"
               cachePolicy="disk"
@@ -71,21 +73,20 @@ export default function WelcomeScreen() {
             {/* Get Started Button */}
             <Pressable
               onPress={handleGetStarted}
-              className="bg-interactive-1 py-4 rounded-full mb-3"
+              className="mb-3 rounded-full bg-interactive-1 py-4"
             >
-              <Text className="text-white text-center font-semibold text-lg">
+              <Text className="text-center text-lg font-semibold text-white">
                 Get Started
               </Text>
             </Pressable>
 
             {/* Simple sign in link */}
-            <Pressable
-              onPress={handleSignIn}
-              className="py-3"
-            >
+            <Pressable onPress={handleSignIn} className="py-3">
               <Text className="text-center text-sm text-gray-600">
                 Already have an account?{" "}
-                <Text className="font-semibold text-interactive-1">Sign in</Text>
+                <Text className="font-semibold text-interactive-1">
+                  Sign in
+                </Text>
               </Text>
             </Pressable>
           </AnimatedView>

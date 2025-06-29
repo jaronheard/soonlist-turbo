@@ -7,11 +7,17 @@ import Intercom from "@intercom/intercom-react-native";
 import { useConvexAuth } from "convex/react";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
-import { LogOut, MessageCircle, ShareIcon, User, RefreshCw } from "~/components/icons";
+import {
+  LogOut,
+  MessageCircle,
+  RefreshCw,
+  ShareIcon,
+  User,
+} from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
+import { useAppStore } from "~/store";
 import { logError } from "../utils/errorLogging";
 import { UserProfileFlair } from "./UserProfileFlair";
-import { useAppStore } from "~/store";
 
 export function ProfileMenu() {
   const { user } = useUser();
@@ -20,15 +26,25 @@ export function ProfileMenu() {
   const { setHasSeenOnboarding, setHasCompletedOnboarding } = useAppStore();
 
   const handleSignOut = () => {
-    signOut().catch((error) => {
-      // Ignore "You are signed out" errors as these are expected
-      // when third-party services try to logout after Clerk has already signed out
-      if (error instanceof Error && error.message?.includes("You are signed out")) {
-        return;
-      }
-      logError("Error during sign out process", error);
-      // Optionally, you could show a toast to the user here
-    });
+    signOut()
+      .then(() => {
+        // Navigate to onboarding welcome after successful sign out
+        router.replace("/(onboarding)/onboarding");
+      })
+      .catch((error) => {
+        // Ignore "You are signed out" errors as these are expected
+        // when third-party services try to logout after Clerk has already signed out
+        if (
+          error instanceof Error &&
+          error.message?.includes("You are signed out")
+        ) {
+          // Still navigate to onboarding even if we get this error
+          router.replace("/(onboarding)/onboarding");
+          return;
+        }
+        logError("Error during sign out process", error);
+        // Optionally, you could show a toast to the user here
+      });
   };
 
   const handleEditProfile = () => {
@@ -56,7 +72,7 @@ export function ProfileMenu() {
     // Reset onboarding state
     setHasSeenOnboarding(false);
     setHasCompletedOnboarding(false);
-    
+
     // Navigate to onboarding
     router.replace("/(onboarding)/onboarding");
   };
@@ -121,11 +137,16 @@ export function ProfileMenu() {
         </DropdownMenu.Item>
 
         {__DEV__ && (
-          <DropdownMenu.Item key="reset-onboarding" onSelect={handleResetOnboarding}>
+          <DropdownMenu.Item
+            key="reset-onboarding"
+            onSelect={handleResetOnboarding}
+          >
             <DropdownMenu.ItemIcon ios={{ name: "arrow.counterclockwise" }}>
               <RefreshCw />
             </DropdownMenu.ItemIcon>
-            <DropdownMenu.ItemTitle>Reset Onboarding (Dev)</DropdownMenu.ItemTitle>
+            <DropdownMenu.ItemTitle>
+              Reset Onboarding (Dev)
+            </DropdownMenu.ItemTitle>
           </DropdownMenu.Item>
         )}
 

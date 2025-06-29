@@ -127,8 +127,8 @@ export default function NotificationsScreen() {
             </View>
           </View>
         </View>
-        
-        <Text className="text-center text-sm text-white/60 px-6 pb-4">
+
+        <Text className="px-6 pb-4 text-center text-sm text-white/60">
           You can always update this later in your settings!
         </Text>
       </View>

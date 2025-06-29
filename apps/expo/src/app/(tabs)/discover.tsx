@@ -2,7 +2,12 @@ import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useQuery, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
+import {
+  Authenticated,
+  AuthLoading,
+  Unauthenticated,
+  useQuery,
+} from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -12,7 +17,7 @@ import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useStableTimestamp, useAppStore } from "~/store";
+import { useAppStore, useStableTimestamp } from "~/store";
 import { getPlanStatusFromUser } from "~/utils/plan";
 
 function DiscoverContent() {
@@ -103,7 +108,7 @@ function DiscoverContent() {
 
 export default function Page() {
   const hasSeenOnboarding = useAppStore((state) => state.hasSeenOnboarding);
-  
+
   return (
     <>
       <AuthLoading>

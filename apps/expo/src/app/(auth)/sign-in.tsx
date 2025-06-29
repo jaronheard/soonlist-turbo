@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { useConvexAuth } from "convex/react";
@@ -34,12 +34,12 @@ export default function AuthScreen() {
 
   // Show sign-in screen with status banners if coming from paywall
   const showBanner = fromPaywall === "true";
-  
+
   // Create the banner component
   const banner = showBanner ? (
-    <View className="px-4 pt-4 pb-4">
+    <View className="px-4 pb-4 pt-4">
       {subscribed === "true" && (
-        <View className="bg-interactive-2 px-6 py-4 rounded-2xl">
+        <View className="rounded-2xl bg-interactive-2 px-6 py-4">
           <Text className="text-center text-lg font-bold text-neutral-1">
             Thanks for subscribing! 🎉
           </Text>
@@ -47,15 +47,15 @@ export default function AuthScreen() {
             Create your account to get started
           </Text>
           {plan && (
-            <Text className="text-center text-sm text-neutral-1/80 mt-1">
+            <Text className="mt-1 text-center text-sm text-neutral-1/80">
               {plan === "monthly" ? "Monthly plan" : "Yearly plan"}
             </Text>
           )}
         </View>
       )}
-      
+
       {trial === "true" && (
-        <View className="bg-interactive-2 px-6 py-4 rounded-2xl">
+        <View className="rounded-2xl bg-interactive-2 px-6 py-4">
           <Text className="text-center text-lg font-bold text-neutral-1">
             Try saving 3 events for free
           </Text>
@@ -66,6 +66,6 @@ export default function AuthScreen() {
       )}
     </View>
   ) : null;
-  
+
   return <SignInWithOAuth banner={banner} />;
 }

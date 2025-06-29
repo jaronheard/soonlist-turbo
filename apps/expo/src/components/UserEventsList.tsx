@@ -510,6 +510,7 @@ interface UserEventsListProps {
   showCreator: ShowCreatorOption;
   onEndReached: () => void;
   isFetchingNextPage: boolean;
+  isLoadingFirstPage?: boolean;
   promoCard?: PromoCardProps;
   demoMode?: boolean;
   hasUnlimited?: boolean;
@@ -524,6 +525,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     showCreator,
     onEndReached,
     isFetchingNextPage,
+    isLoadingFirstPage = false,
     promoCard,
     demoMode,
     stats,
@@ -561,6 +563,14 @@ export default function UserEventsList(props: UserEventsListProps) {
       </View>
     );
   };
+
+  if (isLoadingFirstPage) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#5A32FB" />
+      </View>
+    );
+  }
 
   if (collapsedEvents.length === 0) {
     return renderEmptyState();

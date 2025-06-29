@@ -111,8 +111,13 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       setCustomerInfo(null);
     } catch (error) {
       // Ignore errors about logging out anonymous users - this is expected
-      if (error instanceof Error && error.message?.includes("current user is anonymous")) {
-        logMessage("Attempted to logout anonymous user from RevenueCat - this is expected");
+      if (
+        error instanceof Error &&
+        error.message?.includes("current user is anonymous")
+      ) {
+        logMessage(
+          "Attempted to logout anonymous user from RevenueCat - this is expected",
+        );
       } else {
         logError("Error logging out from RevenueCat", error);
       }

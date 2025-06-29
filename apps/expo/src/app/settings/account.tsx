@@ -12,15 +12,13 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { router, Stack } from "expo-router";
+import { Redirect, router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
-import { Redirect } from "expo-router";
-import { useConvexAuth } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -51,7 +49,7 @@ export default function EditProfileScreen() {
   const { isAuthenticated } = useConvexAuth();
   const { user } = useUser();
   const { customerInfo } = useRevenueCat();
-  
+
   // Redirect unauthenticated users to sign-in
   if (!isAuthenticated) {
     return <Redirect href="/sign-in" />;
@@ -233,6 +231,8 @@ export default function EditProfileScreen() {
                 await signOut({ shouldDeleteAccount: true });
                 toast.dismiss(loadingToastId);
                 toast.success("Account deleted successfully");
+                // Navigate to onboarding welcome after sign out
+                router.replace("/(onboarding)/onboarding");
               } catch (error) {
                 logError("Error deleting account", error);
                 toast.dismiss(loadingToastId);

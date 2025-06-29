@@ -27,7 +27,9 @@ export function useOnboarding() {
   const setOnboardingCompletedAtMutation = useMutation(
     api.users.setOnboardingCompletedAt,
   );
-  const saveGuestOnboardingDataMutation = useMutation(api.guestOnboarding.saveGuestOnboardingData);
+  const saveGuestOnboardingDataMutation = useMutation(
+    api.guestOnboarding.saveGuestOnboardingData,
+  );
 
   // Query to get current onboarding data (for invalidation purposes)
   const onboardingData = useQuery(
@@ -37,7 +39,7 @@ export function useOnboarding() {
 
   const completeOnboarding = useCallback(async () => {
     const completedAt = new Date().toISOString();
-    
+
     // For guest users, just mark onboarding as seen
     if (!user?.id) {
       setHasSeenOnboarding(true);

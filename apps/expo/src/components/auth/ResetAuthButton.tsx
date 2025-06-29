@@ -23,7 +23,7 @@ export function ResetAuthButton({ style }: ResetAuthButtonProps) {
   const handleReset = async () => {
     setShowConfirmation(false);
     await signOut();
-    router.replace("/sign-in");
+    router.replace("/(onboarding)/onboarding");
   };
 
   return (
@@ -47,7 +47,7 @@ export function ResetAuthButton({ style }: ResetAuthButtonProps) {
       >
         <Text style={styles.dialogText}>
           This will clear your current authentication progress and return you to
-          the sign-in screen.
+          the welcome screen.
         </Text>
       </Dialog>
     </>

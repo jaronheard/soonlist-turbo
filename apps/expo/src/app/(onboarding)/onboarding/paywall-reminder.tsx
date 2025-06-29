@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
-import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 
 import { useAppStore } from "~/store";
 import { shouldMockPaywall } from "~/utils/deviceInfo";
@@ -14,12 +14,12 @@ export default function PaywallReminderScreen() {
   const handleSubscribe = async () => {
     if (showMockPaywall) {
       // Mock subscription for simulator
-      setOnboardingData({ 
+      setOnboardingData({
         subscribed: true,
         trialMode: false,
-        subscribedAt: new Date().toISOString() 
+        subscribedAt: new Date().toISOString(),
       });
-      
+
       // Go to main feed
       router.replace("/(tabs)/feed");
       return;
@@ -28,14 +28,17 @@ export default function PaywallReminderScreen() {
     try {
       const paywallResult = await RevenueCatUI.presentPaywall();
 
-      if (paywallResult === PAYWALL_RESULT.PURCHASED || paywallResult === PAYWALL_RESULT.RESTORED) {
+      if (
+        paywallResult === PAYWALL_RESULT.PURCHASED ||
+        paywallResult === PAYWALL_RESULT.RESTORED
+      ) {
         // User subscribed successfully
-        setOnboardingData({ 
+        setOnboardingData({
           subscribed: true,
           trialMode: false,
-          subscribedAt: new Date().toISOString() 
+          subscribedAt: new Date().toISOString(),
         });
-        
+
         // Go to main feed
         router.replace("/(tabs)/feed");
       }
@@ -59,7 +62,7 @@ export default function PaywallReminderScreen() {
           <Text className="mb-8 text-center text-lg text-white/80">
             Save up to 3 events to try Soonlist
           </Text>
-          
+
           {showMockPaywall && (
             <Text className="mb-4 text-center text-sm text-accent-yellow">
               (Mock Mode - Simulator)
@@ -76,8 +79,8 @@ export default function PaywallReminderScreen() {
               <Text className="text-white">✓ Basic event details</Text>
               <Text className="text-white">✓ Screenshot capture</Text>
             </View>
-            
-            <Text className="mt-6 mb-4 text-center text-xl font-semibold text-white">
+
+            <Text className="mb-4 mt-6 text-center text-xl font-semibold text-white">
               Upgrade to unlock:
             </Text>
             <View className="space-y-2">

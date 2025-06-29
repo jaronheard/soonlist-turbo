@@ -1,19 +1,15 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
-import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 import { useOnboarding } from "~/hooks/useOnboarding";
+import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function SeeHowItWorksScreen() {
   const { saveStep } = useOnboarding();
 
   const handleContinue = () => {
-    saveStep(
-      "demo",
-      { watchedDemo: true },
-      "/(onboarding)/onboarding/paywall"
-    );
+    saveStep("demo", { watchedDemo: true }, "/(onboarding)/onboarding/paywall");
   };
 
   return (
@@ -26,17 +22,19 @@ export default function SeeHowItWorksScreen() {
       <View className="flex-1 justify-between">
         <View className="flex-1 items-center justify-center">
           {/* Video placeholder */}
-          <View className="h-64 w-full max-w-sm rounded-2xl bg-neutral-2 items-center justify-center">
-            <Text className="text-white/60 text-lg">Video Player</Text>
-            <Text className="text-white/40 text-sm mt-2">Demo video will play here</Text>
+          <View className="h-64 w-full max-w-sm items-center justify-center rounded-2xl bg-neutral-2">
+            <Text className="text-lg text-white/60">Video Player</Text>
+            <Text className="mt-2 text-sm text-white/40">
+              Demo video will play here
+            </Text>
           </View>
         </View>
-        
+
         <Pressable
           onPress={handleContinue}
-          className="bg-white py-4 rounded-full"
+          className="rounded-full bg-white py-4"
         >
-          <Text className="text-interactive-1 text-center font-semibold text-lg">
+          <Text className="text-center text-lg font-semibold text-interactive-1">
             Continue
           </Text>
         </Pressable>
