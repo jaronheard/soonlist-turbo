@@ -90,4 +90,10 @@ export interface OnboardingData {
     emoji: string;
   }; // Keep for backward compatibility
   completedAt?: Date;
+  watchedDemo?: boolean;
+  subscribed?: boolean;
+  subscribedAt?: string;
+  subscriptionPlan?: string;
+  trialMode?: boolean;
+  trialStartedAt?: string;
 }

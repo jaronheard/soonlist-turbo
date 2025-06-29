@@ -24,7 +24,14 @@ export const onboardingDataValidator = v.object({
   screenshotEvents: v.optional(v.string()),
   goals: v.optional(v.array(v.string())), // Multi-select goals
   priority: v.optional(priorityValidator), // Keep for backward compatibility
+  watchedDemo: v.optional(v.boolean()), // Whether user watched the demo
   completedAt: v.optional(v.string()), // ISO date string
+  // Subscription fields
+  subscribed: v.optional(v.boolean()),
+  subscribedAt: v.optional(v.string()), // ISO date string
+  subscriptionPlan: v.optional(v.string()),
+  trialMode: v.optional(v.boolean()),
+  trialStartedAt: v.optional(v.string()), // ISO date string
 });
 
 export const userAdditionalInfoValidator = v.object({

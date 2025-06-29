@@ -10,6 +10,7 @@ export type OnboardingStep =
   | "source"
   | "readyNotifications"
   | "notifications"
+  | "demo"
   | "demoIntro"
   | "screenshotDemo"
   | "addScreenshot"

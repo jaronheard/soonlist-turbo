@@ -21,6 +21,11 @@ export function ProfileMenu() {
 
   const handleSignOut = () => {
     signOut().catch((error) => {
+      // Ignore "You are signed out" errors as these are expected
+      // when third-party services try to logout after Clerk has already signed out
+      if (error instanceof Error && error.message?.includes("You are signed out")) {
+        return;
+      }
       logError("Error during sign out process", error);
       // Optionally, you could show a toast to the user here
     });

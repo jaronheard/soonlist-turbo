@@ -1,18 +1,19 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
-import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 import { useOnboarding } from "~/hooks/useOnboarding";
 
 export default function SeeHowItWorksScreen() {
-  const { saveData } = useOnboarding();
+  const { saveStep } = useOnboarding();
 
-  const handleContinue = async () => {
-    await saveData({ watchedDemo: true });
-    // TODO: Navigate to paywall screen
-    router.push("/onboarding/paywall");
+  const handleContinue = () => {
+    saveStep(
+      "demo",
+      { watchedDemo: true },
+      "/(onboarding)/onboarding/paywall"
+    );
   };
 
   return (

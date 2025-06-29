@@ -19,6 +19,8 @@ import { useMutation, useQuery } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
+import { Redirect } from "expo-router";
+import { useConvexAuth } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -46,8 +48,14 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function EditProfileScreen() {
+  const { isAuthenticated } = useConvexAuth();
   const { user } = useUser();
   const { customerInfo } = useRevenueCat();
+  
+  // Redirect unauthenticated users to sign-in
+  if (!isAuthenticated) {
+    return <Redirect href="/sign-in" />;
+  }
   const signOut = useSignOut();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(

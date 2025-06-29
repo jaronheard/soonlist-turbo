@@ -14,7 +14,6 @@ import type * as events from "../events.js";
 import type * as feedHelpers from "../feedHelpers.js";
 import type * as feeds from "../feeds.js";
 import type * as files from "../files.js";
-import type * as guestEvents from "../guestEvents.js";
 import type * as guestOnboarding from "../guestOnboarding.js";
 import type * as http from "../http.js";
 import type * as migrations_userFeedsMigration from "../migrations/userFeedsMigration.js";
@@ -55,7 +54,6 @@ declare const fullApi: ApiFromModules<{
   feedHelpers: typeof feedHelpers;
   feeds: typeof feeds;
   files: typeof files;
-  guestEvents: typeof guestEvents;
   guestOnboarding: typeof guestOnboarding;
   http: typeof http;
   "migrations/userFeedsMigration": typeof migrations_userFeedsMigration;

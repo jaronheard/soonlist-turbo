@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useQuery } from "convex/react";
+import { useQuery, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -12,7 +12,7 @@ import SaveButton from "~/components/SaveButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useStableTimestamp } from "~/store";
+import { useStableTimestamp, useAppStore } from "~/store";
 import { getPlanStatusFromUser } from "~/utils/plan";
 
 function DiscoverContent() {
@@ -102,5 +102,28 @@ function DiscoverContent() {
 }
 
 export default function Page() {
-  return <DiscoverContent />;
+  const hasSeenOnboarding = useAppStore((state) => state.hasSeenOnboarding);
+  
+  return (
+    <>
+      <AuthLoading>
+        <View className="flex-1 bg-white">
+          <LoadingSpinner />
+        </View>
+      </AuthLoading>
+
+      <Unauthenticated>
+        {/* For guest users, check if they've seen onboarding */}
+        {!hasSeenOnboarding ? (
+          <Redirect href="/(onboarding)/onboarding" />
+        ) : (
+          <Redirect href="/sign-in" />
+        )}
+      </Unauthenticated>
+
+      <Authenticated>
+        <DiscoverContent />
+      </Authenticated>
+    </>
+  );
 }

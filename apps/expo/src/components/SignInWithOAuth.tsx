@@ -2,7 +2,8 @@ import type { ClerkAPIError, OAuthStrategy } from "@clerk/types";
 import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import Animated, { Layout } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -23,7 +24,11 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 WebBrowser.maybeCompleteAuthSession();
 
-const SignInWithOAuth = () => {
+interface SignInWithOAuthProps {
+  banner?: React.ReactNode;
+}
+
+const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
 
@@ -60,6 +65,13 @@ const SignInWithOAuth = () => {
           : startAppleOAuthFlow;
 
       const result = await startOAuthFlow();
+      
+      // Add null check for result
+      if (!result) {
+        logError("OAuth flow returned null result", { strategy });
+        return;
+      }
+      
       if (result.createdSessionId) {
         if (result.signIn?.status === "complete") {
           await setActiveSignIn({ session: result.createdSessionId });
@@ -70,7 +82,7 @@ const SignInWithOAuth = () => {
           // Safely access session data
           const session = Clerk.session;
           if (session?.user) {
-            const email = session.user.emailAddresses[0]?.emailAddress;
+            const email = session.user.emailAddresses?.[0]?.emailAddress;
             const userId = session.user.id;
 
             if (email && userId) {
@@ -96,8 +108,14 @@ const SignInWithOAuth = () => {
         setShowUsernameInput(true);
       }
     } catch (err) {
-      // Handle error
+      // Handle error with more context
+      console.error("OAuth flow error details:", err);
       logError("OAuth flow error", err);
+      
+      // Check if it's a JSON parse error
+      if (err instanceof Error && err.message?.includes("JSON Parse error")) {
+        console.error("OAuth response might be HTML instead of JSON. This could indicate a configuration issue.");
+      }
     }
   };
 
@@ -222,10 +240,13 @@ const SignInWithOAuth = () => {
     );
   }
 
+  const Container = banner ? SafeAreaView : View;
+  
   return (
-    <View className="flex-1 bg-interactive-3">
+    <Container className="flex-1 bg-interactive-3">
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-1 px-4 pb-8 pt-24">
+      {banner}
+      <View className={`flex-1 px-4 pb-8 ${banner ? 'pt-0' : 'pt-24'}`}>
         <AnimatedView className="flex-1" layout={Layout.duration(400)}>
           <View className="shrink-0">
             <AnimatedView
@@ -266,35 +287,43 @@ const SignInWithOAuth = () => {
             className="relative w-full shrink-0"
             layout={Layout.duration(400)}
           >
-            {!showOtherOptions ? (
-              <>
-                <AppleSignInButton
-                  onPress={() => void handleOAuthFlow("oauth_apple")}
-                />
+            <AppleSignInButton
+              onPress={() => void handleOAuthFlow("oauth_apple")}
+            />
+            <View className="h-3" />
+            <AnimatedPressable
+              onPress={toggleOtherOptions}
+              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
+            >
+              <Text className="text-base font-medium text-gray-700">
+                Other Options
+              </Text>
+              {showOtherOptions && (
+                <View className="absolute right-6">
+                  <X size={20} color="#374151" />
+                </View>
+              )}
+            </AnimatedPressable>
+            {showOtherOptions && (
+              <AnimatedView
+                entering={FadeIn.duration(400)}
+                exiting={FadeOut.duration(300)}
+                layout={Layout.duration(400)}
+                className="absolute bottom-full w-full"
+              >
+                <View className="h-3" />
+                <EmailSignInButton onPress={navigateToEmailSignUp} />
                 <View className="h-3" />
                 <GoogleSignInButton
                   onPress={() => void handleOAuthFlow("oauth_google")}
                 />
                 <View className="h-3" />
-                <EmailSignInButton onPress={navigateToEmailSignUp} />
-              </>
-            ) : (
-              <AnimatedPressable
-                onPress={toggleOtherOptions}
-                className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
-              >
-                <Text className="text-base font-medium text-gray-700">
-                  Hide Options
-                </Text>
-                <View className="absolute right-6">
-                  <X size={20} color="#374151" />
-                </View>
-              </AnimatedPressable>
+              </AnimatedView>
             )}
           </AnimatedView>
         </AnimatedView>
       </View>
-    </View>
+    </Container>
   );
 };
 

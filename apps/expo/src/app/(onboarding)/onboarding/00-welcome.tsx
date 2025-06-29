@@ -1,53 +1,27 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, Pressable } from "react-native";
 import type { ImageSourcePropType } from "react-native";
 import { router, Stack } from "expo-router";
 import { Image as ExpoImage } from "expo-image";
-import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
-import { useOAuth } from "@clerk/clerk-expo";
+import Animated, { Layout } from "react-native-reanimated";
 
 import { Logo } from "~/components/Logo";
-import { AppleSignInButton } from "~/components/AppleSignInButton";
-import { GoogleSignInButton } from "~/components/GoogleSignInButton";
-import { EmailSignInButton } from "~/components/EmailSignInButton";
-import { X } from "~/components/icons";
 import { useAppStore } from "~/store";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function WelcomeScreen() {
-  const [showSignInOptions, setShowSignInOptions] = useState(false);
-  const { startOAuthFlow: _startGoogleOAuthFlow } = useOAuth({
-    strategy: "oauth_google",
-  });
-  const { startOAuthFlow: _startAppleOAuthFlow } = useOAuth({
-    strategy: "oauth_apple",
-  });
-
   const handleGetStarted = () => {
     router.push("/(onboarding)/onboarding/01-intro");
   };
 
-  const toggleSignInOptions = () => {
-    setShowSignInOptions(!showSignInOptions);
-  };
-
-  const handleOAuthFlow = async (_strategy: "oauth_google" | "oauth_apple") => {
-    // Mark as seen onboarding so they go to sign-in screen 
+  const handleSignIn = () => {
+    // Mark as seen onboarding so they skip it after sign-in
     const setHasSeenOnboarding = useAppStore.getState().setHasSeenOnboarding;
     setHasSeenOnboarding(true);
     
-    // Navigate to sign-in which will handle the OAuth flow
-    router.push("/(auth)/sign-in");
-  };
-
-  const navigateToEmailSignUp = () => {
-    // Mark as seen onboarding
-    const setHasSeenOnboarding = useAppStore.getState().setHasSeenOnboarding;
-    setHasSeenOnboarding(true);
-    
-    router.push("/sign-up-email");
+    // Navigate to sign-in screen
+    router.push("/sign-in");
   };
 
   return (
@@ -104,41 +78,16 @@ export default function WelcomeScreen() {
               </Text>
             </Pressable>
 
-            {/* Have an account button - minimal style */}
-            <AnimatedPressable
-              onPress={toggleSignInOptions}
-              className="relative flex-row items-center justify-center py-2"
+            {/* Simple sign in link */}
+            <Pressable
+              onPress={handleSignIn}
+              className="py-3"
             >
-              <Text className="text-sm font-medium text-interactive-1">
-                Already have an account?
+              <Text className="text-center text-sm text-gray-600">
+                Already have an account?{" "}
+                <Text className="font-semibold text-interactive-1">Sign in</Text>
               </Text>
-              {showSignInOptions && (
-                <View className="absolute right-0">
-                  <X size={16} color="#7c3aed" />
-                </View>
-              )}
-            </AnimatedPressable>
-
-            {showSignInOptions && (
-              <AnimatedView
-                entering={FadeIn.duration(400)}
-                exiting={FadeOut.duration(300)}
-                layout={Layout.duration(400)}
-                className="absolute bottom-full w-full"
-              >
-                <View className="h-3" />
-                <EmailSignInButton onPress={navigateToEmailSignUp} />
-                <View className="h-3" />
-                <GoogleSignInButton
-                  onPress={() => void handleOAuthFlow("oauth_google")}
-                />
-                <View className="h-3" />
-                <AppleSignInButton
-                  onPress={() => void handleOAuthFlow("oauth_apple")}
-                />
-                <View className="h-3" />
-              </AnimatedView>
-            )}
+            </Pressable>
           </AnimatedView>
         </AnimatedView>
       </View>
