@@ -11,11 +11,9 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { ResetAuthButton } from "~/components/auth/ResetAuthButton";
-import { useAppStore } from "~/store";
 
 export default function AuthLayout() {
   const { isAuthenticated } = useConvexAuth();
-  const { onboardingData } = useAppStore();
 
   // Fetch user data only when authenticated.
   // Pass "skip" to useQuery to prevent it from running if not authenticated.

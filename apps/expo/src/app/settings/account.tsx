@@ -48,18 +48,12 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export default function EditProfileScreen() {
   const { isAuthenticated } = useConvexAuth();
   const { user } = useUser();
-  const { customerInfo } = useRevenueCat();
-
-  // Redirect unauthenticated users to sign-in
-  if (!isAuthenticated) {
-    return <Redirect href="/sign-in" />;
-  }
+  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const signOut = useSignOut();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.imageUrl ?? null,
   );
-  const { showProPaywallIfNeeded } = useRevenueCat();
   const userData = useQuery(
     api.users.getByUsername,
     user?.username ? { userName: user.username } : "skip",
@@ -87,6 +81,14 @@ export default function EditProfileScreen() {
     },
     mode: "onBlur",
   });
+
+  // Create refs for each input field
+  const usernameRef = useRef<TextInput>(null);
+  const bioRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+  const instaRef = useRef<TextInput>(null);
+  const websiteRef = useRef<TextInput>(null);
 
   useEffect(() => {
     if (userData) {
@@ -187,14 +189,6 @@ export default function EditProfileScreen() {
     }
   }, [user]);
 
-  // Create refs for each input field
-  const usernameRef = useRef<TextInput>(null);
-  const bioRef = useRef<TextInput>(null);
-  const emailRef = useRef<TextInput>(null);
-  const phoneRef = useRef<TextInput>(null);
-  const instaRef = useRef<TextInput>(null);
-  const websiteRef = useRef<TextInput>(null);
-
   // Function to focus the next input
   const focusNextInput = (nextRef: React.RefObject<TextInput | null>) => {
     nextRef.current?.focus();
@@ -282,6 +276,11 @@ export default function EditProfileScreen() {
       ],
     );
   }, [resetOnboardingMutation, resetOnboardingStore, user?.id]);
+
+  // Redirect unauthenticated users to sign-in
+  if (!isAuthenticated) {
+    return <Redirect href="/sign-in" />;
+  }
 
   return (
     <KeyboardAvoidingView

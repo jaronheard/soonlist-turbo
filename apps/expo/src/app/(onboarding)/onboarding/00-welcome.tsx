@@ -1,4 +1,3 @@
-import type { ImageSourcePropType } from "react-native";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { Layout } from "react-native-reanimated";
@@ -55,10 +54,8 @@ export default function WelcomeScreen() {
             className="flex-1 justify-center"
           >
             <ExpoImage
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
-              source={
-                require("../../../assets/feed.png") as ImageSourcePropType
-              }
+              // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+              source={require("../../../assets/feed.png")}
               style={{ width: "100%", height: "100%" }}
               contentFit="contain"
               cachePolicy="disk"
