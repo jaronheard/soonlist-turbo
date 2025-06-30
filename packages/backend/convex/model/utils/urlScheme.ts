@@ -6,8 +6,18 @@
  * Returns the URL scheme to use for deep links based on the current environment
  */
 export function getUrlScheme() {
-  // Check if we're in development environment
-  const isDev = process.env.NODE_ENV !== "production";
+  // Use CONVEX_ENV for explicit environment detection, fallback to NODE_ENV
+  const ENV = process.env.CONVEX_ENV || process.env.NODE_ENV || "production";
+  const isDev = ENV === "development";
+
+  // Log environment detection for debugging
+  console.log("Deep link scheme detection:", {
+    CONVEX_ENV: process.env.CONVEX_ENV,
+    NODE_ENV: process.env.NODE_ENV,
+    ENV,
+    isDev,
+    scheme: isDev ? "soonlist.dev" : "soonlist",
+  });
 
   // Return appropriate scheme
   if (isDev) {
