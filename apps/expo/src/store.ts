@@ -142,6 +142,7 @@ interface AppState {
   hasSeenOnboarding: boolean;
   setHasSeenOnboarding: (seen: boolean) => void;
   resetStore: () => void;
+  resetForLogout: () => void;
 
   // Media-related state & actions
   recentPhotos: RecentPhoto[];
@@ -405,6 +406,53 @@ export const useAppStore = create<AppState>()(
           currentOnboardingStep: null,
           workflowIds: [],
         }),
+
+      // Reset for logout - preserves onboarding state
+      resetForLogout: () =>
+        set((state) => ({
+          filter: "upcoming",
+          intentParams: null,
+          isCalendarModalVisible: false,
+          showAllCalendars: false,
+          addEventState: {
+            input: "",
+            imagePreview: null,
+            linkPreview: null,
+            isPublic: false,
+            isImageLoading: false,
+            isImageUploading: false,
+            uploadedImageUrl: null,
+            isOptionSelected: false,
+            activeInput: null,
+          },
+          newEventState: {
+            input: "",
+            imagePreview: null,
+            linkPreview: null,
+            isPublic: false,
+            isImageLoading: false,
+            isImageUploading: false,
+            uploadedImageUrl: null,
+          },
+          defaultCalendarId: null,
+          availableCalendars: [],
+          selectedEvent: null,
+          calendarUsage: {},
+          recentPhotos: [],
+          hasMediaPermission: false,
+          hasFullPhotoAccess: false,
+          userPriority: null,
+          userTimezone: getUserTimeZone(),
+          hasShownTimezoneAlert: false,
+          stableTimestamp: createStableTimestamp(),
+          lastTimestampUpdate: Date.now(),
+          // Preserve onboarding state for logout
+          hasCompletedOnboarding: false,
+          hasSeenOnboarding: state.hasSeenOnboarding, // Keep this value
+          onboardingData: {},
+          currentOnboardingStep: null,
+          workflowIds: [],
+        })),
 
       // Stable timestamp for query filtering
       stableTimestamp: createStableTimestamp(),

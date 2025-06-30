@@ -16,6 +16,7 @@ interface SignOutOptions {
 export const useSignOut = () => {
   const { signOut, userId } = useAuth();
   const resetStore = useAppStore((state) => state.resetStore);
+  const resetForLogout = useAppStore((state) => state.resetForLogout);
   const setHasCompletedOnboarding = useAppStore(
     (state) => state.setHasCompletedOnboarding,
   );
@@ -85,7 +86,12 @@ export const useSignOut = () => {
     });
 
     // Step 4: Reset local app state AFTER successful sign out.
-    resetStore();
+    // Use full reset for account deletion, partial reset for regular logout
+    if (options?.shouldDeleteAccount) {
+      resetStore();
+    } else {
+      resetForLogout();
+    }
     setHasCompletedOnboarding(false);
   };
 };

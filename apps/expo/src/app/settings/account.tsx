@@ -225,8 +225,7 @@ export default function EditProfileScreen() {
                 await signOut({ shouldDeleteAccount: true });
                 toast.dismiss(loadingToastId);
                 toast.success("Account deleted successfully");
-                // Navigate to onboarding welcome after sign out
-                router.replace("/(onboarding)/onboarding");
+                // No manual navigation needed - Convex auth components will handle the transition
               } catch (error) {
                 logError("Error deleting account", error);
                 toast.dismiss(loadingToastId);

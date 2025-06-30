@@ -102,7 +102,13 @@ export default function AuthAndTokenSync() {
         }
       } catch (error) {
         if (!cancelled) {
-          logError("Auth sync error", error);
+          // Ignore "You are signed out" errors as these are expected during logout
+          if (
+            error instanceof Error &&
+            !error.message?.includes("You are signed out")
+          ) {
+            logError("Auth sync error", error);
+          }
         }
       }
     };

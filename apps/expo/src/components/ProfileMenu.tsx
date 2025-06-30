@@ -24,25 +24,21 @@ export function ProfileMenu() {
   const { user } = useUser();
   const { isAuthenticated } = useConvexAuth();
   const signOut = useSignOut();
-  const { setHasSeenOnboarding, setHasCompletedOnboarding } = useAppStore();
+  const { resetOnboarding } = useAppStore();
 
   const handleSignOut = () => {
-    signOut()
-      .catch((error) => {
-        // Ignore "You are signed out" errors as these are expected
-        // when third-party services try to logout after Clerk has already signed out
-        if (
-          error instanceof Error &&
-          !error.message?.includes("You are signed out")
-        ) {
-          logError("Error during sign out process", error);
-          toast.error("Failed to sign out. Please try again.");
-        }
-      })
-      .finally(() => {
-        // Navigate to onboarding welcome after sign out attempt (success or expected error)
-        router.replace("/(onboarding)/onboarding");
-      });
+    signOut().catch((error) => {
+      // Ignore "You are signed out" errors as these are expected
+      // when third-party services try to logout after Clerk has already signed out
+      if (
+        error instanceof Error &&
+        !error.message?.includes("You are signed out")
+      ) {
+        logError("Error during sign out process", error);
+        toast.error("Failed to sign out. Please try again.");
+      }
+    });
+    // No manual navigation needed - Convex auth components will handle the transition
   };
 
   const handleEditProfile = () => {
@@ -67,9 +63,8 @@ export function ProfileMenu() {
   };
 
   const handleResetOnboarding = () => {
-    // Reset onboarding state
-    setHasSeenOnboarding(false);
-    setHasCompletedOnboarding(false);
+    // Reset onboarding state using the resetOnboarding function
+    resetOnboarding();
 
     // Navigate to onboarding
     router.replace("/(onboarding)/onboarding");
