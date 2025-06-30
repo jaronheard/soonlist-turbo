@@ -85,10 +85,13 @@ export interface OnboardingData {
     | "Facebook";
   screenshotEvents?: "Yes" | "Not yet";
   goals?: string[]; // Multi-select goals replacing priority
+  /**
+   * @deprecated Use `goals` instead. Kept for backward compatibility.
+   */
   priority?: {
     text: string;
     emoji: string;
-  }; // Keep for backward compatibility
+  };
   completedAt?: Date;
   watchedDemo?: boolean;
   subscribed?: boolean;
