@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Soonlist is an iOS app with a corresponding Next.js web app that lets users save events by parsing them with AI and have all their possibilities in one place.
 
 Key features:
+
 - Screenshot any event and add it instantly - no typing required
 - AI automatically extracts event details from screenshots, URLs, text, or photos
 - Keep all your event possibilities organized in one place
@@ -29,10 +30,12 @@ If I send you a URL, you should consider fetching its contents if your environme
 ### Git Workflow
 
 1. **Always create a new branch** - Never commit to main
+
    - Name branches descriptively based on the feature (e.g., `add-event-sharing`, `fix-screenshot-parsing`)
    - Checkout main and pull latest changes before creating a new branch
 
 2. **Commit often** as you work
+
    - Use clear commit messages that describe what changed
    - Before committing, ALWAYS run:
      ```bash
@@ -42,18 +45,28 @@ If I send you a URL, you should consider fetching its contents if your environme
      ```
 
 3. **Create a PR when ready**
-   - Use `@coderabbit` as the PR title
+   - Use a descriptive title
    - Push the branch to GitHub
    - Create the PR using `gh pr create`
 
 ### Important Git Rules
+
 - NEVER commit to main
 - NEVER push to origin/main
 - Always ensure lint, format, and typecheck pass before committing
 
 ## Essential Development Commands
 
-### Starting Development
+### Code Quality - Run Before Committing
+
+```bash
+pnpm lint:fix           # Fix linting issues
+pnpm format:fix         # Fix formatting
+pnpm typecheck          # Check TypeScript types
+```
+
+### Starting Development - Not Run Unless Asked
+
 ```bash
 pnpm dev                 # Run all services (web, mobile, backend)
 pnpm dev:backend        # Run Convex backend only
@@ -61,33 +74,10 @@ pnpm dev:expo           # Run Expo mobile app only
 pnpm dev:no-expo        # Run web and backend only
 ```
 
-### Code Quality - Run Before Committing
-```bash
-pnpm lint:fix           # Fix linting issues
-pnpm format:fix         # Fix formatting
-pnpm typecheck          # Check TypeScript types
-```
-
-### Database Operations
-```bash
-pnpm db:push            # Push database schema changes
-```
-
-### Mobile Development Setup
-```bash
-pnpm ngrok-YOURNAME     # Start ngrok tunnel (replace YOURNAME)
-```
-
-### Building
-```bash
-pnpm build              # Build all packages
-pnpm expo:build:ios     # Build iOS app with EAS
-pnpm expo:build:android # Build Android app with EAS
-```
-
 ## Architecture Overview
 
 ### Monorepo Structure
+
 - **apps/expo**: React Native mobile app using Expo Router, NativeWind, and React Query
 - **apps/web**: Next.js 15 app with App Router, React 19, and TailwindCSS
 - **packages/backend**: Convex backend with real-time sync and workflows
@@ -97,6 +87,7 @@ pnpm expo:build:android # Build Android app with EAS
 - **packages/validators**: Zod validation schemas
 
 ### Key Technology Decisions
+
 - **Backend**: Always use Convex for new features (do not modify tRPC code)
 - **Authentication**: Clerk for both web and mobile
 - **State Management**: Convex for server state, Zustand for client state (mobile)
@@ -106,6 +97,7 @@ pnpm expo:build:android # Build Android app with EAS
 - **Payments**: RevenueCat (mobile) - moving away from Stripe
 
 ### Convex Guidelines
+
 - All new features must be built in `packages/backend/convex/`
 - Follow Convex documentation best practices
 - Business logic goes in `convex/model/`, thin API wrappers in `convex/*.ts`
@@ -117,6 +109,7 @@ pnpm expo:build:android # Build Android app with EAS
 ### Coding Conventions
 
 #### TypeScript
+
 - Strict mode is enabled - follow all strict mode requirements
 - Avoid `any` types - figure out the proper types instead
 - Type assertions (`as`) are occasionally acceptable, but ensure there's not a better approach first
@@ -125,6 +118,7 @@ pnpm expo:build:android # Build Android app with EAS
 - Avoid enums, use literal types instead
 
 #### React Components
+
 - Use functional components only - no class components
 - Follow existing patterns in the codebase for:
   - Component naming
@@ -133,6 +127,7 @@ pnpm expo:build:android # Build Android app with EAS
   - Props interfaces
 
 #### General Patterns
+
 - Directory names should be lowercase-dash
 - Check existing code for:
   - Async/await patterns
@@ -142,13 +137,16 @@ pnpm expo:build:android # Build Android app with EAS
 - Use Server Components in Next.js where possible
 
 ### Environment Setup
+
 The project requires extensive environment variables. Use:
+
 ```bash
 pnpm env:sync:local     # Pull development env vars from Vercel
 pnpm env:sync:production # Pull production env vars
 ```
 
 Key environment variable groups:
+
 - Clerk authentication
 - Convex backend
 - Database connections
@@ -158,6 +156,7 @@ Key environment variable groups:
 - Push notifications (OneSignal)
 
 ### Mobile Development Notes
+
 - Each developer needs a personal ngrok edge (see README.md)
 - Use Maestro for E2E testing (`.maestro/` directory)
 - Expo Router provides typed navigation
@@ -165,6 +164,7 @@ Key environment variable groups:
 - Follow NativeWind patterns for styling
 
 ### Testing Approach
+
 - No traditional unit testing framework currently
 - Maestro for mobile E2E tests: `pnpm test` in apps/expo
 - Rely on TypeScript for type safety
@@ -173,6 +173,7 @@ Key environment variable groups:
 ## Common Development Tasks
 
 ### Adding a New Feature
+
 1. Always use Convex for new features (never modify tRPC code)
 2. Add to appropriate module in `packages/backend/convex/`
 3. Update validators in `packages/validators/` if needed
@@ -180,13 +181,16 @@ Key environment variable groups:
 5. Implement in both web and mobile apps if applicable
 
 ### Working with Events
+
 - Main data model revolves around "possibilities" (saved events)
 - Events can be captured from screenshots, URLs, text, or photos
 - AI extracts event details automatically
 - See `packages/backend/convex/MIGRATION_GUIDE.md` for all event endpoints
 
 ### Debugging
+
 When debugging issues:
+
 - Check Convex dashboard for backend logs
 - Use Sentry for error tracking
 - PostHog for analytics and user behavior
