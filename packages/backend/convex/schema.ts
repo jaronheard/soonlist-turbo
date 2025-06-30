@@ -193,4 +193,16 @@ export default defineSchema({
     createdAt: v.string(), // ISO date string
     updatedAt: v.string(), // ISO date string
   }).index("by_owner", ["ownerToken"]),
+
+  demoVideos: defineTable({
+    url: v.string(), // Bytescale CDN URL
+    version: v.string(), // Version identifier for cache invalidation
+    duration: v.number(), // Duration in seconds
+    size: v.number(), // File size in bytes
+    isActive: v.boolean(), // Whether this is the current active video
+    title: v.optional(v.string()), // Optional title for admin reference
+    createdAt: v.string(), // ISO date string
+  })
+    .index("by_active", ["isActive"])
+    .index("by_version", ["version"]),
 });

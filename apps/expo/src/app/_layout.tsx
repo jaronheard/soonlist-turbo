@@ -31,6 +31,7 @@ import { AuthErrorProvider } from "~/components/AuthErrorBoundary";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useCalendar } from "~/hooks/useCalendar";
+import { preloadDemoVideo } from "~/hooks/useDemoVideo";
 import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
@@ -306,6 +307,17 @@ function RootLayoutContent() {
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
+
+  useEffect(() => {
+    // Start video preload after 5 seconds to avoid competing with initial app loading
+    const timer = setTimeout(() => {
+      preloadDemoVideo().catch((error) => {
+        logError("Failed to preload demo video", error);
+      });
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // The share extension logic now specifically leads to /new
   useIntentHandler();
