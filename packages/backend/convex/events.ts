@@ -171,7 +171,7 @@ export const getDiscoverPaginated = query({
     const { beforeThisDateTime } = args;
 
     // Get all events that are upcoming and public
-    const result = await ctx.db
+    const allEvents = await ctx.db
       .query("events")
       .filter((q) => {
         // Always filter for public events
@@ -195,11 +195,43 @@ export const getDiscoverPaginated = query({
 
         return baseFilter;
       })
-      .order("asc")
-      .paginate(args.paginationOpts);
+      .collect();
+
+    // Sort events by startDateTime (upcoming events first, earliest to latest)
+    const sortedEvents = allEvents.sort((a, b) => {
+      const aTime = new Date(a.startDateTime).getTime();
+      const bTime = new Date(b.startDateTime).getTime();
+      return aTime - bTime; // Ascending order for upcoming events
+    });
+
+    // Manually paginate the sorted results
+    const pageSize = args.paginationOpts.numItems;
+    const cursor = args.paginationOpts.cursor;
+
+    let startIndex = 0;
+    if (cursor) {
+      // Find the event with the cursor ID
+      const cursorIndex = sortedEvents.findIndex((e) => e._id === cursor);
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1;
+      }
+    }
+
+    const page = sortedEvents.slice(startIndex, startIndex + pageSize);
+    const hasMore = startIndex + pageSize < sortedEvents.length;
+    const nextCursor = hasMore ? page[page.length - 1]?._id : null;
+
+    const result = {
+      page,
+      isDone: !hasMore,
+      continueCursor: nextCursor,
+    };
 
     // Enrich events with user data, comments, and follows
-    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, result.page);
+    const enrichedEvents = await enrichEventsAndFilterNulls(
+      ctx,
+      result.page.map((e) => ({ id: e.id })),
+    );
 
     return {
       ...result,
@@ -281,16 +313,44 @@ export const getEventsForUserPaginated = query({
       return eventFilter;
     });
 
-    // Apply ordering and pagination
-    const orderedQuery =
-      filter === "upcoming"
-        ? eventsQuery.order("asc")
-        : eventsQuery.order("desc");
+    // Collect all matching events first
+    const allEvents = await eventsQuery.collect();
 
-    const result = await orderedQuery.paginate(args.paginationOpts);
+    // Sort events by startDateTime
+    const sortedEvents = allEvents.sort((a, b) => {
+      const aTime = new Date(a.startDateTime).getTime();
+      const bTime = new Date(b.startDateTime).getTime();
+      return filter === "upcoming" ? aTime - bTime : bTime - aTime;
+    });
+
+    // Manually paginate the sorted results
+    const pageSize = args.paginationOpts.numItems;
+    const cursor = args.paginationOpts.cursor;
+
+    let startIndex = 0;
+    if (cursor) {
+      // Find the event with the cursor ID
+      const cursorIndex = sortedEvents.findIndex((e) => e._id === cursor);
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1;
+      }
+    }
+
+    const page = sortedEvents.slice(startIndex, startIndex + pageSize);
+    const hasMore = startIndex + pageSize < sortedEvents.length;
+    const nextCursor = hasMore ? page[page.length - 1]?._id : null;
+
+    const result = {
+      page,
+      isDone: !hasMore,
+      continueCursor: nextCursor,
+    };
 
     // Enrich events with user data, comments, and follows
-    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, result.page);
+    const enrichedEvents = await enrichEventsAndFilterNulls(
+      ctx,
+      result.page.map((e) => ({ id: e.id })),
+    );
 
     return {
       ...result,
