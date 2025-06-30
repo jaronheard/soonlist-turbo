@@ -92,11 +92,11 @@ export interface OnboardingData {
     text: string;
     emoji: string;
   };
-  completedAt?: Date;
+  completedAt?: string; // ISO string date
   watchedDemo?: boolean;
   subscribed?: boolean;
-  subscribedAt?: string;
+  subscribedAt?: string; // ISO string date
   subscriptionPlan?: string;
   trialMode?: boolean;
-  trialStartedAt?: string;
+  trialStartedAt?: string; // ISO string date
 }
