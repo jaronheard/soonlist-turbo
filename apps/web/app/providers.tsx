@@ -32,14 +32,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
         variables: { colorPrimary: "rgb(90, 50, 251)", borderRadius: "16px" },
       }}
     >
-      <QueryClientProvider client={queryClient}>
-        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <QueryClientProvider client={queryClient}>
           <Suspense>
             <IntercomProvider> </IntercomProvider>
           </Suspense>
           <ContextProvider>{children}</ContextProvider>
-        </ConvexProviderWithClerk>
-      </QueryClientProvider>
+        </QueryClientProvider>
+      </ConvexProviderWithClerk>
     </ClerkProvider>
   );
 }
