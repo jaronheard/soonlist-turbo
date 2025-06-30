@@ -25,19 +25,17 @@ function MyFeedContent() {
 
   // Memoize query args to prevent unnecessary re-renders
   const queryArgs = useMemo(() => {
-    if (!user?.username) return "skip";
     return {
-      userName: user.username,
       filter: "upcoming" as const,
       beforeThisDateTime: stableTimestamp,
     };
-  }, [user?.username, stableTimestamp]);
+  }, [stableTimestamp]);
 
   const {
     results: events,
     status,
     loadMore,
-  } = useStablePaginatedQuery(api.events.getEventsForUserPaginated, queryArgs, {
+  } = useStablePaginatedQuery(api.feeds.getMyFeed, queryArgs, {
     initialNumItems: 20,
   });
 
@@ -47,11 +45,22 @@ function MyFeedContent() {
     }
   }, [status, loadMore]);
 
+  // Add missing properties that UserEventsList expects
+  const enrichedEvents = useMemo(() => {
+    return events.map((event) => ({
+      ...event,
+      eventFollows: [],
+      comments: [],
+      eventToLists: [],
+      lists: [],
+    }));
+  }, [events]);
+
   return (
     <View className="flex-1 bg-white">
       <View className="flex-1">
         <UserEventsList
-          events={events}
+          events={enrichedEvents}
           onEndReached={handleLoadMore}
           isFetchingNextPage={status === "LoadingMore"}
           isLoadingFirstPage={status === "LoadingFirstPage"}
