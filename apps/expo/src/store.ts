@@ -139,6 +139,8 @@ interface AppState {
 
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (status: boolean) => void;
+  hasSeenOnboarding: boolean;
+  setHasSeenOnboarding: (seen: boolean) => void;
   resetStore: () => void;
 
   // Media-related state & actions
@@ -344,12 +346,14 @@ export const useAppStore = create<AppState>()(
 
       // Onboarding state
       hasCompletedOnboarding: false,
+      hasSeenOnboarding: false,
       onboardingData: {},
       currentOnboardingStep: null,
 
       // Onboarding actions
       setHasCompletedOnboarding: (status) =>
         set({ hasCompletedOnboarding: status }),
+      setHasSeenOnboarding: (seen) => set({ hasSeenOnboarding: seen }),
       setOnboardingData: (data) =>
         set((state) => ({
           onboardingData: { ...state.onboardingData, ...data },
@@ -395,6 +399,8 @@ export const useAppStore = create<AppState>()(
           hasShownTimezoneAlert: false,
           stableTimestamp: createStableTimestamp(),
           lastTimestampUpdate: Date.now(),
+          hasCompletedOnboarding: false,
+          hasSeenOnboarding: false,
           onboardingData: {},
           currentOnboardingStep: null,
           workflowIds: [],

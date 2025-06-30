@@ -11,7 +11,11 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   onPress,
 }) => {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity
+      style={styles.button}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <View style={styles.contentContainer}>
         <Image
           // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports

@@ -4,14 +4,17 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, Stack } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
+
 import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
 import { logError } from "../../utils/errorLogging";
+import { transferGuestData } from "../../utils/guestDataTransfer";
 
 const verifyEmailSchema = z.object({
   code: z
@@ -30,6 +33,9 @@ const VerifyEmail = () => {
   const { isAuthenticated } = useConvexAuth();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
+  );
+  const transferGuestOnboardingData = useMutation(
+    api.guestOnboarding.transferGuestOnboardingData,
   );
   const {
     control,
@@ -63,6 +69,16 @@ const VerifyEmail = () => {
           email: completeSignUp.emailAddress,
           username: completeSignUp.username,
         });
+
+        // Transfer guest data after successful sign up
+        // Use the createdUserId from the sign-up response
+        const userId = completeSignUp.createdUserId;
+        if (userId) {
+          await transferGuestData({
+            userId,
+            transferGuestOnboardingData,
+          });
+        }
       } else {
         logError("Verification failed", completeSignUp);
         setGeneralError("Verification failed. Please try again.");

@@ -52,10 +52,9 @@ export default function AuthLayout() {
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" />
           </View>
-        ) : !user?.onboardingCompletedAt ? (
-          // User record doesn't exist in DB OR user exists but is not onboarded
-          <Redirect href="/(onboarding)/onboarding" />
         ) : (
+          // Authenticated users always go to feed
+          // They should never see onboarding even if onboardingCompletedAt is not set
           <Redirect href="/(tabs)/feed" />
         )}
       </Authenticated>

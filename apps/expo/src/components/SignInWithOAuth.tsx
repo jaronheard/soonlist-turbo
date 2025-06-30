@@ -3,16 +3,21 @@ import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
+import { useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { X } from "~/components/icons";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { logError } from "../utils/errorLogging";
+import { transferGuestData } from "../utils/guestDataTransfer";
 import { AppleSignInButton } from "./AppleSignInButton";
 import { EmailSignInButton } from "./EmailSignInButton"; // You'll need to create this component
 import { GoogleSignInButton } from "./GoogleSignInButton";
@@ -23,9 +28,16 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 WebBrowser.maybeCompleteAuthSession();
 
-const SignInWithOAuth = () => {
+interface SignInWithOAuthProps {
+  banner?: React.ReactNode;
+}
+
+const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
+  const transferGuestOnboardingData = useMutation(
+    api.guestOnboarding.transferGuestOnboardingData,
+  );
 
   const { signIn, setActive: setActiveSignIn } = useSignIn();
   const { signUp, setActive: setActiveSignUp } = useSignUp();
@@ -60,6 +72,13 @@ const SignInWithOAuth = () => {
           : startAppleOAuthFlow;
 
       const result = await startOAuthFlow();
+
+      // Add null check for result
+      if (!result) {
+        logError("OAuth flow returned null result", { strategy });
+        return;
+      }
+
       if (result.createdSessionId) {
         if (result.signIn?.status === "complete") {
           await setActiveSignIn({ session: result.createdSessionId });
@@ -70,7 +89,7 @@ const SignInWithOAuth = () => {
           // Safely access session data
           const session = Clerk.session;
           if (session?.user) {
-            const email = session.user.emailAddresses[0]?.emailAddress;
+            const email = session.user.emailAddresses?.[0]?.emailAddress;
             const userId = session.user.id;
 
             if (email && userId) {
@@ -85,6 +104,12 @@ const SignInWithOAuth = () => {
               } catch (intercomError) {
                 logError("Intercom login error", intercomError);
               }
+
+              // Transfer guest data after successful sign in
+              await transferGuestData({
+                userId,
+                transferGuestOnboardingData,
+              });
             }
           }
         } else if (result.signUp?.status === "missing_requirements") {
@@ -96,8 +121,16 @@ const SignInWithOAuth = () => {
         setShowUsernameInput(true);
       }
     } catch (err) {
-      // Handle error
+      // Handle error with more context
+      console.error("OAuth flow error details:", err);
       logError("OAuth flow error", err);
+
+      // Check if it's a JSON parse error
+      if (err instanceof Error && err.message?.includes("JSON Parse error")) {
+        console.error(
+          "OAuth response might be HTML instead of JSON. This could indicate a configuration issue.",
+        );
+      }
     }
   };
 
@@ -117,6 +150,15 @@ const SignInWithOAuth = () => {
         await Intercom.loginUnidentifiedUser();
         setShowUsernameInput(false);
         setPendingSignUp(null);
+
+        // Transfer guest data after successful sign up
+        const session = Clerk.session;
+        if (session?.user?.id) {
+          await transferGuestData({
+            userId: session.user.id,
+            transferGuestOnboardingData,
+          });
+        }
       } else if (res.status === "missing_requirements") {
         setUsernameError(
           "There are other pending requirements for your account.",
@@ -211,7 +253,7 @@ const SignInWithOAuth = () => {
 
           <Pressable
             onPress={handleUsernameSubmit}
-            className="rounded-full bg-interactive-1 px-6 py-3"
+            className="rounded-full bg-interactive-1 px-6 py-3 active:opacity-70"
           >
             <Text className="text-center text-lg font-bold text-white">
               Continue
@@ -222,10 +264,13 @@ const SignInWithOAuth = () => {
     );
   }
 
+  const Container = banner ? SafeAreaView : View;
+
   return (
-    <View className="flex-1 bg-interactive-3">
+    <Container className="flex-1 bg-interactive-3">
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-1 px-4 pb-8 pt-24">
+      {banner}
+      <View className={`flex-1 px-4 pb-8 ${banner ? "pt-0" : "pt-24"}`}>
         <AnimatedView className="flex-1" layout={Layout.duration(400)}>
           <View className="shrink-0">
             <AnimatedView
@@ -239,11 +284,11 @@ const SignInWithOAuth = () => {
               layout={Layout.duration(400)}
             >
               <Text className="mb-2 text-center font-heading text-4xl font-bold text-gray-700">
-                Save events{" "}
-                <Text className="text-interactive-1">instantly</Text>
+                Turn screenshots into{" "}
+                <Text className="text-interactive-1">plans</Text>
               </Text>
               <Text className="mb-4 text-center text-lg text-gray-500">
-                Screenshots → list of possibilities
+                Save events in one tap. All in one place.
               </Text>
             </AnimatedView>
           </View>
@@ -272,7 +317,7 @@ const SignInWithOAuth = () => {
             <View className="h-3" />
             <AnimatedPressable
               onPress={toggleOtherOptions}
-              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3"
+              className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 active:opacity-70"
             >
               <Text className="text-base font-medium text-gray-700">
                 Other Options
@@ -302,7 +347,7 @@ const SignInWithOAuth = () => {
           </AnimatedView>
         </AnimatedView>
       </View>
-    </View>
+    </Container>
   );
 };
 

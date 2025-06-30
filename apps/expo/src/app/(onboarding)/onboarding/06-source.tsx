@@ -9,34 +9,35 @@ import { useAppStore } from "~/store";
 import { logError } from "~/utils/errorLogging";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
-const discoveryMethods = [
-  "Instagram",
+const sources = [
+  "Google Search",
   "TikTok",
-  "Friends' recommendations",
-  "Local websites/newsletters",
-  "Walking around town",
+  "Searched on App Store",
+  "Instagram",
   "Facebook",
+  "Through a friend",
+  "Other",
 ] as const;
 
-type DiscoveryMethod = (typeof discoveryMethods)[number];
+type Source = (typeof sources)[number];
 
-export default function DiscoveryScreen() {
+export default function SourceScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const { saveStep } = useOnboarding();
   const { onboardingData } = useAppStore();
 
-  const handleMethodSelect = async (method: DiscoveryMethod) => {
+  const handleSourceSelect = async (source: Source) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
       saveStep(
-        "discovery",
-        { discoveryMethod: method },
-        "/onboarding/05-screenshot",
+        "source",
+        { source },
+        "/(onboarding)/onboarding/07-notifications",
       );
     } catch (error) {
-      logError("Failed to save discovery method", error);
+      logError("Failed to save source", error);
       toast.error("Something went wrong", {
         description: "Please try again",
       });
@@ -48,17 +49,17 @@ export default function DiscoveryScreen() {
   return (
     <>
       <QuestionContainer
-        question="Where do you see the most events?"
-        currentStep={4}
+        question="Where did you hear about us?"
+        currentStep={7}
         totalSteps={TOTAL_ONBOARDING_STEPS}
       >
         <View>
-          {discoveryMethods.map((method) => (
+          {sources.map((source) => (
             <QuestionOption
-              key={method}
-              label={method}
-              onPress={() => handleMethodSelect(method)}
-              isSelected={onboardingData.discoveryMethod === method}
+              key={source}
+              label={source}
+              onPress={() => handleSourceSelect(source)}
+              isSelected={onboardingData.source === source}
               disabled={isLoading}
             />
           ))}

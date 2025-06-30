@@ -36,7 +36,20 @@ export const useSignOut = () => {
     }
 
     // Step 2: Sign out from Clerk. This revokes the token.
-    await signOut();
+    try {
+      await signOut();
+    } catch (error) {
+      // If already signed out, continue with cleanup
+      if (
+        error instanceof Error &&
+        error.message?.includes("You are signed out")
+      ) {
+        // User is already signed out, continue with cleanup
+      } else {
+        // Re-throw other errors
+        throw error;
+      }
+    }
 
     // Step 3: Clean up local data and third-party sessions.
     // These should not require auth and can run concurrently.
@@ -49,7 +62,25 @@ export const useSignOut = () => {
     logoutResults.forEach((result, index) => {
       if (result.status === "rejected") {
         const services = ["Intercom", "RevenueCat", "OneSignal"];
-        logError(`Failed to logout from ${services[index]}`, result.reason);
+        const error = result.reason as
+          | Error
+          | { message?: string; code?: string };
+
+        // Ignore expected errors
+        if (
+          (error instanceof Error &&
+            (error.message?.includes("You are signed out") ||
+              error.message?.includes("current user is anonymous"))) ||
+          (typeof error === "object" &&
+            error !== null &&
+            "code" in error &&
+            error.code === "signed_out")
+        ) {
+          // These are expected when logging out - don't log as errors
+          return;
+        }
+
+        logError(`Failed to logout from ${services[index]}`, error);
       }
     });
 

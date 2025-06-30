@@ -9,30 +9,26 @@ import { useAppStore } from "~/store";
 import { logError } from "~/utils/errorLogging";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
-const ageRanges = [
-  "Under 24",
-  "25-34",
-  "35-44",
-  "45-54",
-  "55-64",
-  "65+",
-] as const;
+const options = ["Yes", "Not yet"] as const;
+type Option = (typeof options)[number];
 
-type AgeRange = (typeof ageRanges)[number];
-
-export default function AgeScreen() {
+export default function ScreenshotScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const { saveStep } = useOnboarding();
   const { onboardingData } = useAppStore();
 
-  const handleAgeSelect = async (age: AgeRange) => {
+  const handleOptionSelect = async (option: Option) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
-      saveStep("age", { ageRange: age }, "/onboarding/03-source");
+      saveStep(
+        "screenshot",
+        { screenshotEvents: option },
+        "/(onboarding)/onboarding/04-discovery-channels",
+      );
     } catch (error) {
-      logError("Failed to save age", error);
+      logError("Failed to save screenshot", error);
       toast.error("Something went wrong", {
         description: "Please try again",
       });
@@ -43,17 +39,17 @@ export default function AgeScreen() {
 
   return (
     <QuestionContainer
-      question="How old are you?"
-      currentStep={2}
+      question="Do you already screenshot events you're interested in?"
+      currentStep={4}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <View>
-        {ageRanges.map((age) => (
+        {options.map((option) => (
           <QuestionOption
-            key={age}
-            label={age}
-            onPress={() => handleAgeSelect(age)}
-            isSelected={onboardingData.ageRange === age}
+            key={option}
+            label={option}
+            onPress={() => handleOptionSelect(option)}
+            isSelected={onboardingData.screenshotEvents === option}
             disabled={isLoading}
           />
         ))}

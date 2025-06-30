@@ -11,7 +11,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useStableTimestamp } from "~/store";
+import { useAppStore, useStableTimestamp } from "~/store";
 
 function MyFeedContent() {
   const { user } = useUser();
@@ -54,6 +54,7 @@ function MyFeedContent() {
           events={events}
           onEndReached={handleLoadMore}
           isFetchingNextPage={status === "LoadingMore"}
+          isLoadingFirstPage={status === "LoadingFirstPage"}
           showCreator="savedFromOthers"
           stats={undefined}
           promoCard={{ type: "addEvents" }}
@@ -66,6 +67,8 @@ function MyFeedContent() {
 }
 
 function MyFeed() {
+  const { hasSeenOnboarding } = useAppStore();
+
   return (
     <>
       <AuthLoading>
@@ -75,7 +78,12 @@ function MyFeed() {
       </AuthLoading>
 
       <Unauthenticated>
-        <Redirect href="/sign-in" />
+        {/* For guest users, check if they've seen onboarding */}
+        {!hasSeenOnboarding ? (
+          <Redirect href="/(onboarding)/onboarding" />
+        ) : (
+          <Redirect href="/sign-in" />
+        )}
       </Unauthenticated>
 
       <Authenticated>

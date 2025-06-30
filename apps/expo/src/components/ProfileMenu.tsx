@@ -5,10 +5,18 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { useConvexAuth } from "convex/react";
+import { toast } from "sonner-native";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
-import { LogOut, MessageCircle, ShareIcon, User } from "~/components/icons";
+import {
+  LogOut,
+  MessageCircle,
+  RefreshCw,
+  ShareIcon,
+  User,
+} from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
+import { useAppStore } from "~/store";
 import { logError } from "../utils/errorLogging";
 import { UserProfileFlair } from "./UserProfileFlair";
 
@@ -16,12 +24,25 @@ export function ProfileMenu() {
   const { user } = useUser();
   const { isAuthenticated } = useConvexAuth();
   const signOut = useSignOut();
+  const { setHasSeenOnboarding, setHasCompletedOnboarding } = useAppStore();
 
   const handleSignOut = () => {
-    signOut().catch((error) => {
-      logError("Error during sign out process", error);
-      // Optionally, you could show a toast to the user here
-    });
+    signOut()
+      .catch((error) => {
+        // Ignore "You are signed out" errors as these are expected
+        // when third-party services try to logout after Clerk has already signed out
+        if (
+          error instanceof Error &&
+          !error.message?.includes("You are signed out")
+        ) {
+          logError("Error during sign out process", error);
+          toast.error("Failed to sign out. Please try again.");
+        }
+      })
+      .finally(() => {
+        // Navigate to onboarding welcome after sign out attempt (success or expected error)
+        router.replace("/(onboarding)/onboarding");
+      });
   };
 
   const handleEditProfile = () => {
@@ -43,6 +64,15 @@ export function ProfileMenu() {
       message: "Check out Soonlist on the App Store!",
       url: url,
     });
+  };
+
+  const handleResetOnboarding = () => {
+    // Reset onboarding state
+    setHasSeenOnboarding(false);
+    setHasCompletedOnboarding(false);
+
+    // Navigate to onboarding
+    router.replace("/(onboarding)/onboarding");
   };
 
   const profileImage = (
@@ -103,6 +133,20 @@ export function ProfileMenu() {
           </DropdownMenu.ItemIcon>
           <DropdownMenu.ItemTitle>Support</DropdownMenu.ItemTitle>
         </DropdownMenu.Item>
+
+        {__DEV__ && (
+          <DropdownMenu.Item
+            key="reset-onboarding"
+            onSelect={handleResetOnboarding}
+          >
+            <DropdownMenu.ItemIcon ios={{ name: "arrow.counterclockwise" }}>
+              <RefreshCw />
+            </DropdownMenu.ItemIcon>
+            <DropdownMenu.ItemTitle>
+              Reset Onboarding (Dev)
+            </DropdownMenu.ItemTitle>
+          </DropdownMenu.Item>
+        )}
 
         <DropdownMenu.Item key="sign-out" onSelect={handleSignOut} destructive>
           <DropdownMenu.ItemIcon

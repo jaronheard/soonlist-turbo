@@ -9,7 +9,11 @@ interface EmailSignInButtonProps {
 
 export function EmailSignInButton({ onPress }: EmailSignInButtonProps) {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity
+      style={styles.button}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <View style={styles.contentContainer}>
         <View style={styles.iconContainer}>
           <Mail size={24} color="#162135" />

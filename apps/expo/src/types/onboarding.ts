@@ -1,12 +1,20 @@
 import type { OnboardingData } from "@soonlist/db/types";
 
 export type OnboardingStep =
-  | "notifications"
+  | "welcome"
+  | "intro"
+  | "goals"
+  | "screenshot"
+  | "discovery"
   | "age"
   | "source"
-  | "discovery"
-  | "screenshot"
-  | "priorities"
-  | "photos";
+  | "readyNotifications"
+  | "notifications"
+  | "demo"
+  | "demoIntro"
+  | "screenshotDemo"
+  | "addScreenshot"
+  | "success"
+  | "paywall";
 
 export type { OnboardingData };

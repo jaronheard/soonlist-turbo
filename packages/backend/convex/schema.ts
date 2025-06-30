@@ -22,8 +22,16 @@ export const onboardingDataValidator = v.object({
   source: v.optional(v.string()),
   discoveryMethod: v.optional(v.string()),
   screenshotEvents: v.optional(v.string()),
-  priority: v.optional(priorityValidator),
+  goals: v.optional(v.array(v.string())), // Multi-select goals
+  priority: v.optional(priorityValidator), // Keep for backward compatibility
+  watchedDemo: v.optional(v.boolean()), // Whether user watched the demo
   completedAt: v.optional(v.string()), // ISO date string
+  // Subscription fields
+  subscribed: v.optional(v.boolean()),
+  subscribedAt: v.optional(v.string()), // ISO date string
+  subscriptionPlan: v.optional(v.string()),
+  trialMode: v.optional(v.boolean()),
+  trialStartedAt: v.optional(v.string()), // ISO date string
 });
 
 export const userAdditionalInfoValidator = v.object({
@@ -177,4 +185,12 @@ export default defineSchema({
     .index("by_feed_time", ["feedId", "eventStartTime"])
     .index("by_feed_event", ["feedId", "eventId"]) // For deduplication checks
     .index("by_event", ["eventId"]), // For event removal across all feeds
+
+  guestOnboardingData: defineTable({
+    ownerToken: v.string(), // Guest user ID
+    isGuest: v.boolean(),
+    data: onboardingDataValidator,
+    createdAt: v.string(), // ISO date string
+    updatedAt: v.string(), // ISO date string
+  }).index("by_owner", ["ownerToken"]),
 });

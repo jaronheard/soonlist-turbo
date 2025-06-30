@@ -8,5 +8,6 @@ export default function Index() {
     return null;
   }
 
+  // Always go to feed, which will handle auth check and redirect to onboarding if needed
   return <Redirect href="/(tabs)/feed" />;
 }
