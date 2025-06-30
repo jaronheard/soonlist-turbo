@@ -50,7 +50,7 @@ export default function SourceScreen() {
     <>
       <QuestionContainer
         question="Where did you hear about us?"
-        currentStep={6}
+        currentStep={7}
         totalSteps={TOTAL_ONBOARDING_STEPS}
       >
         <View>
