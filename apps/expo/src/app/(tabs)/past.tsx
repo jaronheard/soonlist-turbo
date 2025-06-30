@@ -35,12 +35,12 @@ function PastEventsContent() {
     loadMore,
     isLoading,
   } = useStablePaginatedQuery(api.feeds.getMyFeed, queryArgs, {
-    initialNumItems: 20,
+    initialNumItems: 50,
   });
 
   const handleLoadMore = useCallback(() => {
     if (status === "CanLoadMore") {
-      loadMore(20);
+      loadMore(25);
     }
   }, [status, loadMore]);
 

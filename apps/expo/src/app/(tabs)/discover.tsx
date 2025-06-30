@@ -42,7 +42,7 @@ function DiscoverContent() {
       beforeThisDateTime: stableTimestamp,
     },
     {
-      initialNumItems: 20,
+      initialNumItems: 50,
     },
   );
 
@@ -59,7 +59,7 @@ function DiscoverContent() {
 
   const handleLoadMore = useCallback(() => {
     if (status === "CanLoadMore") {
-      loadMore(20);
+      loadMore(25);
     }
   }, [status, loadMore]);
 
