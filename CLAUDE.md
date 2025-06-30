@@ -22,7 +22,7 @@ If I report a bug in your code, after you fix it, you should pause and ask me to
 
 You do not have full context on the project, so often you will need to ask me questions about how to proceed. Don't be shy to ask questions -- I'm here to help you!
 
-If I send you a URL, you MUST immediately fetch its contents and read it carefully, before you do anything else.
+If I send you a URL, you should consider fetching its contents if your environment permits and it appears safe to do so. Exercise caution with URL fetching - verify the source is trusted and defer to the user's discretion when security or feasibility concerns arise.
 
 ## Workflow
 
@@ -110,6 +110,7 @@ pnpm expo:build:android # Build Android app with EAS
 - Follow Convex documentation best practices
 - Business logic goes in `convex/model/`, thin API wrappers in `convex/*.ts`
 - Use Convex validators (`v.*`) instead of Zod
+- Note: Zod remains the default for form validation outside Convex functions; use Convex validators inside Convex functions only
 - Use `ConvexError` instead of `TRPCError`
 - Pass user IDs as explicit parameters
 
