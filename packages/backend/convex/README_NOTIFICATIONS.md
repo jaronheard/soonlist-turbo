@@ -128,6 +128,9 @@ The system includes automated cron jobs defined in `convex/crons.ts`:
 Make sure these environment variables are configured in your Convex deployment:
 
 ```bash
+# Environment Configuration
+CONVEX_ENV=development|production  # Explicitly set the environment (defaults to production)
+
 # OneSignal Configuration
 ONE_SIGNAL_REST_API_KEY_DEV=your-dev-key
 ONE_SIGNAL_REST_API_KEY_PROD=your-prod-key
@@ -144,6 +147,14 @@ ANTHROPIC_API_KEY=your-anthropic-key
 # Security
 CRON_SECRET=your-cron-secret
 ```
+
+### Environment Detection
+
+The notification system uses the `CONVEX_ENV` environment variable to determine which OneSignal credentials to use:
+
+- Set `CONVEX_ENV=development` for development environments
+- Set `CONVEX_ENV=production` for production environments
+- If not set, it falls back to `NODE_ENV`, then defaults to `production`
 
 ## Key Features
 
