@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -14,7 +13,6 @@ import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useStableTimestamp } from "~/store";
 
 function PastEventsContent() {
-  const { user } = useUser();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
