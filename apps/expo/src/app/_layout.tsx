@@ -163,14 +163,14 @@ function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
-        <QueryClientProvider client={queryClient}>
-          <ClerkProvider
-            publishableKey={clerkPublishableKey}
-            tokenCache={tokenCache}
-          >
-            <ClerkLoaded>
-              {/* eslint-disable-next-line react-compiler/react-compiler */}
-              <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <ClerkProvider
+          publishableKey={clerkPublishableKey}
+          tokenCache={tokenCache}
+        >
+          <ClerkLoaded>
+            {/* eslint-disable-next-line react-compiler/react-compiler */}
+            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+              <QueryClientProvider client={queryClient}>
                 <SafeAreaProvider>
                   <PostHogProvider
                     apiKey={Config.posthogApiKey}
@@ -197,10 +197,10 @@ function RootLayout() {
                     </OneSignalProvider>
                   </PostHogProvider>
                 </SafeAreaProvider>
-              </ConvexProviderWithClerk>
-            </ClerkLoaded>
-          </ClerkProvider>
-        </QueryClientProvider>
+              </QueryClientProvider>
+            </ConvexProviderWithClerk>
+          </ClerkLoaded>
+        </ClerkProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );
