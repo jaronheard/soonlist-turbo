@@ -48,6 +48,12 @@ export default function PaywallReminderScreen() {
   };
 
   const handleContinueTrial = () => {
+    // Set trial mode state
+    setOnboardingData({
+      subscribed: false,
+      trialMode: true,
+    });
+    
     // Continue with trial limitations
     router.replace("/(tabs)/feed");
   };
