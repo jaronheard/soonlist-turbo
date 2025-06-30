@@ -63,15 +63,6 @@ function DiscoverContent() {
     }
   }, [status, loadMore]);
 
-  // Check if user has access to discover feature (only if authenticated)
-  if (user) {
-    const { showDiscover } = getPlanStatusFromUser(user);
-
-    if (!showDiscover) {
-      return <Redirect href="/feed" />;
-    }
-  }
-
   const savedEventIds = new Set(
     savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
@@ -86,6 +77,15 @@ function DiscoverContent() {
       lists: [],
     }));
   }, [events]);
+
+  // Check if user has access to discover feature (only if authenticated)
+  if (user) {
+    const { showDiscover } = getPlanStatusFromUser(user);
+
+    if (!showDiscover) {
+      return <Redirect href="/feed" />;
+    }
+  }
 
   function SaveButtonWrapper({ event }: { event: { id: string } }) {
     // Only show save button for authenticated users
