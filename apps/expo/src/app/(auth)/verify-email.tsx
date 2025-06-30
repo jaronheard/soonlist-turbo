@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, Stack } from "expo-router";
-import { Clerk, useSignUp } from "@clerk/clerk-expo";
+import { useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
@@ -71,14 +71,11 @@ const VerifyEmail = () => {
         });
 
         // Transfer guest data after successful sign up
-        // Wait a bit for the session to be fully initialized
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // Safely access session data
-        const session = Clerk.session;
-        if (session?.user?.id) {
+        // Use the createdUserId from the sign-up response
+        const userId = completeSignUp.createdUserId;
+        if (userId) {
           await transferGuestData({
-            userId: session.user.id,
+            userId,
             transferGuestOnboardingData,
           });
         }
