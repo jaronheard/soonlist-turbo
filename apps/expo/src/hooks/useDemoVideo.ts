@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { api } from "@soonlist/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { videoCache } from "~/services/videoCache";
 
@@ -70,12 +71,12 @@ export function useDemoVideo(): UseDemoVideoResult {
   }, [activeDemoVideo]);
 
   useEffect(() => {
-    loadVideo();
+    void loadVideo();
   }, [loadVideo]);
 
   const retry = useCallback(() => {
     setError(null);
-    loadVideo();
+    void loadVideo();
   }, [loadVideo]);
 
   return {

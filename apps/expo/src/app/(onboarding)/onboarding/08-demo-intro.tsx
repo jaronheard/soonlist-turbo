@@ -105,6 +105,8 @@ export default function SeeHowItWorksScreen() {
                     <TouchableOpacity
                       onPress={handleReplay}
                       className="rounded-full bg-black/50 p-4"
+                      accessibilityRole="button"
+                      accessibilityLabel="Replay video"
                     >
                       <Ionicons name="refresh" size={32} color="#FFF" />
                     </TouchableOpacity>
@@ -113,6 +115,11 @@ export default function SeeHowItWorksScreen() {
                       onPress={handlePlayPause}
                       className="rounded-full bg-black/50 p-4"
                       style={{ opacity: isPlaying ? 0 : 1 }}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        isPlaying ? "Pause video" : "Play video"
+                      }
+                      accessibilityState={{ selected: isPlaying }}
                     >
                       <Ionicons
                         name={isPlaying ? "pause" : "play"}

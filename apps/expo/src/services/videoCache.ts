@@ -93,7 +93,7 @@ class VideoCacheService {
             const progress =
               downloadProgress.totalBytesWritten /
               downloadProgress.totalBytesExpectedToWrite;
-            onProgress(progress);
+            onProgress(Math.min(progress, 1));
           }
         },
       );
