@@ -2,7 +2,7 @@ import type { ClerkAPIError, OAuthStrategy } from "@clerk/types";
 import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
@@ -24,7 +24,6 @@ import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Logo } from "./Logo";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -271,18 +270,12 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
       <Stack.Screen options={{ headerShown: false }} />
       {banner}
       <View className={`flex-1 px-4 pb-8 ${banner ? "pt-0" : "pt-24"}`}>
-        <AnimatedView className="flex-1" layout={Layout.duration(400)}>
+        <View className="flex-1">
           <View className="shrink-0">
-            <AnimatedView
-              className="mb-4 items-center"
-              layout={Layout.duration(400)}
-            >
+            <View className="mb-4 items-center">
               <Logo className="h-10 w-40" variant="hidePreview" />
-            </AnimatedView>
-            <AnimatedView
-              className="items-center"
-              layout={Layout.duration(400)}
-            >
+            </View>
+            <View className="items-center">
               <Text className="mb-2 text-center font-heading text-4xl font-bold text-gray-700">
                 Turn screenshots into{" "}
                 <Text className="text-interactive-1">plans</Text>
@@ -290,13 +283,10 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               <Text className="mb-4 text-center text-lg text-gray-500">
                 Save events in one tap. All in one place.
               </Text>
-            </AnimatedView>
+            </View>
           </View>
 
-          <AnimatedView
-            layout={Layout.duration(400)}
-            className="flex-1 justify-center"
-          >
+          <View className="flex-1 justify-center">
             <ExpoImage
               // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-require-imports
               source={require("../assets/feed.png") as ImageSourcePropType}
@@ -305,17 +295,14 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               cachePolicy="disk"
               transition={100}
             />
-          </AnimatedView>
+          </View>
 
-          <AnimatedView
-            className="relative w-full shrink-0"
-            layout={Layout.duration(400)}
-          >
+          <View className="relative w-full shrink-0">
             <AppleSignInButton
               onPress={() => void handleOAuthFlow("oauth_apple")}
             />
             <View className="h-3" />
-            <AnimatedPressable
+            <Pressable
               onPress={toggleOtherOptions}
               className="relative flex-row items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 active:opacity-70"
             >
@@ -327,12 +314,11 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
                   <X size={20} color="#374151" />
                 </View>
               )}
-            </AnimatedPressable>
+            </Pressable>
             {showOtherOptions && (
               <AnimatedView
                 entering={FadeIn.duration(400)}
                 exiting={FadeOut.duration(300)}
-                layout={Layout.duration(400)}
                 className="absolute bottom-full w-full"
               >
                 <View className="h-3" />
@@ -344,8 +330,8 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
                 <View className="h-3" />
               </AnimatedView>
             )}
-          </AnimatedView>
-        </AnimatedView>
+          </View>
+        </View>
       </View>
     </Container>
   );
