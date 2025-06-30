@@ -3,7 +3,17 @@
 // OneSignal REST API base URL
 const ONE_SIGNAL_API_URL = "https://onesignal.com/api/v1";
 
-const IS_DEV = process.env.NODE_ENV === "development";
+// Use CONVEX_ENV for explicit environment detection, fallback to NODE_ENV
+const ENV = process.env.CONVEX_ENV || process.env.NODE_ENV || "production";
+const IS_DEV = ENV === "development";
+
+// Log environment detection for debugging
+console.log("OneSignal Environment Detection:", {
+  CONVEX_ENV: process.env.CONVEX_ENV,
+  NODE_ENV: process.env.NODE_ENV,
+  ENV,
+  IS_DEV,
+});
 
 // OneSignal API key from environment variables
 const ONE_SIGNAL_REST_API_KEY = IS_DEV
@@ -18,6 +28,11 @@ const EXPO_PUBLIC_ONE_SIGNAL_APP_ID = IS_DEV
 if (!ONE_SIGNAL_REST_API_KEY || !EXPO_PUBLIC_ONE_SIGNAL_APP_ID) {
   console.warn(
     "OneSignal API key or App ID not configured. Notifications will not be sent.",
+    {
+      hasApiKey: !!ONE_SIGNAL_REST_API_KEY,
+      hasAppId: !!EXPO_PUBLIC_ONE_SIGNAL_APP_ID,
+      environment: IS_DEV ? "development" : "production",
+    },
   );
 }
 
@@ -71,7 +86,13 @@ export async function sendNotification({
 }> {
   // If OneSignal is not configured, log and return early
   if (!ONE_SIGNAL_REST_API_KEY || !EXPO_PUBLIC_ONE_SIGNAL_APP_ID) {
-    console.error("OneSignal API key or App ID not configured");
+    console.error("OneSignal API key or App ID not configured", {
+      userId,
+      title,
+      environment: IS_DEV ? "development" : "production",
+      hasApiKey: !!ONE_SIGNAL_REST_API_KEY,
+      hasAppId: !!EXPO_PUBLIC_ONE_SIGNAL_APP_ID,
+    });
     return {
       success: false,
       error: "OneSignal API key or App ID not configured",
@@ -121,6 +142,13 @@ export async function sendNotification({
       );
     }
 
+    console.log("OneSignal notification sent successfully", {
+      userId,
+      title,
+      oneSignalId: "id" in result ? result.id : undefined,
+      environment: IS_DEV ? "development" : "production",
+    });
+
     return {
       success: true,
       id: "id" in result ? result.id : undefined,
@@ -158,7 +186,13 @@ export async function sendBatchNotifications({
 }> {
   // If OneSignal is not configured, log and return early
   if (!ONE_SIGNAL_REST_API_KEY || !EXPO_PUBLIC_ONE_SIGNAL_APP_ID) {
-    console.error("OneSignal API key or App ID not configured");
+    console.error("OneSignal API key or App ID not configured", {
+      userIds: userIds.length,
+      title,
+      environment: IS_DEV ? "development" : "production",
+      hasApiKey: !!ONE_SIGNAL_REST_API_KEY,
+      hasAppId: !!EXPO_PUBLIC_ONE_SIGNAL_APP_ID,
+    });
     return {
       success: false,
       error: "OneSignal API key or App ID not configured",
