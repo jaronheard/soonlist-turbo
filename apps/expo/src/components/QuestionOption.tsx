@@ -1,4 +1,5 @@
 import React from "react";
+import type { AccessibilityState} from "react-native";
 import { Pressable, Text } from "react-native";
 
 import { cn } from "~/utils/cn";
@@ -10,6 +11,9 @@ interface QuestionOptionProps {
   rightIcon?: string;
   className?: string;
   disabled?: boolean;
+  accessibilityLabel?: string;
+  accessibilityRole?: "button" | "radio" | "checkbox";
+  accessibilityState?: AccessibilityState;
 }
 
 export function QuestionOption({
@@ -19,11 +23,17 @@ export function QuestionOption({
   className,
   rightIcon,
   disabled = false,
+  accessibilityLabel,
+  accessibilityRole = "button",
+  accessibilityState,
 }: QuestionOptionProps) {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      accessibilityRole={accessibilityRole}
+      accessibilityLabel={accessibilityLabel || label}
+      accessibilityState={accessibilityState || { selected: isSelected, disabled }}
       className={cn(
         "mb-3 w-full flex-row items-center justify-between rounded-3xl border-2 p-4",
         isSelected

@@ -76,6 +76,9 @@ export default function GoalsScreen() {
               isSelected={selectedGoals.includes(goal)}
               disabled={isLoading}
               rightIcon={selectedGoals.includes(goal) ? "✓" : undefined}
+              accessibilityRole="button"
+              accessibilityState={{ selected: selectedGoals.includes(goal) }}
+              accessibilityLabel={`${goal}. ${selectedGoals.includes(goal) ? "Selected" : "Not selected"}. Double tap to ${selectedGoals.includes(goal) ? "deselect" : "select"}.`}
             />
           ))}
         </View>

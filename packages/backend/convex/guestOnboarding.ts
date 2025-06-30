@@ -11,6 +11,7 @@ export const saveGuestOnboardingData = mutation({
     guestUserId: v.string(),
     data: onboardingDataValidator,
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const { guestUserId, data } = args;
 
@@ -48,6 +49,7 @@ export const transferGuestOnboardingData = mutation({
   args: {
     guestUserId: v.string(),
   },
+  returns: v.object({ transferred: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {

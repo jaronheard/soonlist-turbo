@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { useConvexAuth } from "convex/react";
+import { toast } from "sonner-native";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
 import {
@@ -27,23 +28,20 @@ export function ProfileMenu() {
 
   const handleSignOut = () => {
     signOut()
-      .then(() => {
-        // Navigate to onboarding welcome after successful sign out
-        router.replace("/(onboarding)/onboarding");
-      })
       .catch((error) => {
         // Ignore "You are signed out" errors as these are expected
         // when third-party services try to logout after Clerk has already signed out
         if (
           error instanceof Error &&
-          error.message?.includes("You are signed out")
+          !error.message?.includes("You are signed out")
         ) {
-          // Still navigate to onboarding even if we get this error
-          router.replace("/(onboarding)/onboarding");
-          return;
+          logError("Error during sign out process", error);
+          toast.error("Failed to sign out. Please try again.");
         }
-        logError("Error during sign out process", error);
-        // Optionally, you could show a toast to the user here
+      })
+      .finally(() => {
+        // Navigate to onboarding welcome after sign out attempt (success or expected error)
+        router.replace("/(onboarding)/onboarding");
       });
   };
 

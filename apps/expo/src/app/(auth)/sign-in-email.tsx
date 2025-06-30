@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, router, Stack } from "expo-router";
-import { useSignIn, useSession } from "@clerk/clerk-expo";
+import { Clerk, useSignIn } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
@@ -34,7 +34,6 @@ const SignInEmail = () => {
   const [isSigningIn, setIsSigningIn] = React.useState(false);
   const [generalError, setGeneralError] = React.useState("");
   const { signIn, setActive, isLoaded } = useSignIn();
-  const { session } = useSession();
   const posthog = usePostHog();
   const { isAuthenticated } = useConvexAuth();
   const hasCompletedOnboarding = useAppStore(
@@ -87,11 +86,11 @@ const SignInEmail = () => {
           await setActive({ session: completeSignIn.createdSessionId });
 
           // Transfer guest data after successful sign in
-          // The session might not be immediately available, so we'll use the userId from completeSignIn
-          const userId = completeSignIn.createdUserId;
-          if (userId) {
+          // After setActive, the session should be available via Clerk
+          const activeSession = Clerk.session;
+          if (activeSession?.user?.id) {
             await transferGuestData({
-              userId,
+              userId: activeSession.user.id,
               transferGuestOnboardingData,
             });
           }
