@@ -36,8 +36,11 @@ function DiscoverContent() {
     loadMore,
     isLoading,
   } = useStablePaginatedQuery(
-    api.events.getDiscoverPaginated,
-    { beforeThisDateTime: stableTimestamp },
+    api.feeds.getDiscoverFeed,
+    {
+      filter: "upcoming" as const,
+      beforeThisDateTime: stableTimestamp,
+    },
     {
       initialNumItems: 20,
     },
@@ -60,6 +63,21 @@ function DiscoverContent() {
     }
   }, [status, loadMore]);
 
+  const savedEventIds = new Set(
+    savedEventIdsQuery?.map((event) => event.id) ?? [],
+  );
+
+  // Add missing properties that UserEventsList expects
+  const enrichedEvents = useMemo(() => {
+    return events.map((event) => ({
+      ...event,
+      eventFollows: [],
+      comments: [],
+      eventToLists: [],
+      lists: [],
+    }));
+  }, [events]);
+
   // Check if user has access to discover feature (only if authenticated)
   if (user) {
     const { showDiscover } = getPlanStatusFromUser(user);
@@ -68,10 +86,6 @@ function DiscoverContent() {
       return <Redirect href="/feed" />;
     }
   }
-
-  const savedEventIds = new Set(
-    savedEventIdsQuery?.map((event) => event.id) ?? [],
-  );
 
   function SaveButtonWrapper({ event }: { event: { id: string } }) {
     // Only show save button for authenticated users
@@ -91,7 +105,7 @@ function DiscoverContent() {
       ) : (
         <View className="flex-1">
           <UserEventsList
-            events={events}
+            events={enrichedEvents}
             onEndReached={handleLoadMore}
             isFetchingNextPage={status === "LoadingMore"}
             ActionButton={SaveButtonWrapper}

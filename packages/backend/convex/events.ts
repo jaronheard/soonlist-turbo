@@ -45,66 +45,6 @@ const listValidator = v.object({
 });
 
 /**
- * Get events for a specific user by username
- */
-export const getForUser = query({
-  args: { userName: v.string() },
-  handler: async (ctx, args) => {
-    return await Events.getEventsForUser(ctx, args.userName);
-  },
-});
-
-/**
- * Get upcoming events for a user (created + saved)
- */
-export const getUpcomingForUser = query({
-  args: { userName: v.string() },
-  handler: async (ctx, args) => {
-    return await Events.getUpcomingEventsForUser(ctx, args.userName);
-  },
-});
-
-/**
- * Get created events for a user
- */
-export const getCreatedForUser = query({
-  args: { userName: v.string() },
-  handler: async (ctx, args) => {
-    return await Events.getEventsForUser(ctx, args.userName);
-  },
-});
-
-/**
- * Get events that a user is following
- */
-export const getFollowingForUser = query({
-  args: { userName: v.string() },
-  handler: async (ctx, args) => {
-    return await Events.getFollowingEventsForUser(ctx, args.userName);
-  },
-});
-
-/**
- * Get upcoming events from following (optimized)
- */
-export const getFollowingUpcomingForUser = query({
-  args: { userName: v.string() },
-  handler: async (ctx, args) => {
-    return await Events.getFollowingUpcomingEventsForUser(ctx, args.userName);
-  },
-});
-
-/**
- * Get saved events for a user
- */
-export const getSavedForUser = query({
-  args: { userName: v.string() },
-  handler: async (ctx, args) => {
-    return await Events.getSavedEventsForUser(ctx, args.userName);
-  },
-});
-
-/**
  * Get saved event IDs for a user
  */
 export const getSavedIdsForUser = query({
@@ -115,46 +55,12 @@ export const getSavedIdsForUser = query({
 });
 
 /**
- * Get possible duplicate events based on start time
- */
-export const getPossibleDuplicates = query({
-  args: { startDateTime: v.string() },
-  handler: async (ctx, args) => {
-    const startDateTime = new Date(args.startDateTime);
-    return await Events.getPossibleDuplicateEvents(ctx, startDateTime);
-  },
-});
-
-/**
  * Get a single event by ID
  */
 export const get = query({
   args: { eventId: v.string() },
   handler: async (ctx, args) => {
     return await Events.getEventById(ctx, args.eventId);
-  },
-});
-
-/**
- * Get all events
- */
-export const getAll = query({
-  args: {},
-  handler: async (ctx, _args) => {
-    return await Events.getAllEvents(ctx);
-  },
-});
-
-/**
- * Get next upcoming events
- */
-export const getNext = query({
-  args: {
-    limit: v.optional(v.number()),
-    excludeCurrent: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    return await Events.getNextEvents(ctx, args.limit, args.excludeCurrent);
   },
 });
 
