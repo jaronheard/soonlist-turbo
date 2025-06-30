@@ -266,6 +266,7 @@ export const useAppStore = create<AppState>()(
       resetOnboarding: () =>
         set({
           hasCompletedOnboarding: false,
+          hasSeenOnboarding: false,
           onboardingData: {},
           currentOnboardingStep: null,
         }),
