@@ -30,14 +30,6 @@ export const useGuestUser = () => {
     void initializeGuestUser();
   }, []);
 
-  const markHasGuestEvents = async () => {
-    try {
-      await AsyncStorage.setItem(HAS_GUEST_EVENTS_KEY, "true");
-    } catch (error) {
-      console.error("Error marking guest events:", error);
-    }
-  };
-
   const clearGuestData = async () => {
     try {
       await AsyncStorage.multiRemove([GUEST_USER_KEY, HAS_GUEST_EVENTS_KEY]);
@@ -49,7 +41,6 @@ export const useGuestUser = () => {
   return {
     guestUserId,
     isLoading,
-    markHasGuestEvents,
     clearGuestData,
   };
 };
