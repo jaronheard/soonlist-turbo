@@ -85,8 +85,11 @@ const SignInEmail = () => {
           });
           await setActive({ session: completeSignIn.createdSessionId });
 
+          // Wait a bit for the session to be fully initialized
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
           // Transfer guest data after successful sign in
-          // After setActive, the session should be available via Clerk
+          // After setActive and delay, the session should be available via Clerk
           const activeSession = Clerk.session;
           if (activeSession?.user?.id) {
             await transferGuestData({
