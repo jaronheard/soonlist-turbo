@@ -1,5 +1,5 @@
+import type { AccessibilityState } from "react-native";
 import React from "react";
-import type { AccessibilityState} from "react-native";
 import { Pressable, Text } from "react-native";
 
 import { cn } from "~/utils/cn";
@@ -33,7 +33,9 @@ export function QuestionOption({
       disabled={disabled}
       accessibilityRole={accessibilityRole}
       accessibilityLabel={accessibilityLabel || label}
-      accessibilityState={accessibilityState || { selected: isSelected, disabled }}
+      accessibilityState={
+        accessibilityState || { selected: isSelected, disabled }
+      }
       className={cn(
         "mb-3 w-full flex-row items-center justify-between rounded-3xl border-2 p-4",
         isSelected

@@ -53,7 +53,7 @@ export default function PaywallReminderScreen() {
       subscribed: false,
       trialMode: true,
     });
-    
+
     // Continue with trial limitations
     router.replace("/(tabs)/feed");
   };
