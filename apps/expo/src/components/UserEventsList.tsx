@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
@@ -578,46 +577,23 @@ const GhostEventCard = ({ index }: { index: number }) => {
   );
 };
 
-const EmptyStateBanner = () => {
+const EmptyStateHeader = () => {
   const { fontScale } = useWindowDimensions();
-  const { triggerAddEventFlow } = useAddEventFlow();
 
   return (
-    <View className="mb-6 px-4">
-      <TouchableOpacity
-        onPress={() => void triggerAddEventFlow()}
-        activeOpacity={0.85}
+    <View className="mb-6 px-4 items-center">
+      <Text
+        className="mb-2 text-center text-2xl font-bold text-neutral-1"
+        style={{ fontSize: 24 * fontScale }}
       >
-        <LinearGradient
-          colors={["#7C3AED", "#5A32FB"]}
-          start={{ x: 0.3, y: 0 }}
-          end={{ x: 0.7, y: 1 }}
-          style={{
-            borderRadius: 16,
-            padding: 24,
-            shadowColor: "#5A32FB",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 8,
-            elevation: 5,
-          }}
-        >
-          <View className="items-center">
-            <Text
-              className="mb-2 text-center text-2xl font-bold text-white"
-              style={{ fontSize: 24 * fontScale }}
-            >
-              Your events, all in one place.
-            </Text>
-            <Text
-              className="text-center text-base text-white/80"
-              style={{ fontSize: 16 * fontScale }}
-            >
-              Tap to add from a screenshot.
-            </Text>
-          </View>
-        </LinearGradient>
-      </TouchableOpacity>
+        Your events will appear here.
+      </Text>
+      <Text
+        className="text-center text-base text-neutral-2"
+        style={{ fontSize: 16 * fontScale }}
+      >
+        Tap the + below to add your first event from a screenshot.
+      </Text>
     </View>
   );
 };
@@ -668,7 +644,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <EmptyStateBanner />
+        <EmptyStateHeader />
         <GhostEventCard index={0} />
         <GhostEventCard index={1} />
         <GhostEventCard index={2} />
