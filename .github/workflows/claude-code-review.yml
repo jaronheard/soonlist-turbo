@@ -2,21 +2,30 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, ready_for_review]  # Run on initial PR creation and when marked ready
     # Optional: Only run on specific file changes
     # paths:
     #   - "src/**/*.ts"
     #   - "src/**/*.tsx"
     #   - "src/**/*.js"
     #   - "src/**/*.jsx"
+  
+  # Also trigger when someone comments '@claude review' on a PR
+  issue_comment:
+    types: [created]
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
+    # Only run if:
+    # 1. It's a new non-draft PR (opened event), OR
+    # 2. A draft PR is marked as ready for review, OR
+    # 3. It's a comment on a PR that contains '@claude review'
+    if: |
+      (github.event_name == 'pull_request' && 
+       github.event.pull_request.draft == false) ||
+      (github.event_name == 'issue_comment' && 
+       github.event.issue.pull_request && 
+       contains(github.event.comment.body, '@claude review'))
     
     runs-on: ubuntu-latest
     permissions:
@@ -40,7 +49,11 @@ jobs:
           # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
           # model: "claude-opus-4-20250514"
           
-          # Direct prompt for automated review (no @claude mention needed)
+          # Direct prompt for automated review
+          # Note: This review runs automatically on:
+          # - New non-draft PRs
+          # - When draft PRs are marked as ready for review
+          # - When someone comments '@claude review'
           direct_prompt: |
             Please review this pull request and provide feedback on:
             - Code quality and best practices
