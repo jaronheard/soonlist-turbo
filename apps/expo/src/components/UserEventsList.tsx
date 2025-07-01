@@ -535,12 +535,22 @@ const GhostEventCard = ({ index }: { index: number }) => {
             width: imageWidth,
             height: imageHeight,
             borderRadius: 20,
-            borderWidth: 2,
-            borderColor: "#E0D9FF",
-            borderStyle: "dashed",
-            backgroundColor: "#FAFAFF",
+            overflow: "hidden",
+            backgroundColor: "white",
           }}
-        />
+        >
+          <View
+            style={{
+              width: imageWidth,
+              height: imageHeight,
+              borderRadius: 20,
+              borderWidth: 3,
+              borderColor: "white",
+              borderStyle: "dashed",
+              backgroundColor: "#FAFAFF",
+            }}
+          />
+        </View>
       </View>
 
       {/* Ghost card content with dashed border - matching exact card style */}
@@ -560,8 +570,8 @@ const GhostEventCard = ({ index }: { index: number }) => {
           backgroundColor: "#FAFAFF",
         }}
       >
-        {/* Empty content - no skeleton elements */}
-        <View style={{ height: 80 * fontScale }} />
+        {/* Empty content - matching the actual card height */}
+        <View style={{ height: 85 * fontScale }} />
       </View>
     </View>
   );
