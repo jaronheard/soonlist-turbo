@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -13,7 +14,7 @@ import { router } from "expo-router";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
-import { shouldMockPaywall } from "~/utils/deviceInfo";
+import { isSimulator, shouldMockPaywall } from "~/utils/deviceInfo";
 
 export default function PaywallScreen() {
   const { isInitialized, customerInfo } = useRevenueCat();
@@ -25,8 +26,11 @@ export default function PaywallScreen() {
 
   // Debug logging
   console.log("Paywall Debug:", {
-    isDevice: Constants.isDevice,
-    isSimulator: !Constants.isDevice,
+    isDevice: Constants.isDevice as boolean | undefined,
+    deviceName: String(Constants.deviceName ?? "unknown"),
+    platform: Platform.OS,
+    model: String(Constants.platform?.ios?.model ?? "unknown"),
+    isSimulator: isSimulator(),
     shouldMockPaywall: shouldMockPaywall(),
     showMockPaywall,
     isInitialized,
@@ -250,11 +254,7 @@ export default function PaywallScreen() {
       <View className="flex-1 items-center justify-center px-6">
         <ActivityIndicator size="large" color="white" />
         <Text className="mt-4 text-lg text-white">
-          {!isInitialized
-            ? "Initializing..."
-            : paywallPresented
-              ? "Loading paywall..."
-              : "Loading subscription options..."}
+          {!isInitialized ? "Initializing..." : "Loading subscription options..."}
         </Text>
         {/* Show skip button only before paywall is presented */}
         {isInitialized && !paywallPresented && (
