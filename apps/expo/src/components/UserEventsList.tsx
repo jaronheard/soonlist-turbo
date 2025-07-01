@@ -589,9 +589,10 @@ const EmptyStateBanner = () => {
         activeOpacity={0.85}
       >
         <LinearGradient
-          colors={["#5A32FB", "#8B5CF6"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          colors={["#8B5CF6", "#5A32FB", "#8B5CF6"]}
+          start={{ x: 0.5, y: 0.5 }}
+          end={{ x: 0, y: 1 }}
+          locations={[0, 0.5, 1]}
           style={{
             borderRadius: 16,
             padding: 24,
@@ -613,7 +614,7 @@ const EmptyStateBanner = () => {
               className="text-center text-base text-white/80"
               style={{ fontSize: 16 * fontScale }}
             >
-              Tap here to add from a screenshot.
+              Tap to add from a screenshot.
             </Text>
           </View>
         </LinearGradient>
