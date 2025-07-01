@@ -638,48 +638,49 @@ const EmptyStateBanner = () => {
 
   return (
     <View className="mb-8 px-4">
-      <Animated.View
-        className="overflow-hidden rounded-2xl p-6 shadow-lg"
-        style={{
-          transform: [{ scale: scaleAnim }],
-          shadowColor: "#5A32FB",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.2,
-          shadowRadius: 16,
-          elevation: 8,
-          backgroundColor: "#5A32FB",
-        }}
+      <TouchableOpacity
+        onPress={() => void triggerAddEventFlow()}
+        activeOpacity={0.9}
       >
-        <View className="items-center">
-          <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-white/20">
-            <Plus size={32 * fontScale} color="white" strokeWidth={3} />
-          </View>
-          <Text
-            className="mb-2 text-center text-2xl font-bold text-white"
-            style={{ fontSize: 24 * fontScale }}
-          >
-            Your events, all in one place
-          </Text>
-          <Text
-            className="mb-6 text-center text-base text-white/90"
-            style={{ fontSize: 16 * fontScale }}
-          >
-            Add events from screenshots and never miss out
-          </Text>
-          <TouchableOpacity
-            onPress={() => void triggerAddEventFlow()}
-            className="rounded-full bg-white px-8 py-3 shadow-md"
-            activeOpacity={0.8}
-          >
+        <Animated.View
+          className="overflow-hidden rounded-2xl p-6 shadow-lg"
+          style={{
+            transform: [{ scale: scaleAnim }],
+            shadowColor: "#5A32FB",
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.2,
+            shadowRadius: 16,
+            elevation: 8,
+            backgroundColor: "#5A32FB",
+          }}
+        >
+          <View className="items-center">
+            <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-white/20">
+              <Plus size={32 * fontScale} color="white" strokeWidth={3} />
+            </View>
             <Text
-              className="text-accent-purple text-center text-base font-semibold"
+              className="mb-2 text-center text-2xl font-bold text-white"
+              style={{ fontSize: 24 * fontScale }}
+            >
+              Your events, all in one place
+            </Text>
+            <Text
+              className="mb-6 text-center text-base text-white/90"
               style={{ fontSize: 16 * fontScale }}
             >
-              Add from Screenshot
+              Add events from screenshots and never miss out
             </Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
+            <View className="rounded-full bg-white px-8 py-3 shadow-md">
+              <Text
+                className="text-accent-purple text-center text-base font-semibold"
+                style={{ fontSize: 16 * fontScale }}
+              >
+                Add from Screenshot
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
+      </TouchableOpacity>
     </View>
   );
 };
