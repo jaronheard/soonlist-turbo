@@ -624,9 +624,9 @@ const EmptyStateHeader = () => {
           className="text-center text-base text-neutral-2"
           style={{ fontSize: 16 * fontScale }}
         >
-          Tap 
+          Tap
         </Text>
-        <View 
+        <View
           className="mx-1.5 items-center justify-center rounded-full bg-interactive-1"
           style={{
             width: 20 * fontScale,
