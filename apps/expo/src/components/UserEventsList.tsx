@@ -589,10 +589,9 @@ const EmptyStateBanner = () => {
         activeOpacity={0.85}
       >
         <LinearGradient
-          colors={["#8B5CF6", "#5A32FB", "#8B5CF6"]}
-          start={{ x: 0.5, y: 0.5 }}
-          end={{ x: 0, y: 1 }}
-          locations={[0, 0.5, 1]}
+          colors={["#7C3AED", "#5A32FB"]}
+          start={{ x: 0.3, y: 0 }}
+          end={{ x: 0.7, y: 1 }}
           style={{
             borderRadius: 16,
             padding: 24,
