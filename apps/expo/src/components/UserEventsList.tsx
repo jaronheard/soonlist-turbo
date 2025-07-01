@@ -584,28 +584,13 @@ const GhostEventCard = ({ index }: { index: number }) => {
           
           {/* Location line */}
           <View 
-            className="mb-4 rounded"
+            className="rounded"
             style={{
               height: 14 * fontScale,
               width: 160 * fontScale,
               backgroundColor: "#E8E5FF",
             }}
           />
-          
-          {/* Action buttons row */}
-          <View className="flex-row items-center gap-3">
-            {[0, 1, 2, 3].map((i) => (
-              <View
-                key={i}
-                className="rounded-full"
-                style={{
-                  width: 32 * fontScale,
-                  height: 32 * fontScale,
-                  backgroundColor: "#E8E5FF",
-                }}
-              />
-            ))}
-          </View>
         </View>
       </View>
     </View>
@@ -621,13 +606,13 @@ const EmptyStateHeader = () => {
         className="mb-2 text-center text-2xl font-bold text-neutral-1"
         style={{ fontSize: 24 * fontScale }}
       >
-        Your events will appear here.
+        Your events, all in one place.
       </Text>
       <Text
         className="text-center text-base text-neutral-2"
         style={{ fontSize: 16 * fontScale }}
       >
-        Tap the + below to add your first event from a screenshot.
+        Tap to add from a screenshot.
       </Text>
     </View>
   );
