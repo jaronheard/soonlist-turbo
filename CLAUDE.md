@@ -55,6 +55,13 @@ If I send you a URL, you should consider fetching its contents if your environme
 - NEVER push to origin/main
 - Always ensure lint, format, and typecheck pass before committing
 
+### Terminal Command Best Practices
+
+- **Always quote file paths in terminal commands** - File paths may contain special characters (spaces, parentheses, etc.)
+  - ❌ Wrong: `git diff apps/expo/src/app/(auth)/sign-in.tsx`
+  - ✅ Correct: `git diff "apps/expo/src/app/(auth)/sign-in.tsx"`
+  - This applies to ALL commands: git, pnpm, cat, ls, etc.
+
 ## Essential Development Commands
 
 ### Code Quality - Run Before Committing
