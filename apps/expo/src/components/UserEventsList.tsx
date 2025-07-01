@@ -535,22 +535,12 @@ const GhostEventCard = ({ index }: { index: number }) => {
             width: imageWidth,
             height: imageHeight,
             borderRadius: 20,
-            overflow: "hidden",
-            backgroundColor: "white",
+            borderWidth: 2,
+            borderColor: "#E0D9FF",
+            borderStyle: "dashed",
+            backgroundColor: "#FAFAFF",
           }}
-        >
-          <View
-            style={{
-              width: imageWidth,
-              height: imageHeight,
-              borderRadius: 20,
-              borderWidth: 3,
-              borderColor: "white",
-              borderStyle: "dashed",
-              backgroundColor: "#FAFAFF",
-            }}
-          />
-        </View>
+        />
       </View>
 
       {/* Ghost card content with dashed border - matching exact card style */}
@@ -570,8 +560,53 @@ const GhostEventCard = ({ index }: { index: number }) => {
           backgroundColor: "#FAFAFF",
         }}
       >
-        {/* Empty content - matching the actual card height */}
-        <View style={{ height: 100 * fontScale }} />
+        {/* Gray lines representing text content */}
+        <View>
+          {/* Date/time line */}
+          <View 
+            className="mb-2 rounded"
+            style={{
+              height: 14 * fontScale,
+              width: 120 * fontScale,
+              backgroundColor: "#E8E5FF",
+            }}
+          />
+          
+          {/* Title line */}
+          <View 
+            className="mb-2 rounded"
+            style={{
+              height: 20 * fontScale,
+              width: "85%",
+              backgroundColor: "#E8E5FF",
+            }}
+          />
+          
+          {/* Location line */}
+          <View 
+            className="mb-4 rounded"
+            style={{
+              height: 14 * fontScale,
+              width: 160 * fontScale,
+              backgroundColor: "#E8E5FF",
+            }}
+          />
+          
+          {/* Action buttons row */}
+          <View className="flex-row items-center gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <View
+                key={i}
+                className="rounded-full"
+                style={{
+                  width: 32 * fontScale,
+                  height: 32 * fontScale,
+                  backgroundColor: "#E8E5FF",
+                }}
+              />
+            ))}
+          </View>
+        </View>
       </View>
     </View>
   );
