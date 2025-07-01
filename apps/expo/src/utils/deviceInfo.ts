@@ -10,6 +10,6 @@ export const isDevelopment = () => {
 };
 
 export const shouldMockPaywall = () => {
-  // Mock paywall in development or simulator
-  return isDevelopment() || isSimulator();
+  // Mock paywall only in simulator, not on real devices
+  return isSimulator();
 };
