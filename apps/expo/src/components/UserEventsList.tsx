@@ -26,6 +26,7 @@ import {
   MapPinned,
   MoreVertical,
   Plus,
+  PlusIcon,
   User,
 } from "~/components/icons";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
@@ -521,11 +522,6 @@ const GhostEventCard = ({ index }: { index: number }) => {
           right: 10,
           top: -5,
           zIndex: 10,
-          shadowColor: "#5A32FB",
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.3,
-          shadowRadius: 1.5,
-          elevation: 3,
           transform: [{ rotate: imageRotation }],
           backgroundColor: "transparent",
         }}
@@ -535,7 +531,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
             width: imageWidth,
             height: imageHeight,
             borderRadius: 20,
-            borderWidth: 2,
+            borderWidth: 3,
             borderColor: "#E0D9FF",
             borderStyle: "dashed",
             backgroundColor: "#FAFAFF",
@@ -552,45 +548,55 @@ const GhostEventCard = ({ index }: { index: number }) => {
           borderWidth: 3,
           borderColor: "#E0D9FF",
           borderStyle: "dashed",
-          shadowColor: "#5A32FB",
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.15,
-          shadowRadius: 2.5,
-          elevation: 2,
           backgroundColor: "#FAFAFF",
         }}
       >
         {/* Gray lines representing text content */}
         <View>
           {/* Date/time line */}
-          <View 
+          <View
             className="mb-2 rounded"
             style={{
               height: 14 * fontScale,
               width: 120 * fontScale,
-              backgroundColor: "#E8E5FF",
+              backgroundColor: "#F4F1FF",
             }}
           />
-          
+
           {/* Title line */}
-          <View 
+          <View
             className="mb-2 rounded"
             style={{
               height: 20 * fontScale,
               width: "85%",
-              backgroundColor: "#E8E5FF",
+              backgroundColor: "#F4F1FF",
             }}
           />
-          
+
           {/* Location line */}
-          <View 
-            className="rounded"
+          <View
+            className="mb-4 rounded"
             style={{
               height: 14 * fontScale,
               width: 160 * fontScale,
-              backgroundColor: "#E8E5FF",
+              backgroundColor: "#F4F1FF",
             }}
           />
+
+          {/* Action buttons row */}
+          <View className="flex-row items-center gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <View
+                key={i}
+                className="rounded-full"
+                style={{
+                  width: 24 * fontScale,
+                  height: 24 * fontScale,
+                  backgroundColor: "#F4F1FF",
+                }}
+              />
+            ))}
+          </View>
         </View>
       </View>
     </View>
@@ -599,22 +605,44 @@ const GhostEventCard = ({ index }: { index: number }) => {
 
 const EmptyStateHeader = () => {
   const { fontScale } = useWindowDimensions();
+  const { triggerAddEventFlow } = useAddEventFlow();
 
   return (
-    <View className="mb-6 px-4 items-center">
+    <TouchableOpacity
+      className="my-6 items-center px-4"
+      onPress={() => void triggerAddEventFlow()}
+      activeOpacity={0.7}
+    >
       <Text
         className="mb-2 text-center text-2xl font-bold text-neutral-1"
         style={{ fontSize: 24 * fontScale }}
       >
-        Your events, all in one place.
+        Your events, <Text style={{ color: "#5A32FB" }}>all in one place</Text>
       </Text>
-      <Text
-        className="text-center text-base text-neutral-2"
-        style={{ fontSize: 16 * fontScale }}
-      >
-        Tap to add from a screenshot.
-      </Text>
-    </View>
+      <View className="flex-row items-center justify-center">
+        <Text
+          className="text-center text-base text-neutral-2"
+          style={{ fontSize: 16 * fontScale }}
+        >
+          Tap 
+        </Text>
+        <View 
+          className="mx-1.5 items-center justify-center rounded-full bg-interactive-1"
+          style={{
+            width: 20 * fontScale,
+            height: 20 * fontScale,
+          }}
+        >
+          <PlusIcon size={12 * fontScale} color="#FFF" strokeWidth={3} />
+        </View>
+        <Text
+          className="text-center text-base text-neutral-2"
+          style={{ fontSize: 16 * fontScale }}
+        >
+          to add from screenshots
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 };
 
