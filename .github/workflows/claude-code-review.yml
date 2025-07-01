@@ -79,7 +79,7 @@ jobs:
         with:
           # For pull_request events, checkout the PR head
           # For issue_comment events, checkout the PR head ref from the API call above
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || steps.pr-details.outputs.head_sha }}
+          ref: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.sha) || (github.event_name == 'issue_comment' && steps.pr-details.outputs.head_sha) }}
           fetch-depth: 1
 
       - name: Run Claude Code Review
