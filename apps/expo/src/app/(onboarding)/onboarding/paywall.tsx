@@ -62,6 +62,25 @@ export default function PaywallScreen() {
           });
           break;
 
+        case PAYWALL_RESULT.NOT_PRESENTED:
+          // User already has the required entitlement
+          setOnboardingData({
+            subscribed: true,
+            subscribedAt: new Date().toISOString(),
+          });
+          // Mark onboarding as seen
+          useAppStore.getState().setHasSeenOnboarding(true);
+          // Navigate to sign-in screen with subscription status
+          router.push({
+            pathname: "/sign-in",
+            params: {
+              fromPaywall: "true",
+              subscribed: "true",
+              skipped: "already_subscribed",
+            },
+          });
+          break;
+
         case PAYWALL_RESULT.CANCELLED:
         case PAYWALL_RESULT.ERROR:
           // User cancelled or error occurred - enter trial mode
