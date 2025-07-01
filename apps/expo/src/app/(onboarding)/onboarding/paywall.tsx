@@ -15,9 +15,11 @@ import { useAppStore } from "~/store";
 import { shouldMockPaywall } from "~/utils/deviceInfo";
 
 export default function PaywallScreen() {
-  const { isInitialized } = useRevenueCat();
+  const { isInitialized, customerInfo } = useRevenueCat();
   const { setOnboardingData } = useAppStore();
   const [showMockPaywall] = useState(shouldMockPaywall());
+  const hasUnlimited =
+    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const presentPaywall = useCallback(async () => {
     try {
@@ -75,10 +77,38 @@ export default function PaywallScreen() {
   }, [setOnboardingData]);
 
   useEffect(() => {
-    if (!showMockPaywall && isInitialized) {
+    // Check if user is already subscribed
+    if (isInitialized && hasUnlimited) {
+      // User already has subscription, skip paywall
+      setOnboardingData({
+        subscribed: true,
+        subscribedAt: new Date().toISOString(),
+      });
+      // Mark onboarding as seen
+      useAppStore.getState().setHasSeenOnboarding(true);
+      // Navigate to sign-in screen with subscription status
+      router.push({
+        pathname: "/sign-in",
+        params: {
+          fromPaywall: "true",
+          subscribed: "true",
+          skipped: "already_subscribed",
+        },
+      });
+      return;
+    }
+
+    // Present paywall for non-subscribers on real devices
+    if (!showMockPaywall && isInitialized && !hasUnlimited) {
       void presentPaywall();
     }
-  }, [isInitialized, showMockPaywall, presentPaywall]);
+  }, [
+    isInitialized,
+    showMockPaywall,
+    presentPaywall,
+    hasUnlimited,
+    setOnboardingData,
+  ]);
 
   const handleSkip = () => {
     // Dismiss the paywall and enter trial mode
@@ -197,25 +227,22 @@ export default function PaywallScreen() {
     );
   }
 
+  // Real device - show loading spinner
+  // The RevenueCat paywall will appear as a modal over this screen
   return (
     <SafeAreaView className="flex-1 bg-interactive-1">
       <View className="flex-1 items-center justify-center px-6">
-        {!isInitialized ? (
-          <>
-            <ActivityIndicator size="large" color="white" />
-            <Text className="mt-4 text-white">Loading...</Text>
-          </>
-        ) : (
-          <>
-            <Text className="mb-4 text-center text-xl text-white">
-              Opening subscription options...
+        <ActivityIndicator size="large" color="white" />
+        <Text className="mt-4 text-lg text-white">
+          Loading subscription options...
+        </Text>
+        {/* Only show skip button if paywall hasn't loaded yet */}
+        {!isInitialized && (
+          <Pressable onPress={handleSkip} className="mt-8 py-2">
+            <Text className="text-center text-white/60 underline">
+              Skip for now
             </Text>
-            <Pressable onPress={handleSkip} className="mt-8 py-2">
-              <Text className="text-center text-white/80 underline">
-                Skip and try 3 events free
-              </Text>
-            </Pressable>
-          </>
+          </Pressable>
         )}
       </View>
     </SafeAreaView>
