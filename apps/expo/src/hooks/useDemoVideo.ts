@@ -63,6 +63,8 @@ export function useDemoVideo(): UseDemoVideoResult {
       // If download fails, try to use the remote URL directly as a fallback
       if (activeDemoVideo.url) {
         setVideoUri(activeDemoVideo.url);
+        // Clear error since we have a fallback video available
+        setError(null);
       }
     } finally {
       setIsLoading(false);
