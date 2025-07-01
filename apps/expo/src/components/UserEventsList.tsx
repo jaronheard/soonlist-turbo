@@ -1,8 +1,9 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   Text,
   TouchableOpacity,
@@ -504,6 +505,185 @@ function PromoCard({ type }: PromoCardProps) {
   return null;
 }
 
+const GhostEventCard = ({ delay = 0 }: { delay?: number }) => {
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const { fontScale } = useWindowDimensions();
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmerAnim, {
+          toValue: 1,
+          duration: 1000,
+          delay,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmerAnim, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, [shimmerAnim, delay]);
+
+  const opacity = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 0.7],
+  });
+
+  const iconSize = 16 * fontScale;
+  const imageWidth = 90 * fontScale;
+  const imageHeight = (imageWidth * 16) / 9;
+
+  return (
+    <View className="relative mb-6 px-4">
+      {/* Ghost image placeholder */}
+      <View
+        style={{
+          position: "absolute",
+          right: 10,
+          top: -5,
+          zIndex: 10,
+          transform: [{ rotate: delay % 2 === 0 ? "10deg" : "-10deg" }],
+        }}
+      >
+        <Animated.View
+          style={{
+            width: imageWidth,
+            height: imageHeight,
+            borderRadius: 20,
+            backgroundColor: "#E8E5FF",
+            borderWidth: 3,
+            borderColor: "white",
+            opacity,
+          }}
+        />
+      </View>
+
+      {/* Ghost card content */}
+      <View
+        className="my-1 mt-4 p-3"
+        style={{
+          paddingRight: imageWidth * 1.1,
+          borderRadius: 20,
+          borderWidth: 3,
+          borderColor: "white",
+          shadowColor: "#5A32FB",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.15,
+          shadowRadius: 2.5,
+          elevation: 2,
+          backgroundColor: "white",
+        }}
+      >
+        {/* Date skeleton */}
+        <Animated.View
+          className="bg-neutral-5 mb-2 h-4 w-32 rounded"
+          style={{ opacity }}
+        />
+
+        {/* Title skeleton */}
+        <Animated.View
+          className="bg-neutral-5 mb-2 h-5 w-full rounded"
+          style={{ opacity }}
+        />
+
+        {/* Location skeleton */}
+        <Animated.View
+          className="bg-neutral-5 mb-3 h-3.5 w-48 rounded"
+          style={{ opacity }}
+        />
+
+        {/* Action buttons skeleton */}
+        <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
+          {[0, 1, 2, 3].map((i) => (
+            <Animated.View
+              key={i}
+              className="bg-neutral-5 rounded-full p-2.5"
+              style={{
+                opacity,
+                width: iconSize + 20,
+                height: iconSize + 20,
+              }}
+            />
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const EmptyStateBanner = () => {
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const { fontScale } = useWindowDimensions();
+  const { triggerAddEventFlow } = useAddEventFlow();
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.95,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, [scaleAnim]);
+
+  return (
+    <View className="mb-8 px-4">
+      <Animated.View
+        className="overflow-hidden rounded-2xl p-6 shadow-lg"
+        style={{
+          transform: [{ scale: scaleAnim }],
+          shadowColor: "#5A32FB",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.2,
+          shadowRadius: 16,
+          elevation: 8,
+          backgroundColor: "#5A32FB",
+        }}
+      >
+        <View className="items-center">
+          <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-white/20">
+            <Plus size={32 * fontScale} color="white" strokeWidth={3} />
+          </View>
+          <Text
+            className="mb-2 text-center text-2xl font-bold text-white"
+            style={{ fontSize: 24 * fontScale }}
+          >
+            Your events, all in one place
+          </Text>
+          <Text
+            className="mb-6 text-center text-base text-white/90"
+            style={{ fontSize: 16 * fontScale }}
+          >
+            Add events from screenshots and never miss out
+          </Text>
+          <TouchableOpacity
+            onPress={() => void triggerAddEventFlow()}
+            className="rounded-full bg-white px-8 py-3 shadow-md"
+            activeOpacity={0.8}
+          >
+            <Text
+              className="text-accent-purple text-center text-base font-semibold"
+              style={{ fontSize: 16 * fontScale }}
+            >
+              Add from Screenshot
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    </View>
+  );
+};
+
 interface UserEventsListProps {
   events: Event[];
   ActionButton?: React.ComponentType<ActionButtonProps>;
@@ -540,26 +720,15 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   const renderEmptyState = () => {
     return (
-      <View className="flex-1 items-center justify-center px-6">
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/icon.png")}
-          style={{
-            width: 64,
-            height: 64,
-            marginBottom: 16,
-            borderRadius: 8,
-          }}
-          contentFit="contain"
-          cachePolicy="disk"
-          transition={100}
-        />
-        <Text className="mb-2 rounded-lg text-center text-2xl font-bold text-neutral-1">
-          Add events from photos
-        </Text>
-        <Text className="text-center text-base text-neutral-2">
-          Tap the plus button to start your list of possibilities
-        </Text>
+      <View className="flex-1">
+        <View className="py-8">
+          <EmptyStateBanner />
+          <View className="opacity-60">
+            <GhostEventCard delay={0} />
+            <GhostEventCard delay={200} />
+            <GhostEventCard delay={400} />
+          </View>
+        </View>
       </View>
     );
   };
