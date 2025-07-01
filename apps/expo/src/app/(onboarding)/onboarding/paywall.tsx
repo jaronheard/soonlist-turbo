@@ -19,10 +19,14 @@ import { isSimulator, shouldMockPaywall } from "~/utils/deviceInfo";
 export default function PaywallScreen() {
   const { isInitialized, customerInfo } = useRevenueCat();
   const { setOnboardingData } = useAppStore();
-  const [showMockPaywall] = useState(shouldMockPaywall());
+  const [showMockPaywall] = useState(() => shouldMockPaywall());
   const [paywallPresented, setPaywallPresented] = useState(false);
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+
+  const completeOnboarding = useCallback(() => {
+    useAppStore.getState().setHasSeenOnboarding(true);
+  }, []);
 
   // Debug logging
   console.log("Paywall Debug:", {
@@ -54,7 +58,7 @@ export default function PaywallScreen() {
             subscribedAt: new Date().toISOString(),
           });
           // Mark onboarding as seen
-          useAppStore.getState().setHasSeenOnboarding(true);
+          completeOnboarding();
           // Navigate to sign-in screen with subscription status
           router.push({
             pathname: "/sign-in",
@@ -69,7 +73,7 @@ export default function PaywallScreen() {
             subscribedAt: new Date().toISOString(),
           });
           // Mark onboarding as seen
-          useAppStore.getState().setHasSeenOnboarding(true);
+          completeOnboarding();
           // Navigate to sign-in screen with subscription status
           router.push({
             pathname: "/sign-in",
@@ -90,7 +94,7 @@ export default function PaywallScreen() {
             trialStartedAt: new Date().toISOString(),
           });
           // Mark onboarding as seen
-          useAppStore.getState().setHasSeenOnboarding(true);
+          completeOnboarding();
           // Navigate to sign-in screen in trial mode
           router.push({
             pathname: "/sign-in",
@@ -107,13 +111,13 @@ export default function PaywallScreen() {
         trialStartedAt: new Date().toISOString(),
       });
       // Mark onboarding as seen
-      useAppStore.getState().setHasSeenOnboarding(true);
+      completeOnboarding();
       router.push({
         pathname: "/sign-in",
         params: { fromPaywall: "true", trial: "true" },
       });
     }
-  }, [setOnboardingData, setPaywallPresented]);
+  }, [setOnboardingData, setPaywallPresented, completeOnboarding]);
 
   useEffect(() => {
     // Check if user is already subscribed
@@ -124,7 +128,7 @@ export default function PaywallScreen() {
         subscribedAt: new Date().toISOString(),
       });
       // Mark onboarding as seen
-      useAppStore.getState().setHasSeenOnboarding(true);
+      completeOnboarding();
       // Navigate to sign-in screen with subscription status
       router.push({
         pathname: "/sign-in",
@@ -138,7 +142,12 @@ export default function PaywallScreen() {
     }
 
     // Present paywall for non-subscribers on real devices
-    if (!showMockPaywall && isInitialized && !hasUnlimited) {
+    if (
+      !showMockPaywall &&
+      isInitialized &&
+      !hasUnlimited &&
+      !paywallPresented
+    ) {
       void presentPaywall();
     }
   }, [
@@ -147,6 +156,7 @@ export default function PaywallScreen() {
     presentPaywall,
     hasUnlimited,
     setOnboardingData,
+    paywallPresented,
   ]);
 
   const handleSkip = () => {
@@ -163,7 +173,7 @@ export default function PaywallScreen() {
     });
 
     // Mark onboarding as seen
-    useAppStore.getState().setHasSeenOnboarding(true);
+    completeOnboarding();
 
     // Navigate to sign-in screen
     router.push({
@@ -180,7 +190,7 @@ export default function PaywallScreen() {
       subscriptionPlan: plan,
     });
     // Mark onboarding as seen
-    useAppStore.getState().setHasSeenOnboarding(true);
+    completeOnboarding();
     // Navigate to sign-in screen
     router.push({
       pathname: "/sign-in",
