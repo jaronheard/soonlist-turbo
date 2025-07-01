@@ -572,7 +572,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
         }}
       >
         {/* Empty content - matching the actual card height */}
-        <View style={{ height: 98 * fontScale }} />
+        <View style={{ height: 100 * fontScale }} />
       </View>
     </View>
   );
