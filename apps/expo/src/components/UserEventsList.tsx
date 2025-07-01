@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -571,7 +572,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
         }}
       >
         {/* Empty content - matching the actual card height */}
-        <View style={{ height: 85 * fontScale }} />
+        <View style={{ height: 80 * fontScale }} />
       </View>
     </View>
   );
@@ -657,13 +658,23 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   const renderEmptyState = () => {
     return (
-      <View className="flex-1">
-        <View className="py-8">
-          <EmptyStateBanner />
-          <GhostEventCard index={0} />
-          <GhostEventCard index={1} />
-        </View>
-      </View>
+      <ScrollView
+        style={{ backgroundColor: "#F4F1FF" }}
+        contentContainerStyle={{
+          paddingTop: 16,
+          paddingBottom: 120,
+          flexGrow: 1,
+          backgroundColor: "#F4F1FF",
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <EmptyStateBanner />
+        <GhostEventCard index={0} />
+        <GhostEventCard index={1} />
+        <GhostEventCard index={2} />
+        <GhostEventCard index={3} />
+        <GhostEventCard index={4} />
+      </ScrollView>
     );
   };
 
