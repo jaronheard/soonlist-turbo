@@ -254,7 +254,9 @@ export default function PaywallScreen() {
       <View className="flex-1 items-center justify-center px-6">
         <ActivityIndicator size="large" color="white" />
         <Text className="mt-4 text-lg text-white">
-          {!isInitialized ? "Initializing..." : "Loading subscription options..."}
+          {!isInitialized
+            ? "Initializing..."
+            : "Loading subscription options..."}
         </Text>
         {/* Show skip button only before paywall is presented */}
         {isInitialized && !paywallPresented && (

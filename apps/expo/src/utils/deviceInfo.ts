@@ -1,5 +1,5 @@
-import Constants from "expo-constants";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 
 export const isSimulator = () => {
   // Constants.isDevice can be undefined in development builds
@@ -7,11 +7,11 @@ export const isSimulator = () => {
   if (Constants.isDevice === true) {
     return false; // Definitely a real device
   }
-  
+
   if (Constants.isDevice === false) {
     return true; // Definitely a simulator
   }
-  
+
   // If Constants.isDevice is undefined, use platform-specific checks
   if (Platform.OS === "ios") {
     // Check for simulator-specific properties
@@ -21,7 +21,7 @@ export const isSimulator = () => {
       false
     );
   }
-  
+
   if (Platform.OS === "android") {
     // Android emulator checks
     return (
@@ -30,7 +30,7 @@ export const isSimulator = () => {
       false
     );
   }
-  
+
   // Default to assuming it's a real device if we can't determine
   return false;
 };
