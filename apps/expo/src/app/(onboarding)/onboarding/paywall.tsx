@@ -18,12 +18,17 @@ export default function PaywallScreen() {
   const { isInitialized, customerInfo } = useRevenueCat();
   const { setOnboardingData } = useAppStore();
   const [showMockPaywall] = useState(shouldMockPaywall());
+  const [paywallPresented, setPaywallPresented] = useState(false);
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   const presentPaywall = useCallback(async () => {
     try {
-      const paywallResult = await RevenueCatUI.presentPaywall();
+      setPaywallPresented(true);
+      // Use presentPaywallIfNeeded to double-check entitlements
+      const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
+        requiredEntitlementIdentifier: "unlimited",
+      });
 
       switch (paywallResult) {
         case PAYWALL_RESULT.PURCHASED:
@@ -74,7 +79,7 @@ export default function PaywallScreen() {
         params: { fromPaywall: "true", trial: "true" },
       });
     }
-  }, [setOnboardingData]);
+  }, [setOnboardingData, setPaywallPresented]);
 
   useEffect(() => {
     // Check if user is already subscribed
@@ -234,10 +239,14 @@ export default function PaywallScreen() {
       <View className="flex-1 items-center justify-center px-6">
         <ActivityIndicator size="large" color="white" />
         <Text className="mt-4 text-lg text-white">
-          Loading subscription options...
+          {!isInitialized
+            ? "Initializing..."
+            : paywallPresented
+              ? "Loading paywall..."
+              : "Loading subscription options..."}
         </Text>
-        {/* Only show skip button if paywall hasn't loaded yet */}
-        {!isInitialized && (
+        {/* Show skip button only before paywall is presented */}
+        {isInitialized && !paywallPresented && (
           <Pressable onPress={handleSkip} className="mt-8 py-2">
             <Text className="text-center text-white/60 underline">
               Skip for now
