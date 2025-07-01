@@ -1,9 +1,8 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Pressable,
   Text,
   TouchableOpacity,
@@ -506,32 +505,29 @@ function PromoCard({ type }: PromoCardProps) {
   return null;
 }
 
-const GhostEventCard = ({ delay = 0 }: { delay?: number }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+const GhostEventCard = ({ index }: { index: number }) => {
   const { fontScale } = useWindowDimensions();
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      delay,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim, delay]);
 
   const imageWidth = 90 * fontScale;
   const imageHeight = (imageWidth * 16) / 9;
+  const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
 
   return (
-    <Animated.View className="relative mb-6 px-4" style={{ opacity: fadeAnim }}>
-      {/* Ghost image placeholder with dashed border */}
+    <View className="relative mb-6 px-4">
+      {/* Ghost image placeholder with dashed border - matching exact positioning */}
       <View
         style={{
           position: "absolute",
           right: 10,
           top: -5,
           zIndex: 10,
-          transform: [{ rotate: delay % 2 === 0 ? "10deg" : "-10deg" }],
+          shadowColor: "#5A32FB",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.3,
+          shadowRadius: 1.5,
+          elevation: 3,
+          transform: [{ rotate: imageRotation }],
+          backgroundColor: "transparent",
         }}
       >
         <View
@@ -547,22 +543,27 @@ const GhostEventCard = ({ delay = 0 }: { delay?: number }) => {
         />
       </View>
 
-      {/* Ghost card content with dashed border */}
+      {/* Ghost card content with dashed border - matching exact card style */}
       <View
         className="my-1 mt-4 p-3"
         style={{
           paddingRight: imageWidth * 1.1,
           borderRadius: 20,
-          borderWidth: 2,
+          borderWidth: 3,
           borderColor: "#E0D9FF",
           borderStyle: "dashed",
+          shadowColor: "#5A32FB",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.15,
+          shadowRadius: 2.5,
+          elevation: 2,
           backgroundColor: "#FAFAFF",
         }}
       >
         {/* Empty content - no skeleton elements */}
         <View style={{ height: 80 * fontScale }} />
       </View>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -649,8 +650,8 @@ export default function UserEventsList(props: UserEventsListProps) {
       <View className="flex-1">
         <View className="py-8">
           <EmptyStateBanner />
-          <GhostEventCard delay={0} />
-          <GhostEventCard delay={300} />
+          <GhostEventCard index={0} />
+          <GhostEventCard index={1} />
         </View>
       </View>
     );
