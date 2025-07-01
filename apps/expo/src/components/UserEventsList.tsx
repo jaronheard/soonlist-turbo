@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -25,6 +26,7 @@ import {
   MapPinned,
   MoreVertical,
   Plus,
+  PlusIcon,
   User,
 } from "~/components/icons";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
@@ -504,6 +506,146 @@ function PromoCard({ type }: PromoCardProps) {
   return null;
 }
 
+const GhostEventCard = ({ index }: { index: number }) => {
+  const { fontScale } = useWindowDimensions();
+
+  const imageWidth = 90 * fontScale;
+  const imageHeight = (imageWidth * 16) / 9;
+  const imageRotation = index % 2 === 0 ? "10deg" : "-10deg";
+
+  return (
+    <View className="relative mb-6 px-4">
+      {/* Ghost image placeholder with dashed border - matching exact positioning */}
+      <View
+        style={{
+          position: "absolute",
+          right: 10,
+          top: -5,
+          zIndex: 10,
+          transform: [{ rotate: imageRotation }],
+          backgroundColor: "transparent",
+        }}
+      >
+        <View
+          style={{
+            width: imageWidth,
+            height: imageHeight,
+            borderRadius: 20,
+            borderWidth: 3,
+            borderColor: "#E0D9FF",
+            borderStyle: "dashed",
+            backgroundColor: "#FAFAFF",
+          }}
+        />
+      </View>
+
+      {/* Ghost card content with dashed border - matching exact card style */}
+      <View
+        className="my-1 mt-4 p-3"
+        style={{
+          paddingRight: imageWidth * 1.1,
+          borderRadius: 20,
+          borderWidth: 3,
+          borderColor: "#E0D9FF",
+          borderStyle: "dashed",
+          backgroundColor: "#FAFAFF",
+        }}
+      >
+        {/* Gray lines representing text content */}
+        <View>
+          {/* Date/time line */}
+          <View
+            className="mb-2 rounded"
+            style={{
+              height: 14 * fontScale,
+              width: 120 * fontScale,
+              backgroundColor: "#F4F1FF",
+            }}
+          />
+
+          {/* Title line */}
+          <View
+            className="mb-2 rounded"
+            style={{
+              height: 20 * fontScale,
+              width: "85%",
+              backgroundColor: "#F4F1FF",
+            }}
+          />
+
+          {/* Location line */}
+          <View
+            className="mb-4 rounded"
+            style={{
+              height: 14 * fontScale,
+              width: 160 * fontScale,
+              backgroundColor: "#F4F1FF",
+            }}
+          />
+
+          {/* Action buttons row */}
+          <View className="flex-row items-center gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <View
+                key={i}
+                className="rounded-full"
+                style={{
+                  width: 24 * fontScale,
+                  height: 24 * fontScale,
+                  backgroundColor: "#F4F1FF",
+                }}
+              />
+            ))}
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const EmptyStateHeader = () => {
+  const { fontScale } = useWindowDimensions();
+  const { triggerAddEventFlow } = useAddEventFlow();
+
+  return (
+    <TouchableOpacity
+      className="my-6 items-center px-4"
+      onPress={() => void triggerAddEventFlow()}
+      activeOpacity={0.7}
+    >
+      <Text
+        className="mb-2 text-center text-2xl font-bold text-neutral-1"
+        style={{ fontSize: 24 * fontScale }}
+      >
+        Your events, <Text style={{ color: "#5A32FB" }}>all in one place</Text>
+      </Text>
+      <View className="flex-row items-center justify-center">
+        <Text
+          className="text-center text-base text-neutral-2"
+          style={{ fontSize: 16 * fontScale }}
+        >
+          Tap
+        </Text>
+        <View
+          className="mx-1.5 items-center justify-center rounded-full bg-interactive-1"
+          style={{
+            width: 20 * fontScale,
+            height: 20 * fontScale,
+          }}
+        >
+          <PlusIcon size={12 * fontScale} color="#FFF" strokeWidth={3} />
+        </View>
+        <Text
+          className="text-center text-base text-neutral-2"
+          style={{ fontSize: 16 * fontScale }}
+        >
+          to add from screenshots
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
 interface UserEventsListProps {
   events: Event[];
   ActionButton?: React.ComponentType<ActionButtonProps>;
@@ -540,27 +682,23 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   const renderEmptyState = () => {
     return (
-      <View className="flex-1 items-center justify-center px-6">
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/icon.png")}
-          style={{
-            width: 64,
-            height: 64,
-            marginBottom: 16,
-            borderRadius: 8,
-          }}
-          contentFit="contain"
-          cachePolicy="disk"
-          transition={100}
-        />
-        <Text className="mb-2 rounded-lg text-center text-2xl font-bold text-neutral-1">
-          Add events from photos
-        </Text>
-        <Text className="text-center text-base text-neutral-2">
-          Tap the plus button to start your list of possibilities
-        </Text>
-      </View>
+      <ScrollView
+        style={{ backgroundColor: "#F4F1FF" }}
+        contentContainerStyle={{
+          paddingTop: 16,
+          paddingBottom: 120,
+          flexGrow: 1,
+          backgroundColor: "#F4F1FF",
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <EmptyStateHeader />
+        <GhostEventCard index={0} />
+        <GhostEventCard index={1} />
+        <GhostEventCard index={2} />
+        <GhostEventCard index={3} />
+        <GhostEventCard index={4} />
+      </ScrollView>
     );
   };
 

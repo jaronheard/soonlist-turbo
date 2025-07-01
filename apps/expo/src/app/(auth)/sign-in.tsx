@@ -59,7 +59,7 @@ export default function AuthScreen() {
             Try saving 3 events for free
           </Text>
           <Text className="text-center text-base text-neutral-1">
-            Create your account to start your trial
+            Create your account to get started
           </Text>
         </View>
       )}
