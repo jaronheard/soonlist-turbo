@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -8,20 +9,45 @@ import {
 } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
-import { shouldMockPaywall } from "~/utils/deviceInfo";
+import { isSimulator, shouldMockPaywall } from "~/utils/deviceInfo";
 
 export default function PaywallScreen() {
-  const { isInitialized } = useRevenueCat();
+  const { isInitialized, customerInfo } = useRevenueCat();
   const { setOnboardingData } = useAppStore();
-  const [showMockPaywall] = useState(shouldMockPaywall());
+  const [showMockPaywall] = useState(() => shouldMockPaywall());
+  const [paywallPresented, setPaywallPresented] = useState(false);
+  const hasUnlimited =
+    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+
+  const completeOnboarding = useCallback(() => {
+    useAppStore.getState().setHasSeenOnboarding(true);
+  }, []);
+
+  // Debug logging
+  console.log("Paywall Debug:", {
+    isDevice: Constants.isDevice as boolean | undefined,
+    deviceName: String(Constants.deviceName ?? "unknown"),
+    platform: Platform.OS,
+    model: String(Constants.platform?.ios?.model ?? "unknown"),
+    isSimulator: isSimulator(),
+    shouldMockPaywall: shouldMockPaywall(),
+    showMockPaywall,
+    isInitialized,
+    hasUnlimited,
+  });
 
   const presentPaywall = useCallback(async () => {
     try {
-      const paywallResult = await RevenueCatUI.presentPaywall();
+      setPaywallPresented(true);
+      // Use presentPaywallIfNeeded to double-check entitlements
+      const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
+        requiredEntitlementIdentifier: "unlimited",
+      });
 
       switch (paywallResult) {
         case PAYWALL_RESULT.PURCHASED:
@@ -32,11 +58,30 @@ export default function PaywallScreen() {
             subscribedAt: new Date().toISOString(),
           });
           // Mark onboarding as seen
-          useAppStore.getState().setHasSeenOnboarding(true);
+          completeOnboarding();
           // Navigate to sign-in screen with subscription status
           router.push({
             pathname: "/sign-in",
             params: { fromPaywall: "true", subscribed: "true" },
+          });
+          break;
+
+        case PAYWALL_RESULT.NOT_PRESENTED:
+          // User already has the required entitlement
+          setOnboardingData({
+            subscribed: true,
+            subscribedAt: new Date().toISOString(),
+          });
+          // Mark onboarding as seen
+          completeOnboarding();
+          // Navigate to sign-in screen with subscription status
+          router.push({
+            pathname: "/sign-in",
+            params: {
+              fromPaywall: "true",
+              subscribed: "true",
+              skipped: "already_subscribed",
+            },
           });
           break;
 
@@ -49,7 +94,7 @@ export default function PaywallScreen() {
             trialStartedAt: new Date().toISOString(),
           });
           // Mark onboarding as seen
-          useAppStore.getState().setHasSeenOnboarding(true);
+          completeOnboarding();
           // Navigate to sign-in screen in trial mode
           router.push({
             pathname: "/sign-in",
@@ -66,19 +111,53 @@ export default function PaywallScreen() {
         trialStartedAt: new Date().toISOString(),
       });
       // Mark onboarding as seen
-      useAppStore.getState().setHasSeenOnboarding(true);
+      completeOnboarding();
       router.push({
         pathname: "/sign-in",
         params: { fromPaywall: "true", trial: "true" },
       });
     }
-  }, [setOnboardingData]);
+  }, [setOnboardingData, setPaywallPresented, completeOnboarding]);
 
   useEffect(() => {
-    if (!showMockPaywall && isInitialized) {
+    // Check if user is already subscribed
+    if (isInitialized && hasUnlimited) {
+      // User already has subscription, skip paywall
+      setOnboardingData({
+        subscribed: true,
+        subscribedAt: new Date().toISOString(),
+      });
+      // Mark onboarding as seen
+      completeOnboarding();
+      // Navigate to sign-in screen with subscription status
+      router.push({
+        pathname: "/sign-in",
+        params: {
+          fromPaywall: "true",
+          subscribed: "true",
+          skipped: "already_subscribed",
+        },
+      });
+      return;
+    }
+
+    // Present paywall for non-subscribers on real devices
+    if (
+      !showMockPaywall &&
+      isInitialized &&
+      !hasUnlimited &&
+      !paywallPresented
+    ) {
       void presentPaywall();
     }
-  }, [isInitialized, showMockPaywall, presentPaywall]);
+  }, [
+    isInitialized,
+    showMockPaywall,
+    presentPaywall,
+    hasUnlimited,
+    setOnboardingData,
+    paywallPresented,
+  ]);
 
   const handleSkip = () => {
     // Dismiss the paywall and enter trial mode
@@ -94,7 +173,7 @@ export default function PaywallScreen() {
     });
 
     // Mark onboarding as seen
-    useAppStore.getState().setHasSeenOnboarding(true);
+    completeOnboarding();
 
     // Navigate to sign-in screen
     router.push({
@@ -111,7 +190,7 @@ export default function PaywallScreen() {
       subscriptionPlan: plan,
     });
     // Mark onboarding as seen
-    useAppStore.getState().setHasSeenOnboarding(true);
+    completeOnboarding();
     // Navigate to sign-in screen
     router.push({
       pathname: "/sign-in",
@@ -197,25 +276,24 @@ export default function PaywallScreen() {
     );
   }
 
+  // Real device - show loading spinner
+  // The RevenueCat paywall will appear as a modal over this screen
   return (
     <SafeAreaView className="flex-1 bg-interactive-1">
       <View className="flex-1 items-center justify-center px-6">
-        {!isInitialized ? (
-          <>
-            <ActivityIndicator size="large" color="white" />
-            <Text className="mt-4 text-white">Loading...</Text>
-          </>
-        ) : (
-          <>
-            <Text className="mb-4 text-center text-xl text-white">
-              Opening subscription options...
+        <ActivityIndicator size="large" color="white" />
+        <Text className="mt-4 text-lg text-white">
+          {!isInitialized
+            ? "Initializing..."
+            : "Loading subscription options..."}
+        </Text>
+        {/* Show skip button only before paywall is presented */}
+        {isInitialized && !paywallPresented && (
+          <Pressable onPress={handleSkip} className="mt-8 py-2">
+            <Text className="text-center text-white/60 underline">
+              Skip for now
             </Text>
-            <Pressable onPress={handleSkip} className="mt-8 py-2">
-              <Text className="text-center text-white/80 underline">
-                Skip and try 3 events free
-              </Text>
-            </Pressable>
-          </>
+          </Pressable>
         )}
       </View>
     </SafeAreaView>
