@@ -40,9 +40,37 @@ jobs:
         id: pr-details
         run: |
           PR_URL="${{ github.event.issue.pull_request.url }}"
-          PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "$PR_URL")
-          HEAD_REF=$(echo "$PR_DATA" | jq -r '.head.ref')
-          HEAD_SHA=$(echo "$PR_DATA" | jq -r '.head.sha')
+          echo "Fetching PR details from: $PR_URL"
+
+          # Fetch PR data with error handling
+          if ! PR_DATA=$(curl -s -f -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "$PR_URL"); then
+            echo "Error: Failed to fetch PR data from GitHub API"
+            exit 1
+          fi
+
+          # Validate the API response contains valid JSON
+          if ! echo "$PR_DATA" | jq empty 2>/dev/null; then
+            echo "Error: Invalid JSON response from GitHub API"
+            echo "Response: $PR_DATA"
+            exit 1
+          fi
+
+          # Extract head ref and sha with validation
+          HEAD_REF=$(echo "$PR_DATA" | jq -r '.head.ref // empty')
+          HEAD_SHA=$(echo "$PR_DATA" | jq -r '.head.sha // empty')
+
+          # Validate that required fields are not empty
+          if [[ -z "$HEAD_REF" || "$HEAD_REF" == "null" ]]; then
+            echo "Error: Could not extract head.ref from PR data"
+            exit 1
+          fi
+
+          if [[ -z "$HEAD_SHA" || "$HEAD_SHA" == "null" ]]; then
+            echo "Error: Could not extract head.sha from PR data"
+            exit 1
+          fi
+
+          echo "Successfully extracted PR details: ref=$HEAD_REF, sha=$HEAD_SHA"
           echo "head_ref=$HEAD_REF" >> $GITHUB_OUTPUT
           echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
 
@@ -51,7 +79,7 @@ jobs:
         with:
           # For pull_request events, checkout the PR head
           # For issue_comment events, checkout the PR head ref from the API call above
-          ref: ${{ github.event_name == 'issue_comment' && steps.pr-details.outputs.head_sha || github.event.pull_request.head.sha }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || steps.pr-details.outputs.head_sha }}
           fetch-depth: 1
 
       - name: Run Claude Code Review
