@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -21,6 +22,16 @@ export default function PaywallScreen() {
   const [paywallPresented, setPaywallPresented] = useState(false);
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+
+  // Debug logging
+  console.log("Paywall Debug:", {
+    isDevice: Constants.isDevice,
+    isSimulator: !Constants.isDevice,
+    shouldMockPaywall: shouldMockPaywall(),
+    showMockPaywall,
+    isInitialized,
+    hasUnlimited,
+  });
 
   const presentPaywall = useCallback(async () => {
     try {
