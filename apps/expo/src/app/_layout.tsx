@@ -307,6 +307,26 @@ function RootLayoutContent() {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
 
+  // Preload demo video after a delay to avoid impacting startup
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        const { preloadDemoVideo } = await import("~/services/videoPreload");
+        const { api } = await import("@soonlist/backend/convex/_generated/api");
+
+        // Fetch video URL from Convex and preload
+        const videoUrl = await convex.query(api.appConfig.getDemoVideoUrl);
+        if (videoUrl) {
+          await preloadDemoVideo(videoUrl);
+        }
+      } catch (error) {
+        console.log("Failed to preload demo video:", error);
+      }
+    }, 5000); // 5 second delay
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // The share extension logic now specifically leads to /new
   useIntentHandler();
   useTimezoneAlert();
