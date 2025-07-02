@@ -5,7 +5,6 @@ import * as Sentry from "@sentry/react-native";
 import { useConvexAuth } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 
-import { useTokenRefresh } from "~/hooks/useTokenRefresh";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { logError } from "~/utils/errorLogging";
 import { getAccessGroup } from "~/utils/getAccessGroup";
@@ -64,9 +63,6 @@ export default function AuthAndTokenSync() {
   const { isAuthenticated } = useConvexAuth();
   const { login, isInitialized } = useRevenueCat();
   const posthog = usePostHog();
-
-  // Use token refresh hook to keep tokens fresh
-  useTokenRefresh();
 
   const username = user?.username;
   const email = user?.primaryEmailAddress?.emailAddress;
