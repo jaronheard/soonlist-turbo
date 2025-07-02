@@ -1,5 +1,6 @@
+import type { AppStateStatus } from "react-native";
 import { useEffect, useRef } from "react";
-import { AppState, AppStateStatus } from "react-native";
+import { AppState } from "react-native";
 import { useAuth } from "@clerk/clerk-expo";
 
 import { logError, logMessage } from "~/utils/errorLogging";
@@ -48,7 +49,7 @@ export function useTokenRefresh() {
     // Handle app state changes (foreground/background)
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (
-        appStateRef.current.match(/inactive|background/) &&
+        /inactive|background/.exec(appStateRef.current) &&
         nextAppState === "active"
       ) {
         // App has come to foreground - refresh token
@@ -64,9 +65,12 @@ export function useTokenRefresh() {
     );
 
     // Set up periodic token refresh (every 5 minutes)
-    const intervalId = setInterval(() => {
-      void refreshToken();
-    }, 5 * 60 * 1000);
+    const intervalId = setInterval(
+      () => {
+        void refreshToken();
+      },
+      5 * 60 * 1000,
+    );
 
     // Initial token fetch
     void refreshToken();

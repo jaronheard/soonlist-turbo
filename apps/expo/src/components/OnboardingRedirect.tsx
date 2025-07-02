@@ -18,7 +18,7 @@ export function OnboardingRedirect() {
   // Use "skip" pattern when user is not available or not authenticated
   const userData = useQuery(
     api.users.getById,
-    isAuthenticated && user?.id ? { id: user.id } : "skip"
+    isAuthenticated && user?.id ? { id: user.id } : "skip",
   );
 
   useEffect(() => {
