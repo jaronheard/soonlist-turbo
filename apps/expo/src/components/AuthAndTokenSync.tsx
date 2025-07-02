@@ -5,6 +5,7 @@ import * as Sentry from "@sentry/react-native";
 import { useConvexAuth } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 
+import { useTokenRefresh } from "~/hooks/useTokenRefresh";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { logError } from "~/utils/errorLogging";
 import { getAccessGroup } from "~/utils/getAccessGroup";
@@ -58,11 +59,14 @@ export const getAuthData = async (): Promise<{
 };
 
 export default function AuthAndTokenSync() {
-  const { getToken, userId } = useAuth();
+  const { getToken, userId, sessionId } = useAuth();
   const { user } = useUser();
   const { isAuthenticated } = useConvexAuth();
   const { login, isInitialized } = useRevenueCat();
   const posthog = usePostHog();
+
+  // Use token refresh hook to keep tokens fresh
+  useTokenRefresh();
 
   const username = user?.username;
   const email = user?.primaryEmailAddress?.emailAddress;
@@ -79,19 +83,24 @@ export default function AuthAndTokenSync() {
         if (isSignedIn && username) {
           // USER IS SIGNED IN
 
-          const authToken = await getToken();
+          const authToken = await getToken({ template: "convex" });
           if (cancelled) return;
 
-          await saveAuthData({
-            username,
-            authToken,
-            email: email ?? null,
-          });
+          // Only save if we successfully got a token
+          if (authToken) {
+            await saveAuthData({
+              username,
+              authToken,
+              email: email ?? null,
+            });
 
-          if (cancelled) return;
+            if (cancelled) return;
 
-          Sentry.setUser({ id: userId, username, email });
-          posthog.identify(userId, { username, email: email ?? "" });
+            Sentry.setUser({ id: userId, username, email });
+            posthog.identify(userId, { username, email: email ?? "" });
+          } else {
+            logError("Failed to get Convex token", new Error("Token is null"));
+          }
         } else if (!isSignedIn) {
           // USER IS SIGNED OUT
           if (cancelled) return;
@@ -118,7 +127,7 @@ export default function AuthAndTokenSync() {
     return () => {
       cancelled = true;
     };
-  }, [isSignedIn, userId, username, email, getToken, posthog]);
+  }, [isSignedIn, userId, username, email, getToken, posthog, sessionId]);
 
   useEffect(() => {
     let cancelled = false;
