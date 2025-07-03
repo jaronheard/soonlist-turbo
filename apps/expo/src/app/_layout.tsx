@@ -6,6 +6,7 @@ import {
 } from "react-native-safe-area-context";
 import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
@@ -19,7 +20,7 @@ import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 import "../styles.css";
 
 import type { ErrorBoundaryProps } from "expo-router";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Constants, { AppOwnership } from "expo-constants";
@@ -50,6 +51,9 @@ const styles = StyleSheet.create({
 });
 
 const queryClient = new QueryClient();
+
+// Prevent the splash screen from auto-hiding before App component declaration
+SplashScreen.preventAutoHideAsync();
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const insets = useSafeAreaInsets();
@@ -144,10 +148,23 @@ appsFlyer.initSdk(
 function RootLayout() {
   const clerkPublishableKey = Config.clerkPublishableKey;
   const { setUserTimezone } = useAppStore();
+  const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
-    // Initialize user timezone on app start
-    setUserTimezone(getUserTimeZone());
+    async function prepare() {
+      try {
+        // Initialize user timezone on app start
+        setUserTimezone(getUserTimeZone());
+        
+        // Add a small delay to ensure all providers and navigation are properly initialized
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppIsReady(true);
+      }
+    }
+    prepare();
   }, [setUserTimezone]);
 
   if (!clerkPublishableKey) {
@@ -160,8 +177,18 @@ function RootLayout() {
 
   const isDev = Constants.expoConfig?.scheme === "soonlist.dev";
 
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      await SplashScreen.hideAsync();
+    }
+  }, [appIsReady]);
+
+  if (!appIsReady) {
+    return null; // Return nothing while loading
+  }
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <KeyboardProvider>
         <ClerkProvider
           publishableKey={clerkPublishableKey}
