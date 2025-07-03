@@ -63,7 +63,10 @@ export function useIntentHandler() {
           return;
         }
 
-        const route = parsedUrl.pathname.replace(/^\/+/, "");
+        // For custom scheme URLs like soonlist.dev://new?params
+        // the "new" part is parsed as hostname, not pathname
+        const route =
+          parsedUrl.hostname || parsedUrl.pathname.replace(/^\/+/, "");
         const params = parsedUrl.searchParams;
 
         logDebug("Route", {
