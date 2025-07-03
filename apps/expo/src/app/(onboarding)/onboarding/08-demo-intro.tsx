@@ -1,5 +1,4 @@
-import type { AVPlaybackStatus } from "expo-av";
-import React, { useRef, useState } from "react";
+import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { ResizeMode, Video } from "expo-av";
 
@@ -11,9 +10,7 @@ import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function SeeHowItWorksScreen() {
   const { saveStep } = useOnboarding();
-  const { videoUrl, isPlaying, isLoading, play, pause } = useDemoVideo();
-  const videoRef = useRef<Video>(null);
-  const [isVideoReady, setIsVideoReady] = useState(false);
+  const { videoUrl, isLoading } = useDemoVideo();
 
   const handleContinue = () => {
     saveStep("demo", { watchedDemo: true }, "/(onboarding)/onboarding/paywall");
@@ -40,51 +37,26 @@ export default function SeeHowItWorksScreen() {
             {isLoading || !videoUrl ? (
               <LoadingSpinner color="white" />
             ) : (
-              <>
-                {!isVideoReady && (
-                  <View className="absolute inset-0 z-10">
-                    <LoadingSpinner color="white" />
-                  </View>
-                )}
-                <Video
-                  ref={videoRef}
-                  source={{ uri: videoUrl }}
-                  style={{ flex: 1, opacity: isVideoReady ? 1 : 0 }}
-                  resizeMode={ResizeMode.CONTAIN}
-                  shouldPlay={true}
-                  isLooping={true}
-                  useNativeControls={true}
-                  onPlaybackStatusUpdate={(status: AVPlaybackStatus) => {
-                    if (status.isLoaded) {
-                      if (status.isPlaying && !isPlaying) {
-                        play();
-                      } else if (!status.isPlaying && isPlaying) {
-                        pause();
-                      }
-                    }
-                  }}
-                  onLoad={() => {
-                    if (__DEV__) {
-                      console.log("Demo video loaded and ready to play");
-                    }
-                    setIsVideoReady(true);
-                    play();
-                  }}
-                  onError={(error) => {
-                    console.error("Video loading error:", error);
-                    setIsVideoReady(true); // Hide spinner even on error
-                  }}
-                />
-              </>
+              <Video
+                source={{ uri: videoUrl }}
+                style={{ flex: 1 }}
+                resizeMode={ResizeMode.CONTAIN}
+                shouldPlay={true}
+                isLooping={true}
+                useNativeControls={true}
+                onError={(error) => {
+                  console.error("Video loading error:", error);
+                }}
+              />
             )}
           </View>
         </View>
 
         <Pressable
           onPress={handleContinue}
-          className="rounded-full bg-white py-4"
+          className="mx-4 rounded-2xl bg-interactive-1 px-6 py-4"
         >
-          <Text className="text-center text-lg font-semibold text-interactive-1">
+          <Text className="text-center text-lg font-semibold text-white">
             Continue
           </Text>
         </Pressable>
