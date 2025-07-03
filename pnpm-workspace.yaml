@@ -74,6 +74,7 @@ catalog:
   "expo-constants": ~17.1.6
   "expo-dev-client": ~5.1.8
   "expo-image": ~2.1.7
+  "expo-video": ~2.2.2
   "expo-secure-store": ^14.2.3
   "expo-status-bar": ~2.2.3
   "react-native": ~0.79.2

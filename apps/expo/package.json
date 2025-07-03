@@ -86,7 +86,7 @@
     "expo-status-bar": "catalog:",
     "expo-task-manager": "catalog:",
     "expo-updates": "catalog:",
-    "expo-video": "~2.2.2",
+    "expo-video": "catalog:",
     "expo-web-browser": "catalog:",
     "moment-timezone": "catalog:",
     "nativewind": "catalog:",

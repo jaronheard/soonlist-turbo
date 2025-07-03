@@ -312,6 +312,9 @@ catalogs:
     expo-updates:
       specifier: ~0.28.13
       version: 0.28.13
+    expo-video:
+      specifier: ~2.2.2
+      version: 2.2.2
     expo-web-browser:
       specifier: ~14.1.6
       version: 14.1.6
@@ -705,7 +708,7 @@ importers:
         specifier: 'catalog:'
         version: 0.28.13(expo@53.0.9(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))(react@19.0.0)
       expo-video:
-        specifier: ~2.2.2
+        specifier: 'catalog:'
         version: 2.2.2(expo@53.0.9(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
       expo-web-browser:
         specifier: 'catalog:'
