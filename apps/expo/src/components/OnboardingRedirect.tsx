@@ -15,7 +15,11 @@ export function OnboardingRedirect() {
   const { hasCompletedOnboarding } = useAppStore();
 
   // Get user data from our database
-  const userData = useQuery(api.users.getById, { id: user?.id ?? "" });
+  // Use "skip" pattern when user is not available or not authenticated
+  const userData = useQuery(
+    api.users.getById,
+    isAuthenticated && user?.id ? { id: user.id } : "skip",
+  );
 
   useEffect(() => {
     // Only proceed if user data is loaded and user is authenticated
