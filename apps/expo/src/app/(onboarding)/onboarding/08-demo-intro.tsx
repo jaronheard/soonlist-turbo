@@ -1,16 +1,23 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { ResizeMode, Video } from "expo-av";
+import { VideoView } from "expo-video";
 
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { QuestionContainer } from "~/components/QuestionContainer";
-import { useDemoVideo } from "~/hooks/useDemoVideo";
+import { useVideoPlayerContext } from "~/contexts/VideoPlayerContext";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function SeeHowItWorksScreen() {
   const { saveStep } = useOnboarding();
-  const { videoUrl, isLoading } = useDemoVideo();
+  const { demoVideoPlayer, isVideoReady } = useVideoPlayerContext();
+
+  React.useEffect(() => {
+    // Start playing when the screen is shown
+    if (demoVideoPlayer) {
+      demoVideoPlayer.play();
+    }
+  }, [demoVideoPlayer]);
 
   const handleContinue = () => {
     saveStep("demo", { watchedDemo: true }, "/(onboarding)/onboarding/paywall");
@@ -34,19 +41,15 @@ export default function SeeHowItWorksScreen() {
               maxHeight: "100%",
             }}
           >
-            {isLoading || !videoUrl ? (
+            {!isVideoReady || !demoVideoPlayer ? (
               <LoadingSpinner color="white" />
             ) : (
-              <Video
-                source={{ uri: videoUrl }}
+              <VideoView
+                player={demoVideoPlayer}
                 style={{ flex: 1 }}
-                resizeMode={ResizeMode.CONTAIN}
-                shouldPlay={true}
-                isLooping={true}
-                useNativeControls={true}
-                onError={(error) => {
-                  console.error("Video loading error:", error);
-                }}
+                contentFit="contain"
+                allowsFullscreen
+                allowsPictureInPicture
               />
             )}
           </View>

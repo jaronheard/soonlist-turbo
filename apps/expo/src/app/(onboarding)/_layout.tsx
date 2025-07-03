@@ -2,6 +2,8 @@ import { View } from "react-native";
 import { Redirect, Stack } from "expo-router";
 import { useConvexAuth } from "convex/react";
 
+import { VideoPlayerProvider } from "~/contexts/VideoPlayerContext";
+
 export const TOTAL_ONBOARDING_STEPS = 8;
 
 export default function OnboardingLayout() {
@@ -14,13 +16,15 @@ export default function OnboardingLayout() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: "ios_from_right",
-        }}
-      />
-    </View>
+    <VideoPlayerProvider>
+      <View style={{ flex: 1 }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: "ios_from_right",
+          }}
+        />
+      </View>
+    </VideoPlayerProvider>
   );
 }

@@ -307,7 +307,6 @@ function RootLayoutContent() {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
 
-
   // The share extension logic now specifically leads to /new
   useIntentHandler();
   useTimezoneAlert();
