@@ -14,7 +14,6 @@ import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { getAuthData } from "~/components/AuthAndTokenSync";
 import { Button } from "~/components/Button";
 
 interface TestResult {
@@ -195,23 +194,10 @@ export default function WorkflowTestScreen() {
   };
 
   const testAccessGroups = async () => {
-    try {
-      const authData = await getAuthData();
-      if (authData) {
-        console.log("✅ Access groups working! Auth data:", {
-          username: authData.username,
-          hasToken: !!authData.authToken,
-          email: authData.email,
-        });
-        Alert.alert("✅ Access groups working! Check console for details.");
-      } else {
-        console.log("❌ No auth data found");
-        Alert.alert("❌ No auth data found - user may not be logged in");
-      }
-    } catch (error) {
-      console.error("❌ Access groups test failed:", error);
-      Alert.alert("❌ Access groups test failed - check console");
-    }
+    Alert.alert(
+      "Access Groups Test Removed",
+      "This test has been removed as the app no longer uses manual token storage in SecureStore. Authentication is now handled by Convex.",
+    );
   };
 
   const clearResults = () => {
@@ -428,7 +414,8 @@ export default function WorkflowTestScreen() {
               Access Groups Test
             </Text>
             <Text className="mb-3 text-sm text-slate-600">
-              Test if the share extension can access authentication data.
+              This test has been deprecated - authentication is now handled by
+              Convex.
             </Text>
             <Pressable
               onPress={testAccessGroups}

@@ -167,39 +167,37 @@ function RootLayout() {
           publishableKey={clerkPublishableKey}
           tokenCache={tokenCache}
         >
-          <ClerkLoaded>
-            {/* eslint-disable-next-line react-compiler/react-compiler */}
-            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-              <QueryClientProvider client={queryClient}>
-                <SafeAreaProvider>
-                  <PostHogProvider
-                    apiKey={Config.posthogApiKey}
-                    options={{
-                      host: "https://us.i.posthog.com",
-                      disabled: isDev,
-                      enableSessionReplay: !isDev,
-                      sessionReplayConfig: {
-                        maskAllTextInputs: false,
-                        maskAllImages: false,
-                        captureLog: false,
-                        captureNetworkTelemetry: true,
-                        androidDebouncerDelayMs: 500,
-                        iOSdebouncerDelayMs: 1000,
-                      },
-                    }}
-                  >
-                    <PostHogIdentityTracker />
-                    <OneSignalProvider>
-                      <RevenueCatProvider>
-                        <AuthAndTokenSync />
-                        <RootLayoutContent />
-                      </RevenueCatProvider>
-                    </OneSignalProvider>
-                  </PostHogProvider>
-                </SafeAreaProvider>
-              </QueryClientProvider>
-            </ConvexProviderWithClerk>
-          </ClerkLoaded>
+          {/* eslint-disable-next-line react-compiler/react-compiler */}
+          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+            <QueryClientProvider client={queryClient}>
+              <SafeAreaProvider>
+                <PostHogProvider
+                  apiKey={Config.posthogApiKey}
+                  options={{
+                    host: "https://us.i.posthog.com",
+                    disabled: isDev,
+                    enableSessionReplay: !isDev,
+                    sessionReplayConfig: {
+                      maskAllTextInputs: false,
+                      maskAllImages: false,
+                      captureLog: false,
+                      captureNetworkTelemetry: true,
+                      androidDebouncerDelayMs: 500,
+                      iOSdebouncerDelayMs: 1000,
+                    },
+                  }}
+                >
+                  <PostHogIdentityTracker />
+                  <OneSignalProvider>
+                    <RevenueCatProvider>
+                      <AuthAndTokenSync />
+                      <RootLayoutContent />
+                    </RevenueCatProvider>
+                  </OneSignalProvider>
+                </PostHogProvider>
+              </SafeAreaProvider>
+            </QueryClientProvider>
+          </ConvexProviderWithClerk>
         </ClerkProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
