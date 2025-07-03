@@ -1,12 +1,24 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useVideoPlayer, VideoView } from "expo-video";
+import { useQuery } from "convex/react";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
+
+import LoadingSpinner from "~/components/LoadingSpinner";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function SeeHowItWorksScreen() {
   const { saveStep } = useOnboarding();
+  const videoUrl = useQuery(api.appConfig.getDemoVideoUrl);
+
+  // Create video player following expo-video docs exactly
+  const player = useVideoPlayer(videoUrl ?? "", (player) => {
+    player.loop = true;
+    player.play();
+  });
 
   const handleContinue = () => {
     saveStep("demo", { watchedDemo: true }, "/(onboarding)/onboarding/paywall");
@@ -20,21 +32,35 @@ export default function SeeHowItWorksScreen() {
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <View className="flex-1 justify-between">
-        <View className="flex-1 items-center justify-center">
-          {/* Video placeholder */}
-          <View className="h-64 w-full max-w-sm items-center justify-center rounded-2xl bg-neutral-2">
-            <Text className="text-lg text-white/60">Video Player</Text>
-            <Text className="mt-2 text-sm text-white/40">
-              Demo video will play here
-            </Text>
+        <View className="flex-1 items-center justify-center px-4 pb-4">
+          <View
+            className="overflow-hidden rounded-2xl bg-interactive-1"
+            style={{
+              width: "100%",
+              maxWidth: 350,
+              aspectRatio: 884 / 1920,
+              maxHeight: "100%",
+            }}
+          >
+            {!videoUrl ? (
+              <LoadingSpinner color="white" />
+            ) : (
+              <VideoView
+                player={player}
+                style={styles.video}
+                contentFit="contain"
+                allowsFullscreen
+                allowsPictureInPicture
+              />
+            )}
           </View>
         </View>
 
         <Pressable
           onPress={handleContinue}
-          className="rounded-full bg-white py-4"
+          className="mx-4 rounded-2xl bg-interactive-1 px-6 py-4"
         >
-          <Text className="text-center text-lg font-semibold text-interactive-1">
+          <Text className="text-center text-lg font-semibold text-white">
             Continue
           </Text>
         </Pressable>
@@ -42,3 +68,9 @@ export default function SeeHowItWorksScreen() {
     </QuestionContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  video: {
+    flex: 1,
+  },
+});

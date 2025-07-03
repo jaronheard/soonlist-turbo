@@ -193,4 +193,10 @@ export default defineSchema({
     createdAt: v.string(), // ISO date string
     updatedAt: v.string(), // ISO date string
   }).index("by_owner", ["ownerToken"]),
+
+  appConfig: defineTable({
+    key: v.string(), // Config key (e.g., "demoVideoUrl")
+    value: v.string(), // Config value
+    updatedAt: v.string(), // ISO date string
+  }).index("by_key", ["key"]),
 });
