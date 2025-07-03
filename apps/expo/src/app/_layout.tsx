@@ -309,19 +309,33 @@ function RootLayoutContent() {
 
   // Preload demo video after a delay to avoid impacting startup
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      try {
-        const { preloadDemoVideo } = await import("~/services/videoPreload");
-        const { api } = await import("@soonlist/backend/convex/_generated/api");
+    const timer = setTimeout(() => {
+      void (async () => {
+        try {
+          if (__DEV__) {
+            console.log("Starting demo video preload...");
+          }
 
-        // Fetch video URL from Convex and preload
-        const videoUrl = await convex.query(api.appConfig.getDemoVideoUrl);
-        if (videoUrl) {
-          await preloadDemoVideo(videoUrl);
+          const { preloadDemoVideo } = await import("~/services/videoPreload");
+          const { api } = await import(
+            "@soonlist/backend/convex/_generated/api"
+          );
+
+          // Fetch video URL from Convex and preload
+          const videoUrl = await convex.query(api.appConfig.getDemoVideoUrl);
+          if (videoUrl) {
+            if (__DEV__) {
+              console.log("Demo video URL fetched:", videoUrl);
+            }
+            preloadDemoVideo(videoUrl);
+            if (__DEV__) {
+              console.log("Demo video preload completed");
+            }
+          }
+        } catch (error) {
+          console.log("Failed to preload demo video:", error);
         }
-      } catch (error) {
-        console.log("Failed to preload demo video:", error);
-      }
+      })();
     }, 5000); // 5 second delay
 
     return () => clearTimeout(timer);

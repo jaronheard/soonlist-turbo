@@ -1,38 +1,17 @@
-import { Video } from "expo-av";
+// Removing preloading functionality as it's causing errors
+// The Video component from expo-av cannot be instantiated with new Video({})
+// and is deprecated in favor of expo-video
 
-let preloadedVideo: Video | null = null;
-let cachedVideoUrl: string | null = null;
-
-export async function preloadDemoVideo(videoUrl: string) {
-  try {
-    if (!preloadedVideo || cachedVideoUrl !== videoUrl) {
-      // Clean up previous video if URL changed
-      if (preloadedVideo && cachedVideoUrl !== videoUrl) {
-        await preloadedVideo.unloadAsync();
-        preloadedVideo = null;
-      }
-
-      preloadedVideo = new Video({});
-      await preloadedVideo.loadAsync(
-        { uri: videoUrl },
-        { shouldPlay: false },
-        false,
-      );
-      cachedVideoUrl = videoUrl;
-    }
-  } catch (error) {
-    console.error("Failed to preload demo video:", error);
-  }
+export function preloadDemoVideo(_videoUrl: string) {
+  // Just a placeholder now, actual preloading removed
+  // The underscore prefix indicates the parameter is intentionally unused
 }
 
 export function getPreloadedVideo() {
-  return preloadedVideo;
+  // Return null as we're not preloading anymore
+  return null;
 }
 
 export function clearPreloadedVideo() {
-  if (preloadedVideo) {
-    void preloadedVideo.unloadAsync();
-    preloadedVideo = null;
-    cachedVideoUrl = null;
-  }
+  // No-op since we're not caching anything
 }

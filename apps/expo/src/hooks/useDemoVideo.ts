@@ -1,14 +1,9 @@
-import type { Video } from "expo-av";
 import { useEffect, useState } from "react";
-import { ResizeMode } from "expo-av";
 import { useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { getPreloadedVideo, preloadDemoVideo } from "~/services/videoPreload";
-
 export function useDemoVideo() {
-  const [video, setVideo] = useState<Video | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -16,45 +11,23 @@ export function useDemoVideo() {
 
   useEffect(() => {
     if (videoUrl) {
-      // Try to use preloaded video first
-      const preloaded = getPreloadedVideo();
-      if (preloaded) {
-        setVideo(preloaded);
-        setIsLoading(false);
-      } else {
-        // Preload if not already done
-        preloadDemoVideo(videoUrl).then(() => {
-          setVideo(getPreloadedVideo());
-          setIsLoading(false);
-        });
-      }
+      setIsLoading(false);
     }
   }, [videoUrl]);
 
-  const play = async () => {
-    if (video) {
-      await video.playAsync();
-      setIsPlaying(true);
-    }
+  const play = () => {
+    setIsPlaying(true);
   };
 
-  const pause = async () => {
-    if (video) {
-      await video.pauseAsync();
-      setIsPlaying(false);
-    }
+  const pause = () => {
+    setIsPlaying(false);
   };
 
-  const replay = async () => {
-    if (video) {
-      await video.setPositionAsync(0);
-      await video.playAsync();
-      setIsPlaying(true);
-    }
+  const replay = () => {
+    setIsPlaying(true);
   };
 
   return {
-    video,
     videoUrl,
     isPlaying,
     isLoading,
