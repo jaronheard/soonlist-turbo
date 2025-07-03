@@ -2,7 +2,7 @@
 import { useCallback, useEffect } from "react";
 import Constants from "expo-constants";
 import { useURL } from "expo-linking";
-import { useRouter } from "expo-router";
+import { useRouter, useRootNavigationState } from "expo-router";
 
 import { useAppStore } from "~/store";
 import { logDebug, logError, logMessage } from "~/utils/errorLogging";
@@ -39,6 +39,7 @@ export function useIntentHandler() {
   // The deep link that triggered the app's opening
   const incomingUrl = useURL();
   const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
   const { setIntentParams } = useAppStore();
 
   const handleDeepLink = useCallback(
@@ -131,10 +132,16 @@ export function useIntentHandler() {
   );
 
   useEffect(() => {
+    const isNavigationReady = rootNavigationState?.key !== null;
+
+    if (!isNavigationReady) {
+      return;
+    }
+
     logDebug("Incoming URL", incomingUrl);
     if (!incomingUrl || incomingUrl === prevUrl) return;
     logDebug("Setting incoming URL", incomingUrl);
     prevUrl = incomingUrl;
     handleDeepLink(incomingUrl);
-  }, [incomingUrl, handleDeepLink]);
+  }, [incomingUrl, handleDeepLink, rootNavigationState?.key]);
 }
