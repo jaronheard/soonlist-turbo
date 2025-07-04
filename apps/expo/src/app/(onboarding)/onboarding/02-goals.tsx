@@ -62,7 +62,7 @@ export default function GoalsScreen() {
   return (
     <QuestionContainer
       question="What do you want to use Soonlist for?"
-      subtitle="Pick as many as you like."
+      subtitle="Pick as many as you like"
       currentStep={3}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
