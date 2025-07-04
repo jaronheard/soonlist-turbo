@@ -10,15 +10,26 @@ import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
-export default function SeeHowItWorksScreen() {
-  const { saveStep } = useOnboarding();
-  const videoUrl = useQuery(api.appConfig.getDemoVideoUrl);
-
-  // Create video player following expo-video docs exactly
-  const player = useVideoPlayer(videoUrl ?? "", (player) => {
+function VideoPlayer({ videoUrl }: { videoUrl: string }) {
+  const player = useVideoPlayer(videoUrl, (player) => {
     player.loop = true;
     player.play();
   });
+
+  return (
+    <VideoView
+      player={player}
+      style={styles.video}
+      contentFit="contain"
+      allowsFullscreen
+      allowsPictureInPicture
+    />
+  );
+}
+
+export default function SeeHowItWorksScreen() {
+  const { saveStep } = useOnboarding();
+  const videoUrl = useQuery(api.appConfig.getDemoVideoUrl);
 
   const handleContinue = () => {
     saveStep("demo", { watchedDemo: true }, "/(onboarding)/onboarding/paywall");
@@ -45,13 +56,7 @@ export default function SeeHowItWorksScreen() {
             {!videoUrl ? (
               <LoadingSpinner color="white" />
             ) : (
-              <VideoView
-                player={player}
-                style={styles.video}
-                contentFit="contain"
-                allowsFullscreen
-                allowsPictureInPicture
-              />
+              <VideoPlayer videoUrl={videoUrl} />
             )}
           </View>
         </View>
