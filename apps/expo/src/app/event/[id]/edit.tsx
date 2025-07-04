@@ -47,8 +47,8 @@ const formSchema = z.object({
     images: z.array(z.string()).optional(),
   }),
   eventMetadata: z.object({
-    eventType: z.string().optional(),
-    eventCategory: z.string().optional(),
+    type: z.string().optional(),
+    category: z.string().optional(),
     priceType: z.string().optional(),
     price: z.string().optional(),
     ageRestriction: z.string().optional(),
@@ -106,8 +106,8 @@ export default function EditEventScreen() {
         images: [],
       },
       eventMetadata: {
-        eventType: "",
-        eventCategory: "",
+        type: "",
+        category: "",
         priceType: "",
         price: "",
         ageRestriction: "",
@@ -136,8 +136,8 @@ export default function EditEventScreen() {
       };
 
       const eventMetadata = eventQuery.eventMetadata as {
-        eventType?: string;
-        eventCategory?: string;
+        type?: string;
+        category?: string;
         priceType?: string;
         price?: string;
         ageRestriction?: string;
@@ -158,8 +158,8 @@ export default function EditEventScreen() {
           images: eventData?.images || [],
         },
         eventMetadata: {
-          eventType: eventMetadata?.eventType || "",
-          eventCategory: eventMetadata?.eventCategory || "",
+          type: eventMetadata?.type || "",
+          category: eventMetadata?.category || "",
           priceType: eventMetadata?.priceType || "",
           price: eventMetadata?.price || "",
           ageRestriction: eventMetadata?.ageRestriction || "",
