@@ -159,7 +159,7 @@ export default function EditEventScreen() {
           type: eventMetadata?.type || "",
           category: eventMetadata?.category || "",
           priceType: eventMetadata?.priceType || "",
-            ageRestriction: eventMetadata?.ageRestriction || "",
+          ageRestriction: eventMetadata?.ageRestriction || "",
           performers: Array.isArray(eventMetadata?.performers)
             ? eventMetadata.performers.join(", ")
             : typeof eventMetadata?.performers === "string"
@@ -374,7 +374,7 @@ export default function EditEventScreen() {
         }
 
         // Only include eventMetadata if it has actual values
-        const hasEventMetadata = 
+        const hasEventMetadata =
           accessibilityArray.length > 0 ||
           performersArray.length > 0 ||
           data.eventMetadata.type ||
@@ -391,11 +391,21 @@ export default function EditEventScreen() {
           ...(hasEventMetadata && {
             eventMetadata: {
               ...(data.eventMetadata.type && { type: data.eventMetadata.type }),
-              ...(data.eventMetadata.category && { category: data.eventMetadata.category }),
-              ...(data.eventMetadata.priceType && { priceType: data.eventMetadata.priceType }),
-              ...(data.eventMetadata.ageRestriction && { ageRestriction: data.eventMetadata.ageRestriction }),
-              ...(accessibilityArray.length > 0 && { accessibility: accessibilityArray }),
-              ...(performersArray.length > 0 && { performers: performersArray }),
+              ...(data.eventMetadata.category && {
+                category: data.eventMetadata.category,
+              }),
+              ...(data.eventMetadata.priceType && {
+                priceType: data.eventMetadata.priceType,
+              }),
+              ...(data.eventMetadata.ageRestriction && {
+                ageRestriction: data.eventMetadata.ageRestriction,
+              }),
+              ...(accessibilityArray.length > 0 && {
+                accessibility: accessibilityArray,
+              }),
+              ...(performersArray.length > 0 && {
+                performers: performersArray,
+              }),
             },
           }),
           comment: data.comment || "",
