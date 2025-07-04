@@ -44,7 +44,7 @@ export default function WelcomeScreen() {
                 <Text className="text-interactive-1">plans</Text>
               </Text>
               <Text className="mb-4 text-center text-lg text-gray-500">
-                Save events in one tap. All in one place.
+                Save events in one tap. All in one place
               </Text>
             </AnimatedView>
           </View>

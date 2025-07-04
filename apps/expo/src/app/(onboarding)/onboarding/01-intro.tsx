@@ -13,7 +13,7 @@ export default function IntroScreen() {
   return (
     <QuestionContainer
       question="Welcome to Soonlist 👋"
-      subtitle="We'll personalize your experience based on a few quick questions."
+      subtitle="We'll customize your experience based on a few quick questions"
       currentStep={2}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >

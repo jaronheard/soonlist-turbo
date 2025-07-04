@@ -81,7 +81,7 @@ export default function NotificationsScreen() {
   return (
     <QuestionContainer
       question="Let's get started!"
-      subtitle="Turn on notifications to save events, get reminders, and never miss what's coming up."
+      subtitle="Turn on notifications to save events, get reminders, and never miss what's coming up"
       currentStep={7}
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
@@ -91,11 +91,11 @@ export default function NotificationsScreen() {
             <View className="rounded-2xl bg-white">
               <View className="px-2 pb-3 pt-4">
                 <Text className="mb-2 px-4 text-center text-xl font-semibold leading-6">
-                  Turn on Push Notifications to capture and remember.
+                  Turn on Push Notifications to capture and remember
                 </Text>
                 <Text className="mb-2 px-4 text-center text-sm leading-5">
                   Soonlist notifies you when events are created, and to help you
-                  build a habit of capturing events.
+                  build a habit of capturing events
                 </Text>
               </View>
               <View className="flex-row border-t border-[#3c3c43]/30">
