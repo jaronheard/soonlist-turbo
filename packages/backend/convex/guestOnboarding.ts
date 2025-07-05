@@ -76,10 +76,14 @@ export const transferGuestOnboardingData = mutation({
       .unique();
 
     if (!user) {
-      throw new ConvexError({
-        message: "User not found",
-        data: { userId: identity.subject },
+      // User hasn't been created by Clerk webhook yet
+      // This can happen due to race conditions during signup
+      // Return false to indicate transfer didn't happen
+      console.log("User not found yet, likely due to webhook timing", {
+        userId: identity.subject,
+        guestUserId: args.guestUserId,
       });
+      return { transferred: false };
     }
 
     // Update user with onboarding data

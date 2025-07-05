@@ -39,7 +39,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   );
 
   const { signIn, setActive: setActiveSignIn } = useSignIn();
-  const { signUp, setActive: setActiveSignUp } = useSignUp();
+  const { signUp } = useSignUp();
   const { startOAuthFlow: startGoogleOAuthFlow } = useOAuth({
     strategy: "oauth_google",
   });
