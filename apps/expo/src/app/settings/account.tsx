@@ -241,7 +241,7 @@ export default function EditProfileScreen() {
   const handleRestartOnboarding = useCallback(() => {
     Alert.alert(
       "Restart Onboarding",
-      "This will reset your onboarding progress. You'll need to go through the onboarding process again.",
+      "This will reset your onboarding progress and sign you out. You'll need to go through the onboarding process again.",
       [
         {
           text: "Cancel",
@@ -263,7 +263,8 @@ export default function EditProfileScreen() {
                 toast.dismiss(loadingToastId);
                 toast.success("Onboarding reset successfully");
 
-                router.replace("/(onboarding)/onboarding");
+                // Sign out the user to land on the welcome screen
+                await signOut();
               } catch (error) {
                 logError("Error restarting onboarding", error);
                 toast.dismiss(loadingToastId);
@@ -274,7 +275,7 @@ export default function EditProfileScreen() {
         },
       ],
     );
-  }, [resetOnboardingMutation, resetOnboardingStore, user?.id]);
+  }, [resetOnboardingMutation, resetOnboardingStore, user?.id, signOut]);
 
   // Redirect unauthenticated users to sign-in
   if (!isAuthenticated) {
