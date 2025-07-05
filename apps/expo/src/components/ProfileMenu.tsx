@@ -8,15 +8,8 @@ import { useConvexAuth } from "convex/react";
 import { toast } from "sonner-native";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
-import {
-  LogOut,
-  MessageCircle,
-  RefreshCw,
-  ShareIcon,
-  User,
-} from "~/components/icons";
+import { LogOut, MessageCircle, ShareIcon, User } from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
-import { useAppStore } from "~/store";
 import { logError } from "../utils/errorLogging";
 import { UserProfileFlair } from "./UserProfileFlair";
 
@@ -24,7 +17,6 @@ export function ProfileMenu() {
   const { user } = useUser();
   const { isAuthenticated } = useConvexAuth();
   const signOut = useSignOut();
-  const { resetOnboarding } = useAppStore();
 
   const handleSignOut = () => {
     signOut().catch((error) => {
@@ -60,14 +52,6 @@ export function ProfileMenu() {
       message: "Check out Soonlist on the App Store!",
       url: url,
     });
-  };
-
-  const handleResetOnboarding = () => {
-    // Reset onboarding state using the resetOnboarding function
-    resetOnboarding();
-
-    // Navigate to onboarding
-    router.replace("/(onboarding)/onboarding");
   };
 
   const profileImage = (
@@ -128,20 +112,6 @@ export function ProfileMenu() {
           </DropdownMenu.ItemIcon>
           <DropdownMenu.ItemTitle>Support</DropdownMenu.ItemTitle>
         </DropdownMenu.Item>
-
-        {__DEV__ && (
-          <DropdownMenu.Item
-            key="reset-onboarding"
-            onSelect={handleResetOnboarding}
-          >
-            <DropdownMenu.ItemIcon ios={{ name: "arrow.counterclockwise" }}>
-              <RefreshCw />
-            </DropdownMenu.ItemIcon>
-            <DropdownMenu.ItemTitle>
-              Reset Onboarding (Dev)
-            </DropdownMenu.ItemTitle>
-          </DropdownMenu.Item>
-        )}
 
         <DropdownMenu.Item key="sign-out" onSelect={handleSignOut} destructive>
           <DropdownMenu.ItemIcon
