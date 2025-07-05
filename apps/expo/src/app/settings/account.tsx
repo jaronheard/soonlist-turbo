@@ -263,7 +263,7 @@ export default function EditProfileScreen() {
                 toast.dismiss(loadingToastId);
                 toast.success("Onboarding reset successfully");
 
-                router.replace("/onboarding");
+                router.replace("/(onboarding)/onboarding");
               } catch (error) {
                 logError("Error restarting onboarding", error);
                 toast.dismiss(loadingToastId);
