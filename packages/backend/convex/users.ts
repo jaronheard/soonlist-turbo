@@ -1,7 +1,91 @@
 import { ConvexError, v } from "convex/values";
 
+import type { DatabaseReader } from "./_generated/server";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
+
+/**
+ * Generate a unique username based on user's name or email
+ * Format: firstname-lastname-random (e.g., jaron-heard-742)
+ */
+async function generateUniqueUsername(
+  db: DatabaseReader,
+  firstName?: string | null,
+  lastName?: string | null,
+  email?: string,
+): Promise<string> {
+  // Clean and format names for username
+  const cleanName = (name: string | null | undefined) => {
+    if (!name) return "";
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-") // Replace special chars with hyphens
+      .replace(/-+/g, "-") // Replace multiple hyphens with single
+      .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
+  };
+
+  const cleanFirst = cleanName(firstName);
+  const cleanLast = cleanName(lastName);
+
+  // Try different username formats
+  let baseUsername: string;
+
+  if (cleanFirst && cleanLast) {
+    // Prefer firstname-lastname format
+    baseUsername = `${cleanFirst}-${cleanLast}`;
+  } else if (cleanFirst) {
+    // Just first name
+    baseUsername = cleanFirst;
+  } else if (cleanLast) {
+    // Just last name
+    baseUsername = cleanLast;
+  } else if (email) {
+    // Fallback to email prefix
+    const emailPrefix = email.split("@")[0];
+    baseUsername = cleanName(emailPrefix) || "user";
+  } else {
+    // Ultimate fallback
+    baseUsername = "user";
+  }
+
+  // Ensure minimum length
+  if (baseUsername.length < 3) {
+    baseUsername = baseUsername.padEnd(3, "0");
+  }
+
+  // Check if base username is available
+  const existingBase = await db
+    .query("users")
+    .withIndex("by_username", (q) => q.eq("username", baseUsername))
+    .unique();
+
+  if (!existingBase) {
+    return baseUsername;
+  }
+
+  // Add random numbers until we find a unique one
+  let attempts = 0;
+  const maxAttempts = 100;
+
+  while (attempts < maxAttempts) {
+    const randomNum = Math.floor(Math.random() * 9000) + 100; // 3-digit number (100-9099)
+    const candidateUsername = `${baseUsername}-${randomNum}`;
+
+    const existing = await db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", candidateUsername))
+      .unique();
+
+    if (!existing) {
+      return candidateUsername;
+    }
+
+    attempts++;
+  }
+
+  // Fallback: use timestamp if we couldn't find a unique username
+  return `${baseUsername}-${Date.now()}`;
+}
 
 /**
  * Get a user by their ID
@@ -338,6 +422,8 @@ export const syncFromClerk = internalMutation({
     displayName: v.string(),
     userImage: v.string(),
     publicMetadata: v.optional(v.object({})),
+    firstName: v.optional(v.union(v.string(), v.null())),
+    lastName: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -345,9 +431,20 @@ export const syncFromClerk = internalMutation({
       .withIndex("by_custom_id", (q) => q.eq("id", args.id))
       .unique();
 
+    // Generate username if not provided or empty
+    let username = args.username;
+    if (!username || username.trim() === "") {
+      username = await generateUniqueUsername(
+        ctx.db,
+        args.firstName,
+        args.lastName,
+        args.email,
+      );
+    }
+
     const userData = {
       id: args.id,
-      username: args.username,
+      username,
       email: args.email,
       displayName: args.displayName,
       userImage: args.userImage,
@@ -356,6 +453,12 @@ export const syncFromClerk = internalMutation({
     };
 
     if (existing) {
+      // Only update username if the user doesn't already have one
+      if (existing.username && existing.username.trim() !== "") {
+        const { username: _, ...userDataWithoutUsername } = userData;
+        await ctx.db.patch(existing._id, userDataWithoutUsername);
+        return;
+      }
       await ctx.db.patch(existing._id, userData);
     } else {
       await ctx.db.insert("users", {

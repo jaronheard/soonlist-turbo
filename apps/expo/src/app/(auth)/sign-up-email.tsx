@@ -18,10 +18,6 @@ const signUpSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   emailAddress: z.string().email("Invalid email format"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  username: z
-    .string()
-    .min(3, "Username must be at least 3 characters")
-    .max(30, "Username must be 30 characters or less"),
 });
 
 type SignUpFormData = z.infer<typeof signUpSchema>;
@@ -45,7 +41,6 @@ export default function SignUpScreen() {
       lastName: "",
       emailAddress: "",
       password: "",
-      username: "",
     },
     mode: "onChange",
   });
@@ -179,36 +174,6 @@ export default function SignUpScreen() {
                 </Text>
               )}
             </View>
-          </View>
-
-          <View className="mb-4 w-full">
-            <Text className="mb-1 text-sm font-medium text-gray-700">
-              Username
-            </Text>
-            <Controller
-              control={control}
-              name="username"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  autoCapitalize="none"
-                  autoComplete="username-new"
-                  autoCorrect={false}
-                  defaultValue={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3"
-                  returnKeyType="next"
-                />
-              )}
-            />
-            {errors.username && (
-              <Text className="mt-1 text-red-500">
-                {errors.username.message}
-              </Text>
-            )}
-            <Text className="mt-1 text-sm text-gray-500">
-              On Instagram? Consider using the same username
-            </Text>
           </View>
 
           <View className="mb-4 w-full">
