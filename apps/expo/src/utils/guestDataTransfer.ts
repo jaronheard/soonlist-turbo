@@ -57,8 +57,20 @@ export const transferGuestData = async ({
 
     // Step 2: Transfer guest onboarding data
     try {
-      await transferGuestOnboardingData({ guestUserId });
-      logMessage("Guest onboarding data transferred", { guestUserId });
+      const result = await transferGuestOnboardingData({ guestUserId });
+
+      if (result.transferred) {
+        logMessage("Guest onboarding data transferred immediately", {
+          guestUserId,
+        });
+      } else {
+        logMessage("Guest onboarding data transfer scheduled for retry", {
+          guestUserId,
+          userId,
+        });
+        // Note: This is expected during initial signup due to webhook timing
+        // A background job will retry the transfer automatically
+      }
     } catch (convexError) {
       logError("Failed to transfer guest onboarding data", convexError, {
         guestUserId,
@@ -67,6 +79,7 @@ export const transferGuestData = async ({
     }
 
     // Step 3: Clear guest data from AsyncStorage
+    // We can safely clear it now since the backend will handle retries if needed
     await AsyncStorage.removeItem(GUEST_USER_KEY);
     logMessage("Guest data cleared from AsyncStorage");
 

@@ -1,7 +1,118 @@
 import { ConvexError, v } from "convex/values";
 
+import type { DatabaseReader } from "./_generated/server";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
+
+/**
+ * Generate a unique username based on user's name or email
+ * Uses slug-like generation: tries simplest form first, then adds numbers
+ */
+async function generateUniqueUsername(
+  db: DatabaseReader,
+  firstName?: string | null,
+  lastName?: string | null,
+  email?: string,
+): Promise<string> {
+  // Clean and format names for username (slug-like)
+  const slugify = (text: string | null | undefined) => {
+    if (!text) return "";
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with hyphens
+      .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
+      .replace(/-+/g, "-"); // Replace multiple hyphens with single
+  };
+
+  const cleanFirst = slugify(firstName);
+  const cleanLast = slugify(lastName);
+  const emailPrefix = email ? slugify(email.split("@")[0]) : "";
+
+  // Create a list of username candidates in order of preference
+  const candidates: string[] = [];
+
+  // 1. Try just firstname (most common for social platforms)
+  if (cleanFirst) {
+    candidates.push(cleanFirst);
+  }
+
+  // 2. Try firstname + lastname variations
+  if (cleanFirst && cleanLast) {
+    candidates.push(`${cleanFirst}${cleanLast}`); // johnsmith
+    candidates.push(`${cleanFirst}-${cleanLast}`); // john-smith
+    candidates.push(`${cleanFirst}.${cleanLast}`); // john.smith
+    candidates.push(`${cleanFirst}_${cleanLast}`); // john_smith
+  }
+
+  // 3. Try just lastname
+  if (cleanLast) {
+    candidates.push(cleanLast);
+  }
+
+  // 4. Try email prefix
+  if (emailPrefix && emailPrefix !== cleanFirst && emailPrefix !== cleanLast) {
+    candidates.push(emailPrefix);
+  }
+
+  // 5. Try combinations with first initial
+  if (cleanFirst && cleanLast) {
+    candidates.push(`${cleanFirst[0]}${cleanLast}`); // jsmith
+    candidates.push(`${cleanFirst[0]}-${cleanLast}`); // j-smith
+  }
+
+  // Ensure minimum length for all candidates
+  const validCandidates = candidates
+    .filter((username) => username.length >= 3)
+    .slice(0, 10); // Limit to first 10 candidates
+
+  // Try each candidate in order
+  for (const candidate of validCandidates) {
+    const existing = await db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", candidate))
+      .unique();
+
+    if (!existing) {
+      return candidate;
+    }
+  }
+
+  // If all candidates are taken, add numbers to the best candidate
+  const baseUsername = validCandidates[0] || "user";
+
+  // First try sequential numbers 1-99
+  for (let i = 1; i < 100; i++) {
+    const candidateUsername = `${baseUsername}${i}`;
+
+    const existing = await db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", candidateUsername))
+      .unique();
+
+    if (!existing) {
+      return candidateUsername;
+    }
+  }
+
+  // Then try random 3-digit numbers
+  for (let attempts = 0; attempts < 50; attempts++) {
+    const randomNum = Math.floor(Math.random() * 900) + 100; // 100-999
+    const candidateUsername = `${baseUsername}${randomNum}`;
+
+    const existing = await db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", candidateUsername))
+      .unique();
+
+    if (!existing) {
+      return candidateUsername;
+    }
+  }
+
+  // Ultimate fallback: use timestamp
+  return `${baseUsername}${Date.now()}`;
+}
 
 /**
  * Get a user by their ID
@@ -338,6 +449,8 @@ export const syncFromClerk = internalMutation({
     displayName: v.string(),
     userImage: v.string(),
     publicMetadata: v.optional(v.object({})),
+    firstName: v.optional(v.union(v.string(), v.null())),
+    lastName: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -345,9 +458,20 @@ export const syncFromClerk = internalMutation({
       .withIndex("by_custom_id", (q) => q.eq("id", args.id))
       .unique();
 
+    // Generate username if not provided or empty
+    let username = args.username;
+    if (!username || username.trim() === "") {
+      username = await generateUniqueUsername(
+        ctx.db,
+        args.firstName,
+        args.lastName,
+        args.email,
+      );
+    }
+
     const userData = {
       id: args.id,
-      username: args.username,
+      username,
       email: args.email,
       displayName: args.displayName,
       userImage: args.userImage,
@@ -356,6 +480,12 @@ export const syncFromClerk = internalMutation({
     };
 
     if (existing) {
+      // Only update username if the user doesn't already have one
+      if (existing.username && existing.username.trim() !== "") {
+        const { username: _, ...userDataWithoutUsername } = userData;
+        await ctx.db.patch(existing._id, userDataWithoutUsername);
+        return;
+      }
       await ctx.db.patch(existing._id, userData);
     } else {
       await ctx.db.insert("users", {
