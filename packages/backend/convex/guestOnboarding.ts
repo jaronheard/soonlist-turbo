@@ -84,7 +84,7 @@ export const transferGuestOnboardingData = mutation({
         userId: identity.subject,
         guestUserId: args.guestUserId,
       });
-      
+
       await ctx.scheduler.runAfter(
         5000, // 5 seconds
         internal.guestOnboarding.retryTransfer,
@@ -92,9 +92,9 @@ export const transferGuestOnboardingData = mutation({
           userId: identity.subject,
           guestUserId: args.guestUserId,
           attemptCount: 1,
-        }
+        },
       );
-      
+
       return { transferred: false };
     }
 
@@ -123,7 +123,7 @@ export const retryTransfer = internalMutation({
   },
   handler: async (ctx, args) => {
     const maxAttempts = 3;
-    
+
     // Find guest onboarding data
     const guestData = await ctx.db
       .query("guestOnboardingData")
@@ -161,7 +161,7 @@ export const retryTransfer = internalMutation({
         attemptCount: args.attemptCount + 1,
         delayMs,
       });
-      
+
       await ctx.scheduler.runAfter(
         delayMs,
         internal.guestOnboarding.retryTransfer,
@@ -169,7 +169,7 @@ export const retryTransfer = internalMutation({
           userId: args.userId,
           guestUserId: args.guestUserId,
           attemptCount: args.attemptCount + 1,
-        }
+        },
       );
       return;
     }

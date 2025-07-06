@@ -6,7 +6,7 @@ import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
 /**
  * Generate a unique username based on user's name or email
- * Format: firstname-lastname-random (e.g., jaron-heard-742)
+ * Uses slug-like generation: tries simplest form first, then adds numbers
  */
 async function generateUniqueUsername(
   db: DatabaseReader,
@@ -14,62 +14,76 @@ async function generateUniqueUsername(
   lastName?: string | null,
   email?: string,
 ): Promise<string> {
-  // Clean and format names for username
-  const cleanName = (name: string | null | undefined) => {
-    if (!name) return "";
-    return name
+  // Clean and format names for username (slug-like)
+  const slugify = (text: string | null | undefined) => {
+    if (!text) return "";
+    return text
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, "-") // Replace special chars with hyphens
-      .replace(/-+/g, "-") // Replace multiple hyphens with single
-      .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with hyphens
+      .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
+      .replace(/-+/g, "-"); // Replace multiple hyphens with single
   };
 
-  const cleanFirst = cleanName(firstName);
-  const cleanLast = cleanName(lastName);
+  const cleanFirst = slugify(firstName);
+  const cleanLast = slugify(lastName);
+  const emailPrefix = email ? slugify(email.split("@")[0]) : "";
 
-  // Try different username formats
-  let baseUsername: string;
+  // Create a list of username candidates in order of preference
+  const candidates: string[] = [];
 
+  // 1. Try just firstname (most common for social platforms)
+  if (cleanFirst) {
+    candidates.push(cleanFirst);
+  }
+
+  // 2. Try firstname + lastname variations
   if (cleanFirst && cleanLast) {
-    // Prefer firstname-lastname format
-    baseUsername = `${cleanFirst}-${cleanLast}`;
-  } else if (cleanFirst) {
-    // Just first name
-    baseUsername = cleanFirst;
-  } else if (cleanLast) {
-    // Just last name
-    baseUsername = cleanLast;
-  } else if (email) {
-    // Fallback to email prefix
-    const emailPrefix = email.split("@")[0];
-    baseUsername = cleanName(emailPrefix) || "user";
-  } else {
-    // Ultimate fallback
-    baseUsername = "user";
+    candidates.push(`${cleanFirst}${cleanLast}`); // johnsmith
+    candidates.push(`${cleanFirst}-${cleanLast}`); // john-smith
+    candidates.push(`${cleanFirst}.${cleanLast}`); // john.smith
+    candidates.push(`${cleanFirst}_${cleanLast}`); // john_smith
   }
 
-  // Ensure minimum length
-  if (baseUsername.length < 3) {
-    baseUsername = baseUsername.padEnd(3, "0");
+  // 3. Try just lastname
+  if (cleanLast) {
+    candidates.push(cleanLast);
   }
 
-  // Check if base username is available
-  const existingBase = await db
-    .query("users")
-    .withIndex("by_username", (q) => q.eq("username", baseUsername))
-    .unique();
-
-  if (!existingBase) {
-    return baseUsername;
+  // 4. Try email prefix
+  if (emailPrefix && emailPrefix !== cleanFirst && emailPrefix !== cleanLast) {
+    candidates.push(emailPrefix);
   }
 
-  // Add random numbers until we find a unique one
-  let attempts = 0;
-  const maxAttempts = 100;
+  // 5. Try combinations with first initial
+  if (cleanFirst && cleanLast) {
+    candidates.push(`${cleanFirst[0]}${cleanLast}`); // jsmith
+    candidates.push(`${cleanFirst[0]}-${cleanLast}`); // j-smith
+  }
 
-  while (attempts < maxAttempts) {
-    const randomNum = Math.floor(Math.random() * 9000) + 100; // 3-digit number (100-9099)
-    const candidateUsername = `${baseUsername}-${randomNum}`;
+  // Ensure minimum length for all candidates
+  const validCandidates = candidates
+    .filter((username) => username.length >= 3)
+    .slice(0, 10); // Limit to first 10 candidates
+
+  // Try each candidate in order
+  for (const candidate of validCandidates) {
+    const existing = await db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", candidate))
+      .unique();
+
+    if (!existing) {
+      return candidate;
+    }
+  }
+
+  // If all candidates are taken, add numbers to the best candidate
+  const baseUsername = validCandidates[0] || "user";
+
+  // First try sequential numbers 1-99
+  for (let i = 1; i < 100; i++) {
+    const candidateUsername = `${baseUsername}${i}`;
 
     const existing = await db
       .query("users")
@@ -79,12 +93,25 @@ async function generateUniqueUsername(
     if (!existing) {
       return candidateUsername;
     }
-
-    attempts++;
   }
 
-  // Fallback: use timestamp if we couldn't find a unique username
-  return `${baseUsername}-${Date.now()}`;
+  // Then try random 3-digit numbers
+  for (let attempts = 0; attempts < 50; attempts++) {
+    const randomNum = Math.floor(Math.random() * 900) + 100; // 100-999
+    const candidateUsername = `${baseUsername}${randomNum}`;
+
+    const existing = await db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", candidateUsername))
+      .unique();
+
+    if (!existing) {
+      return candidateUsername;
+    }
+  }
+
+  // Ultimate fallback: use timestamp
+  return `${baseUsername}${Date.now()}`;
 }
 
 /**
