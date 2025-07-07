@@ -28,12 +28,11 @@ async function queryFeed(
     .withIndex("by_feed_time", (q) => q.eq("feedId", feedId));
 
   // Apply time filter if provided (for stable pagination)
-  if (beforeThisDateTime) {
+  // For past events only - upcoming events are filtered after fetching to include in-progress events
+  if (beforeThisDateTime && filter === "past") {
     const timestamp = new Date(beforeThisDateTime).getTime();
     feedQuery = feedQuery.filter((q) =>
-      filter === "upcoming"
-        ? q.gte(q.field("eventStartTime"), timestamp)
-        : q.lt(q.field("eventStartTime"), timestamp),
+      q.lt(q.field("eventStartTime"), timestamp)
     );
   }
 
