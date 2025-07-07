@@ -67,7 +67,7 @@ async function queryFeed(
         : Date.now();
 
       if (filter === "upcoming" && eventEndTime < referenceTime) return null;
-      if (filter === "past" && eventStartTime >= referenceTime) return null;
+      if (filter === "past" && eventEndTime >= referenceTime) return null;
 
       // Fetch the user who created the event
       const user = await ctx.db
@@ -218,7 +218,7 @@ export const getUserCreatedEvents = query({
         : now;
 
       if (filter === "upcoming" && eventEndTime < referenceTime) return false;
-      if (filter === "past" && eventStartTime >= referenceTime) return false;
+      if (filter === "past" && eventEndTime >= referenceTime) return false;
       return true;
     });
 
