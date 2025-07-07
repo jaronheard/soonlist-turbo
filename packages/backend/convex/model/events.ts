@@ -142,7 +142,7 @@ export async function getUpcomingEventsForUser(
   ctx: QueryCtx,
   userName: string,
 ) {
-  const now = new Date(new Date().getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+  const now = new Date();
 
   const user = await ctx.db
     .query("users")
@@ -157,7 +157,7 @@ export async function getUpcomingEventsForUser(
   const createdEvents = await ctx.db
     .query("events")
     .withIndex("by_user", (q) => q.eq("userId", user.id))
-    .filter((q) => q.gte(q.field("startDateTime"), now.toISOString()))
+    .filter((q) => q.gte(q.field("endDateTime"), now.toISOString()))
     .collect();
 
   // Get saved events
@@ -173,7 +173,7 @@ export async function getUpcomingEventsForUser(
       .withIndex("by_custom_id", (q) => q.eq("id", follow.eventId))
       .unique();
 
-    if (event && new Date(event.startDateTime) > now) {
+    if (event && new Date(event.endDateTime) >= now) {
       savedEvents.push(event);
     }
   }

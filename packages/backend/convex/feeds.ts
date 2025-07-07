@@ -60,14 +60,15 @@ async function queryFeed(
       if (!event) return null;
 
       // Only include events that match our filter criteria
-      if (beforeThisDateTime) {
-        const eventStartTime = new Date(event.startDateTime).getTime();
-        const referenceTime = new Date(beforeThisDateTime).getTime();
+      const eventEndTime = new Date(event.endDateTime).getTime();
+      const eventStartTime = new Date(event.startDateTime).getTime();
+      const referenceTime = beforeThisDateTime 
+        ? new Date(beforeThisDateTime).getTime() 
+        : Date.now();
 
-        if (filter === "upcoming" && eventStartTime < referenceTime)
-          return null;
-        if (filter === "past" && eventStartTime >= referenceTime) return null;
-      }
+      if (filter === "upcoming" && eventEndTime < referenceTime)
+        return null;
+      if (filter === "past" && eventStartTime >= referenceTime) return null;
 
       // Fetch the user who created the event
       const user = await ctx.db
