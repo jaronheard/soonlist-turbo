@@ -62,12 +62,11 @@ async function queryFeed(
       // Only include events that match our filter criteria
       const eventEndTime = new Date(event.endDateTime).getTime();
       const eventStartTime = new Date(event.startDateTime).getTime();
-      const referenceTime = beforeThisDateTime 
-        ? new Date(beforeThisDateTime).getTime() 
+      const referenceTime = beforeThisDateTime
+        ? new Date(beforeThisDateTime).getTime()
         : Date.now();
 
-      if (filter === "upcoming" && eventEndTime < referenceTime)
-        return null;
+      if (filter === "upcoming" && eventEndTime < referenceTime) return null;
       if (filter === "past" && eventStartTime >= referenceTime) return null;
 
       // Fetch the user who created the event
@@ -188,7 +187,7 @@ export const getUserCreatedEvents = query({
       eventsQuery = eventsQuery.filter((q) => {
         const dateFilter =
           filter === "upcoming"
-            ? q.gte(q.field("startDateTime"), beforeThisDateTime)
+            ? q.gte(q.field("endDateTime"), beforeThisDateTime)
             : q.lt(q.field("startDateTime"), beforeThisDateTime);
         return dateFilter;
       });
@@ -209,8 +208,22 @@ export const getUserCreatedEvents = query({
       .withIndex("by_custom_id", (q) => q.eq("id", userId))
       .first();
 
+    // Filter events based on current time if no beforeThisDateTime provided
+    const now = Date.now();
+    const filteredEvents = results.page.filter((event) => {
+      const eventEndTime = new Date(event.endDateTime).getTime();
+      const eventStartTime = new Date(event.startDateTime).getTime();
+      const referenceTime = beforeThisDateTime
+        ? new Date(beforeThisDateTime).getTime()
+        : now;
+
+      if (filter === "upcoming" && eventEndTime < referenceTime) return false;
+      if (filter === "past" && eventStartTime >= referenceTime) return false;
+      return true;
+    });
+
     // Enrich events with user data
-    const enrichedEvents = results.page.map((event) => ({
+    const enrichedEvents = filteredEvents.map((event) => ({
       ...event,
       user,
     }));
