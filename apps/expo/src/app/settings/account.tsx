@@ -241,7 +241,7 @@ export default function EditProfileScreen() {
   const handleRestartOnboarding = useCallback(() => {
     Alert.alert(
       "Restart Onboarding",
-      "This will reset your onboarding progress. You'll need to go through the onboarding process again.",
+      "This will reset your onboarding progress and sign you out. You'll need to go through the onboarding process again.",
       [
         {
           text: "Cancel",
@@ -260,10 +260,12 @@ export default function EditProfileScreen() {
                 // Reset client-side onboarding state in Zustand store
                 resetOnboardingStore();
 
+                // Sign out the user to land on the welcome screen
+                await signOut();
+
+                // Only show success toast after signOut completes successfully
                 toast.dismiss(loadingToastId);
                 toast.success("Onboarding reset successfully");
-
-                router.replace("/onboarding");
               } catch (error) {
                 logError("Error restarting onboarding", error);
                 toast.dismiss(loadingToastId);
@@ -274,7 +276,7 @@ export default function EditProfileScreen() {
         },
       ],
     );
-  }, [resetOnboardingMutation, resetOnboardingStore, user?.id]);
+  }, [resetOnboardingMutation, resetOnboardingStore, user?.id, signOut]);
 
   // Redirect unauthenticated users to sign-in
   if (!isAuthenticated) {
