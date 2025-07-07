@@ -27,15 +27,19 @@ async function queryFeed(
     .query("userFeeds")
     .withIndex("by_feed_time", (q) => q.eq("feedId", feedId));
 
-  // Apply time filter if provided (for stable pagination)
-  if (beforeThisDateTime) {
-    const timestamp = new Date(beforeThisDateTime).getTime();
-    feedQuery = feedQuery.filter((q) =>
+  // Apply time filter - use current time if not provided
+  const referenceDateTime = beforeThisDateTime || new Date().toISOString();
+  const timestamp = new Date(referenceDateTime).getTime();
+
+  feedQuery = feedQuery.filter((q) => {
+    // Filter based on eventEndTime
+    const timeFilter =
       filter === "upcoming"
-        ? q.gte(q.field("eventStartTime"), timestamp)
-        : q.lt(q.field("eventStartTime"), timestamp),
-    );
-  }
+        ? q.gte(q.field("eventEndTime"), timestamp) // Show events that haven't ended yet
+        : q.lt(q.field("eventEndTime"), timestamp); // Show events that have ended
+
+    return timeFilter;
+  });
 
   // Apply ordering based on filter
   const orderedQuery =
@@ -46,28 +50,15 @@ async function queryFeed(
   // Paginate
   const feedResults = await orderedQuery.paginate(paginationOpts);
 
-  // Extract unique event IDs
-  const eventIds = [...new Set(feedResults.page.map((item) => item.eventId))];
-
-  // Batch fetch events with their users
+  // Map feed entries to full events with users, preserving order
   const events = await Promise.all(
-    eventIds.map(async (eventId) => {
+    feedResults.page.map(async (feedEntry) => {
       const event = await ctx.db
         .query("events")
-        .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+        .withIndex("by_custom_id", (q) => q.eq("id", feedEntry.eventId))
         .first();
 
       if (!event) return null;
-
-      // Only include events that match our filter criteria
-      if (beforeThisDateTime) {
-        const eventStartTime = new Date(event.startDateTime).getTime();
-        const referenceTime = new Date(beforeThisDateTime).getTime();
-
-        if (filter === "upcoming" && eventStartTime < referenceTime)
-          return null;
-        if (filter === "past" && eventStartTime >= referenceTime) return null;
-      }
 
       // Fetch the user who created the event
       const user = await ctx.db
@@ -82,8 +73,16 @@ async function queryFeed(
     }),
   );
 
-  // Filter out null events
-  const validEvents = events.filter((event) => event !== null);
+  // Filter out null events and sort by start time
+  const validEvents = events
+    .filter((event) => event !== null)
+    .sort((a, b) => {
+      const aStart = new Date(a.startDateTime).getTime();
+      const bStart = new Date(b.startDateTime).getTime();
+      // For upcoming events, sort ascending (earliest first)
+      // For past events, sort descending (most recent first)
+      return filter === "upcoming" ? aStart - bStart : bStart - aStart;
+    });
 
   return {
     ...feedResults,
@@ -182,16 +181,13 @@ export const getUserCreatedEvents = query({
       .query("events")
       .withIndex("by_user_and_startDateTime", (q) => q.eq("userId", userId));
 
-    // Apply time filter if provided
-    if (beforeThisDateTime) {
-      eventsQuery = eventsQuery.filter((q) => {
-        const dateFilter =
-          filter === "upcoming"
-            ? q.gte(q.field("startDateTime"), beforeThisDateTime)
-            : q.lt(q.field("startDateTime"), beforeThisDateTime);
-        return dateFilter;
-      });
-    }
+    // Apply time filter - use current time if not provided
+    const referenceDateTime = beforeThisDateTime || new Date().toISOString();
+    eventsQuery = eventsQuery.filter((q) =>
+      filter === "upcoming"
+        ? q.gte(q.field("endDateTime"), referenceDateTime)
+        : q.lt(q.field("endDateTime"), referenceDateTime),
+    );
 
     // Apply ordering based on filter
     const orderedQuery =

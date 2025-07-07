@@ -556,6 +556,7 @@ export const upsertEvent = internalMutation({
           userId: args.userId,
           visibility: args.visibility,
           startDateTime: args.startDateTime,
+          endDateTime: args.endDateTime,
         });
       }
     } else {
@@ -568,6 +569,7 @@ export const upsertEvent = internalMutation({
         userId: args.userId,
         visibility: args.visibility,
         startDateTime: args.startDateTime,
+        endDateTime: args.endDateTime,
       });
     }
     return null;
