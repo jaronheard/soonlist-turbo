@@ -17,6 +17,7 @@ import type * as feeds from "../feeds.js";
 import type * as files from "../files.js";
 import type * as guestOnboarding from "../guestOnboarding.js";
 import type * as http from "../http.js";
+import type * as migrations_addEventEndTimeToFeeds from "../migrations/addEventEndTimeToFeeds.js";
 import type * as migrations_userFeedsMigration from "../migrations/userFeedsMigration.js";
 import type * as model_ai from "../model/ai.js";
 import type * as model_aiHelpers from "../model/aiHelpers.js";
@@ -58,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   files: typeof files;
   guestOnboarding: typeof guestOnboarding;
   http: typeof http;
+  "migrations/addEventEndTimeToFeeds": typeof migrations_addEventEndTimeToFeeds;
   "migrations/userFeedsMigration": typeof migrations_userFeedsMigration;
   "model/ai": typeof model_ai;
   "model/aiHelpers": typeof model_aiHelpers;
