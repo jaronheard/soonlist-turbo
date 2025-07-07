@@ -260,11 +260,12 @@ export default function EditProfileScreen() {
                 // Reset client-side onboarding state in Zustand store
                 resetOnboardingStore();
 
-                toast.dismiss(loadingToastId);
-                toast.success("Onboarding reset successfully");
-
                 // Sign out the user to land on the welcome screen
                 await signOut();
+
+                // Only show success toast after signOut completes successfully
+                toast.dismiss(loadingToastId);
+                toast.success("Onboarding reset successfully");
               } catch (error) {
                 logError("Error restarting onboarding", error);
                 toast.dismiss(loadingToastId);
