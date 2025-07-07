@@ -180,6 +180,7 @@ export default defineSchema({
     feedId: v.string(), // Feed identifier (user_${userId}, discover, curated_${topic}, etc.)
     eventId: v.string(), // Event in the feed
     eventStartTime: v.number(), // For chronological ordering (timestamp)
+    eventEndTime: v.optional(v.number()), // For filtering ongoing/past events (timestamp) - optional during migration
     addedAt: v.number(), // When added to feed (timestamp)
   })
     .index("by_feed_time", ["feedId", "eventStartTime"])
