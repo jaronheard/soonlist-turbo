@@ -121,6 +121,7 @@ export const retryTransfer = internalMutation({
     guestUserId: v.string(),
     attemptCount: v.number(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const maxAttempts = 3;
 

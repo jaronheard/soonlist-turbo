@@ -39,7 +39,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   );
 
   const { signIn, setActive: setActiveSignIn } = useSignIn();
-  const { signUp } = useSignUp();
+  const { signUp, setActive: setActiveSignUp } = useSignUp();
   const { startOAuthFlow: startGoogleOAuthFlow } = useOAuth({
     strategy: "oauth_google",
   });
@@ -73,6 +73,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
       }
 
       if (result.createdSessionId) {
+        // Handle successful sign-in
         if (result.signIn?.status === "complete") {
           await setActiveSignIn({ session: result.createdSessionId });
 
@@ -105,6 +106,55 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               });
             }
           }
+        }
+        // Handle successful sign-up
+        else if (result.signUp?.status === "complete") {
+          await setActiveSignUp({ session: result.createdSessionId });
+
+          // Wait a bit for the session to be fully initialized
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          // Safely access session data
+          const session = Clerk.session;
+          if (session?.user) {
+            const email = session.user.emailAddresses?.[0]?.emailAddress;
+            const userId = session.user.id;
+
+            if (email && userId) {
+              try {
+                await Intercom.loginUserWithUserAttributes({
+                  email,
+                  userId,
+                });
+                posthog.identify(email, {
+                  email,
+                });
+              } catch (intercomError) {
+                logError("Intercom login error", intercomError);
+              }
+
+              // Transfer guest data after successful sign up
+              await transferGuestData({
+                userId,
+                transferGuestOnboardingData,
+              });
+            }
+          }
+        }
+      }
+      // Handle incomplete OAuth flow (neither sign-in nor sign-up completed)
+      else {
+        // Log the incomplete flow for debugging
+        logError("OAuth flow did not complete", {
+          signIn: result.signIn,
+          signUp: result.signUp,
+          createdSessionId: result.createdSessionId,
+        });
+
+        // If we have signIn or signUp objects but no session, something needs completion
+        // Navigate to email sign-up as a fallback
+        if (result.signIn || result.signUp) {
+          router.push("/sign-up-email");
         }
       }
     } catch (err) {
