@@ -12,6 +12,7 @@ export const populateUserFeeds = migrations.define({
   migrateOne: async (ctx, event) => {
     try {
       const eventStartTime = new Date(event.startDateTime).getTime();
+      const eventEndTime = new Date(event.endDateTime).getTime();
       const currentTime = Date.now();
       let addedCount = 0;
 
@@ -30,6 +31,7 @@ export const populateUserFeeds = migrations.define({
             feedId: creatorFeedId,
             eventId: event.id,
             eventStartTime,
+            eventEndTime,
             addedAt: currentTime,
           });
           addedCount++;
@@ -58,6 +60,7 @@ export const populateUserFeeds = migrations.define({
               feedId: discoverFeedId,
               eventId: event.id,
               eventStartTime,
+              eventEndTime,
               addedAt: currentTime,
             });
             addedCount++;
@@ -93,6 +96,7 @@ export const populateUserFeeds = migrations.define({
                 feedId: followerFeedId,
                 eventId: event.id,
                 eventStartTime,
+                eventEndTime,
                 addedAt: currentTime,
               });
               addedCount++;
