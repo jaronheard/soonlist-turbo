@@ -84,7 +84,9 @@ export const transferGuestData = async ({
       await AsyncStorage.removeItem(GUEST_USER_KEY);
       logMessage("Guest data cleared from AsyncStorage");
     } catch (storageError) {
-      logError("Failed to clear guest data from AsyncStorage", storageError, { userId });
+      logError("Failed to clear guest data from AsyncStorage", storageError, {
+        userId,
+      });
       // Continue since backend data transfer was successful
     }
 
