@@ -66,14 +66,12 @@ export default function Page({ params }: Props) {
   // For viewing another user's feed, only show their created events
   const myFeedArgs = {
     filter: "upcoming" as const,
-    beforeThisDateTime: stableNow.toISOString(),
   };
 
   const userCreatedArgs = targetUser
     ? {
         userId: targetUser.id,
         filter: "upcoming" as const,
-        beforeThisDateTime: stableNow.toISOString(),
       }
     : "skip";
 
