@@ -185,7 +185,6 @@ export default defineSchema({
     eventEndTime: v.number(), // For filtering ongoing/past events (timestamp)
     addedAt: v.number(), // When added to feed (timestamp)
     hasEnded: v.boolean(), // Pre-computed field: true if event has ended, false if ongoing/upcoming (now required)
-    beforeThisDateTime: v.optional(v.string()), // Optional ISO date string for custom filtering
   })
     .index("by_feed_hasEnded_startTime", [
       "feedId",
