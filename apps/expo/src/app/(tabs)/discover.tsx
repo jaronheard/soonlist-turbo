@@ -67,16 +67,25 @@ function DiscoverContent() {
     savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
-  // Add missing properties that UserEventsList expects
+  // Add missing properties that UserEventsList expects and filter out ended events
   const enrichedEvents = useMemo(() => {
-    return events.map((event) => ({
-      ...event,
-      eventFollows: [],
-      comments: [],
-      eventToLists: [],
-      lists: [],
-    }));
-  }, [events]);
+    // Use stableTimestamp instead of recalculating Date.now()
+    const currentTime = new Date(stableTimestamp).getTime();
+    return events
+      .filter((event) => {
+        // Client-side safety filter: hide events that have ended
+        // This prevents showing ended events if the cron job hasn't run recently
+        const eventEndTime = new Date(event.endDateTime).getTime();
+        return eventEndTime >= currentTime;
+      })
+      .map((event) => ({
+        ...event,
+        eventFollows: [],
+        comments: [],
+        eventToLists: [],
+        lists: [],
+      }));
+  }, [events, stableTimestamp]);
 
   // Check if user has access to discover feature (only if authenticated)
   if (user) {

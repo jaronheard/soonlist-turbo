@@ -61,11 +61,23 @@ export default function Page() {
   const isLoading = status === "LoadingFirstPage";
   const events = results ? transformConvexEvents(results) : [];
 
-  // Events are already filtered by the query, just separate current vs future
-  const currentEvents = events.filter(
-    (item) => item.startDateTime < stableNow && item.endDateTime > stableNow,
-  );
-  const futureEvents = events.filter((item) => item.startDateTime >= stableNow);
+  // Client-side safety filter: hide events that have ended
+  // This prevents showing ended events if the cron job hasn't run recently
+  // Also separate current vs future events in a single pass
+  const currentEvents: typeof events = [];
+  const futureEvents: typeof events = [];
+
+  for (const event of events) {
+    // Skip ended events
+    if (event.endDateTime < stableNow) continue;
+
+    // Categorize as current or future
+    if (event.startDateTime < stableNow && event.endDateTime > stableNow) {
+      currentEvents.push(event);
+    } else if (event.startDateTime >= stableNow) {
+      futureEvents.push(event);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl">

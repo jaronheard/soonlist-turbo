@@ -8,7 +8,7 @@ export const migrations = new Migrations<DataModel>(components.migrations);
 // Migration to populate user feeds from existing events
 export const populateUserFeeds = migrations.define({
   table: "events",
-  batchSize: 10, // Small batch size to avoid read limits
+  batchSize: 100,
   migrateOne: async (ctx, event) => {
     try {
       const eventStartTime = new Date(event.startDateTime).getTime();
@@ -33,6 +33,7 @@ export const populateUserFeeds = migrations.define({
             eventStartTime,
             eventEndTime,
             addedAt: currentTime,
+            hasEnded: eventEndTime < currentTime,
           });
           addedCount++;
         }
@@ -62,6 +63,7 @@ export const populateUserFeeds = migrations.define({
               eventStartTime,
               eventEndTime,
               addedAt: currentTime,
+              hasEnded: eventEndTime < currentTime,
             });
             addedCount++;
           }
@@ -98,6 +100,7 @@ export const populateUserFeeds = migrations.define({
                 eventStartTime,
                 eventEndTime,
                 addedAt: currentTime,
+                hasEnded: eventEndTime < currentTime,
               });
               addedCount++;
             }
@@ -171,4 +174,39 @@ export const cleanupOrphanedFeedEntries = migrations.define({
 
 export const runCleanupOrphanedFeedEntries = migrations.runner(
   internal.migrations.userFeedsMigration.cleanupOrphanedFeedEntries,
+);
+
+// Migration to populate hasEnded field for existing userFeeds entries
+export const populateHasEndedField = migrations.define({
+  table: "userFeeds",
+  batchSize: 100, // Can process more entries since we're just updating a field
+  migrateOne: async (ctx, feedEntry) => {
+    try {
+      // Skip if hasEnded is already set (handles re-runs)
+      if ("hasEnded" in feedEntry && feedEntry.hasEnded !== undefined) {
+        return;
+      }
+
+      const eventEndTime = feedEntry.eventEndTime;
+      const hasEnded = eventEndTime < Date.now();
+
+      await ctx.db.patch(feedEntry._id, {
+        hasEnded,
+      });
+
+      console.log(
+        `Updated feed entry ${feedEntry._id} for event ${feedEntry.eventId}: hasEnded=${hasEnded}`,
+      );
+    } catch (error) {
+      console.error(
+        `Failed to update hasEnded for feed entry ${feedEntry._id}:`,
+        error,
+      );
+      throw error;
+    }
+  },
+});
+
+export const runPopulateHasEndedField = migrations.runner(
+  internal.migrations.userFeedsMigration.populateHasEndedField,
 );
