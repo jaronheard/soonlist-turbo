@@ -20,35 +20,19 @@ async function queryFeed(
   feedId: string,
   paginationOpts: PaginationOptions,
   filter: "upcoming" | "past" = "upcoming",
-  beforeThisDateTime?: string,
 ) {
-  // Build the query with proper filtering
-  let feedQuery = ctx.db
+  // Use the new index that includes hasEnded for efficient filtering
+  const hasEnded = filter === "past";
+  
+  const feedQuery = ctx.db
     .query("userFeeds")
-    .withIndex("by_feed_time", (q) => q.eq("feedId", feedId));
-
-  // Apply time filter - use current time if not provided
-  const referenceDateTime = beforeThisDateTime || new Date().toISOString();
-  const timestamp = new Date(referenceDateTime).getTime();
-
-  feedQuery = feedQuery.filter((q) => {
-    // Filter based on eventEndTime
-    const timeFilter =
-      filter === "upcoming"
-        ? q.gte(q.field("eventEndTime"), timestamp) // Show events that haven't ended yet
-        : q.lt(q.field("eventEndTime"), timestamp); // Show events that have ended
-
-    return timeFilter;
-  });
-
-  // Apply ordering based on filter
-  const orderedQuery =
-    filter === "upcoming"
-      ? feedQuery.order("asc") // Earliest upcoming events first
-      : feedQuery.order("desc"); // Latest past events first
+    .withIndex("by_feed_hasEnded_startTime", (q) => 
+      q.eq("feedId", feedId).eq("hasEnded", hasEnded)
+    )
+    .order(filter === "upcoming" ? "asc" : "desc"); // Orders by eventStartTime
 
   // Paginate
-  const feedResults = await orderedQuery.paginate(paginationOpts);
+  const feedResults = await feedQuery.paginate(paginationOpts);
 
   // Map feed entries to full events with users, preserving order
   const events = await Promise.all(
@@ -119,7 +103,7 @@ export const getFeed = query({
     }
 
     // Use the common query function
-    return queryFeed(ctx, feedId, paginationOpts, filter, beforeThisDateTime);
+    return queryFeed(ctx, feedId, paginationOpts, filter);
   },
 });
 
@@ -142,7 +126,7 @@ export const getMyFeed = query({
     const feedId = `user_${userId}`;
 
     // Use the common query function
-    return queryFeed(ctx, feedId, paginationOpts, filter, beforeThisDateTime);
+    return queryFeed(ctx, feedId, paginationOpts, filter);
   },
 });
 
@@ -160,7 +144,7 @@ export const getDiscoverFeed = query({
     const feedId = "discover";
 
     // Use the common query function
-    return queryFeed(ctx, feedId, paginationOpts, filter, beforeThisDateTime);
+    return queryFeed(ctx, feedId, paginationOpts, filter);
   },
 });
 
@@ -244,8 +228,8 @@ export const updateHasEndedFlags = internalMutation({
       for (const entry of feedEntries) {
         const shouldHaveEnded = entry.eventEndTime < currentTime;
 
-        // Only update if the value has changed or is not set
-        if (entry.hasEnded === undefined || entry.hasEnded !== shouldHaveEnded) {
+        // Only update if the value has changed
+        if (entry.hasEnded !== shouldHaveEnded) {
           await ctx.db.patch(entry._id, {
             hasEnded: shouldHaveEnded,
           });
