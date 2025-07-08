@@ -1,4 +1,4 @@
-import type { OAuthStrategy } from "@clerk/types";
+import type { ClerkAPIError, OAuthStrategy } from "@clerk/types";
 import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -48,6 +48,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   });
 
   const [showOtherOptions, setShowOtherOptions] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
 
   const toggleOtherOptions = () => {
     setShowOtherOptions(!showOtherOptions);
@@ -58,6 +59,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   }
 
   const handleOAuthFlow = async (strategy: OAuthStrategy) => {
+    setOauthError(null);
     try {
       const startOAuthFlow =
         strategy === "oauth_google"
@@ -72,8 +74,57 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
         return;
       }
 
+      const handleMissingRequirements = async (
+        pendingSignUp: ReturnType<typeof useSignUp>["signUp"],
+      ) => {
+        if (!pendingSignUp) return;
+        try {
+          const res = await pendingSignUp.update({});
+
+          if (res.status === "complete") {
+            await setActiveSignUp({ session: res.createdSessionId });
+            await Intercom.loginUnidentifiedUser();
+            setOauthError(null);
+
+            // Transfer guest data after successful sign up
+            const session = Clerk.session;
+            if (session?.user?.id) {
+              await transferGuestData({
+                userId: session.user.id,
+                transferGuestOnboardingData,
+              });
+            }
+          } else if (res.status === "missing_requirements") {
+            setOauthError(
+              "There are other pending requirements for your account.",
+            );
+          }
+        } catch (err: unknown) {
+          logError("OAuth sign up completion error", err);
+          const clerkError = err as {
+            errors?: ClerkAPIError[];
+            message?: string;
+          };
+          let specificErrorMessage: string | null = null;
+
+          if (
+            clerkError.errors &&
+            Array.isArray(clerkError.errors) &&
+            clerkError.errors.length > 0 &&
+            clerkError.errors[0]?.message
+          ) {
+            specificErrorMessage = clerkError.errors[0].message;
+          } else if (clerkError.message) {
+            specificErrorMessage = clerkError.message;
+          }
+          setOauthError(
+            specificErrorMessage ||
+              "An unexpected error occurred. Please try again.",
+          );
+        }
+      };
+
       if (result.createdSessionId) {
-        // Handle successful sign-in
         if (result.signIn?.status === "complete") {
           await setActiveSignIn({ session: result.createdSessionId });
 
@@ -92,70 +143,33 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
                   email,
                   userId,
                 });
-                posthog.identify(email, {
-                  email,
-                });
               } catch (intercomError) {
                 logError("Intercom login error", intercomError);
               }
 
-              // Transfer guest data after successful sign in
-              await transferGuestData({
-                userId,
-                transferGuestOnboardingData,
-              });
-            }
-          }
-        }
-        // Handle successful sign-up
-        else if (result.signUp?.status === "complete") {
-          await setActiveSignUp({ session: result.createdSessionId });
-
-          // Wait a bit for the session to be fully initialized
-          await new Promise((resolve) => setTimeout(resolve, 100));
-
-          // Safely access session data
-          const session = Clerk.session;
-          if (session?.user) {
-            const email = session.user.emailAddresses?.[0]?.emailAddress;
-            const userId = session.user.id;
-
-            if (email && userId) {
               try {
-                await Intercom.loginUserWithUserAttributes({
-                  email,
-                  userId,
-                });
                 posthog.identify(email, {
                   email,
                 });
-              } catch (intercomError) {
-                logError("Intercom login error", intercomError);
+              } catch (posthogError) {
+                logError("PostHog identify error", posthogError);
               }
 
-              // Transfer guest data after successful sign up
-              await transferGuestData({
-                userId,
-                transferGuestOnboardingData,
-              });
+              try {
+                await transferGuestData({
+                  userId,
+                  transferGuestOnboardingData,
+                });
+              } catch (transferError) {
+                logError("Guest data transfer error", transferError);
+              }
             }
           }
+        } else if (result.signUp?.status === "missing_requirements") {
+          await handleMissingRequirements(result.signUp);
         }
-      }
-      // Handle incomplete OAuth flow (neither sign-in nor sign-up completed)
-      else {
-        // Log the incomplete flow for debugging
-        logError("OAuth flow did not complete", {
-          signIn: result.signIn,
-          signUp: result.signUp,
-          createdSessionId: result.createdSessionId,
-        });
-
-        // If we have signIn or signUp objects but no session, something needs completion
-        // Navigate to email sign-up as a fallback
-        if (result.signIn || result.signUp) {
-          router.push("/sign-up-email");
-        }
+      } else if (result.signUp?.status === "missing_requirements") {
+        await handleMissingRequirements(result.signUp);
       }
     } catch (err) {
       // Handle error with more context
@@ -208,6 +222,14 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               transition={100}
             />
           </View>
+
+          {oauthError && (
+            <View className="mb-4 rounded-lg bg-red-100 p-4">
+              <Text className="text-center text-sm text-red-600">
+                {oauthError}
+              </Text>
+            </View>
+          )}
 
           <View className="relative w-full shrink-0">
             <AppleSignInButton
