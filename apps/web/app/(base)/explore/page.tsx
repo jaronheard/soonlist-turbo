@@ -53,7 +53,6 @@ export default function Page() {
     api.feeds.getDiscoverFeed,
     {
       filter: "upcoming",
-      beforeThisDateTime: stableNow.toISOString(),
     },
     { initialNumItems: 50 },
   );
