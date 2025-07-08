@@ -69,7 +69,8 @@ function DiscoverContent() {
 
   // Add missing properties that UserEventsList expects and filter out ended events
   const enrichedEvents = useMemo(() => {
-    const currentTime = Date.now();
+    // Use stableTimestamp instead of recalculating Date.now()
+    const currentTime = new Date(stableTimestamp).getTime();
     return events
       .filter((event) => {
         // Client-side safety filter: hide events that have ended
@@ -84,7 +85,7 @@ function DiscoverContent() {
         eventToLists: [],
         lists: [],
       }));
-  }, [events]);
+  }, [events, stableTimestamp]);
 
   // Check if user has access to discover feature (only if authenticated)
   if (user) {

@@ -220,6 +220,10 @@ export const getUserCreatedEvents = query({
 // Internal mutation to update hasEnded flags for all userFeeds entries
 export const updateHasEndedFlags = internalMutation({
   args: {},
+  returns: v.object({
+    totalProcessed: v.number(),
+    totalUpdated: v.number(),
+  }),
   handler: async (ctx) => {
     const currentTime = Date.now();
     let totalUpdated = 0;
@@ -227,17 +231,15 @@ export const updateHasEndedFlags = internalMutation({
 
     // Process in batches to avoid hitting limits
     const batchSize = 100;
-    let isDone = false;
+    let cursor = null;
 
-    while (!isDone) {
-      // Get a batch of feed entries
-      const feedEntries = await ctx.db.query("userFeeds").take(batchSize);
+    while (true) {
+      // Get a batch of feed entries using cursor-based pagination
+      const result = await ctx.db
+        .query("userFeeds")
+        .paginate({ numItems: batchSize, cursor });
 
-      if (feedEntries.length === 0) {
-        isDone = true;
-        break;
-      }
-
+      const feedEntries = result.page;
       totalProcessed += feedEntries.length;
 
       // Update each entry
@@ -245,7 +247,10 @@ export const updateHasEndedFlags = internalMutation({
         const shouldHaveEnded = entry.eventEndTime < currentTime;
 
         // Only update if the value has changed or is not set
-        if (entry.hasEnded === undefined || entry.hasEnded !== shouldHaveEnded) {
+        if (
+          entry.hasEnded === undefined ||
+          entry.hasEnded !== shouldHaveEnded
+        ) {
           await ctx.db.patch(entry._id, {
             hasEnded: shouldHaveEnded,
           });
@@ -253,10 +258,11 @@ export const updateHasEndedFlags = internalMutation({
         }
       }
 
-      // If we got less than batchSize, we're done
-      if (feedEntries.length < batchSize) {
-        isDone = true;
+      // Check if we're done
+      if (!result.continueCursor) {
+        break;
       }
+      cursor = result.continueCursor;
     }
 
     console.log(

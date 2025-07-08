@@ -183,13 +183,12 @@ export const populateHasEndedField = migrations.define({
   migrateOne: async (ctx, feedEntry) => {
     try {
       // Skip if hasEnded is already set (handles re-runs)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((feedEntry as any).hasEnded !== undefined) {
+      if ("hasEnded" in feedEntry && feedEntry.hasEnded !== undefined) {
         return;
       }
 
-      const currentTime = Date.now();
-      const hasEnded = feedEntry.eventEndTime < currentTime;
+      const eventEndTime = feedEntry.eventEndTime;
+      const hasEnded = eventEndTime < Date.now();
 
       await ctx.db.patch(feedEntry._id, {
         hasEnded,

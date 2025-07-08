@@ -15,6 +15,12 @@ export const updateEventInFeeds = internalMutation({
     ctx,
     { eventId, userId, visibility, startDateTime, endDateTime },
   ) => {
+    if (isNaN(new Date(startDateTime).getTime())) {
+      throw new Error(`Invalid startDateTime: ${startDateTime}`);
+    }
+    if (isNaN(new Date(endDateTime).getTime())) {
+      throw new Error(`Invalid endDateTime: ${endDateTime}`);
+    }
     const eventStartTime = new Date(startDateTime).getTime();
     const eventEndTime = new Date(endDateTime).getTime();
 
@@ -37,6 +43,12 @@ export const updateEventInFeeds = internalMutation({
         addedAt: currentTime,
         hasEnded: eventEndTime < currentTime,
       });
+    } else {
+      await ctx.db.patch(existingCreatorEntry._id, {
+        eventStartTime,
+        eventEndTime,
+        hasEnded: eventEndTime < Date.now(),
+      });
     }
 
     // 2. Add to discover feed if public
@@ -58,6 +70,12 @@ export const updateEventInFeeds = internalMutation({
           eventEndTime,
           addedAt: currentTime,
           hasEnded: eventEndTime < currentTime,
+        });
+      } else {
+        await ctx.db.patch(existingDiscoverEntry._id, {
+          eventStartTime,
+          eventEndTime,
+          hasEnded: eventEndTime < Date.now(),
         });
       }
     }
@@ -86,6 +104,12 @@ export const updateEventInFeeds = internalMutation({
           eventEndTime,
           addedAt: currentTime,
           hasEnded: eventEndTime < currentTime,
+        });
+      } else {
+        await ctx.db.patch(existingFollowerEntry._id, {
+          eventStartTime,
+          eventEndTime,
+          hasEnded: eventEndTime < Date.now(),
         });
       }
     }
