@@ -642,6 +642,7 @@ export async function createEvent(
     userId,
     visibility: visibility || "public",
     startDateTime: startDateTime.toISOString(),
+    endDateTime: endDateTime.toISOString(),
   });
 
   return { id: eventId };
@@ -783,6 +784,7 @@ export async function updateEvent(
       userId: existingEvent.userId,
       visibility: visibility || existingEvent.visibility,
       startDateTime: startDateTime.toISOString(),
+      endDateTime: endDateTime.toISOString(),
     });
   }
 
@@ -997,6 +999,26 @@ export async function toggleEventVisibility(
     visibility,
     updatedAt: new Date().toISOString(),
   });
+
+  // Update feeds based on visibility change
+  if (event.visibility !== visibility) {
+    // If changing to private, remove from public feeds
+    if (visibility === "private") {
+      await ctx.runMutation(internal.feedHelpers.removeEventFromFeeds, {
+        eventId,
+        keepCreatorFeed: true,
+      });
+    } else {
+      // If changing to public, add to feeds
+      await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
+        eventId,
+        userId: event.userId,
+        visibility,
+        startDateTime: event.startDateTime,
+        endDateTime: event.endDateTime,
+      });
+    }
+  }
 
   return event;
 }

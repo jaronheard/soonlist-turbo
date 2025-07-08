@@ -9,9 +9,14 @@ export const updateEventInFeeds = internalMutation({
     userId: v.string(),
     visibility: v.union(v.literal("public"), v.literal("private")),
     startDateTime: v.string(),
+    endDateTime: v.string(),
   },
-  handler: async (ctx, { eventId, userId, visibility, startDateTime }) => {
+  handler: async (
+    ctx,
+    { eventId, userId, visibility, startDateTime, endDateTime },
+  ) => {
     const eventStartTime = new Date(startDateTime).getTime();
+    const eventEndTime = new Date(endDateTime).getTime();
 
     // 1. Always add to creator's personal feed
     const creatorFeedId = `user_${userId}`;
@@ -23,11 +28,14 @@ export const updateEventInFeeds = internalMutation({
       .first();
 
     if (!existingCreatorEntry) {
+      const currentTime = Date.now();
       await ctx.db.insert("userFeeds", {
         feedId: creatorFeedId,
         eventId,
         eventStartTime,
-        addedAt: Date.now(),
+        eventEndTime,
+        addedAt: currentTime,
+        hasEnded: eventEndTime < currentTime,
       });
     }
 
@@ -42,11 +50,14 @@ export const updateEventInFeeds = internalMutation({
         .first();
 
       if (!existingDiscoverEntry) {
+        const currentTime = Date.now();
         await ctx.db.insert("userFeeds", {
           feedId: discoverFeedId,
           eventId,
           eventStartTime,
-          addedAt: Date.now(),
+          eventEndTime,
+          addedAt: currentTime,
+          hasEnded: eventEndTime < currentTime,
         });
       }
     }
@@ -67,11 +78,14 @@ export const updateEventInFeeds = internalMutation({
         .first();
 
       if (!existingFollowerEntry) {
+        const currentTime = Date.now();
         await ctx.db.insert("userFeeds", {
           feedId: followerFeedId,
           eventId,
           eventStartTime,
-          addedAt: Date.now(),
+          eventEndTime,
+          addedAt: currentTime,
+          hasEnded: eventEndTime < currentTime,
         });
       }
     }
@@ -97,6 +111,7 @@ export const addEventToUserFeed = internalMutation({
 
     const feedId = `user_${userId}`;
     const eventStartTime = new Date(event.startDateTime).getTime();
+    const eventEndTime = new Date(event.endDateTime).getTime();
 
     // Check if already in feed
     const existing = await ctx.db
@@ -107,11 +122,14 @@ export const addEventToUserFeed = internalMutation({
       .first();
 
     if (!existing) {
+      const currentTime = Date.now();
       await ctx.db.insert("userFeeds", {
         feedId,
         eventId,
         eventStartTime,
-        addedAt: Date.now(),
+        eventEndTime,
+        addedAt: currentTime,
+        hasEnded: eventEndTime < currentTime,
       });
     }
   },
