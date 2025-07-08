@@ -33,7 +33,7 @@ export const populateUserFeeds = migrations.define({
             eventStartTime,
             eventEndTime,
             addedAt: currentTime,
-            hasEnded: eventEndTime < currentTime,
+            hasEnded: eventEndTime < currentTime, // always set
           });
           addedCount++;
         }
@@ -63,7 +63,7 @@ export const populateUserFeeds = migrations.define({
               eventStartTime,
               eventEndTime,
               addedAt: currentTime,
-              hasEnded: eventEndTime < currentTime,
+              hasEnded: eventEndTime < currentTime, // always set
             });
             addedCount++;
           }
@@ -100,7 +100,7 @@ export const populateUserFeeds = migrations.define({
                 eventStartTime,
                 eventEndTime,
                 addedAt: currentTime,
-                hasEnded: eventEndTime < currentTime,
+                hasEnded: eventEndTime < currentTime, // always set
               });
               addedCount++;
             }
@@ -176,37 +176,37 @@ export const runCleanupOrphanedFeedEntries = migrations.runner(
   internal.migrations.userFeedsMigration.cleanupOrphanedFeedEntries,
 );
 
-// Migration to populate hasEnded field for existing userFeeds entries
-export const populateHasEndedField = migrations.define({
-  table: "userFeeds",
-  batchSize: 100, // Can process more entries since we're just updating a field
-  migrateOne: async (ctx, feedEntry) => {
-    try {
-      // Skip if hasEnded is already set (handles re-runs)
-      if ("hasEnded" in feedEntry && feedEntry.hasEnded !== undefined) {
-        return;
-      }
+// Remove or comment out the populateHasEndedField migration as hasEnded is now required
+// export const populateHasEndedField = migrations.define({
+//   table: "userFeeds",
+//   batchSize: 100, // Can process more entries since we're just updating a field
+//   migrateOne: async (ctx, feedEntry) => {
+//     try {
+//       // Skip if hasEnded is already set (handles re-runs)
+//       if ("hasEnded" in feedEntry && feedEntry.hasEnded !== undefined) {
+//         return;
+//       }
 
-      const eventEndTime = feedEntry.eventEndTime;
-      const hasEnded = eventEndTime < Date.now();
+//       const eventEndTime = feedEntry.eventEndTime;
+//       const hasEnded = eventEndTime < Date.now();
 
-      await ctx.db.patch(feedEntry._id, {
-        hasEnded,
-      });
+//       await ctx.db.patch(feedEntry._id, {
+//         hasEnded,
+//       });
 
-      console.log(
-        `Updated feed entry ${feedEntry._id} for event ${feedEntry.eventId}: hasEnded=${hasEnded}`,
-      );
-    } catch (error) {
-      console.error(
-        `Failed to update hasEnded for feed entry ${feedEntry._id}:`,
-        error,
-      );
-      throw error;
-    }
-  },
-});
+//       console.log(
+//         `Updated feed entry ${feedEntry._id} for event ${feedEntry.eventId}: hasEnded=${hasEnded}`,
+//       );
+//     } catch (error) {
+//       console.error(
+//         `Failed to update hasEnded for feed entry ${feedEntry._id}:`,
+//         error,
+//       );
+//       throw error;
+//     }
+//   },
+// });
 
-export const runPopulateHasEndedField = migrations.runner(
-  internal.migrations.userFeedsMigration.populateHasEndedField,
-);
+// export const runPopulateHasEndedField = migrations.runner(
+//   internal.migrations.userFeedsMigration.populateHasEndedField,
+// );

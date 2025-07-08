@@ -20,35 +20,20 @@ async function queryFeed(
   feedId: string,
   paginationOpts: PaginationOptions,
   filter: "upcoming" | "past" = "upcoming",
-  beforeThisDateTime?: string,
 ) {
-  // Build the query with proper filtering
-  let feedQuery = ctx.db
+  // Use the new index for efficient filtering
+  const hasEnded = filter === "past";
+  const order = filter === "upcoming" ? "asc" : "desc";
+
+  const feedQuery = ctx.db
     .query("userFeeds")
-    .withIndex("by_feed_time", (q) => q.eq("feedId", feedId));
-
-  // Apply time filter - use current time if not provided
-  const referenceDateTime = beforeThisDateTime || new Date().toISOString();
-  const timestamp = new Date(referenceDateTime).getTime();
-
-  feedQuery = feedQuery.filter((q) => {
-    // Filter based on eventEndTime
-    const timeFilter =
-      filter === "upcoming"
-        ? q.gte(q.field("eventEndTime"), timestamp) // Show events that haven't ended yet
-        : q.lt(q.field("eventEndTime"), timestamp); // Show events that have ended
-
-    return timeFilter;
-  });
-
-  // Apply ordering based on filter
-  const orderedQuery =
-    filter === "upcoming"
-      ? feedQuery.order("asc") // Earliest upcoming events first
-      : feedQuery.order("desc"); // Latest past events first
+    .withIndex("by_feed_hasEnded_startTime", (q) =>
+      q.eq("feedId", feedId).eq("hasEnded", hasEnded),
+    )
+    .order(order);
 
   // Paginate
-  const feedResults = await orderedQuery.paginate(paginationOpts);
+  const feedResults = await feedQuery.paginate(paginationOpts);
 
   // Map feed entries to full events with users, preserving order
   const events = await Promise.all(
@@ -73,16 +58,8 @@ async function queryFeed(
     }),
   );
 
-  // Filter out null events and sort by start time
-  const validEvents = events
-    .filter((event) => event !== null)
-    .sort((a, b) => {
-      const aStart = new Date(a.startDateTime).getTime();
-      const bStart = new Date(b.startDateTime).getTime();
-      // For upcoming events, sort ascending (earliest first)
-      // For past events, sort descending (most recent first)
-      return filter === "upcoming" ? aStart - bStart : bStart - aStart;
-    });
+  // Filter out null events (should be rare)
+  const validEvents = events.filter((event) => event !== null);
 
   return {
     ...feedResults,
@@ -90,18 +67,14 @@ async function queryFeed(
   };
 }
 
-// Main feed query that uses proper time-based filtering
+// Main feed query that uses proper hasEnded-based filtering
 export const getFeed = query({
   args: {
     feedId: v.string(),
     paginationOpts: paginationOptsValidator,
     filter: v.union(v.literal("upcoming"), v.literal("past")),
-    beforeThisDateTime: v.optional(v.string()),
   },
-  handler: async (
-    ctx,
-    { feedId, paginationOpts, filter, beforeThisDateTime },
-  ) => {
+  handler: async (ctx, { feedId, paginationOpts, filter }) => {
     // For personal feeds, verify access
     if (feedId.startsWith("user_")) {
       const requestedUserId = feedId.replace("user_", "");
@@ -119,7 +92,7 @@ export const getFeed = query({
     }
 
     // Use the common query function
-    return queryFeed(ctx, feedId, paginationOpts, filter, beforeThisDateTime);
+    return queryFeed(ctx, feedId, paginationOpts, filter);
   },
 });
 
@@ -128,12 +101,8 @@ export const getMyFeed = query({
   args: {
     paginationOpts: paginationOptsValidator,
     filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
-    beforeThisDateTime: v.optional(v.string()),
   },
-  handler: async (
-    ctx,
-    { paginationOpts, filter = "upcoming", beforeThisDateTime },
-  ) => {
+  handler: async (ctx, { paginationOpts, filter = "upcoming" }) => {
     const userId = await getUserId(ctx);
     if (!userId) {
       throw new ConvexError("Not authenticated");
@@ -142,7 +111,7 @@ export const getMyFeed = query({
     const feedId = `user_${userId}`;
 
     // Use the common query function
-    return queryFeed(ctx, feedId, paginationOpts, filter, beforeThisDateTime);
+    return queryFeed(ctx, feedId, paginationOpts, filter);
   },
 });
 
@@ -151,16 +120,12 @@ export const getDiscoverFeed = query({
   args: {
     paginationOpts: paginationOptsValidator,
     filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
-    beforeThisDateTime: v.optional(v.string()),
   },
-  handler: async (
-    ctx,
-    { paginationOpts, filter = "upcoming", beforeThisDateTime },
-  ) => {
+  handler: async (ctx, { paginationOpts, filter = "upcoming" }) => {
     const feedId = "discover";
 
     // Use the common query function
-    return queryFeed(ctx, feedId, paginationOpts, filter, beforeThisDateTime);
+    return queryFeed(ctx, feedId, paginationOpts, filter);
   },
 });
 

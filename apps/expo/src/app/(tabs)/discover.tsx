@@ -39,7 +39,6 @@ function DiscoverContent() {
     api.feeds.getDiscoverFeed,
     {
       filter: "upcoming" as const,
-      beforeThisDateTime: stableTimestamp,
     },
     {
       initialNumItems: 50,
