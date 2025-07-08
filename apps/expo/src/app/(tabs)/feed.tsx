@@ -25,9 +25,8 @@ function MyFeedContent() {
   const queryArgs = useMemo(() => {
     return {
       filter: "upcoming" as const,
-      beforeThisDateTime: stableTimestamp,
     };
-  }, [stableTimestamp]);
+  }, []);
 
   const {
     results: events,

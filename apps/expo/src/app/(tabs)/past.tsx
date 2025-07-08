@@ -10,24 +10,18 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useStableTimestamp } from "~/store";
 
 function PastEventsContent() {
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  // Use the stable timestamp from the store that updates every 15 minutes
-  // This prevents InvalidCursor errors while still filtering for past events
-  const stableTimestamp = useStableTimestamp();
-
   // Memoize query args to prevent unnecessary re-renders
   const queryArgs = useMemo(() => {
     return {
       filter: "past" as const,
-      beforeThisDateTime: stableTimestamp,
     };
-  }, [stableTimestamp]);
+  }, []);
 
   const {
     results: events,
