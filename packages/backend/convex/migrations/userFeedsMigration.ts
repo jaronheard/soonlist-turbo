@@ -210,3 +210,31 @@ export const runCleanupOrphanedFeedEntries = migrations.runner(
 // export const runPopulateHasEndedField = migrations.runner(
 //   internal.migrations.userFeedsMigration.populateHasEndedField,
 // );
+
+// Migration to set beforeThisDateTime to undefined for all userFeeds records
+export const unsetBeforeThisDateTime = migrations.define({
+  table: "userFeeds",
+  batchSize: 100,
+  migrateOne: async (ctx, feedEntry) => {
+    try {
+      // Only update if beforeThisDateTime is set
+      if (
+        "beforeThisDateTime" in feedEntry &&
+        feedEntry.beforeThisDateTime !== undefined
+      ) {
+        await ctx.db.patch(feedEntry._id, { beforeThisDateTime: undefined });
+        console.log(`Unset beforeThisDateTime for feed entry ${feedEntry._id}`);
+      }
+    } catch (error) {
+      console.error(
+        `Failed to unset beforeThisDateTime for feed entry ${feedEntry._id}:`,
+        error,
+      );
+      throw error;
+    }
+  },
+});
+
+export const runUnsetBeforeThisDateTime = migrations.runner(
+  internal.migrations.userFeedsMigration.unsetBeforeThisDateTime,
+);
