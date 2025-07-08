@@ -180,12 +180,15 @@ export default defineSchema({
     feedId: v.string(), // Feed identifier (user_${userId}, discover, curated_${topic}, etc.)
     eventId: v.string(), // Event in the feed
     eventStartTime: v.number(), // For chronological ordering (timestamp)
-    eventEndTime: v.optional(v.number()), // For filtering ongoing/past events (timestamp) - optional during migration
+    eventEndTime: v.number(), // For filtering ongoing/past events (timestamp)
     addedAt: v.number(), // When added to feed (timestamp)
+    hasEnded: v.boolean(), // Pre-computed field: true if event has ended, false if ongoing/upcoming
   })
     .index("by_feed_time", ["feedId", "eventStartTime"])
     .index("by_feed_event", ["feedId", "eventId"]) // For deduplication checks
-    .index("by_event", ["eventId"]), // For event removal across all feeds
+    .index("by_event", ["eventId"]) // For event removal across all feeds
+    .index("by_feed_endTime", ["feedId", "eventEndTime"]) // For efficient time-based queries
+    .index("by_feed_hasEnded_startTime", ["feedId", "hasEnded", "eventStartTime"]), // For efficient filtering and sorting
 
   guestOnboardingData: defineTable({
     ownerToken: v.string(), // Guest user ID
