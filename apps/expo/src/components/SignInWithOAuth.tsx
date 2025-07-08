@@ -143,18 +143,26 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
                   email,
                   userId,
                 });
-                posthog.identify(email, {
-                  email,
-                });
               } catch (intercomError) {
                 logError("Intercom login error", intercomError);
               }
 
-              // Transfer guest data after successful sign in
-              await transferGuestData({
-                userId,
-                transferGuestOnboardingData,
-              });
+              try {
+                posthog.identify(email, {
+                  email,
+                });
+              } catch (posthogError) {
+                logError("PostHog identify error", posthogError);
+              }
+
+              try {
+                await transferGuestData({
+                  userId,
+                  transferGuestOnboardingData,
+                });
+              } catch (transferError) {
+                logError("Guest data transfer error", transferError);
+              }
             }
           }
         } else if (result.signUp?.status === "missing_requirements") {
