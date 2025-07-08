@@ -1,7 +1,7 @@
-import type { ClerkAPIError, OAuthStrategy } from "@clerk/types";
+import type { OAuthStrategy } from "@clerk/types";
 import type { ImageSourcePropType } from "react-native";
 import React, { useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
@@ -47,13 +47,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
     strategy: "oauth_apple",
   });
 
-  const [username, setUsername] = useState("");
-  const [showUsernameInput, setShowUsernameInput] = useState(false);
   const [showOtherOptions, setShowOtherOptions] = useState(false);
-  const [pendingSignUp, setPendingSignUp] = useState<
-    ReturnType<typeof useSignUp>["signUp"] | null
-  >(null);
-  const [usernameError, setUsernameError] = useState<string | null>(null);
 
   const toggleOtherOptions = () => {
     setShowOtherOptions(!showOtherOptions);
@@ -79,6 +73,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
       }
 
       if (result.createdSessionId) {
+        // Handle successful sign-in
         if (result.signIn?.status === "complete") {
           await setActiveSignIn({ session: result.createdSessionId });
 
@@ -111,13 +106,56 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               });
             }
           }
-        } else if (result.signUp?.status === "missing_requirements") {
-          setPendingSignUp(result.signUp);
-          setShowUsernameInput(true);
         }
-      } else if (result.signUp?.status === "missing_requirements") {
-        setPendingSignUp(result.signUp);
-        setShowUsernameInput(true);
+        // Handle successful sign-up
+        else if (result.signUp?.status === "complete") {
+          await setActiveSignUp({ session: result.createdSessionId });
+
+          // Wait a bit for the session to be fully initialized
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          // Safely access session data
+          const session = Clerk.session;
+          if (session?.user) {
+            const email = session.user.emailAddresses?.[0]?.emailAddress;
+            const userId = session.user.id;
+
+            if (email && userId) {
+              try {
+                await Intercom.loginUserWithUserAttributes({
+                  email,
+                  userId,
+                });
+                posthog.identify(email, {
+                  email,
+                });
+              } catch (intercomError) {
+                logError("Intercom login error", intercomError);
+              }
+
+              // Transfer guest data after successful sign up
+              await transferGuestData({
+                userId,
+                transferGuestOnboardingData,
+              });
+            }
+          }
+        }
+      }
+      // Handle incomplete OAuth flow (neither sign-in nor sign-up completed)
+      else {
+        // Log the incomplete flow for debugging
+        logError("OAuth flow did not complete", {
+          signIn: result.signIn,
+          signUp: result.signUp,
+          createdSessionId: result.createdSessionId,
+        });
+
+        // If we have signIn or signUp objects but no session, something needs completion
+        // Navigate to email sign-up as a fallback
+        if (result.signIn || result.signUp) {
+          router.push("/sign-up-email");
+        }
       }
     } catch (err) {
       // Handle error with more context
@@ -133,135 +171,9 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
     }
   };
 
-  const handleUsernameSubmit = async () => {
-    if (!pendingSignUp) {
-      return;
-    }
-    setUsernameError(null);
-
-    try {
-      const res = await pendingSignUp.update({
-        username: username,
-      });
-
-      if (res.status === "complete") {
-        await setActiveSignUp({ session: res.createdSessionId });
-        await Intercom.loginUnidentifiedUser();
-        setShowUsernameInput(false);
-        setPendingSignUp(null);
-
-        // Transfer guest data after successful sign up
-        const session = Clerk.session;
-        if (session?.user?.id) {
-          await transferGuestData({
-            userId: session.user.id,
-            transferGuestOnboardingData,
-          });
-        }
-      } else if (res.status === "missing_requirements") {
-        setUsernameError(
-          "There are other pending requirements for your account.",
-        );
-      }
-    } catch (err: unknown) {
-      logError("Username submission error", err);
-      const clerkError = err as {
-        errors?: ClerkAPIError[];
-        message?: string;
-      };
-      let specificErrorMessage: string | null = null;
-
-      if (
-        clerkError.errors &&
-        Array.isArray(clerkError.errors) &&
-        clerkError.errors.length > 0
-      ) {
-        const usernameSpecificError = clerkError.errors.find(
-          (e: ClerkAPIError) => e.meta?.paramName === "username",
-        );
-        if (usernameSpecificError) {
-          specificErrorMessage = usernameSpecificError.message;
-        } else if (clerkError.errors[0]?.message) {
-          specificErrorMessage = clerkError.errors[0].message;
-        }
-      } else if (clerkError.message) {
-        specificErrorMessage = clerkError.message;
-      }
-      setUsernameError(
-        specificErrorMessage ||
-          "An unexpected error occurred. Please try again.",
-      );
-    }
-  };
-
   const navigateToEmailSignUp = () => {
     router.push("/sign-up-email");
   };
-
-  if (showUsernameInput) {
-    return (
-      <ScrollView className="flex-1 bg-white px-4 py-6">
-        <View className="min-h-screen justify-center">
-          <Text className="mb-4 text-center text-2xl font-bold">
-            Choose Your Username
-          </Text>
-
-          <Text className="mb-4 text-center text-lg">
-            Pick a unique username to represent you on Soonlist.
-          </Text>
-          <TextInput
-            value={username}
-            onChangeText={(text) => {
-              setUsername(text);
-              if (usernameError) {
-                setUsernameError(null);
-              }
-            }}
-            placeholder="Enter your username"
-            className="mb-1 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-lg"
-            autoComplete="off"
-            autoCorrect={false}
-            autoCapitalize="none"
-            autoFocus={true}
-            onSubmitEditing={handleUsernameSubmit}
-            returnKeyType="done"
-          />
-          {usernameError && (
-            <Text className="mb-4 ml-1 mt-1 text-sm text-red-500">
-              {usernameError}
-            </Text>
-          )}
-
-          <View className="mb-6 rounded-lg bg-accent-yellow p-4">
-            <Text className="text-accent-yellow-contrast mb-2 text-base font-bold uppercase">
-              Tips
-            </Text>
-
-            <View className="mb-2">
-              <Text className="text-base">
-                • Your username will be visible on shared events
-              </Text>
-            </View>
-
-            <View>
-              <Text className="text-base">
-                • On Instagram? Consider using the same username
-              </Text>
-            </View>
-          </View>
-
-          <Pressable
-            onPress={handleUsernameSubmit}
-            className="rounded-full bg-interactive-1 px-6 py-3 active:opacity-70"
-          >
-            <Text className="text-center text-lg font-bold text-white">
-              Continue
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    );
-  }
 
   const Container = banner ? SafeAreaView : View;
 
