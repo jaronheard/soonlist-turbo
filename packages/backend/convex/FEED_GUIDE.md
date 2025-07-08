@@ -13,9 +13,13 @@ userFeeds: {
   feedId: string,          // Feed identifier (user_${userId}, discover, etc.)
   eventId: string,         // Event in the feed
   eventStartTime: number,  // For chronological ordering (timestamp)
+  eventEndTime: number,    // For filtering ongoing/past events (timestamp)
   addedAt: number,         // When added to feed (timestamp)
+  hasEnded: boolean,       // Required: true if event has ended, false if ongoing/upcoming
 }
 ```
+
+- The index `by_feed_hasEnded_startTime` (["feedId", "hasEnded", "eventStartTime"]) is used for efficient filtering and sorting.
 
 ### Feed Types
 
@@ -34,14 +38,14 @@ import { usePaginatedQuery } from "convex/react";
 // Get user's personal feed (includes followed events)
 const { results, status } = usePaginatedQuery(
   api.feeds.getMyFeed,
-  {},
+  { filter: "upcoming" },
   { initialNumItems: 50 },
 );
 
 // Get discover feed
 const { results, status } = usePaginatedQuery(
   api.feeds.getDiscoverFeed,
-  {},
+  { filter: "upcoming" },
   { initialNumItems: 50 },
 );
 
@@ -52,6 +56,8 @@ const { results, status } = usePaginatedQuery(
   { initialNumItems: 50 },
 );
 ```
+
+- Filtering is now done at the database level using the required `hasEnded` field and the new index. Pagination is consistent and efficient.
 
 ### Updating Feeds
 

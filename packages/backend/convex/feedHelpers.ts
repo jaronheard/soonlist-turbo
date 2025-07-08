@@ -41,13 +41,13 @@ export const updateEventInFeeds = internalMutation({
         eventStartTime,
         eventEndTime,
         addedAt: currentTime,
-        hasEnded: eventEndTime < currentTime,
+        hasEnded: eventEndTime < currentTime, // always set
       });
     } else {
       await ctx.db.patch(existingCreatorEntry._id, {
         eventStartTime,
         eventEndTime,
-        hasEnded: eventEndTime < Date.now(),
+        hasEnded: eventEndTime < Date.now(), // always set
       });
     }
 
@@ -69,13 +69,13 @@ export const updateEventInFeeds = internalMutation({
           eventStartTime,
           eventEndTime,
           addedAt: currentTime,
-          hasEnded: eventEndTime < currentTime,
+          hasEnded: eventEndTime < currentTime, // always set
         });
       } else {
         await ctx.db.patch(existingDiscoverEntry._id, {
           eventStartTime,
           eventEndTime,
-          hasEnded: eventEndTime < Date.now(),
+          hasEnded: eventEndTime < Date.now(), // always set
         });
       }
     }
@@ -103,13 +103,13 @@ export const updateEventInFeeds = internalMutation({
           eventStartTime,
           eventEndTime,
           addedAt: currentTime,
-          hasEnded: eventEndTime < currentTime,
+          hasEnded: eventEndTime < currentTime, // always set
         });
       } else {
         await ctx.db.patch(existingFollowerEntry._id, {
           eventStartTime,
           eventEndTime,
-          hasEnded: eventEndTime < Date.now(),
+          hasEnded: eventEndTime < Date.now(), // always set
         });
       }
     }
@@ -153,7 +153,7 @@ export const addEventToUserFeed = internalMutation({
         eventStartTime,
         eventEndTime,
         addedAt: currentTime,
-        hasEnded: eventEndTime < currentTime,
+        hasEnded: eventEndTime < currentTime, // always set
       });
     }
   },
