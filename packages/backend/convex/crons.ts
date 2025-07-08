@@ -28,10 +28,10 @@ crons.cron(
   {},
 );
 
-// Update hasEnded flags for userFeeds every 10 minutes
+// Update hasEnded flags for userFeeds every 15 minutes
 crons.cron(
   "update hasEnded flags",
-  "*/10 * * * *", // Every 10 minutes
+  "*/15 * * * *", // Every 15 minutes
   internal.feeds.updateHasEndedFlags,
   {},
 );

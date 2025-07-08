@@ -8,7 +8,7 @@ export const migrations = new Migrations<DataModel>(components.migrations);
 // Migration to populate user feeds from existing events
 export const populateUserFeeds = migrations.define({
   table: "events",
-  batchSize: 10, // Small batch size to avoid read limits
+  batchSize: 100,
   migrateOne: async (ctx, event) => {
     try {
       const eventStartTime = new Date(event.startDateTime).getTime();
