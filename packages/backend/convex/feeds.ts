@@ -3,7 +3,7 @@ import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
 import type { QueryCtx } from "./_generated/server";
-import { query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -178,6 +178,65 @@ export const getUserCreatedEvents = query({
     return {
       ...results,
       page: enrichedEvents,
+    };
+  },
+});
+
+// Internal mutation to update hasEnded flags for all userFeeds entries
+export const updateHasEndedFlags = internalMutation({
+  args: {},
+  returns: v.object({
+    totalProcessed: v.number(),
+    totalUpdated: v.number(),
+  }),
+  handler: async (ctx) => {
+    const currentTime = Date.now();
+    let totalUpdated = 0;
+    let totalProcessed = 0;
+
+    // Process in batches to avoid hitting limits
+    const batchSize = 100;
+    let cursor = null;
+
+    while (true) {
+      // Get a batch of feed entries using cursor-based pagination
+      const result = await ctx.db
+        .query("userFeeds")
+        .paginate({ numItems: batchSize, cursor });
+
+      const feedEntries = result.page;
+      totalProcessed += feedEntries.length;
+
+      // Update each entry
+      for (const entry of feedEntries) {
+        const shouldHaveEnded = entry.eventEndTime < currentTime;
+
+        // Only update if the value has changed or is not set
+        if (
+          entry.hasEnded === undefined ||
+          entry.hasEnded !== shouldHaveEnded
+        ) {
+          await ctx.db.patch(entry._id, {
+            hasEnded: shouldHaveEnded,
+          });
+          totalUpdated++;
+        }
+      }
+
+      // Check if we're done
+      if (!result.continueCursor) {
+        break;
+      }
+      cursor = result.continueCursor;
+    }
+
+    console.log(
+      `Updated hasEnded flags: ${totalUpdated} changed out of ${totalProcessed} processed`,
+    );
+
+    return {
+      totalProcessed,
+      totalUpdated,
     };
   },
 });

@@ -28,12 +28,12 @@ crons.cron(
   {},
 );
 
-// Remove or comment out the cron job for updating hasEnded, as hasEnded is now always set and required
-// crons.cron(
-//   "update hasEnded flags",
-//   "*/15 * * * *", // Every 15 minutes
-//   internal.feeds.updateHasEndedFlags,
-//   {},
-// );
+// Update hasEnded flags for userFeeds every 15 minutes
+crons.cron(
+  "update hasEnded flags",
+  "*/15 * * * *", // Every 15 minutes
+  internal.feeds.updateHasEndedFlags,
+  {},
+);
 
 export default crons;
