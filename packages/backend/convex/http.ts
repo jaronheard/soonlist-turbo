@@ -67,8 +67,6 @@ http.route({
         userImage: evt.data.image_url,
         email: evt.data.email_addresses[0]?.email_address || "",
         publicMetadata: evt.data.public_metadata,
-        firstName: evt.data.first_name,
-        lastName: evt.data.last_name,
       };
 
       await ctx.runMutation(internal.users.syncFromClerk, userData);
