@@ -43,15 +43,23 @@ function MyFeedContent() {
     }
   }, [status, loadMore]);
 
-  // Add missing properties that UserEventsList expects
+  // Add missing properties that UserEventsList expects and filter out ended events
   const enrichedEvents = useMemo(() => {
-    return events.map((event) => ({
-      ...event,
-      eventFollows: [],
-      comments: [],
-      eventToLists: [],
-      lists: [],
-    }));
+    const currentTime = Date.now();
+    return events
+      .filter((event) => {
+        // Client-side safety filter: hide events that have ended
+        // This prevents showing ended events if the cron job hasn't run recently
+        const eventEndTime = new Date(event.endDateTime).getTime();
+        return eventEndTime >= currentTime;
+      })
+      .map((event) => ({
+        ...event,
+        eventFollows: [],
+        comments: [],
+        eventToLists: [],
+        lists: [],
+      }));
   }, [events]);
 
   return (

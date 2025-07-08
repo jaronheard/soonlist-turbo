@@ -184,6 +184,7 @@ export default defineSchema({
     eventStartTime: v.number(), // For chronological ordering (timestamp)
     eventEndTime: v.number(), // For filtering ongoing/past events (timestamp)
     addedAt: v.number(), // When added to feed (timestamp)
+    hasEnded: v.optional(v.boolean()), // Pre-computed field: true if event has ended, false if ongoing/upcoming (optional during migration)
   })
     .index("by_feed_time", ["feedId", "eventStartTime"])
     .index("by_feed_event", ["feedId", "eventId"]) // For deduplication checks

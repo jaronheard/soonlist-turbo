@@ -28,12 +28,14 @@ export const updateEventInFeeds = internalMutation({
       .first();
 
     if (!existingCreatorEntry) {
+      const currentTime = Date.now();
       await ctx.db.insert("userFeeds", {
         feedId: creatorFeedId,
         eventId,
         eventStartTime,
         eventEndTime,
-        addedAt: Date.now(),
+        addedAt: currentTime,
+        hasEnded: eventEndTime < currentTime,
       });
     }
 
@@ -48,12 +50,14 @@ export const updateEventInFeeds = internalMutation({
         .first();
 
       if (!existingDiscoverEntry) {
+        const currentTime = Date.now();
         await ctx.db.insert("userFeeds", {
           feedId: discoverFeedId,
           eventId,
           eventStartTime,
           eventEndTime,
-          addedAt: Date.now(),
+          addedAt: currentTime,
+          hasEnded: eventEndTime < currentTime,
         });
       }
     }
@@ -74,12 +78,14 @@ export const updateEventInFeeds = internalMutation({
         .first();
 
       if (!existingFollowerEntry) {
+        const currentTime = Date.now();
         await ctx.db.insert("userFeeds", {
           feedId: followerFeedId,
           eventId,
           eventStartTime,
           eventEndTime,
-          addedAt: Date.now(),
+          addedAt: currentTime,
+          hasEnded: eventEndTime < currentTime,
         });
       }
     }
@@ -116,12 +122,14 @@ export const addEventToUserFeed = internalMutation({
       .first();
 
     if (!existing) {
+      const currentTime = Date.now();
       await ctx.db.insert("userFeeds", {
         feedId,
         eventId,
         eventStartTime,
         eventEndTime,
-        addedAt: Date.now(),
+        addedAt: currentTime,
+        hasEnded: eventEndTime < currentTime,
       });
     }
   },

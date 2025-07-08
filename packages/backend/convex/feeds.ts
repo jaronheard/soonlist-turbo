@@ -3,7 +3,7 @@ import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
 import type { QueryCtx } from "./_generated/server";
-import { query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -213,6 +213,59 @@ export const getUserCreatedEvents = query({
     return {
       ...results,
       page: enrichedEvents,
+    };
+  },
+});
+
+// Internal mutation to update hasEnded flags for all userFeeds entries
+export const updateHasEndedFlags = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const currentTime = Date.now();
+    let totalUpdated = 0;
+    let totalProcessed = 0;
+
+    // Process in batches to avoid hitting limits
+    const batchSize = 100;
+    let isDone = false;
+
+    while (!isDone) {
+      // Get a batch of feed entries
+      const feedEntries = await ctx.db.query("userFeeds").take(batchSize);
+
+      if (feedEntries.length === 0) {
+        isDone = true;
+        break;
+      }
+
+      totalProcessed += feedEntries.length;
+
+      // Update each entry
+      for (const entry of feedEntries) {
+        const shouldHaveEnded = entry.eventEndTime < currentTime;
+
+        // Only update if the value has changed or is not set
+        if (entry.hasEnded === undefined || entry.hasEnded !== shouldHaveEnded) {
+          await ctx.db.patch(entry._id, {
+            hasEnded: shouldHaveEnded,
+          });
+          totalUpdated++;
+        }
+      }
+
+      // If we got less than batchSize, we're done
+      if (feedEntries.length < batchSize) {
+        isDone = true;
+      }
+    }
+
+    console.log(
+      `Updated hasEnded flags: ${totalUpdated} changed out of ${totalProcessed} processed`,
+    );
+
+    return {
+      totalProcessed,
+      totalUpdated,
     };
   },
 });

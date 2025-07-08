@@ -95,14 +95,20 @@ export default function Page({ params }: Props) {
   const isLoading = status === "LoadingFirstPage" || (!self && !targetUser);
   const events = convexEvents ? transformConvexEvents(convexEvents) : [];
 
+  // Client-side safety filter: hide events that have ended
+  // This prevents showing ended events if the cron job hasn't run recently
+  const filteredEvents = events.filter((event) => {
+    return new Date(event.endDateTime) >= stableNow;
+  });
+
   // Events are already filtered by the query, just separate current vs future
-  const currentEvents = events.filter((item) => {
+  const currentEvents = filteredEvents.filter((item) => {
     const isCurrent =
       new Date(item.startDateTime) < stableNow &&
       new Date(item.endDateTime) > stableNow;
     return isCurrent;
   });
-  const futureEvents = events.filter(
+  const futureEvents = filteredEvents.filter(
     (item) => new Date(item.startDateTime) >= stableNow,
   );
 
