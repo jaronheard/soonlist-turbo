@@ -45,7 +45,6 @@ function createStableTimestamp(): string {
  * // Use in queries
  * const queryArgs = {
  *   filter: "upcoming",
- *   beforeThisDateTime: stableTimestamp,
  * };
  *
  * // Manually refresh when needed (e.g., on screen focus)
