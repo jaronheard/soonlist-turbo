@@ -329,8 +329,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
               {ActionButton && <ActionButton event={event} />}
 
               <TouchableOpacity
-                className="-mb-0.5 -ml-3 flex-row items-center gap-2 bg-interactive-1 px-4 py-2.5"
-                style={{ borderRadius: 20 }}
+                className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-1 px-4 py-2.5"
+                style={{ borderRadius: 16 }}
                 onPress={handleShare}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
