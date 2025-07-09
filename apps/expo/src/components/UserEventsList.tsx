@@ -27,6 +27,7 @@ import {
   MoreVertical,
   Plus,
   PlusIcon,
+  ShareIcon,
   User,
 } from "~/components/icons";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
@@ -88,6 +89,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
     handleDirections,
     handleAddToCal,
     handleToggleVisibility,
+    handleShare,
     showDiscover,
   } = useEventActions({ event, isSaved, demoMode });
   const id = event.id;
@@ -331,6 +333,14 @@ export function UserEventListItem(props: UserEventListItemProps) {
 
             <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
               {ActionButton && <ActionButton event={event} />}
+
+              <TouchableOpacity
+                className="rounded-full p-2.5"
+                onPress={handleShare}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <ShareIcon size={iconSize} color="#5A32FB" />
+              </TouchableOpacity>
 
               <TouchableOpacity
                 className="rounded-full p-2.5"
