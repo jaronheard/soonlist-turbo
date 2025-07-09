@@ -17,6 +17,7 @@ interface UseCachedFeedOptions {
   feedType: FeedType;
   userId?: string;
   filter: "upcoming" | "past";
+  key?: number; // Optional key to force refresh
 }
 
 interface UseCachedFeedResult {

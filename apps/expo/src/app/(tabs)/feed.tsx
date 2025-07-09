@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from "react";
-import { Button, Text, View } from "react-native";
+import { Alert, Button, Text, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
@@ -17,6 +17,7 @@ function MyFeedContent() {
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+  const [cacheKey, setCacheKey] = React.useState(0); // Force refresh key
 
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
@@ -35,6 +36,7 @@ function MyFeedContent() {
     feedType: "user",
     userId: user?.id,
     filter: "upcoming",
+    key: cacheKey,
   });
 
   const handleLoadMore = useCallback(() => {
@@ -79,7 +81,8 @@ function MyFeedContent() {
             title="Clear Cache (Test)"
             onPress={async () => {
               await offlineStorage.clearAllCaches();
-              alert('Cache cleared! Navigate away and back to test.');
+              setCacheKey(prev => prev + 1); // Force hook to remount
+              Alert.alert('Cache cleared!');
             }}
           />
         </View>
