@@ -55,7 +55,7 @@
     "@trpc/server": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
     "convex": "catalog:",
-    "convex-helpers": "^0.1.89",
+    "convex-helpers": "catalog:",
     "expo": "catalog:",
     "expo-apple-authentication": "catalog:",
     "expo-application": "catalog:",
