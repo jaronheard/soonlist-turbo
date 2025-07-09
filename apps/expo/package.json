@@ -42,6 +42,7 @@
     "@intercom/intercom-react-native": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@react-native-community/datetimepicker": "catalog:",
+    "@react-native-community/netinfo": "catalog:",
     "@sentry/react-native": "catalog:",
     "@soonlist/api": "workspace:*",
     "@soonlist/backend": "workspace:*",
