@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from "react";
-import { View } from "react-native";
+import { Button, Text, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
@@ -9,6 +9,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useCachedFeed } from "~/hooks/useCachedFeed";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
+import { offlineStorage } from "~/services/offlineStorage";
 import { useAppStore, useStableTimestamp } from "~/store";
 
 function MyFeedContent() {
@@ -66,6 +67,23 @@ function MyFeedContent() {
 
   return (
     <View className="flex-1 bg-white">
+      {/* Debug info for testing */}
+      {__DEV__ && (
+        <View className="bg-gray-100 p-2">
+          <Text className="text-xs text-gray-700">
+            Cached: {_lastUpdated ? new Date(_lastUpdated).toLocaleTimeString() : 'Never'} | 
+            Offline: {_isOffline ? 'Yes' : 'No'} | 
+            Events: {events?.length ?? 0}
+          </Text>
+          <Button
+            title="Clear Cache (Test)"
+            onPress={async () => {
+              await offlineStorage.clearAllCaches();
+              alert('Cache cleared! Navigate away and back to test.');
+            }}
+          />
+        </View>
+      )}
       <View className="flex-1">
         <UserEventsList
           events={enrichedEvents}
