@@ -581,7 +581,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
 
           {/* Location line */}
           <View
-            className="mb-4 rounded"
+            className="mb-1 rounded"
             style={{
               height: 14 * fontScale,
               width: 160 * fontScale,
@@ -590,11 +590,23 @@ const GhostEventCard = ({ index }: { index: number }) => {
           />
 
           {/* Action buttons row */}
-          <View className="flex-row items-center gap-3">
-            {[0, 1, 2, 3].map((i) => (
+          <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
+            {/* Ghost Share button */}
+            <View
+              className="-ml-2 rounded"
+              style={{
+                borderRadius: 16,
+                backgroundColor: "#F4F1FF",
+                height: 36 * fontScale,
+                width: 96 * fontScale,
+              }}
+            />
+
+            {/* Two circular buttons */}
+            {[0, 1].map((i) => (
               <View
                 key={i}
-                className="rounded-full"
+                className="rounded-full p-2.5"
                 style={{
                   width: 24 * fontScale,
                   height: 24 * fontScale,
