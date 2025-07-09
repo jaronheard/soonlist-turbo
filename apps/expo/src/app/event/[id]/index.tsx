@@ -20,7 +20,6 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { EventMenu } from "~/components/EventMenu";
 import { EyeOff, Globe2, MapPin, ShareIcon, User } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import ShareButton from "~/components/ShareButton";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
 import { formatEventDateRange } from "~/utils/dates";
@@ -91,10 +90,9 @@ export default function Page() {
           menuType="popup"
           onDelete={handleDeleteAndRedirect}
         />
-        <ShareButton webPath={`/event/${id}`} />
       </View>
     );
-  }, [event, isSaved, currentUser?.id, id, handleDeleteAndRedirect]);
+  }, [event, isSaved, currentUser?.id, handleDeleteAndRedirect]);
 
   // Early return if the 'id' is missing or invalid
   if (!id || typeof id !== "string") {
@@ -267,9 +265,9 @@ export default function Page() {
           elevation: 8,
         }}
       >
-        <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
-          <ShareIcon size={28} color="#FFF" />
-          <Text className="text-xl font-bold text-white">
+        <View className="flex-row items-center gap-4 rounded-full bg-interactive-2 px-8 py-5">
+          <ShareIcon size={28} color="#5A32FB" />
+          <Text className="text-xl font-bold text-interactive-1">
             Share with friends
           </Text>
         </View>

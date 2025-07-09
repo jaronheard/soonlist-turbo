@@ -329,13 +329,15 @@ export function UserEventListItem(props: UserEventListItemProps) {
               {ActionButton && <ActionButton event={event} />}
 
               <TouchableOpacity
-                className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-1 px-4 py-2.5"
+                className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
                 style={{ borderRadius: 16 }}
                 onPress={handleShare}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <ShareIcon size={iconSize * 1.1} color="#FFF" />
-                <Text className="text-base font-bold text-white">Share</Text>
+                <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
+                <Text className="text-base font-bold text-interactive-1">
+                  Share with friends
+                </Text>
               </TouchableOpacity>
 
               {/* <TouchableOpacity
