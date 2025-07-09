@@ -332,6 +332,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
                 style={{ borderRadius: 16 }}
                 onPress={handleShare}
+                accessibilityLabel="Share with friends"
+                accessibilityRole="button"
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <ShareIcon size={iconSize * 1.1} color="#5A32FB" />

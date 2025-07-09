@@ -257,6 +257,8 @@ export default function Page() {
       <TouchableOpacity
         className="absolute bottom-8 self-center"
         onPress={handleShare}
+        accessibilityLabel="Share with friends"
+        accessibilityRole="button"
         style={{
           shadowColor: "#5A32FB",
           shadowOffset: { width: 0, height: 3 },
