@@ -73,16 +73,19 @@ function MyFeedContent() {
       {__DEV__ && (
         <View className="bg-gray-100 p-2">
           <Text className="text-xs text-gray-700">
-            Cached: {_lastUpdated ? new Date(_lastUpdated).toLocaleTimeString() : 'Never'} | 
-            Offline: {_isOffline ? 'Yes' : 'No'} | 
-            Events: {events?.length ?? 0}
+            Cached:{" "}
+            {_lastUpdated
+              ? new Date(_lastUpdated).toLocaleTimeString()
+              : "Never"}{" "}
+            | Offline: {_isOffline ? "Yes" : "No"} | Events:{" "}
+            {events?.length ?? 0}
           </Text>
           <Button
             title="Clear Cache (Test)"
             onPress={async () => {
               await offlineStorage.clearAllCaches();
-              setCacheKey(prev => prev + 1); // Force hook to remount
-              Alert.alert('Cache cleared!');
+              setCacheKey((prev) => prev + 1); // Force hook to remount
+              Alert.alert("Cache cleared!");
             }}
           />
         </View>

@@ -6,6 +6,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { offlineStorage } from "~/services/offlineStorage";
 import { useStableTimestamp } from "~/store";
+import { useNetworkState } from "./useNetworkState";
 import { useStablePaginatedQuery } from "./useStableQuery";
 
 type FeedType = "user" | "discover" | "past";
@@ -42,9 +43,9 @@ export function useCachedFeed({
     lastUpdated: number;
   } | null>(null);
   const [isAutoLoadingPages, setIsAutoLoadingPages] = useState(false);
-  // TODO: Will be implemented with NetInfo in a future commit
 
-  const [isOffline] = useState(false);
+  // Use real network state
+  const { isOffline } = useNetworkState();
 
   const stableTimestamp = useStableTimestamp();
 
