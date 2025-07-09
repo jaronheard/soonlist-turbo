@@ -46,4 +46,5 @@ export { default as Sparkles } from "./Sparkles";
 export { default as Trash2 } from "./Trash2";
 export { default as Type } from "./Type";
 export { default as User } from "./User";
+export { default as WifiOff } from "./WifiOff";
 export { default as X } from "./X";

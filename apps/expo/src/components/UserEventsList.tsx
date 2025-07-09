@@ -39,6 +39,7 @@ import {
   isOver,
 } from "~/utils/dates";
 import { getEventEmoji } from "~/utils/eventEmoji";
+import { getEventStatus, getEventTimingLabel } from "~/utils/eventStatus";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
@@ -110,17 +111,24 @@ export function UserEventListItem(props: UserEventListItemProps) {
     [e.endDate, e.startDate, e.endTime, e.startTime],
   );
 
-  const eventIsOver = useMemo(() => {
-    if (!endDateInfo) return false;
-    return isOver(endDateInfo);
-  }, [endDateInfo]);
+  // Use client-side event status calculations for offline support
+  const eventStatus = useMemo(() => {
+    return getEventStatus(
+      e.startDate + (e.startTime ? `T${e.startTime}` : ""),
+      e.endDate
+        ? e.endDate + (e.endTime ? `T${e.endTime}` : "")
+        : e.startDate + (e.endTime ? `T${e.endTime}` : ""),
+    );
+  }, [e.startDate, e.startTime, e.endDate, e.endTime]);
+
+  const eventIsOver = eventStatus === "ended";
 
   const relativeTime = useMemo(() => {
     if (!startDateInfo || eventIsOver) return "";
     return formatRelativeTime(startDateInfo);
   }, [startDateInfo, eventIsOver]);
 
-  const isHappeningNow = relativeTime === "Happening now" && !eventIsOver;
+  const isHappeningNow = eventStatus === "happening";
 
   const { user: currentUser } = useUser();
   const eventUser = event.user;
@@ -680,6 +688,7 @@ interface UserEventsListProps {
   hasUnlimited?: boolean;
   stats?: EventStatsData;
   hideDiscoverableButton?: boolean;
+  refreshControl?: React.ReactElement<any>;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -694,6 +703,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     demoMode,
     stats,
     hideDiscoverableButton = false,
+    refreshControl,
   } = props;
   const { user } = useUser();
 
@@ -806,6 +816,7 @@ export default function UserEventsList(props: UserEventsListProps) {
           backgroundColor: "#F4F1FF",
         }}
         ListFooterComponent={renderFooter()}
+        refreshControl={refreshControl}
       />
     </>
   );

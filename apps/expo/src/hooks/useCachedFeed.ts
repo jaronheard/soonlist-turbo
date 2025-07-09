@@ -18,7 +18,6 @@ interface UseCachedFeedOptions {
   feedType: FeedType;
   userId?: string;
   filter: "upcoming" | "past";
-  key?: number; // Optional key to force refresh
 }
 
 interface UseCachedFeedResult {
@@ -46,6 +45,7 @@ export function useCachedFeed({
 
   // Use real network state
   const { isOffline } = useNetworkState();
+  const [hasReconnected, setHasReconnected] = useState(false);
 
   const stableTimestamp = useStableTimestamp();
 
@@ -102,6 +102,26 @@ export function useCachedFeed({
   const isLoadingMore = status === "LoadingMore";
   const isDone = status === "Exhausted";
   const canLoadMore = status === "CanLoadMore";
+
+  // Track reconnection
+  useEffect(() => {
+    if (!isOffline && hasReconnected) {
+      // Clear this flag after a moment to prevent repeated triggers
+      const timer = setTimeout(() => setHasReconnected(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOffline, hasReconnected]);
+
+  // Detect when we go from offline to online
+  useEffect(() => {
+    const wasOffline = isOffline;
+
+    return () => {
+      if (wasOffline && !isOffline) {
+        setHasReconnected(true);
+      }
+    };
+  }, [isOffline]);
 
   // Automatically load all pages when online
   useEffect(() => {

@@ -4,12 +4,21 @@ import { Tabs } from "expo-router";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
+import {
+  useCacheWarming,
+  useSelectiveFeedCaching,
+} from "~/hooks/useCacheWarming";
 
 export const unstable_settings = {
   initialRouteName: "feed",
 };
 
 export default function TabsLayout() {
+  // Warm the cache on app launch
+  useCacheWarming();
+  // Manage cache size and freshness
+  useSelectiveFeedCaching();
+
   return (
     <>
       <Tabs
