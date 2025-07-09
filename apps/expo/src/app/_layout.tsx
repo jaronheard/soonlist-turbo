@@ -31,7 +31,6 @@ import { AuthErrorProvider } from "~/components/AuthErrorBoundary";
 import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useCalendar } from "~/hooks/useCalendar";
-import { useIntentHandler } from "~/hooks/useIntentHandler";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { useTimezoneAlert } from "~/hooks/useTimezoneAlert";
@@ -305,8 +304,6 @@ function RootLayoutContent() {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
 
-  // The share extension logic now specifically leads to /new
-  useIntentHandler();
   useTimezoneAlert();
 
   return (
