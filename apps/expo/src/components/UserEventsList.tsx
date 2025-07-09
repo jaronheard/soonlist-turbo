@@ -23,7 +23,6 @@ import {
   Copy,
   EyeOff,
   Globe2,
-  MapPinned,
   MoreVertical,
   Plus,
   PlusIcon,
@@ -85,13 +84,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
     hideDiscoverableButton = false,
   } = props;
   const { fontScale } = useWindowDimensions();
-  const {
-    handleDirections,
-    handleAddToCal,
-    handleToggleVisibility,
-    handleShare,
-    showDiscover,
-  } = useEventActions({ event, isSaved, demoMode });
+  const { handleAddToCal, handleToggleVisibility, handleShare, showDiscover } =
+    useEventActions({ event, isSaved, demoMode });
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
 
@@ -335,26 +329,28 @@ export function UserEventListItem(props: UserEventListItemProps) {
               {ActionButton && <ActionButton event={event} />}
 
               <TouchableOpacity
-                className="rounded-full p-2.5"
+                className="-mb-0.5 -ml-3 flex-row items-center gap-2 bg-interactive-1 px-4 py-2.5"
+                style={{ borderRadius: 20 }}
                 onPress={handleShare}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <ShareIcon size={iconSize} color="#5A32FB" />
+                <ShareIcon size={iconSize * 1.1} color="#FFF" />
+                <Text className="text-base font-bold text-white">Share</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 className="rounded-full p-2.5"
                 onPress={handleDirections}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <MapPinned size={iconSize} color="#5A32FB" />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               <TouchableOpacity
                 className="rounded-full p-2.5"
                 onPress={handleAddToCal}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <CalendarPlus size={iconSize} color="#5A32FB" />
+                <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
               </TouchableOpacity>
 
               {showDiscover && !hideDiscoverableButton && (
@@ -368,9 +364,9 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   {event.visibility === "public" ? (
-                    <Globe2 size={iconSize} color="#5A32FB" />
+                    <Globe2 size={iconSize * 1.1} color="#5A32FB" />
                   ) : (
-                    <EyeOff size={iconSize} color="#5A32FB" />
+                    <EyeOff size={iconSize * 1.1} color="#5A32FB" />
                   )}
                 </TouchableOpacity>
               )}
@@ -389,7 +385,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   }}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <MoreVertical size={iconSize} color="#5A32FB" />
+                  <MoreVertical size={iconSize * 1.1} color="#5A32FB" />
                 </TouchableOpacity>
               </EventMenu>
             </View>
