@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import type { PaginationStatus } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
+import { useEffect, useState } from "react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -25,6 +25,7 @@ interface UseCachedFeedResult {
   lastUpdated: number | undefined;
   isLoadingFirstPage: boolean;
   isLoadingMore: boolean;
+  isAutoLoadingPages: boolean;
   loadMore: (numItems: number) => void;
   status: PaginationStatus;
   isDone: boolean;
@@ -39,6 +40,7 @@ export function useCachedFeed({
     items: EventWithUser[];
     lastUpdated: number;
   } | null>(null);
+  const [isAutoLoadingPages, setIsAutoLoadingPages] = useState(false);
   // TODO: Will be implemented with NetInfo in a future commit
 
   const [isOffline] = useState(false);
@@ -89,16 +91,30 @@ export function useCachedFeed({
       ? { paginationOpts: { initialNumItems: 50, numItems: 25 } }
       : { filter, paginationOpts: { initialNumItems: 50, numItems: 25 } };
 
-  const paginatedQuery = useStablePaginatedQuery(
-    queryFunction,
-    queryArgs,
-    { initialNumItems: 50 }
-  );
+  const paginatedQuery = useStablePaginatedQuery(queryFunction, queryArgs, {
+    initialNumItems: 50,
+  });
 
   const { results, status, loadMore } = paginatedQuery;
   const isLoadingFirstPage = status === "LoadingFirstPage";
   const isLoadingMore = status === "LoadingMore";
   const isDone = status === "Exhausted";
+  const canLoadMore = status === "CanLoadMore";
+
+  // Automatically load all pages when online
+  useEffect(() => {
+    async function loadAllPages() {
+      if (!isOffline && canLoadMore && feedId) {
+        setIsAutoLoadingPages(true);
+        // Load more pages automatically
+        loadMore(25);
+      } else if (isDone || isOffline) {
+        setIsAutoLoadingPages(false);
+      }
+    }
+
+    void loadAllPages();
+  }, [canLoadMore, isOffline, loadMore, feedId, isDone]);
 
   // Save to cache when data updates
   useEffect(() => {
@@ -109,7 +125,7 @@ export function useCachedFeed({
         await offlineStorage.saveFeedCache(
           feedId,
           results,
-          new Date(stableTimestamp).getTime()
+          new Date(stableTimestamp).getTime(),
         );
 
         // Update cached data state
@@ -137,6 +153,7 @@ export function useCachedFeed({
     lastUpdated: cachedData?.lastUpdated,
     isLoadingFirstPage,
     isLoadingMore,
+    isAutoLoadingPages,
     loadMore,
     status,
     isDone,
