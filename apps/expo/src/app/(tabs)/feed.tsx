@@ -1,18 +1,18 @@
 import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
-
-import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
-import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
+import { useCachedFeed } from "~/hooks/useCachedFeed";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useStableTimestamp } from "~/store";
 
 function MyFeedContent() {
+  const { user } = useUser();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
@@ -21,19 +21,19 @@ function MyFeedContent() {
   // This prevents InvalidCursor errors while still filtering for upcoming events
   const stableTimestamp = useStableTimestamp();
 
-  // Memoize query args to prevent unnecessary re-renders
-  const queryArgs = useMemo(() => {
-    return {
-      filter: "upcoming" as const,
-    };
-  }, []);
-
   const {
-    results: events,
+    items: events,
     status,
     loadMore,
-  } = useStablePaginatedQuery(api.feeds.getMyFeed, queryArgs, {
-    initialNumItems: 50,
+    isLoadingFirstPage,
+    isLoadingMore,
+    isOffline: _isOffline, // Will be used for offline indicators
+    lastUpdated: _lastUpdated, // Will be used for freshness display
+    isAutoLoadingPages,
+  } = useCachedFeed({
+    feedType: "user",
+    userId: user?.id,
+    filter: "upcoming",
   });
 
   const handleLoadMore = useCallback(() => {
@@ -44,6 +44,8 @@ function MyFeedContent() {
 
   // Add missing properties that UserEventsList expects and filter out ended events
   const enrichedEvents = useMemo(() => {
+    if (!events) return [];
+
     // Use stableTimestamp instead of recalculating Date.now()
     const currentTime = new Date(stableTimestamp).getTime();
     return events
@@ -68,8 +70,8 @@ function MyFeedContent() {
         <UserEventsList
           events={enrichedEvents}
           onEndReached={handleLoadMore}
-          isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={status === "LoadingFirstPage"}
+          isFetchingNextPage={isLoadingMore || isAutoLoadingPages}
+          isLoadingFirstPage={isLoadingFirstPage}
           showCreator="savedFromOthers"
           stats={undefined}
           promoCard={{ type: "addEvents" }}
