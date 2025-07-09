@@ -23,10 +23,10 @@ import {
   Copy,
   EyeOff,
   Globe2,
-  MapPinned,
   MoreVertical,
   Plus,
   PlusIcon,
+  ShareIcon,
   User,
 } from "~/components/icons";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
@@ -84,12 +84,8 @@ export function UserEventListItem(props: UserEventListItemProps) {
     hideDiscoverableButton = false,
   } = props;
   const { fontScale } = useWindowDimensions();
-  const {
-    handleDirections,
-    handleAddToCal,
-    handleToggleVisibility,
-    showDiscover,
-  } = useEventActions({ event, isSaved, demoMode });
+  const { handleAddToCal, handleToggleVisibility, handleShare, showDiscover } =
+    useEventActions({ event, isSaved, demoMode });
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
 
@@ -333,18 +329,32 @@ export function UserEventListItem(props: UserEventListItemProps) {
               {ActionButton && <ActionButton event={event} />}
 
               <TouchableOpacity
+                className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
+                style={{ borderRadius: 16 }}
+                onPress={handleShare}
+                accessibilityLabel="Share with friends"
+                accessibilityRole="button"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
+                <Text className="text-base font-bold text-interactive-1">
+                  Share with friends
+                </Text>
+              </TouchableOpacity>
+
+              {/* <TouchableOpacity
                 className="rounded-full p-2.5"
                 onPress={handleDirections}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <MapPinned size={iconSize} color="#5A32FB" />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               <TouchableOpacity
                 className="rounded-full p-2.5"
                 onPress={handleAddToCal}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <CalendarPlus size={iconSize} color="#5A32FB" />
+                <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
               </TouchableOpacity>
 
               {showDiscover && !hideDiscoverableButton && (
@@ -358,9 +368,9 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   {event.visibility === "public" ? (
-                    <Globe2 size={iconSize} color="#5A32FB" />
+                    <Globe2 size={iconSize * 1.1} color="#5A32FB" />
                   ) : (
-                    <EyeOff size={iconSize} color="#5A32FB" />
+                    <EyeOff size={iconSize * 1.1} color="#5A32FB" />
                   )}
                 </TouchableOpacity>
               )}
@@ -379,7 +389,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   }}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <MoreVertical size={iconSize} color="#5A32FB" />
+                  <MoreVertical size={iconSize * 1.1} color="#5A32FB" />
                 </TouchableOpacity>
               </EventMenu>
             </View>
@@ -575,7 +585,7 @@ const GhostEventCard = ({ index }: { index: number }) => {
 
           {/* Location line */}
           <View
-            className="mb-4 rounded"
+            className="mb-1 rounded"
             style={{
               height: 14 * fontScale,
               width: 160 * fontScale,
@@ -584,11 +594,23 @@ const GhostEventCard = ({ index }: { index: number }) => {
           />
 
           {/* Action buttons row */}
-          <View className="flex-row items-center gap-3">
-            {[0, 1, 2, 3].map((i) => (
+          <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
+            {/* Ghost Share button */}
+            <View
+              className="-ml-2 rounded"
+              style={{
+                borderRadius: 16,
+                backgroundColor: "#F4F1FF",
+                height: 36 * fontScale,
+                width: 96 * fontScale,
+              }}
+            />
+
+            {/* Two circular buttons */}
+            {[0, 1].map((i) => (
               <View
                 key={i}
-                className="rounded-full"
+                className="rounded-full p-2.5"
                 style={{
                   width: 24 * fontScale,
                   height: 24 * fontScale,

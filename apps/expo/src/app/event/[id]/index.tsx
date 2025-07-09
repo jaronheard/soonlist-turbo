@@ -5,6 +5,7 @@ import {
   Image as RNImage,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,9 +18,8 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { EventMenu } from "~/components/EventMenu";
-import { EyeOff, Globe2, MapPin, User } from "~/components/icons";
+import { EyeOff, Globe2, MapPin, ShareIcon, User } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import ShareButton from "~/components/ShareButton";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
 import { formatEventDateRange } from "~/utils/dates";
@@ -41,7 +41,7 @@ export default function Page() {
   const isSaved =
     event && currentUser ? event.userId !== currentUser.id : false;
 
-  const { handleDelete } = useEventActions({
+  const { handleDelete, handleShare } = useEventActions({
     event,
     isSaved,
   });
@@ -90,10 +90,9 @@ export default function Page() {
           menuType="popup"
           onDelete={handleDeleteAndRedirect}
         />
-        <ShareButton webPath={`/event/${id}`} />
       </View>
     );
-  }, [event, isSaved, currentUser?.id, id, handleDeleteAndRedirect]);
+  }, [event, isSaved, currentUser?.id, handleDeleteAndRedirect]);
 
   // Early return if the 'id' is missing or invalid
   if (!id || typeof id !== "string") {
@@ -253,6 +252,28 @@ export default function Page() {
           )}
         </View>
       </ScrollView>
+
+      {/* Floating Share Button */}
+      <TouchableOpacity
+        className="absolute bottom-8 self-center"
+        onPress={handleShare}
+        accessibilityLabel="Share with friends"
+        accessibilityRole="button"
+        style={{
+          shadowColor: "#5A32FB",
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.3,
+          shadowRadius: 6,
+          elevation: 8,
+        }}
+      >
+        <View className="flex-row items-center gap-4 rounded-full bg-interactive-2 px-8 py-5">
+          <ShareIcon size={28} color="#5A32FB" />
+          <Text className="text-xl font-bold text-interactive-1">
+            Share with friends
+          </Text>
+        </View>
+      </TouchableOpacity>
     </>
   );
 }
