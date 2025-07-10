@@ -69,6 +69,7 @@ interface UserEventListItemProps {
   demoMode?: boolean;
   index: number;
   hideDiscoverableButton?: boolean;
+  isDiscoverFeed?: boolean;
 }
 
 export function UserEventListItem(props: UserEventListItemProps) {
@@ -82,6 +83,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
     demoMode,
     index,
     hideDiscoverableButton = false,
+    isDiscoverFeed = false,
   } = props;
   const { fontScale } = useWindowDimensions();
   const { handleAddToCal, handleToggleVisibility, handleShare, showDiscover } =
@@ -328,19 +330,32 @@ export function UserEventListItem(props: UserEventListItemProps) {
             <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
               {ActionButton && <ActionButton event={event} />}
 
-              <TouchableOpacity
-                className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
-                style={{ borderRadius: 16 }}
-                onPress={handleShare}
-                accessibilityLabel="Share with friends"
-                accessibilityRole="button"
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-                <Text className="text-base font-bold text-interactive-1">
-                  Share with friends
-                </Text>
-              </TouchableOpacity>
+              {isDiscoverFeed ? (
+                <TouchableOpacity
+                  className="rounded-full p-2.5"
+                  style={{ backgroundColor: "white" }}
+                  onPress={handleShare}
+                  accessibilityLabel="Share"
+                  accessibilityRole="button"
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
+                  style={{ borderRadius: 16 }}
+                  onPress={handleShare}
+                  accessibilityLabel="Share"
+                  accessibilityRole="button"
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
+                  <Text className="text-base font-bold text-interactive-1">
+                    Share
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {/* <TouchableOpacity
                 className="rounded-full p-2.5"
@@ -349,14 +364,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
               >
                 <MapPinned size={iconSize} color="#5A32FB" />
               </TouchableOpacity> */}
-              <TouchableOpacity
-                className="rounded-full p-2.5"
-                onPress={handleAddToCal}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
-              </TouchableOpacity>
-
               {showDiscover && !hideDiscoverableButton && (
                 <TouchableOpacity
                   className="rounded-full p-2.5"
@@ -374,6 +381,14 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   )}
                 </TouchableOpacity>
               )}
+
+              <TouchableOpacity
+                className="rounded-full p-2.5"
+                onPress={handleAddToCal}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
+              </TouchableOpacity>
 
               <EventMenu
                 event={event}
@@ -680,6 +695,7 @@ interface UserEventsListProps {
   hasUnlimited?: boolean;
   stats?: EventStatsData;
   hideDiscoverableButton?: boolean;
+  isDiscoverFeed?: boolean;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -694,6 +710,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     demoMode,
     stats,
     hideDiscoverableButton = false,
+    isDiscoverFeed = false,
   } = props;
   const { user } = useUser();
 
@@ -793,6 +810,7 @@ export default function UserEventsList(props: UserEventsListProps) {
               demoMode={demoMode}
               index={index}
               hideDiscoverableButton={hideDiscoverableButton}
+              isDiscoverFeed={isDiscoverFeed}
             />
           );
         }}

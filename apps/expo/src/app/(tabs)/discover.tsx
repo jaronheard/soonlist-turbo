@@ -120,6 +120,7 @@ function DiscoverContent() {
             showCreator="always"
             hasUnlimited={hasUnlimited}
             hideDiscoverableButton={true}
+            isDiscoverFeed={true}
           />
           {user && <AddEventButton showChevron={false} />}
         </View>

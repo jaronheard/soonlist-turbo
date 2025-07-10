@@ -269,9 +269,7 @@ export default function Page() {
       >
         <View className="flex-row items-center gap-4 rounded-full bg-interactive-2 px-8 py-5">
           <ShareIcon size={28} color="#5A32FB" />
-          <Text className="text-xl font-bold text-interactive-1">
-            Share with friends
-          </Text>
+          <Text className="text-xl font-bold text-interactive-1">Share</Text>
         </View>
       </TouchableOpacity>
     </>
