@@ -121,7 +121,7 @@ function DiscoverContent() {
             hasUnlimited={hasUnlimited}
             hideDiscoverableButton={true}
           />
-          {user && <AddEventButton showChevron={false} />}
+          {user && <AddEventButton />}
         </View>
       )}
     </View>

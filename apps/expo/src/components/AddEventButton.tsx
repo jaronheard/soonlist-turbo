@@ -11,10 +11,8 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
-import { CircularSpinner } from "~/components/ui/CircularSpinner";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
 interface EventStats {
   upcomingEvents: number;
@@ -41,8 +39,6 @@ export default function AddEventButton({
   showChevron = true,
   stats,
 }: AddEventButtonProps) {
-  const { isCapturing } = useInFlightEventStore();
-
   const {
     customerInfo,
     isLoading: isRevenueCatLoading,
@@ -145,38 +141,20 @@ export default function AddEventButton({
       {!isRevenueCatLoading && (
         <TouchableOpacity
           onPress={handlePress}
-          className="absolute bottom-8 self-center"
+          className="absolute bottom-8 z-50 self-center"
         >
           {canProceedWithAdd ? (
-            <View className="relative">
-              <View
-                className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
-                style={{
-                  shadowColor: "#5A32FB",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 6,
-                  elevation: 8,
-                }}
-              >
-                <PlusIcon size={44} color="#FFF" strokeWidth={2} />
-              </View>
-
-              {/* Spinner Overlay */}
-              {isCapturing && (
-                <View
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{
-                    transform: [{ translateX: -5 }, { translateY: -5 }],
-                  }}
-                >
-                  <CircularSpinner
-                    size={76} // Size = button diameter (68) + strokeWidth (4)
-                    strokeWidth={4}
-                    color="#5A32FB"
-                  />
-                </View>
-              )}
+            <View
+              className="flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
+              style={{
+                shadowColor: "#5A32FB",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 20,
+              }}
+            >
+              <PlusIcon size={44} color="#FFF" strokeWidth={2} />
             </View>
           ) : (
             <View
