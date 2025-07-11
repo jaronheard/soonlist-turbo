@@ -26,13 +26,21 @@ export const createBatch = internalMutation({
     totalCount: v.number(),
   },
   handler: async (ctx, args) => {
+    // Get username from user record
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", args.userId))
+      .first();
+      
     await ctx.db.insert("eventBatches", {
       batchId: args.batchId,
       userId: args.userId,
+      username: user?.username,
       totalCount: args.totalCount,
       successCount: 0,
       failureCount: 0,
       status: "processing",
+      progress: 0,
       createdAt: Date.now(),
     });
   },
@@ -97,6 +105,95 @@ export const sendBatchNotificationWithErrors = internalAction({
     } catch (error) {
       console.error("Error in sendBatchNotificationWithErrors:", error);
       throw error;
+    }
+  },
+});
+
+/**
+ * Get batch info for processing additional images
+ */
+export const getBatchInfo = internalQuery({
+  args: {
+    batchId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const batch = await ctx.db
+      .query("eventBatches")
+      .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
+      .first();
+      
+    if (!batch) {
+      return null;
+    }
+    
+    // Get first event to extract common parameters
+    const firstEvent = await ctx.db
+      .query("events")
+      .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
+      .first();
+      
+    return {
+      ...batch,
+      // Extract parameters from first event or use defaults
+      timezone: firstEvent?.timeZone ?? "UTC",
+      comment: undefined, // Events don't store comments
+      lists: [], // Events don't store lists directly
+      visibility: firstEvent?.visibility ?? "private",
+      username: firstEvent?.userName ?? batch.username ?? "unknown",
+    };
+  },
+});
+
+/**
+ * Increment batch progress as images are processed
+ */
+export const incrementBatchProgress = internalMutation({
+  args: {
+    batchId: v.string(),
+    successCount: v.number(),
+    failureCount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const batch = await ctx.db
+      .query("eventBatches")
+      .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
+      .first();
+      
+    if (!batch) {
+      throw new ConvexError("Batch not found");
+    }
+    
+    const newSuccessCount = batch.successCount + args.successCount;
+    const newFailureCount = batch.failureCount + args.failureCount;
+    const newProgress = (newSuccessCount + newFailureCount) / batch.totalCount;
+    
+    await ctx.db.patch(batch._id, {
+      successCount: newSuccessCount,
+      failureCount: newFailureCount,
+      progress: newProgress,
+      // Update status if all images are processed
+      status: newProgress >= 1 ? "completed" : "processing",
+    });
+    
+    // Check if we should send the batch notification
+    if (newProgress >= 1) {
+      // Get the full batch details for notification
+      const updatedBatch = await ctx.db.get(batch._id);
+      if (updatedBatch) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.eventBatches.sendBatchNotificationWithErrors,
+          {
+            batchId: args.batchId,
+            userId: updatedBatch.userId,
+            username: updatedBatch.username ?? "unknown",
+            totalCount: updatedBatch.totalCount,
+            successCount: newSuccessCount,
+            failureCount: newFailureCount,
+            failedImages: [], // Empty for incremental updates
+          },
+        );
+      }
     }
   },
 });

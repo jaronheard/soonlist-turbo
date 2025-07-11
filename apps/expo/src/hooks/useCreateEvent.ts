@@ -72,6 +72,7 @@ export function useCreateEvent() {
     api.ai.eventFromImageBase64Direct,
   );
   const createEventBatch = useMutation(api.ai.createEventBatch);
+  const addImagesToBatch = useMutation(api.ai.addImagesToBatch);
 
   // Keep workflow versions for URL and text (for now)
   const eventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
@@ -218,11 +219,29 @@ export function useCreateEvent() {
         const batchId = generateBatchId();
         const { userId, username, sendNotification = true } = tasks[0]!;
 
-        // Start timing image preparation
-        const prepStartTime = performance.now();
-        console.log(`[Batch ${batchId}] Starting image preparation for ${tasks.length} images`);
+        // Start timing
+        const startTime = performance.now();
+        console.log(`[Batch ${batchId}] Starting streaming batch for ${tasks.length} images`);
 
-        // Process all images in parallel to get base64
+        // Step 1: Create the batch immediately (with 0 images)
+        console.log(`[Batch ${batchId}] Creating batch record`);
+        const batchResult = await createEventBatch({
+          batchId,
+          images: [], // Start with empty array
+          totalCount: tasks.length, // Tell backend expected total
+          userId,
+          username,
+          lists: [],
+          timezone: userTimezone,
+          visibility: "private",
+          sendNotification,
+        });
+        
+        const batchCreateTime = performance.now();
+        console.log(`[Batch ${batchId}] Batch created in ${(batchCreateTime - startTime).toFixed(2)}ms`);
+
+        // Step 2: Process and stream images as they're ready
+        let processedCount = 0;
         const imagePromises = tasks.map(async (task, index) => {
           if (!task.imageUri) {
             throw new Error("No image URI provided");
@@ -250,47 +269,40 @@ export function useCreateEvent() {
           }
 
           // Optimize image and get base64
+          const imageStartTime = performance.now();
           const base64 = await optimizeImage(fileUri);
-
-          return {
+          const imageOptTime = performance.now();
+          
+          // Immediately send this image to the backend
+          const image = {
             base64Image: base64,
             tempId: `${batchId}-${index}`,
           };
+          
+          await addImagesToBatch({
+            batchId,
+            images: [image],
+          });
+          
+          processedCount++;
+          const imageTotalTime = performance.now() - imageStartTime;
+          console.log(`[Batch ${batchId}] Image ${processedCount}/${tasks.length} processed and sent in ${imageTotalTime.toFixed(2)}ms (opt: ${(imageOptTime - imageStartTime).toFixed(2)}ms)`);
+          
+          return image;
         });
 
-        const images = await Promise.all(imagePromises);
+        // Wait for all images to be processed and sent
+        await Promise.all(imagePromises);
         
-        // Log preparation time
-        const prepEndTime = performance.now();
-        const prepDuration = prepEndTime - prepStartTime;
-        console.log(`[Batch ${batchId}] Image preparation completed in ${prepDuration.toFixed(2)}ms (${(prepDuration / 1000).toFixed(2)}s)`);
-        console.log(`[Batch ${batchId}] Average time per image: ${(prepDuration / tasks.length).toFixed(2)}ms`);
-
-        // Send batch to backend
-        console.log(`[Batch ${batchId}] Sending ${images.length} images to backend`);
-        const backendStartTime = performance.now();
-        
-        const result = await createEventBatch({
-          batchId,
-          images,
-          userId,
-          username,
-          lists: [],
-          timezone: userTimezone,
-          visibility: "private",
-          sendNotification,
-        });
-        
-        const backendEndTime = performance.now();
-        const backendDuration = backendEndTime - backendStartTime;
-        console.log(`[Batch ${batchId}] Backend accepted batch in ${backendDuration.toFixed(2)}ms`);
-        console.log(`[Batch ${batchId}] Total time from start to backend acceptance: ${(backendEndTime - prepStartTime).toFixed(2)}ms`);
+        const totalTime = performance.now() - startTime;
+        console.log(`[Batch ${batchId}] All images streamed in ${totalTime.toFixed(2)}ms (${(totalTime / 1000).toFixed(2)}s)`);
+        console.log(`[Batch ${batchId}] Average time per image: ${(totalTime / tasks.length).toFixed(2)}ms`);
 
         // The batch is now processing asynchronously
         // Provide immediate feedback to user
         if (!hasNotificationPermission || !sendNotification) {
           toast.success(
-            `Processing ${result.totalImages} image${result.totalImages > 1 ? "s" : ""}...`,
+            `Processing ${tasks.length} image${tasks.length > 1 ? "s" : ""}...`,
           );
         }
         // Note: Actual success/failure will be communicated via push notification
@@ -306,6 +318,7 @@ export function useCreateEvent() {
     },
     [
       createEventBatch,
+      addImagesToBatch,
       hasNotificationPermission,
       userTimezone,
       setIsCapturing,

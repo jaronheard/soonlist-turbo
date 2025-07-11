@@ -489,6 +489,61 @@ export const eventFromImageBase64Direct = mutation({
 });
 
 /**
+ * Add images to an existing batch
+ */
+export const addImagesToBatch = mutation({
+  args: {
+    batchId: v.string(),
+    images: v.array(
+      v.object({
+        base64Image: v.string(),
+        tempId: v.string(),
+      }),
+    ),
+  },
+  returns: v.object({
+    added: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    // Get the batch to verify it exists and belongs to the user
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Not authenticated");
+    }
+    
+    const batch = await ctx.db
+      .query("eventBatches")
+      .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
+      .first();
+      
+    if (!batch) {
+      throw new ConvexError("Batch not found");
+    }
+    
+    if (batch.userId !== identity.subject) {
+      throw new ConvexError("Unauthorized");
+    }
+    
+    // Schedule processing for these new images
+    const jobId: string = await ctx.scheduler.runAfter(
+      0,
+      internal.ai.processAdditionalBatchImages,
+      {
+        batchId: args.batchId,
+        images: args.images,
+        userId: batch.userId,
+      },
+    );
+    
+    console.log(`Added ${args.images.length} images to batch ${args.batchId}, job: ${jobId}`);
+    
+    return {
+      added: args.images.length,
+    };
+  },
+});
+
+/**
  * Batch event creation from multiple base64 images
  */
 export const createEventBatch = mutation({
@@ -500,6 +555,7 @@ export const createEventBatch = mutation({
         tempId: v.string(), // Temporary ID for tracking on client
       }),
     ),
+    totalCount: v.optional(v.number()), // Expected total count (for streaming)
     timezone: v.string(),
     comment: v.optional(v.string()),
     lists: v.array(listValidator),
@@ -511,36 +567,43 @@ export const createEventBatch = mutation({
   returns: v.object({
     batchId: v.string(),
     totalImages: v.number(),
-    jobId: v.string(),
+    jobId: v.optional(v.string()),
   }),
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{
+    batchId: string;
+    totalImages: number;
+    jobId?: string;
+  }> => {
     // Create batch tracking record
     await ctx.runMutation(internal.eventBatches.createBatch, {
       batchId: args.batchId,
       userId: args.userId,
-      totalCount: args.images.length,
+      totalCount: args.totalCount ?? args.images.length,
     });
 
-    // Schedule batch processing as a single action
-    const jobId: string = await ctx.scheduler.runAfter(
-      0,
-      internal.ai.processBatchImages,
-      {
-        batchId: args.batchId,
-        images: args.images,
-        timezone: args.timezone,
-        comment: args.comment,
-        lists: args.lists,
-        visibility: args.visibility,
-        userId: args.userId,
-        username: args.username,
-        sendNotification: args.sendNotification ?? true,
-      },
-    );
+    // Only schedule processing if we have images
+    let jobId: string | undefined;
+    if (args.images.length > 0) {
+      jobId = await ctx.scheduler.runAfter(
+        0,
+        internal.ai.processBatchImages,
+        {
+          batchId: args.batchId,
+          images: args.images,
+          timezone: args.timezone,
+          comment: args.comment,
+          lists: args.lists,
+          visibility: args.visibility,
+          userId: args.userId,
+          username: args.username,
+          sendNotification: args.sendNotification ?? true,
+        },
+      );
+    }
 
     return {
       batchId: args.batchId,
-      totalImages: args.images.length,
+      totalImages: args.totalCount ?? args.images.length,
       jobId,
     };
   },
@@ -594,6 +657,108 @@ export const processSingleImageWithNotification = internalAction({
     }
 
     return result;
+  },
+});
+
+/**
+ * Process additional images for an existing batch
+ */
+export const processAdditionalBatchImages = internalAction({
+  args: {
+    batchId: v.string(),
+    images: v.array(
+      v.object({
+        base64Image: v.string(),
+        tempId: v.string(),
+      }),
+    ),
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log(
+      `Processing ${args.images.length} additional images for batch ${args.batchId}`,
+    );
+
+    // Get the batch info to get the other parameters
+    const batch = await ctx.runQuery(internal.eventBatches.getBatchInfo, {
+      batchId: args.batchId,
+    });
+
+    if (!batch) {
+      throw new ConvexError("Batch not found");
+    }
+
+    // Process these images using the same logic as processBatchImages
+    const results: {
+      tempId: string;
+      success: boolean;
+      eventId?: string;
+      error?: string;
+    }[] = [];
+
+    // Process images (reusing the chunk logic)
+    const CHUNK_SIZE = 5;
+    const chunks: (typeof args.images)[] = [];
+    
+    for (let i = 0; i < args.images.length; i += CHUNK_SIZE) {
+      chunks.push(args.images.slice(i, i + CHUNK_SIZE));
+    }
+
+    for (const [chunkIndex, chunk] of chunks.entries()) {
+      console.log(`Processing chunk ${chunkIndex + 1}/${chunks.length} for additional batch images`);
+
+      const chunkResults = await Promise.allSettled(
+        chunk.map(async (image) => {
+          const result: { success: boolean; eventId?: string; error?: string } =
+            await ctx.runAction(internal.ai.processSingleImage, {
+              base64Image: image.base64Image,
+              timezone: batch.timezone,
+              comment: batch.comment,
+              lists: batch.lists ?? [],
+              visibility: batch.visibility,
+              userId: args.userId,
+              username: batch.username,
+              batchId: args.batchId,
+            });
+          return {
+            tempId: image.tempId,
+            ...result,
+          };
+        }),
+      );
+
+      // Convert Promise.allSettled results
+      for (let i = 0; i < chunkResults.length; i++) {
+        const result = chunkResults[i];
+        const image = chunk[i];
+        if (!result || !image) continue;
+
+        if (result.status === "fulfilled") {
+          results.push(result.value);
+        } else {
+          results.push({
+            tempId: image.tempId,
+            success: false,
+            error:
+              result.reason instanceof Error
+                ? result.reason.message
+                : "Processing failed",
+          });
+        }
+      }
+    }
+
+    // Update batch progress
+    const successCount = results.filter((r) => r.success).length;
+    const failureCount = results.filter((r) => !r.success).length;
+
+    await ctx.runMutation(internal.eventBatches.incrementBatchProgress, {
+      batchId: args.batchId,
+      successCount,
+      failureCount,
+    });
+
+    return results;
   },
 });
 

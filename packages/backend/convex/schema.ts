@@ -215,6 +215,7 @@ export default defineSchema({
   eventBatches: defineTable({
     batchId: v.string(),
     userId: v.string(),
+    username: v.optional(v.string()),
     totalCount: v.number(),
     successCount: v.number(),
     failureCount: v.number(),
@@ -223,6 +224,7 @@ export default defineSchema({
       v.literal("completed"),
       v.literal("failed"),
     ),
+    progress: v.optional(v.number()), // 0-1 progress indicator
     createdAt: v.number(), // timestamp
     completedAt: v.optional(v.number()), // timestamp
   })
