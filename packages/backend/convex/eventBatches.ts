@@ -100,23 +100,26 @@ export const sendBatchNotification = internalAction({
         console.log("Sending individual notifications for small batch");
 
         // Send individual notifications for each successful event
-        // Send sequentially to ensure accurate count increments
+        // Pass explicit position to ensure accurate count
         const results = [];
         for (let i = 0; i < events.length; i++) {
           const event = events[i];
+          const position = i + 1; // 1-based position
           console.log(
-            `Sending notification ${i + 1}/${events.length} for event ${event.id}`,
+            `Sending notification ${position}/${events.length} for event ${event.id}`,
           );
           try {
-            // Add a small delay between notifications to ensure they're processed in order
+            // Add a small delay between notifications to ensure they arrive in order
             if (i > 0) {
-              await new Promise((resolve) => setTimeout(resolve, 500));
+              await new Promise((resolve) => setTimeout(resolve, 300));
             }
 
             const result = await ctx.runAction(internal.notifications.push, {
               eventId: event.id,
               userId: args.userId,
               userName: args.username,
+              batchPosition: position,
+              batchTotal: events.length,
             });
             console.log(`Notification result for event ${event.id}:`, result);
             results.push(result);

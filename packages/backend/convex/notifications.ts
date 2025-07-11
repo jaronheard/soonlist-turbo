@@ -373,6 +373,9 @@ export const push = internalAction({
     eventId: v.string(),
     userId: v.string(),
     userName: v.string(),
+    // Optional: for batch processing, explicitly pass the position
+    batchPosition: v.optional(v.number()),
+    batchTotal: v.optional(v.number()),
   },
   returns: v.object({
     success: v.boolean(),
@@ -380,7 +383,7 @@ export const push = internalAction({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const { eventId, userId } = args;
+    const { eventId, userId, batchPosition, batchTotal } = args;
 
     // Get the event to extract the name for notification
     const event = await ctx.runQuery(internal.events.getEventById, {
@@ -394,12 +397,25 @@ export const push = internalAction({
       };
     }
 
-    // Get today's event count for this user
-    const todayEvents = await ctx.runQuery(
-      internal.events.getTodayEventsCount,
-      { userId },
-    );
-    const eventCount = todayEvents.length;
+    // Determine the event count/position
+    let eventCount: number;
+
+    if (batchPosition !== undefined && batchTotal !== undefined) {
+      // Use explicit position for batch processing
+      // For a batch of 3, positions would be 1, 2, 3
+      eventCount = batchPosition;
+      console.log(
+        `Using batch position ${batchPosition} of ${batchTotal} for notification`,
+      );
+    } else {
+      // Get today's event count for this user (for non-batch captures)
+      const todayEvents = await ctx.runQuery(
+        internal.events.getTodayEventsCount,
+        { userId },
+      );
+      eventCount = todayEvents.length;
+      console.log(`Using today's event count: ${eventCount}`);
+    }
 
     // Generate notification content based on count
     let title: string;
