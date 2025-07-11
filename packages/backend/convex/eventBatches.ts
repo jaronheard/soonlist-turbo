@@ -100,28 +100,35 @@ export const sendBatchNotification = internalAction({
         console.log("Sending individual notifications for small batch");
 
         // Send individual notifications for each successful event
-        // Use Promise.all to ensure all notifications are sent
-        const notificationPromises = events.map(async (event) => {
-          console.log(`Sending notification for event ${event.id}`);
+        // Send sequentially to ensure accurate count increments
+        const results = [];
+        for (let i = 0; i < events.length; i++) {
+          const event = events[i];
+          console.log(
+            `Sending notification ${i + 1}/${events.length} for event ${event.id}`,
+          );
           try {
+            // Add a small delay between notifications to ensure they're processed in order
+            if (i > 0) {
+              await new Promise((resolve) => setTimeout(resolve, 500));
+            }
+
             const result = await ctx.runAction(internal.notifications.push, {
               eventId: event.id,
               userId: args.userId,
               userName: args.username,
             });
             console.log(`Notification result for event ${event.id}:`, result);
-            return result;
+            results.push(result);
           } catch (error) {
             console.error(
               `Failed to send notification for event ${event.id}:`,
               error,
             );
             // Don't throw - we want to continue sending other notifications
-            return { success: false, error: String(error) };
+            results.push({ success: false, error: String(error) });
           }
-        });
-
-        const results = await Promise.all(notificationPromises);
+        }
         console.log("All individual notifications processed:", results);
       } else {
         console.log("Sending summary notification for large batch");
