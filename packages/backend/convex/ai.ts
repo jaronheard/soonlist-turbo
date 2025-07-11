@@ -510,20 +510,20 @@ export const addImagesToBatch = mutation({
     if (!identity) {
       throw new ConvexError("Not authenticated");
     }
-    
+
     const batch = await ctx.db
       .query("eventBatches")
       .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
       .first();
-      
+
     if (!batch) {
       throw new ConvexError("Batch not found");
     }
-    
+
     if (batch.userId !== identity.subject) {
       throw new ConvexError("Unauthorized");
     }
-    
+
     // Schedule processing for these new images
     const jobId: string = await ctx.scheduler.runAfter(
       0,
@@ -534,9 +534,11 @@ export const addImagesToBatch = mutation({
         userId: batch.userId,
       },
     );
-    
-    console.log(`Added ${args.images.length} images to batch ${args.batchId}, job: ${jobId}`);
-    
+
+    console.log(
+      `Added ${args.images.length} images to batch ${args.batchId}, job: ${jobId}`,
+    );
+
     return {
       added: args.images.length,
     };
@@ -569,7 +571,10 @@ export const createEventBatch = mutation({
     totalImages: v.number(),
     jobId: v.optional(v.string()),
   }),
-  handler: async (ctx, args): Promise<{
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
     batchId: string;
     totalImages: number;
     jobId?: string;
@@ -584,21 +589,17 @@ export const createEventBatch = mutation({
     // Only schedule processing if we have images
     let jobId: string | undefined;
     if (args.images.length > 0) {
-      jobId = await ctx.scheduler.runAfter(
-        0,
-        internal.ai.processBatchImages,
-        {
-          batchId: args.batchId,
-          images: args.images,
-          timezone: args.timezone,
-          comment: args.comment,
-          lists: args.lists,
-          visibility: args.visibility,
-          userId: args.userId,
-          username: args.username,
-          sendNotification: args.sendNotification ?? true,
-        },
-      );
+      jobId = await ctx.scheduler.runAfter(0, internal.ai.processBatchImages, {
+        batchId: args.batchId,
+        images: args.images,
+        timezone: args.timezone,
+        comment: args.comment,
+        lists: args.lists,
+        visibility: args.visibility,
+        userId: args.userId,
+        username: args.username,
+        sendNotification: args.sendNotification ?? true,
+      });
     }
 
     return {
@@ -699,13 +700,15 @@ export const processAdditionalBatchImages = internalAction({
     // Process images (reusing the chunk logic)
     const CHUNK_SIZE = 5;
     const chunks: (typeof args.images)[] = [];
-    
+
     for (let i = 0; i < args.images.length; i += CHUNK_SIZE) {
       chunks.push(args.images.slice(i, i + CHUNK_SIZE));
     }
 
     for (const [chunkIndex, chunk] of chunks.entries()) {
-      console.log(`Processing chunk ${chunkIndex + 1}/${chunks.length} for additional batch images`);
+      console.log(
+        `Processing chunk ${chunkIndex + 1}/${chunks.length} for additional batch images`,
+      );
 
       const chunkResults = await Promise.allSettled(
         chunk.map(async (image) => {

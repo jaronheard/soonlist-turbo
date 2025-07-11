@@ -488,22 +488,47 @@ export const pushBatchSummary = internalAction({
     id: v.optional(v.string()),
     error: v.optional(v.string()),
   }),
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args) => {
     const { userId, message, successCount, failureCount } = args;
 
-    // Create batch summary notification
-    const title =
-      failureCount === 0
-        ? "Events captured successfully!"
-        : "Event batch completed";
+    // Get today's total event count
+    const todayEvents = await ctx.runQuery(
+      internal.events.getTodayEventsCount,
+      { userId },
+    );
+    const totalCount = todayEvents.length;
 
-    const body = message;
+    // Create batch summary notification with daily count
+    let title: string;
+    let subtitle: string | undefined;
+    let body: string;
+
+    if (failureCount === 0) {
+      title = "Events captured ✨";
+      subtitle = `Successfully captured ${successCount} events`;
+
+      // Add daily count message
+      if (totalCount === successCount && totalCount === 1) {
+        body = "First capture today! 🤔 What's next?";
+      } else if (totalCount === 2) {
+        body = "2 captures today! ✌️ Keep 'em coming!";
+      } else if (totalCount === 3) {
+        body = "3 captures today! 🔥 You're on fire!";
+      } else {
+        body = `${totalCount} captures today! 🌌 The sky's the limit!`;
+      }
+    } else {
+      title = "Event batch completed";
+      subtitle = undefined;
+      body = message;
+    }
     const deepLink = createDeepLink(`batch/${args.batchId}`);
 
     // Send notification
     const result = await OneSignal.sendNotification({
       userId,
       title,
+      subtitle,
       body,
       url: deepLink,
       data: {
