@@ -30,6 +30,7 @@ interface CreateEventOptions {
 
 // Optimize image off the main JS thread and return a base64 string
 async function optimizeImage(uri: string): Promise<string> {
+  const startTime = performance.now();
   try {
     // Resize & compress on the native thread and get base64 in a single step
     const { base64 } = await ImageManipulator.manipulateAsync(
@@ -46,8 +47,15 @@ async function optimizeImage(uri: string): Promise<string> {
       throw new Error("Failed to encode image to base64");
     }
 
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    console.log(`[Image Optimization] Processed image in ${duration.toFixed(2)}ms`);
+    
     return base64;
   } catch (error) {
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    console.log(`[Image Optimization] Failed after ${duration.toFixed(2)}ms`);
     logError("Error manipulating image", error);
     throw new Error("Failed to optimize image for upload");
   }
@@ -210,6 +218,10 @@ export function useCreateEvent() {
         const batchId = generateBatchId();
         const { userId, username, sendNotification = true } = tasks[0]!;
 
+        // Start timing image preparation
+        const prepStartTime = performance.now();
+        console.log(`[Batch ${batchId}] Starting image preparation for ${tasks.length} images`);
+
         // Process all images in parallel to get base64
         const imagePromises = tasks.map(async (task, index) => {
           if (!task.imageUri) {
@@ -247,8 +259,17 @@ export function useCreateEvent() {
         });
 
         const images = await Promise.all(imagePromises);
+        
+        // Log preparation time
+        const prepEndTime = performance.now();
+        const prepDuration = prepEndTime - prepStartTime;
+        console.log(`[Batch ${batchId}] Image preparation completed in ${prepDuration.toFixed(2)}ms (${(prepDuration / 1000).toFixed(2)}s)`);
+        console.log(`[Batch ${batchId}] Average time per image: ${(prepDuration / tasks.length).toFixed(2)}ms`);
 
         // Send batch to backend
+        console.log(`[Batch ${batchId}] Sending ${images.length} images to backend`);
+        const backendStartTime = performance.now();
+        
         const result = await createEventBatch({
           batchId,
           images,
@@ -259,6 +280,11 @@ export function useCreateEvent() {
           visibility: "private",
           sendNotification,
         });
+        
+        const backendEndTime = performance.now();
+        const backendDuration = backendEndTime - backendStartTime;
+        console.log(`[Batch ${batchId}] Backend accepted batch in ${backendDuration.toFixed(2)}ms`);
+        console.log(`[Batch ${batchId}] Total time from start to backend acceptance: ${(backendEndTime - prepStartTime).toFixed(2)}ms`);
 
         // The batch is now processing asynchronously
         // Provide immediate feedback to user
