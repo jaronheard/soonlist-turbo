@@ -4,8 +4,6 @@ import { differenceInMinutes } from "date-fns";
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 
-import { logDebug } from "./errorLogging";
-
 type Event = NonNullable<FunctionReturnType<typeof api.events.get>>;
 
 // Cosine Similarity Functions

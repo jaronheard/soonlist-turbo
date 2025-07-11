@@ -50,6 +50,21 @@ const listValidator = v.object({
 export const getEventsByBatchId = query({
   args: { batchId: v.string() },
   handler: async (ctx, args) => {
+    // Enforce authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Authentication required");
+    }
+
+    // Verify batch ownership
+    const batch = await ctx.db
+      .query("eventBatches")
+      .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
+      .unique();
+    if (!batch || batch.userId !== identity.subject) {
+      throw new ConvexError("Batch not found or access denied");
+    }
+
     const events = await ctx.db
       .query("events")
       .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))

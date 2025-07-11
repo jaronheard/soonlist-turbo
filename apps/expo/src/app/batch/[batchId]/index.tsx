@@ -58,10 +58,12 @@ export default function BatchResultsPage() {
         }}
       />
       <View className="flex-1 bg-white">
-        <UserEventsList 
-          events={events} 
-          showCreator="never" 
-          onEndReached={() => {}}
+        <UserEventsList
+          events={events}
+          showCreator="never"
+          onEndReached={() => {
+            // No-op: batch results don't support pagination
+          }}
           isFetchingNextPage={false}
         />
       </View>

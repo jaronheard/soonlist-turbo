@@ -409,7 +409,7 @@ export const push = internalAction({
       );
       // Subtract the total batch size to get count before this batch
       // Then add the current position
-      const countBeforeBatch = todayEvents.length - batchTotal;
+      const countBeforeBatch = Math.max(0, todayEvents.length - batchTotal);
       eventCount = countBeforeBatch + batchPosition;
       console.log(
         `Batch notification: position ${batchPosition}/${batchTotal}, ` +

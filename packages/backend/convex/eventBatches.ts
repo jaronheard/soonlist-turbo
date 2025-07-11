@@ -165,7 +165,7 @@ export const incrementBatchProgress = internalMutation({
 
     const newSuccessCount = batch.successCount + args.successCount;
     const newFailureCount = batch.failureCount + args.failureCount;
-    const newProgress = (newSuccessCount + newFailureCount) / batch.totalCount;
+    const newProgress = Math.min(1, (newSuccessCount + newFailureCount) / batch.totalCount);
 
     await ctx.db.patch(batch._id, {
       successCount: newSuccessCount,
