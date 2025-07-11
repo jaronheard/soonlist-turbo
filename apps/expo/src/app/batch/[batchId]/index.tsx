@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useQuery } from "convex/react";
 
@@ -7,7 +7,6 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import UserEventsList from "~/components/UserEventsList";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { Text } from "~/components/ui/Text";
 
 export default function BatchResultsPage() {
   const { batchId } = useLocalSearchParams<{ batchId: string }>();
