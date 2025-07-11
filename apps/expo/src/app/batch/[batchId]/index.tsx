@@ -58,7 +58,12 @@ export default function BatchResultsPage() {
         }}
       />
       <View className="flex-1 bg-white">
-        <UserEventsList events={events} showCreator="never" variant="owned" />
+        <UserEventsList 
+          events={events} 
+          showCreator="never" 
+          onEndReached={() => {}}
+          isFetchingNextPage={false}
+        />
       </View>
     </>
   );

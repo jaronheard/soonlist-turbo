@@ -459,7 +459,7 @@ export const eventFromImageBase64Direct = mutation({
   },
   returns: v.object({
     success: v.boolean(),
-    eventId: v.string(),
+    jobId: v.string(),
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
@@ -482,7 +482,7 @@ export const eventFromImageBase64Direct = mutation({
     // Return immediately with a job ID for tracking
     return {
       success: true,
-      eventId: jobId, // Using job ID as a placeholder
+      jobId: jobId,
       error: undefined,
     };
   },

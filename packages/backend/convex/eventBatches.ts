@@ -154,6 +154,10 @@ async function sendBatchNotificationHandler(
       const results = [];
       for (let i = 0; i < events.length; i++) {
         const event = events[i];
+        if (!event) {
+          console.error(`Event at index ${i} is undefined`);
+          continue;
+        }
         const position = i + 1; // 1-based position
         console.log(
           `Sending notification ${position}/${events.length} for event ${event.id}`,

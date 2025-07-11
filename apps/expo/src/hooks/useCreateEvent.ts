@@ -131,7 +131,7 @@ export function useCreateEvent() {
             throw new Error(result.error || "Failed to create event");
           }
 
-          return result.eventId;
+          return result.jobId;
         }
 
         // Handle URL events with workflow
