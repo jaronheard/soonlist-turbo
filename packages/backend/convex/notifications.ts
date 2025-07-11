@@ -401,11 +401,19 @@ export const push = internalAction({
     let eventCount: number;
 
     if (batchPosition !== undefined && batchTotal !== undefined) {
-      // Use explicit position for batch processing
-      // For a batch of 3, positions would be 1, 2, 3
-      eventCount = batchPosition;
+      // For batch processing, we need to get the count BEFORE this batch
+      // and add the position within the batch
+      const todayEvents = await ctx.runQuery(
+        internal.events.getTodayEventsCount,
+        { userId },
+      );
+      // Subtract the total batch size to get count before this batch
+      // Then add the current position
+      const countBeforeBatch = todayEvents.length - batchTotal;
+      eventCount = countBeforeBatch + batchPosition;
       console.log(
-        `Using batch position ${batchPosition} of ${batchTotal} for notification`,
+        `Batch notification: position ${batchPosition}/${batchTotal}, ` +
+        `today's total: ${todayEvents.length}, count for this event: ${eventCount}`,
       );
     } else {
       // Get today's event count for this user (for non-batch captures)
@@ -414,7 +422,7 @@ export const push = internalAction({
         { userId },
       );
       eventCount = todayEvents.length;
-      console.log(`Using today's event count: ${eventCount}`);
+      console.log(`Single event notification - today's count: ${eventCount}`);
     }
 
     // Generate notification content based on count
