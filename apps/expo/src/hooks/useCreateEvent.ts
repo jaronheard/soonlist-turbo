@@ -12,6 +12,11 @@ import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 
+// Generate a simple batch ID without external dependencies
+function generateBatchId(): string {
+  return `batch_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
 interface CreateEventOptions {
   imageUri?: string;
   userId: string;
@@ -25,6 +30,7 @@ interface CreateEventOptions {
 
 // Optimize image off the main JS thread and return a base64 string
 async function optimizeImage(uri: string): Promise<string> {
+  const startTime = performance.now();
   try {
     // Resize & compress on the native thread and get base64 in a single step
     const { base64 } = await ImageManipulator.manipulateAsync(
@@ -41,8 +47,17 @@ async function optimizeImage(uri: string): Promise<string> {
       throw new Error("Failed to encode image to base64");
     }
 
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    console.log(
+      `[Image Optimization] Processed image in ${duration.toFixed(2)}ms`,
+    );
+
     return base64;
   } catch (error) {
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    console.log(`[Image Optimization] Failed after ${duration.toFixed(2)}ms`);
     logError("Error manipulating image", error);
     throw new Error("Failed to optimize image for upload");
   }
@@ -54,9 +69,14 @@ export function useCreateEvent() {
   const { hasNotificationPermission } = useOneSignal();
   const userTimezone = useUserTimezone();
 
-  const eventFromImageBase64 = useMutation(
-    api.ai.eventFromImageBase64ThenCreate,
+  // New direct mutations (faster, no workflow overhead)
+  const eventFromImageBase64Direct = useMutation(
+    api.ai.eventFromImageBase64Direct,
   );
+  const createEventBatch = useMutation(api.ai.createEventBatch);
+  const addImagesToBatch = useMutation(api.ai.addImagesToBatch);
+
+  // Keep workflow versions for URL and text (for now)
   const eventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
   const eventFromText = useMutation(api.ai.eventFromTextThenCreate);
 
@@ -107,8 +127,8 @@ export function useCreateEvent() {
           // 1. Optimize image and get base64
           const base64 = await optimizeImage(fileUri);
 
-          // 2. Create event with base64 image (backend handles upload now)
-          const startWorkflow = await eventFromImageBase64({
+          // 2. Create event directly (no workflow overhead)
+          const result = await eventFromImageBase64Direct({
             base64Image: base64,
             userId,
             username,
@@ -118,10 +138,11 @@ export function useCreateEvent() {
             sendNotification,
           });
 
-          // 3. Track the workflow in our store
-          addWorkflowId(startWorkflow.workflowId);
+          if (!result.success) {
+            throw new Error(result.error || "Failed to create event");
+          }
 
-          return startWorkflow.workflowId;
+          return result.jobId;
         }
 
         // Handle URL events with workflow
@@ -179,7 +200,7 @@ export function useCreateEvent() {
     [
       setIsCapturing,
       setIsImageLoading,
-      eventFromImageBase64,
+      eventFromImageBase64Direct,
       userTimezone,
       addWorkflowId,
       eventFromUrl,
@@ -187,42 +208,134 @@ export function useCreateEvent() {
     ],
   );
 
-  // Simplified batch creation - just call createEvent for each image
+  // New batch creation with smart notifications
   const createMultipleEvents = useCallback(
     async (tasks: CreateEventOptions[]): Promise<void> => {
       if (!tasks.length) return;
 
-      let successCount = 0;
-      let failureCount = 0;
+      try {
+        setIsCapturing(true);
+        setIsImageLoading(true, "add");
+        setIsImageLoading(true, "new");
 
-      // Process all images in parallel - Convex workflows handle the reliability
-      const promises = tasks.map(async (task) => {
-        try {
-          await createEvent({ ...task, suppressCapturing: true });
-          successCount++;
-        } catch (error) {
-          failureCount++;
-          logError("Error creating event from image", error, { task });
-        }
-      });
+        const batchId = generateBatchId();
+        const { userId, username, sendNotification = true } = tasks[0]!;
 
-      await Promise.allSettled(promises);
-
-      // Provide user feedback
-      if (failureCount > 0) {
-        toast.error(
-          `${failureCount} event(s) failed to process. ${successCount} succeeded.`,
+        // Start timing
+        const startTime = performance.now();
+        console.log(
+          `[Batch ${batchId}] Starting streaming batch for ${tasks.length} images`,
         );
-      } else if (successCount > 0) {
-        if (!hasNotificationPermission) {
+
+        // Step 1: Create the batch immediately (with 0 images)
+        console.log(`[Batch ${batchId}] Creating batch record`);
+        await createEventBatch({
+          batchId,
+          images: [], // Start with empty array
+          totalCount: tasks.length, // Tell backend expected total
+          userId,
+          username,
+          lists: [],
+          timezone: userTimezone,
+          visibility: "private",
+          sendNotification,
+        });
+
+        const batchCreateTime = performance.now();
+        console.log(
+          `[Batch ${batchId}] Batch created in ${(batchCreateTime - startTime).toFixed(2)}ms`,
+        );
+
+        // Step 2: Process and stream images as they're ready
+        let processedCount = 0;
+        const imagePromises = tasks.map(async (task, index) => {
+          if (!task.imageUri) {
+            throw new Error("No image URI provided");
+          }
+
+          // Convert photo library URI to file URI if needed
+          let fileUri = task.imageUri;
+          if (task.imageUri.startsWith("ph://")) {
+            const assetId = task.imageUri.replace("ph://", "").split("/")[0];
+            if (!assetId) {
+              throw new Error("Invalid photo library asset ID");
+            }
+            const asset = await MediaLibrary.getAssetInfoAsync(assetId);
+            if (!asset.localUri) {
+              throw new Error(
+                "Could not get local URI for photo library asset",
+              );
+            }
+            fileUri = asset.localUri;
+          }
+
+          // Validate image URI
+          if (!fileUri.startsWith("file://")) {
+            throw new Error("Invalid image URI format");
+          }
+
+          // Optimize image and get base64
+          const imageStartTime = performance.now();
+          const base64 = await optimizeImage(fileUri);
+          const imageOptTime = performance.now();
+
+          // Immediately send this image to the backend
+          const image = {
+            base64Image: base64,
+            tempId: `${batchId}-${index}`,
+          };
+
+          await addImagesToBatch({
+            batchId,
+            images: [image],
+          });
+
+          processedCount++;
+          const imageTotalTime = performance.now() - imageStartTime;
+          console.log(
+            `[Batch ${batchId}] Image ${processedCount}/${tasks.length} processed and sent in ${imageTotalTime.toFixed(2)}ms (opt: ${(imageOptTime - imageStartTime).toFixed(2)}ms)`,
+          );
+
+          return image;
+        });
+
+        // Wait for all images to be processed and sent
+        await Promise.all(imagePromises);
+
+        const totalTime = performance.now() - startTime;
+        console.log(
+          `[Batch ${batchId}] All images streamed in ${totalTime.toFixed(2)}ms (${(totalTime / 1000).toFixed(2)}s)`,
+        );
+        console.log(
+          `[Batch ${batchId}] Average time per image: ${(totalTime / tasks.length).toFixed(2)}ms`,
+        );
+
+        // The batch is now processing asynchronously
+        // Provide immediate feedback to user
+        if (!hasNotificationPermission || !sendNotification) {
           toast.success(
-            `${successCount} event${successCount > 1 ? "s" : ""} captured successfully!`,
+            `Processing ${tasks.length} image${tasks.length > 1 ? "s" : ""}...`,
           );
         }
-        // If notifications are enabled, we rely on the native notification.
+        // Note: Actual success/failure will be communicated via push notification
+      } catch (error) {
+        logError("Error creating events batch", error);
+        toast.error("Failed to process images. Please try again.");
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } finally {
+        setIsCapturing(false);
+        setIsImageLoading(false, "add");
+        setIsImageLoading(false, "new");
       }
     },
-    [createEvent, hasNotificationPermission],
+    [
+      createEventBatch,
+      addImagesToBatch,
+      hasNotificationPermission,
+      userTimezone,
+      setIsCapturing,
+      setIsImageLoading,
+    ],
   );
 
   return {

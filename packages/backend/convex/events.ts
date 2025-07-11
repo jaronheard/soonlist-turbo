@@ -45,6 +45,38 @@ const listValidator = v.object({
 });
 
 /**
+ * Get events by batch ID
+ */
+export const getEventsByBatchId = query({
+  args: { batchId: v.string() },
+  handler: async (ctx, args) => {
+    // Enforce authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Authentication required");
+    }
+
+    // Verify batch ownership
+    const batch = await ctx.db
+      .query("eventBatches")
+      .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
+      .unique();
+    if (!batch || batch.userId !== identity.subject) {
+      throw new ConvexError("Batch not found or access denied");
+    }
+
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
+      .order("desc")
+      .collect();
+
+    // Enrich events with user data, comments, and follows
+    return await enrichEventsAndFilterNulls(ctx, events);
+  },
+});
+
+/**
  * Get saved event IDs for a user
  */
 export const getSavedIdsForUser = query({
@@ -462,10 +494,18 @@ export const insertEvent = internalMutation({
     visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
     userId: v.string(),
     username: v.string(),
+    batchId: v.optional(v.string()),
   },
   returns: v.string(), // eventId
   handler: async (ctx, args): Promise<string> => {
-    const { firstEvent, uploadedImageUrl, comment, lists, visibility } = args;
+    const {
+      firstEvent,
+      uploadedImageUrl,
+      comment,
+      lists,
+      visibility,
+      batchId,
+    } = args;
 
     // Add uploaded image to event if available
     const eventData = {
@@ -490,6 +530,7 @@ export const insertEvent = internalMutation({
       comment,
       lists,
       visibility,
+      batchId,
     );
 
     return result.id;

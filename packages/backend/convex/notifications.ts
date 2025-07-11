@@ -373,6 +373,9 @@ export const push = internalAction({
     eventId: v.string(),
     userId: v.string(),
     userName: v.string(),
+    // Optional: for batch processing, explicitly pass the position
+    batchPosition: v.optional(v.number()),
+    batchTotal: v.optional(v.number()),
   },
   returns: v.object({
     success: v.boolean(),
@@ -380,7 +383,7 @@ export const push = internalAction({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const { eventId, userId } = args;
+    const { eventId, userId, batchPosition, batchTotal } = args;
 
     // Get the event to extract the name for notification
     const event = await ctx.runQuery(internal.events.getEventById, {
@@ -394,12 +397,33 @@ export const push = internalAction({
       };
     }
 
-    // Get today's event count for this user
-    const todayEvents = await ctx.runQuery(
-      internal.events.getTodayEventsCount,
-      { userId },
-    );
-    const eventCount = todayEvents.length;
+    // Determine the event count/position
+    let eventCount: number;
+
+    if (batchPosition !== undefined && batchTotal !== undefined) {
+      // For batch processing, we need to get the count BEFORE this batch
+      // and add the position within the batch
+      const todayEvents = await ctx.runQuery(
+        internal.events.getTodayEventsCount,
+        { userId },
+      );
+      // Subtract the total batch size to get count before this batch
+      // Then add the current position
+      const countBeforeBatch = Math.max(0, todayEvents.length - batchTotal);
+      eventCount = countBeforeBatch + batchPosition;
+      console.log(
+        `Batch notification: position ${batchPosition}/${batchTotal}, ` +
+          `today's total: ${todayEvents.length}, count for this event: ${eventCount}`,
+      );
+    } else {
+      // Get today's event count for this user (for non-batch captures)
+      const todayEvents = await ctx.runQuery(
+        internal.events.getTodayEventsCount,
+        { userId },
+      );
+      eventCount = todayEvents.length;
+      console.log(`Single event notification - today's count: ${eventCount}`);
+    }
 
     // Generate notification content based on count
     let title: string;
@@ -450,6 +474,80 @@ export const push = internalAction({
 /**
  * Send failure notification for event creation
  */
+export const pushBatchSummary = internalAction({
+  args: {
+    userId: v.string(),
+    username: v.string(),
+    message: v.string(),
+    successCount: v.number(),
+    failureCount: v.number(),
+    batchId: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    id: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const { userId, message, successCount, failureCount } = args;
+
+    // Get today's total event count
+    const todayEvents = await ctx.runQuery(
+      internal.events.getTodayEventsCount,
+      { userId },
+    );
+    const totalCount = todayEvents.length;
+
+    // Create batch summary notification with daily count
+    let title: string;
+    let subtitle: string | undefined;
+    let body: string;
+
+    if (failureCount === 0) {
+      title = "Events captured ✨";
+      subtitle = `Successfully captured ${successCount} events`;
+
+      // Add daily count message
+      if (totalCount === successCount && totalCount === 1) {
+        body = "First capture today! 🤔 What's next?";
+      } else if (totalCount === 2) {
+        body = "2 captures today! ✌️ Keep 'em coming!";
+      } else if (totalCount === 3) {
+        body = "3 captures today! 🔥 You're on fire!";
+      } else {
+        body = `${totalCount} captures today! 🌌 The sky's the limit!`;
+      }
+    } else {
+      title = "Event batch completed";
+      subtitle = undefined;
+      body = message;
+    }
+    const deepLink = createDeepLink(`batch/${args.batchId}`);
+
+    // Send notification
+    const result = await OneSignal.sendNotification({
+      userId,
+      title,
+      subtitle,
+      body,
+      url: deepLink,
+      data: {
+        type: "batch_summary",
+        successCount,
+        failureCount,
+      },
+      source: "notification_router",
+      method: "batch",
+    });
+
+    return {
+      success: result.success,
+      id: result.id,
+      error: result.error,
+    };
+  },
+});
+
 export const pushFailure = internalAction({
   args: {
     userId: v.string(),
