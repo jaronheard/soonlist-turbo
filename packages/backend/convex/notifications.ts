@@ -413,7 +413,7 @@ export const push = internalAction({
       eventCount = countBeforeBatch + batchPosition;
       console.log(
         `Batch notification: position ${batchPosition}/${batchTotal}, ` +
-        `today's total: ${todayEvents.length}, count for this event: ${eventCount}`,
+          `today's total: ${todayEvents.length}, count for this event: ${eventCount}`,
       );
     } else {
       // Get today's event count for this user (for non-batch captures)

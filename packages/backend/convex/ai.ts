@@ -4,11 +4,7 @@ import { ConvexError, v } from "convex/values";
 import type { EventWithMetadata } from "@soonlist/cal";
 
 import { components, internal } from "./_generated/api";
-import {
-  internalAction,
-  internalMutation,
-  mutation,
-} from "./_generated/server";
+import { internalAction, mutation } from "./_generated/server";
 import { eventDataValidator } from "./events";
 import * as AI from "./model/ai";
 import { fetchAndProcessEvent, validateJinaResponse } from "./model/aiHelpers";
@@ -626,44 +622,76 @@ export const processBatchImages = internalAction({
       `Processing batch ${args.batchId} with ${args.images.length} images`,
     );
 
-    // Process all images in parallel
-    const results = await Promise.allSettled(
-      args.images.map(async (image) => {
-        const result: { success: boolean; eventId?: string; error?: string } =
-          await ctx.runAction(internal.ai.processSingleImage, {
-            base64Image: image.base64Image,
-            timezone: args.timezone,
-            comment: args.comment,
-            lists: args.lists,
-            visibility: args.visibility,
-            userId: args.userId,
-            username: args.username,
-            batchId: args.batchId,
-          });
-        return {
-          tempId: image.tempId,
-          ...result,
-        };
-      }),
-    );
+    // Process in chunks to avoid overwhelming the system
+    const CHUNK_SIZE = 5;
+    const chunks: (typeof args.images)[] = [];
 
-    // Convert Promise.allSettled results to our format
-    const formattedResults = results.map((result, index) => {
-      const tempId = args.images[index]!.tempId;
-      if (result.status === "fulfilled") {
-        return result.value;
-      } else {
-        return {
-          tempId,
-          success: false,
-          error: result.reason?.message || "Processing failed",
-        };
+    for (let i = 0; i < args.images.length; i += CHUNK_SIZE) {
+      chunks.push(args.images.slice(i, i + CHUNK_SIZE));
+    }
+
+    const allResults: {
+      tempId: string;
+      success: boolean;
+      eventId?: string;
+      error?: string;
+    }[] = [];
+
+    // Process chunks sequentially, items within chunks in parallel
+    for (const [chunkIndex, chunk] of chunks.entries()) {
+      console.log(`Processing chunk ${chunkIndex + 1}/${chunks.length}`);
+
+      const chunkResults = await Promise.allSettled(
+        chunk.map(async (image) => {
+          const result: { success: boolean; eventId?: string; error?: string } =
+            await ctx.runAction(internal.ai.processSingleImage, {
+              base64Image: image.base64Image,
+              timezone: args.timezone,
+              comment: args.comment,
+              lists: args.lists,
+              visibility: args.visibility,
+              userId: args.userId,
+              username: args.username,
+              batchId: args.batchId,
+            });
+          return {
+            tempId: image.tempId,
+            ...result,
+          };
+        }),
+      );
+
+      // Convert Promise.allSettled results for this chunk
+      for (let i = 0; i < chunkResults.length; i++) {
+        const result = chunkResults[i];
+        const image = chunk[i];
+        if (!result || !image) {
+          console.error(
+            `Unexpected null result or image at index ${i} in chunk ${chunkIndex}`,
+          );
+          continue;
+        }
+
+        const tempId = image.tempId;
+
+        if (result.status === "fulfilled") {
+          allResults.push(result.value);
+        } else {
+          allResults.push({
+            tempId,
+            success: false,
+            error:
+              result.reason instanceof Error
+                ? result.reason.message
+                : "Processing failed",
+          });
+        }
       }
-    });
+    }
 
     // Count successes and failures
-    const successCount = formattedResults.filter((r) => r.success).length;
-    const failureCount = formattedResults.filter((r) => !r.success).length;
+    const successCount = allResults.filter((r) => r.success).length;
+    const failureCount = allResults.filter((r) => !r.success).length;
 
     // Update batch status
     await ctx.runMutation(internal.eventBatches.updateBatchStatus, {
@@ -678,15 +706,28 @@ export const processBatchImages = internalAction({
       console.log(
         `Sending batch notification for batch ${args.batchId} - ${successCount} success, ${failureCount} failures`,
       );
+
+      // Collect failed image details for better error reporting
+      const failedImages = allResults
+        .filter((r) => !r.success)
+        .map((r) => ({
+          tempId: r.tempId,
+          error: r.error || "Unknown error",
+        }));
+
       try {
-        await ctx.runAction(internal.eventBatches.sendBatchNotification, {
-          batchId: args.batchId,
-          userId: args.userId,
-          username: args.username,
-          totalCount: args.images.length,
-          successCount,
-          failureCount,
-        });
+        await ctx.runAction(
+          internal.eventBatches.sendBatchNotificationWithErrors,
+          {
+            batchId: args.batchId,
+            userId: args.userId,
+            username: args.username,
+            totalCount: args.images.length,
+            successCount,
+            failureCount,
+            failedImages,
+          },
+        );
         console.log(`Batch notification sent successfully`);
       } catch (error) {
         console.error(`Failed to send batch notification:`, error);
@@ -697,6 +738,6 @@ export const processBatchImages = internalAction({
       );
     }
 
-    return formattedResults;
+    return allResults;
   },
 });

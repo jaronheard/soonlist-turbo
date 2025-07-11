@@ -64,7 +64,7 @@ export function useCreateEvent() {
     api.ai.eventFromImageBase64Direct,
   );
   const createEventBatch = useMutation(api.ai.createEventBatch);
-  
+
   // Keep workflow versions for URL and text (for now)
   const eventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
   const eventFromText = useMutation(api.ai.eventFromTextThenCreate);
@@ -278,7 +278,13 @@ export function useCreateEvent() {
         setIsImageLoading(false, "new");
       }
     },
-    [createEventBatch, hasNotificationPermission, userTimezone, setIsCapturing, setIsImageLoading],
+    [
+      createEventBatch,
+      hasNotificationPermission,
+      userTimezone,
+      setIsCapturing,
+      setIsImageLoading,
+    ],
   );
 
   return {

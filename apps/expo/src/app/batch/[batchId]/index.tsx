@@ -1,24 +1,26 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { Text, View } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import UserEventsList from "~/components/UserEventsList";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import UserEventsList from "~/components/UserEventsList";
 
 export default function BatchResultsPage() {
   const { batchId } = useLocalSearchParams<{ batchId: string }>();
 
   // Get batch status
-  const batchStatus = useQuery(api.eventBatches.getBatchStatus, 
-    batchId ? { batchId } : "skip"
+  const batchStatus = useQuery(
+    api.eventBatches.getBatchStatus,
+    batchId ? { batchId } : "skip",
   );
 
   // Get events for this batch
-  const events = useQuery(api.events.getEventsByBatchId,
-    batchId ? { batchId } : "skip"
+  const events = useQuery(
+    api.events.getEventsByBatchId,
+    batchId ? { batchId } : "skip",
   );
 
   if (!batchId) {
@@ -43,24 +45,20 @@ export default function BatchResultsPage() {
     );
   }
 
-  const title = batchStatus 
-    ? `${batchStatus.successCount} Event${batchStatus.successCount !== 1 ? 's' : ''} Added`
+  const title = batchStatus
+    ? `${batchStatus.successCount} Event${batchStatus.successCount !== 1 ? "s" : ""} Added`
     : "Batch Results";
 
   return (
     <>
-      <Stack.Screen 
-        options={{ 
+      <Stack.Screen
+        options={{
           title,
           headerBackTitle: "Back",
-        }} 
+        }}
       />
       <View className="flex-1 bg-white">
-        <UserEventsList
-          events={events}
-          showCreator="never"
-          variant="owned"
-        />
+        <UserEventsList events={events} showCreator="never" variant="owned" />
       </View>
     </>
   );
