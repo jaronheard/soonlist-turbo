@@ -56,17 +56,6 @@ export default function BatchResultsPage() {
         }} 
       />
       <View className="flex-1 bg-white">
-        {batchStatus && batchStatus.successCount > 0 && (
-          <View className="border-b border-neutral-4 bg-neutral-5 px-4 py-3">
-            <Text className="text-center text-sm text-neutral-2">
-              {batchStatus.failureCount === 0 
-                ? `Successfully captured ${batchStatus.successCount} of ${batchStatus.totalCount} events`
-                : `Captured ${batchStatus.successCount} of ${batchStatus.totalCount} events (${batchStatus.failureCount} failed)`
-              }
-            </Text>
-          </View>
-        )}
-        
         <UserEventsList
           events={events}
           showCreator="never"
