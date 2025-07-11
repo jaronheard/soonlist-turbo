@@ -49,15 +49,11 @@ async function optimizeImage(uri: string): Promise<string> {
 
     const endTime = performance.now();
     const duration = endTime - startTime;
-    console.log(
-      `[Image Optimization] Processed image in ${duration.toFixed(2)}ms`,
-    );
 
     return base64;
   } catch (error) {
     const endTime = performance.now();
     const duration = endTime - startTime;
-    console.log(`[Image Optimization] Failed after ${duration.toFixed(2)}ms`);
     logError("Error manipulating image", error);
     throw new Error("Failed to optimize image for upload");
   }
@@ -223,12 +219,8 @@ export function useCreateEvent() {
 
         // Start timing
         const startTime = performance.now();
-        console.log(
-          `[Batch ${batchId}] Starting streaming batch for ${tasks.length} images`,
-        );
 
         // Step 1: Create the batch immediately (with 0 images)
-        console.log(`[Batch ${batchId}] Creating batch record`);
         await createEventBatch({
           batchId,
           images: [], // Start with empty array
@@ -242,9 +234,6 @@ export function useCreateEvent() {
         });
 
         const batchCreateTime = performance.now();
-        console.log(
-          `[Batch ${batchId}] Batch created in ${(batchCreateTime - startTime).toFixed(2)}ms`,
-        );
 
         // Step 2: Process and stream images as they're ready
         let processedCount = 0;
@@ -292,9 +281,6 @@ export function useCreateEvent() {
 
           processedCount++;
           const imageTotalTime = performance.now() - imageStartTime;
-          console.log(
-            `[Batch ${batchId}] Image ${processedCount}/${tasks.length} processed and sent in ${imageTotalTime.toFixed(2)}ms (opt: ${(imageOptTime - imageStartTime).toFixed(2)}ms)`,
-          );
 
           return image;
         });
@@ -303,12 +289,6 @@ export function useCreateEvent() {
         await Promise.all(imagePromises);
 
         const totalTime = performance.now() - startTime;
-        console.log(
-          `[Batch ${batchId}] All images streamed in ${totalTime.toFixed(2)}ms (${(totalTime / 1000).toFixed(2)}s)`,
-        );
-        console.log(
-          `[Batch ${batchId}] Average time per image: ${(totalTime / tasks.length).toFixed(2)}ms`,
-        );
 
         // The batch is now processing asynchronously
         // Provide immediate feedback to user
