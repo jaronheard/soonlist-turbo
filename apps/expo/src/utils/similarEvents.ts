@@ -153,8 +153,6 @@ function collapseSimilarEvents(events: Event[], currentUserId?: string) {
     });
   });
 
-  logDebug("eventsWithSimilarity", eventsWithSimilarity);
-
   const uniqueEventsWithSimilarity: EventWithSimilarity[] = [];
 
   // Create a Set to track events that have already been considered
