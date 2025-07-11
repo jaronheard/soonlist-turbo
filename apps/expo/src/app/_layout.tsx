@@ -267,6 +267,15 @@ const InitialLayout = () => {
           title: "Edit Event",
         }}
       />
+      <Stack.Screen
+        name="batch/[batchId]/index"
+        options={{
+          title: "Recently Added",
+          headerShown: true,
+          headerBackTitle: "Back",
+          headerBackVisible: true,
+        }}
+      />
       {/* SHARE EXTENSION ROUTE */}
       <Stack.Screen
         name="new"

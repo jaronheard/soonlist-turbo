@@ -45,6 +45,23 @@ const listValidator = v.object({
 });
 
 /**
+ * Get events by batch ID
+ */
+export const getEventsByBatchId = query({
+  args: { batchId: v.string() },
+  handler: async (ctx, args) => {
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
+      .order("desc")
+      .collect();
+
+    // Enrich events with user data, comments, and follows
+    return await enrichEventsAndFilterNulls(ctx, events);
+  },
+});
+
+/**
  * Get saved event IDs for a user
  */
 export const getSavedIdsForUser = query({

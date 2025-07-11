@@ -474,7 +474,7 @@ export const pushBatchSummary = internalAction({
         : "Event batch completed";
 
     const body = message;
-    const deepLink = createDeepLink("home?tab=upcoming");
+    const deepLink = createDeepLink(`batch/${args.batchId}`);
 
     // Send notification
     const result = await OneSignal.sendNotification({
