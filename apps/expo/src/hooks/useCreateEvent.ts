@@ -12,6 +12,11 @@ import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
 
+// Generate a simple batch ID without external dependencies
+function generateBatchId(): string {
+  return `batch_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
 interface CreateEventOptions {
   imageUri?: string;
   userId: string;
@@ -54,9 +59,13 @@ export function useCreateEvent() {
   const { hasNotificationPermission } = useOneSignal();
   const userTimezone = useUserTimezone();
 
-  const eventFromImageBase64 = useMutation(
-    api.ai.eventFromImageBase64ThenCreate,
+  // New direct mutations (faster, no workflow overhead)
+  const eventFromImageBase64Direct = useMutation(
+    api.ai.eventFromImageBase64Direct,
   );
+  const createEventBatch = useMutation(api.ai.createEventBatch);
+  
+  // Keep workflow versions for URL and text (for now)
   const eventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
   const eventFromText = useMutation(api.ai.eventFromTextThenCreate);
 
@@ -107,8 +116,8 @@ export function useCreateEvent() {
           // 1. Optimize image and get base64
           const base64 = await optimizeImage(fileUri);
 
-          // 2. Create event with base64 image (backend handles upload now)
-          const startWorkflow = await eventFromImageBase64({
+          // 2. Create event directly (no workflow overhead)
+          const result = await eventFromImageBase64Direct({
             base64Image: base64,
             userId,
             username,
@@ -118,10 +127,11 @@ export function useCreateEvent() {
             sendNotification,
           });
 
-          // 3. Track the workflow in our store
-          addWorkflowId(startWorkflow.workflowId);
+          if (!result.success) {
+            throw new Error(result.error || "Failed to create event");
+          }
 
-          return startWorkflow.workflowId;
+          return result.eventId;
         }
 
         // Handle URL events with workflow
@@ -179,7 +189,7 @@ export function useCreateEvent() {
     [
       setIsCapturing,
       setIsImageLoading,
-      eventFromImageBase64,
+      eventFromImageBase64Direct,
       userTimezone,
       addWorkflowId,
       eventFromUrl,
@@ -187,42 +197,88 @@ export function useCreateEvent() {
     ],
   );
 
-  // Simplified batch creation - just call createEvent for each image
+  // New batch creation with smart notifications
   const createMultipleEvents = useCallback(
     async (tasks: CreateEventOptions[]): Promise<void> => {
       if (!tasks.length) return;
 
-      let successCount = 0;
-      let failureCount = 0;
+      try {
+        setIsCapturing(true);
+        setIsImageLoading(true, "add");
+        setIsImageLoading(true, "new");
 
-      // Process all images in parallel - Convex workflows handle the reliability
-      const promises = tasks.map(async (task) => {
-        try {
-          await createEvent({ ...task, suppressCapturing: true });
-          successCount++;
-        } catch (error) {
-          failureCount++;
-          logError("Error creating event from image", error, { task });
-        }
-      });
+        const batchId = generateBatchId();
+        const { userId, username, sendNotification = true } = tasks[0]!;
 
-      await Promise.allSettled(promises);
+        // Process all images in parallel to get base64
+        const imagePromises = tasks.map(async (task, index) => {
+          if (!task.imageUri) {
+            throw new Error("No image URI provided");
+          }
 
-      // Provide user feedback
-      if (failureCount > 0) {
-        toast.error(
-          `${failureCount} event(s) failed to process. ${successCount} succeeded.`,
-        );
-      } else if (successCount > 0) {
-        if (!hasNotificationPermission) {
+          // Convert photo library URI to file URI if needed
+          let fileUri = task.imageUri;
+          if (task.imageUri.startsWith("ph://")) {
+            const assetId = task.imageUri.replace("ph://", "").split("/")[0];
+            if (!assetId) {
+              throw new Error("Invalid photo library asset ID");
+            }
+            const asset = await MediaLibrary.getAssetInfoAsync(assetId);
+            if (!asset.localUri) {
+              throw new Error(
+                "Could not get local URI for photo library asset",
+              );
+            }
+            fileUri = asset.localUri;
+          }
+
+          // Validate image URI
+          if (!fileUri.startsWith("file://")) {
+            throw new Error("Invalid image URI format");
+          }
+
+          // Optimize image and get base64
+          const base64 = await optimizeImage(fileUri);
+
+          return {
+            base64Image: base64,
+            tempId: `${batchId}-${index}`,
+          };
+        });
+
+        const images = await Promise.all(imagePromises);
+
+        // Send batch to backend
+        const result = await createEventBatch({
+          batchId,
+          images,
+          userId,
+          username,
+          lists: [],
+          timezone: userTimezone,
+          visibility: "private",
+          sendNotification,
+        });
+
+        // The batch is now processing asynchronously
+        // Provide immediate feedback to user
+        if (!hasNotificationPermission || !sendNotification) {
           toast.success(
-            `${successCount} event${successCount > 1 ? "s" : ""} captured successfully!`,
+            `Processing ${result.totalImages} image${result.totalImages > 1 ? "s" : ""}...`,
           );
         }
-        // If notifications are enabled, we rely on the native notification.
+        // Note: Actual success/failure will be communicated via push notification
+      } catch (error) {
+        logError("Error creating events batch", error);
+        toast.error("Failed to process images. Please try again.");
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } finally {
+        setIsCapturing(false);
+        setIsImageLoading(false, "add");
+        setIsImageLoading(false, "new");
       }
     },
-    [createEvent, hasNotificationPermission],
+    [createEventBatch, hasNotificationPermission, userTimezone, setIsCapturing, setIsImageLoading],
   );
 
   return {

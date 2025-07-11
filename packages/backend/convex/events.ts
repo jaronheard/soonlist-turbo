@@ -462,10 +462,18 @@ export const insertEvent = internalMutation({
     visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
     userId: v.string(),
     username: v.string(),
+    batchId: v.optional(v.string()),
   },
   returns: v.string(), // eventId
   handler: async (ctx, args): Promise<string> => {
-    const { firstEvent, uploadedImageUrl, comment, lists, visibility } = args;
+    const {
+      firstEvent,
+      uploadedImageUrl,
+      comment,
+      lists,
+      visibility,
+      batchId,
+    } = args;
 
     // Add uploaded image to event if available
     const eventData = {
@@ -490,6 +498,7 @@ export const insertEvent = internalMutation({
       comment,
       lists,
       visibility,
+      batchId,
     );
 
     return result.id;

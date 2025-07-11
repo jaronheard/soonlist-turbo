@@ -76,6 +76,8 @@ export default defineSchema({
     startDate: v.optional(v.string()),
     startTime: v.optional(v.string()),
     description: v.optional(v.string()),
+    // Batch tracking
+    batchId: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"])
@@ -83,7 +85,8 @@ export default defineSchema({
     .index("by_startDateTime", ["startDateTime"])
     .index("by_visibility_and_startDateTime", ["visibility", "startDateTime"])
     .index("by_user_and_endDateTime", ["userId", "endDateTime"])
-    .index("by_visibility_and_endDateTime", ["visibility", "endDateTime"]),
+    .index("by_visibility_and_endDateTime", ["visibility", "endDateTime"])
+    .index("by_batch_id", ["batchId"]),
 
   eventToLists: defineTable({
     eventId: v.string(),
@@ -208,4 +211,22 @@ export default defineSchema({
     value: v.string(), // Config value
     updatedAt: v.string(), // ISO date string
   }).index("by_key", ["key"]),
+
+  eventBatches: defineTable({
+    batchId: v.string(),
+    userId: v.string(),
+    totalCount: v.number(),
+    successCount: v.number(),
+    failureCount: v.number(),
+    status: v.union(
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    createdAt: v.number(), // timestamp
+    completedAt: v.optional(v.number()), // timestamp
+  })
+    .index("by_batch_id", ["batchId"])
+    .index("by_user", ["userId"])
+    .index("by_user_and_status", ["userId", "status"]),
 });

@@ -576,6 +576,7 @@ export async function createEvent(
   comment?: string,
   lists?: { value: string }[],
   visibility?: "public" | "private",
+  batchId?: string,
 ) {
   const eventId = generatePublicId();
 
@@ -609,6 +610,7 @@ export async function createEvent(
     startDate: eventData.startDate,
     startTime,
     description: eventData.description,
+    batchId,
   });
 
   // Add comment if provided

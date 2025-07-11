@@ -450,6 +450,55 @@ export const push = internalAction({
 /**
  * Send failure notification for event creation
  */
+export const pushBatchSummary = internalAction({
+  args: {
+    userId: v.string(),
+    username: v.string(),
+    message: v.string(),
+    successCount: v.number(),
+    failureCount: v.number(),
+    batchId: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    id: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (_ctx, args) => {
+    const { userId, message, successCount, failureCount } = args;
+
+    // Create batch summary notification
+    const title =
+      failureCount === 0
+        ? "Events captured successfully!"
+        : "Event batch completed";
+
+    const body = message;
+    const deepLink = createDeepLink("home?tab=upcoming");
+
+    // Send notification
+    const result = await OneSignal.sendNotification({
+      userId,
+      title,
+      body,
+      url: deepLink,
+      data: {
+        type: "batch_summary",
+        successCount,
+        failureCount,
+      },
+      source: "notification_router",
+      method: "batch",
+    });
+
+    return {
+      success: result.success,
+      id: result.id,
+      error: result.error,
+    };
+  },
+});
+
 export const pushFailure = internalAction({
   args: {
     userId: v.string(),

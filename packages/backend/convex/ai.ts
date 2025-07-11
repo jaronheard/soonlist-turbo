@@ -4,7 +4,11 @@ import { ConvexError, v } from "convex/values";
 import type { EventWithMetadata } from "@soonlist/cal";
 
 import { components, internal } from "./_generated/api";
-import { internalAction, mutation } from "./_generated/server";
+import {
+  internalAction,
+  internalMutation,
+  mutation,
+} from "./_generated/server";
 import { eventDataValidator } from "./events";
 import * as AI from "./model/ai";
 import { fetchAndProcessEvent, validateJinaResponse } from "./model/aiHelpers";
@@ -346,5 +350,353 @@ export const validateFirstEvent = internalAction({
     // The validator ensures all required fields are present
     // Return the validated event which now has all required fields populated
     return firstEvent;
+  },
+});
+
+// NEW DIRECT FUNCTIONS WITHOUT WORKFLOW OVERHEAD
+// ============================================================================
+
+/**
+ * Direct event creation from base64 image - no workflow overhead
+ */
+/**
+ * Process single image - internal action that can be called from mutations
+ */
+export const processSingleImage = internalAction({
+  args: {
+    base64Image: v.string(),
+    timezone: v.string(),
+    comment: v.optional(v.string()),
+    lists: v.array(listValidator),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+    userId: v.string(),
+    username: v.string(),
+    batchId: v.optional(v.string()),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    eventId: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    try {
+      // Step 1: Extract event and upload image in parallel
+      const [aiResult, uploadedImageUrl]: [
+        { events: EventWithMetadata[]; response: string },
+        string,
+      ] = await Promise.all([
+        ctx.runAction(internal.ai.extractEventFromBase64Image, {
+          base64Image: args.base64Image,
+          timezone: args.timezone,
+        }),
+        ctx.runAction(internal.files.uploadImage, {
+          base64Image: args.base64Image,
+        }),
+      ]);
+
+      // Step 2: Validate first event
+      if (aiResult.events.length === 0) {
+        throw new ConvexError({
+          message: "No events found in image",
+          data: { eventsCount: 0 },
+        });
+      }
+
+      const firstEvent: EventWithMetadata | undefined = aiResult.events[0];
+      if (!firstEvent) {
+        throw new ConvexError({
+          message: "No events found to validate",
+          data: { eventsCount: 0 },
+        });
+      }
+
+      AI.validateEvent(firstEvent);
+
+      // Step 3: Insert event into database
+      const eventArgs = {
+        comment: args.comment,
+        lists: args.lists,
+        visibility: args.visibility,
+        userId: args.userId,
+        username: args.username,
+        batchId: args.batchId,
+      };
+
+      const eventId: string = await ctx.runMutation(
+        internal.events.insertEvent,
+        {
+          firstEvent,
+          uploadedImageUrl,
+          timezone: args.timezone,
+          ...eventArgs,
+        },
+      );
+
+      return {
+        success: true,
+        eventId,
+      };
+    } catch (error) {
+      console.error("Error processing image:", error);
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      };
+    }
+  },
+});
+
+/**
+ * Direct event creation from base64 image - no workflow overhead
+ */
+export const eventFromImageBase64Direct = mutation({
+  args: {
+    base64Image: v.string(),
+    timezone: v.string(),
+    comment: v.optional(v.string()),
+    lists: v.array(listValidator),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+    sendNotification: v.optional(v.boolean()),
+    userId: v.string(),
+    username: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    eventId: v.string(),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    // Schedule the processing as an action (this allows parallel execution)
+    const jobId: string = await ctx.scheduler.runAfter(
+      0,
+      internal.ai.processSingleImageWithNotification,
+      {
+        base64Image: args.base64Image,
+        timezone: args.timezone,
+        comment: args.comment,
+        lists: args.lists,
+        visibility: args.visibility,
+        userId: args.userId,
+        username: args.username,
+        sendNotification: args.sendNotification ?? true,
+      },
+    );
+
+    // Return immediately with a job ID for tracking
+    return {
+      success: true,
+      eventId: jobId, // Using job ID as a placeholder
+      error: undefined,
+    };
+  },
+});
+
+/**
+ * Batch event creation from multiple base64 images
+ */
+export const createEventBatch = mutation({
+  args: {
+    batchId: v.string(),
+    images: v.array(
+      v.object({
+        base64Image: v.string(),
+        tempId: v.string(), // Temporary ID for tracking on client
+      }),
+    ),
+    timezone: v.string(),
+    comment: v.optional(v.string()),
+    lists: v.array(listValidator),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+    sendNotification: v.optional(v.boolean()),
+    userId: v.string(),
+    username: v.string(),
+  },
+  returns: v.object({
+    batchId: v.string(),
+    totalImages: v.number(),
+    jobId: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    // Create batch tracking record
+    await ctx.runMutation(internal.eventBatches.createBatch, {
+      batchId: args.batchId,
+      userId: args.userId,
+      totalCount: args.images.length,
+    });
+
+    // Schedule batch processing as a single action
+    const jobId: string = await ctx.scheduler.runAfter(
+      0,
+      internal.ai.processBatchImages,
+      {
+        batchId: args.batchId,
+        images: args.images,
+        timezone: args.timezone,
+        comment: args.comment,
+        lists: args.lists,
+        visibility: args.visibility,
+        userId: args.userId,
+        username: args.username,
+        sendNotification: args.sendNotification ?? true,
+      },
+    );
+
+    return {
+      batchId: args.batchId,
+      totalImages: args.images.length,
+      jobId,
+    };
+  },
+});
+
+/**
+ * Process single image with notification - internal action
+ */
+export const processSingleImageWithNotification = internalAction({
+  args: {
+    base64Image: v.string(),
+    timezone: v.string(),
+    comment: v.optional(v.string()),
+    lists: v.array(listValidator),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+    userId: v.string(),
+    username: v.string(),
+    sendNotification: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const result: { success: boolean; eventId?: string; error?: string } =
+      await ctx.runAction(internal.ai.processSingleImage, {
+        base64Image: args.base64Image,
+        timezone: args.timezone,
+        comment: args.comment,
+        lists: args.lists,
+        visibility: args.visibility,
+        userId: args.userId,
+        username: args.username,
+      });
+
+    if (result.success && result.eventId && args.sendNotification) {
+      console.log(`Sending notification for event ${result.eventId}`);
+      try {
+        const notificationResult = await ctx.runAction(
+          internal.notifications.push,
+          {
+            eventId: result.eventId,
+            userId: args.userId,
+            userName: args.username,
+          },
+        );
+        console.log(`Notification result:`, notificationResult);
+      } catch (error) {
+        console.error(`Failed to send notification:`, error);
+      }
+    } else {
+      console.log(
+        `Skipping notification - success: ${result.success}, eventId: ${result.eventId}, sendNotification: ${args.sendNotification}`,
+      );
+    }
+
+    return result;
+  },
+});
+
+/**
+ * Process batch of images - internal action
+ */
+export const processBatchImages = internalAction({
+  args: {
+    batchId: v.string(),
+    images: v.array(
+      v.object({
+        base64Image: v.string(),
+        tempId: v.string(),
+      }),
+    ),
+    timezone: v.string(),
+    comment: v.optional(v.string()),
+    lists: v.array(listValidator),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+    userId: v.string(),
+    username: v.string(),
+    sendNotification: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    console.log(
+      `Processing batch ${args.batchId} with ${args.images.length} images`,
+    );
+
+    // Process all images in parallel
+    const results = await Promise.allSettled(
+      args.images.map(async (image) => {
+        const result: { success: boolean; eventId?: string; error?: string } =
+          await ctx.runAction(internal.ai.processSingleImage, {
+            base64Image: image.base64Image,
+            timezone: args.timezone,
+            comment: args.comment,
+            lists: args.lists,
+            visibility: args.visibility,
+            userId: args.userId,
+            username: args.username,
+            batchId: args.batchId,
+          });
+        return {
+          tempId: image.tempId,
+          ...result,
+        };
+      }),
+    );
+
+    // Convert Promise.allSettled results to our format
+    const formattedResults = results.map((result, index) => {
+      const tempId = args.images[index]!.tempId;
+      if (result.status === "fulfilled") {
+        return result.value;
+      } else {
+        return {
+          tempId,
+          success: false,
+          error: result.reason?.message || "Processing failed",
+        };
+      }
+    });
+
+    // Count successes and failures
+    const successCount = formattedResults.filter((r) => r.success).length;
+    const failureCount = formattedResults.filter((r) => !r.success).length;
+
+    // Update batch status
+    await ctx.runMutation(internal.eventBatches.updateBatchStatus, {
+      batchId: args.batchId,
+      successCount,
+      failureCount,
+      status: "completed",
+    });
+
+    // Send batch notification if enabled
+    if (args.sendNotification) {
+      console.log(
+        `Sending batch notification for batch ${args.batchId} - ${successCount} success, ${failureCount} failures`,
+      );
+      try {
+        await ctx.runAction(internal.eventBatches.sendBatchNotification, {
+          batchId: args.batchId,
+          userId: args.userId,
+          username: args.username,
+          totalCount: args.images.length,
+          successCount,
+          failureCount,
+        });
+        console.log(`Batch notification sent successfully`);
+      } catch (error) {
+        console.error(`Failed to send batch notification:`, error);
+      }
+    } else {
+      console.log(
+        `Skipping batch notification - sendNotification: ${args.sendNotification}`,
+      );
+    }
+
+    return formattedResults;
   },
 });

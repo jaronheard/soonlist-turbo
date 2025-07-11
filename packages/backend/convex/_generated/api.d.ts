@@ -11,6 +11,7 @@
 import type * as ai from "../ai.js";
 import type * as appConfig from "../appConfig.js";
 import type * as crons from "../crons.js";
+import type * as eventBatches from "../eventBatches.js";
 import type * as events from "../events.js";
 import type * as feedHelpers from "../feedHelpers.js";
 import type * as feeds from "../feeds.js";
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   appConfig: typeof appConfig;
   crons: typeof crons;
+  eventBatches: typeof eventBatches;
   events: typeof events;
   feedHelpers: typeof feedHelpers;
   feeds: typeof feeds;
