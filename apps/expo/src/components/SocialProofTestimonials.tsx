@@ -2,13 +2,20 @@ import React from "react";
 import { Text, View } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 
+import type { ImageSource } from "expo-image";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-assertions
+const dellaImage = require("../assets/della.png") as ImageSource;
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-assertions
+const ericImage = require("../assets/eric.png") as ImageSource;
+
 const testimonials = [
   {
     body: "Soonlist has brought SO much more ease into the process of organizing and prioritizing the events that are important to me!",
     author: {
       name: "Della Mueller",
       handle: "delladella",
-      imageSource: require("../assets/della.png"),
+      imageSource: dellaImage,
     },
   },
   {
@@ -16,7 +23,7 @@ const testimonials = [
     author: {
       name: "Eric Benedon",
       handle: "eggsbenedon",
-      imageSource: require("../assets/eric.png"),
+      imageSource: ericImage,
     },
   },
 ];
@@ -69,4 +76,3 @@ export function SocialProofTestimonials() {
     </View>
   );
 }
-
