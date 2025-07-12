@@ -50,10 +50,7 @@ export default function WelcomeScreen() {
             </AnimatedView>
           </View>
 
-          <AnimatedView
-            layout={Layout.duration(400)}
-            className="mb-4"
-          >
+          <AnimatedView layout={Layout.duration(400)} className="mb-4">
             <SocialProofTestimonials />
           </AnimatedView>
 

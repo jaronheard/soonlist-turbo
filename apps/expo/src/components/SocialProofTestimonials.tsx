@@ -1,8 +1,7 @@
+import type { ImageSource } from "expo-image";
 import React from "react";
 import { Text, View } from "react-native";
 import { Image as ExpoImage } from "expo-image";
-
-import type { ImageSource } from "expo-image";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-assertions
 const dellaImage = require("../assets/della.png") as ImageSource;
@@ -29,7 +28,7 @@ const testimonials = [
 ];
 
 interface TestimonialCardProps {
-  testimonial: typeof testimonials[0];
+  testimonial: (typeof testimonials)[0];
 }
 
 function TestimonialCard({ testimonial }: TestimonialCardProps) {
