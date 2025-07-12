@@ -147,20 +147,20 @@ async function generateUniqueUsername(
 }
 
 /**
- * Generate a unique username - requires authentication
+ * Generate a unique username - requires guest authentication
  */
 export const generateUsername = query({
   args: {
+    guestUserId: v.string(),
     firstName: v.optional(v.union(v.string(), v.null())),
     lastName: v.optional(v.union(v.string(), v.null())),
     email: v.optional(v.string()),
   },
   returns: v.string(),
   handler: async (ctx, args) => {
-    // Require authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError("Authentication required for username generation");
+    // Validate guest user ID format
+    if (!args.guestUserId || !args.guestUserId.startsWith("guest_")) {
+      throw new ConvexError("Valid guest user ID required for username generation");
     }
 
     return await generateUniqueUsername(

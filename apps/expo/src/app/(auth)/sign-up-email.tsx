@@ -11,6 +11,7 @@ import { z } from "zod";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { useGuestUser } from "~/hooks/useGuestUser";
 import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
 import { logError } from "../../utils/errorLogging";
@@ -30,6 +31,7 @@ export default function SignUpScreen() {
   const { isLoaded, signUp } = useSignUp();
   const { isAuthenticated } = useConvexAuth();
   const convex = useConvex();
+  const { guestUserId } = useGuestUser();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
   );
@@ -55,13 +57,14 @@ export default function SignUpScreen() {
   }
 
   const onSignUpPress = async (data: SignUpFormData) => {
-    if (!isLoaded) return;
+    if (!isLoaded || !guestUserId) return;
     setGeneralError("");
     setIsSubmitting(true);
 
     try {
       // Generate username synchronously using convex.query()
       const username = await convex.query(api.users.generateUsername, {
+        guestUserId,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.emailAddress,

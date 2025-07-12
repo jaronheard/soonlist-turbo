@@ -15,6 +15,7 @@ import { usePostHog } from "posthog-react-native";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { X } from "~/components/icons";
+import { useGuestUser } from "~/hooks/useGuestUser";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { logError } from "../utils/errorLogging";
 import { transferGuestData } from "../utils/guestDataTransfer";
@@ -35,6 +36,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
   const convex = useConvex();
+  const { guestUserId } = useGuestUser();
   const transferGuestOnboardingData = useMutation(
     api.guestOnboarding.transferGuestOnboardingData,
   );
@@ -90,8 +92,14 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
             return;
           }
 
+          if (!guestUserId) {
+            setOauthError("Guest user initialization failed. Please try again.");
+            return;
+          }
+
           // Generate username synchronously using convex.query()
           const username = await convex.query(api.users.generateUsername, {
+            guestUserId,
             firstName: firstName || null,
             lastName: lastName || null,
             email: email,
