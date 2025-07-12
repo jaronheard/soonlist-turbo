@@ -525,7 +525,7 @@ export const addImagesToBatch = mutation({
     }
 
     // Schedule processing for these new images
-    const jobId: string = await ctx.scheduler.runAfter(
+    const _jobId: string = await ctx.scheduler.runAfter(
       0,
       internal.ai.processAdditionalBatchImages,
       {
@@ -634,7 +634,7 @@ export const processSingleImageWithNotification = internalAction({
 
     if (result.success && result.eventId && args.sendNotification) {
       try {
-        const notificationResult = await ctx.runAction(
+        const _notificationResult = await ctx.runAction(
           internal.notifications.push,
           {
             eventId: result.eventId,
@@ -691,7 +691,7 @@ export const processAdditionalBatchImages = internalAction({
       chunks.push(args.images.slice(i, i + CHUNK_SIZE));
     }
 
-    for (const [chunkIndex, chunk] of chunks.entries()) {
+    for (const [_chunkIndex, chunk] of chunks.entries()) {
       const chunkResults = await Promise.allSettled(
         chunk.map(async (image) => {
           const result: { success: boolean; eventId?: string; error?: string } =
