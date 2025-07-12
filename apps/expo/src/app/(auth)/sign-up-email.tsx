@@ -67,7 +67,7 @@ export default function SignUpScreen() {
         email: data.emailAddress,
       });
 
-      console.log("Generated username:", username);
+      // Username generated successfully
 
       await signUp.create({
         ...data,

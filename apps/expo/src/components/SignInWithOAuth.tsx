@@ -97,7 +97,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
             email: email,
           });
 
-          console.log("Generated username:", username);
+          // Username generated successfully
 
           const res = await pendingSignUp.update({ username });
 

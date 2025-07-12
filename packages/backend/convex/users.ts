@@ -155,6 +155,7 @@ export const generateUsername = query({
     lastName: v.optional(v.union(v.string(), v.null())),
     email: v.optional(v.string()),
   },
+  returns: v.string(),
   handler: async (ctx, args) => {
     return await generateUniqueUsername(
       ctx.db,
