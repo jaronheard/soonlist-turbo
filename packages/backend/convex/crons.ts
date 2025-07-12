@@ -32,7 +32,7 @@ crons.cron(
 crons.cron(
   "update hasEnded flags",
   "*/15 * * * *", // Every 15 minutes
-  internal.feeds.updateHasEndedFlags,
+  internal.feeds.updateHasEndedFlagsAction,
   {},
 );
 
