@@ -147,7 +147,7 @@ async function generateUniqueUsername(
 }
 
 /**
- * Public query to generate a unique username without authentication
+ * Generate a unique username - requires authentication
  */
 export const generateUsername = query({
   args: {
@@ -157,6 +157,12 @@ export const generateUsername = query({
   },
   returns: v.string(),
   handler: async (ctx, args) => {
+    // Require authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Authentication required for username generation");
+    }
+
     return await generateUniqueUsername(
       ctx.db,
       args.firstName,
