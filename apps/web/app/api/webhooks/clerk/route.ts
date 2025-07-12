@@ -41,10 +41,11 @@ async function forwardToConvex(
   },
 ) {
   try {
-    const convexUrl = env.NEXT_PUBLIC_CONVEX_URL.replace(
-      /\.convex\.cloud$/,
-      ".convex.site",
-    );
+    // Use custom HTTP endpoint URL for production, otherwise use standard domain replacement
+    const convexUrl =
+      env.NEXT_PUBLIC_CONVEX_SITE_URL_PROD ||
+      env.NEXT_PUBLIC_CONVEX_URL.replace(/\.convex\.cloud$/, ".convex.site");
+    
     const response = await fetch(`${convexUrl}/clerk-webhook`, {
       method: "POST",
       headers: {
