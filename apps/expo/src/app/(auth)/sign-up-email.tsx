@@ -262,8 +262,10 @@ export default function SignUpScreen() {
 
           <Pressable
             onPress={handleSubmit(onSignUpPress)}
-            className={`w-full rounded-full px-6 py-3 ${isSubmitting || !isValid || isGuestUserLoading ? "bg-gray-400" : "bg-interactive-1"}`}
-            disabled={isSubmitting || !isValid || isGuestUserLoading}
+            className={`w-full rounded-full px-6 py-3 ${isSubmitting || !isValid || isGuestUserLoading || !guestUserId ? "bg-gray-400" : "bg-interactive-1"}`}
+            disabled={
+              isSubmitting || !isValid || isGuestUserLoading || !guestUserId
+            }
           >
             <Text className="text-center text-lg font-bold text-white">
               {isSubmitting ? "Signing Up..." : "Sign Up"}
