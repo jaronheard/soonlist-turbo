@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
+import { SocialProofTestimonials } from "~/components/SocialProofTestimonials";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function IntroScreen() {
@@ -18,7 +19,9 @@ export default function IntroScreen() {
       totalSteps={TOTAL_ONBOARDING_STEPS}
     >
       <View className="flex-1 justify-center">
-        <View className="flex-1" />
+        <View className="flex-1 justify-center">
+          <SocialProofTestimonials />
+        </View>
 
         <Pressable
           onPress={handleContinue}
