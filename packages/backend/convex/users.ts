@@ -461,6 +461,15 @@ export const syncFromClerk = internalMutation({
     // Generate username if not provided or empty
     let username = args.username;
     if (!username || username.trim() === "") {
+      console.error(
+        `[syncFromClerk] Received empty username for user ${args.id}. This is unexpected - Next.js webhook should have generated one. Generating fallback username.`,
+        {
+          userId: args.id,
+          email: args.email,
+          firstName: args.firstName,
+          lastName: args.lastName,
+        },
+      );
       username = await generateUniqueUsername(
         ctx.db,
         args.firstName,
