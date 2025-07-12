@@ -160,8 +160,22 @@ export async function POST(req: Request) {
       if (evt.type === "user.created") {
         const userId = evt.data.external_id || evt.data.id || "";
 
-        // Username should already be set during signup
-        const username = evt.data.username || "";
+        // Username must be set during signup - fail if missing
+        const username = evt.data.username;
+        if (!username || username.trim() === "") {
+          console.error(
+            `Missing username for user ${userId} during creation. Username must be set during signup.`,
+            {
+              userId,
+              email: evt.data.email_addresses[0]?.email_address,
+              firstName: evt.data.first_name,
+              lastName: evt.data.last_name,
+            },
+          );
+          return new Response("Username is required for user creation", {
+            status: 400,
+          });
+        }
 
         await db.insert(users).values({
           id: userId,

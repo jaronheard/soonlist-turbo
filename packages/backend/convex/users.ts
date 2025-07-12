@@ -509,18 +509,18 @@ export const syncFromClerk = internalMutation({
       .withIndex("by_custom_id", (q) => q.eq("id", args.id))
       .unique();
 
-    // Username should already be set during signup
-    const username = args.username || "";
+    // Username must be set during signup - fail if missing
+    const username = args.username;
     if (!username || username.trim() === "") {
-      console.error(
-        `[syncFromClerk] Received empty username for user ${args.id}. Username should have been set during signup.`,
-        {
+      throw new ConvexError({
+        message: "Username is required for user creation",
+        data: {
           userId: args.id,
           email: args.email,
           firstName: args.firstName,
           lastName: args.lastName,
         },
-      );
+      });
     }
 
     const userData = {
