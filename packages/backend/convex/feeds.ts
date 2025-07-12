@@ -2,8 +2,9 @@ import type { PaginationOptions } from "convex/server";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
+import { internal } from "./_generated/api";
 import type { QueryCtx } from "./_generated/server";
-import { internalMutation, query } from "./_generated/server";
+import { internalAction, internalMutation, query } from "./_generated/server";
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -182,58 +183,83 @@ export const getUserCreatedEvents = query({
   },
 });
 
-// Internal mutation to update hasEnded flags for all userFeeds entries
-export const updateHasEndedFlags = internalMutation({
+// Internal mutation to update hasEnded flags for a batch of userFeeds entries
+export const updateHasEndedFlagsBatch = internalMutation({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+    batchSize: v.number(),
+  },
+  returns: v.object({
+    processed: v.number(),
+    updated: v.number(),
+    nextCursor: v.optional(v.string()),
+  }),
+  handler: async (ctx, { cursor, batchSize }) => {
+    const currentTime = Date.now();
+    let updated = 0;
+    
+    // Get a single batch with the provided cursor
+    const result = await ctx.db
+      .query("userFeeds")
+      .paginate({ numItems: batchSize, cursor });
+    
+    // Process each entry in the batch
+    for (const entry of result.page) {
+      const shouldHaveEnded = entry.eventEndTime < currentTime;
+      
+      if (entry.hasEnded !== shouldHaveEnded) {
+        await ctx.db.patch(entry._id, {
+          hasEnded: shouldHaveEnded,
+        });
+        updated++;
+      }
+    }
+    
+    return {
+      processed: result.page.length,
+      updated,
+      nextCursor: result.continueCursor,
+    };
+  },
+});
+
+// Internal action to orchestrate updating hasEnded flags across all userFeeds
+export const updateHasEndedFlagsAction = internalAction({
   args: {},
   returns: v.object({
     totalProcessed: v.number(),
     totalUpdated: v.number(),
   }),
   handler: async (ctx) => {
-    const currentTime = Date.now();
-    let totalUpdated = 0;
     let totalProcessed = 0;
-
-    // Process in batches to avoid hitting limits
+    let totalUpdated = 0;
+    let cursor: string | null = null;
     const batchSize = 100;
-    let cursor = null;
-
+    
+    // Process batches until no more data
     while (true) {
-      // Get a batch of feed entries using cursor-based pagination
-      const result = await ctx.db
-        .query("userFeeds")
-        .paginate({ numItems: batchSize, cursor });
-
-      const feedEntries = result.page;
-      totalProcessed += feedEntries.length;
-
-      // Update each entry
-      for (const entry of feedEntries) {
-        const shouldHaveEnded = entry.eventEndTime < currentTime;
-
-        // Only update if the value has changed or is not set
-        if (
-          entry.hasEnded === undefined ||
-          entry.hasEnded !== shouldHaveEnded
-        ) {
-          await ctx.db.patch(entry._id, {
-            hasEnded: shouldHaveEnded,
-          });
-          totalUpdated++;
-        }
-      }
-
-      // Check if we're done
-      if (!result.continueCursor) {
+      const result: {
+        processed: number;
+        updated: number;
+        nextCursor?: string;
+      } = await ctx.runMutation(
+        internal.feeds.updateHasEndedFlagsBatch,
+        { cursor, batchSize }
+      );
+      
+      totalProcessed += result.processed;
+      totalUpdated += result.updated;
+      
+      if (!result.nextCursor) {
         break;
       }
-      cursor = result.continueCursor;
+      cursor = result.nextCursor;
     }
-
+    
     console.log(
-      `Updated hasEnded flags: ${totalUpdated} changed out of ${totalProcessed} processed`,
+      `Updated hasEnded flags: ${totalUpdated} changed out of ${totalProcessed} processed`
     );
-
+    
     return {
       totalProcessed,
       totalUpdated,
