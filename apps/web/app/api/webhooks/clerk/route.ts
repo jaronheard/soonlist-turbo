@@ -45,7 +45,7 @@ async function forwardToConvex(
     const convexUrl =
       env.NEXT_PUBLIC_CONVEX_SITE_URL_PROD ||
       env.NEXT_PUBLIC_CONVEX_URL.replace(/\.convex\.cloud$/, ".convex.site");
-    
+
     const response = await fetch(`${convexUrl}/clerk-webhook`, {
       method: "POST",
       headers: {
