@@ -141,33 +141,6 @@ async function generateUniqueUsername(
     }
   }
 
-  // Try random 3-digit numbers with batch checking
-  const randomCandidates: string[] = [];
-  const maxRandom = Math.min(999, maxNumber);
-
-  for (let attempts = 0; attempts < 50 && attempts < maxRandom; attempts++) {
-    const randomNum = Math.floor(Math.random() * (maxRandom - 100 + 1)) + 100;
-    const candidateUsername = `${baseUsername}${randomNum}`;
-    if (candidateUsername.length <= MAX_USERNAME_LENGTH) {
-      randomCandidates.push(candidateUsername);
-    }
-  }
-
-  if (randomCandidates.length > 0) {
-    const existingRandom = await db.query.users.findMany({
-      where: inArray(users.username, randomCandidates),
-      columns: { username: true },
-    });
-
-    const takenRandom = new Set(existingRandom.map((u) => u.username));
-
-    for (const candidate of randomCandidates) {
-      if (!takenRandom.has(candidate)) {
-        return candidate;
-      }
-    }
-  }
-
   // Ultimate fallback: use timestamp (ensure it fits)
   const timestamp = Date.now().toString();
   const fallbackUsername = `${baseUsername}${timestamp}`;
