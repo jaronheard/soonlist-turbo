@@ -2,6 +2,7 @@ import type { FunctionReturnType } from "convex/server";
 import { Alert, Linking, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
 import { Temporal } from "@js-temporal/polyfill";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner-native";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
@@ -10,6 +11,17 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
+
+export const calendarsQueryKey = ["availableCalendars"];
+
+const fetchCalendars = async () => {
+  const calendars = await Calendar.getCalendarsAsync(
+    Calendar.EntityTypes.EVENT,
+  );
+  const defaultCalendar =
+    Platform.OS === "ios" ? await Calendar.getDefaultCalendarAsync() : null;
+  return { calendars, defaultCalendar };
+};
 
 const INITIAL_CALENDAR_LIMIT = 5;
 
@@ -30,6 +42,8 @@ export function useCalendar() {
     clearCalendarData,
   } = useAppStore();
 
+  const queryClient = useQueryClient();
+
   const handleAddToCal = async (
     event: NonNullable<FunctionReturnType<typeof api.events.get>>,
   ) => {
@@ -47,14 +61,10 @@ export function useCalendar() {
         return;
       }
 
-      const calendars = await Calendar.getCalendarsAsync(
-        Calendar.EntityTypes.EVENT,
-      );
-
-      let defaultCalendar: Calendar.Calendar | null = null;
-      if (Platform.OS === "ios") {
-        defaultCalendar = await Calendar.getDefaultCalendarAsync();
-      }
+      const { calendars, defaultCalendar } = await queryClient.fetchQuery({
+        queryKey: calendarsQueryKey,
+        queryFn: fetchCalendars,
+      });
 
       calendars.sort((a, b) => {
         const usageA = calendarUsage[a.id] ?? 0;
@@ -182,6 +192,11 @@ export function useCalendar() {
     }
   };
 
+  const handleClearCalendarData = () => {
+    clearCalendarData();
+    queryClient.removeQueries({ queryKey: calendarsQueryKey });
+  };
+
   return {
     isCalendarModalVisible,
     setIsCalendarModalVisible,
@@ -191,6 +206,6 @@ export function useCalendar() {
     showAllCalendars,
     setShowAllCalendars,
     INITIAL_CALENDAR_LIMIT,
-    clearCalendarData,
+    clearCalendarData: handleClearCalendarData,
   };
 }
