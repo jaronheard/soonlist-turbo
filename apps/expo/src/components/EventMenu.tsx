@@ -11,11 +11,11 @@ import {
   CalendarPlus,
   EyeOff,
   Globe2,
+  Heart,
   Map,
   MinusCircle,
   MoreVertical,
   PenSquare,
-  PlusCircle,
   QrCode,
   ShareIcon,
   Trash2,
@@ -64,7 +64,9 @@ interface MenuItem {
     | "square.and.pencil"
     | "trash"
     | "plus.circle"
-    | "minus.circle";
+    | "minus.circle"
+    | "heart"
+    | "heart.fill";
   destructive?: boolean;
 }
 
@@ -143,9 +145,9 @@ export function EventMenu({
     } else if (!isSaved) {
       return [
         {
-          title: "Add to My Feed",
-          lucideIcon: PlusCircle,
-          systemIcon: "plus.circle",
+          title: "Save",
+          lucideIcon: Heart,
+          systemIcon: "heart",
         },
         ...baseItems,
       ];
@@ -153,7 +155,7 @@ export function EventMenu({
       return [
         ...baseItems,
         {
-          title: "Remove from My Feed",
+          title: "Unsave",
           lucideIcon: MinusCircle,
           systemIcon: "minus.circle",
           destructive: true,
@@ -191,10 +193,10 @@ export function EventMenu({
       case "Delete":
         void handleDelete();
         break;
-      case "Add to My Feed":
+      case "Save":
         void handleFollow();
         break;
-      case "Remove from My Feed":
+      case "Unsave":
         void handleUnfollow();
         break;
       case "Show QR":

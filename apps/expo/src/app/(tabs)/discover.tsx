@@ -124,6 +124,7 @@ function DiscoverContent() {
             hasUnlimited={hasUnlimited}
             hideDiscoverableButton={true}
             isDiscoverFeed={true}
+            savedEventIds={savedEventIds}
           />
           {user && <AddEventButton showChevron={false} />}
         </View>
