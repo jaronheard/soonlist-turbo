@@ -31,7 +31,7 @@ export default function SignUpScreen() {
   const { isLoaded, signUp } = useSignUp();
   const { isAuthenticated } = useConvexAuth();
   const convex = useConvex();
-  const { guestUserId } = useGuestUser();
+  const { guestUserId, isLoading: isGuestUserLoading } = useGuestUser();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
   );
@@ -57,18 +57,27 @@ export default function SignUpScreen() {
   }
 
   const onSignUpPress = async (data: SignUpFormData) => {
-    if (!isLoaded || !guestUserId) return;
+    if (!isLoaded || isGuestUserLoading || !guestUserId) return;
     setGeneralError("");
     setIsSubmitting(true);
 
     try {
-      // Generate username synchronously using convex.query()
-      const username = await convex.query(api.users.generateUsername, {
-        guestUserId,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.emailAddress,
-      });
+      let username: string;
+
+      try {
+        // Generate username synchronously using convex.query()
+        username = await convex.query(api.users.generateUsername, {
+          guestUserId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.emailAddress,
+        });
+      } catch (usernameError) {
+        logError("Error generating username", usernameError);
+        setGeneralError("Failed to generate username. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
 
       // Username generated successfully
 
@@ -104,7 +113,7 @@ export default function SignUpScreen() {
     }
   };
 
-  if (!isLoaded) {
+  if (!isLoaded || isGuestUserLoading) {
     return <Text>Loading...</Text>;
   }
 
@@ -253,8 +262,8 @@ export default function SignUpScreen() {
 
           <Pressable
             onPress={handleSubmit(onSignUpPress)}
-            className={`w-full rounded-full px-6 py-3 ${isSubmitting || !isValid ? "bg-gray-400" : "bg-interactive-1"}`}
-            disabled={isSubmitting || !isValid}
+            className={`w-full rounded-full px-6 py-3 ${isSubmitting || !isValid || isGuestUserLoading ? "bg-gray-400" : "bg-interactive-1"}`}
+            disabled={isSubmitting || !isValid || isGuestUserLoading}
           >
             <Text className="text-center text-lg font-bold text-white">
               {isSubmitting ? "Signing Up..." : "Sign Up"}

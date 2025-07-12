@@ -36,7 +36,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
   const convex = useConvex();
-  const { guestUserId } = useGuestUser();
+  const { guestUserId, isLoading: isGuestUserLoading } = useGuestUser();
   const transferGuestOnboardingData = useMutation(
     api.guestOnboarding.transferGuestOnboardingData,
   );
@@ -57,7 +57,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
     setShowOtherOptions(!showOtherOptions);
   };
 
-  if (!signIn || !signUp) {
+  if (!signIn || !signUp || isGuestUserLoading) {
     return null;
   }
 
@@ -92,8 +92,10 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
             return;
           }
 
-          if (!guestUserId) {
-            setOauthError("Guest user initialization failed. Please try again.");
+          if (!guestUserId || isGuestUserLoading) {
+            setOauthError(
+              "Guest user initialization failed. Please try again.",
+            );
             return;
           }
 

@@ -160,8 +160,10 @@ export const generateUsername = query({
   returns: v.string(),
   handler: async (ctx, args) => {
     // Validate guest user ID format
-    if (!args.guestUserId || !args.guestUserId.startsWith("guest_")) {
-      throw new ConvexError("Valid guest user ID required for username generation");
+    if (!args.guestUserId?.startsWith("guest_")) {
+      throw new ConvexError(
+        "Valid guest user ID required for username generation",
+      );
     }
 
     return await generateUniqueUsername(

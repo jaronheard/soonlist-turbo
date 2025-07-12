@@ -1,6 +1,6 @@
 import type { WebhookEvent } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { Webhook } from "svix";
 
 import { db } from "@soonlist/db";
@@ -118,11 +118,6 @@ export async function POST(req: Request) {
 
       if (evt.type === "user.updated") {
         const userId = evt.data.external_id || evt.data.id || "";
-
-        // Check if user already exists
-        const existingUser = await db.query.users.findFirst({
-          where: eq(users.id, userId),
-        });
 
         // Prepare update data
         const updateData: {
