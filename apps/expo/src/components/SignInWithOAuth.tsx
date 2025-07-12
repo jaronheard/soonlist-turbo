@@ -57,7 +57,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
     setShowOtherOptions(!showOtherOptions);
   };
 
-  if (!signIn || !signUp || isGuestUserLoading) {
+  if (!signIn || !signUp || isGuestUserLoading || !guestUserId) {
     return null;
   }
 
