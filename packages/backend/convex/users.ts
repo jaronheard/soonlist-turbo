@@ -315,6 +315,86 @@ export const deleteAccount = mutation({
       throw new ConvexError("User not found");
     }
 
+    // Delete events created by user
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    for (const event of events) {
+      await ctx.db.delete(event._id);
+    }
+
+    // Delete comments by user
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    for (const comment of comments) {
+      await ctx.db.delete(comment._id);
+    }
+
+    // Delete lists created by user
+    const lists = await ctx.db
+      .query("lists")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    for (const list of lists) {
+      await ctx.db.delete(list._id);
+    }
+
+    // Delete event follows
+    const eventFollows = await ctx.db
+      .query("eventFollows")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    for (const follow of eventFollows) {
+      await ctx.db.delete(follow._id);
+    }
+
+    // Delete list follows
+    const listFollows = await ctx.db
+      .query("listFollows")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    for (const follow of listFollows) {
+      await ctx.db.delete(follow._id);
+    }
+
+    // Delete push tokens
+    const pushTokens = await ctx.db
+      .query("pushTokens")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    for (const token of pushTokens) {
+      await ctx.db.delete(token._id);
+    }
+
+    // Delete event batches
+    const eventBatches = await ctx.db
+      .query("eventBatches")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    for (const batch of eventBatches) {
+      await ctx.db.delete(batch._id);
+    }
+
+    // Delete user feeds
+    const userFeeds = await ctx.db
+      .query("userFeeds")
+      .filter((q) => q.eq(q.field("feedId"), `user_${args.userId}`))
+      .collect();
+
+    for (const feed of userFeeds) {
+      await ctx.db.delete(feed._id);
+    }
+
     // Delete user follows (both as follower and following)
     const followsAsFollower = await ctx.db
       .query("userFollows")
@@ -520,15 +600,97 @@ export const deleteUser = internalMutation({
       return;
     }
 
+    const userId = args.id;
+
+    // Delete events created by user
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const event of events) {
+      await ctx.db.delete(event._id);
+    }
+
+    // Delete comments by user
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const comment of comments) {
+      await ctx.db.delete(comment._id);
+    }
+
+    // Delete lists created by user
+    const lists = await ctx.db
+      .query("lists")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const list of lists) {
+      await ctx.db.delete(list._id);
+    }
+
+    // Delete event follows
+    const eventFollows = await ctx.db
+      .query("eventFollows")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const follow of eventFollows) {
+      await ctx.db.delete(follow._id);
+    }
+
+    // Delete list follows
+    const listFollows = await ctx.db
+      .query("listFollows")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const follow of listFollows) {
+      await ctx.db.delete(follow._id);
+    }
+
+    // Delete push tokens
+    const pushTokens = await ctx.db
+      .query("pushTokens")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const token of pushTokens) {
+      await ctx.db.delete(token._id);
+    }
+
+    // Delete event batches
+    const eventBatches = await ctx.db
+      .query("eventBatches")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const batch of eventBatches) {
+      await ctx.db.delete(batch._id);
+    }
+
+    // Delete user feeds
+    const userFeeds = await ctx.db
+      .query("userFeeds")
+      .filter((q) => q.eq(q.field("feedId"), `user_${userId}`))
+      .collect();
+
+    for (const feed of userFeeds) {
+      await ctx.db.delete(feed._id);
+    }
+
     // Delete user follows (both as follower and following)
     const followsAsFollower = await ctx.db
       .query("userFollows")
-      .withIndex("by_follower", (q) => q.eq("followerId", args.id))
+      .withIndex("by_follower", (q) => q.eq("followerId", userId))
       .collect();
 
     const followsAsFollowing = await ctx.db
       .query("userFollows")
-      .withIndex("by_following", (q) => q.eq("followingId", args.id))
+      .withIndex("by_following", (q) => q.eq("followingId", userId))
       .collect();
 
     // Delete all follow relationships
