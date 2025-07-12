@@ -183,7 +183,7 @@ export const getUserCreatedEvents = query({
   },
 });
 
-// Internal mutation to update hasEnded flags for a batch of userFeeds entries
+// Internal mutation to update hasEndedFlags for a batch of userFeeds entries
 export const updateHasEndedFlagsBatch = internalMutation({
   args: {
     cursor: v.union(v.string(), v.null()),
@@ -192,7 +192,8 @@ export const updateHasEndedFlagsBatch = internalMutation({
   returns: v.object({
     processed: v.number(),
     updated: v.number(),
-    nextCursor: v.optional(v.string()),
+    nextCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
   }),
   handler: async (ctx, { cursor, batchSize }) => {
     const currentTime = Date.now();
@@ -201,6 +202,7 @@ export const updateHasEndedFlagsBatch = internalMutation({
     // Get a single batch with the provided cursor
     const result = await ctx.db
       .query("userFeeds")
+      .order("asc")
       .paginate({ numItems: batchSize, cursor });
 
     // Process each entry in the batch
@@ -219,6 +221,7 @@ export const updateHasEndedFlagsBatch = internalMutation({
       processed: result.page.length,
       updated,
       nextCursor: result.continueCursor,
+      isDone: result.isDone,
     };
   },
 });
@@ -241,7 +244,8 @@ export const updateHasEndedFlagsAction = internalAction({
       const result: {
         processed: number;
         updated: number;
-        nextCursor?: string;
+        nextCursor: string | null;
+        isDone: boolean;
       } = await ctx.runMutation(internal.feeds.updateHasEndedFlagsBatch, {
         cursor,
         batchSize,
@@ -250,7 +254,7 @@ export const updateHasEndedFlagsAction = internalAction({
       totalProcessed += result.processed;
       totalUpdated += result.updated;
 
-      if (!result.nextCursor) {
+      if (result.isDone) {
         break;
       }
       cursor = result.nextCursor;
