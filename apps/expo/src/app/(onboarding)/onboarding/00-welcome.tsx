@@ -5,7 +5,6 @@ import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 
 import { Logo } from "~/components/Logo";
-import { SocialProofTestimonials } from "~/components/SocialProofTestimonials";
 import { useAppStore } from "~/store";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
@@ -49,10 +48,6 @@ export default function WelcomeScreen() {
               </Text>
             </AnimatedView>
           </View>
-
-          <AnimatedView layout={Layout.duration(400)} className="mb-4">
-            <SocialProofTestimonials />
-          </AnimatedView>
 
           <AnimatedView
             layout={Layout.duration(400)}
