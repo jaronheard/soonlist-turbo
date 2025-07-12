@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 
 import type { DatabaseReader } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
@@ -347,24 +348,45 @@ export const deleteAccount = mutation({
       throw new ConvexError("User not found");
     }
 
-    // Delete user follows (both as follower and following)
-    const followsAsFollower = await ctx.db
-      .query("userFollows")
-      .withIndex("by_follower", (q) => q.eq("followerId", args.userId))
-      .collect();
-
-    const followsAsFollowing = await ctx.db
-      .query("userFollows")
-      .withIndex("by_following", (q) => q.eq("followingId", args.userId))
-      .collect();
-
-    // Delete all follow relationships
-    for (const follow of [...followsAsFollower, ...followsAsFollowing]) {
-      await ctx.db.delete(follow._id);
+    // Delete user from Clerk first
+    const clerkSecretKey = process.env.CLERK_SECRET_KEY;
+    if (!clerkSecretKey) {
+      throw new ConvexError("Clerk secret key not configured");
     }
 
-    // Delete the user record
-    await ctx.db.delete(user._id);
+    try {
+      const response = await fetch(
+        `https://api.clerk.com/v1/users/${args.userId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${clerkSecretKey}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new ConvexError(
+          `Failed to delete user from Clerk: ${response.status} ${error}`,
+        );
+      }
+    } catch (error) {
+      // If it's already a ConvexError, re-throw it
+      if (error instanceof ConvexError) {
+        throw error;
+      }
+      // For other errors (network, etc.), wrap in ConvexError
+      throw new ConvexError(
+        `Failed to delete user from Clerk: ${String(error)}`,
+      );
+    }
+
+    // Use the new centralized cascade delete mutation
+    await ctx.runMutation(internal.users.deleteUserAndCascade, {
+      userId: args.userId,
+    });
 
     return null;
   },
@@ -560,24 +582,165 @@ export const deleteUser = internalMutation({
       console.warn(`User ${args.id} not found for deletion`);
       return;
     }
+    // Use the new centralized cascade delete mutation
+    await ctx.runMutation(internal.users.deleteUserAndCascade, {
+      userId: args.id,
+    });
+  },
+});
+
+/**
+ * INTERNAL: Centralized cascade deletion logic for a user.
+ * This function should be called by other mutations that need to delete a user.
+ */
+export const deleteUserAndCascade = internalMutation({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", args.userId))
+      .unique();
+
+    if (!user) {
+      console.warn(`User ${args.userId} not found for deletion`);
+      return;
+    }
+
+    // Delete events created by user and their cascade dependencies
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    for (const event of events) {
+      // Delete comments on this event (by all users)
+      const eventComments = await ctx.db
+        .query("comments")
+        .withIndex("by_event", (q) => q.eq("eventId", event.id))
+        .collect();
+      for (const comment of eventComments) {
+        await ctx.db.delete(comment._id);
+      }
+
+      // Delete follows of this event (by all users)
+      const eventFollowsOfEvent = await ctx.db
+        .query("eventFollows")
+        .withIndex("by_event", (q) => q.eq("eventId", event.id))
+        .collect();
+      for (const follow of eventFollowsOfEvent) {
+        await ctx.db.delete(follow._id);
+      }
+
+      // Delete eventToLists associations for this event
+      const eventToListsOfEvent = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event", (q) => q.eq("eventId", event.id))
+        .collect();
+      for (const etl of eventToListsOfEvent) {
+        await ctx.db.delete(etl._id);
+      }
+
+      // Delete the event itself
+      await ctx.db.delete(event._id);
+    }
+
+    // Delete comments by user (on other users' events)
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    for (const comment of comments) {
+      await ctx.db.delete(comment._id);
+    }
+
+    // Delete lists created by user and their cascade dependencies
+    const lists = await ctx.db
+      .query("lists")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    for (const list of lists) {
+      // Delete follows of this list (by all users)
+      const listFollowsOfList = await ctx.db
+        .query("listFollows")
+        .withIndex("by_list", (q) => q.eq("listId", list.id))
+        .collect();
+      for (const follow of listFollowsOfList) {
+        await ctx.db.delete(follow._id);
+      }
+
+      // Delete eventToLists associations for this list
+      const eventToListsOfList = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_list", (q) => q.eq("listId", list.id))
+        .collect();
+      for (const etl of eventToListsOfList) {
+        await ctx.db.delete(etl._id);
+      }
+
+      // Delete the list itself
+      await ctx.db.delete(list._id);
+    }
+
+    // Delete event follows by user (follows of other users' events)
+    const eventFollows = await ctx.db
+      .query("eventFollows")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    for (const follow of eventFollows) {
+      await ctx.db.delete(follow._id);
+    }
+
+    // Delete list follows by user (follows of other users' lists)
+    const listFollows = await ctx.db
+      .query("listFollows")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    for (const follow of listFollows) {
+      await ctx.db.delete(follow._id);
+    }
+
+    // Delete push tokens
+    const pushTokens = await ctx.db
+      .query("pushTokens")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    for (const token of pushTokens) {
+      await ctx.db.delete(token._id);
+    }
+
+    // Delete event batches
+    const eventBatches = await ctx.db
+      .query("eventBatches")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    for (const batch of eventBatches) {
+      await ctx.db.delete(batch._id);
+    }
+
+    // Delete user feeds
+    const userFeeds = await ctx.db
+      .query("userFeeds")
+      .filter((q) => q.eq(q.field("feedId"), `user_${args.userId}`))
+      .collect();
+    for (const feed of userFeeds) {
+      await ctx.db.delete(feed._id);
+    }
 
     // Delete user follows (both as follower and following)
     const followsAsFollower = await ctx.db
       .query("userFollows")
-      .withIndex("by_follower", (q) => q.eq("followerId", args.id))
+      .withIndex("by_follower", (q) => q.eq("followerId", args.userId))
       .collect();
-
     const followsAsFollowing = await ctx.db
       .query("userFollows")
-      .withIndex("by_following", (q) => q.eq("followingId", args.id))
+      .withIndex("by_following", (q) => q.eq("followingId", args.userId))
       .collect();
-
-    // Delete all follow relationships
     for (const follow of [...followsAsFollower, ...followsAsFollowing]) {
       await ctx.db.delete(follow._id);
     }
 
-    // Delete the user record
+    // Finally, delete the user record
     await ctx.db.delete(user._id);
   },
 });
