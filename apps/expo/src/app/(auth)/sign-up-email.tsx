@@ -5,10 +5,13 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, router, Stack } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useConvexAuth } from "convex/react";
+import { useConvex, useConvexAuth } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { api } from "@soonlist/backend/convex/_generated/api";
+
+import { useGuestUser } from "~/hooks/useGuestUser";
 import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
 import { logError } from "../../utils/errorLogging";
@@ -27,6 +30,8 @@ export default function SignUpScreen() {
   const [generalError, setGeneralError] = React.useState("");
   const { isLoaded, signUp } = useSignUp();
   const { isAuthenticated } = useConvexAuth();
+  const convex = useConvex();
+  const { guestUserId, isLoading: isGuestUserLoading } = useGuestUser();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
   );
@@ -52,12 +57,34 @@ export default function SignUpScreen() {
   }
 
   const onSignUpPress = async (data: SignUpFormData) => {
-    if (!isLoaded) return;
+    if (!isLoaded || isGuestUserLoading || !guestUserId) return;
     setGeneralError("");
     setIsSubmitting(true);
 
     try {
-      await signUp.create(data);
+      let username: string;
+
+      try {
+        // Generate username synchronously using convex.query()
+        username = await convex.query(api.users.generateUsername, {
+          guestUserId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.emailAddress,
+        });
+      } catch (usernameError) {
+        logError("Error generating username", usernameError);
+        setGeneralError("Failed to generate username. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Username generated successfully
+
+      await signUp.create({
+        ...data,
+        username,
+      });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       router.push("/verify-email");
     } catch (err: unknown) {
@@ -81,11 +108,12 @@ export default function SignUpScreen() {
       } else {
         setGeneralError("An error occurred during sign up.");
       }
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
-  if (!isLoaded) {
+  if (!isLoaded || isGuestUserLoading) {
     return <Text>Loading...</Text>;
   }
 
@@ -234,8 +262,10 @@ export default function SignUpScreen() {
 
           <Pressable
             onPress={handleSubmit(onSignUpPress)}
-            className={`w-full rounded-full px-6 py-3 ${isSubmitting || !isValid ? "bg-gray-400" : "bg-interactive-1"}`}
-            disabled={isSubmitting || !isValid}
+            className={`w-full rounded-full px-6 py-3 ${isSubmitting || !isValid || isGuestUserLoading || !guestUserId ? "bg-gray-400" : "bg-interactive-1"}`}
+            disabled={
+              isSubmitting || !isValid || isGuestUserLoading || !guestUserId
+            }
           >
             <Text className="text-center text-lg font-bold text-white">
               {isSubmitting ? "Signing Up..." : "Sign Up"}

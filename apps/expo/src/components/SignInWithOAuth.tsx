@@ -9,12 +9,13 @@ import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
-import { useMutation } from "convex/react";
+import { useConvex, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { X } from "~/components/icons";
+import { useGuestUser } from "~/hooks/useGuestUser";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { logError } from "../utils/errorLogging";
 import { transferGuestData } from "../utils/guestDataTransfer";
@@ -34,6 +35,8 @@ interface SignInWithOAuthProps {
 const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
+  const convex = useConvex();
+  const { guestUserId, isLoading: isGuestUserLoading } = useGuestUser();
   const transferGuestOnboardingData = useMutation(
     api.guestOnboarding.transferGuestOnboardingData,
   );
@@ -54,7 +57,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
     setShowOtherOptions(!showOtherOptions);
   };
 
-  if (!signIn || !signUp) {
+  if (!signIn || !signUp || isGuestUserLoading || !guestUserId) {
     return null;
   }
 
@@ -79,7 +82,34 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
       ) => {
         if (!pendingSignUp) return;
         try {
-          const res = await pendingSignUp.update({});
+          // Get user info for username generation
+          const firstName = pendingSignUp.firstName;
+          const lastName = pendingSignUp.lastName;
+          const email = pendingSignUp.emailAddress;
+
+          if (!email) {
+            setOauthError("Email is required for account creation.");
+            return;
+          }
+
+          if (!guestUserId || isGuestUserLoading) {
+            setOauthError(
+              "Guest user initialization failed. Please try again.",
+            );
+            return;
+          }
+
+          // Generate username synchronously using convex.query()
+          const username = await convex.query(api.users.generateUsername, {
+            guestUserId,
+            firstName: firstName || null,
+            lastName: lastName || null,
+            email: email,
+          });
+
+          // Username generated successfully
+
+          const res = await pendingSignUp.update({ username });
 
           if (res.status === "complete") {
             await setActiveSignUp({ session: res.createdSessionId });

@@ -148,6 +148,34 @@ async function generateUniqueUsername(
 }
 
 /**
+ * Generate a unique username - requires guest authentication
+ */
+export const generateUsername = query({
+  args: {
+    guestUserId: v.string(),
+    firstName: v.optional(v.union(v.string(), v.null())),
+    lastName: v.optional(v.union(v.string(), v.null())),
+    email: v.optional(v.string()),
+  },
+  returns: v.string(),
+  handler: async (ctx, args) => {
+    // Validate guest user ID format
+    if (!args.guestUserId?.startsWith("guest_")) {
+      throw new ConvexError(
+        "Valid guest user ID required for username generation",
+      );
+    }
+
+    return await generateUniqueUsername(
+      ctx.db,
+      args.firstName,
+      args.lastName,
+      args.email,
+    );
+  },
+});
+
+/**
  * Get a user by their ID
  */
 export const getById = query({
@@ -512,24 +540,18 @@ export const syncFromClerk = internalMutation({
       .withIndex("by_custom_id", (q) => q.eq("id", args.id))
       .unique();
 
-    // Generate username if not provided or empty
-    let username = args.username;
+    // Username must be set during signup - fail if missing
+    const username = args.username;
     if (!username || username.trim() === "") {
-      console.error(
-        `[syncFromClerk] Received empty username for user ${args.id}. This is unexpected - Next.js webhook should have generated one. Generating fallback username.`,
-        {
+      throw new ConvexError({
+        message: "Username is required for user creation",
+        data: {
           userId: args.id,
           email: args.email,
           firstName: args.firstName,
           lastName: args.lastName,
         },
-      );
-      username = await generateUniqueUsername(
-        ctx.db,
-        args.firstName,
-        args.lastName,
-        args.email,
-      );
+      });
     }
 
     const userData = {
