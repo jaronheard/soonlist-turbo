@@ -2,8 +2,8 @@ import type { PaginationOptions } from "convex/server";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
-import { internal } from "./_generated/api";
 import type { QueryCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { internalAction, internalMutation, query } from "./_generated/server";
 
 // Helper function to get the current user ID from auth
@@ -197,16 +197,16 @@ export const updateHasEndedFlagsBatch = internalMutation({
   handler: async (ctx, { cursor, batchSize }) => {
     const currentTime = Date.now();
     let updated = 0;
-    
+
     // Get a single batch with the provided cursor
     const result = await ctx.db
       .query("userFeeds")
       .paginate({ numItems: batchSize, cursor });
-    
+
     // Process each entry in the batch
     for (const entry of result.page) {
       const shouldHaveEnded = entry.eventEndTime < currentTime;
-      
+
       if (entry.hasEnded !== shouldHaveEnded) {
         await ctx.db.patch(entry._id, {
           hasEnded: shouldHaveEnded,
@@ -214,7 +214,7 @@ export const updateHasEndedFlagsBatch = internalMutation({
         updated++;
       }
     }
-    
+
     return {
       processed: result.page.length,
       updated,
@@ -234,32 +234,32 @@ export const updateHasEndedFlagsAction = internalAction({
     let totalProcessed = 0;
     let totalUpdated = 0;
     let cursor: string | null = null;
-    const batchSize = 100;
-    
+    const batchSize = 2048;
+
     // Process batches until no more data
     while (true) {
       const result: {
         processed: number;
         updated: number;
         nextCursor?: string;
-      } = await ctx.runMutation(
-        internal.feeds.updateHasEndedFlagsBatch,
-        { cursor, batchSize }
-      );
-      
+      } = await ctx.runMutation(internal.feeds.updateHasEndedFlagsBatch, {
+        cursor,
+        batchSize,
+      });
+
       totalProcessed += result.processed;
       totalUpdated += result.updated;
-      
+
       if (!result.nextCursor) {
         break;
       }
       cursor = result.nextCursor;
     }
-    
+
     console.log(
-      `Updated hasEnded flags: ${totalUpdated} changed out of ${totalProcessed} processed`
+      `Updated hasEnded flags: ${totalUpdated} changed out of ${totalProcessed} processed`,
     );
-    
+
     return {
       totalProcessed,
       totalUpdated,
