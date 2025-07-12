@@ -782,11 +782,12 @@ export default function UserEventsList(props: UserEventsListProps) {
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
           const eventData = item.event;
-          const isCurrentUser = user?.id === eventData.user?.id;
-          // Use savedEventIds if provided, otherwise fall back to old logic
+          // Use savedEventIds if provided, otherwise check eventFollows
           const isSaved = savedEventIds
-            ? savedEventIds.has(eventData.id) && !isCurrentUser
-            : eventData.user?.id === user?.id;
+            ? savedEventIds.has(eventData.id)
+            : (eventData.eventFollows?.some(
+                (follow) => follow.userId === user?.id,
+              ) ?? false);
           // TODO: Add savedAt
 
           const similarEventsCount = item.similarEvents.length;
