@@ -315,17 +315,48 @@ export const deleteAccount = mutation({
       throw new ConvexError("User not found");
     }
 
-    // Delete events created by user
+    // Delete events created by user and their cascade dependencies
     const events = await ctx.db
       .query("events")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     for (const event of events) {
+      // Delete comments on this event (by all users)
+      const eventComments = await ctx.db
+        .query("comments")
+        .withIndex("by_event", (q) => q.eq("eventId", event.id))
+        .collect();
+
+      for (const comment of eventComments) {
+        await ctx.db.delete(comment._id);
+      }
+
+      // Delete follows of this event (by all users)
+      const eventFollowsOfEvent = await ctx.db
+        .query("eventFollows")
+        .withIndex("by_event", (q) => q.eq("eventId", event.id))
+        .collect();
+
+      for (const follow of eventFollowsOfEvent) {
+        await ctx.db.delete(follow._id);
+      }
+
+      // Delete eventToLists associations for this event
+      const eventToListsOfEvent = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event", (q) => q.eq("eventId", event.id))
+        .collect();
+
+      for (const etl of eventToListsOfEvent) {
+        await ctx.db.delete(etl._id);
+      }
+
+      // Delete the event itself
       await ctx.db.delete(event._id);
     }
 
-    // Delete comments by user
+    // Delete comments by user (on other users' events)
     const comments = await ctx.db
       .query("comments")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -335,17 +366,38 @@ export const deleteAccount = mutation({
       await ctx.db.delete(comment._id);
     }
 
-    // Delete lists created by user
+    // Delete lists created by user and their cascade dependencies
     const lists = await ctx.db
       .query("lists")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     for (const list of lists) {
+      // Delete follows of this list (by all users)
+      const listFollowsOfList = await ctx.db
+        .query("listFollows")
+        .withIndex("by_list", (q) => q.eq("listId", list.id))
+        .collect();
+
+      for (const follow of listFollowsOfList) {
+        await ctx.db.delete(follow._id);
+      }
+
+      // Delete eventToLists associations for this list
+      const eventToListsOfList = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_list", (q) => q.eq("listId", list.id))
+        .collect();
+
+      for (const etl of eventToListsOfList) {
+        await ctx.db.delete(etl._id);
+      }
+
+      // Delete the list itself
       await ctx.db.delete(list._id);
     }
 
-    // Delete event follows
+    // Delete event follows by user (follows of other users' events)
     const eventFollows = await ctx.db
       .query("eventFollows")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -355,7 +407,7 @@ export const deleteAccount = mutation({
       await ctx.db.delete(follow._id);
     }
 
-    // Delete list follows
+    // Delete list follows by user (follows of other users' lists)
     const listFollows = await ctx.db
       .query("listFollows")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -602,17 +654,48 @@ export const deleteUser = internalMutation({
 
     const userId = args.id;
 
-    // Delete events created by user
+    // Delete events created by user and their cascade dependencies
     const events = await ctx.db
       .query("events")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
     for (const event of events) {
+      // Delete comments on this event (by all users)
+      const eventComments = await ctx.db
+        .query("comments")
+        .withIndex("by_event", (q) => q.eq("eventId", event.id))
+        .collect();
+
+      for (const comment of eventComments) {
+        await ctx.db.delete(comment._id);
+      }
+
+      // Delete follows of this event (by all users)
+      const eventFollowsOfEvent = await ctx.db
+        .query("eventFollows")
+        .withIndex("by_event", (q) => q.eq("eventId", event.id))
+        .collect();
+
+      for (const follow of eventFollowsOfEvent) {
+        await ctx.db.delete(follow._id);
+      }
+
+      // Delete eventToLists associations for this event
+      const eventToListsOfEvent = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event", (q) => q.eq("eventId", event.id))
+        .collect();
+
+      for (const etl of eventToListsOfEvent) {
+        await ctx.db.delete(etl._id);
+      }
+
+      // Delete the event itself
       await ctx.db.delete(event._id);
     }
 
-    // Delete comments by user
+    // Delete comments by user (on other users' events)
     const comments = await ctx.db
       .query("comments")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -622,17 +705,38 @@ export const deleteUser = internalMutation({
       await ctx.db.delete(comment._id);
     }
 
-    // Delete lists created by user
+    // Delete lists created by user and their cascade dependencies
     const lists = await ctx.db
       .query("lists")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
     for (const list of lists) {
+      // Delete follows of this list (by all users)
+      const listFollowsOfList = await ctx.db
+        .query("listFollows")
+        .withIndex("by_list", (q) => q.eq("listId", list.id))
+        .collect();
+
+      for (const follow of listFollowsOfList) {
+        await ctx.db.delete(follow._id);
+      }
+
+      // Delete eventToLists associations for this list
+      const eventToListsOfList = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_list", (q) => q.eq("listId", list.id))
+        .collect();
+
+      for (const etl of eventToListsOfList) {
+        await ctx.db.delete(etl._id);
+      }
+
+      // Delete the list itself
       await ctx.db.delete(list._id);
     }
 
-    // Delete event follows
+    // Delete event follows by user (follows of other users' events)
     const eventFollows = await ctx.db
       .query("eventFollows")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -642,7 +746,7 @@ export const deleteUser = internalMutation({
       await ctx.db.delete(follow._id);
     }
 
-    // Delete list follows
+    // Delete list follows by user (follows of other users' lists)
     const listFollows = await ctx.db
       .query("listFollows")
       .withIndex("by_user", (q) => q.eq("userId", userId))
