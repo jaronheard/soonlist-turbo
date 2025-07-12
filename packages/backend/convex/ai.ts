@@ -525,7 +525,7 @@ export const addImagesToBatch = mutation({
     }
 
     // Schedule processing for these new images
-    const jobId: string = await ctx.scheduler.runAfter(
+    const _jobId: string = await ctx.scheduler.runAfter(
       0,
       internal.ai.processAdditionalBatchImages,
       {
@@ -533,10 +533,6 @@ export const addImagesToBatch = mutation({
         images: args.images,
         userId: batch.userId,
       },
-    );
-
-    console.log(
-      `Added ${args.images.length} images to batch ${args.batchId}, job: ${jobId}`,
     );
 
     return {
@@ -637,9 +633,8 @@ export const processSingleImageWithNotification = internalAction({
       });
 
     if (result.success && result.eventId && args.sendNotification) {
-      console.log(`Sending notification for event ${result.eventId}`);
       try {
-        const notificationResult = await ctx.runAction(
+        const _notificationResult = await ctx.runAction(
           internal.notifications.push,
           {
             eventId: result.eventId,
@@ -647,14 +642,9 @@ export const processSingleImageWithNotification = internalAction({
             userName: args.username,
           },
         );
-        console.log(`Notification result:`, notificationResult);
       } catch (error) {
         console.error(`Failed to send notification:`, error);
       }
-    } else {
-      console.log(
-        `Skipping notification - success: ${result.success}, eventId: ${result.eventId}, sendNotification: ${args.sendNotification}`,
-      );
     }
 
     return result;
@@ -676,10 +666,6 @@ export const processAdditionalBatchImages = internalAction({
     userId: v.string(),
   },
   handler: async (ctx, args) => {
-    console.log(
-      `Processing ${args.images.length} additional images for batch ${args.batchId}`,
-    );
-
     // Get the batch info to get the other parameters
     const batch = await ctx.runQuery(internal.eventBatches.getBatchInfo, {
       batchId: args.batchId,
@@ -705,11 +691,7 @@ export const processAdditionalBatchImages = internalAction({
       chunks.push(args.images.slice(i, i + CHUNK_SIZE));
     }
 
-    for (const [chunkIndex, chunk] of chunks.entries()) {
-      console.log(
-        `Processing chunk ${chunkIndex + 1}/${chunks.length} for additional batch images`,
-      );
-
+    for (const [_chunkIndex, chunk] of chunks.entries()) {
       const chunkResults = await Promise.allSettled(
         chunk.map(async (image) => {
           const result: { success: boolean; eventId?: string; error?: string } =
@@ -786,10 +768,6 @@ export const processBatchImages = internalAction({
     sendNotification: v.boolean(),
   },
   handler: async (ctx, args) => {
-    console.log(
-      `Processing batch ${args.batchId} with ${args.images.length} images`,
-    );
-
     // Process in chunks to avoid overwhelming the system
     const CHUNK_SIZE = 5;
     const chunks: (typeof args.images)[] = [];
@@ -807,8 +785,6 @@ export const processBatchImages = internalAction({
 
     // Process chunks sequentially, items within chunks in parallel
     for (const [chunkIndex, chunk] of chunks.entries()) {
-      console.log(`Processing chunk ${chunkIndex + 1}/${chunks.length}`);
-
       const chunkResults = await Promise.allSettled(
         chunk.map(async (image) => {
           const result: { success: boolean; eventId?: string; error?: string } =
@@ -871,10 +847,6 @@ export const processBatchImages = internalAction({
 
     // Send batch notification if enabled
     if (args.sendNotification) {
-      console.log(
-        `Sending batch notification for batch ${args.batchId} - ${successCount} success, ${failureCount} failures`,
-      );
-
       // Collect failed image details for better error reporting
       const failedImages = allResults
         .filter((r) => !r.success)
@@ -896,14 +868,9 @@ export const processBatchImages = internalAction({
             failedImages,
           },
         );
-        console.log(`Batch notification sent successfully`);
       } catch (error) {
         console.error(`Failed to send batch notification:`, error);
       }
-    } else {
-      console.log(
-        `Skipping batch notification - sendNotification: ${args.sendNotification}`,
-      );
     }
 
     return allResults;

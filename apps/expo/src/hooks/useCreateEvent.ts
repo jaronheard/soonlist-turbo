@@ -30,7 +30,6 @@ interface CreateEventOptions {
 
 // Optimize image off the main JS thread and return a base64 string
 async function optimizeImage(uri: string): Promise<string> {
-  const startTime = performance.now();
   try {
     // Resize & compress on the native thread and get base64 in a single step
     const { base64 } = await ImageManipulator.manipulateAsync(
@@ -47,17 +46,8 @@ async function optimizeImage(uri: string): Promise<string> {
       throw new Error("Failed to encode image to base64");
     }
 
-    const endTime = performance.now();
-    const duration = endTime - startTime;
-    console.log(
-      `[Image Optimization] Processed image in ${duration.toFixed(2)}ms`,
-    );
-
     return base64;
   } catch (error) {
-    const endTime = performance.now();
-    const duration = endTime - startTime;
-    console.log(`[Image Optimization] Failed after ${duration.toFixed(2)}ms`);
     logError("Error manipulating image", error);
     throw new Error("Failed to optimize image for upload");
   }
@@ -221,14 +211,7 @@ export function useCreateEvent() {
         const batchId = generateBatchId();
         const { userId, username, sendNotification = true } = tasks[0]!;
 
-        // Start timing
-        const startTime = performance.now();
-        console.log(
-          `[Batch ${batchId}] Starting streaming batch for ${tasks.length} images`,
-        );
-
         // Step 1: Create the batch immediately (with 0 images)
-        console.log(`[Batch ${batchId}] Creating batch record`);
         await createEventBatch({
           batchId,
           images: [], // Start with empty array
@@ -241,13 +224,7 @@ export function useCreateEvent() {
           sendNotification,
         });
 
-        const batchCreateTime = performance.now();
-        console.log(
-          `[Batch ${batchId}] Batch created in ${(batchCreateTime - startTime).toFixed(2)}ms`,
-        );
-
         // Step 2: Process and stream images as they're ready
-        let processedCount = 0;
         const imagePromises = tasks.map(async (task, index) => {
           if (!task.imageUri) {
             throw new Error("No image URI provided");
@@ -275,9 +252,7 @@ export function useCreateEvent() {
           }
 
           // Optimize image and get base64
-          const imageStartTime = performance.now();
           const base64 = await optimizeImage(fileUri);
-          const imageOptTime = performance.now();
 
           // Immediately send this image to the backend
           const image = {
@@ -290,25 +265,11 @@ export function useCreateEvent() {
             images: [image],
           });
 
-          processedCount++;
-          const imageTotalTime = performance.now() - imageStartTime;
-          console.log(
-            `[Batch ${batchId}] Image ${processedCount}/${tasks.length} processed and sent in ${imageTotalTime.toFixed(2)}ms (opt: ${(imageOptTime - imageStartTime).toFixed(2)}ms)`,
-          );
-
           return image;
         });
 
         // Wait for all images to be processed and sent
         await Promise.all(imagePromises);
-
-        const totalTime = performance.now() - startTime;
-        console.log(
-          `[Batch ${batchId}] All images streamed in ${totalTime.toFixed(2)}ms (${(totalTime / 1000).toFixed(2)}s)`,
-        );
-        console.log(
-          `[Batch ${batchId}] Average time per image: ${(totalTime / tasks.length).toFixed(2)}ms`,
-        );
 
         // The batch is now processing asynchronously
         // Provide immediate feedback to user
