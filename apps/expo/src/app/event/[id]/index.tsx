@@ -18,7 +18,14 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { EventMenu } from "~/components/EventMenu";
-import { EyeOff, Globe2, MapPin, ShareIcon, User } from "~/components/icons";
+import {
+  CalendarPlus,
+  EyeOff,
+  Globe2,
+  MapPin,
+  ShareIcon,
+  User,
+} from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
@@ -41,7 +48,7 @@ export default function Page() {
   const isSaved =
     event && currentUser ? event.userId !== currentUser.id : false;
 
-  const { handleDelete, handleShare } = useEventActions({
+  const { handleDelete, handleShare, handleAddToCal } = useEventActions({
     event,
     isSaved,
   });
@@ -253,12 +260,9 @@ export default function Page() {
         </View>
       </ScrollView>
 
-      {/* Floating Share Button */}
-      <TouchableOpacity
-        className="absolute bottom-8 self-center"
-        onPress={handleShare}
-        accessibilityLabel="Share with friends"
-        accessibilityRole="button"
+      {/* Floating Action Buttons */}
+      <View
+        className="absolute bottom-8 flex-row items-center justify-center gap-4 self-center"
         style={{
           shadowColor: "#5A32FB",
           shadowOffset: { width: 0, height: 3 },
@@ -267,11 +271,28 @@ export default function Page() {
           elevation: 8,
         }}
       >
-        <View className="flex-row items-center gap-4 rounded-full bg-interactive-2 px-8 py-5">
-          <ShareIcon size={28} color="#5A32FB" />
-          <Text className="text-xl font-bold text-interactive-1">Share</Text>
-        </View>
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleAddToCal}
+          accessibilityLabel="Add to Calendar"
+          accessibilityRole="button"
+        >
+          <View className="flex-row items-center gap-4 rounded-full bg-interactive-2 px-8 py-5">
+            <CalendarPlus size={28} color="#5A32FB" />
+            <Text className="text-xl font-bold text-interactive-1">Add</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleShare}
+          accessibilityLabel="Share"
+          accessibilityRole="button"
+        >
+          <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
+            <ShareIcon size={28} color="#FFFFFF" />
+            <Text className="text-xl font-bold text-white">Share</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     </>
   );
 }
