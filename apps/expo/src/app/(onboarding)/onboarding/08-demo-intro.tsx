@@ -13,6 +13,7 @@ import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 function VideoPlayer({ videoUrl }: { videoUrl: string }) {
   const player = useVideoPlayer(videoUrl, (player) => {
     player.loop = true;
+    player.muted = true;
     player.play();
   });
 
