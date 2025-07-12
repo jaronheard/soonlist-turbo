@@ -9,7 +9,7 @@ import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
-import { useMutation, useQuery } from "convex/react";
+import { useConvex, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -34,6 +34,7 @@ interface SignInWithOAuthProps {
 const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
+  const convex = useConvex();
   const transferGuestOnboardingData = useMutation(
     api.guestOnboarding.transferGuestOnboardingData,
   );
@@ -49,17 +50,6 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
 
   const [showOtherOptions, setShowOtherOptions] = useState(false);
   const [oauthError, setOauthError] = useState<string | null>(null);
-  const [usernameParams, setUsernameParams] = useState<{
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
-  } | null>(null);
-
-  // Generate username when params are set
-  const generatedUsername = useQuery(
-    api.users.generateUsername,
-    usernameParams || "skip",
-  );
 
   const toggleOtherOptions = () => {
     setShowOtherOptions(!showOtherOptions);
@@ -100,30 +90,14 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
             return;
           }
 
-          // Set params to trigger username generation
-          setUsernameParams({
+          // Generate username synchronously using convex.query()
+          const username = await convex.query(api.users.generateUsername, {
             firstName: firstName || null,
             lastName: lastName || null,
             email: email,
           });
 
-          // Wait for username generation
-          let username: string | undefined;
-          const maxAttempts = 20; // 2 seconds max
-          for (let i = 0; i < maxAttempts; i++) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-
-            // Check if we have a username
-            if (generatedUsername !== undefined) {
-              username = generatedUsername;
-              break;
-            }
-          }
-
-          if (!username) {
-            setOauthError("Failed to generate username. Please try again.");
-            return;
-          }
+          console.log("Generated username:", username);
 
           const res = await pendingSignUp.update({ username });
 
@@ -167,8 +141,6 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
             specificErrorMessage ||
               "An unexpected error occurred. Please try again.",
           );
-        } finally {
-          setUsernameParams(null);
         }
       };
 

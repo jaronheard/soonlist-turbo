@@ -5,7 +5,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, router, Stack } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useConvex, useConvexAuth } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -27,13 +27,9 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 export default function SignUpScreen() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [generalError, setGeneralError] = React.useState("");
-  const [usernameParams, setUsernameParams] = React.useState<{
-    firstName: string;
-    lastName: string;
-    email: string;
-  } | null>(null);
   const { isLoaded, signUp } = useSignUp();
   const { isAuthenticated } = useConvexAuth();
+  const convex = useConvex();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
   );
@@ -52,12 +48,6 @@ export default function SignUpScreen() {
     mode: "onChange",
   });
 
-  // Generate username when params are set
-  const generatedUsername = useQuery(
-    api.users.generateUsername,
-    usernameParams || "skip",
-  );
-
   if (isAuthenticated && hasCompletedOnboarding) {
     return <Redirect href="/feed" />;
   } else if (isAuthenticated && !hasCompletedOnboarding) {
@@ -70,29 +60,14 @@ export default function SignUpScreen() {
     setIsSubmitting(true);
 
     try {
-      // Set params to trigger username generation
-      setUsernameParams({
+      // Generate username synchronously using convex.query()
+      const username = await convex.query(api.users.generateUsername, {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.emailAddress,
       });
 
-      // Wait for username generation
-      let username: string | undefined;
-      const maxAttempts = 20; // 2 seconds max
-      for (let i = 0; i < maxAttempts; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // Check if we have a username
-        if (generatedUsername !== undefined) {
-          username = generatedUsername;
-          break;
-        }
-      }
-
-      if (!username) {
-        throw new Error("Failed to generate username. Please try again.");
-      }
+      console.log("Generated username:", username);
 
       await signUp.create({
         ...data,
@@ -123,7 +98,6 @@ export default function SignUpScreen() {
       }
     } finally {
       setIsSubmitting(false);
-      setUsernameParams(null);
     }
   };
 
