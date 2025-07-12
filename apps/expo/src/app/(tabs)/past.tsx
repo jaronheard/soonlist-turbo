@@ -62,7 +62,7 @@ function PastEventsContent() {
             isFetchingNextPage={status === "LoadingMore"}
             hasUnlimited={hasUnlimited}
           />
-          <AddEventButton showChevron={false} />
+          <AddEventButton />
         </View>
       )}
     </View>
