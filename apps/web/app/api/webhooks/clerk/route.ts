@@ -1,6 +1,6 @@
 import type { WebhookEvent } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { Webhook } from "svix";
 
 import { db } from "@soonlist/db";
@@ -17,6 +17,145 @@ import {
 import { env } from "~/env";
 
 export const dynamic = "force-dynamic";
+
+// Maximum username length in the database
+const MAX_USERNAME_LENGTH = 64;
+
+// Helper function to generate display name
+function generateDisplayName(
+  firstName?: string | null,
+  lastName?: string | null,
+): string {
+  if (!firstName && !lastName) return "anonymous";
+
+  const first = firstName || "";
+  const last = lastName || "";
+
+  if (first && last) return `${first} ${last}`;
+  return first || last;
+}
+
+// Helper function to generate unique username
+async function generateUniqueUsername(
+  firstName?: string | null,
+  lastName?: string | null,
+  email?: string,
+): Promise<string> {
+  // Clean and format names for username (slug-like)
+  const slugify = (text: string | null | undefined) => {
+    if (!text) return "";
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with hyphens
+      .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
+      .replace(/-+/g, "-"); // Replace multiple hyphens with single
+  };
+
+  const cleanFirst = slugify(firstName);
+  const cleanLast = slugify(lastName);
+  const emailPrefix = email ? slugify(email.split("@")[0]) : "";
+
+  // Create a list of username candidates in order of preference
+  const candidates: string[] = [];
+
+  // 1. Try just firstname (most common for social platforms)
+  if (cleanFirst) {
+    candidates.push(cleanFirst);
+  }
+
+  // 2. Try firstname + lastname variations
+  if (cleanFirst && cleanLast) {
+    candidates.push(`${cleanFirst}${cleanLast}`); // johnsmith
+    candidates.push(`${cleanFirst}-${cleanLast}`); // john-smith
+    candidates.push(`${cleanFirst}.${cleanLast}`); // john.smith
+    candidates.push(`${cleanFirst}_${cleanLast}`); // john_smith
+  }
+
+  // 3. Try just lastname
+  if (cleanLast) {
+    candidates.push(cleanLast);
+  }
+
+  // 4. Try email prefix
+  if (emailPrefix && emailPrefix !== cleanFirst && emailPrefix !== cleanLast) {
+    candidates.push(emailPrefix);
+  }
+
+  // 5. Try combinations with first initial
+  if (cleanFirst && cleanLast) {
+    candidates.push(`${cleanFirst[0]}${cleanLast}`); // jsmith
+    candidates.push(`${cleanFirst[0]}-${cleanLast}`); // j-smith
+  }
+
+  // Filter candidates by length and ensure minimum length
+  const validCandidates = candidates
+    .filter(
+      (username) =>
+        username.length >= 3 && username.length <= MAX_USERNAME_LENGTH,
+    )
+    .slice(0, 10); // Limit to first 10 candidates
+
+  // Batch check all candidates at once
+  if (validCandidates.length > 0) {
+    const existingUsers = await db.query.users.findMany({
+      where: inArray(users.username, validCandidates),
+      columns: { username: true },
+    });
+
+    const takenUsernames = new Set(existingUsers.map((u) => u.username));
+
+    // Return first available candidate
+    for (const candidate of validCandidates) {
+      if (!takenUsernames.has(candidate)) {
+        return candidate;
+      }
+    }
+  }
+
+  // If all candidates are taken, add numbers to the best candidate
+  const baseUsername = validCandidates[0] || "user";
+
+  // Ensure base username with numbers fits within limit
+  const maxNumberLength = MAX_USERNAME_LENGTH - baseUsername.length;
+  const maxNumber = Math.pow(10, maxNumberLength) - 1;
+
+  // Batch check numbered usernames (1-99)
+  const numberedCandidates: string[] = [];
+  for (let i = 1; i < 100 && i <= maxNumber; i++) {
+    numberedCandidates.push(`${baseUsername}${i}`);
+  }
+
+  if (numberedCandidates.length > 0) {
+    const existingNumbered = await db.query.users.findMany({
+      where: inArray(users.username, numberedCandidates),
+      columns: { username: true },
+    });
+
+    const takenNumbered = new Set(existingNumbered.map((u) => u.username));
+
+    for (const candidate of numberedCandidates) {
+      if (!takenNumbered.has(candidate)) {
+        return candidate;
+      }
+    }
+  }
+
+  // Ultimate fallback: use timestamp (ensure it fits)
+  const timestamp = Date.now().toString();
+  const fallbackUsername = `${baseUsername}${timestamp}`;
+
+  if (fallbackUsername.length <= MAX_USERNAME_LENGTH) {
+    return fallbackUsername;
+  }
+
+  // If even timestamp is too long, truncate the base and add timestamp
+  const truncatedBase = baseUsername.substring(
+    0,
+    MAX_USERNAME_LENGTH - timestamp.length,
+  );
+  return `${truncatedBase}${timestamp}`;
+}
 
 async function forwardToConvex(
   body: string,
@@ -102,35 +241,47 @@ export async function POST(req: Request) {
         throw new Error("No user ID found in webhook data");
       }
 
-      // Helper function to generate display name
-      const generateDisplayName = (
-        firstName?: string | null,
-        lastName?: string | null,
-      ) => {
-        if (!firstName && !lastName) return "anonymous";
-
-        const first = firstName || "";
-        const last = lastName || "";
-
-        if (first && last) return `${first} ${last}`;
-        return first || last;
-      };
-
       if (evt.type === "user.updated") {
         const userId = evt.data.external_id || evt.data.id || "";
-        await db
-          .update(users)
-          .set({
-            username: evt.data.username || "",
-            displayName: generateDisplayName(
-              evt.data.first_name,
-              evt.data.last_name,
-            ),
-            userImage: evt.data.image_url,
-            email: evt.data.email_addresses[0]?.email_address || "",
-            publicMetadata: evt.data.public_metadata,
-          })
-          .where(eq(users.id, userId));
+
+        // Check if user already exists
+        const existingUser = await db.query.users.findFirst({
+          where: eq(users.id, userId),
+        });
+
+        // Prepare update data
+        const updateData: {
+          displayName: string;
+          userImage: string;
+          email: string;
+          publicMetadata?: Record<string, unknown>;
+          username?: string;
+        } = {
+          displayName: generateDisplayName(
+            evt.data.first_name,
+            evt.data.last_name,
+          ),
+          userImage: evt.data.image_url,
+          email: evt.data.email_addresses[0]?.email_address || "",
+          publicMetadata: evt.data.public_metadata,
+        };
+
+        // Only update username if provided by Clerk or if user doesn't have one yet
+        if (evt.data.username && evt.data.username.trim() !== "") {
+          updateData.username = evt.data.username;
+        } else if (
+          !existingUser?.username ||
+          existingUser.username.trim() === ""
+        ) {
+          // Generate username if user doesn't have one
+          updateData.username = await generateUniqueUsername(
+            evt.data.first_name,
+            evt.data.last_name,
+            evt.data.email_addresses[0]?.email_address,
+          );
+        }
+
+        await db.update(users).set(updateData).where(eq(users.id, userId));
 
         // Forward to Convex after successful MySQL update
         await forwardToConvex(body, {
@@ -143,9 +294,20 @@ export async function POST(req: Request) {
       // 👉 If the type is "user.created" create a record in the users table
       if (evt.type === "user.created") {
         const userId = evt.data.external_id || evt.data.id || "";
+
+        // Generate username if not provided by Clerk
+        let username = evt.data.username;
+        if (!username || username.trim() === "") {
+          username = await generateUniqueUsername(
+            evt.data.first_name,
+            evt.data.last_name,
+            evt.data.email_addresses[0]?.email_address,
+          );
+        }
+
         await db.insert(users).values({
           id: userId,
-          username: evt.data.username || "",
+          username,
           displayName: generateDisplayName(
             evt.data.first_name,
             evt.data.last_name,

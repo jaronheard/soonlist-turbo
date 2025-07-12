@@ -4,6 +4,8 @@ import type { DatabaseReader } from "./_generated/server";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
+const MAX_USERNAME_LENGTH = 64;
+
 /**
  * Generate a unique username based on user's name or email
  * Uses slug-like generation: tries simplest form first, then adds numbers
@@ -61,57 +63,87 @@ async function generateUniqueUsername(
     candidates.push(`${cleanFirst[0]}-${cleanLast}`); // j-smith
   }
 
-  // Ensure minimum length for all candidates
+  // Filter candidates by length and ensure minimum length
   const validCandidates = candidates
-    .filter((username) => username.length >= 3)
+    .filter(
+      (username) =>
+        username.length >= 3 && username.length <= MAX_USERNAME_LENGTH,
+    )
     .slice(0, 10); // Limit to first 10 candidates
 
-  // Try each candidate in order
-  for (const candidate of validCandidates) {
-    const existing = await db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", candidate))
-      .unique();
+  // Batch check all candidates at once
+  if (validCandidates.length > 0) {
+    const existingUsers = await Promise.all(
+      validCandidates.map((username) =>
+        db
+          .query("users")
+          .withIndex("by_username", (q) => q.eq("username", username))
+          .unique(),
+      ),
+    );
 
-    if (!existing) {
-      return candidate;
+    const takenUsernames = new Set(
+      existingUsers.filter(Boolean).map((u) => u!.username),
+    );
+
+    // Return first available candidate
+    for (const candidate of validCandidates) {
+      if (!takenUsernames.has(candidate)) {
+        return candidate;
+      }
     }
   }
 
   // If all candidates are taken, add numbers to the best candidate
   const baseUsername = validCandidates[0] || "user";
 
-  // First try sequential numbers 1-99
-  for (let i = 1; i < 100; i++) {
-    const candidateUsername = `${baseUsername}${i}`;
+  // Ensure base username with numbers fits within limit
+  const maxNumberLength = MAX_USERNAME_LENGTH - baseUsername.length - 1; // -1 for the number
+  if (maxNumberLength > 0) {
+    const maxNumber = Math.pow(10, maxNumberLength) - 1;
 
-    const existing = await db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", candidateUsername))
-      .unique();
+    // Batch check numbered usernames (1-99)
+    const numberedCandidates: string[] = [];
+    for (let i = 1; i < 100 && i <= maxNumber; i++) {
+      numberedCandidates.push(`${baseUsername}${i}`);
+    }
 
-    if (!existing) {
-      return candidateUsername;
+    if (numberedCandidates.length > 0) {
+      const existingNumbered = await Promise.all(
+        numberedCandidates.map((username) =>
+          db
+            .query("users")
+            .withIndex("by_username", (q) => q.eq("username", username))
+            .unique(),
+        ),
+      );
+
+      const takenNumbered = new Set(
+        existingNumbered.filter(Boolean).map((u) => u!.username),
+      );
+
+      for (const candidate of numberedCandidates) {
+        if (!takenNumbered.has(candidate)) {
+          return candidate;
+        }
+      }
     }
   }
 
-  // Then try random 3-digit numbers
-  for (let attempts = 0; attempts < 50; attempts++) {
-    const randomNum = Math.floor(Math.random() * 900) + 100; // 100-999
-    const candidateUsername = `${baseUsername}${randomNum}`;
+  // Ultimate fallback: use timestamp (ensure it fits)
+  const timestamp = Date.now().toString();
+  const fallbackUsername = `${baseUsername}${timestamp}`;
 
-    const existing = await db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", candidateUsername))
-      .unique();
-
-    if (!existing) {
-      return candidateUsername;
-    }
+  if (fallbackUsername.length <= MAX_USERNAME_LENGTH) {
+    return fallbackUsername;
   }
 
-  // Ultimate fallback: use timestamp
-  return `${baseUsername}${Date.now()}`;
+  // If even timestamp is too long, truncate the base and add timestamp
+  const truncatedBase = baseUsername.substring(
+    0,
+    MAX_USERNAME_LENGTH - timestamp.length,
+  );
+  return `${truncatedBase}${timestamp}`;
 }
 
 /**
@@ -461,6 +493,15 @@ export const syncFromClerk = internalMutation({
     // Generate username if not provided or empty
     let username = args.username;
     if (!username || username.trim() === "") {
+      console.error(
+        `[syncFromClerk] Received empty username for user ${args.id}. This is unexpected - Next.js webhook should have generated one. Generating fallback username.`,
+        {
+          userId: args.id,
+          email: args.email,
+          firstName: args.firstName,
+          lastName: args.lastName,
+        },
+      );
       username = await generateUniqueUsername(
         ctx.db,
         args.firstName,
