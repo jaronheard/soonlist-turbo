@@ -5,9 +5,11 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, router, Stack } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
@@ -25,6 +27,11 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 export default function SignUpScreen() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [generalError, setGeneralError] = React.useState("");
+  const [usernameParams, setUsernameParams] = React.useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null>(null);
   const { isLoaded, signUp } = useSignUp();
   const { isAuthenticated } = useConvexAuth();
   const hasCompletedOnboarding = useAppStore(
@@ -45,6 +52,12 @@ export default function SignUpScreen() {
     mode: "onChange",
   });
 
+  // Generate username when params are set
+  const generatedUsername = useQuery(
+    api.users.generateUsername,
+    usernameParams || "skip",
+  );
+
   if (isAuthenticated && hasCompletedOnboarding) {
     return <Redirect href="/feed" />;
   } else if (isAuthenticated && !hasCompletedOnboarding) {
@@ -57,7 +70,34 @@ export default function SignUpScreen() {
     setIsSubmitting(true);
 
     try {
-      await signUp.create(data);
+      // Set params to trigger username generation
+      setUsernameParams({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.emailAddress,
+      });
+
+      // Wait for username generation
+      let username: string | undefined;
+      const maxAttempts = 20; // 2 seconds max
+      for (let i = 0; i < maxAttempts; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        // Check if we have a username
+        if (generatedUsername !== undefined) {
+          username = generatedUsername;
+          break;
+        }
+      }
+
+      if (!username) {
+        throw new Error("Failed to generate username. Please try again.");
+      }
+
+      await signUp.create({
+        ...data,
+        username,
+      });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       router.push("/verify-email");
     } catch (err: unknown) {
@@ -81,8 +121,10 @@ export default function SignUpScreen() {
       } else {
         setGeneralError("An error occurred during sign up.");
       }
+    } finally {
+      setIsSubmitting(false);
+      setUsernameParams(null);
     }
-    setIsSubmitting(false);
   };
 
   if (!isLoaded) {
