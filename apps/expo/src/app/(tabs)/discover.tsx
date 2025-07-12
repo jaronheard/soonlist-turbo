@@ -13,7 +13,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import SaveButton from "~/components/SaveButton";
+import SaveShareButton from "~/components/SaveShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -95,14 +95,17 @@ function DiscoverContent() {
     }
   }
 
-  function SaveButtonWrapper({ event }: { event: { id: string } }) {
-    // Only show save button for authenticated users
+  function SaveShareButtonWrapper({ event }: { event: { id: string } }) {
+    // Only show save/share button for authenticated users
     if (!user) {
       return null;
     }
 
     return (
-      <SaveButton eventId={event.id} isSaved={savedEventIds.has(event.id)} />
+      <SaveShareButton
+        eventId={event.id}
+        isSaved={savedEventIds.has(event.id)}
+      />
     );
   }
 
@@ -116,7 +119,7 @@ function DiscoverContent() {
             events={enrichedEvents}
             onEndReached={handleLoadMore}
             isFetchingNextPage={status === "LoadingMore"}
-            ActionButton={SaveButtonWrapper}
+            ActionButton={SaveShareButtonWrapper}
             showCreator="always"
             hasUnlimited={hasUnlimited}
             hideDiscoverableButton={true}

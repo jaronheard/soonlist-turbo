@@ -330,18 +330,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
             <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
               {ActionButton && <ActionButton event={event} />}
 
-              {isDiscoverFeed ? (
-                <TouchableOpacity
-                  className="rounded-full p-2.5"
-                  style={{ backgroundColor: "white" }}
-                  onPress={handleShare}
-                  accessibilityLabel="Share"
-                  accessibilityRole="button"
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-                </TouchableOpacity>
-              ) : (
+              {!isDiscoverFeed && (
                 <TouchableOpacity
                   className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
                   style={{ borderRadius: 16 }}
@@ -696,6 +685,7 @@ interface UserEventsListProps {
   stats?: EventStatsData;
   hideDiscoverableButton?: boolean;
   isDiscoverFeed?: boolean;
+  savedEventIds?: Set<string>;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -711,6 +701,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     stats,
     hideDiscoverableButton = false,
     isDiscoverFeed = false,
+    savedEventIds,
   } = props;
   const { user } = useUser();
 
@@ -791,7 +782,11 @@ export default function UserEventsList(props: UserEventsListProps) {
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
           const eventData = item.event;
-          const isSaved = eventData.user?.id === user?.id;
+          const isCurrentUser = user?.id === eventData.user?.id;
+          // Use savedEventIds if provided, otherwise fall back to old logic
+          const isSaved = savedEventIds
+            ? savedEventIds.has(eventData.id) && !isCurrentUser
+            : eventData.user?.id === user?.id;
           // TODO: Add savedAt
 
           const similarEventsCount = item.similarEvents.length;

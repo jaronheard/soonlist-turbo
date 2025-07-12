@@ -1,7 +1,13 @@
 import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
-import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+import { useUser } from "@clerk/clerk-expo";
+import {
+  Authenticated,
+  AuthLoading,
+  Unauthenticated,
+  useQuery,
+} from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -13,6 +19,7 @@ import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useStableTimestamp } from "~/store";
 
 function MyFeedContent() {
+  const { user } = useUser();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
@@ -36,11 +43,26 @@ function MyFeedContent() {
     initialNumItems: 50,
   });
 
+  // Memoize saved events query args to prevent unnecessary re-renders
+  const savedEventsQueryArgs = useMemo(() => {
+    if (!user?.username) return "skip";
+    return { userName: user.username };
+  }, [user?.username]);
+
+  const savedEventIdsQuery = useQuery(
+    api.events.getSavedIdsForUser,
+    savedEventsQueryArgs,
+  );
+
   const handleLoadMore = useCallback(() => {
     if (status === "CanLoadMore") {
       loadMore(25);
     }
   }, [status, loadMore]);
+
+  const savedEventIds = new Set(
+    savedEventIdsQuery?.map((event) => event.id) ?? [],
+  );
 
   // Add missing properties that UserEventsList expects and filter out ended events
   const enrichedEvents = useMemo(() => {
@@ -74,6 +96,7 @@ function MyFeedContent() {
           stats={undefined}
           promoCard={{ type: "addEvents" }}
           hasUnlimited={hasUnlimited}
+          savedEventIds={savedEventIds}
         />
         <AddEventButton stats={undefined} />
       </View>

@@ -1,7 +1,13 @@
 import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
-import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+import { useUser } from "@clerk/clerk-expo";
+import {
+  Authenticated,
+  AuthLoading,
+  Unauthenticated,
+  useQuery,
+} from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -12,6 +18,7 @@ import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 
 function PastEventsContent() {
+  const { user } = useUser();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
@@ -32,11 +39,26 @@ function PastEventsContent() {
     initialNumItems: 50,
   });
 
+  // Memoize saved events query args to prevent unnecessary re-renders
+  const savedEventsQueryArgs = useMemo(() => {
+    if (!user?.username) return "skip";
+    return { userName: user.username };
+  }, [user?.username]);
+
+  const savedEventIdsQuery = useQuery(
+    api.events.getSavedIdsForUser,
+    savedEventsQueryArgs,
+  );
+
   const handleLoadMore = useCallback(() => {
     if (status === "CanLoadMore") {
       loadMore(25);
     }
   }, [status, loadMore]);
+
+  const savedEventIds = new Set(
+    savedEventIdsQuery?.map((event) => event.id) ?? [],
+  );
 
   // Add missing properties that UserEventsList expects
   const enrichedEvents = useMemo(() => {
@@ -61,6 +83,7 @@ function PastEventsContent() {
             showCreator="savedFromOthers"
             isFetchingNextPage={status === "LoadingMore"}
             hasUnlimited={hasUnlimited}
+            savedEventIds={savedEventIds}
           />
           <AddEventButton showChevron={false} />
         </View>
