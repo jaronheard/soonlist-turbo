@@ -316,6 +316,41 @@ export const deleteAccount = mutation({
       throw new ConvexError("User not found");
     }
 
+    // Delete user from Clerk first
+    const clerkSecretKey = process.env.CLERK_SECRET_KEY;
+    if (!clerkSecretKey) {
+      throw new ConvexError("Clerk secret key not configured");
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.clerk.com/v1/users/${args.userId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${clerkSecretKey}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new ConvexError(
+          `Failed to delete user from Clerk: ${response.status} ${error}`,
+        );
+      }
+    } catch (error) {
+      // If it's already a ConvexError, re-throw it
+      if (error instanceof ConvexError) {
+        throw error;
+      }
+      // For other errors (network, etc.), wrap in ConvexError
+      throw new ConvexError(
+        `Failed to delete user from Clerk: ${String(error)}`,
+      );
+    }
+
     // Use the new centralized cascade delete mutation
     await ctx.runMutation(internal.users.deleteUserAndCascade, {
       userId: args.userId,
