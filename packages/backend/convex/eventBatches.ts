@@ -24,6 +24,7 @@ export const createBatch = internalMutation({
     batchId: v.string(),
     userId: v.string(),
     totalCount: v.number(),
+    timezone: v.string(),
   },
   handler: async (ctx, args) => {
     // Get username from user record
@@ -36,6 +37,7 @@ export const createBatch = internalMutation({
       batchId: args.batchId,
       userId: args.userId,
       username: user?.username,
+      timezone: args.timezone,
       totalCount: args.totalCount,
       successCount: 0,
       failureCount: 0,
@@ -97,8 +99,6 @@ export const sendBatchNotificationWithErrors = internalAction({
     ),
   },
   handler: async (ctx, args) => {
-    console.log("sendBatchNotificationWithErrors called with:", args);
-
     try {
       // Call the original sendBatchNotification logic but with enhanced error details
       return await sendBatchNotificationHandler(ctx, args);
@@ -126,20 +126,11 @@ export const getBatchInfo = internalQuery({
       return null;
     }
 
-    // Get first event to extract common parameters
-    const firstEvent = await ctx.db
-      .query("events")
-      .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
-      .first();
-
     return {
       ...batch,
-      // Extract parameters from first event or use defaults
-      timezone: firstEvent?.timeZone ?? "UTC",
       comment: undefined, // Events don't store comments
       lists: [], // Events don't store lists directly
-      visibility: firstEvent?.visibility ?? "private",
-      username: firstEvent?.userName ?? batch.username ?? "unknown",
+      visibility: "private", // Private by default,
     };
   },
 });
@@ -212,8 +203,6 @@ export const sendBatchNotification = internalAction({
     failureCount: v.number(),
   },
   handler: async (ctx, args) => {
-    console.log("sendBatchNotification called with:", args);
-
     // Call the handler with empty failed images array
     return await sendBatchNotificationHandler(ctx, {
       ...args,
@@ -235,20 +224,14 @@ async function sendBatchNotificationHandler(
     failedImages?: { tempId: string; error: string }[];
   },
 ) {
-  console.log("sendBatchNotificationHandler called with:", args);
-
   try {
     // Get the created events for this batch
     const events = await ctx.runQuery(internal.eventBatches.getEventsForBatch, {
       batchId: args.batchId,
     });
 
-    console.log(`Found ${events.length} events for batch ${args.batchId}`);
-
     // Determine notification strategy
     if (args.totalCount <= 3) {
-      console.log("Sending individual notifications for small batch");
-
       // Send individual notifications for each successful event
       // Pass explicit position to ensure accurate count
       const results = [];
@@ -259,9 +242,6 @@ async function sendBatchNotificationHandler(
           continue;
         }
         const position = i + 1; // 1-based position
-        console.log(
-          `Sending notification ${position}/${events.length} for event ${event.id}`,
-        );
         try {
           // Add a small delay between notifications to ensure they arrive in order
           if (i > 0) {
@@ -275,7 +255,6 @@ async function sendBatchNotificationHandler(
             batchPosition: position,
             batchTotal: events.length,
           });
-          console.log(`Notification result for event ${event.id}:`, result);
           results.push(result);
         } catch (error) {
           console.error(
@@ -286,10 +265,7 @@ async function sendBatchNotificationHandler(
           results.push({ success: false, error: String(error) });
         }
       }
-      console.log("All individual notifications processed:", results);
     } else {
-      console.log("Sending summary notification for large batch");
-
       // Build enhanced message with error details
       let message: string;
       if (args.failureCount === 0) {
@@ -324,7 +300,6 @@ async function sendBatchNotificationHandler(
             batchId: args.batchId,
           },
         );
-        console.log("Batch summary notification result:", result);
       } catch (error) {
         console.error("Failed to send batch summary notification:", error);
         throw error;

@@ -580,6 +580,7 @@ export const createEventBatch = mutation({
       batchId: args.batchId,
       userId: args.userId,
       totalCount: args.totalCount ?? args.images.length,
+      timezone: args.timezone,
     });
 
     // Only schedule processing if we have images
@@ -691,18 +692,20 @@ export const processAdditionalBatchImages = internalAction({
       chunks.push(args.images.slice(i, i + CHUNK_SIZE));
     }
 
+    const timezone = batch.timezone ?? "America/Los_Angeles"; // Default fallback
+
     for (const [_chunkIndex, chunk] of chunks.entries()) {
       const chunkResults = await Promise.allSettled(
         chunk.map(async (image) => {
           const result: { success: boolean; eventId?: string; error?: string } =
             await ctx.runAction(internal.ai.processSingleImage, {
               base64Image: image.base64Image,
-              timezone: batch.timezone,
-              comment: batch.comment,
-              lists: batch.lists ?? [],
-              visibility: batch.visibility,
+              timezone: timezone,
+              comment: undefined,
+              lists: [],
+              visibility: "private" as const,
               userId: args.userId,
-              username: batch.username,
+              username: batch.username ?? args.userId,
               batchId: args.batchId,
             });
           return {
