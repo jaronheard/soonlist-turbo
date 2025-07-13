@@ -5,6 +5,7 @@ import type { EventWithMetadata } from "@soonlist/cal";
 
 import { components, internal } from "./_generated/api";
 import { internalAction, mutation } from "./_generated/server";
+import { DEFAULT_TIMEZONE } from "./constants";
 import { eventDataValidator } from "./events";
 import * as AI from "./model/ai";
 import { fetchAndProcessEvent, validateJinaResponse } from "./model/aiHelpers";
@@ -692,7 +693,7 @@ export const processAdditionalBatchImages = internalAction({
       chunks.push(args.images.slice(i, i + CHUNK_SIZE));
     }
 
-    const timezone = batch.timezone ?? "America/Los_Angeles"; // Default fallback
+    const timezone = batch.timezone ?? DEFAULT_TIMEZONE; // Default fallback
 
     for (const [_chunkIndex, chunk] of chunks.entries()) {
       const chunkResults = await Promise.allSettled(

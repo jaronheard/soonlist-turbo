@@ -6,6 +6,7 @@ import type { EventMetadataLoose } from "@soonlist/cal";
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { DEFAULT_TIMEZONE } from "../constants";
 import { generateNumericId, generatePublicId } from "../utils";
 
 // Type for event data (based on AddToCalendarButtonProps)
@@ -82,7 +83,7 @@ function parseDateTime(date: string, time: string, timeZone: string): Date {
 
     // Use Temporal to properly handle timezone conversion
     const zonedDateTime = Temporal.ZonedDateTime.from(
-      `${date}T${timeWithSeconds}[${timeZone || "America/Los_Angeles"}]`,
+      `${date}T${timeWithSeconds}[${timeZone || DEFAULT_TIMEZONE}]`,
     );
 
     // Convert to a regular Date object
@@ -583,7 +584,7 @@ export async function createEvent(
   // Parse dates and times
   const startTime = eventData.startTime || "00:00";
   const endTime = eventData.endTime || "23:59";
-  const timeZone = eventData.timeZone || "America/Los_Angeles";
+  const timeZone = eventData.timeZone || DEFAULT_TIMEZONE;
 
   const startDateTime = parseDateTime(eventData.startDate, startTime, timeZone);
   const endDateTime = parseDateTime(eventData.endDate, endTime, timeZone);
@@ -681,7 +682,7 @@ export async function updateEvent(
   // Parse dates and times
   const startTime = eventData.startTime || "00:00";
   const endTime = eventData.endTime || "23:59";
-  const timeZone = eventData.timeZone || "America/Los_Angeles";
+  const timeZone = eventData.timeZone || DEFAULT_TIMEZONE;
 
   // Validate required date fields
   if (!eventData.startDate) {

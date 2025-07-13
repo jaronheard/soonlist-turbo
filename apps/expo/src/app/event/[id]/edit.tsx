@@ -31,6 +31,7 @@ import { EyeOff, Globe2, Image as ImageIcon } from "~/components/icons";
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
+import { DEFAULT_VISIBILITY } from "~/constants";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
 
@@ -114,7 +115,7 @@ export default function EditEventScreen() {
       },
       comment: "",
       lists: [],
-      visibility: "private" as const,
+      visibility: DEFAULT_VISIBILITY,
     },
   });
 
@@ -177,7 +178,7 @@ export default function EditEventScreen() {
           eventQuery.visibility === "public" ||
           eventQuery.visibility === "private"
             ? eventQuery.visibility
-            : ("private" as const),
+            : DEFAULT_VISIBILITY,
       });
 
       if (

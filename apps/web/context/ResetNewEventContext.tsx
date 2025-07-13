@@ -10,6 +10,7 @@ import {
   Status,
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
+import { DEFAULT_VISIBILITY } from "~/lib/constants";
 
 export function ResetNewEventContext() {
   const pathName = usePathname();
@@ -22,7 +23,7 @@ export function ResetNewEventContext() {
     setCroppedImagesUrls({});
     setOrganizeData({
       notes: "",
-      visibility: "private",
+      visibility: DEFAULT_VISIBILITY,
       lists: [],
     });
     setEventData(undefined);

@@ -8,6 +8,7 @@ import {
   internalQuery,
   query,
 } from "./_generated/server";
+import { DEFAULT_VISIBILITY } from "./constants";
 
 // Batch tracking schema
 export const batchStatusValidator = v.union(
@@ -27,6 +28,17 @@ export const createBatch = internalMutation({
     timezone: v.string(),
   },
   handler: async (ctx, args) => {
+    // Validate timezone
+    if (!args.timezone || args.timezone.trim() === "") {
+      throw new ConvexError("Timezone is required");
+    }
+
+    // Check if timezone is supported (using a simple check)
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: args.timezone });
+    } catch {
+      throw new ConvexError(`Invalid timezone: ${args.timezone}`);
+    }
     // Get username from user record
     const user = await ctx.db
       .query("users")
@@ -130,7 +142,7 @@ export const getBatchInfo = internalQuery({
       ...batch,
       comment: undefined, // Events don't store comments
       lists: [], // Events don't store lists directly
-      visibility: "private", // Private by default,
+      visibility: DEFAULT_VISIBILITY, // Private by default,
     };
   },
 });
@@ -289,17 +301,14 @@ async function sendBatchNotificationHandler(
       }
 
       try {
-        await ctx.runAction(
-          internal.notifications.pushBatchSummary,
-          {
-            userId: args.userId,
-            username: args.username,
-            message,
-            successCount: args.successCount,
-            failureCount: args.failureCount,
-            batchId: args.batchId,
-          },
-        );
+        await ctx.runAction(internal.notifications.pushBatchSummary, {
+          userId: args.userId,
+          username: args.username,
+          message,
+          successCount: args.successCount,
+          failureCount: args.failureCount,
+          batchId: args.batchId,
+        });
       } catch (error) {
         console.error("Failed to send batch summary notification:", error);
         throw error;

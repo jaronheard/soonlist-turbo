@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState } from "react";
 
 import type { AddToCalendarCardProps } from "~/components/AddToCalendarCard";
 import type { organizeFormSchema } from "~/components/YourDetails";
+import { DEFAULT_VISIBILITY } from "~/lib/constants";
 
 // Define the type of the context state
 interface NewEventContextState {
@@ -17,9 +18,11 @@ interface NewEventContextState {
 
 // Create a context with empty objects and dummy functions
 const NewEventContext = createContext<NewEventContextState>({
-  organizeData: { notes: "", visibility: "private", lists: [] } as z.infer<
-    typeof organizeFormSchema
-  >,
+  organizeData: {
+    notes: "",
+    visibility: DEFAULT_VISIBILITY,
+    lists: [],
+  } as z.infer<typeof organizeFormSchema>,
   setOrganizeData: () => null,
   eventData: undefined,
   setEventData: () => null,
