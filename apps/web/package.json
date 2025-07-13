@@ -88,5 +88,5 @@
     "typescript": "catalog:"
   },
   "prettier": "@soonlist/prettier-config",
-  "packageManager": "pnpm@10.11.0"
+  "packageManager": "pnpm@9.15.9"
 }
