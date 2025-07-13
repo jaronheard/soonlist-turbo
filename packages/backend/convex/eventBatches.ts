@@ -289,7 +289,7 @@ async function sendBatchNotificationHandler(
       }
 
       try {
-        const result = await ctx.runAction(
+        await ctx.runAction(
           internal.notifications.pushBatchSummary,
           {
             userId: args.userId,
