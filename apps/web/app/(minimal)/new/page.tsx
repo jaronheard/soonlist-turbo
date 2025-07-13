@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 
+import { DEFAULT_TIMEZONE } from "~/lib/constants";
 import { getDefaultLists } from "~/lib/convex-lists";
 import { EventsFromImage } from "./EventsFromImage";
 import { ProgressStages } from "./newEventProgressStages";
@@ -28,7 +29,7 @@ export default async function Page(props: Props) {
   // TODO: Implement list queries in Convex backend
   // For now, using empty array until lists module is migrated
   const lists = getDefaultLists(userId);
-  const timezone = searchParams.timezone || "America/Los_Angeles";
+  const timezone = searchParams.timezone || DEFAULT_TIMEZONE;
   const autoProcess = searchParams.autoProcess === "true";
 
   // image only

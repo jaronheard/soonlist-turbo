@@ -42,6 +42,7 @@ import { Label } from "@soonlist/ui/label";
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
+import { DEFAULT_TIMEZONE } from "~/lib/constants";
 import { feedback } from "~/lib/intercom/intercom";
 import { cn } from "~/lib/utils";
 import { CalendarButton } from "./CalendarButton";
@@ -764,7 +765,7 @@ export function EventListItem(props: EventListItemProps) {
               endDate={event.endDate!}
               startTime={event.startTime!}
               endTime={event.endTime!}
-              timezone={event.timeZone || "America/Los_Angeles"}
+              timezone={event.timeZone || DEFAULT_TIMEZONE}
               location={event.location}
               happeningNow={props.happeningNow}
               visibility={visibility} // Add this line
@@ -849,7 +850,7 @@ export function EventListItem(props: EventListItemProps) {
               endDate={event.endDate!}
               startTime={event.startTime!}
               endTime={event.endTime!}
-              timezone={event.timeZone || "America/Los_Angeles"}
+              timezone={event.timeZone || DEFAULT_TIMEZONE}
               location={event.location}
               description={event.description}
             />

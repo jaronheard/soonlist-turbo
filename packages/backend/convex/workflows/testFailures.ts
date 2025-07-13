@@ -3,6 +3,7 @@ import { v } from "convex/values";
 
 import { components, internal } from "../_generated/api";
 import { mutation } from "../_generated/server";
+import { DEFAULT_VISIBILITY } from "../constants";
 
 const workflow = new WorkflowManager(components.workflow);
 
@@ -31,7 +32,7 @@ export const testAIExtractionFailure = mutation({
         timezone: "America/New_York",
         comment: "Test AI failure",
         lists: [],
-        visibility: "private" as const,
+        visibility: DEFAULT_VISIBILITY,
         sendNotification: true,
         userId: args.userId,
         username: args.username,
@@ -77,7 +78,7 @@ export const testImageUploadFailure = mutation({
         timezone: "America/New_York",
         comment: "Test upload failure",
         lists: [],
-        visibility: "private" as const,
+        visibility: DEFAULT_VISIBILITY,
         sendNotification: true,
         userId: args.userId,
         username: args.username,
@@ -124,7 +125,7 @@ export const testValidationFailure = mutation({
         timezone: "America/New_York",
         comment: "Test validation failure",
         lists: [],
-        visibility: "private" as const,
+        visibility: DEFAULT_VISIBILITY,
         sendNotification: true,
         userId: args.userId,
         username: args.username,
@@ -286,7 +287,7 @@ export const simulateUrlFetchFailure = mutation({
         timezone: "America/New_York",
         comment: "Test URL fetch failure",
         lists: [],
-        visibility: "private" as const,
+        visibility: DEFAULT_VISIBILITY,
         sendNotification: true,
         userId: args.userId,
         username: args.username,
@@ -332,7 +333,7 @@ export const simulateUrlContentParsingFailure = mutation({
         timezone: "America/New_York",
         comment: "Test URL content parsing failure",
         lists: [],
-        visibility: "private" as const,
+        visibility: DEFAULT_VISIBILITY,
         sendNotification: true,
         userId: args.userId,
         username: args.username,
@@ -378,7 +379,7 @@ export const simulateUrlAiProcessingFailure = mutation({
         timezone: "America/New_York",
         comment: "Test URL AI processing failure",
         lists: [],
-        visibility: "private" as const,
+        visibility: DEFAULT_VISIBILITY,
         sendNotification: true,
         userId: args.userId,
         username: args.username,
@@ -424,7 +425,7 @@ export const simulateUrlValidationFailure = mutation({
         timezone: "America/New_York",
         comment: "Test URL validation failure",
         lists: [],
-        visibility: "private" as const,
+        visibility: DEFAULT_VISIBILITY,
         sendNotification: true,
         userId: args.userId,
         username: args.username,
@@ -495,7 +496,7 @@ export const testUrlWorkflowSuccess = mutation({
         timezone: "America/New_York",
         comment: "Test URL workflow success",
         lists: [],
-        visibility: "private" as const,
+        visibility: DEFAULT_VISIBILITY,
         sendNotification: true, // Enable notifications for success test
         userId: args.userId,
         username: args.username,

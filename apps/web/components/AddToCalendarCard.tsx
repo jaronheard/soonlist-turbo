@@ -32,6 +32,7 @@ import { Textarea } from "@soonlist/ui/textarea";
 
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
+import { DEFAULT_TIMEZONE } from "~/lib/constants";
 import { feedback } from "~/lib/intercom/intercom";
 import { CalendarButton } from "./CalendarButton";
 import { SaveButton } from "./SaveButton";
@@ -98,7 +99,7 @@ export function AddToCalendarCard({
   const [endDate, setEndDate] = useState(initialProps.endDate);
   const [endTime, setEndTime] = useState(initialProps.endTime);
   const [timeZone, setTimeZone] = useState<string>(
-    initialProps.timeZone || "America/Los_Angeles",
+    initialProps.timeZone || DEFAULT_TIMEZONE,
   );
   const [link, setLink] = useState<string>("");
   const [mentions] = useState<string[]>(

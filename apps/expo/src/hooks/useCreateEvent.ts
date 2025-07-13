@@ -7,6 +7,7 @@ import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { DEFAULT_VISIBILITY } from "~/constants";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
@@ -124,7 +125,7 @@ export function useCreateEvent() {
             username,
             lists: [],
             timezone: userTimezone,
-            visibility: "private",
+            visibility: DEFAULT_VISIBILITY,
             sendNotification,
           });
 
@@ -144,7 +145,7 @@ export function useCreateEvent() {
             username,
             lists: [],
             timezone: userTimezone,
-            visibility: "private",
+            visibility: DEFAULT_VISIBILITY,
             sendNotification,
           });
 
@@ -162,7 +163,7 @@ export function useCreateEvent() {
             username,
             lists: [],
             timezone: userTimezone,
-            visibility: "private",
+            visibility: DEFAULT_VISIBILITY,
             sendNotification,
           });
 
