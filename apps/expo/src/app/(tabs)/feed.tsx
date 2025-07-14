@@ -28,6 +28,12 @@ function MyFeedContent() {
   // This prevents InvalidCursor errors while still filtering for upcoming events
   const stableTimestamp = useStableTimestamp();
 
+  // Fetch user stats
+  const stats = useQuery(
+    api.events.getStats,
+    user?.username ? { userName: user.username } : "skip"
+  );
+
   // Memoize query args to prevent unnecessary re-renders
   const queryArgs = useMemo(() => {
     return {
@@ -93,12 +99,12 @@ function MyFeedContent() {
           isFetchingNextPage={status === "LoadingMore"}
           isLoadingFirstPage={status === "LoadingFirstPage"}
           showCreator="savedFromOthers"
-          stats={undefined}
+          stats={stats}
           promoCard={{ type: "addEvents" }}
           hasUnlimited={hasUnlimited}
           savedEventIds={savedEventIds}
         />
-        <AddEventButton stats={undefined} />
+        <AddEventButton stats={stats} />
       </View>
     </View>
   );

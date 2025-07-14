@@ -23,6 +23,12 @@ function PastEventsContent() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
+  // Fetch user stats
+  const stats = useQuery(
+    api.events.getStats,
+    user?.username ? { userName: user.username } : "skip"
+  );
+
   // Memoize query args to prevent unnecessary re-renders
   const queryArgs = useMemo(() => {
     return {
@@ -85,7 +91,7 @@ function PastEventsContent() {
             hasUnlimited={hasUnlimited}
             savedEventIds={savedEventIds}
           />
-          <AddEventButton showChevron={false} />
+          <AddEventButton showChevron={false} stats={stats} />
         </View>
       )}
     </View>
