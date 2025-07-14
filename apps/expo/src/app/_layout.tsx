@@ -326,7 +326,16 @@ function RootLayoutContent() {
         onDismiss={() => setIsCalendarModalVisible(false)}
         initialLimit={INITIAL_CALENDAR_LIMIT}
       />
-      <Toaster position="top-center" offset={100} visibleToasts={1} />
+      <Toaster 
+        position="top-center" 
+        offset={100} 
+        visibleToasts={1}
+        toastOptions={{
+          style: {
+            borderRadius: 16,
+          },
+        }}
+      />
     </View>
   );
 }
