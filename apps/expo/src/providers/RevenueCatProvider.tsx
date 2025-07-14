@@ -40,8 +40,8 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
 
   // Initialize RevenueCat only once when the component mounts
   useMountEffect(() => {
-    let listenerRemove: (() => void) | undefined;
-    
+    let updateListener: ((customerInfo: CustomerInfo) => void) | undefined;
+
     async function initializeRevenueCatOnce() {
       if (isInitialized) return;
 
@@ -50,12 +50,14 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
         setIsInitialized(true);
 
         // Set up customer info update listener
-        listenerRemove = Purchases.addCustomerInfoUpdateListener((customerInfo) => {
-          console.log('[RevenueCat] Customer info updated:', {
-            hasUnlimited: customerInfo.entitlements.active.unlimited?.isActive,
+        updateListener = (customerInfo: CustomerInfo) => {
+          console.log("[RevenueCat] Customer info updated:", {
+            hasUnlimited:
+              customerInfo.entitlements.active.unlimited?.isActive,
           });
           setCustomerInfo(customerInfo);
-        });
+        };
+        Purchases.addCustomerInfoUpdateListener(updateListener);
 
         // Only try to log in if there's a userId after initialization
         if (userId) {
@@ -69,11 +71,11 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     }
 
     void initializeRevenueCatOnce();
-    
+
     // Cleanup listener on unmount
     return () => {
-      if (listenerRemove) {
-        listenerRemove();
+      if (updateListener) {
+        Purchases.removeCustomerInfoUpdateListener(updateListener);
       }
     };
   });
@@ -161,13 +163,17 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
           try {
             const updatedCustomerInfo = await Purchases.getCustomerInfo();
             setCustomerInfo(updatedCustomerInfo);
-            console.log('[RevenueCat] Customer info refreshed after purchase:', {
-              hasUnlimited: updatedCustomerInfo.entitlements.active.unlimited?.isActive,
-            });
+            console.log(
+              "[RevenueCat] Customer info refreshed after purchase:",
+              {
+                hasUnlimited:
+                  updatedCustomerInfo.entitlements.active.unlimited?.isActive,
+              },
+            );
           } catch (error) {
             logError("Error refreshing customer info after purchase", error);
           }
-          
+
           // Send welcome notification if notifications are enabled
           if (hasNotificationPermission) {
             // Using OneSignal for notifications

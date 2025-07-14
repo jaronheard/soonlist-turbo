@@ -57,7 +57,7 @@ export default function Page() {
 
   // Track event view and show paywall if needed
   useEffect(() => {
-    console.log('[Paywall Debug] Event view effect:', {
+    console.log("[Paywall Debug] Event view effect:", {
       eventExists: !!event,
       hasUnlimited,
       customerInfo: customerInfo,
@@ -65,18 +65,18 @@ export default function Page() {
       totalViews: useAppStore.getState().totalEventViews,
       lastShownAt: useAppStore.getState().lastPaywallShownAtView,
     });
-    
+
     if (event && !hasUnlimited) {
       incrementEventView();
 
       if (shouldShowViewPaywall()) {
-        console.log('[Paywall Debug] Showing paywall...');
+        console.log("[Paywall Debug] Showing paywall...");
         void showProPaywallIfNeeded()
           .then(() => {
             markPaywallShown();
           })
           .catch((error) => {
-            console.error('[Paywall Debug] Failed to show paywall:', error);
+            console.error("[Paywall Debug] Failed to show paywall:", error);
           });
       }
     }
@@ -87,6 +87,7 @@ export default function Page() {
     shouldShowViewPaywall,
     markPaywallShown,
     showProPaywallIfNeeded,
+    customerInfo,
   ]);
 
   // Properly check if the event is saved by the current user

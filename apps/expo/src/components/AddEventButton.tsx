@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -10,7 +10,7 @@ import Animated, {
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { ChevronDown, Lock, PlusIcon, Sparkles } from "~/components/icons";
+import { ChevronDown, Lock, PlusIcon } from "~/components/icons";
 import { CircularSpinner } from "~/components/ui/CircularSpinner";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -53,8 +53,8 @@ export default function AddEventButton({
 
   const { triggerAddEventFlow } = useAddEventFlow();
 
-  const upcomingEventsCount = stats?.upcomingEvents ?? 0;
   const allTimeEventsCount = stats?.allTimeEvents ?? 0;
+  const isStatsLoading = stats === undefined;
 
   let canProceedWithAdd = false;
   if (allTimeEventsCount < 3) {
@@ -65,7 +65,7 @@ export default function AddEventButton({
     canProceedWithAdd = hasUnlimited;
   }
 
-  console.log('[Paywall Debug] AddEventButton:', {
+  console.log("[Paywall Debug] AddEventButton:", {
     allTimeEventsCount,
     hasUnlimited,
     canProceedWithAdd,
@@ -145,7 +145,7 @@ export default function AddEventButton({
       </View>
 
       {/* Main action button */}
-      {!isRevenueCatLoading && (
+      {!isRevenueCatLoading && !isStatsLoading && (
         <TouchableOpacity
           onPress={handlePress}
           className="absolute bottom-8 self-center"
