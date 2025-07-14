@@ -40,12 +40,22 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
 
   // Initialize RevenueCat only once when the component mounts
   useMountEffect(() => {
+    let listenerRemove: (() => void) | undefined;
+    
     async function initializeRevenueCatOnce() {
       if (isInitialized) return;
 
       try {
         await initializeRevenueCat();
         setIsInitialized(true);
+
+        // Set up customer info update listener
+        listenerRemove = Purchases.addCustomerInfoUpdateListener((customerInfo) => {
+          console.log('[RevenueCat] Customer info updated:', {
+            hasUnlimited: customerInfo.entitlements.active.unlimited?.isActive,
+          });
+          setCustomerInfo(customerInfo);
+        });
 
         // Only try to log in if there's a userId after initialization
         if (userId) {
@@ -59,6 +69,13 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     }
 
     void initializeRevenueCatOnce();
+    
+    // Cleanup listener on unmount
+    return () => {
+      if (listenerRemove) {
+        listenerRemove();
+      }
+    };
   });
 
   // Handle Clerk user ID changes, but only after initialization
@@ -140,6 +157,17 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       switch (paywallResult) {
         case PAYWALL_RESULT.PURCHASED:
         case PAYWALL_RESULT.RESTORED:
+          // Refresh customer info after successful purchase
+          try {
+            const updatedCustomerInfo = await Purchases.getCustomerInfo();
+            setCustomerInfo(updatedCustomerInfo);
+            console.log('[RevenueCat] Customer info refreshed after purchase:', {
+              hasUnlimited: updatedCustomerInfo.entitlements.active.unlimited?.isActive,
+            });
+          } catch (error) {
+            logError("Error refreshing customer info after purchase", error);
+          }
+          
           // Send welcome notification if notifications are enabled
           if (hasNotificationPermission) {
             // Using OneSignal for notifications
