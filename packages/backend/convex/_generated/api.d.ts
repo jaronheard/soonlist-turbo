@@ -10,6 +10,7 @@
 
 import type * as ai from "../ai.js";
 import type * as appConfig from "../appConfig.js";
+import type * as constants from "../constants.js";
 import type * as crons from "../crons.js";
 import type * as eventBatches from "../eventBatches.js";
 import type * as events from "../events.js";
@@ -52,6 +53,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   appConfig: typeof appConfig;
+  constants: typeof constants;
   crons: typeof crons;
   eventBatches: typeof eventBatches;
   events: typeof events;

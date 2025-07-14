@@ -9,11 +9,13 @@ This document describes the failure notification pattern implemented for Convex 
 ### Core Components
 
 1. **Workflow Implementation** (`eventFromImageBase64Workflow`)
+
    - Located in `packages/backend/convex/workflows/eventIngestion.ts`
    - Handles end-to-end event creation from image data
    - Uses Convex's built-in workflow failure detection
 
 2. **Failure Notification Action** (`pushFailure`)
+
    - Located in `packages/backend/convex/notifications.ts`
    - Sends push notifications for workflow failures
    - Includes failure-specific content and metadata
@@ -195,24 +197,28 @@ The failure notification pattern implemented for `eventFromImageBase64Workflow` 
 #### Critical Failure Points
 
 1. **URL Fetching and Content Extraction**
+
    - Network failures when accessing the URL
    - Invalid URL formats or unreachable URLs
    - Content parsing failures (malformed HTML, protected content)
    - Timeout issues for slow-loading pages
 
 2. **AI Content Processing**
+
    - AI service failures or rate limiting
    - Invalid or unexpected content format
    - AI extraction returning no events or malformed data
    - Content too large or complex for processing
 
 3. **Data Validation**
+
    - Invalid event data structure from AI
    - Missing required fields (name, date, etc.)
    - Invalid date/time formats or timezone issues
    - Validation schema failures
 
 4. **Database Operations**
+
    - Event creation failures
    - User lookup failures
    - List association failures
@@ -326,24 +332,28 @@ export const pushUrlFailure = internalAction({
 #### Critical Failure Points
 
 1. **Text Processing and Parsing**
+
    - Empty or invalid text input
    - Text format issues (encoding, special characters)
    - Content too long or too short for processing
    - Ambiguous or unclear event information
 
 2. **AI Content Extraction**
+
    - AI service failures or rate limiting
    - Unable to extract meaningful event data from text
    - Ambiguous dates, times, or locations
    - Multiple conflicting interpretations
 
 3. **Data Validation**
+
    - Invalid event data structure from AI
    - Missing required fields (name, date, etc.)
    - Invalid date/time formats or timezone issues
    - Validation schema failures
 
 4. **Database Operations**
+
    - Event creation failures
    - User lookup failures
    - List association failures
@@ -438,10 +448,12 @@ export const pushTextFailure = internalAction({
 #### Testing Strategy
 
 1. **Input Validation Testing**
+
    - Invalid URLs, malformed text, network failures
    - Edge cases specific to each input type
 
 2. **AI Processing Testing**
+
    - Simulate AI service failures
    - Test with ambiguous or unclear inputs
    - Validate error handling for various AI response formats
