@@ -65,14 +65,6 @@ export default function AddEventButton({
     canProceedWithAdd = hasUnlimited;
   }
 
-  console.log("[Paywall Debug] AddEventButton:", {
-    allTimeEventsCount,
-    hasUnlimited,
-    canProceedWithAdd,
-    customerInfo,
-    isRevenueCatLoading,
-  });
-
   const promptUserToUpgrade = async () => {
     // Navigate to settings/plans page.
     // You might want to adjust this path to your specific subscription/plans screen.

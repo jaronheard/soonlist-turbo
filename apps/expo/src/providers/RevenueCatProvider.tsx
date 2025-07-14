@@ -56,9 +56,6 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
 
         // Set up customer info update listener
         updateListener = (customerInfo: CustomerInfo) => {
-          console.log("[RevenueCat] Customer info updated:", {
-            hasUnlimited: customerInfo.entitlements.active.unlimited?.isActive,
-          });
           setCustomerInfo(customerInfo);
         };
         Purchases.addCustomerInfoUpdateListener(updateListener);
@@ -170,13 +167,6 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
           try {
             const updatedCustomerInfo = await Purchases.getCustomerInfo();
             setCustomerInfo(updatedCustomerInfo);
-            console.log(
-              "[RevenueCat] Customer info refreshed after purchase:",
-              {
-                hasUnlimited:
-                  updatedCustomerInfo.entitlements.active.unlimited?.isActive,
-              },
-            );
           } catch (error) {
             logError("Error refreshing customer info after purchase", error);
           }

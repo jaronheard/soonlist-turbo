@@ -67,25 +67,15 @@ export default function Page() {
 
       const store = useAppStore.getState();
 
-      console.log("[Paywall Debug] Event view effect:", {
-        eventExists: !!event,
-        hasUnlimited,
-        customerInfo: customerInfo,
-        shouldShow: store.shouldShowViewPaywall(),
-        totalViews: store.totalEventViews,
-        lastShownAt: store.lastPaywallShownAtView,
-      });
-
       store.incrementEventView();
 
       if (store.shouldShowViewPaywall()) {
-        console.log("[Paywall Debug] Showing paywall...");
         void showProPaywallIfNeeded()
           .then(() => {
             store.markPaywallShown();
           })
           .catch((error) => {
-            console.error("[Paywall Debug] Failed to show paywall:", error);
+            console.error("Failed to show paywall:", error);
           });
       }
     }
