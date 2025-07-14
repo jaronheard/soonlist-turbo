@@ -535,7 +535,7 @@ overrides:
 
 patchedDependencies:
   xcode@3.0.1:
-    hash: 725863c0591d89ca053226c49fe7bc321f320391ec5f78b6c2e8e41ab1868805
+    hash: kvggi4abfe6iel7wt6iiemonyq
     path: patches/xcode@3.0.1.patch
 
 importers:
@@ -571,7 +571,7 @@ importers:
         version: 3.51.0
       '@clerk/clerk-expo':
         specifier: 'catalog:'
-        version: 2.11.8(982b6250ce0a92ca42ec64569fa08a60)
+        version: 2.11.8(tz4jwwdpgedwo7vltmaw4wicte)
       '@intercom/intercom-react-native':
         specifier: 'catalog:'
         version: 8.5.0(encoding@0.1.13)(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
@@ -700,7 +700,7 @@ importers:
         version: 0.31.4(expo@53.0.19(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
       expo-router:
         specifier: 'catalog:'
-        version: 5.1.3(bffdb396b70d2c36c63f734beb8f8475)
+        version: 5.1.3(wrybpy4btivwogqyoftilkhaxm)
       expo-secure-store:
         specifier: 'catalog:'
         version: 14.2.3(expo@53.0.19(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))
@@ -733,7 +733,7 @@ importers:
         version: 2.0.3(encoding@0.1.13)
       posthog-react-native:
         specifier: 'catalog:'
-        version: 3.15.4(1c60eb3b347e654df360eabdcb767638)
+        version: 3.15.4(bupoptofpyzoyf2b7e4g5febge)
       posthog-react-native-session-replay:
         specifier: 'catalog:'
         version: 1.0.6(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
@@ -793,7 +793,7 @@ importers:
         version: 15.11.2(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
       sonner-native:
         specifier: 'catalog:'
-        version: 0.16.2(714e934b487068cc890ce05e2b7eb774)
+        version: 0.16.2(l4egbzcilq3jlkv3oxh4edp4na)
       superjson:
         specifier: 'catalog:'
         version: 2.2.1
@@ -11423,7 +11423,7 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/clerk-expo@2.11.8(982b6250ce0a92ca42ec64569fa08a60)':
+  '@clerk/clerk-expo@2.11.8(tz4jwwdpgedwo7vltmaw4wicte)':
     dependencies:
       '@clerk/clerk-js': 5.67.3(@types/react@19.1.5)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@clerk/clerk-react': 5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -11997,7 +11997,7 @@ snapshots:
       semver: 7.7.2
       slash: 3.0.0
       slugify: 1.6.6
-      xcode: 3.0.1(patch_hash=725863c0591d89ca053226c49fe7bc321f320391ec5f78b6c2e8e41ab1868805)
+      xcode: 3.0.1(patch_hash=kvggi4abfe6iel7wt6iiemonyq)
       xml2js: 0.6.0
     transitivePeerDependencies:
       - supports-color
@@ -16508,7 +16508,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  expo-router@5.1.3(bffdb396b70d2c36c63f734beb8f8475):
+  expo-router@5.1.3(wrybpy4btivwogqyoftilkhaxm):
     dependencies:
       '@expo/metro-runtime': 5.0.4(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))
       '@expo/server': 0.6.3
@@ -18589,7 +18589,7 @@ snapshots:
       react: 19.0.0
       react-native: 0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)
 
-  posthog-react-native@3.15.4(1c60eb3b347e654df360eabdcb767638):
+  posthog-react-native@3.15.4(bupoptofpyzoyf2b7e4g5febge):
     dependencies:
       react-native-svg: 15.11.2(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
     optionalDependencies:
@@ -19505,7 +19505,7 @@ snapshots:
       solid-js: 1.9.7
       swr-store: 0.10.6
 
-  sonner-native@0.16.2(714e934b487068cc890ce05e2b7eb774):
+  sonner-native@0.16.2(l4egbzcilq3jlkv3oxh4edp4na):
     dependencies:
       react: 19.0.0
       react-native: 0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)
@@ -20425,7 +20425,7 @@ snapshots:
 
   ws@8.18.2: {}
 
-  xcode@3.0.1(patch_hash=725863c0591d89ca053226c49fe7bc321f320391ec5f78b6c2e8e41ab1868805):
+  xcode@3.0.1(patch_hash=kvggi4abfe6iel7wt6iiemonyq):
     dependencies:
       simple-plist: 1.3.1
       uuid: 7.0.3
