@@ -41,19 +41,23 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   // Initialize RevenueCat only once when the component mounts
   useMountEffect(() => {
     let updateListener: ((customerInfo: CustomerInfo) => void) | undefined;
+    let isMounted = true;
 
     async function initializeRevenueCatOnce() {
       if (isInitialized) return;
 
       try {
         await initializeRevenueCat();
+
+        // Check if component is still mounted before proceeding
+        if (!isMounted) return;
+
         setIsInitialized(true);
 
         // Set up customer info update listener
         updateListener = (customerInfo: CustomerInfo) => {
           console.log("[RevenueCat] Customer info updated:", {
-            hasUnlimited:
-              customerInfo.entitlements.active.unlimited?.isActive,
+            hasUnlimited: customerInfo.entitlements.active.unlimited?.isActive,
           });
           setCustomerInfo(customerInfo);
         };
@@ -66,7 +70,9 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       } catch (error) {
         logError("Failed to initialize RevenueCat", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 
@@ -74,6 +80,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
 
     // Cleanup listener on unmount
     return () => {
+      isMounted = false;
       if (updateListener) {
         Purchases.removeCustomerInfoUpdateListener(updateListener);
       }

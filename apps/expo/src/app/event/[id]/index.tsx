@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   Pressable,
@@ -45,50 +45,51 @@ export default function Page() {
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
   // Track whether the image is fully loaded (for a fade-in)
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  // Track if we've already counted this event view to prevent multiple increments
+  const hasCountedViewRef = useRef(false);
 
   const event = useQuery(api.events.get, { eventId: id });
 
   // Event view tracking
-  const { incrementEventView, shouldShowViewPaywall, markPaywallShown } =
-    useAppStore();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
+  // Reset view count tracking when event ID changes
+  useEffect(() => {
+    hasCountedViewRef.current = false;
+  }, [id]);
+
   // Track event view and show paywall if needed
   useEffect(() => {
-    console.log("[Paywall Debug] Event view effect:", {
-      eventExists: !!event,
-      hasUnlimited,
-      customerInfo: customerInfo,
-      shouldShow: shouldShowViewPaywall(),
-      totalViews: useAppStore.getState().totalEventViews,
-      lastShownAt: useAppStore.getState().lastPaywallShownAtView,
-    });
+    if (event && !hasUnlimited && !hasCountedViewRef.current) {
+      hasCountedViewRef.current = true;
 
-    if (event && !hasUnlimited) {
-      incrementEventView();
+      const store = useAppStore.getState();
 
-      if (shouldShowViewPaywall()) {
+      console.log("[Paywall Debug] Event view effect:", {
+        eventExists: !!event,
+        hasUnlimited,
+        customerInfo: customerInfo,
+        shouldShow: store.shouldShowViewPaywall(),
+        totalViews: store.totalEventViews,
+        lastShownAt: store.lastPaywallShownAtView,
+      });
+
+      store.incrementEventView();
+
+      if (store.shouldShowViewPaywall()) {
         console.log("[Paywall Debug] Showing paywall...");
         void showProPaywallIfNeeded()
           .then(() => {
-            markPaywallShown();
+            store.markPaywallShown();
           })
           .catch((error) => {
             console.error("[Paywall Debug] Failed to show paywall:", error);
           });
       }
     }
-  }, [
-    event,
-    hasUnlimited,
-    incrementEventView,
-    shouldShowViewPaywall,
-    markPaywallShown,
-    showProPaywallIfNeeded,
-    customerInfo,
-  ]);
+  }, [event, hasUnlimited, showProPaywallIfNeeded, customerInfo]);
 
   // Properly check if the event is saved by the current user
   const isSaved =
