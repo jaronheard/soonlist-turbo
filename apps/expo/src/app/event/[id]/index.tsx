@@ -71,9 +71,13 @@ export default function Page() {
 
       if (shouldShowViewPaywall()) {
         console.log('[Paywall Debug] Showing paywall...');
-        void showProPaywallIfNeeded().then(() => {
-          markPaywallShown();
-        });
+        void showProPaywallIfNeeded()
+          .then(() => {
+            markPaywallShown();
+          })
+          .catch((error) => {
+            console.error('[Paywall Debug] Failed to show paywall:', error);
+          });
       }
     }
   }, [
