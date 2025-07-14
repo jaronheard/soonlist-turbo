@@ -31,7 +31,7 @@ function MyFeedContent() {
   // Fetch user stats
   const stats = useQuery(
     api.events.getStats,
-    user?.username ? { userName: user.username } : "skip"
+    user?.username ? { userName: user.username } : "skip",
   );
 
   // Memoize query args to prevent unnecessary re-renders

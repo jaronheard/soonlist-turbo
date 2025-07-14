@@ -10,7 +10,7 @@ import Animated, {
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
+import { ChevronDown, Lock, PlusIcon, Sparkles } from "~/components/icons";
 import { CircularSpinner } from "~/components/ui/CircularSpinner";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -64,13 +64,6 @@ export default function AddEventButton({
     // After 3 captures, requires unlimited subscription
     canProceedWithAdd = hasUnlimited;
   }
-
-  console.log('[Paywall Debug] AddEventButton:', {
-    allTimeEventsCount,
-    hasUnlimited,
-    canProceedWithAdd,
-    customerInfo,
-  });
 
   const promptUserToUpgrade = async () => {
     // Navigate to settings/plans page.
@@ -181,20 +174,23 @@ export default function AddEventButton({
               )}
             </View>
           ) : (
-            <View
-              className="flex-row items-center justify-center rounded-full bg-interactive-1 px-5 py-4"
-              style={{
-                shadowColor: "#5A32FB",
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-                elevation: 8,
-              }}
-            >
-              <Sparkles size={20} color="#FFF" />
-              <Text className="ml-2 text-3xl font-bold text-white">
-                Start your free trial
-              </Text>
+            <View className="relative">
+              <View
+                className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
+                style={{
+                  shadowColor: "#5A32FB",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 6,
+                  elevation: 8,
+                }}
+              >
+                <PlusIcon size={44} color="#FFF" strokeWidth={2} />
+              </View>
+              {/* Lock icon overlay */}
+              <View className="absolute bottom-0 right-0 rounded-full bg-white p-1">
+                <Lock size={20} color="#5A32FB" strokeWidth={3} />
+              </View>
             </View>
           )}
         </TouchableOpacity>

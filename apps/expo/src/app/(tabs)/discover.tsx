@@ -29,7 +29,7 @@ function DiscoverContent() {
   // Fetch user stats
   const stats = useQuery(
     api.events.getStats,
-    user?.username ? { userName: user.username } : "skip"
+    user?.username ? { userName: user.username } : "skip",
   );
 
   // Use the stable timestamp from the store that updates every 15 minutes

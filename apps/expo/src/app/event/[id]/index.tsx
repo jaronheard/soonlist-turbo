@@ -57,20 +57,10 @@ export default function Page() {
 
   // Track event view and show paywall if needed
   useEffect(() => {
-    console.log('[Paywall Debug] Event view effect:', {
-      eventExists: !!event,
-      hasUnlimited,
-      customerInfo: customerInfo,
-      shouldShow: shouldShowViewPaywall(),
-      totalViews: useAppStore.getState().totalEventViews,
-      lastShownAt: useAppStore.getState().lastPaywallShownAtView,
-    });
-    
     if (event && !hasUnlimited) {
       incrementEventView();
 
       if (shouldShowViewPaywall()) {
-        console.log('[Paywall Debug] Showing paywall...');
         void showProPaywallIfNeeded().then(() => {
           markPaywallShown();
         });
