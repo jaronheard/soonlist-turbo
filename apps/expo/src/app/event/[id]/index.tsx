@@ -30,6 +30,8 @@ import {
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
+import { useRevenueCat } from "~/providers/RevenueCatProvider";
+import { useAppStore } from "~/store";
 import { formatEventDateRange } from "~/utils/dates";
 import { logError } from "../../../utils/errorLogging";
 
@@ -45,6 +47,33 @@ export default function Page() {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   const event = useQuery(api.events.get, { eventId: id });
+
+  // Event view tracking
+  const { incrementEventView, shouldShowViewPaywall, markPaywallShown } =
+    useAppStore();
+  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
+  const hasUnlimited =
+    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+
+  // Track event view and show paywall if needed
+  useEffect(() => {
+    if (event && !hasUnlimited) {
+      incrementEventView();
+
+      if (shouldShowViewPaywall()) {
+        void showProPaywallIfNeeded().then(() => {
+          markPaywallShown();
+        });
+      }
+    }
+  }, [
+    event,
+    hasUnlimited,
+    incrementEventView,
+    shouldShowViewPaywall,
+    markPaywallShown,
+    showProPaywallIfNeeded,
+  ]);
 
   // Properly check if the event is saved by the current user
   const isSaved =

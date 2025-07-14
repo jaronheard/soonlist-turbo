@@ -165,6 +165,14 @@ interface AppState {
   addWorkflowId: (workflowId: string) => void;
   removeWorkflowId: (workflowId: string) => void;
   clearAllWorkflowIds: () => void;
+
+  // Event view tracking for paywall
+  totalEventViews: number;
+  lastPaywallShownAtView: number;
+  incrementEventView: () => void;
+  shouldShowViewPaywall: () => boolean;
+  markPaywallShown: () => void;
+  resetEventViews: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -405,6 +413,8 @@ export const useAppStore = create<AppState>()(
           onboardingData: {},
           currentOnboardingStep: null,
           workflowIds: [],
+          totalEventViews: 0,
+          lastPaywallShownAtView: 0,
         }),
 
       // Reset for logout - preserves onboarding state
@@ -452,6 +462,8 @@ export const useAppStore = create<AppState>()(
           onboardingData: {},
           currentOnboardingStep: null,
           workflowIds: [],
+          totalEventViews: 0,
+          lastPaywallShownAtView: 0,
         })),
 
       // Stable timestamp for query filtering
@@ -478,6 +490,31 @@ export const useAppStore = create<AppState>()(
           workflowIds: state.workflowIds.filter((id) => id !== workflowId),
         })),
       clearAllWorkflowIds: () => set({ workflowIds: [] }),
+
+      // Event view tracking for paywall
+      totalEventViews: 0,
+      lastPaywallShownAtView: 0,
+      incrementEventView: () =>
+        set((state) => ({
+          totalEventViews: state.totalEventViews + 1,
+        })),
+      shouldShowViewPaywall: () => {
+        const state = get();
+        // Show paywall every 20 views after the last shown
+        return (
+          state.totalEventViews > 0 &&
+          state.totalEventViews >= state.lastPaywallShownAtView + 20
+        );
+      },
+      markPaywallShown: () =>
+        set((state) => ({
+          lastPaywallShownAtView: state.totalEventViews,
+        })),
+      resetEventViews: () =>
+        set({
+          totalEventViews: 0,
+          lastPaywallShownAtView: 0,
+        }),
     }),
     {
       name: "app-storage",
