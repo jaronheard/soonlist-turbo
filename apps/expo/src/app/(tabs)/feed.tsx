@@ -104,7 +104,7 @@ function MyFeedContent() {
           hasUnlimited={hasUnlimited}
           savedEventIds={savedEventIds}
         />
-        <AddEventButton stats={stats} />
+        <AddEventButton stats={stats} showChevron={false} />
       </View>
     </View>
   );
