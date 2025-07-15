@@ -261,11 +261,11 @@ export const updateAdditionalInfo = mutation({
     }
 
     await ctx.db.patch(user._id, {
-      bio: args.bio || null,
-      publicEmail: args.publicEmail || null,
-      publicPhone: args.publicPhone || null,
-      publicInsta: args.publicInsta || null,
-      publicWebsite: args.publicWebsite || null,
+      bio: args.bio || undefined,
+      publicEmail: args.publicEmail || undefined,
+      publicPhone: args.publicPhone || undefined,
+      publicInsta: args.publicInsta || undefined,
+      publicWebsite: args.publicWebsite || undefined,
       displayName: args.displayName || undefined,
       updatedAt: new Date().toISOString(),
     });
