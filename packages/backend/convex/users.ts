@@ -260,15 +260,19 @@ export const updateAdditionalInfo = mutation({
       throw new ConvexError("User not found");
     }
 
-    await ctx.db.patch(user._id, {
-      bio: args.bio || undefined,
-      publicEmail: args.publicEmail || undefined,
-      publicPhone: args.publicPhone || undefined,
-      publicInsta: args.publicInsta || undefined,
-      publicWebsite: args.publicWebsite || undefined,
-      displayName: args.displayName || undefined,
+    const updates: Record<string, string | undefined> = {
       updatedAt: new Date().toISOString(),
-    });
+    };
+
+    if (args.bio !== undefined) updates.bio = args.bio;
+    if (args.publicEmail !== undefined) updates.publicEmail = args.publicEmail;
+    if (args.publicPhone !== undefined) updates.publicPhone = args.publicPhone;
+    if (args.publicInsta !== undefined) updates.publicInsta = args.publicInsta;
+    if (args.publicWebsite !== undefined)
+      updates.publicWebsite = args.publicWebsite;
+    if (args.displayName !== undefined) updates.displayName = args.displayName;
+
+    await ctx.db.patch(user._id, updates);
 
     return null;
   },
