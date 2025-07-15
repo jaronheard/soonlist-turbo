@@ -36,7 +36,10 @@ const profileSchema = z.object({
     .string()
     .min(3, "Username must be at least 3 characters")
     .max(30, "Username must be 30 characters or less"),
-  displayName: z.string().max(50, "Display name must be 50 characters or less").optional(),
+  displayName: z
+    .string()
+    .max(50, "Display name must be 50 characters or less")
+    .optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -50,7 +53,7 @@ export default function EditProfileScreen() {
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.imageUrl ?? null,
   );
-  
+
   const displayNameRef = useRef<TextInput>(null);
   const userData = useQuery(
     api.users.getByUsername,
@@ -325,7 +328,10 @@ export default function EditProfileScreen() {
                 Preview
               </Text>
               <Text className="text-sm text-neutral-500">
-                On events, you'll appear as: <Text className="font-medium text-neutral-700">{watchedDisplayName?.trim() || user?.username || "Unknown"}</Text>
+                On events, you'll appear as:{" "}
+                <Text className="font-medium text-neutral-700">
+                  {watchedDisplayName?.trim() || user?.username || "Unknown"}
+                </Text>
               </Text>
             </View>
 
