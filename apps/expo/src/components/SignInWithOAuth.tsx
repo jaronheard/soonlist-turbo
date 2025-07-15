@@ -146,9 +146,9 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
           console.error("[OAUTH_SIGNUP] OAuth sign up completion error", {
             error: err,
             guestUserId,
-            firstName: firstName || null,
-            lastName: lastName || null,
-            email: email,
+            firstName: pendingSignUp?.firstName || null,
+            lastName: pendingSignUp?.lastName || null,
+            email: pendingSignUp?.emailAddress || null,
           });
           logError("OAuth sign up completion error", err);
           const clerkError = err as {

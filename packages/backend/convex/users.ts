@@ -33,7 +33,7 @@ async function generateUniqueUsername(
       .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with hyphens
       .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
       .replace(/-+/g, "-"); // Replace multiple hyphens with single
-    
+
     console.log("[USERNAME_GEN] Slugified", { input: text, output: result });
     return result;
   };
@@ -80,9 +80,9 @@ async function generateUniqueUsername(
     candidates.push(`${cleanFirst[0]}-${cleanLast}`); // j-smith
   }
 
-  console.log("[USERNAME_GEN] Generated candidates", { 
+  console.log("[USERNAME_GEN] Generated candidates", {
     allCandidates: candidates,
-    candidateCount: candidates.length 
+    candidateCount: candidates.length,
   });
 
   // Filter candidates by length and ensure minimum length
@@ -117,15 +117,17 @@ async function generateUniqueUsername(
 
     console.log("[USERNAME_GEN] Candidate availability check results", {
       takenUsernames: Array.from(takenUsernames),
-      availableCandidates: validCandidates.filter(c => !takenUsernames.has(c)),
+      availableCandidates: validCandidates.filter(
+        (c) => !takenUsernames.has(c),
+      ),
     });
 
     // Return first available candidate
     for (const candidate of validCandidates) {
       if (!takenUsernames.has(candidate)) {
-        console.log("[USERNAME_GEN] SUCCESS: Found available username", { 
+        console.log("[USERNAME_GEN] SUCCESS: Found available username", {
           selectedUsername: candidate,
-          strategy: "primary_candidates"
+          strategy: "primary_candidates",
         });
         return candidate;
       }
@@ -134,11 +136,14 @@ async function generateUniqueUsername(
 
   // If all candidates are taken, add numbers to the best candidate
   const baseUsername = validCandidates[0] || "user";
-  
-  console.log("[USERNAME_GEN] All primary candidates taken, trying numbered fallbacks", {
-    baseUsername,
-    fallbackStrategy: "numbered_usernames"
-  });
+
+  console.log(
+    "[USERNAME_GEN] All primary candidates taken, trying numbered fallbacks",
+    {
+      baseUsername,
+      fallbackStrategy: "numbered_usernames",
+    },
+  );
 
   // Ensure base username with numbers fits within limit
   const maxNumberLength = MAX_USERNAME_LENGTH - baseUsername.length - 1; // -1 for the number
@@ -148,7 +153,7 @@ async function generateUniqueUsername(
     console.log("[USERNAME_GEN] Numbered fallback constraints", {
       maxNumberLength,
       maxNumber,
-      baseUsernameLength: baseUsername.length
+      baseUsernameLength: baseUsername.length,
     });
 
     // Batch check numbered usernames (1-99)
@@ -160,7 +165,7 @@ async function generateUniqueUsername(
     if (numberedCandidates.length > 0) {
       console.log("[USERNAME_GEN] Checking numbered candidates", {
         numberedCandidates: numberedCandidates.slice(0, 5), // Show first 5 for brevity
-        totalNumberedCandidates: numberedCandidates.length
+        totalNumberedCandidates: numberedCandidates.length,
       });
 
       const existingNumbered = await Promise.all(
@@ -178,22 +183,31 @@ async function generateUniqueUsername(
 
       console.log("[USERNAME_GEN] Numbered candidates availability", {
         takenNumbered: Array.from(takenNumbered),
-        availableNumbered: numberedCandidates.filter(c => !takenNumbered.has(c)).slice(0, 5)
+        availableNumbered: numberedCandidates
+          .filter((c) => !takenNumbered.has(c))
+          .slice(0, 5),
       });
 
       for (const candidate of numberedCandidates) {
         if (!takenNumbered.has(candidate)) {
-          console.log("[USERNAME_GEN] SUCCESS: Found available numbered username", { 
-            selectedUsername: candidate,
-            strategy: "numbered_fallback"
-          });
+          console.log(
+            "[USERNAME_GEN] SUCCESS: Found available numbered username",
+            {
+              selectedUsername: candidate,
+              strategy: "numbered_fallback",
+            },
+          );
           return candidate;
         }
       }
-      
-      console.log("[USERNAME_GEN] All numbered candidates taken, proceeding to timestamp fallback");
+
+      console.log(
+        "[USERNAME_GEN] All numbered candidates taken, proceeding to timestamp fallback",
+      );
     } else {
-      console.log("[USERNAME_GEN] No numbered candidates possible due to length constraints");
+      console.log(
+        "[USERNAME_GEN] No numbered candidates possible due to length constraints",
+      );
     }
   }
 
@@ -207,13 +221,13 @@ async function generateUniqueUsername(
     fallbackUsername,
     fallbackLength: fallbackUsername.length,
     maxLength: MAX_USERNAME_LENGTH,
-    strategy: "timestamp_fallback"
+    strategy: "timestamp_fallback",
   });
 
   if (fallbackUsername.length <= MAX_USERNAME_LENGTH) {
-    console.log("[USERNAME_GEN] SUCCESS: Using timestamp fallback username", { 
+    console.log("[USERNAME_GEN] SUCCESS: Using timestamp fallback username", {
       selectedUsername: fallbackUsername,
-      strategy: "timestamp_fallback"
+      strategy: "timestamp_fallback",
     });
     return fallbackUsername;
   }
@@ -224,14 +238,14 @@ async function generateUniqueUsername(
     MAX_USERNAME_LENGTH - timestamp.length,
   );
   const finalUsername = `${truncatedBase}${timestamp}`;
-  
-  console.log("[USERNAME_GEN] SUCCESS: Using truncated timestamp fallback", { 
+
+  console.log("[USERNAME_GEN] SUCCESS: Using truncated timestamp fallback", {
     selectedUsername: finalUsername,
     truncatedBase,
     timestamp,
-    strategy: "truncated_timestamp_fallback"
+    strategy: "truncated_timestamp_fallback",
   });
-  
+
   return finalUsername;
 }
 
@@ -259,7 +273,7 @@ export const generateUsername = query({
     if (!args.guestUserId?.startsWith("guest_")) {
       console.error("[USERNAME_GEN] ERROR: Invalid guest user ID", {
         guestUserId: args.guestUserId,
-        error: "Guest user ID must start with 'guest_'"
+        error: "Guest user ID must start with 'guest_'",
       });
       throw new ConvexError(
         "Valid guest user ID required for username generation",
@@ -273,19 +287,19 @@ export const generateUsername = query({
         args.lastName,
         args.email,
       );
-      
+
       console.log("[USERNAME_GEN] generateUsername completed successfully", {
         guestUserId: args.guestUserId,
         generatedUsername: result,
-        duration: "completed"
+        duration: "completed",
       });
-      
+
       return result;
     } catch (error) {
       console.error("[USERNAME_GEN] ERROR: generateUsername failed", {
         guestUserId: args.guestUserId,
         error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
       });
       throw error;
     }
