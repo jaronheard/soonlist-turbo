@@ -104,18 +104,6 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
         // Retry function with exponential backoff
         const attemptSignupWithRetry = async (): Promise<boolean> => {
           try {
-            console.log(
-              `[OAUTH_SIGNUP] Attempting username generation (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`,
-              {
-                guestUserId,
-                firstName: firstName || null,
-                lastName: lastName || null,
-                email: email,
-                retryCount,
-                timestamp: new Date().toISOString(),
-              },
-            );
-
             // Generate username with retry attempt info
             const username = await convex.query(api.users.generateUsername, {
               guestUserId,
@@ -125,15 +113,6 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               retryAttempt: retryCount,
               maxRetries: MAX_RETRIES,
             });
-
-            console.log(
-              `[OAUTH_SIGNUP] Username generation successful (attempt ${retryCount + 1})`,
-              {
-                generatedUsername: username,
-                guestUserId,
-                retryCount,
-              },
-            );
 
             // Try to update pending signup with the generated username
             const res = await pendingSignUp.update({ username });
@@ -152,15 +131,6 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
                 });
               }
 
-              console.log(
-                `[OAUTH_SIGNUP] Signup completed successfully after ${retryCount + 1} attempts`,
-                {
-                  finalUsername: username,
-                  guestUserId,
-                  totalAttempts: retryCount + 1,
-                },
-              );
-
               return true; // Success
             } else if (res.status === "missing_requirements") {
               setOauthError(
@@ -171,18 +141,6 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
 
             return false; // Unknown status, don't retry
           } catch (err: unknown) {
-            console.error(
-              `[OAUTH_SIGNUP] OAuth signup attempt ${retryCount + 1} failed`,
-              {
-                error: err,
-                guestUserId,
-                firstName: firstName || null,
-                lastName: lastName || null,
-                email: email,
-                retryCount,
-              },
-            );
-
             const clerkError = err as {
               errors?: ClerkAPIError[];
               message?: string;
@@ -211,16 +169,6 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
 
             // If it's a username conflict and we haven't exceeded max retries, retry
             if (isUsernameConflict && retryCount < MAX_RETRIES) {
-              console.log(
-                `[OAUTH_SIGNUP] Username conflict detected, retrying in ${BASE_DELAY * Math.pow(2, retryCount)}ms`,
-                {
-                  conflictMessage: errorMessage,
-                  retryCount: retryCount + 1,
-                  maxRetries: MAX_RETRIES,
-                  nextDelay: BASE_DELAY * Math.pow(2, retryCount),
-                },
-              );
-
               // Exponential backoff delay
               const delay = BASE_DELAY * Math.pow(2, retryCount);
               await new Promise((resolve) => setTimeout(resolve, delay));
@@ -231,14 +179,6 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
 
             // If it's not a username conflict or we've exceeded max retries, show error
             if (retryCount >= MAX_RETRIES) {
-              console.error(
-                `[OAUTH_SIGNUP] Max retries exceeded for username conflicts`,
-                {
-                  totalAttempts: retryCount + 1,
-                  maxRetries: MAX_RETRIES,
-                  lastError: errorMessage,
-                },
-              );
               setOauthError(
                 "Unable to create a unique username after multiple attempts. Please try again later.",
               );
@@ -257,14 +197,6 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
         try {
           await attemptSignupWithRetry();
         } catch (err: unknown) {
-          console.error(
-            "[OAUTH_SIGNUP] Retry process failed with unexpected error",
-            {
-              error: err,
-              guestUserId,
-              totalAttempts: retryCount + 1,
-            },
-          );
           logError("OAuth signup retry process failed", err);
           setOauthError("An unexpected error occurred. Please try again.");
         }

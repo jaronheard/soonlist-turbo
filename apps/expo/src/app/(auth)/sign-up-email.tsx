@@ -68,18 +68,6 @@ export default function SignUpScreen() {
     // Retry function with exponential backoff
     const attemptSignupWithRetry = async (): Promise<void> => {
       try {
-        console.log(
-          `[SIGNUP_EMAIL] Attempting username generation (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`,
-          {
-            guestUserId,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.emailAddress,
-            retryCount,
-            timestamp: new Date().toISOString(),
-          },
-        );
-
         // Generate username synchronously using convex.query()
         const username = await convex.query(api.users.generateUsername, {
           guestUserId,
@@ -90,15 +78,6 @@ export default function SignUpScreen() {
           maxRetries: MAX_RETRIES,
         });
 
-        console.log(
-          `[SIGNUP_EMAIL] Username generation successful (attempt ${retryCount + 1})`,
-          {
-            generatedUsername: username,
-            guestUserId,
-            retryCount,
-          },
-        );
-
         // Try to create user with the generated username
         await signUp.create({
           ...data,
@@ -108,28 +87,7 @@ export default function SignUpScreen() {
           strategy: "email_code",
         });
         router.push("/verify-email");
-
-        console.log(
-          `[SIGNUP_EMAIL] Signup completed successfully after ${retryCount + 1} attempts`,
-          {
-            finalUsername: username,
-            guestUserId,
-            totalAttempts: retryCount + 1,
-          },
-        );
       } catch (err: unknown) {
-        console.error(
-          `[SIGNUP_EMAIL] Signup attempt ${retryCount + 1} failed`,
-          {
-            error: err,
-            guestUserId,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.emailAddress,
-            retryCount,
-          },
-        );
-
         const clerkError = err as {
           errors?: ClerkAPIError[];
           message?: string;
@@ -158,16 +116,6 @@ export default function SignUpScreen() {
 
         // If it's a username conflict and we haven't exceeded max retries, retry
         if (isUsernameConflict && retryCount < MAX_RETRIES) {
-          console.log(
-            `[SIGNUP_EMAIL] Username conflict detected, retrying in ${BASE_DELAY * Math.pow(2, retryCount)}ms`,
-            {
-              conflictMessage: errorMessage,
-              retryCount: retryCount + 1,
-              maxRetries: MAX_RETRIES,
-              nextDelay: BASE_DELAY * Math.pow(2, retryCount),
-            },
-          );
-
           // Exponential backoff delay
           const delay = BASE_DELAY * Math.pow(2, retryCount);
           await new Promise((resolve) => setTimeout(resolve, delay));
@@ -178,14 +126,6 @@ export default function SignUpScreen() {
 
         // If it's not a username conflict or we've exceeded max retries, show error
         if (retryCount >= MAX_RETRIES) {
-          console.error(
-            `[SIGNUP_EMAIL] Max retries exceeded for username conflicts`,
-            {
-              totalAttempts: retryCount + 1,
-              maxRetries: MAX_RETRIES,
-              lastError: errorMessage,
-            },
-          );
           setGeneralError(
             "Unable to create a unique username after multiple attempts. Please try again later.",
           );
