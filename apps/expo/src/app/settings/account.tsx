@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -7,7 +7,6 @@ import {
   Platform,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -16,7 +15,7 @@ import { Redirect, router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
 
@@ -45,7 +44,6 @@ export default function EditProfileScreen() {
   const { user } = useUser();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const signOut = useSignOut();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.imageUrl ?? null,
   );
@@ -60,9 +58,6 @@ export default function EditProfileScreen() {
   } = useAppStore();
 
   const {
-    control,
-    handleSubmit,
-    formState: { errors, isDirty, isValid },
     reset,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -83,32 +78,6 @@ export default function EditProfileScreen() {
 
 
   const resetOnboardingMutation = useMutation(api.users.resetOnboarding);
-
-  const onSubmit = useCallback(
-    async (data: ProfileFormData) => {
-      const loadingToastId = toast.loading("Updating profile...");
-      setIsSubmitting(true);
-      try {
-        if (data.username !== user?.username) {
-          await user?.update({ username: data.username });
-        }
-        toast.dismiss(loadingToastId);
-        toast.success("Profile updated successfully");
-        if (router.canGoBack()) {
-          router.back();
-        } else {
-          router.navigate("/feed");
-        }
-      } catch (error) {
-        logError("Error updating profile", error);
-        toast.dismiss(loadingToastId);
-        toast.error("An unexpected error occurred");
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [user],
-  );
 
   const pickImage = useCallback(async () => {
     const loadingToastId = toast.loading("Updating profile image...");
@@ -155,20 +124,6 @@ export default function EditProfileScreen() {
       setProfileImage(user?.imageUrl ?? null);
     }
   }, [user]);
-
-
-
-  const handleSaveOrBack = useCallback(() => {
-    if (isDirty && isValid) {
-      void handleSubmit(onSubmit)();
-    } else {
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.navigate("/feed");
-      }
-    }
-  }, [isDirty, isValid, handleSubmit, onSubmit]);
 
   const handleDeleteAccount = useCallback(() => {
     Alert.alert(
@@ -320,7 +275,7 @@ export default function EditProfileScreen() {
             </TouchableOpacity>
           </View>
 
-            <View className="mt-8">
+          <View className="mt-8">
               <Text className="text-lg font-semibold">Preferences</Text>
               <View className="mt-4">
                 <Text className="mb-2 text-base font-medium">
@@ -335,9 +290,9 @@ export default function EditProfileScreen() {
                   placeholder="Select a timezone"
                 />
               </View>
-            </View>
+          </View>
 
-            <View className="mt-12">
+          <View className="mt-12">
               <Text className="text-lg font-semibold">Subscription</Text>
               {(() => {
                 if (!user) return null;
@@ -393,9 +348,9 @@ export default function EditProfileScreen() {
                   </TouchableOpacity>
                 );
               })()}
-            </View>
+          </View>
 
-            {__DEV__ && (
+          {__DEV__ && (
               <View className="mt-12">
                 <Text className="mb-2 text-base font-semibold text-blue-600">
                   Development Testing
@@ -412,9 +367,9 @@ export default function EditProfileScreen() {
                   </Text>
                 </TouchableOpacity>
               </View>
-            )}
+          )}
 
-            <View className="mt-12">
+          <View className="mt-12">
               <Text className="mb-2 text-base font-semibold text-red-500">
                 Danger Zone
               </Text>
@@ -423,7 +378,6 @@ export default function EditProfileScreen() {
                   onPress={handleRestartOnboarding}
                   variant="destructive"
                   className="bg-red-500"
-                  disabled={isSubmitting}
                 >
                   Restart Onboarding
                 </Button>
@@ -432,7 +386,6 @@ export default function EditProfileScreen() {
                   onPress={handleDeleteAccount}
                   variant="destructive"
                   className="bg-red-500"
-                  disabled={isSubmitting}
                 >
                   Delete Account
                 </Button>
@@ -441,7 +394,6 @@ export default function EditProfileScreen() {
                   data.
                 </Text>
               </View>
-            </View>
           </View>
         </View>
       </ScrollView>
