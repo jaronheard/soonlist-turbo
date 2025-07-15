@@ -1,0 +1,33 @@
+---
+description: Guidelines for optimal Zustand store usage, covering selector patterns, action invocation, state updates, and component integration to ensure performance and maintainability.
+globs: 
+alwaysApply: false
+---
+# Zustand Store Usage Guidelines
+
+## Single store
+Use a single store in [useStore.ts](mdc:components/stores/useStore.ts) rather than creating multiple stores
+
+## Always subscribe with a selector
+```typescript
+const items = useStore(s => s.items)
+```
+
+## If the selector returns an object/array, add `shallow`
+```typescript
+const info = useStore(s => ({ propA: s.propA, propB: s.propB }), shallow)
+```
+
+## Call actions via stable refs from auto-generated selectors
+```typescript
+const increment = useStore.use.increment()
+```
+
+## Update state with a functional `set` call
+```typescript
+set(s => ({ count: s.count + 1 }))
+```
+
+## Never use the store bare in a component
+(i.e., don't call `useStore()` without a selector).
+

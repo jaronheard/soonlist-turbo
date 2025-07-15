@@ -578,3 +578,25 @@ export const useRefreshTimestampOnFocus = () => {
 
   return refreshTimestamp;
 };
+
+// Auto-generated selectors for actions (following Zustand best practices)
+// These provide stable references to actions without using getState()
+export const useSetHasSeenOnboarding = () => 
+  useAppStore((state) => state.setHasSeenOnboarding);
+
+export const useIncrementEventView = () => 
+  useAppStore((state) => state.incrementEventView);
+
+export const useShouldShowViewPaywall = () => 
+  useAppStore((state) => state.shouldShowViewPaywall);
+
+export const useMarkPaywallShown = () => 
+  useAppStore((state) => state.markPaywallShown);
+
+// Auto-generated selector pattern for stable action references
+useAppStore.use = {
+  setHasSeenOnboarding: () => useAppStore((state) => state.setHasSeenOnboarding),
+  incrementEventView: () => useAppStore((state) => state.incrementEventView),
+  shouldShowViewPaywall: () => useAppStore((state) => state.shouldShowViewPaywall),
+  markPaywallShown: () => useAppStore((state) => state.markPaywallShown),
+};

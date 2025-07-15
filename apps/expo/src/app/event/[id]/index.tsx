@@ -60,19 +60,21 @@ export default function Page() {
     hasCountedViewRef.current = false;
   }, [id]);
 
+  const incrementEventView = useAppStore.use.incrementEventView();
+  const shouldShowViewPaywall = useAppStore.use.shouldShowViewPaywall();
+  const markPaywallShown = useAppStore.use.markPaywallShown();
+
   // Track event view and show paywall if needed
   useEffect(() => {
     if (event && !hasUnlimited && !hasCountedViewRef.current) {
       hasCountedViewRef.current = true;
 
-      const store = useAppStore.getState();
+      incrementEventView();
 
-      store.incrementEventView();
-
-      if (store.shouldShowViewPaywall()) {
+      if (shouldShowViewPaywall()) {
         void showProPaywallIfNeeded()
           .then(() => {
-            store.markPaywallShown();
+            markPaywallShown();
           })
           .catch((error) => {
             console.error("Failed to show paywall:", error);

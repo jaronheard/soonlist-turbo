@@ -24,9 +24,11 @@ export default function PaywallScreen() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
+  const setHasSeenOnboarding = useAppStore.use.setHasSeenOnboarding();
+
   const completeOnboarding = useCallback(() => {
-    useAppStore.getState().setHasSeenOnboarding(true);
-  }, []);
+    setHasSeenOnboarding(true);
+  }, [setHasSeenOnboarding]);
 
   // Debug logging
   console.log("Paywall Debug:", {
