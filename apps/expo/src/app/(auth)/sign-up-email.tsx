@@ -65,6 +65,14 @@ export default function SignUpScreen() {
       let username: string;
 
       try {
+        console.log("[SIGNUP_EMAIL] Attempting username generation", {
+          guestUserId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.emailAddress,
+          timestamp: new Date().toISOString(),
+        });
+
         // Generate username synchronously using convex.query()
         username = await convex.query(api.users.generateUsername, {
           guestUserId,
@@ -72,7 +80,19 @@ export default function SignUpScreen() {
           lastName: data.lastName,
           email: data.emailAddress,
         });
+
+        console.log("[SIGNUP_EMAIL] Username generation successful", {
+          generatedUsername: username,
+          guestUserId,
+        });
       } catch (usernameError) {
+        console.error("[SIGNUP_EMAIL] Username generation failed", {
+          error: usernameError,
+          guestUserId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.emailAddress,
+        });
         logError("Error generating username", usernameError);
         setGeneralError("Failed to generate username. Please try again.");
         setIsSubmitting(false);

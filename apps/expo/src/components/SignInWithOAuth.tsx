@@ -99,12 +99,25 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
             return;
           }
 
+          console.log("[OAUTH_SIGNUP] Attempting username generation", {
+            guestUserId,
+            firstName: firstName || null,
+            lastName: lastName || null,
+            email: email,
+            timestamp: new Date().toISOString(),
+          });
+
           // Generate username synchronously using convex.query()
           const username = await convex.query(api.users.generateUsername, {
             guestUserId,
             firstName: firstName || null,
             lastName: lastName || null,
             email: email,
+          });
+
+          console.log("[OAUTH_SIGNUP] Username generation successful", {
+            generatedUsername: username,
+            guestUserId,
           });
 
           // Username generated successfully
@@ -130,6 +143,13 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
             );
           }
         } catch (err: unknown) {
+          console.error("[OAUTH_SIGNUP] OAuth sign up completion error", {
+            error: err,
+            guestUserId,
+            firstName: firstName || null,
+            lastName: lastName || null,
+            email: email,
+          });
           logError("OAuth sign up completion error", err);
           const clerkError = err as {
             errors?: ClerkAPIError[];
