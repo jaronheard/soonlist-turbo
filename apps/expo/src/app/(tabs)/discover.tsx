@@ -26,6 +26,12 @@ function DiscoverContent() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
+  // Fetch user stats
+  const stats = useQuery(
+    api.events.getStats,
+    user?.username ? { userName: user.username } : "skip",
+  );
+
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
   const stableTimestamp = useStableTimestamp();
@@ -126,7 +132,7 @@ function DiscoverContent() {
             isDiscoverFeed={true}
             savedEventIds={savedEventIds}
           />
-          {user && <AddEventButton showChevron={false} />}
+          {user && <AddEventButton showChevron={false} stats={stats} />}
         </View>
       )}
     </View>

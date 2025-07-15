@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   Pressable,
@@ -30,6 +30,8 @@ import {
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
+import { useRevenueCat } from "~/providers/RevenueCatProvider";
+import { useAppStore } from "~/store";
 import { formatEventDateRange } from "~/utils/dates";
 import { logError } from "../../../utils/errorLogging";
 
@@ -43,8 +45,41 @@ export default function Page() {
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
   // Track whether the image is fully loaded (for a fade-in)
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  // Track if we've already counted this event view to prevent multiple increments
+  const hasCountedViewRef = useRef(false);
 
   const event = useQuery(api.events.get, { eventId: id });
+
+  // Event view tracking
+  const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
+  const hasUnlimited =
+    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+
+  // Reset view count tracking when event ID changes
+  useEffect(() => {
+    hasCountedViewRef.current = false;
+  }, [id]);
+
+  // Track event view and show paywall if needed
+  useEffect(() => {
+    if (event && !hasUnlimited && !hasCountedViewRef.current) {
+      hasCountedViewRef.current = true;
+
+      const store = useAppStore.getState();
+
+      store.incrementEventView();
+
+      if (store.shouldShowViewPaywall()) {
+        void showProPaywallIfNeeded()
+          .then(() => {
+            store.markPaywallShown();
+          })
+          .catch((error) => {
+            console.error("Failed to show paywall:", error);
+          });
+      }
+    }
+  }, [event, hasUnlimited, showProPaywallIfNeeded, customerInfo]);
 
   // Properly check if the event is saved by the current user
   const isSaved =

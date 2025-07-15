@@ -40,12 +40,25 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
 
   // Initialize RevenueCat only once when the component mounts
   useMountEffect(() => {
+    let updateListener: ((customerInfo: CustomerInfo) => void) | undefined;
+    let isMounted = true;
+
     async function initializeRevenueCatOnce() {
       if (isInitialized) return;
 
       try {
         await initializeRevenueCat();
+
+        // Check if component is still mounted before proceeding
+        if (!isMounted) return;
+
         setIsInitialized(true);
+
+        // Set up customer info update listener
+        updateListener = (customerInfo: CustomerInfo) => {
+          setCustomerInfo(customerInfo);
+        };
+        Purchases.addCustomerInfoUpdateListener(updateListener);
 
         // Only try to log in if there's a userId after initialization
         if (userId) {
@@ -54,11 +67,21 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       } catch (error) {
         logError("Failed to initialize RevenueCat", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 
     void initializeRevenueCatOnce();
+
+    // Cleanup listener on unmount
+    return () => {
+      isMounted = false;
+      if (updateListener) {
+        Purchases.removeCustomerInfoUpdateListener(updateListener);
+      }
+    };
   });
 
   // Handle Clerk user ID changes, but only after initialization
@@ -140,6 +163,14 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       switch (paywallResult) {
         case PAYWALL_RESULT.PURCHASED:
         case PAYWALL_RESULT.RESTORED:
+          // Refresh customer info after successful purchase
+          try {
+            const updatedCustomerInfo = await Purchases.getCustomerInfo();
+            setCustomerInfo(updatedCustomerInfo);
+          } catch (error) {
+            logError("Error refreshing customer info after purchase", error);
+          }
+
           // Send welcome notification if notifications are enabled
           if (hasNotificationPermission) {
             // Using OneSignal for notifications

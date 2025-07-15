@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -10,7 +10,7 @@ import Animated, {
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { ChevronDown, PlusIcon, Sparkles } from "~/components/icons";
+import { ChevronDown, Lock, PlusIcon } from "~/components/icons";
 import { CircularSpinner } from "~/components/ui/CircularSpinner";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -34,8 +34,8 @@ interface AddEventButtonProps {
  * Opens the native photo picker (up to 10 images) and creates events for each selected photo in parallel.
  * This bypasses the /add screen for a faster multi‑event creation flow.
  * Paywall logic:
- * - First event is free.
- * - If not the first event, and upcoming events >= 5, requires "unlimited" entitlement.
+ * - First 3 events are free.
+ * - After 3 total captured events, requires "unlimited" entitlement.
  */
 export default function AddEventButton({
   showChevron = true,
@@ -53,21 +53,16 @@ export default function AddEventButton({
 
   const { triggerAddEventFlow } = useAddEventFlow();
 
-  const upcomingEventsCount = stats?.upcomingEvents ?? 0;
   const allTimeEventsCount = stats?.allTimeEvents ?? 0;
+  const isStatsLoading = stats === undefined;
 
   let canProceedWithAdd = false;
-  if (allTimeEventsCount === 0) {
-    // First capture is always allowed
+  if (allTimeEventsCount < 3) {
+    // First 3 captures are always allowed
     canProceedWithAdd = true;
   } else {
-    if (upcomingEventsCount < 5) {
-      // Allowed if less than 5 upcoming events (and not the first capture)
-      canProceedWithAdd = true;
-    } else {
-      // 5 or more upcoming events, and not the first capture: requires unlimited
-      canProceedWithAdd = hasUnlimited;
-    }
+    // After 3 captures, requires unlimited subscription
+    canProceedWithAdd = hasUnlimited;
   }
 
   const promptUserToUpgrade = async () => {
@@ -142,7 +137,7 @@ export default function AddEventButton({
       </View>
 
       {/* Main action button */}
-      {!isRevenueCatLoading && (
+      {!isRevenueCatLoading && !isStatsLoading && (
         <TouchableOpacity
           onPress={handlePress}
           className="absolute bottom-8 self-center"
@@ -179,20 +174,23 @@ export default function AddEventButton({
               )}
             </View>
           ) : (
-            <View
-              className="flex-row items-center justify-center rounded-full bg-interactive-1 px-5 py-4"
-              style={{
-                shadowColor: "#5A32FB",
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-                elevation: 8,
-              }}
-            >
-              <Sparkles size={20} color="#FFF" />
-              <Text className="ml-2 text-3xl font-bold text-white">
-                Start your free trial
-              </Text>
+            <View className="relative">
+              <View
+                className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
+                style={{
+                  shadowColor: "#5A32FB",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 6,
+                  elevation: 8,
+                }}
+              >
+                <PlusIcon size={44} color="#FFF" strokeWidth={2} />
+              </View>
+              {/* Lock icon overlay */}
+              <View className="absolute bottom-0 right-0 rounded-full bg-white p-0.5">
+                <Lock size={16} color="#5A32FB" strokeWidth={3} />
+              </View>
             </View>
           )}
         </TouchableOpacity>

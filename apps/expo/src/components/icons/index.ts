@@ -25,6 +25,7 @@ export { default as Instagram } from "./Instagram";
 export { default as Link } from "./Link";
 export { default as LinkIcon } from "./LinkIcon";
 export { default as List } from "./List";
+export { default as Lock } from "./Lock";
 export { default as LogOut } from "./LogOut";
 export { default as Mail } from "./Mail";
 export { default as Map } from "./Map";
