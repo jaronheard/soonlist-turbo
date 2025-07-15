@@ -57,9 +57,7 @@ export default function EditProfileScreen() {
     setUserTimezone,
   } = useAppStore();
 
-  const {
-    reset,
-  } = useForm<ProfileFormData>({
+  const { reset } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       username: user?.username ?? "",
@@ -74,8 +72,6 @@ export default function EditProfileScreen() {
       });
     }
   }, [userData, user, reset]);
-
-
 
   const resetOnboardingMutation = useMutation(api.users.resetOnboarding);
 
@@ -276,124 +272,123 @@ export default function EditProfileScreen() {
           </View>
 
           <View className="mt-8">
-              <Text className="text-lg font-semibold">Preferences</Text>
-              <View className="mt-4">
-                <Text className="mb-2 text-base font-medium">
-                  Default Timezone
-                </Text>
-                <Text className="mb-2 text-sm text-neutral-500">
-                  This timezone will be used for all new events you create.
-                </Text>
-                <TimezoneSelectNative
-                  value={userTimezone}
-                  onValueChange={setUserTimezone}
-                  placeholder="Select a timezone"
-                />
-              </View>
+            <Text className="text-lg font-semibold">Preferences</Text>
+            <View className="mt-4">
+              <Text className="mb-2 text-base font-medium">
+                Default Timezone
+              </Text>
+              <Text className="mb-2 text-sm text-neutral-500">
+                This timezone will be used for all new events you create.
+              </Text>
+              <TimezoneSelectNative
+                value={userTimezone}
+                onValueChange={setUserTimezone}
+                placeholder="Select a timezone"
+              />
+            </View>
           </View>
 
           <View className="mt-12">
-              <Text className="text-lg font-semibold">Subscription</Text>
-              {(() => {
-                if (!user) return null;
-                const hasUnlimited =
-                  customerInfo?.entitlements.active.unlimited?.isActive ??
-                  false;
+            <Text className="text-lg font-semibold">Subscription</Text>
+            {(() => {
+              if (!user) return null;
+              const hasUnlimited =
+                customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-                const stripeSubscription =
-                  customerInfo?.originalPurchaseDate &&
-                  new Date(customerInfo.originalPurchaseDate) <=
-                    new Date(2025, 2, 7);
+              const stripeSubscription =
+                customerInfo?.originalPurchaseDate &&
+                new Date(customerInfo.originalPurchaseDate) <=
+                  new Date(2025, 2, 7);
 
-                if (hasUnlimited && !stripeSubscription) {
-                  return (
-                    <TouchableOpacity
-                      onPress={() => {
-                        void Linking.openURL(
-                          "itms-apps://apps.apple.com/account/subscriptions",
-                        );
-                      }}
-                      className="mt-2 rounded-md bg-neutral-100 p-4"
-                    >
-                      <Text className="text-base">
-                        View subscription in Settings
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }
-
-                if (hasUnlimited && stripeSubscription) {
-                  return (
-                    <TouchableOpacity
-                      onPress={() => {
-                        void Linking.openURL(
-                          "https://www.soonlist.com/account/plans",
-                        );
-                      }}
-                      className="mt-2 rounded-md bg-neutral-100 p-4"
-                    >
-                      <Text className="text-base">
-                        Manage subscription on web
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }
-
+              if (hasUnlimited && !stripeSubscription) {
                 return (
                   <TouchableOpacity
-                    onPress={showProPaywallIfNeeded}
+                    onPress={() => {
+                      void Linking.openURL(
+                        "itms-apps://apps.apple.com/account/subscriptions",
+                      );
+                    }}
                     className="mt-2 rounded-md bg-neutral-100 p-4"
                   >
-                    <Text className="text-base">Upgrade to Pro</Text>
+                    <Text className="text-base">
+                      View subscription in Settings
+                    </Text>
                   </TouchableOpacity>
                 );
-              })()}
+              }
+
+              if (hasUnlimited && stripeSubscription) {
+                return (
+                  <TouchableOpacity
+                    onPress={() => {
+                      void Linking.openURL(
+                        "https://www.soonlist.com/account/plans",
+                      );
+                    }}
+                    className="mt-2 rounded-md bg-neutral-100 p-4"
+                  >
+                    <Text className="text-base">
+                      Manage subscription on web
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }
+
+              return (
+                <TouchableOpacity
+                  onPress={showProPaywallIfNeeded}
+                  className="mt-2 rounded-md bg-neutral-100 p-4"
+                >
+                  <Text className="text-base">Upgrade to Pro</Text>
+                </TouchableOpacity>
+              );
+            })()}
           </View>
 
           {__DEV__ && (
-              <View className="mt-12">
-                <Text className="mb-2 text-base font-semibold text-blue-600">
-                  Development Testing
+            <View className="mt-12">
+              <Text className="mb-2 text-base font-semibold text-blue-600">
+                Development Testing
+              </Text>
+              <TouchableOpacity
+                onPress={() => router.push("/settings/workflow-test")}
+                className="mt-2 rounded-md bg-blue-100 p-4"
+              >
+                <Text className="text-base text-blue-800">
+                  Workflow Failure Tests
                 </Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/settings/workflow-test")}
-                  className="mt-2 rounded-md bg-blue-100 p-4"
-                >
-                  <Text className="text-base text-blue-800">
-                    Workflow Failure Tests
-                  </Text>
-                  <Text className="text-sm text-blue-600">
-                    Test workflow failure notifications
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                <Text className="text-sm text-blue-600">
+                  Test workflow failure notifications
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
 
           <View className="mt-12">
-              <Text className="mb-2 text-base font-semibold text-red-500">
-                Danger Zone
+            <Text className="mb-2 text-base font-semibold text-red-500">
+              Danger Zone
+            </Text>
+            <View>
+              <Button
+                onPress={handleRestartOnboarding}
+                variant="destructive"
+                className="bg-red-500"
+              >
+                Restart Onboarding
+              </Button>
+              <View className="h-4" />
+              <Button
+                onPress={handleDeleteAccount}
+                variant="destructive"
+                className="bg-red-500"
+              >
+                Delete Account
+              </Button>
+              <Text className="mt-2 text-xs text-neutral-500">
+                This will permanently delete your account and all associated
+                data.
               </Text>
-              <View>
-                <Button
-                  onPress={handleRestartOnboarding}
-                  variant="destructive"
-                  className="bg-red-500"
-                >
-                  Restart Onboarding
-                </Button>
-                <View className="h-4" />
-                <Button
-                  onPress={handleDeleteAccount}
-                  variant="destructive"
-                  className="bg-red-500"
-                >
-                  Delete Account
-                </Button>
-                <Text className="mt-2 text-xs text-neutral-500">
-                  This will permanently delete your account and all associated
-                  data.
-                </Text>
-              </View>
+            </View>
           </View>
         </View>
       </ScrollView>

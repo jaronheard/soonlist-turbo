@@ -33,7 +33,7 @@ export default function DisplayNameScreen() {
   const { isAuthenticated } = useConvexAuth();
   const { user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const userData = useQuery(
     api.users.getByUsername,
     user?.username ? { userName: user.username } : "skip",
@@ -130,7 +130,8 @@ export default function DisplayNameScreen() {
         <View className="flex-1 p-4">
           <View className="mb-6">
             <Text className="mb-2 text-sm text-neutral-500">
-              Your display name is shown when you create events. If you don't set one, your username will be used instead.
+              Your display name is shown when you create events. If you don't
+              set one, your username will be used instead.
             </Text>
           </View>
 
@@ -170,7 +171,10 @@ export default function DisplayNameScreen() {
               Preview
             </Text>
             <Text className="text-sm text-neutral-500">
-              On events, you'll appear as: <Text className="font-medium text-neutral-700">@{previewName}</Text>
+              On events, you'll appear as:{" "}
+              <Text className="font-medium text-neutral-700">
+                @{previewName}
+              </Text>
             </Text>
           </View>
 
@@ -188,4 +192,3 @@ export default function DisplayNameScreen() {
     </KeyboardAvoidingView>
   );
 }
-
