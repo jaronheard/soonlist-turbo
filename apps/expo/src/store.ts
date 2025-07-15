@@ -1,11 +1,7 @@
-import type { FunctionReturnType } from "convex/server";
-import type * as Calendar from "expo-calendar";
 import React from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-
-import type { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
 import { getUserTimeZone } from "./utils/dates";
@@ -77,14 +73,10 @@ type NewEventInputState = CommonEventInputState;
 interface AppState {
   filter: "upcoming" | "past";
   intentParams: { text?: string; imageUri?: string } | null;
-  isCalendarModalVisible: boolean;
-  showAllCalendars: boolean;
   setFilter: (filter: "upcoming" | "past") => void;
   setIntentParams: (
     params: { text?: string; imageUri?: string } | null,
   ) => void;
-  setIsCalendarModalVisible: (isVisible: boolean) => void;
-  setShowAllCalendars: (show: boolean) => void;
 
   // Stable timestamp for query filtering
   stableTimestamp: string;
@@ -122,19 +114,6 @@ interface AppState {
   setActiveInput: (
     input: "camera" | "upload" | "url" | "describe" | null,
   ) => void;
-
-  // Calendar-related state
-  defaultCalendarId: string | null;
-  availableCalendars: Calendar.Calendar[];
-  selectedEvent: FunctionReturnType<typeof api.events.get>;
-  calendarUsage: Record<string, number>;
-
-  // Calendar-related actions
-  setDefaultCalendarId: (id: string | null) => void;
-  setAvailableCalendars: (calendars: Calendar.Calendar[]) => void;
-  setSelectedEvent: (event: FunctionReturnType<typeof api.events.get>) => void;
-  setCalendarUsage: (usage: Record<string, number>) => void;
-  clearCalendarData: () => void;
 
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (status: boolean) => void;
@@ -180,17 +159,12 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       filter: "upcoming",
       intentParams: null,
-      isCalendarModalVisible: false,
-      showAllCalendars: false,
       userPriority: null,
       userTimezone: getUserTimeZone(),
       hasShownTimezoneAlert: false,
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
-      setIsCalendarModalVisible: (isVisible) =>
-        set({ isCalendarModalVisible: isVisible }),
-      setShowAllCalendars: (show) => set({ showAllCalendars: show }),
       setUserTimezone: (timezone) => set({ userTimezone: timezone }),
       setHasShownTimezoneAlert: (hasShown) =>
         set({ hasShownTimezoneAlert: hasShown }),
@@ -320,26 +294,6 @@ export const useAppStore = create<AppState>()(
           },
         })),
 
-      // Calendar-related state
-      defaultCalendarId: null,
-      availableCalendars: [],
-      selectedEvent: null,
-      calendarUsage: {},
-
-      // Calendar-related actions
-      setDefaultCalendarId: (id) => set({ defaultCalendarId: id }),
-      setAvailableCalendars: (calendars) =>
-        set({ availableCalendars: calendars }),
-      setSelectedEvent: (event) => set({ selectedEvent: event }),
-      setCalendarUsage: (usage) => set({ calendarUsage: usage }),
-      clearCalendarData: () =>
-        set({
-          defaultCalendarId: null,
-          availableCalendars: [],
-          selectedEvent: null,
-          calendarUsage: {},
-        }),
-
       // Media-related state
       recentPhotos: [],
       hasMediaPermission: false,
@@ -374,8 +328,6 @@ export const useAppStore = create<AppState>()(
         set({
           filter: "upcoming",
           intentParams: null,
-          isCalendarModalVisible: false,
-          showAllCalendars: false,
           addEventState: {
             input: "",
             imagePreview: null,
@@ -396,10 +348,6 @@ export const useAppStore = create<AppState>()(
             isImageUploading: false,
             uploadedImageUrl: null,
           },
-          defaultCalendarId: null,
-          availableCalendars: [],
-          selectedEvent: null,
-          calendarUsage: {},
           recentPhotos: [],
           hasMediaPermission: false,
           hasFullPhotoAccess: false,
@@ -422,8 +370,6 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           filter: "upcoming",
           intentParams: null,
-          isCalendarModalVisible: false,
-          showAllCalendars: false,
           addEventState: {
             input: "",
             imagePreview: null,
@@ -444,10 +390,6 @@ export const useAppStore = create<AppState>()(
             isImageUploading: false,
             uploadedImageUrl: null,
           },
-          defaultCalendarId: null,
-          availableCalendars: [],
-          selectedEvent: null,
-          calendarUsage: {},
           recentPhotos: [],
           hasMediaPermission: false,
           hasFullPhotoAccess: false,
