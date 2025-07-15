@@ -31,7 +31,11 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useIncrementEventView, useShouldShowViewPaywall, useMarkPaywallShown } from "~/store";
+import {
+  useIncrementEventView,
+  useMarkPaywallShown,
+  useShouldShowViewPaywall,
+} from "~/store";
 import { formatEventDateRange } from "~/utils/dates";
 import { logError } from "../../../utils/errorLogging";
 
