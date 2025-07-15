@@ -19,7 +19,7 @@ export function useCalendar() {
       // iOS 17+ doesn't require permissions when using the system calendar UI
       const needsPermissionCheck =
         Platform.OS === "android" ||
-        (Platform.OS === "ios" && parseInt(Platform.Version, 10) < 17);
+        (Platform.OS === "ios" && Number(Platform.Version.split(".")[0]) < 17);
 
       if (needsPermissionCheck) {
         const { status } = await Calendar.requestCalendarPermissionsAsync();
