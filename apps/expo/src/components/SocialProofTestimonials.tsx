@@ -27,15 +27,15 @@ const testimonials = [
       imageSource: ericImage,
     },
   },
-  {
-    body: "Honestly, I wasn't sure if I would use it. But now I can't imagine life without it!",
-    author: {
-      name: "A.L. Major",
-      title: "Program Director",
-      handle: "almajor",
-      imageSource: null, // placeholder
-    },
-  },
+  // {
+  //   body: "Honestly, I wasn't sure if I would use it. But now I can't imagine life without it!",
+  //   author: {
+  //     name: "A.L. Major",
+  //     title: "Program Director",
+  //     handle: "almajor",
+  //     imageSource: null, // placeholder
+  //   },
+  // },
 ];
 
 interface TestimonialCardProps {
@@ -45,7 +45,7 @@ interface TestimonialCardProps {
 function TestimonialCard({ testimonial }: TestimonialCardProps) {
   return (
     <View
-      className="mb-3 rounded-xl bg-accent-yellow p-4"
+      className="mb-3 rounded-xl bg-accent-yellow p-6"
       style={{
         borderWidth: 3,
         borderColor: "white",
@@ -56,7 +56,7 @@ function TestimonialCard({ testimonial }: TestimonialCardProps) {
         elevation: 2,
       }}
     >
-      <Text className="mb-3 text-center font-heading text-sm font-bold text-neutral-1">
+      <Text className="mb-3 text-center font-heading text-base font-bold text-neutral-1">
         "{testimonial.body}"
       </Text>
       <View className="flex-row items-center justify-center">
@@ -64,9 +64,9 @@ function TestimonialCard({ testimonial }: TestimonialCardProps) {
           <ExpoImage
             source={testimonial.author.imageSource}
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
+              width: 48,
+              height: 48,
+              borderRadius: 24,
               borderWidth: 2,
               borderColor: "#ff6b35",
             }}
@@ -76,9 +76,9 @@ function TestimonialCard({ testimonial }: TestimonialCardProps) {
         ) : (
           <View
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
+              width: 48,
+              height: 48,
+              borderRadius: 24,
               borderWidth: 2,
               borderColor: "#ff6b35",
               backgroundColor: "#5A32FB",
@@ -86,7 +86,7 @@ function TestimonialCard({ testimonial }: TestimonialCardProps) {
               alignItems: "center",
             }}
           >
-            <Text style={{ color: "white", fontSize: 12, fontWeight: "bold" }}>
+            <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
               {testimonial.author.name
                 .split(" ")
                 .map((n) => n[0])
@@ -95,10 +95,10 @@ function TestimonialCard({ testimonial }: TestimonialCardProps) {
           </View>
         )}
         <View className="ml-2">
-          <Text className="text-xs font-semibold text-neutral-1">
+          <Text className="text-sm font-semibold text-neutral-1">
             {testimonial.author.name}
           </Text>
-          <Text className="text-xs font-medium text-neutral-2">
+          <Text className="text-sm font-medium text-neutral-2">
             {testimonial.author.title}
           </Text>
         </View>
