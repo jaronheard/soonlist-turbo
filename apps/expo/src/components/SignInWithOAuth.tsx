@@ -81,76 +81,124 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
         pendingSignUp: ReturnType<typeof useSignUp>["signUp"],
       ) => {
         if (!pendingSignUp) return;
-        try {
-          // Get user info for username generation
-          const firstName = pendingSignUp.firstName;
-          const lastName = pendingSignUp.lastName;
-          const email = pendingSignUp.emailAddress;
 
-          if (!email) {
-            setOauthError("Email is required for account creation.");
-            return;
-          }
+        const MAX_RETRIES = 5;
+        const BASE_DELAY = 1000; // 1 second base delay
+        let retryCount = 0;
 
-          if (!guestUserId || isGuestUserLoading) {
-            setOauthError(
-              "Guest user initialization failed. Please try again.",
-            );
-            return;
-          }
+        // Get user info for username generation
+        const firstName = pendingSignUp.firstName;
+        const lastName = pendingSignUp.lastName;
+        const email = pendingSignUp.emailAddress;
 
-          // Generate username synchronously using convex.query()
-          const username = await convex.query(api.users.generateUsername, {
-            guestUserId,
-            firstName: firstName || null,
-            lastName: lastName || null,
-            email: email,
-          });
+        if (!email) {
+          setOauthError("Email is required for account creation.");
+          return;
+        }
 
-          // Username generated successfully
+        if (!guestUserId || isGuestUserLoading) {
+          setOauthError("Guest user initialization failed. Please try again.");
+          return;
+        }
 
-          const res = await pendingSignUp.update({ username });
+        // Retry function with exponential backoff
+        const attemptSignupWithRetry = async (): Promise<boolean> => {
+          try {
+            // Generate username with retry attempt info
+            const username = await convex.query(api.users.generateUsername, {
+              guestUserId,
+              firstName: firstName || null,
+              lastName: lastName || null,
+              email: email,
+              retryAttempt: retryCount,
+              maxRetries: MAX_RETRIES,
+            });
 
-          if (res.status === "complete") {
-            await setActiveSignUp({ session: res.createdSessionId });
-            await Intercom.loginUnidentifiedUser();
-            setOauthError(null);
+            // Try to update pending signup with the generated username
+            const res = await pendingSignUp.update({ username });
 
-            // Transfer guest data after successful sign up
-            const session = Clerk.session;
-            if (session?.user?.id) {
-              await transferGuestData({
-                userId: session.user.id,
-                transferGuestOnboardingData,
-              });
+            if (res.status === "complete") {
+              await setActiveSignUp({ session: res.createdSessionId });
+              await Intercom.loginUnidentifiedUser();
+              setOauthError(null);
+
+              // Transfer guest data after successful sign up
+              const session = Clerk.session;
+              if (session?.user?.id) {
+                await transferGuestData({
+                  userId: session.user.id,
+                  transferGuestOnboardingData,
+                });
+              }
+
+              return true; // Success
+            } else if (res.status === "missing_requirements") {
+              setOauthError(
+                "There are other pending requirements for your account.",
+              );
+              return false; // Different error, don't retry
             }
-          } else if (res.status === "missing_requirements") {
-            setOauthError(
-              "There are other pending requirements for your account.",
-            );
-          }
-        } catch (err: unknown) {
-          logError("OAuth sign up completion error", err);
-          const clerkError = err as {
-            errors?: ClerkAPIError[];
-            message?: string;
-          };
-          let specificErrorMessage: string | null = null;
 
-          if (
-            clerkError.errors &&
-            Array.isArray(clerkError.errors) &&
-            clerkError.errors.length > 0 &&
-            clerkError.errors[0]?.message
-          ) {
-            specificErrorMessage = clerkError.errors[0].message;
-          } else if (clerkError.message) {
-            specificErrorMessage = clerkError.message;
+            return false; // Unknown status, don't retry
+          } catch (err: unknown) {
+            const clerkError = err as {
+              errors?: ClerkAPIError[];
+              message?: string;
+            };
+
+            // Check if this is a username conflict error
+            let isUsernameConflict = false;
+            let errorMessage = "";
+
+            if (
+              clerkError.errors &&
+              Array.isArray(clerkError.errors) &&
+              clerkError.errors.length > 0 &&
+              clerkError.errors[0]?.message
+            ) {
+              errorMessage = clerkError.errors[0].message;
+              isUsernameConflict =
+                errorMessage.toLowerCase().includes("username") &&
+                errorMessage.toLowerCase().includes("taken");
+            } else if (clerkError.message) {
+              errorMessage = clerkError.message;
+              isUsernameConflict =
+                errorMessage.toLowerCase().includes("username") &&
+                errorMessage.toLowerCase().includes("taken");
+            }
+
+            // If it's a username conflict and we haven't exceeded max retries, retry
+            if (isUsernameConflict && retryCount < MAX_RETRIES) {
+              // Exponential backoff delay
+              const delay = BASE_DELAY * Math.pow(2, retryCount);
+              await new Promise((resolve) => setTimeout(resolve, delay));
+
+              retryCount++;
+              return attemptSignupWithRetry(); // Recursive retry
+            }
+
+            // If it's not a username conflict or we've exceeded max retries, show error
+            if (retryCount >= MAX_RETRIES) {
+              setOauthError(
+                "Unable to create a unique username after multiple attempts. Please try again later.",
+              );
+            } else {
+              setOauthError(
+                errorMessage ||
+                  "An unexpected error occurred. Please try again.",
+              );
+            }
+
+            return false; // Failed
           }
-          setOauthError(
-            specificErrorMessage ||
-              "An unexpected error occurred. Please try again.",
-          );
+        };
+
+        // Start the retry process
+        try {
+          await attemptSignupWithRetry();
+        } catch (err: unknown) {
+          logError("OAuth signup retry process failed", err);
+          setOauthError("An unexpected error occurred. Please try again.");
         }
       };
 

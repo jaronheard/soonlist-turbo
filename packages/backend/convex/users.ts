@@ -17,20 +17,36 @@ async function generateUniqueUsername(
   lastName?: string | null,
   email?: string,
 ): Promise<string> {
+  console.log("[USERNAME_GEN] Starting username generation", {
+    firstName: firstName ? `"${firstName}"` : null,
+    lastName: lastName ? `"${lastName}"` : null,
+    email: email ? `"${email}"` : null,
+    timestamp: new Date().toISOString(),
+  });
+
   // Clean and format names for username (slug-like)
   const slugify = (text: string | null | undefined) => {
     if (!text) return "";
-    return text
+    const result = text
       .toLowerCase()
       .trim()
       .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with hyphens
       .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
       .replace(/-+/g, "-"); // Replace multiple hyphens with single
+
+    console.log("[USERNAME_GEN] Slugified", { input: text, output: result });
+    return result;
   };
 
   const cleanFirst = slugify(firstName);
   const cleanLast = slugify(lastName);
   const emailPrefix = email ? slugify(email.split("@")[0]) : "";
+
+  console.log("[USERNAME_GEN] Cleaned inputs", {
+    cleanFirst,
+    cleanLast,
+    emailPrefix,
+  });
 
   // Create a list of username candidates in order of preference
   const candidates: string[] = [];
@@ -64,6 +80,11 @@ async function generateUniqueUsername(
     candidates.push(`${cleanFirst[0]}-${cleanLast}`); // j-smith
   }
 
+  console.log("[USERNAME_GEN] Generated candidates", {
+    allCandidates: candidates,
+    candidateCount: candidates.length,
+  });
+
   // Filter candidates by length and ensure minimum length
   const validCandidates = candidates
     .filter(
@@ -72,8 +93,15 @@ async function generateUniqueUsername(
     )
     .slice(0, 10); // Limit to first 10 candidates
 
+  console.log("[USERNAME_GEN] Valid candidates after filtering", {
+    validCandidates,
+    validCount: validCandidates.length,
+    filteredOut: candidates.length - validCandidates.length,
+  });
+
   // Batch check all candidates at once
   if (validCandidates.length > 0) {
+    console.log("[USERNAME_GEN] Checking candidate availability...");
     const existingUsers = await Promise.all(
       validCandidates.map((username) =>
         db
@@ -87,9 +115,20 @@ async function generateUniqueUsername(
       existingUsers.filter(Boolean).map((u) => u!.username),
     );
 
+    console.log("[USERNAME_GEN] Candidate availability check results", {
+      takenUsernames: Array.from(takenUsernames),
+      availableCandidates: validCandidates.filter(
+        (c) => !takenUsernames.has(c),
+      ),
+    });
+
     // Return first available candidate
     for (const candidate of validCandidates) {
       if (!takenUsernames.has(candidate)) {
+        console.log("[USERNAME_GEN] SUCCESS: Found available username", {
+          selectedUsername: candidate,
+          strategy: "primary_candidates",
+        });
         return candidate;
       }
     }
@@ -98,10 +137,24 @@ async function generateUniqueUsername(
   // If all candidates are taken, add numbers to the best candidate
   const baseUsername = validCandidates[0] || "user";
 
+  console.log(
+    "[USERNAME_GEN] All primary candidates taken, trying numbered fallbacks",
+    {
+      baseUsername,
+      fallbackStrategy: "numbered_usernames",
+    },
+  );
+
   // Ensure base username with numbers fits within limit
   const maxNumberLength = MAX_USERNAME_LENGTH - baseUsername.length - 1; // -1 for the number
   if (maxNumberLength > 0) {
     const maxNumber = Math.pow(10, maxNumberLength) - 1;
+
+    console.log("[USERNAME_GEN] Numbered fallback constraints", {
+      maxNumberLength,
+      maxNumber,
+      baseUsernameLength: baseUsername.length,
+    });
 
     // Batch check numbered usernames (1-99)
     const numberedCandidates: string[] = [];
@@ -110,6 +163,11 @@ async function generateUniqueUsername(
     }
 
     if (numberedCandidates.length > 0) {
+      console.log("[USERNAME_GEN] Checking numbered candidates", {
+        numberedCandidates: numberedCandidates.slice(0, 5), // Show first 5 for brevity
+        totalNumberedCandidates: numberedCandidates.length,
+      });
+
       const existingNumbered = await Promise.all(
         numberedCandidates.map((username) =>
           db
@@ -123,11 +181,33 @@ async function generateUniqueUsername(
         existingNumbered.filter(Boolean).map((u) => u!.username),
       );
 
+      console.log("[USERNAME_GEN] Numbered candidates availability", {
+        takenNumbered: Array.from(takenNumbered),
+        availableNumbered: numberedCandidates
+          .filter((c) => !takenNumbered.has(c))
+          .slice(0, 5),
+      });
+
       for (const candidate of numberedCandidates) {
         if (!takenNumbered.has(candidate)) {
+          console.log(
+            "[USERNAME_GEN] SUCCESS: Found available numbered username",
+            {
+              selectedUsername: candidate,
+              strategy: "numbered_fallback",
+            },
+          );
           return candidate;
         }
       }
+
+      console.log(
+        "[USERNAME_GEN] All numbered candidates taken, proceeding to timestamp fallback",
+      );
+    } else {
+      console.log(
+        "[USERNAME_GEN] No numbered candidates possible due to length constraints",
+      );
     }
   }
 
@@ -135,7 +215,20 @@ async function generateUniqueUsername(
   const timestamp = Date.now().toString();
   const fallbackUsername = `${baseUsername}${timestamp}`;
 
+  console.log("[USERNAME_GEN] Using timestamp fallback", {
+    baseUsername,
+    timestamp,
+    fallbackUsername,
+    fallbackLength: fallbackUsername.length,
+    maxLength: MAX_USERNAME_LENGTH,
+    strategy: "timestamp_fallback",
+  });
+
   if (fallbackUsername.length <= MAX_USERNAME_LENGTH) {
+    console.log("[USERNAME_GEN] SUCCESS: Using timestamp fallback username", {
+      selectedUsername: fallbackUsername,
+      strategy: "timestamp_fallback",
+    });
     return fallbackUsername;
   }
 
@@ -144,7 +237,16 @@ async function generateUniqueUsername(
     0,
     MAX_USERNAME_LENGTH - timestamp.length,
   );
-  return `${truncatedBase}${timestamp}`;
+  const finalUsername = `${truncatedBase}${timestamp}`;
+
+  console.log("[USERNAME_GEN] SUCCESS: Using truncated timestamp fallback", {
+    selectedUsername: finalUsername,
+    truncatedBase,
+    timestamp,
+    strategy: "truncated_timestamp_fallback",
+  });
+
+  return finalUsername;
 }
 
 /**
@@ -156,22 +258,109 @@ export const generateUsername = query({
     firstName: v.optional(v.union(v.string(), v.null())),
     lastName: v.optional(v.union(v.string(), v.null())),
     email: v.optional(v.string()),
+    retryAttempt: v.optional(v.number()), // Add retry attempt parameter
+    maxRetries: v.optional(v.number()), // Add max retries parameter
   },
   returns: v.string(),
   handler: async (ctx, args) => {
+    const retryAttempt = args.retryAttempt ?? 0;
+    const maxRetries = args.maxRetries ?? 0;
+    const isLastAttempt = retryAttempt >= maxRetries;
+
+    console.log("[USERNAME_GEN] generateUsername called", {
+      guestUserId: args.guestUserId,
+      hasFirstName: !!args.firstName,
+      hasLastName: !!args.lastName,
+      hasEmail: !!args.email,
+      retryAttempt,
+      maxRetries,
+      isLastAttempt,
+      timestamp: new Date().toISOString(),
+    });
+
     // Validate guest user ID format
     if (!args.guestUserId?.startsWith("guest_")) {
+      console.error("[USERNAME_GEN] ERROR: Invalid guest user ID", {
+        guestUserId: args.guestUserId,
+        error: "Guest user ID must start with 'guest_'",
+      });
       throw new ConvexError(
         "Valid guest user ID required for username generation",
       );
     }
 
-    return await generateUniqueUsername(
-      ctx.db,
-      args.firstName,
-      args.lastName,
-      args.email,
-    );
+    try {
+      let result: string;
+
+      if (isLastAttempt) {
+        // On the last attempt, use timestamp-based generation for maximum uniqueness
+        console.log(
+          "[USERNAME_GEN] Using timestamp-based generation (final attempt)",
+          {
+            retryAttempt,
+            maxRetries,
+          },
+        );
+
+        const timestamp = Date.now().toString();
+        const baseUsername = args.firstName
+          ? args.firstName
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, "")
+              .substring(0, 10)
+          : "user";
+
+        result = `${baseUsername}${timestamp}`;
+
+        // Ensure it fits within length limits
+        if (result.length > MAX_USERNAME_LENGTH) {
+          const truncatedBase = baseUsername.substring(
+            0,
+            MAX_USERNAME_LENGTH - timestamp.length,
+          );
+          result = `${truncatedBase}${timestamp}`;
+        }
+
+        console.log("[USERNAME_GEN] Generated timestamp-based username", {
+          baseUsername,
+          timestamp,
+          result,
+          strategy: "timestamp_final_attempt",
+        });
+      } else {
+        // Use normal username generation for non-final attempts
+        console.log("[USERNAME_GEN] Using normal username generation", {
+          retryAttempt,
+          maxRetries,
+        });
+
+        result = await generateUniqueUsername(
+          ctx.db,
+          args.firstName,
+          args.lastName,
+          args.email,
+        );
+      }
+
+      console.log("[USERNAME_GEN] generateUsername completed successfully", {
+        guestUserId: args.guestUserId,
+        generatedUsername: result,
+        retryAttempt,
+        isLastAttempt,
+        duration: "completed",
+      });
+
+      return result;
+    } catch (error) {
+      console.error("[USERNAME_GEN] ERROR: generateUsername failed", {
+        guestUserId: args.guestUserId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        retryAttempt,
+        isLastAttempt,
+      });
+      throw error;
+    }
   },
 });
 
