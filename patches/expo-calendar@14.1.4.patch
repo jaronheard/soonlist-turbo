@@ -1,0 +1,13 @@
+diff --git a/ios/CalendarModule.swift b/ios/CalendarModule.swift
+index f437cdd87b9d7ba736ddcf7b03ede1711a261807..30406e4c5df8a174bed281aa64664d18634351fd 100644
+--- a/ios/CalendarModule.swift
++++ b/ios/CalendarModule.swift
+@@ -303,7 +303,7 @@ public class CalendarModule: Module {
+     }
+ 
+     AsyncFunction("createEventInCalendarAsync") { (event: Event, promise: Promise) in
+-      try checkCalendarPermissions()
++      // try checkCalendarPermissions() // Commented out to allow iOS 17+ to use system calendar UI without permissions
+       guard calendarDialogDelegate == nil else {
+         throw EventDialogInProgressException()
+       }
