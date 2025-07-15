@@ -1,5 +1,5 @@
 import type { FunctionReturnType } from "convex/server";
-import { Linking } from "react-native";
+import { Linking, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
 import { Temporal } from "@js-temporal/polyfill";
 import { toast } from "sonner-native";
@@ -15,17 +15,25 @@ export function useCalendar() {
     event: NonNullable<FunctionReturnType<typeof api.events.get>>,
   ) => {
     try {
-      const { status } = await Calendar.requestCalendarPermissionsAsync();
-      if (status !== Calendar.PermissionStatus.GRANTED) {
-        toast.error("Calendar permission required", {
-          action: {
-            label: "Settings",
-            onClick: () => {
-              void Linking.openSettings();
+      // Check if we need calendar permissions
+      // iOS 17+ doesn't require permissions when using the system calendar UI
+      const needsPermissionCheck =
+        Platform.OS === "android" ||
+        (Platform.OS === "ios" && parseInt(Platform.Version, 10) < 17);
+
+      if (needsPermissionCheck) {
+        const { status } = await Calendar.requestCalendarPermissionsAsync();
+        if (status !== Calendar.PermissionStatus.GRANTED) {
+          toast.error("Calendar permission required", {
+            action: {
+              label: "Settings",
+              onClick: () => {
+                void Linking.openSettings();
+              },
             },
-          },
-        });
-        return;
+          });
+          return;
+        }
       }
 
       const e = event.event as AddToCalendarButtonPropsRestricted;
