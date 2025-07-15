@@ -23,7 +23,6 @@ import { z } from "zod";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
-import { Globe, Instagram, Mail, Phone } from "~/components/icons";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useSignOut } from "~/hooks/useSignOut";
@@ -31,16 +30,12 @@ import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { logError } from "../../utils/errorLogging";
 
+// Simplified schema - only keeping what we still need for form validation
 const profileSchema = z.object({
   username: z
     .string()
     .min(3, "Username must be at least 3 characters")
     .max(30, "Username must be 30 characters or less"),
-  bio: z.string().max(150, "Bio must be 150 characters or less").optional(),
-  publicEmail: z.string().email("Invalid email").optional().or(z.literal("")),
-  publicPhone: z.string().optional(),
-  publicInsta: z.string().optional(),
-  publicWebsite: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -73,37 +68,19 @@ export default function EditProfileScreen() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       username: user?.username ?? "",
-      bio: userData?.bio ?? undefined,
-      publicEmail: userData?.publicEmail ?? undefined,
-      publicPhone: userData?.publicPhone ?? undefined,
-      publicInsta: userData?.publicInsta ?? undefined,
-      publicWebsite: userData?.publicWebsite ?? undefined,
     },
     mode: "onBlur",
   });
-
-  // Create refs for each input field
-  const usernameRef = useRef<TextInput>(null);
-  const bioRef = useRef<TextInput>(null);
-  const emailRef = useRef<TextInput>(null);
-  const phoneRef = useRef<TextInput>(null);
-  const instaRef = useRef<TextInput>(null);
-  const websiteRef = useRef<TextInput>(null);
 
   useEffect(() => {
     if (userData) {
       reset({
         username: user?.username ?? "",
-        bio: userData.bio ?? undefined,
-        publicEmail: userData.publicEmail ?? undefined,
-        publicPhone: userData.publicPhone ?? undefined,
-        publicInsta: userData.publicInsta ?? undefined,
-        publicWebsite: userData.publicWebsite ?? undefined,
       });
     }
   }, [userData, user, reset]);
 
-  const updateProfile = useMutation(api.users.updateAdditionalInfo);
+
 
   const resetOnboardingMutation = useMutation(api.users.resetOnboarding);
 
@@ -114,16 +91,6 @@ export default function EditProfileScreen() {
       try {
         if (data.username !== user?.username) {
           await user?.update({ username: data.username });
-        }
-        if (user?.id) {
-          await updateProfile({
-            userId: user.id,
-            bio: data.bio,
-            publicEmail: data.publicEmail,
-            publicPhone: data.publicPhone,
-            publicInsta: data.publicInsta,
-            publicWebsite: data.publicWebsite,
-          });
         }
         toast.dismiss(loadingToastId);
         toast.success("Profile updated successfully");
@@ -140,7 +107,7 @@ export default function EditProfileScreen() {
         setIsSubmitting(false);
       }
     },
-    [user, updateProfile],
+    [user],
   );
 
   const pickImage = useCallback(async () => {
@@ -189,10 +156,7 @@ export default function EditProfileScreen() {
     }
   }, [user]);
 
-  // Function to focus the next input
-  const focusNextInput = (nextRef: React.RefObject<TextInput | null>) => {
-    nextRef.current?.focus();
-  };
+
 
   const handleSaveOrBack = useCallback(() => {
     if (isDirty && isValid) {
@@ -332,207 +296,29 @@ export default function EditProfileScreen() {
 
             <View>
               <Text className="mb-2 text-base font-semibold">Username</Text>
-              <Controller
-                control={control}
-                name="username"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View className="flex-1">
-                    <TextInput
-                      autoComplete="username"
-                      autoCorrect={false}
-                      autoCapitalize="none"
-                      ref={usernameRef}
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="Enter your username"
-                      className="h-10 rounded-md border border-neutral-300 px-3 py-2"
-                      onSubmitEditing={() => focusNextInput(bioRef)}
-                      returnKeyType="next"
-                    />
-                    {errors.username && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.username.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
-            </View>
-
-            <Controller
-              control={control}
-              name="bio"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View>
-                  <Text className="mb-2 text-base font-semibold">Bio</Text>
-                  <TextInput
-                    autoComplete="off"
-                    autoCorrect={false}
-                    autoCapitalize="none"
-                    ref={bioRef}
-                    defaultValue={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholder="Enter your bio (max 150 characters)"
-                    multiline
-                    className="h-24 rounded-md border border-neutral-300 px-3 py-2"
-                  />
-                  <Text className="mt-1 text-xs text-neutral-500">
-                    Example: I love ambient music, creative community building,
-                    and vegan pop-ups.
-                  </Text>
-                  {errors.bio && (
-                    <Text className="mt-1 text-xs text-red-500">
-                      {errors.bio.message}
-                    </Text>
-                  )}
-                </View>
-              )}
-            />
-
-            <View className="flex-col gap-4 space-y-4">
-              <View>
-                <Text className="text-lg font-semibold">How to connect</Text>
-                <Text className="text-sm text-neutral-500">
-                  Share any contact info you want to publicly display.
-                </Text>
+              <View className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2">
+                <Text className="text-neutral-600">@{user?.username}</Text>
               </View>
-
-              <Controller
-                control={control}
-                name="publicEmail"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View>
-                    <View className="mb-2 flex-row items-center">
-                      <Mail size={16} color="#000" />
-                      <Text className="ml-2 font-medium">Email</Text>
-                    </View>
-                    <TextInput
-                      autoComplete="email"
-                      autoCorrect={false}
-                      autoCapitalize="none"
-                      ref={emailRef}
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="email@example.com"
-                      keyboardType="email-address"
-                      className="rounded-md border border-neutral-300 px-3 py-2"
-                      onSubmitEditing={() => focusNextInput(phoneRef)}
-                      returnKeyType="next"
-                    />
-                    {errors.publicEmail && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.publicEmail.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="publicPhone"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View>
-                    <View className="mb-2 flex-row items-center">
-                      <Phone size={16} color="#000" />
-                      <Text className="ml-2 font-medium">Phone</Text>
-                    </View>
-                    <TextInput
-                      autoComplete="tel"
-                      autoCorrect={false}
-                      autoCapitalize="none"
-                      ref={phoneRef}
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="1234567890"
-                      keyboardType="phone-pad"
-                      className="rounded-md border border-neutral-300 px-3 py-2"
-                    />
-                    {errors.publicPhone && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.publicPhone.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="publicInsta"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View>
-                    <View className="mb-2 flex-row items-center">
-                      <Instagram size={16} color="#000" />
-                      <Text className="ml-2 font-medium">Instagram</Text>
-                    </View>
-                    <TextInput
-                      autoComplete="off"
-                      autoCorrect={false}
-                      autoCapitalize="none"
-                      ref={instaRef}
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="username"
-                      className="rounded-md border border-neutral-300 px-3 py-2"
-                      onSubmitEditing={() => focusNextInput(websiteRef)}
-                      returnKeyType="next"
-                    />
-                    {errors.publicInsta && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.publicInsta.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="publicWebsite"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View>
-                    <View className="mb-2 flex-row items-center">
-                      <Globe size={16} color="#000" />
-                      <Text className="ml-2 font-medium">Website</Text>
-                    </View>
-                    <TextInput
-                      autoComplete="url"
-                      autoCorrect={false}
-                      autoCapitalize="none"
-                      ref={websiteRef}
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="www.example.com"
-                      keyboardType="url"
-                      className="rounded-md border border-neutral-300 px-3 py-2"
-                      returnKeyType="done"
-                    />
-                    {errors.publicWebsite && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.publicWebsite.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
+              <Text className="mt-1 text-xs text-neutral-500">
+                Your username cannot be changed
+              </Text>
             </View>
 
-            {isDirty && (
-              <Button
-                onPress={handleSaveOrBack}
-                disabled={isSubmitting}
-                className="mt-4"
-              >
-                {isSubmitting ? "Saving..." : "Save Profile"}
-              </Button>
-            )}
+            <TouchableOpacity
+              onPress={() => router.push("/settings/display-name")}
+              className="rounded-md border border-neutral-300 p-4"
+            >
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <Text className="text-base font-medium">Display Name</Text>
+                  <Text className="text-sm text-neutral-500">
+                    {userData?.displayName || "Not set - will use username"}
+                  </Text>
+                </View>
+                <Text className="text-neutral-400">›</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
 
             <View className="mt-8">
               <Text className="text-lg font-semibold">Preferences</Text>
