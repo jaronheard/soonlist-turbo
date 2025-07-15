@@ -266,7 +266,7 @@ export const updateAdditionalInfo = mutation({
       publicPhone: args.publicPhone || null,
       publicInsta: args.publicInsta || null,
       publicWebsite: args.publicWebsite || null,
-      displayName: args.displayName || null,
+      displayName: args.displayName || undefined,
       updatedAt: new Date().toISOString(),
     });
 
