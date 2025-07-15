@@ -80,9 +80,12 @@ export function useCalendar() {
         throw new Error("EXPO_PUBLIC_API_BASE_URL is not defined");
       }
 
+      const eventUrl =
+        event.userName && event.id ? `${baseUrl}/event/${event.id}` : baseUrl;
+
       const additionalText =
         event.userName && event.id
-          ? `Collected by @${event.userName} on Soonlist. \nFull details: ${baseUrl}/event/${event.id}`
+          ? `Collected by @${event.userName} on Soonlist. \nFull details: ${eventUrl}`
           : `Collected on Soonlist\n(${baseUrl})`;
 
       const fullDescription = `${e.description}\n\n${additionalText}`;
@@ -94,6 +97,7 @@ export function useCalendar() {
         location: e.location,
         notes: fullDescription,
         timeZone: eventTimezone,
+        url: eventUrl, // iOS only, but included for platforms that support it
       };
 
       const result = await Calendar.createEventInCalendarAsync(eventDetails);
