@@ -61,74 +61,164 @@ export default function SignUpScreen() {
     setGeneralError("");
     setIsSubmitting(true);
 
-    try {
-      let username: string;
+    const MAX_RETRIES = 5;
+    const BASE_DELAY = 1000; // 1 second base delay
+    let retryCount = 0;
 
+    // Retry function with exponential backoff
+    const attemptSignupWithRetry = async (): Promise<void> => {
       try {
-        console.log("[SIGNUP_EMAIL] Attempting username generation", {
-          guestUserId,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.emailAddress,
-          timestamp: new Date().toISOString(),
-        });
+        console.log(
+          `[SIGNUP_EMAIL] Attempting username generation (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`,
+          {
+            guestUserId,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.emailAddress,
+            retryCount,
+            timestamp: new Date().toISOString(),
+          },
+        );
 
         // Generate username synchronously using convex.query()
-        username = await convex.query(api.users.generateUsername, {
+        const username = await convex.query(api.users.generateUsername, {
           guestUserId,
           firstName: data.firstName,
           lastName: data.lastName,
           email: data.emailAddress,
+          retryAttempt: retryCount,
+          maxRetries: MAX_RETRIES,
         });
 
-        console.log("[SIGNUP_EMAIL] Username generation successful", {
-          generatedUsername: username,
-          guestUserId,
-        });
-      } catch (usernameError) {
-        console.error("[SIGNUP_EMAIL] Username generation failed", {
-          error: usernameError,
-          guestUserId,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.emailAddress,
-        });
-        logError("Error generating username", usernameError);
-        setGeneralError("Failed to generate username. Please try again.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Username generated successfully
-
-      await signUp.create({
-        ...data,
-        username,
-      });
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-      router.push("/verify-email");
-    } catch (err: unknown) {
-      logError("Error during sign up", err);
-
-      const clerkError = err as {
-        errors?: ClerkAPIError[];
-        message?: string;
-      };
-      if (
-        clerkError.errors &&
-        Array.isArray(clerkError.errors) &&
-        clerkError.errors.length > 0
-      ) {
-        setGeneralError(
-          clerkError.message ||
-            "An error occurred during sign up. Please check your input.",
+        console.log(
+          `[SIGNUP_EMAIL] Username generation successful (attempt ${retryCount + 1})`,
+          {
+            generatedUsername: username,
+            guestUserId,
+            retryCount,
+          },
         );
-      } else if (err instanceof Error) {
-        setGeneralError(err.message);
-      } else {
-        setGeneralError("An error occurred during sign up.");
+
+        // Try to create user with the generated username
+        await signUp.create({
+          ...data,
+          username,
+        });
+        await signUp.prepareEmailAddressVerification({
+          strategy: "email_code",
+        });
+        router.push("/verify-email");
+
+        console.log(
+          `[SIGNUP_EMAIL] Signup completed successfully after ${retryCount + 1} attempts`,
+          {
+            finalUsername: username,
+            guestUserId,
+            totalAttempts: retryCount + 1,
+          },
+        );
+      } catch (err: unknown) {
+        console.error(
+          `[SIGNUP_EMAIL] Signup attempt ${retryCount + 1} failed`,
+          {
+            error: err,
+            guestUserId,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.emailAddress,
+            retryCount,
+          },
+        );
+
+        const clerkError = err as {
+          errors?: ClerkAPIError[];
+          message?: string;
+        };
+
+        // Check if this is a username conflict error
+        let isUsernameConflict = false;
+        let errorMessage = "";
+
+        if (
+          clerkError.errors &&
+          Array.isArray(clerkError.errors) &&
+          clerkError.errors.length > 0 &&
+          clerkError.errors[0]?.message
+        ) {
+          errorMessage = clerkError.errors[0].message;
+          isUsernameConflict =
+            errorMessage.toLowerCase().includes("username") &&
+            errorMessage.toLowerCase().includes("taken");
+        } else if (clerkError.message) {
+          errorMessage = clerkError.message;
+          isUsernameConflict =
+            errorMessage.toLowerCase().includes("username") &&
+            errorMessage.toLowerCase().includes("taken");
+        }
+
+        // If it's a username conflict and we haven't exceeded max retries, retry
+        if (isUsernameConflict && retryCount < MAX_RETRIES) {
+          console.log(
+            `[SIGNUP_EMAIL] Username conflict detected, retrying in ${BASE_DELAY * Math.pow(2, retryCount)}ms`,
+            {
+              conflictMessage: errorMessage,
+              retryCount: retryCount + 1,
+              maxRetries: MAX_RETRIES,
+              nextDelay: BASE_DELAY * Math.pow(2, retryCount),
+            },
+          );
+
+          // Exponential backoff delay
+          const delay = BASE_DELAY * Math.pow(2, retryCount);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+
+          retryCount++;
+          return attemptSignupWithRetry(); // Recursive retry
+        }
+
+        // If it's not a username conflict or we've exceeded max retries, show error
+        if (retryCount >= MAX_RETRIES) {
+          console.error(
+            `[SIGNUP_EMAIL] Max retries exceeded for username conflicts`,
+            {
+              totalAttempts: retryCount + 1,
+              maxRetries: MAX_RETRIES,
+              lastError: errorMessage,
+            },
+          );
+          setGeneralError(
+            "Unable to create a unique username after multiple attempts. Please try again later.",
+          );
+        } else {
+          // Handle other types of errors
+          if (errorMessage.includes("username")) {
+            setGeneralError("Username conflict. Please try again.");
+          } else {
+            logError("Error during signup", err);
+            setGeneralError(
+              errorMessage || "Failed to create account. Please try again.",
+            );
+          }
+        }
+
+        setIsSubmitting(false);
       }
-    } finally {
+    };
+
+    // Start the retry process
+    try {
+      await attemptSignupWithRetry();
+    } catch (err: unknown) {
+      console.error(
+        "[SIGNUP_EMAIL] Retry process failed with unexpected error",
+        {
+          error: err,
+          guestUserId,
+          totalAttempts: retryCount + 1,
+        },
+      );
+      logError("Email signup retry process failed", err);
+      setGeneralError("An unexpected error occurred. Please try again.");
       setIsSubmitting(false);
     }
   };

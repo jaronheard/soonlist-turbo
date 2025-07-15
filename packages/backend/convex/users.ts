@@ -258,14 +258,23 @@ export const generateUsername = query({
     firstName: v.optional(v.union(v.string(), v.null())),
     lastName: v.optional(v.union(v.string(), v.null())),
     email: v.optional(v.string()),
+    retryAttempt: v.optional(v.number()), // Add retry attempt parameter
+    maxRetries: v.optional(v.number()), // Add max retries parameter
   },
   returns: v.string(),
   handler: async (ctx, args) => {
+    const retryAttempt = args.retryAttempt ?? 0;
+    const maxRetries = args.maxRetries ?? 0;
+    const isLastAttempt = retryAttempt >= maxRetries;
+
     console.log("[USERNAME_GEN] generateUsername called", {
       guestUserId: args.guestUserId,
       hasFirstName: !!args.firstName,
       hasLastName: !!args.lastName,
       hasEmail: !!args.email,
+      retryAttempt,
+      maxRetries,
+      isLastAttempt,
       timestamp: new Date().toISOString(),
     });
 
@@ -281,16 +290,63 @@ export const generateUsername = query({
     }
 
     try {
-      const result = await generateUniqueUsername(
-        ctx.db,
-        args.firstName,
-        args.lastName,
-        args.email,
-      );
+      let result: string;
+
+      if (isLastAttempt) {
+        // On the last attempt, use timestamp-based generation for maximum uniqueness
+        console.log(
+          "[USERNAME_GEN] Using timestamp-based generation (final attempt)",
+          {
+            retryAttempt,
+            maxRetries,
+          },
+        );
+
+        const timestamp = Date.now().toString();
+        const baseUsername = args.firstName
+          ? args.firstName
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, "")
+              .substring(0, 10)
+          : "user";
+
+        result = `${baseUsername}${timestamp}`;
+
+        // Ensure it fits within length limits
+        if (result.length > MAX_USERNAME_LENGTH) {
+          const truncatedBase = baseUsername.substring(
+            0,
+            MAX_USERNAME_LENGTH - timestamp.length,
+          );
+          result = `${truncatedBase}${timestamp}`;
+        }
+
+        console.log("[USERNAME_GEN] Generated timestamp-based username", {
+          baseUsername,
+          timestamp,
+          result,
+          strategy: "timestamp_final_attempt",
+        });
+      } else {
+        // Use normal username generation for non-final attempts
+        console.log("[USERNAME_GEN] Using normal username generation", {
+          retryAttempt,
+          maxRetries,
+        });
+
+        result = await generateUniqueUsername(
+          ctx.db,
+          args.firstName,
+          args.lastName,
+          args.email,
+        );
+      }
 
       console.log("[USERNAME_GEN] generateUsername completed successfully", {
         guestUserId: args.guestUserId,
         generatedUsername: result,
+        retryAttempt,
+        isLastAttempt,
         duration: "completed",
       });
 
@@ -300,6 +356,8 @@ export const generateUsername = query({
         guestUserId: args.guestUserId,
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
+        retryAttempt,
+        isLastAttempt,
       });
       throw error;
     }
