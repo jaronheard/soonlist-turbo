@@ -6,7 +6,7 @@ alwaysApply: false
 # Zustand Store Usage Guidelines
 
 ## Single store
-Use a single store in [useStore.ts](mdc:components/stores/useStore.ts) rather than creating multiple stores
+Use a single store in [store.ts](mdc:apps/expo/src/store.ts) rather than creating multiple stores
 
 ## Always subscribe with a selector
 ```typescript
