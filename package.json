@@ -72,7 +72,8 @@
       "@radix-ui/react-toggle": "1.1.0"
     },
     "patchedDependencies": {
-      "xcode@3.0.1": "patches/xcode@3.0.1.patch"
+      "xcode@3.0.1": "patches/xcode@3.0.1.patch",
+      "expo-calendar@14.1.4": "patches/expo-calendar@14.1.4.patch"
     },
     "onlyBuiltDependencies": [
       "@clerk/shared",

@@ -1,0 +1,41 @@
+diff --git a/ios/CalendarModule.swift b/ios/CalendarModule.swift
+index f437cdd87b9d7ba736ddcf7b03ede1711a261807..30406e4c5df8a174bed281aa64664d18634351fd 100644
+--- a/ios/CalendarModule.swift
++++ b/ios/CalendarModule.swift
+@@ -303,7 +303,9 @@ public class CalendarModule: Module {
+     }
+ 
+     AsyncFunction("createEventInCalendarAsync") { (event: Event, promise: Promise) in
+-      try checkCalendarPermissions()
++      if #unavailable(iOS 17.0) {
++        try checkCalendarPermissions()
++      }
+       guard calendarDialogDelegate == nil else {
+         throw EventDialogInProgressException()
+       }
+diff --git a/ios/Dialogs/CalendarDialogDelegate.swift b/ios/Dialogs/CalendarDialogDelegate.swift
+index 1234567890abcdef1234567890abcdef12345678..abcdef1234567890abcdef1234567890abcdef12 100644
+--- a/ios/Dialogs/CalendarDialogDelegate.swift
++++ b/ios/Dialogs/CalendarDialogDelegate.swift
+@@ -17,7 +17,7 @@ class CalendarDialogDelegate: NSObject, EKEventEditViewDelegate, EKEventViewDele
+     case .saved:
+       let evt = controller.event
+       let id = evt?.calendarItemIdentifier
+-      promise.resolve(DialogEditResponse(action: .saved, id: id))
++      promise.resolve(DialogEditResponse(action: .saved, id: id?.isEmpty == false ? id : nil))
+     default: promise.resolve(DialogEditResponse())
+     }
+     controller.dismiss(animated: true, completion: onComplete)
+diff --git a/src/Calendar.ts b/src/Calendar.ts
+index 1234567890abcdef1234567890abcdef12345678..abcdef1234567890abcdef1234567890abcdef12 100644
+--- a/src/Calendar.ts
++++ b/src/Calendar.ts
+@@ -623,7 +623,7 @@ export type DialogEventResult = {
+   /**
+    * The ID of the event that was created or edited. On Android, this is always `null`.
+    *
+-   * On iOS, this is a string when an event is created or edited. Otherwise, it's `null`.
++   * On iOS, this is a string when user confirms the creation or editing of an event. Otherwise, it's `null`.
+    * */
+   id: string | null;
+ };

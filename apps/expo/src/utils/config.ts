@@ -11,11 +11,10 @@ interface Config {
   convexUrl: string;
 }
 
-const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL as string;
-const clerkPublishableKey = process.env
-  .EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY as string;
-const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY as string;
-const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL as string;
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL!;
+const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY!;
+const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL!;
 
 if (!apiBaseUrl) {
   throw new Error("EXPO_PUBLIC_API_BASE_URL is required");

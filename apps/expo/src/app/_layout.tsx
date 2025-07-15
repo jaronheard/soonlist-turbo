@@ -28,9 +28,7 @@ import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { AuthErrorProvider } from "~/components/AuthErrorBoundary";
-import { CalendarSelectionModal } from "~/components/CalendarSelectionModal";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
-import { useCalendar } from "~/hooks/useCalendar";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { useTimezoneAlert } from "~/hooks/useTimezoneAlert";
@@ -304,8 +302,6 @@ const InitialLayout = () => {
 };
 
 function RootLayoutContent() {
-  const { handleCalendarSelect, INITIAL_CALENDAR_LIMIT } = useCalendar();
-  const { setIsCalendarModalVisible } = useAppStore();
   useMediaPermissions();
   const ref = useNavigationContainerRef();
 
@@ -321,11 +317,6 @@ function RootLayoutContent() {
         <InitialLayout />
       </AuthErrorProvider>
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
-      <CalendarSelectionModal
-        onSelect={handleCalendarSelect}
-        onDismiss={() => setIsCalendarModalVisible(false)}
-        initialLimit={INITIAL_CALENDAR_LIMIT}
-      />
       <Toaster
         position="top-center"
         offset={100}

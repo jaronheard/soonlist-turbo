@@ -1,110 +1,42 @@
 import type { FunctionReturnType } from "convex/server";
-import { Alert, Linking, Platform } from "react-native";
+import { Linking, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
 import { Temporal } from "@js-temporal/polyfill";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner-native";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
-import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 
-export const calendarsQueryKey = ["availableCalendars"];
-
-const fetchCalendars = async () => {
-  const calendars = await Calendar.getCalendarsAsync(
-    Calendar.EntityTypes.EVENT,
-  );
-  const defaultCalendar =
-    Platform.OS === "ios" ? await Calendar.getDefaultCalendarAsync() : null;
-  return { calendars, defaultCalendar };
-};
-
-const INITIAL_CALENDAR_LIMIT = 5;
-
 export function useCalendar() {
-  const {
-    defaultCalendarId,
-    isCalendarModalVisible,
-    availableCalendars,
-    selectedEvent,
-    showAllCalendars,
-    calendarUsage,
-    setDefaultCalendarId,
-    setIsCalendarModalVisible,
-    setAvailableCalendars,
-    setSelectedEvent,
-    setShowAllCalendars,
-    setCalendarUsage,
-    clearCalendarData,
-  } = useAppStore();
-
-  const queryClient = useQueryClient();
-
   const handleAddToCal = async (
     event: NonNullable<FunctionReturnType<typeof api.events.get>>,
   ) => {
     try {
-      const { status } = await Calendar.requestCalendarPermissionsAsync();
-      if (status !== Calendar.PermissionStatus.GRANTED) {
-        toast.error("Calendar permission required", {
-          action: {
-            label: "Settings",
-            onClick: () => {
-              void Linking.openSettings();
+      // Check if we need calendar permissions
+      // iOS 17+ doesn't require permissions when using the system calendar UI
+      const needsPermissionCheck =
+        Platform.OS === "android" ||
+        (Platform.OS === "ios" && Number(Platform.Version.split(".")[0]) < 17);
+
+      if (needsPermissionCheck) {
+        const { status } = await Calendar.requestCalendarPermissionsAsync();
+        if (status !== Calendar.PermissionStatus.GRANTED) {
+          toast.error("Calendar permission required", {
+            action: {
+              label: "Settings",
+              onClick: () => {
+                void Linking.openSettings();
+              },
             },
-          },
-        });
-        return;
+          });
+          return;
+        }
       }
 
-      const { calendars, defaultCalendar } = await queryClient.fetchQuery({
-        queryKey: calendarsQueryKey,
-        queryFn: fetchCalendars,
-      });
-
-      calendars.sort((a, b) => {
-        const usageA = calendarUsage[a.id] ?? 0;
-        const usageB = calendarUsage[b.id] ?? 0;
-
-        if (usageA === 0 && usageB === 0) {
-          if (a.id === defaultCalendarId) return -1;
-          if (b.id === defaultCalendarId) return 1;
-          if (a.id === defaultCalendar?.id) return -1;
-          if (b.id === defaultCalendar?.id) return 1;
-        } else {
-          if (usageA !== usageB) return usageB - usageA;
-          if (a.id === defaultCalendarId) return -1;
-          if (b.id === defaultCalendarId) return 1;
-        }
-        return 0;
-      });
-
-      setAvailableCalendars(calendars);
-      setSelectedEvent(event);
-      setIsCalendarModalVisible(true);
-      setShowAllCalendars(false);
-    } catch (error) {
-      logError("Error fetching calendars", error);
-      Alert.alert("Error", "Failed to fetch calendars. Please try again.");
-    }
-  };
-
-  const handleCalendarSelect = async (selectedCalendarId: string) => {
-    setIsCalendarModalVisible(false);
-
-    if (!selectedEvent) {
-      logError("No event selected", new Error("No event selected"));
-      return;
-    }
-
-    try {
-      setDefaultCalendarId(selectedCalendarId);
-
-      const e = selectedEvent.event as AddToCalendarButtonPropsRestricted;
+      const e = event.event as AddToCalendarButtonPropsRestricted;
 
       const parseDate = (
         dateString: string,
@@ -156,9 +88,12 @@ export function useCalendar() {
         throw new Error("EXPO_PUBLIC_API_BASE_URL is not defined");
       }
 
+      const eventUrl =
+        event.userName && event.id ? `${baseUrl}/event/${event.id}` : baseUrl;
+
       const additionalText =
-        selectedEvent.userName && selectedEvent.id
-          ? `Collected by @${selectedEvent.userName} on Soonlist. \nFull details: ${baseUrl}/event/${selectedEvent.id}`
+        event.userName && event.id
+          ? `Collected by @${event.userName} on Soonlist. \nFull details: ${eventUrl}`
           : `Collected on Soonlist\n(${baseUrl})`;
 
       const fullDescription = `${e.description}\n\n${additionalText}`;
@@ -170,42 +105,21 @@ export function useCalendar() {
         location: e.location,
         notes: fullDescription,
         timeZone: eventTimezone,
+        url: eventUrl, // iOS only, but included for platforms that support it
       };
 
-      const eventId = await Calendar.createEventAsync(
-        selectedCalendarId,
-        eventDetails,
-      );
+      const result = await Calendar.createEventInCalendarAsync(eventDetails);
 
-      if (eventId) {
+      if (result.action !== Calendar.CalendarDialogResultActions.canceled) {
         toast.success("Event successfully added to calendar");
       }
-
-      const newUsage = { ...calendarUsage };
-      newUsage[selectedCalendarId] = (newUsage[selectedCalendarId] ?? 0) + 1;
-      setCalendarUsage(newUsage);
     } catch (error) {
       logError("Error adding event to calendar", error);
       toast.error("Failed to add event to calendar. Please try again.");
-    } finally {
-      setSelectedEvent(null);
     }
   };
 
-  const handleClearCalendarData = () => {
-    clearCalendarData();
-    queryClient.removeQueries({ queryKey: calendarsQueryKey });
-  };
-
   return {
-    isCalendarModalVisible,
-    setIsCalendarModalVisible,
-    availableCalendars,
     handleAddToCal,
-    handleCalendarSelect,
-    showAllCalendars,
-    setShowAllCalendars,
-    INITIAL_CALENDAR_LIMIT,
-    clearCalendarData: handleClearCalendarData,
   };
 }

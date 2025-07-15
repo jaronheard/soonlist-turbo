@@ -49,9 +49,8 @@ const getOneSignalMode = () => {
 
 // Get OneSignal App ID based on environment
 const getOneSignalAppId = (): string => {
-  if (IS_DEV)
-    return (process.env.EXPO_PUBLIC_ONE_SIGNAL_APP_ID_DEV as string) || "";
-  return (process.env.EXPO_PUBLIC_ONE_SIGNAL_APP_ID_PROD as string) || "";
+  if (IS_DEV) return process.env.EXPO_PUBLIC_ONE_SIGNAL_APP_ID_DEV! || "";
+  return process.env.EXPO_PUBLIC_ONE_SIGNAL_APP_ID_PROD! || "";
 };
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
