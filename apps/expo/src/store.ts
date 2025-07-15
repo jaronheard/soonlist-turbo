@@ -594,9 +594,5 @@ export const useMarkPaywallShown = () =>
   useAppStore((state) => state.markPaywallShown);
 
 // Auto-generated selector pattern for stable action references
-useAppStore.use = {
-  setHasSeenOnboarding: () => useAppStore((state) => state.setHasSeenOnboarding),
-  incrementEventView: () => useAppStore((state) => state.incrementEventView),
-  shouldShowViewPaywall: () => useAppStore((state) => state.shouldShowViewPaywall),
-  markPaywallShown: () => useAppStore((state) => state.markPaywallShown),
-};
+// Note: Use the individual hook exports above instead of this pattern
+// to avoid rules-of-hooks violations

@@ -31,7 +31,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore } from "~/store";
+import { useIncrementEventView, useShouldShowViewPaywall, useMarkPaywallShown } from "~/store";
 import { formatEventDateRange } from "~/utils/dates";
 import { logError } from "../../../utils/errorLogging";
 
@@ -60,9 +60,9 @@ export default function Page() {
     hasCountedViewRef.current = false;
   }, [id]);
 
-  const incrementEventView = useAppStore.use.incrementEventView();
-  const shouldShowViewPaywall = useAppStore.use.shouldShowViewPaywall();
-  const markPaywallShown = useAppStore.use.markPaywallShown();
+  const incrementEventView = useIncrementEventView();
+  const shouldShowViewPaywall = useShouldShowViewPaywall();
+  const markPaywallShown = useMarkPaywallShown();
 
   // Track event view and show paywall if needed
   useEffect(() => {
