@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Image,
@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -15,7 +16,7 @@ import { Redirect, router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
 
@@ -35,6 +36,7 @@ const profileSchema = z.object({
     .string()
     .min(3, "Username must be at least 3 characters")
     .max(30, "Username must be 30 characters or less"),
+  displayName: z.string().max(50, "Display name must be 50 characters or less").optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -44,9 +46,12 @@ export default function EditProfileScreen() {
   const { user } = useUser();
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const signOut = useSignOut();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.imageUrl ?? null,
   );
+  
+  const displayNameRef = useRef<TextInput>(null);
   const userData = useQuery(
     api.users.getByUsername,
     user?.username ? { userName: user.username } : "skip",
@@ -57,23 +62,66 @@ export default function EditProfileScreen() {
     setUserTimezone,
   } = useAppStore();
 
-  const { reset } = useForm<ProfileFormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isDirty, isValid },
+    reset,
+    watch,
+  } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       username: user?.username ?? "",
+      displayName: userData?.displayName ?? "",
     },
     mode: "onBlur",
   });
+
+  const watchedDisplayName = watch("displayName");
 
   useEffect(() => {
     if (userData) {
       reset({
         username: user?.username ?? "",
+        displayName: userData.displayName ?? "",
       });
     }
   }, [userData, user, reset]);
 
+  const updateProfile = useMutation(api.users.updateAdditionalInfo);
   const resetOnboardingMutation = useMutation(api.users.resetOnboarding);
+
+  const onSubmit = useCallback(
+    async (data: ProfileFormData) => {
+      const loadingToastId = toast.loading("Updating profile...");
+      setIsSubmitting(true);
+      try {
+        if (data.username !== user?.username) {
+          await user?.update({ username: data.username });
+        }
+        if (user?.id) {
+          await updateProfile({
+            userId: user.id,
+            displayName: data.displayName,
+          });
+        }
+        toast.dismiss(loadingToastId);
+        toast.success("Profile updated successfully");
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.navigate("/feed");
+        }
+      } catch (error) {
+        logError("Error updating profile", error);
+        toast.dismiss(loadingToastId);
+        toast.error("An unexpected error occurred");
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [user, updateProfile],
+  );
 
   const pickImage = useCallback(async () => {
     const loadingToastId = toast.loading("Updating profile image...");
@@ -246,29 +294,50 @@ export default function EditProfileScreen() {
             </View>
 
             <View>
-              <Text className="mb-2 text-base font-semibold">Username</Text>
-              <View className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2">
-                <Text className="text-neutral-600">@{user?.username}</Text>
-              </View>
-              <Text className="mt-1 text-xs text-neutral-500">
-                Your username cannot be changed
+              <Text className="mb-2 text-base font-semibold">Display Name</Text>
+              <Text className="mb-2 text-sm text-neutral-500">
+                How you'll appear on events
+              </Text>
+              <Controller
+                control={control}
+                name="displayName"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    ref={displayNameRef}
+                    className="rounded-md border border-neutral-300 px-3 py-2 text-base"
+                    placeholder="Enter display name"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    maxLength={50}
+                  />
+                )}
+              />
+              {errors.displayName && (
+                <Text className="mt-1 text-sm text-red-500">
+                  {errors.displayName.message}
+                </Text>
+              )}
+            </View>
+
+            <View className="rounded-md bg-neutral-50 p-4">
+              <Text className="mb-2 text-sm font-medium text-neutral-700">
+                Preview
+              </Text>
+              <Text className="text-sm text-neutral-500">
+                On events, you'll appear as: <Text className="font-medium text-neutral-700">{watchedDisplayName?.trim() || user?.username || "Unknown"}</Text>
               </Text>
             </View>
 
-            <TouchableOpacity
-              onPress={() => router.push("/settings/display-name")}
-              className="rounded-md border border-neutral-300 p-4"
-            >
-              <View className="flex-row items-center justify-between">
-                <View>
-                  <Text className="text-base font-medium">Display Name</Text>
-                  <Text className="text-sm text-neutral-500">
-                    {userData?.displayName || "Not set - will use username"}
-                  </Text>
-                </View>
-                <Text className="text-neutral-400">›</Text>
-              </View>
-            </TouchableOpacity>
+            {isDirty && (
+              <Button
+                onPress={handleSubmit(onSubmit)}
+                disabled={isSubmitting || !isValid}
+                className="mt-4"
+              >
+                {isSubmitting ? "Saving..." : "Save Profile"}
+              </Button>
+            )}
           </View>
 
           <View className="mt-8">
