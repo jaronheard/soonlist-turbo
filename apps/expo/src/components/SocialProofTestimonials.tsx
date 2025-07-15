@@ -17,6 +17,7 @@ const testimonials = [
       handle: "delladella",
       imageSource: dellaImage,
     },
+    eventsSaved: 180,
   },
   {
     body: "I'm a freak for my calendar, and Soonlist is the perfect way to keep it fresh and full of events that inspire me.",
@@ -26,6 +27,7 @@ const testimonials = [
       handle: "eggsbenedon",
       imageSource: ericImage,
     },
+    eventsSaved: 50,
   },
   // {
   //   body: "Honestly, I wasn't sure if I would use it. But now I can't imagine life without it!",
@@ -45,7 +47,7 @@ interface TestimonialCardProps {
 function TestimonialCard({ testimonial }: TestimonialCardProps) {
   return (
     <View
-      className="mb-3 rounded-xl bg-accent-yellow p-6"
+      className="mb-6 rounded-xl bg-accent-yellow p-4"
       style={{
         borderWidth: 3,
         borderColor: "white",
@@ -54,12 +56,13 @@ function TestimonialCard({ testimonial }: TestimonialCardProps) {
         shadowOpacity: 0.15,
         shadowRadius: 2.5,
         elevation: 2,
+        position: "relative",
       }}
     >
-      <Text className="mb-3 text-center font-heading text-base font-bold text-neutral-1">
-        "{testimonial.body}"
+      <Text className="mb-3 text-left font-heading text-base font-bold text-neutral-1">
+        “{testimonial.body}”
       </Text>
-      <View className="flex-row items-center justify-center">
+      <View className="flex-row items-center justify-start">
         {testimonial.author.imageSource ? (
           <ExpoImage
             source={testimonial.author.imageSource}
@@ -100,6 +103,35 @@ function TestimonialCard({ testimonial }: TestimonialCardProps) {
           </Text>
           <Text className="text-sm font-medium text-neutral-2">
             {testimonial.author.title}
+          </Text>
+        </View>
+      </View>
+      <View
+        style={{
+          position: "absolute",
+          bottom: -10,
+          left: 0,
+          right: 0,
+          zIndex: 20,
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <View
+          className="rounded-full bg-interactive-2 px-2 py-0.5"
+          style={{
+            borderWidth: 2,
+            borderColor: "white",
+            shadowColor: "#5A32FB",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.15,
+            shadowRadius: 1,
+            elevation: 1,
+          }}
+        >
+          <Text className="text-xs font-medium text-neutral-1">
+            {testimonial.eventsSaved}+ events saved
           </Text>
         </View>
       </View>
