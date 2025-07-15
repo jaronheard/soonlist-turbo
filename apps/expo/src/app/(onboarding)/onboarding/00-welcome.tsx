@@ -5,7 +5,7 @@ import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 
 import { Logo } from "~/components/Logo";
-import { useAppStore } from "~/store";
+import { useSetHasSeenOnboarding } from "~/store";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
@@ -14,9 +14,10 @@ export default function WelcomeScreen() {
     router.push("/(onboarding)/onboarding/01-intro");
   };
 
+  const setHasSeenOnboarding = useSetHasSeenOnboarding();
+
   const handleSignIn = () => {
     // Mark as seen onboarding so they skip it after sign-in
-    const setHasSeenOnboarding = useAppStore.getState().setHasSeenOnboarding;
     setHasSeenOnboarding(true);
 
     // Navigate to sign-in screen

@@ -13,7 +13,7 @@ import Constants from "expo-constants";
 import { router } from "expo-router";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore } from "~/store";
+import { useAppStore, useSetHasSeenOnboarding } from "~/store";
 import { isSimulator, shouldMockPaywall } from "~/utils/deviceInfo";
 
 export default function PaywallScreen() {
@@ -24,9 +24,11 @@ export default function PaywallScreen() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
+  const setHasSeenOnboarding = useSetHasSeenOnboarding();
+
   const completeOnboarding = useCallback(() => {
-    useAppStore.getState().setHasSeenOnboarding(true);
-  }, []);
+    setHasSeenOnboarding(true);
+  }, [setHasSeenOnboarding]);
 
   // Debug logging
   console.log("Paywall Debug:", {
