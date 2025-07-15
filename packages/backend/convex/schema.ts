@@ -40,6 +40,7 @@ export const userAdditionalInfoValidator = v.object({
   publicPhone: v.optional(v.string()),
   publicInsta: v.optional(v.string()),
   publicWebsite: v.optional(v.string()),
+  displayName: v.optional(v.string()),
 });
 
 export default defineSchema({

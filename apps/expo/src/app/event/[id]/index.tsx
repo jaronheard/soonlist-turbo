@@ -272,7 +272,7 @@ export default function Page() {
                   )}
                 </UserProfileFlair>
                 <Text className="text-sm text-neutral-2">
-                  @{event.user?.username || "unknown"}
+                  {event.user?.displayName || event.user?.username || "unknown"}
                 </Text>
               </View>
             )}

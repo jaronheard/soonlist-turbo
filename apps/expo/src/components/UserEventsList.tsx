@@ -419,7 +419,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 )}
               </UserProfileFlair>
               <Text className="text-xs text-neutral-2">
-                @{eventUser.username}
+                {eventUser.displayName || eventUser.username || "unknown"}
               </Text>
             </View>
           ) : null}

@@ -23,7 +23,6 @@ import { z } from "zod";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
-import { Globe, Instagram, Mail, Phone } from "~/components/icons";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useSignOut } from "~/hooks/useSignOut";
@@ -31,16 +30,16 @@ import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import { logError } from "../../utils/errorLogging";
 
+// Simplified schema - only keeping what we still need for form validation
 const profileSchema = z.object({
   username: z
     .string()
     .min(3, "Username must be at least 3 characters")
     .max(30, "Username must be 30 characters or less"),
-  bio: z.string().max(150, "Bio must be 150 characters or less").optional(),
-  publicEmail: z.string().email("Invalid email").optional().or(z.literal("")),
-  publicPhone: z.string().optional(),
-  publicInsta: z.string().optional(),
-  publicWebsite: z.string().url("Invalid URL").optional().or(z.literal("")),
+  displayName: z
+    .string()
+    .max(50, "Display name must be 50 characters or less")
+    .optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -54,6 +53,8 @@ export default function EditProfileScreen() {
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.imageUrl ?? null,
   );
+
+  const displayNameRef = useRef<TextInput>(null);
   const userData = useQuery(
     api.users.getByUsername,
     user?.username ? { userName: user.username } : "skip",
@@ -69,42 +70,28 @@ export default function EditProfileScreen() {
     handleSubmit,
     formState: { errors, isDirty, isValid },
     reset,
+    watch,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       username: user?.username ?? "",
-      bio: userData?.bio ?? undefined,
-      publicEmail: userData?.publicEmail ?? undefined,
-      publicPhone: userData?.publicPhone ?? undefined,
-      publicInsta: userData?.publicInsta ?? undefined,
-      publicWebsite: userData?.publicWebsite ?? undefined,
+      displayName: userData?.displayName ?? "",
     },
     mode: "onBlur",
   });
 
-  // Create refs for each input field
-  const usernameRef = useRef<TextInput>(null);
-  const bioRef = useRef<TextInput>(null);
-  const emailRef = useRef<TextInput>(null);
-  const phoneRef = useRef<TextInput>(null);
-  const instaRef = useRef<TextInput>(null);
-  const websiteRef = useRef<TextInput>(null);
+  const watchedDisplayName = watch("displayName");
 
   useEffect(() => {
     if (userData) {
       reset({
         username: user?.username ?? "",
-        bio: userData.bio ?? undefined,
-        publicEmail: userData.publicEmail ?? undefined,
-        publicPhone: userData.publicPhone ?? undefined,
-        publicInsta: userData.publicInsta ?? undefined,
-        publicWebsite: userData.publicWebsite ?? undefined,
+        displayName: userData.displayName ?? "",
       });
     }
   }, [userData, user, reset]);
 
   const updateProfile = useMutation(api.users.updateAdditionalInfo);
-
   const resetOnboardingMutation = useMutation(api.users.resetOnboarding);
 
   const onSubmit = useCallback(
@@ -118,11 +105,7 @@ export default function EditProfileScreen() {
         if (user?.id) {
           await updateProfile({
             userId: user.id,
-            bio: data.bio,
-            publicEmail: data.publicEmail,
-            publicPhone: data.publicPhone,
-            publicInsta: data.publicInsta,
-            publicWebsite: data.publicWebsite,
+            displayName: data.displayName,
           });
         }
         toast.dismiss(loadingToastId);
@@ -188,23 +171,6 @@ export default function EditProfileScreen() {
       setProfileImage(user?.imageUrl ?? null);
     }
   }, [user]);
-
-  // Function to focus the next input
-  const focusNextInput = (nextRef: React.RefObject<TextInput | null>) => {
-    nextRef.current?.focus();
-  };
-
-  const handleSaveOrBack = useCallback(() => {
-    if (isDirty && isValid) {
-      void handleSubmit(onSubmit)();
-    } else {
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.navigate("/feed");
-      }
-    }
-  }, [isDirty, isValid, handleSubmit, onSubmit]);
 
   const handleDeleteAccount = useCallback(() => {
     Alert.alert(
@@ -331,330 +297,172 @@ export default function EditProfileScreen() {
             </View>
 
             <View>
-              <Text className="mb-2 text-base font-semibold">Username</Text>
+              <Text className="mb-2 text-base font-semibold">Display Name</Text>
+              <Text className="mb-2 text-sm text-neutral-500">
+                How you'll appear on events
+              </Text>
               <Controller
                 control={control}
-                name="username"
+                name="displayName"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View className="flex-1">
-                    <TextInput
-                      autoComplete="username"
-                      autoCorrect={false}
-                      autoCapitalize="none"
-                      ref={usernameRef}
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="Enter your username"
-                      className="h-10 rounded-md border border-neutral-300 px-3 py-2"
-                      onSubmitEditing={() => focusNextInput(bioRef)}
-                      returnKeyType="next"
-                    />
-                    {errors.username && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.username.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
-            </View>
-
-            <Controller
-              control={control}
-              name="bio"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View>
-                  <Text className="mb-2 text-base font-semibold">Bio</Text>
                   <TextInput
-                    autoComplete="off"
-                    autoCorrect={false}
-                    autoCapitalize="none"
-                    ref={bioRef}
-                    defaultValue={value}
+                    ref={displayNameRef}
+                    className="rounded-md border border-neutral-300 px-3 py-2 text-base"
+                    placeholder="Enter display name"
+                    value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    placeholder="Enter your bio (max 150 characters)"
-                    multiline
-                    className="h-24 rounded-md border border-neutral-300 px-3 py-2"
+                    maxLength={50}
                   />
-                  <Text className="mt-1 text-xs text-neutral-500">
-                    Example: I love ambient music, creative community building,
-                    and vegan pop-ups.
-                  </Text>
-                  {errors.bio && (
-                    <Text className="mt-1 text-xs text-red-500">
-                      {errors.bio.message}
-                    </Text>
-                  )}
-                </View>
-              )}
-            />
-
-            <View className="flex-col gap-4 space-y-4">
-              <View>
-                <Text className="text-lg font-semibold">How to connect</Text>
-                <Text className="text-sm text-neutral-500">
-                  Share any contact info you want to publicly display.
+                )}
+              />
+              {errors.displayName && (
+                <Text className="mt-1 text-sm text-red-500">
+                  {errors.displayName.message}
                 </Text>
-              </View>
+              )}
+            </View>
 
-              <Controller
-                control={control}
-                name="publicEmail"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View>
-                    <View className="mb-2 flex-row items-center">
-                      <Mail size={16} color="#000" />
-                      <Text className="ml-2 font-medium">Email</Text>
-                    </View>
-                    <TextInput
-                      autoComplete="email"
-                      autoCorrect={false}
-                      autoCapitalize="none"
-                      ref={emailRef}
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="email@example.com"
-                      keyboardType="email-address"
-                      className="rounded-md border border-neutral-300 px-3 py-2"
-                      onSubmitEditing={() => focusNextInput(phoneRef)}
-                      returnKeyType="next"
-                    />
-                    {errors.publicEmail && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.publicEmail.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="publicPhone"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View>
-                    <View className="mb-2 flex-row items-center">
-                      <Phone size={16} color="#000" />
-                      <Text className="ml-2 font-medium">Phone</Text>
-                    </View>
-                    <TextInput
-                      autoComplete="tel"
-                      autoCorrect={false}
-                      autoCapitalize="none"
-                      ref={phoneRef}
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="1234567890"
-                      keyboardType="phone-pad"
-                      className="rounded-md border border-neutral-300 px-3 py-2"
-                    />
-                    {errors.publicPhone && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.publicPhone.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="publicInsta"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View>
-                    <View className="mb-2 flex-row items-center">
-                      <Instagram size={16} color="#000" />
-                      <Text className="ml-2 font-medium">Instagram</Text>
-                    </View>
-                    <TextInput
-                      autoComplete="off"
-                      autoCorrect={false}
-                      autoCapitalize="none"
-                      ref={instaRef}
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="username"
-                      className="rounded-md border border-neutral-300 px-3 py-2"
-                      onSubmitEditing={() => focusNextInput(websiteRef)}
-                      returnKeyType="next"
-                    />
-                    {errors.publicInsta && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.publicInsta.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="publicWebsite"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View>
-                    <View className="mb-2 flex-row items-center">
-                      <Globe size={16} color="#000" />
-                      <Text className="ml-2 font-medium">Website</Text>
-                    </View>
-                    <TextInput
-                      autoComplete="url"
-                      autoCorrect={false}
-                      autoCapitalize="none"
-                      ref={websiteRef}
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="www.example.com"
-                      keyboardType="url"
-                      className="rounded-md border border-neutral-300 px-3 py-2"
-                      returnKeyType="done"
-                    />
-                    {errors.publicWebsite && (
-                      <Text className="mt-1 text-xs text-red-500">
-                        {errors.publicWebsite.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
+            <View className="rounded-md bg-neutral-50 p-4">
+              <Text className="mb-2 text-sm font-medium text-neutral-700">
+                Preview
+              </Text>
+              <Text className="text-sm text-neutral-500">
+                On events, you'll appear as:{" "}
+                <Text className="font-medium text-neutral-700">
+                  {watchedDisplayName?.trim() || user?.username || "Unknown"}
+                </Text>
+              </Text>
             </View>
 
             {isDirty && (
               <Button
-                onPress={handleSaveOrBack}
-                disabled={isSubmitting}
+                onPress={handleSubmit(onSubmit)}
+                disabled={isSubmitting || !isValid}
                 className="mt-4"
               >
                 {isSubmitting ? "Saving..." : "Save Profile"}
               </Button>
             )}
+          </View>
 
-            <View className="mt-8">
-              <Text className="text-lg font-semibold">Preferences</Text>
-              <View className="mt-4">
-                <Text className="mb-2 text-base font-medium">
-                  Default Timezone
-                </Text>
-                <Text className="mb-2 text-sm text-neutral-500">
-                  This timezone will be used for all new events you create.
-                </Text>
-                <TimezoneSelectNative
-                  value={userTimezone}
-                  onValueChange={setUserTimezone}
-                  placeholder="Select a timezone"
-                />
-              </View>
+          <View className="mt-8">
+            <Text className="text-lg font-semibold">Preferences</Text>
+            <View className="mt-4">
+              <Text className="mb-2 text-base font-medium">
+                Default Timezone
+              </Text>
+              <Text className="mb-2 text-sm text-neutral-500">
+                This timezone will be used for all new events you create.
+              </Text>
+              <TimezoneSelectNative
+                value={userTimezone}
+                onValueChange={setUserTimezone}
+                placeholder="Select a timezone"
+              />
             </View>
+          </View>
 
-            <View className="mt-12">
-              <Text className="text-lg font-semibold">Subscription</Text>
-              {(() => {
-                if (!user) return null;
-                const hasUnlimited =
-                  customerInfo?.entitlements.active.unlimited?.isActive ??
-                  false;
+          <View className="mt-12">
+            <Text className="text-lg font-semibold">Subscription</Text>
+            {(() => {
+              if (!user) return null;
+              const hasUnlimited =
+                customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-                const stripeSubscription =
-                  customerInfo?.originalPurchaseDate &&
-                  new Date(customerInfo.originalPurchaseDate) <=
-                    new Date(2025, 2, 7);
+              const stripeSubscription =
+                customerInfo?.originalPurchaseDate &&
+                new Date(customerInfo.originalPurchaseDate) <=
+                  new Date(2025, 2, 7);
 
-                if (hasUnlimited && !stripeSubscription) {
-                  return (
-                    <TouchableOpacity
-                      onPress={() => {
-                        void Linking.openURL(
-                          "itms-apps://apps.apple.com/account/subscriptions",
-                        );
-                      }}
-                      className="mt-2 rounded-md bg-neutral-100 p-4"
-                    >
-                      <Text className="text-base">
-                        View subscription in Settings
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }
-
-                if (hasUnlimited && stripeSubscription) {
-                  return (
-                    <TouchableOpacity
-                      onPress={() => {
-                        void Linking.openURL(
-                          "https://www.soonlist.com/account/plans",
-                        );
-                      }}
-                      className="mt-2 rounded-md bg-neutral-100 p-4"
-                    >
-                      <Text className="text-base">
-                        Manage subscription on web
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }
-
+              if (hasUnlimited && !stripeSubscription) {
                 return (
                   <TouchableOpacity
-                    onPress={showProPaywallIfNeeded}
+                    onPress={() => {
+                      void Linking.openURL(
+                        "itms-apps://apps.apple.com/account/subscriptions",
+                      );
+                    }}
                     className="mt-2 rounded-md bg-neutral-100 p-4"
                   >
-                    <Text className="text-base">Upgrade to Pro</Text>
+                    <Text className="text-base">
+                      View subscription in Settings
+                    </Text>
                   </TouchableOpacity>
                 );
-              })()}
-            </View>
+              }
 
-            {__DEV__ && (
-              <View className="mt-12">
-                <Text className="mb-2 text-base font-semibold text-blue-600">
-                  Development Testing
-                </Text>
+              if (hasUnlimited && stripeSubscription) {
+                return (
+                  <TouchableOpacity
+                    onPress={() => {
+                      void Linking.openURL(
+                        "https://www.soonlist.com/account/plans",
+                      );
+                    }}
+                    className="mt-2 rounded-md bg-neutral-100 p-4"
+                  >
+                    <Text className="text-base">
+                      Manage subscription on web
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }
+
+              return (
                 <TouchableOpacity
-                  onPress={() => router.push("/settings/workflow-test")}
-                  className="mt-2 rounded-md bg-blue-100 p-4"
+                  onPress={showProPaywallIfNeeded}
+                  className="mt-2 rounded-md bg-neutral-100 p-4"
                 >
-                  <Text className="text-base text-blue-800">
-                    Workflow Failure Tests
-                  </Text>
-                  <Text className="text-sm text-blue-600">
-                    Test workflow failure notifications
-                  </Text>
+                  <Text className="text-base">Upgrade to Pro</Text>
                 </TouchableOpacity>
-              </View>
-            )}
+              );
+            })()}
+          </View>
 
+          {__DEV__ && (
             <View className="mt-12">
-              <Text className="mb-2 text-base font-semibold text-red-500">
-                Danger Zone
+              <Text className="mb-2 text-base font-semibold text-blue-600">
+                Development Testing
               </Text>
-              <View>
-                <Button
-                  onPress={handleRestartOnboarding}
-                  variant="destructive"
-                  className="bg-red-500"
-                  disabled={isSubmitting}
-                >
-                  Restart Onboarding
-                </Button>
-                <View className="h-4" />
-                <Button
-                  onPress={handleDeleteAccount}
-                  variant="destructive"
-                  className="bg-red-500"
-                  disabled={isSubmitting}
-                >
-                  Delete Account
-                </Button>
-                <Text className="mt-2 text-xs text-neutral-500">
-                  This will permanently delete your account and all associated
-                  data.
+              <TouchableOpacity
+                onPress={() => router.push("/settings/workflow-test")}
+                className="mt-2 rounded-md bg-blue-100 p-4"
+              >
+                <Text className="text-base text-blue-800">
+                  Workflow Failure Tests
                 </Text>
-              </View>
+                <Text className="text-sm text-blue-600">
+                  Test workflow failure notifications
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View className="mt-12">
+            <Text className="mb-2 text-base font-semibold text-red-500">
+              Danger Zone
+            </Text>
+            <View>
+              <Button
+                onPress={handleRestartOnboarding}
+                variant="destructive"
+                className="bg-red-500"
+              >
+                Restart Onboarding
+              </Button>
+              <View className="h-4" />
+              <Button
+                onPress={handleDeleteAccount}
+                variant="destructive"
+                className="bg-red-500"
+              >
+                Delete Account
+              </Button>
+              <Text className="mt-2 text-xs text-neutral-500">
+                This will permanently delete your account and all associated
+                data.
+              </Text>
             </View>
           </View>
         </View>
