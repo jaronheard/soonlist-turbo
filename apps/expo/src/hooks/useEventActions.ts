@@ -232,13 +232,23 @@ export function useEventActions({
   const handleFollow = async () => {
     if (!event || checkDemoMode() || isOwner || isSaved) return;
     triggerHaptic();
-    await followEventMutation({ id: event.id });
+    try {
+      await followEventMutation({ id: event.id });
+      toast.success("Event saved");
+    } catch (error) {
+      toast.error(`Failed to save event: ${(error as Error).message}`);
+    }
   };
 
   const handleUnfollow = async () => {
     if (!event || checkDemoMode() || isOwner || !isSaved) return;
     triggerHaptic();
-    await unfollowEventMutation({ id: event.id });
+    try {
+      await unfollowEventMutation({ id: event.id });
+      toast.success("Event unsaved");
+    } catch (error) {
+      toast.error(`Failed to unsave event: ${(error as Error).message}`);
+    }
   };
 
   const handleShowQR = () => {
@@ -338,13 +348,23 @@ export function useEventSaveActions(
   const handleFollow = async () => {
     if (checkDemoMode() || isSaved) return;
     triggerHaptic();
-    await followEventMutation({ id: eventId });
+    try {
+      await followEventMutation({ id: eventId });
+      toast.success("Event saved");
+    } catch (error) {
+      toast.error(`Failed to save event: ${(error as Error).message}`);
+    }
   };
 
   const handleUnfollow = async () => {
     if (checkDemoMode() || !isSaved) return;
     triggerHaptic();
-    await unfollowEventMutation({ id: eventId });
+    try {
+      await unfollowEventMutation({ id: eventId });
+      toast.success("Event unsaved");
+    } catch (error) {
+      toast.error(`Failed to unsave event: ${(error as Error).message}`);
+    }
   };
 
   return {
