@@ -62,8 +62,9 @@ function PastEventsContent() {
     }
   }, [status, loadMore]);
 
-  const savedEventIds = new Set(
-    savedEventIdsQuery?.map((event) => event.id) ?? [],
+  const savedEventIds = useMemo(
+    () => new Set(savedEventIdsQuery?.map((event) => event.id) ?? []),
+    [savedEventIdsQuery],
   );
 
   // Add missing properties that UserEventsList expects
