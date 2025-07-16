@@ -189,7 +189,12 @@ export default function AddEventButton({
               </View>
               {/* Lock icon overlay */}
               <View className="absolute bottom-0 right-0 rounded-full bg-white p-2">
-                <Lock id="lock-icon" size={16} color="#5A32FB" strokeWidth={3} />
+                <Lock
+                  id="lock-icon"
+                  size={16}
+                  color="#5A32FB"
+                  strokeWidth={3}
+                />
               </View>
             </View>
           )}
