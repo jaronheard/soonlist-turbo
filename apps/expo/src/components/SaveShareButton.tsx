@@ -28,9 +28,6 @@ export default function SaveShareButton({
   const { fontScale } = useWindowDimensions();
   const iconSize = 16 * fontScale;
 
-  // Local state to track saved status for immediate UI updates
-  const [localIsSaved, setLocalIsSaved] = React.useState(isSaved);
-
   // Use the simplified event save actions hook
   const { handleFollow } = useEventSaveActions(eventId, isSaved);
 
@@ -52,12 +49,11 @@ export default function SaveShareButton({
   const handlePress = () => {
     if (!isLoaded) return;
 
-    if (localIsSaved) {
+    if (isSaved) {
       // If already saved, share the event
       void handleShare();
     } else {
-      // If not saved, save the event and update local state immediately
-      setLocalIsSaved(true);
+      // If not saved, save the event
       void handleFollow();
     }
   };
@@ -68,19 +64,19 @@ export default function SaveShareButton({
       style={{ borderRadius: 16 }}
       onPress={handlePress}
       disabled={!isLoaded}
-      accessibilityLabel={localIsSaved ? "Share" : "Save"}
+      accessibilityLabel={isSaved ? "Share" : "Save"}
       accessibilityRole="button"
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        {localIsSaved ? (
+        {isSaved ? (
           <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
         ) : (
           <Heart color="#5A32FB" size={iconSize * 1.1} fill="white" />
         )}
       </Animated.View>
       <Text className="text-base font-bold text-interactive-1">
-        {localIsSaved ? "Share" : "Save"}
+        {isSaved ? "Share" : "Save"}
       </Text>
     </TouchableOpacity>
   );

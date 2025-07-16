@@ -38,8 +38,60 @@ export function useEventActions({
   const stableTimestamp = useStableTimestamp();
 
   const deleteEventMutation = useMutation(api.events.deleteEvent);
-  const unfollowEventMutation = useMutation(api.events.unfollow);
-  const followEventMutation = useMutation(api.events.follow);
+
+  const unfollowEventMutation = useMutation(
+    api.events.unfollow,
+  ).withOptimisticUpdate((localStore, args) => {
+    const { id } = args;
+
+    // Update the saved event IDs query if loaded
+    if (user?.username) {
+      const currentSavedIds = localStore.getQuery(
+        api.events.getSavedIdsForUser,
+        {
+          userName: user.username,
+        },
+      );
+
+      if (currentSavedIds !== undefined) {
+        // Remove the event from saved IDs
+        const updatedSavedIds = currentSavedIds.filter(
+          (savedEvent) => savedEvent.id !== id,
+        );
+        localStore.setQuery(
+          api.events.getSavedIdsForUser,
+          { userName: user.username },
+          updatedSavedIds,
+        );
+      }
+    }
+  });
+
+  const followEventMutation = useMutation(
+    api.events.follow,
+  ).withOptimisticUpdate((localStore, args) => {
+    const { id } = args;
+
+    // Update the saved event IDs query if loaded
+    if (user?.username) {
+      const currentSavedIds = localStore.getQuery(
+        api.events.getSavedIdsForUser,
+        {
+          userName: user.username,
+        },
+      );
+
+      if (currentSavedIds !== undefined) {
+        // Add the event to saved IDs
+        const updatedSavedIds = [...currentSavedIds, { id }];
+        localStore.setQuery(
+          api.events.getSavedIdsForUser,
+          { userName: user.username },
+          updatedSavedIds,
+        );
+      }
+    }
+  });
 
   // Use optimistic updates for visibility toggle
   const toggleVisibilityMutation = useMutation(
@@ -215,8 +267,61 @@ export function useEventSaveActions(
   isSaved: boolean,
   demoMode = false,
 ) {
-  const unfollowEventMutation = useMutation(api.events.unfollow);
-  const followEventMutation = useMutation(api.events.follow);
+  const { user } = useUser();
+
+  const unfollowEventMutation = useMutation(
+    api.events.unfollow,
+  ).withOptimisticUpdate((localStore, args) => {
+    const { id } = args;
+
+    // Update the saved event IDs query if loaded
+    if (user?.username) {
+      const currentSavedIds = localStore.getQuery(
+        api.events.getSavedIdsForUser,
+        {
+          userName: user.username,
+        },
+      );
+
+      if (currentSavedIds !== undefined) {
+        // Remove the event from saved IDs
+        const updatedSavedIds = currentSavedIds.filter(
+          (savedEvent) => savedEvent.id !== id,
+        );
+        localStore.setQuery(
+          api.events.getSavedIdsForUser,
+          { userName: user.username },
+          updatedSavedIds,
+        );
+      }
+    }
+  });
+
+  const followEventMutation = useMutation(
+    api.events.follow,
+  ).withOptimisticUpdate((localStore, args) => {
+    const { id } = args;
+
+    // Update the saved event IDs query if loaded
+    if (user?.username) {
+      const currentSavedIds = localStore.getQuery(
+        api.events.getSavedIdsForUser,
+        {
+          userName: user.username,
+        },
+      );
+
+      if (currentSavedIds !== undefined) {
+        // Add the event to saved IDs
+        const updatedSavedIds = [...currentSavedIds, { id }];
+        localStore.setQuery(
+          api.events.getSavedIdsForUser,
+          { userName: user.username },
+          updatedSavedIds,
+        );
+      }
+    }
+  });
 
   const triggerHaptic = () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
