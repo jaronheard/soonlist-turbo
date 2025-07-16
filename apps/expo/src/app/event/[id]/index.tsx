@@ -37,6 +37,7 @@ import {
   useShouldShowViewPaywall,
 } from "~/store";
 import { formatEventDateRange } from "~/utils/dates";
+import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
 
 export default function Page() {
@@ -132,8 +133,6 @@ export default function Page() {
   const HeaderRight = useCallback(() => {
     if (!event) return null;
 
-    const isOwner = event.userId === currentUser?.id;
-
     return (
       <View className="flex-row items-center gap-2">
         <EventMenu
@@ -145,7 +144,7 @@ export default function Page() {
         />
       </View>
     );
-  }, [event, isSaved, currentUser?.id, handleDeleteAndRedirect]);
+  }, [event, isSaved, isOwner, handleDeleteAndRedirect]);
 
   // Early return if the 'id' is missing or invalid
   if (!id || typeof id !== "string") {
@@ -183,9 +182,29 @@ export default function Page() {
     );
   }
 
+  // Access control: Hide non-discoverable events from users without show discover enabled
+  const isOwner = event.userId === currentUser?.id;
+  const isEventDiscoverable = event.visibility === "public";
+  const userCanSeeNonDiscoverable = currentUser 
+    ? getPlanStatusFromUser(currentUser).showDiscover 
+    : false;
+
+  // If the event is not discoverable and the user can't see non-discoverable events
+  // and the user is not the owner, show not found
+  if (!isEventDiscoverable && !userCanSeeNonDiscoverable && !isOwner) {
+    return (
+      <>
+        <Stack.Screen options={{ headerRight: () => null }} />
+        <View className="flex-1 bg-white">
+          <Text>Event not found</Text>
+        </View>
+      </>
+    );
+  }
+
   // Normal render
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
-  const isCurrentUserEvent = currentUser?.id === event.userId;
+  const isCurrentUserEvent = isOwner;
 
   // Compute event date/time strings
   const { date, time } = formatEventDateRange(
