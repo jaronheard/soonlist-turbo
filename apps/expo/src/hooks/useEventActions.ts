@@ -180,29 +180,13 @@ export function useEventActions({
   const handleFollow = async () => {
     if (!event || checkDemoMode() || isOwner || isSaved) return;
     triggerHaptic();
-    const loadingToastId = toast.loading("Saving event...");
-    try {
-      await followEventMutation({ id: event.id });
-      toast.dismiss(loadingToastId);
-      toast.success("Event saved");
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      toast.error(`Failed to save event: ${(error as Error).message}`);
-    }
+    await followEventMutation({ id: event.id });
   };
 
   const handleUnfollow = async () => {
     if (!event || checkDemoMode() || isOwner || !isSaved) return;
     triggerHaptic();
-    const loadingToastId = toast.loading("Unsaving event...");
-    try {
-      await unfollowEventMutation({ id: event.id });
-      toast.dismiss(loadingToastId);
-      toast.success("Event unsaved");
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      toast.error(`Failed to unsave event: ${(error as Error).message}`);
-    }
+    await unfollowEventMutation({ id: event.id });
   };
 
   const handleShowQR = () => {
@@ -249,29 +233,13 @@ export function useEventSaveActions(
   const handleFollow = async () => {
     if (checkDemoMode() || isSaved) return;
     triggerHaptic();
-    const loadingToastId = toast.loading("Saving event...");
-    try {
-      await followEventMutation({ id: eventId });
-      toast.dismiss(loadingToastId);
-      toast.success("Event saved");
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      toast.error(`Failed to save event: ${(error as Error).message}`);
-    }
+    await followEventMutation({ id: eventId });
   };
 
   const handleUnfollow = async () => {
     if (checkDemoMode() || !isSaved) return;
     triggerHaptic();
-    const loadingToastId = toast.loading("Unsaving event...");
-    try {
-      await unfollowEventMutation({ id: eventId });
-      toast.dismiss(loadingToastId);
-      toast.success("Event unsaved");
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      toast.error(`Failed to unsave event: ${(error as Error).message}`);
-    }
+    await unfollowEventMutation({ id: eventId });
   };
 
   return {
