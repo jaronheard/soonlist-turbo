@@ -168,7 +168,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
     // Base style properties
     const style: ViewStyle = {
       paddingRight: imageWidth * 1.1,
-      borderRadius: 20,
       borderWidth: 3,
       borderColor: currentBorderColor,
       shadowColor: "#5A32FB",
@@ -290,7 +289,10 @@ export function UserEventListItem(props: UserEventListItemProps) {
               )}
             </View>
           </View>
-          <View className={cn("my-1 mt-4 p-3")} style={dynamicCardStyle}>
+          <View
+            className={cn("my-1 mt-4 rounded-2xl p-3")}
+            style={dynamicCardStyle}
+          >
             <View className="mb-1 flex-row items-center justify-between">
               <View className="flex-row items-center gap-1">
                 <Text className="text-sm font-medium text-neutral-2">
