@@ -37,6 +37,7 @@ import {
   useShouldShowViewPaywall,
 } from "~/store";
 import { formatEventDateRange } from "~/utils/dates";
+import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
 
 export default function Page() {
@@ -44,6 +45,9 @@ export default function Page() {
   const { width } = Dimensions.get("window");
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
+  const showDiscover = currentUser
+    ? getPlanStatusFromUser(currentUser).showDiscover
+    : false;
 
   // Store the aspect ratio for the main event image
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
@@ -239,42 +243,48 @@ export default function Page() {
             )}
 
             {/* Visibility or user info */}
-            {isCurrentUserEvent ? (
-              <View className="flex-row items-center gap-2">
-                {event.visibility === "public" ? (
-                  <Globe2 size={16} color="#627496" />
+            {showDiscover && (
+              <>
+                {isCurrentUserEvent ? (
+                  <View className="flex-row items-center gap-2">
+                    {event.visibility === "public" ? (
+                      <Globe2 size={16} color="#627496" />
+                    ) : (
+                      <EyeOff size={16} color="#627496" />
+                    )}
+                    <Text className="text-sm text-neutral-2">
+                      {event.visibility === "public"
+                        ? "Discoverable"
+                        : "Not discoverable"}
+                    </Text>
+                  </View>
                 ) : (
-                  <EyeOff size={16} color="#627496" />
+                  <View className="flex-row items-center gap-2">
+                    <UserProfileFlair
+                      username={event.user?.username || ""}
+                      size="xs"
+                    >
+                      {event.user?.userImage ? (
+                        <ExpoImage
+                          source={{ uri: event.user.userImage }}
+                          style={{ width: 20, height: 20, borderRadius: 10 }}
+                          contentFit="cover"
+                          contentPosition="center"
+                          cachePolicy="disk"
+                          transition={100}
+                        />
+                      ) : (
+                        <User size={20} color="#627496" />
+                      )}
+                    </UserProfileFlair>
+                    <Text className="text-sm text-neutral-2">
+                      {event.user?.displayName ||
+                        event.user?.username ||
+                        "unknown"}
+                    </Text>
+                  </View>
                 )}
-                <Text className="text-sm text-neutral-2">
-                  {event.visibility === "public"
-                    ? "Discoverable"
-                    : "Not discoverable"}
-                </Text>
-              </View>
-            ) : (
-              <View className="flex-row items-center gap-2">
-                <UserProfileFlair
-                  username={event.user?.username || ""}
-                  size="xs"
-                >
-                  {event.user?.userImage ? (
-                    <ExpoImage
-                      source={{ uri: event.user.userImage }}
-                      style={{ width: 20, height: 20, borderRadius: 10 }}
-                      contentFit="cover"
-                      contentPosition="center"
-                      cachePolicy="disk"
-                      transition={100}
-                    />
-                  ) : (
-                    <User size={20} color="#627496" />
-                  )}
-                </UserProfileFlair>
-                <Text className="text-sm text-neutral-2">
-                  {event.user?.displayName || event.user?.username || "unknown"}
-                </Text>
-              </View>
+              </>
             )}
           </View>
 
