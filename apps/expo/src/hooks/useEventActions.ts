@@ -261,7 +261,7 @@ export function useEventActions({
   };
 
   const handleFollow = async () => {
-    if (!event || checkDemoMode() || isOwner || isSaved) return;
+    if (!event || checkDemoMode() || isOwner) return;
     triggerHaptic();
     const loadingToastId = toast.loading("Saving event...");
     try {
@@ -275,7 +275,7 @@ export function useEventActions({
   };
 
   const handleUnfollow = async () => {
-    if (!event || checkDemoMode() || isOwner || !isSaved) return;
+    if (!event || checkDemoMode() || isOwner) return;
     triggerHaptic();
     const loadingToastId = toast.loading("Unsaving event...");
     try {
@@ -413,7 +413,7 @@ export function useEventSaveActions(
   };
 
   const handleFollow = async () => {
-    if (checkDemoMode() || isSaved) return;
+    if (checkDemoMode()) return;
     triggerHaptic();
     const loadingToastId = toast.loading("Saving event...");
     try {
@@ -427,7 +427,7 @@ export function useEventSaveActions(
   };
 
   const handleUnfollow = async () => {
-    if (checkDemoMode() || !isSaved) return;
+    if (checkDemoMode()) return;
     triggerHaptic();
     const loadingToastId = toast.loading("Unsaving event...");
     try {
