@@ -68,9 +68,8 @@ function DiscoverContent() {
     }
   }, [status, loadMore]);
 
-  const savedEventIds = useMemo(
-    () => new Set(savedEventIdsQuery?.map((event) => event.id) ?? []),
-    [savedEventIdsQuery],
+  const savedEventIds = new Set(
+    savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
   // Add missing properties that UserEventsList expects and filter out ended events
