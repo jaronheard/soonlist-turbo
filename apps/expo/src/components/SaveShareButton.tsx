@@ -49,20 +49,6 @@ export default function SaveShareButton({
   const handlePress = () => {
     if (!isLoaded) return;
 
-    // Animate the button
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1.2,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
     if (isSaved) {
       // If already saved, share the event
       void handleShare();

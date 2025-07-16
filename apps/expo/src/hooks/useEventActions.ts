@@ -38,8 +38,60 @@ export function useEventActions({
   const stableTimestamp = useStableTimestamp();
 
   const deleteEventMutation = useMutation(api.events.deleteEvent);
-  const unfollowEventMutation = useMutation(api.events.unfollow);
-  const followEventMutation = useMutation(api.events.follow);
+
+  const unfollowEventMutation = useMutation(
+    api.events.unfollow,
+  ).withOptimisticUpdate((localStore, args) => {
+    const { id } = args;
+
+    // Update the saved event IDs query if loaded
+    if (user?.username) {
+      const currentSavedIds = localStore.getQuery(
+        api.events.getSavedIdsForUser,
+        {
+          userName: user.username,
+        },
+      );
+
+      if (currentSavedIds !== undefined) {
+        // Remove the event from saved IDs
+        const updatedSavedIds = currentSavedIds.filter(
+          (savedEvent) => savedEvent.id !== id,
+        );
+        localStore.setQuery(
+          api.events.getSavedIdsForUser,
+          { userName: user.username },
+          updatedSavedIds,
+        );
+      }
+    }
+  });
+
+  const followEventMutation = useMutation(
+    api.events.follow,
+  ).withOptimisticUpdate((localStore, args) => {
+    const { id } = args;
+
+    // Update the saved event IDs query if loaded
+    if (user?.username) {
+      const currentSavedIds = localStore.getQuery(
+        api.events.getSavedIdsForUser,
+        {
+          userName: user.username,
+        },
+      );
+
+      if (currentSavedIds !== undefined) {
+        // Add the event to saved IDs
+        const updatedSavedIds = [...currentSavedIds, { id }];
+        localStore.setQuery(
+          api.events.getSavedIdsForUser,
+          { userName: user.username },
+          updatedSavedIds,
+        );
+      }
+    }
+  });
 
   // Use optimistic updates for visibility toggle
   const toggleVisibilityMutation = useMutation(
@@ -180,13 +232,10 @@ export function useEventActions({
   const handleFollow = async () => {
     if (!event || checkDemoMode() || isOwner || isSaved) return;
     triggerHaptic();
-    const loadingToastId = toast.loading("Saving event...");
     try {
       await followEventMutation({ id: event.id });
-      toast.dismiss(loadingToastId);
       toast.success("Event saved");
     } catch (error) {
-      toast.dismiss(loadingToastId);
       toast.error(`Failed to save event: ${(error as Error).message}`);
     }
   };
@@ -194,13 +243,10 @@ export function useEventActions({
   const handleUnfollow = async () => {
     if (!event || checkDemoMode() || isOwner || !isSaved) return;
     triggerHaptic();
-    const loadingToastId = toast.loading("Unsaving event...");
     try {
       await unfollowEventMutation({ id: event.id });
-      toast.dismiss(loadingToastId);
       toast.success("Event unsaved");
     } catch (error) {
-      toast.dismiss(loadingToastId);
       toast.error(`Failed to unsave event: ${(error as Error).message}`);
     }
   };
@@ -231,8 +277,61 @@ export function useEventSaveActions(
   isSaved: boolean,
   demoMode = false,
 ) {
-  const unfollowEventMutation = useMutation(api.events.unfollow);
-  const followEventMutation = useMutation(api.events.follow);
+  const { user } = useUser();
+
+  const unfollowEventMutation = useMutation(
+    api.events.unfollow,
+  ).withOptimisticUpdate((localStore, args) => {
+    const { id } = args;
+
+    // Update the saved event IDs query if loaded
+    if (user?.username) {
+      const currentSavedIds = localStore.getQuery(
+        api.events.getSavedIdsForUser,
+        {
+          userName: user.username,
+        },
+      );
+
+      if (currentSavedIds !== undefined) {
+        // Remove the event from saved IDs
+        const updatedSavedIds = currentSavedIds.filter(
+          (savedEvent) => savedEvent.id !== id,
+        );
+        localStore.setQuery(
+          api.events.getSavedIdsForUser,
+          { userName: user.username },
+          updatedSavedIds,
+        );
+      }
+    }
+  });
+
+  const followEventMutation = useMutation(
+    api.events.follow,
+  ).withOptimisticUpdate((localStore, args) => {
+    const { id } = args;
+
+    // Update the saved event IDs query if loaded
+    if (user?.username) {
+      const currentSavedIds = localStore.getQuery(
+        api.events.getSavedIdsForUser,
+        {
+          userName: user.username,
+        },
+      );
+
+      if (currentSavedIds !== undefined) {
+        // Add the event to saved IDs
+        const updatedSavedIds = [...currentSavedIds, { id }];
+        localStore.setQuery(
+          api.events.getSavedIdsForUser,
+          { userName: user.username },
+          updatedSavedIds,
+        );
+      }
+    }
+  });
 
   const triggerHaptic = () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -249,13 +348,10 @@ export function useEventSaveActions(
   const handleFollow = async () => {
     if (checkDemoMode() || isSaved) return;
     triggerHaptic();
-    const loadingToastId = toast.loading("Saving event...");
     try {
       await followEventMutation({ id: eventId });
-      toast.dismiss(loadingToastId);
       toast.success("Event saved");
     } catch (error) {
-      toast.dismiss(loadingToastId);
       toast.error(`Failed to save event: ${(error as Error).message}`);
     }
   };
@@ -263,13 +359,10 @@ export function useEventSaveActions(
   const handleUnfollow = async () => {
     if (checkDemoMode() || !isSaved) return;
     triggerHaptic();
-    const loadingToastId = toast.loading("Unsaving event...");
     try {
       await unfollowEventMutation({ id: eventId });
-      toast.dismiss(loadingToastId);
       toast.success("Event unsaved");
     } catch (error) {
-      toast.dismiss(loadingToastId);
       toast.error(`Failed to unsave event: ${(error as Error).message}`);
     }
   };
