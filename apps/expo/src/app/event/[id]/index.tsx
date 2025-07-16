@@ -135,20 +135,6 @@ export default function Page() {
   const userCanSeeNonDiscoverable = currentUser
     ? getPlanStatusFromUser(currentUser).showDiscover
     : false;
-
-  // If the event is not discoverable and the user can't see non-discoverable events
-  // and the user is not the owner, show not found
-  if (!isEventDiscoverable && !userCanSeeNonDiscoverable && !isOwner) {
-    return (
-      <>
-        <Stack.Screen options={{ headerRight: () => null }} />
-        <View className="flex-1 bg-white">
-          <Text>Event not found</Text>
-        </View>
-      </>
-    );
-  }
-
   // Build the header-right UI if we have data
   const HeaderRight = useCallback(() => {
     if (!event) return null;
@@ -202,6 +188,18 @@ export default function Page() {
     );
   }
 
+  // If the event is not discoverable and the user can't see non-discoverable events
+  // and the user is not the owner, show not found
+  if (!isEventDiscoverable && !userCanSeeNonDiscoverable && !isOwner) {
+    return (
+      <>
+        <Stack.Screen options={{ headerRight: () => null }} />
+        <View className="flex-1 bg-white">
+          <Text>Event not found</Text>
+        </View>
+      </>
+    );
+  }
   // Normal render
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const isCurrentUserEvent = isOwner;
