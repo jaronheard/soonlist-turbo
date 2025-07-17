@@ -20,8 +20,8 @@ export function CalendarButton(props: CalendarButtonProps) {
   const eventForCalendar = { ...props.event };
   const additionalText =
     props.username && props.id
-      ? `Collected by [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${props.username}/events|@${props.username}[/url] on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
-      : `Collected on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}|Soonlist[/url]`;
+      ? `Captured by [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${props.username}/events|@${props.username}[/url] on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
+      : `Captured on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}|Soonlist[/url]`;
   eventForCalendar.description = `${props.event.description}[br][br]${additionalText}`;
   eventForCalendar.options = [
     "Apple",
