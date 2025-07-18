@@ -62,7 +62,7 @@ export default async function Page(props: {
       )}
       <div className="p-4"></div>
       <div className="flex place-items-center gap-2">
-        <div className="font-medium">Collected by</div>
+        <div className="font-medium">Captured by</div>
         <UserInfo userId={event.userId} />
       </div>
     </div>

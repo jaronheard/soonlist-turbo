@@ -93,8 +93,8 @@ export function useCalendar() {
 
       const additionalText =
         event.userName && event.id
-          ? `Collected by @${event.userName} on Soonlist. \nFull details: ${eventUrl}`
-          : `Collected on Soonlist\n(${baseUrl})`;
+          ? `Captured by @${event.userName} on Soonlist. \nFull details: ${eventUrl}`
+          : `Captured on Soonlist\n(${baseUrl})`;
 
       const fullDescription = `${e.description}\n\n${additionalText}`;
 
