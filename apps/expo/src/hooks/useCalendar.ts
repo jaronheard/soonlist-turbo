@@ -88,7 +88,8 @@ export function useCalendar() {
         throw new Error("EXPO_PUBLIC_API_BASE_URL is not defined");
       }
 
-      const displayName = event.user?.displayName || event.user?.username || event.userName;
+      const displayName =
+        event.user?.displayName || event.user?.username || event.userName;
       const eventUrl =
         displayName && event.id ? `${baseUrl}/event/${event.id}` : baseUrl;
 
