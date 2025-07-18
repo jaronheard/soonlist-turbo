@@ -20,9 +20,10 @@ interface CalendarButtonProps {
 export function CalendarButton(props: CalendarButtonProps) {
   const eventForCalendar = { ...props.event };
   const displayName = props.displayName || props.username; // fallback to username for backward compatibility
+  const usernameForUrl = props.username || props.displayName; // prefer username for URL, fallback to displayName
   const additionalText =
-    displayName && props.id
-      ? `Captured by [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${props.username || displayName}/events|@${displayName}[/url] on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
+    displayName && props.id && usernameForUrl
+      ? `Captured by [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${usernameForUrl}/events|@${displayName}[/url] on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
       : `Captured on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}|Soonlist[/url]`;
   eventForCalendar.description = `${props.event.description}[br][br]${additionalText}`;
   eventForCalendar.options = [
