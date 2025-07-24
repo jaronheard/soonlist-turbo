@@ -581,6 +581,22 @@ export const getEventById = internalQuery({
 });
 
 /**
+ * Internal query to get an event by internal _id
+ */
+export const getEventByInternalId = internalQuery({
+  args: { _id: v.id("events") },
+  handler: async (ctx, args) => {
+    const event = await ctx.db.get(args._id);
+    if (!event) {
+      return null;
+    }
+    // Enrich the event with user data, comments, and follows
+    const enriched = await enrichEventsAndFilterNulls(ctx, [event]);
+    return enriched[0] ?? null;
+  },
+});
+
+/**
  * Internal query to get today's events count for a user (called from workflow)
  */
 export const getTodayEventsCount = internalQuery({

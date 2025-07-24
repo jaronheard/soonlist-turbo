@@ -2,9 +2,9 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { embed } from "ai";
 import { v } from "convex/values";
 
-import type { Doc } from "./_generated/dataModel";
-import { api } from "./_generated/api";
-import { action, query } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
+import { action } from "./_generated/server";
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY || "",
@@ -60,8 +60,9 @@ export const searchEvents = action({
     // Fetch full event documents with scores
     const eventsWithScores = await Promise.all(
       results.map(async (result) => {
-        const event = await ctx.runQuery(api.search.getEventById, {
-          eventId: result._id,
+        // Directly fetch the event using the internal _id from vector search
+        const event = await ctx.runQuery(internal.events.getEventByInternalId, {
+          _id: result._id as Id<"events">,
         });
         return event
           ? ({
@@ -105,14 +106,5 @@ export const searchEvents = action({
       .sort((a, b) => (b._adjustedScore ?? 0) - (a._adjustedScore ?? 0));
 
     return sortedEvents;
-  },
-});
-
-export const getEventById = query({
-  args: {
-    eventId: v.id("events"),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db.get(args.eventId);
   },
 });
