@@ -66,9 +66,8 @@ function buildEventText(event: Doc<"events">): string {
   }
 
   // Add metadata if available
-  const eventMetadata = event.eventMetadata;
-  if (eventMetadata && typeof eventMetadata === "object") {
-    const metadata = eventMetadata as Record<string, unknown>;
+  if (event.eventMetadata && typeof event.eventMetadata === "object") {
+    const metadata = event.eventMetadata as Record<string, unknown>;
 
     if (metadata.category && typeof metadata.category === "string") {
       parts.push(`Category: ${metadata.category}`);
@@ -83,7 +82,8 @@ function buildEventText(event: Doc<"events">): string {
       Array.isArray(metadata.performers) &&
       metadata.performers.length > 0
     ) {
-      parts.push(`Performers: ${(metadata.performers as string[]).join(", ")}`);
+      const performers = metadata.performers as string[];
+      parts.push(`Performers: ${performers.join(", ")}`);
     }
 
     if (
@@ -91,7 +91,8 @@ function buildEventText(event: Doc<"events">): string {
       Array.isArray(metadata.mentions) &&
       metadata.mentions.length > 0
     ) {
-      parts.push(`Mentions: ${(metadata.mentions as string[]).join(", ")}`);
+      const mentions = metadata.mentions as string[];
+      parts.push(`Mentions: ${mentions.join(", ")}`);
     }
 
     if (metadata.priceType && typeof metadata.priceType === "string") {

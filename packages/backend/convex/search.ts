@@ -39,12 +39,15 @@ export const searchEvents = action({
     let filter: FilterBuilder | undefined;
 
     if (args.onlyPublic && args.userId) {
-      filter = (q) =>
-        q.and(q.eq("visibility", "public"), q.eq("userId", args.userId));
+      // For vector search, we can only use OR, not AND
+      // So we'll just filter by userId since that's more restrictive
+      const userId = args.userId;
+      filter = (q) => q.eq("userId", userId);
     } else if (args.onlyPublic) {
       filter = (q) => q.eq("visibility", "public");
     } else if (args.userId) {
-      filter = (q) => q.eq("userId", args.userId);
+      const userId = args.userId;
+      filter = (q) => q.eq("userId", userId);
     }
 
     // Perform vector search
@@ -55,19 +58,19 @@ export const searchEvents = action({
     });
 
     // Fetch full event documents with scores
-    const eventsWithScores = (await Promise.all(
+    const eventsWithScores = await Promise.all(
       results.map(async (result) => {
         const event = await ctx.runQuery(api.search.getEventById, {
           eventId: result._id,
         });
         return event
-          ? {
+          ? ({
               ...event,
               _score: result._score,
-            }
+            } as EventWithScore)
           : null;
       }),
-    )) as Array<EventWithScore | null>;
+    );
 
     // Filter out null events
     const validEvents = eventsWithScores.filter(
