@@ -10,8 +10,10 @@
 
 import type * as ai from "../ai.js";
 import type * as appConfig from "../appConfig.js";
+import type * as backfillEmbeddings from "../backfillEmbeddings.js";
 import type * as constants from "../constants.js";
 import type * as crons from "../crons.js";
+import type * as embeddings from "../embeddings.js";
 import type * as eventBatches from "../eventBatches.js";
 import type * as events from "../events.js";
 import type * as feedHelpers from "../feedHelpers.js";
@@ -30,6 +32,7 @@ import type * as model_oneSignal from "../model/oneSignal.js";
 import type * as model_utils_urlScheme from "../model/utils/urlScheme.js";
 import type * as notifications from "../notifications.js";
 import type * as planetscaleSync from "../planetscaleSync.js";
+import type * as search from "../search.js";
 import type * as users from "../users.js";
 import type * as utils from "../utils.js";
 import type * as workflows_eventIngestion from "../workflows/eventIngestion.js";
@@ -53,8 +56,10 @@ import type {
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   appConfig: typeof appConfig;
+  backfillEmbeddings: typeof backfillEmbeddings;
   constants: typeof constants;
   crons: typeof crons;
+  embeddings: typeof embeddings;
   eventBatches: typeof eventBatches;
   events: typeof events;
   feedHelpers: typeof feedHelpers;
@@ -73,6 +78,7 @@ declare const fullApi: ApiFromModules<{
   "model/utils/urlScheme": typeof model_utils_urlScheme;
   notifications: typeof notifications;
   planetscaleSync: typeof planetscaleSync;
+  search: typeof search;
   users: typeof users;
   utils: typeof utils;
   "workflows/eventIngestion": typeof workflows_eventIngestion;
