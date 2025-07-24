@@ -66,40 +66,43 @@ function buildEventText(event: Doc<"events">): string {
   }
 
   // Add metadata if available
-  const eventMetadata = event.eventMetadata as
-    | Record<string, unknown>
-    | undefined;
-  if (eventMetadata) {
-    const metadata = eventMetadata as {
-      category?: string;
-      type?: string;
-      performers?: string[];
-      mentions?: string[];
-      priceType?: string;
-      ageRestriction?: string;
-    };
+  const eventMetadata = event.eventMetadata;
+  if (eventMetadata && typeof eventMetadata === "object") {
+    const metadata = eventMetadata as Record<string, unknown>;
 
-    if (metadata.category) {
+    if (metadata.category && typeof metadata.category === "string") {
       parts.push(`Category: ${metadata.category}`);
     }
 
-    if (metadata.type) {
+    if (metadata.type && typeof metadata.type === "string") {
       parts.push(`Type: ${metadata.type}`);
     }
 
-    if (metadata.performers && metadata.performers.length > 0) {
-      parts.push(`Performers: ${metadata.performers.join(", ")}`);
+    if (
+      metadata.performers &&
+      Array.isArray(metadata.performers) &&
+      metadata.performers.length > 0
+    ) {
+      parts.push(`Performers: ${(metadata.performers as string[]).join(", ")}`);
     }
 
-    if (metadata.mentions && metadata.mentions.length > 0) {
-      parts.push(`Mentions: ${metadata.mentions.join(", ")}`);
+    if (
+      metadata.mentions &&
+      Array.isArray(metadata.mentions) &&
+      metadata.mentions.length > 0
+    ) {
+      parts.push(`Mentions: ${(metadata.mentions as string[]).join(", ")}`);
     }
 
-    if (metadata.priceType) {
+    if (metadata.priceType && typeof metadata.priceType === "string") {
       parts.push(`Price: ${metadata.priceType}`);
     }
 
-    if (metadata.ageRestriction && metadata.ageRestriction !== "all") {
+    if (
+      metadata.ageRestriction &&
+      typeof metadata.ageRestriction === "string" &&
+      metadata.ageRestriction !== "all"
+    ) {
       parts.push(`Age restriction: ${metadata.ageRestriction}`);
     }
   }

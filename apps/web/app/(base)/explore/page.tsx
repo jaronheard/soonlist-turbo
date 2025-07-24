@@ -40,7 +40,7 @@ function transformConvexEvents(
     startDateTime: new Date(event.startDateTime),
     visibility: event.visibility,
     createdAt: new Date(event._creationTime),
-    user: transformConvexUser(event.user!),
+    user: transformConvexUser(event.user),
     eventFollows: [],
     comments: [],
     eventToLists: [],

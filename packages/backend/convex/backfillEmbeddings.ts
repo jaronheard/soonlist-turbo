@@ -18,7 +18,8 @@ export const backfillEventEmbeddings = internalMutation({
 
     // If we have a lastProcessedId, continue from there
     if (args.lastProcessedId) {
-      query = query.filter((q) => q.gt(q.field("_id"), args.lastProcessedId));
+      const lastId = args.lastProcessedId;
+      query = query.filter((q) => q.gt(q.field("_id"), lastId));
     }
 
     const events = await query.take(batchSize);

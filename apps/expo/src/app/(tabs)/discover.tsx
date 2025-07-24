@@ -6,8 +6,8 @@ import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
-  useQuery,
   useAction,
+  useQuery,
 } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -27,7 +27,7 @@ function DiscoverContent() {
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
-  
+
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -75,26 +75,29 @@ function DiscoverContent() {
       loadMore(25);
     }
   }, [status, loadMore]);
-  
+
   // Search handlers
-  const handleSearch = useCallback(async (query: string) => {
-    setSearchQuery(query);
-    setIsSearching(true);
-    try {
-      const results = await searchEvents({
-        query,
-        onlyPublic: true,
-        limit: 50,
-      });
-      setSearchResults(results);
-    } catch (error) {
-      console.error("Search error:", error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [searchEvents]);
-  
+  const handleSearch = useCallback(
+    async (query: string) => {
+      setSearchQuery(query);
+      setIsSearching(true);
+      try {
+        const results = await searchEvents({
+          query,
+          onlyPublic: true,
+          limit: 50,
+        });
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Search error:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [searchEvents],
+  );
+
   const handleClearSearch = useCallback(() => {
     setSearchQuery("");
     setSearchResults([]);

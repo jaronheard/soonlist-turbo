@@ -10,6 +10,11 @@ const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY || "",
 });
 
+interface EventWithScore extends Doc<"events"> {
+  _score: number;
+  _adjustedScore?: number;
+}
+
 export const searchEvents = action({
   args: {
     query: v.string(),
@@ -17,7 +22,7 @@ export const searchEvents = action({
     userId: v.optional(v.string()),
     onlyPublic: v.optional(v.boolean()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<EventWithScore[]> => {
     const limit = args.limit ?? 20;
 
     // Generate embedding for the search query
@@ -27,27 +32,30 @@ export const searchEvents = action({
     });
 
     // Build filter function based on parameters
-    const buildFilter = () => {
-      if (args.onlyPublic && args.userId) {
-        return (q: any) =>
-          q.eq("visibility", "public").and(q.eq("userId", args.userId));
-      } else if (args.onlyPublic) {
-        return (q: any) => q.eq("visibility", "public");
-      } else if (args.userId) {
-        return (q: any) => q.eq("userId", args.userId);
-      }
-      return undefined;
-    };
+    type FilterBuilder = Parameters<
+      typeof ctx.vectorSearch<"events", "by_embedding">
+    >[2]["filter"];
+
+    let filter: FilterBuilder | undefined;
+
+    if (args.onlyPublic && args.userId) {
+      filter = (q) =>
+        q.and(q.eq("visibility", "public"), q.eq("userId", args.userId));
+    } else if (args.onlyPublic) {
+      filter = (q) => q.eq("visibility", "public");
+    } else if (args.userId) {
+      filter = (q) => q.eq("userId", args.userId);
+    }
 
     // Perform vector search
     const results = await ctx.vectorSearch("events", "by_embedding", {
       vector: Array.from(embedding),
       limit,
-      filter: buildFilter(),
+      filter,
     });
 
     // Fetch full event documents with scores
-    const eventsWithScores = await Promise.all(
+    const eventsWithScores = (await Promise.all(
       results.map(async (result) => {
         const event = await ctx.runQuery(api.search.getEventById, {
           eventId: result._id,
@@ -59,17 +67,17 @@ export const searchEvents = action({
             }
           : null;
       }),
-    );
+    )) as Array<EventWithScore | null>;
 
     // Filter out null events
     const validEvents = eventsWithScores.filter(
-      (event): event is Doc<"events"> & { _score: number } => event !== null,
+      (event): event is EventWithScore => event !== null,
     );
 
     // Filter out past events but with lower weight
     const now = new Date();
     const sortedEvents = validEvents
-      .map((event) => {
+      .map((event): EventWithScore => {
         const eventDate = new Date(event.startDateTime);
         const isPast = eventDate < now;
         const daysDiff = Math.abs(
@@ -91,7 +99,7 @@ export const searchEvents = action({
           _adjustedScore: adjustedScore,
         };
       })
-      .sort((a, b) => b._adjustedScore - a._adjustedScore);
+      .sort((a, b) => (b._adjustedScore ?? 0) - (a._adjustedScore ?? 0));
 
     return sortedEvents;
   },
