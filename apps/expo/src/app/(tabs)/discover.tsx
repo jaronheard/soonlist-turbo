@@ -165,7 +165,13 @@ function DiscoverContent() {
           />
           <UserEventsList
             events={enrichedEvents}
-            onEndReached={searchQuery ? undefined : handleLoadMore}
+            onEndReached={
+              searchQuery
+                ? () => {
+                    /* No-op when searching */
+                  }
+                : handleLoadMore
+            }
             isFetchingNextPage={status === "LoadingMore"}
             ActionButton={SaveShareButtonWrapper}
             showCreator="always"

@@ -5,9 +5,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { X } from "lucide-react-native";
 
-import { cn } from "@soonlist/ui";
+import { X } from "~/components/icons";
+import { cn } from "~/utils/cn";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;

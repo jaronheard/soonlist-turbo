@@ -137,7 +137,13 @@ function MyFeedContent() {
         />
         <UserEventsList
           events={enrichedEvents}
-          onEndReached={searchQuery ? undefined : handleLoadMore}
+          onEndReached={
+            searchQuery
+              ? () => {
+                  /* No-op when searching */
+                }
+              : handleLoadMore
+          }
           isFetchingNextPage={status === "LoadingMore"}
           isLoadingFirstPage={status === "LoadingFirstPage" && !searchQuery}
           showCreator="savedFromOthers"

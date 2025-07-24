@@ -36,7 +36,11 @@ export const backfillEventEmbeddings = internalMutation({
       });
     }
 
-    const lastEventId = events[events.length - 1]._id;
+    const lastEvent = events[events.length - 1];
+    if (!lastEvent) {
+      throw new Error("Unexpected: events array is empty");
+    }
+    const lastEventId = lastEvent._id;
 
     console.log(`Scheduled embedding generation for ${events.length} events`);
 
