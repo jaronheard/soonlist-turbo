@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -7,6 +7,7 @@ import {
   AuthLoading,
   Unauthenticated,
   useQuery,
+  useAction,
 } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -14,6 +15,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveShareButton from "~/components/SaveShareButton";
+import SearchBar from "~/components/SearchBar";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -25,6 +27,12 @@ function DiscoverContent() {
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchEvents = useAction(api.search.searchEvents);
 
   // Fetch user stats
   const stats = useQuery(
@@ -67,6 +75,30 @@ function DiscoverContent() {
       loadMore(25);
     }
   }, [status, loadMore]);
+  
+  // Search handlers
+  const handleSearch = useCallback(async (query: string) => {
+    setSearchQuery(query);
+    setIsSearching(true);
+    try {
+      const results = await searchEvents({
+        query,
+        onlyPublic: true,
+        limit: 50,
+      });
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Search error:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchEvents]);
+  
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+    setSearchResults([]);
+  }, []);
 
   const savedEventIds = new Set(
     savedEventIdsQuery?.map((event) => event.id) ?? [],
@@ -76,7 +108,8 @@ function DiscoverContent() {
   const enrichedEvents = useMemo(() => {
     // Use stableTimestamp instead of recalculating Date.now()
     const currentTime = new Date(stableTimestamp).getTime();
-    return events
+    const eventsToEnrich = searchQuery ? searchResults : events;
+    return eventsToEnrich
       .filter((event) => {
         // Client-side safety filter: hide events that have ended
         // This prevents showing ended events if the cron job hasn't run recently
@@ -90,7 +123,7 @@ function DiscoverContent() {
         eventToLists: [],
         lists: [],
       }));
-  }, [events, stableTimestamp]);
+  }, [events, searchResults, searchQuery, stableTimestamp]);
 
   // Check if user has access to discover feature (only if authenticated)
   if (user) {
@@ -121,9 +154,15 @@ function DiscoverContent() {
         <LoadingSpinner />
       ) : (
         <View className="flex-1">
+          <SearchBar
+            onSearch={handleSearch}
+            onClear={handleClearSearch}
+            placeholder="Search public events..."
+            isLoading={isSearching}
+          />
           <UserEventsList
             events={enrichedEvents}
-            onEndReached={handleLoadMore}
+            onEndReached={searchQuery ? undefined : handleLoadMore}
             isFetchingNextPage={status === "LoadingMore"}
             ActionButton={SaveShareButtonWrapper}
             showCreator="always"

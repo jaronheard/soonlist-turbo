@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -7,12 +7,14 @@ import {
   AuthLoading,
   Unauthenticated,
   useQuery,
+  useAction,
 } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import SearchBar from "~/components/SearchBar";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
@@ -23,6 +25,12 @@ function MyFeedContent() {
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchEvents = useAction(api.search.searchEvents);
 
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
@@ -65,6 +73,30 @@ function MyFeedContent() {
       loadMore(25);
     }
   }, [status, loadMore]);
+  
+  // Search handlers
+  const handleSearch = useCallback(async (query: string) => {
+    setSearchQuery(query);
+    setIsSearching(true);
+    try {
+      const results = await searchEvents({
+        query,
+        userId: user?.id,
+        limit: 50,
+      });
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Search error:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchEvents, user?.id]);
+  
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+    setSearchResults([]);
+  }, []);
 
   const savedEventIds = new Set(
     savedEventIdsQuery?.map((event) => event.id) ?? [],
@@ -74,7 +106,8 @@ function MyFeedContent() {
   const enrichedEvents = useMemo(() => {
     // Use stableTimestamp instead of recalculating Date.now()
     const currentTime = new Date(stableTimestamp).getTime();
-    return events
+    const eventsToEnrich = searchQuery ? searchResults : events;
+    return eventsToEnrich
       .filter((event) => {
         // Client-side safety filter: hide events that have ended
         // This prevents showing ended events if the cron job hasn't run recently
@@ -88,19 +121,25 @@ function MyFeedContent() {
         eventToLists: [],
         lists: [],
       }));
-  }, [events, stableTimestamp]);
+  }, [events, searchResults, searchQuery, stableTimestamp]);
 
   return (
     <View className="flex-1 bg-white">
       <View className="flex-1">
+        <SearchBar
+          onSearch={handleSearch}
+          onClear={handleClearSearch}
+          placeholder="Search your events..."
+          isLoading={isSearching}
+        />
         <UserEventsList
           events={enrichedEvents}
-          onEndReached={handleLoadMore}
+          onEndReached={searchQuery ? undefined : handleLoadMore}
           isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={status === "LoadingFirstPage"}
+          isLoadingFirstPage={status === "LoadingFirstPage" && !searchQuery}
           showCreator="savedFromOthers"
           stats={stats}
-          promoCard={{ type: "addEvents" }}
+          promoCard={searchQuery ? undefined : { type: "addEvents" }}
           hasUnlimited={hasUnlimited}
           savedEventIds={savedEventIds}
         />
