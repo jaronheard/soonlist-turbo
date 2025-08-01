@@ -1,9 +1,6 @@
 import { Platform, StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
@@ -18,7 +15,6 @@ import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 
 import "../styles.css";
 
-import type { ErrorBoundaryProps } from "expo-router";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -47,29 +43,9 @@ const styles = StyleSheet.create({
 
 const queryClient = new QueryClient();
 
-export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  const insets = useSafeAreaInsets();
+// Export Expo Router's default error boundary
+export { ErrorBoundary } from "expo-router";
 
-  return (
-    <View className="flex-1 bg-red-500 px-4 py-6">
-      <View style={{ paddingTop: insets.top }} />
-      <Text className="mb-4 text-lg font-semibold text-white">
-        {error.message}
-      </Text>
-      <Text className="text-base text-white underline" onPress={retry}>
-        Try Again
-      </Text>
-      <Text className="mt-4 text-sm text-white">
-        Shake your device to open JS debugger for more details.
-      </Text>
-      <View style={{ paddingBottom: insets.bottom }} />
-    </View>
-  );
-}
-
-export const unstable_settings = {
-  initialRouteName: "(tabs)",
-};
 
 // Custom token cache for Clerk
 const tokenCache = {
