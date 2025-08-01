@@ -1,9 +1,6 @@
 import { Platform, StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
@@ -18,7 +15,6 @@ import { RevenueCatProvider } from "~/providers/RevenueCatProvider";
 
 import "../styles.css";
 
-import type { ErrorBoundaryProps } from "expo-router";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -27,7 +23,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
-import { AuthErrorProvider } from "~/components/AuthErrorBoundary";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
@@ -48,29 +43,8 @@ const styles = StyleSheet.create({
 
 const queryClient = new QueryClient();
 
-export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <View className="flex-1 bg-red-500 px-4 py-6">
-      <View style={{ paddingTop: insets.top }} />
-      <Text className="mb-4 text-lg font-semibold text-white">
-        {error.message}
-      </Text>
-      <Text className="text-base text-white underline" onPress={retry}>
-        Try Again
-      </Text>
-      <Text className="mt-4 text-sm text-white">
-        Shake your device to open JS debugger for more details.
-      </Text>
-      <View style={{ paddingBottom: insets.bottom }} />
-    </View>
-  );
-}
-
-export const unstable_settings = {
-  initialRouteName: "(tabs)",
-};
+// Export Expo Router's default error boundary
+export { ErrorBoundary } from "expo-router";
 
 // Custom token cache for Clerk
 const tokenCache = {
@@ -313,9 +287,7 @@ function RootLayoutContent() {
 
   return (
     <View style={{ flex: 1 }}>
-      <AuthErrorProvider>
-        <InitialLayout />
-      </AuthErrorProvider>
+      <InitialLayout />
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
       <Toaster
         position="top-center"

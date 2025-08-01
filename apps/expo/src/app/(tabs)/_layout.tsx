@@ -5,6 +5,9 @@ import { HeaderLogo } from "~/components/HeaderLogo";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
 
+// Export Expo Router's error boundary
+export { ErrorBoundary } from "expo-router";
+
 export const unstable_settings = {
   initialRouteName: "feed",
 };

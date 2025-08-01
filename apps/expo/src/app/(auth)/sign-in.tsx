@@ -68,3 +68,6 @@ export default function AuthScreen() {
 
   return <SignInWithOAuth banner={banner} />;
 }
+
+// Export Expo Router's error boundary
+export { ErrorBoundary } from "expo-router";

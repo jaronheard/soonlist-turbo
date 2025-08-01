@@ -165,3 +165,6 @@ export default function Page() {
     </>
   );
 }
+
+// Export Expo Router's error boundary
+export { ErrorBoundary } from "expo-router";

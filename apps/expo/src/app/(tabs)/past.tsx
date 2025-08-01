@@ -117,3 +117,6 @@ export default function PastEvents() {
     </>
   );
 }
+
+// Export Expo Router's error boundary
+export { ErrorBoundary } from "expo-router";
