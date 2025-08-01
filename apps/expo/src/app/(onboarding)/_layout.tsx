@@ -2,6 +2,9 @@ import { View } from "react-native";
 import { Redirect, Stack } from "expo-router";
 import { useConvexAuth } from "convex/react";
 
+// Export Expo Router's error boundary
+export { ErrorBoundary } from "expo-router";
+
 export const TOTAL_ONBOARDING_STEPS = 8;
 
 export default function OnboardingLayout() {

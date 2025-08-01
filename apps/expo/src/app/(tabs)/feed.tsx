@@ -138,3 +138,6 @@ function MyFeed() {
 }
 
 export default MyFeed;
+
+// Export Expo Router's error boundary
+export { ErrorBoundary } from "expo-router";

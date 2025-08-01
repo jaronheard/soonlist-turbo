@@ -27,7 +27,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
-import { AuthErrorProvider } from "~/components/AuthErrorBoundary";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
@@ -313,9 +312,7 @@ function RootLayoutContent() {
 
   return (
     <View style={{ flex: 1 }}>
-      <AuthErrorProvider>
-        <InitialLayout />
-      </AuthErrorProvider>
+      <InitialLayout />
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
       <Toaster
         position="top-center"

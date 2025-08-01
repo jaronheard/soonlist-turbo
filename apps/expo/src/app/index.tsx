@@ -1,6 +1,9 @@
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
+// Export Expo Router's error boundary
+export { ErrorBoundary } from "expo-router";
+
 export default function Index() {
   const { isLoaded } = useUser();
 

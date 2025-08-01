@@ -240,3 +240,6 @@ export default function AddEventModal() {
     </View>
   );
 }
+
+// Export Expo Router's error boundary
+export { ErrorBoundary } from "expo-router";

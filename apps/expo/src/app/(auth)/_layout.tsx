@@ -12,6 +12,9 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { ResetAuthButton } from "~/components/auth/ResetAuthButton";
 
+// Export Expo Router's error boundary
+export { ErrorBoundary } from "expo-router";
+
 export default function AuthLayout() {
   const { isAuthenticated } = useConvexAuth();
 
