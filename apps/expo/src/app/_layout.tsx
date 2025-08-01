@@ -46,7 +46,6 @@ const queryClient = new QueryClient();
 // Export Expo Router's default error boundary
 export { ErrorBoundary } from "expo-router";
 
-
 // Custom token cache for Clerk
 const tokenCache = {
   async getToken(key: string) {
