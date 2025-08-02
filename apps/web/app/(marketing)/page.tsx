@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { ChevronDownIcon } from "lucide-react";
 
+import { AppStoreDownload } from "../../components/AppStoreDownload";
 import { CarouselDemo } from "./components/CarouselDemo";
 
 const testimonials = [
@@ -12,6 +13,7 @@ const testimonials = [
       imageUrl:
         "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yaEtlMGdrZVhSWm5KNEVheVBLZlpGdUxkSDIifQ",
     },
+    eventsSaved: 180,
   },
   // {
   //   body: "Screenshotting a story and turning it into a calendar event in seconds feels like getting away with something!",
@@ -23,24 +25,25 @@ const testimonials = [
   //   },
   // },
   // // More testimonials...
-  {
-    body: "As an organizer of dance parties and environmental justice activist, I've been dreaming of making event lists this easy for years!",
-    author: {
-      name: "Sarah Baker",
-      handle: "boogiebuffet",
-      imageUrl:
-        "https://upcdn.io/12a1yek/raw/uploads/Soonlist/sarah_profile.webp",
-    },
-  },
   // {
-  //   body: "I'm stoked that Soonlist helps me save and share music events, especially those in non-conventional venues.",
+  //   body: "As an organizer of dance parties and environmental justice activist, I've been dreaming of making event lists this easy for years!",
   //   author: {
-  //     name: "Josh Carr",
-  //     handle: "joshcarr",
+  //     name: "Sarah Baker",
+  //     handle: "boogiebuffet",
   //     imageUrl:
-  //       "https://upcdn.io/12a1yek/raw/uploads/Soonlist/josh_google_profile.webp",
+  //       "https://upcdn.io/12a1yek/raw/uploads/Soonlist/sarah_profile.webp",
   //   },
   // },
+  {
+    body: "I'm stoked that Soonlist helps me save and share music events, especially those in non-conventional venues.",
+    author: {
+      name: "Josh Carr",
+      handle: "joshcarr",
+      imageUrl:
+        "https://upcdn.io/12a1yek/raw/uploads/Soonlist/josh_google_profile.webp",
+    },
+    eventsSaved: 450,
+  },
   // {
   //   body: "I am so appreciative of a platform that allows me to connect with others and share events that is not based in social media.",
   //   author: {
@@ -58,6 +61,7 @@ const testimonials = [
       imageUrl:
         "https://upcdn.io/12a1yek/raw/uploads/Soonlist/eric_profile.webp",
     },
+    eventsSaved: 50,
   },
 ];
 
@@ -172,7 +176,7 @@ function HeroSection() {
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-8 md:grid-cols-1 md:gap-x-8">
           <div className="mx-auto text-center">
             <h1 className="font-heading text-5xl font-bold leading-tight tracking-tighterish text-gray-700 md:text-7xl md:leading-tight">
-              Save events{" "}
+              Turn screenshots into{" "}
               <span className="relative inline-block text-interactive-1">
                 <svg
                   width="492"
@@ -187,63 +191,47 @@ function HeroSection() {
                     fill="#FEEA9F"
                   />
                 </svg>
-                instantly
+                plans
               </span>
             </h1>
             <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
-              See it, save it, show up. It's that easy with Soonlist.
+              The easiest way to save events and organize your social calendar,
+              all in one place.
             </p>
-            <div className="mt-8 flex items-center justify-center gap-x-6">
-              <a
-                href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216?itscg=30200&itsct=apps_box_badge&mttnsubad=6670222216"
-                className="inline-block"
-              >
-                <Image
-                  src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1739059200"
-                  alt="Download on the App Store"
-                  width={246}
-                  height={82}
-                  className="h-[82px] w-[246px] object-contain align-middle"
-                />
-              </a>
-            </div>
+            <AppStoreDownload className="mt-8" />
           </div>
           <div className="mx-auto max-w-2xl">
-            <p className="mt-4 text-lg leading-7 text-gray-600">
-              Are you missing out on events that matter to you?
+            <p className="mt-8 text-xl leading-7 text-gray-600">
+              You see events everywhere: Instagram Stories, group chats, flyers
+              around town. But keeping track of them is messy.
             </p>
-            <div className="mx-auto mt-2 max-w-2xl">
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <div className="mx-auto mt-8 max-w-2xl">
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
                 <div className="rotate-2 transform">
-                  <div className="inline-block rounded-md bg-accent-yellow px-2 py-1 text-xs text-neutral-1 shadow-sm">
-                    Warehouse dance party from Instagram Stories
+                  <div className="inline-block rounded-md bg-accent-yellow px-2 py-1 text-sm font-bold text-neutral-1 shadow-sm">
+                    👀 You screenshot a show poster...
                   </div>
                 </div>
                 <div className="-rotate-3 transform">
-                  <div className="inline-block rounded-md bg-accent-orange px-2 py-1 text-xs text-neutral-1 shadow-sm">
-                    Touring band flyers on the coffee shop wall
+                  <div className="inline-block rounded-md bg-accent-orange px-2 py-1 text-sm font-bold text-neutral-1 shadow-sm">
+                    👀 You see a workshop in your IG feed…
                   </div>
                 </div>
                 <div className="rotate-1 transform">
-                  <div className="inline-block rounded-md bg-accent-green px-2 py-1 text-xs text-neutral-1 shadow-sm">
-                    Ceramics workshops from your friend
-                  </div>
-                </div>
-                <div className="-rotate-2 transform">
-                  <div className="inline-block rounded-md bg-accent-blue px-2 py-1 text-xs text-neutral-1 shadow-sm">
-                    A networking event from your company newsletter
+                  <div className="inline-block rounded-md bg-accent-green px-2 py-1 text-sm font-bold text-neutral-1 shadow-sm">
+                    👀 You get a text about a brunch hang…
                   </div>
                 </div>
               </div>
-              <p className="mt-6 text-lg leading-7 text-gray-600">
-                Soonlist helps you <span className="font-bold">capture</span>,{" "}
-                <span className="font-bold">organize</span>,{" "}
-                <span className="font-bold">share</span>, and{" "}
-                <span className="font-bold">remember</span> possibilities.
+              <p className="mt-8 text-xl leading-7 text-gray-600">
+                Then, when you want to plan your week, everything is scattered
+                and hard to find 😅
               </p>
-              <p className="text-lg leading-7 text-gray-600">
-                All you have to do is <span className="font-bold">show up</span>
-                .
+              <p className="mt-6 text-xl leading-7 text-gray-600">
+                <span className="font-bold">
+                  Soonlist makes it easy to save events & stay organized in one
+                  tap.
+                </span>
               </p>
             </div>
           </div>
@@ -296,7 +284,7 @@ function ConnectWithWhatMatters() {
 function TestimonialsSection() {
   return (
     <Section>
-      <SectionTitle subtitle="Testimonials" title="Hear from our users" />
+      <SectionTitle subtitle="Why they love it" title="Hear from our users" />
       <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
         <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
           {testimonials.map((testimonial) => (
@@ -320,7 +308,9 @@ function TestimonialsSection() {
                       {testimonial.author.name}
                     </div>
                     <div className="py-0.5"></div>
-                    <div className="text-lg font-medium leading-none text-neutral-2">{`@${testimonial.author.handle}`}</div>
+                    <div className="text-lg font-medium leading-none text-neutral-2">
+                      {testimonial.eventsSaved}+ events saved
+                    </div>
                   </div>
                 </figcaption>
               </figure>
