@@ -1,28 +1,58 @@
-import Link from "next/link";
+import Image from "next/image";
 
-export function AppStoreDownload({
-  className = "",
-  text = "Download on the App Store",
-}: {
+interface AppStoreDownloadProps {
   className?: string;
-  text?: string;
-}) {
+}
+
+export function AppStoreDownload({ className = "" }: AppStoreDownloadProps) {
+  const appStoreUrl =
+    "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216?itscg=30200&itsct=apps_box_badge&mttnsubad=6670222216";
+
   return (
-    <Link
-      href="https://apps.apple.com/us/app/soonlist/id6670222216"
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`inline-flex items-center justify-center rounded-lg bg-black px-4 py-2 text-white transition-colors hover:bg-gray-800 ${className}`}
+    <a
+      href={appStoreUrl}
+      className={`group block ${className}`}
+      aria-label="Download Soonlist on the App Store"
     >
-      <svg
-        className="mr-2 h-5 w-5"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.2 12.37 21.2C10.84 21.2 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 16.97 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z" />
-      </svg>
-      {text}
-    </Link>
+      <div className="flex flex-col items-center justify-center gap-4">
+        {/* App Store Badge */}
+        <div className="transition-transform duration-200 group-hover:scale-105">
+          <Image
+            src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1739059200"
+            alt="Download on the App Store"
+            width={246}
+            height={82}
+            className="h-[82px] w-[246px] object-contain align-middle"
+          />
+        </div>
+
+        {/* App Store Social Proof */}
+        <div className="flex flex-col items-center justify-center gap-4">
+          {/* Rating with improved copy and layout */}
+          <div className="flex items-center gap-2 transition-opacity duration-200 group-hover:opacity-90">
+            <span className="text-lg font-medium text-gray-700">
+              Rated 4.9 / 5
+            </span>
+            <div className="flex items-center">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <svg
+                  key={i}
+                  className="h-5 w-5 text-amber-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              ))}
+            </div>
+          </div>
+
+          {/* Free trial copy with subdued styling */}
+          <p className="text-sm text-gray-500 transition-opacity duration-200 group-hover:opacity-90">
+            Try for free. No one turned away for lack of funds.
+          </p>
+        </div>
+      </div>
+    </a>
   );
 }

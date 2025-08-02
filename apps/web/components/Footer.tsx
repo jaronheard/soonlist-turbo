@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignedOut } from "@clerk/nextjs";
 
 import { buttonVariants } from "@soonlist/ui/button";
 
+import { AppStoreDownload } from "./AppStoreDownload";
 import { Logo } from "./Logo";
 
 const excludedCTARoutes = [
@@ -69,24 +69,11 @@ export function Footer() {
             <Section className="bg-interactive-3">
               <div className="text-center">
                 <SectionTitle
-                  title="Your photos → your event list"
-                  subtitle="Get the app"
-                  description="Stop missing out"
+                  title="Turn screenshots into plans"
+                  subtitle="Save your events"
+                  description="The easiest way to save events and organize your social calendar, all in one place"
                 />
-                <div className="mt-10 flex items-center justify-center gap-x-6">
-                  <a
-                    href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216?itscg=30200&itsct=apps_box_badge&mttnsubad=6670222216"
-                    className="inline-block"
-                  >
-                    <Image
-                      src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1739059200"
-                      alt="Download on the App Store"
-                      width={246}
-                      height={82}
-                      className="h-[82px] w-[246px] object-contain align-middle"
-                    />
-                  </a>
-                </div>
+                <AppStoreDownload className="mt-10" />
               </div>
             </Section>
           </>

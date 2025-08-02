@@ -25,9 +25,9 @@ const plex_sans = IBM_Plex_Sans({
 });
 
 const title = "Soonlist";
-const tagline = "Your photos → your event list";
+const tagline = "Turn screenshots into plans";
 const description =
-  "See it, save it, show up. It's that easy with Soonlist. Now available on iOS.";
+  "The easiest way to save events and organize your social calendar, all in one place";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.soonlist.com/"),
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   description: tagline,
   openGraph: {
     siteName: "Soonlist",
-    title: "Your photos → your event list",
+    title: "Turn screenshots into plans",
     description,
     locale: "en_US",
     type: "website",
