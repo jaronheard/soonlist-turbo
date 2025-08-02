@@ -201,33 +201,33 @@ function HeroSection() {
             <AppStoreDownload className="mt-8" />
           </div>
           <div className="mx-auto max-w-2xl">
-            <p className="mt-8 text-xl leading-7 text-gray-600">
+            <p className="mt-8 text-lg leading-7 text-gray-600 md:text-xl">
               You see events everywhere: Instagram Stories, group chats, flyers
               around town. But keeping track of them is messy.
             </p>
             <div className="mx-auto mt-8 max-w-2xl">
               <div className="mt-6 flex flex-wrap justify-center gap-2">
                 <div className="rotate-2 transform">
-                  <div className="inline-block rounded-md bg-accent-yellow px-2 py-1 text-sm font-bold text-neutral-1 shadow-sm">
+                  <div className="inline-block rounded-md bg-accent-yellow px-2 py-1 text-base font-bold text-neutral-1 shadow-sm">
                     👀 You screenshot a show poster...
                   </div>
                 </div>
                 <div className="-rotate-3 transform">
-                  <div className="inline-block rounded-md bg-accent-orange px-2 py-1 text-sm font-bold text-neutral-1 shadow-sm">
+                  <div className="inline-block rounded-md bg-accent-orange px-2 py-1 text-base font-bold text-neutral-1 shadow-sm">
                     👀 You see a workshop in your IG feed…
                   </div>
                 </div>
                 <div className="rotate-1 transform">
-                  <div className="inline-block rounded-md bg-accent-green px-2 py-1 text-sm font-bold text-neutral-1 shadow-sm">
+                  <div className="inline-block rounded-md bg-accent-green px-2 py-1 text-base font-bold text-neutral-1 shadow-sm">
                     👀 You get a text about a brunch hang…
                   </div>
                 </div>
               </div>
-              <p className="mt-8 text-xl leading-7 text-gray-600">
+              <p className="mt-8 text-lg leading-7 text-gray-600 md:text-xl">
                 Then, when you want to plan your week, everything is scattered
                 and hard to find 😅
               </p>
-              <p className="mt-6 text-xl leading-7 text-gray-600">
+              <p className="mt-6 text-lg leading-7 text-gray-600 md:text-xl">
                 <span className="font-bold">
                   Soonlist makes it easy to save events & stay organized in one
                   tap.
