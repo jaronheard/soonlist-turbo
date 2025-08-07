@@ -62,7 +62,7 @@ function transformConvexEventsAsPublic(
         eventMetadata: event.eventMetadata,
         endDateTime: new Date(event.endDateTime),
         startDateTime: new Date(event.startDateTime),
-        visibility: event.visibility,
+        visibility: "public", // This is only used for public lists that a user have opted into, so we can safely set it to public.
         createdAt: new Date(event._creationTime),
         user: transformConvexUser(event.user),
         eventFollows: [],
