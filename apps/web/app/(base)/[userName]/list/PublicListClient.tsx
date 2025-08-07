@@ -39,7 +39,7 @@ const transformConvexUser = (user: Doc<"users">): User => {
   };
 };
 
-// Transform Convex events to EventWithUser format
+// Transform Convex events to EventWithUser format (for public list events)
 function transformConvexEventsAsPublic(
   events:
     | FunctionReturnType<typeof api.users.getPublicListEvents>["page"]
@@ -67,6 +67,34 @@ function transformConvexEventsAsPublic(
   }));
 }
 
+// Transform Convex events to EventWithUser format (for feed events)
+function transformConvexEvents(
+  events:
+    | FunctionReturnType<typeof api.feeds.getMyFeed>["page"]
+    | undefined,
+): EventWithUser[] {
+  if (!events) return [];
+
+  return events.map((event) => ({
+    id: event.id,
+    userId: event.userId,
+    updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+    userName: event.userName,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    event: event.event,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    eventMetadata: event.eventMetadata,
+    endDateTime: new Date(event.endDateTime),
+    startDateTime: new Date(event.startDateTime),
+    visibility: event.visibility,
+    createdAt: new Date(event._creationTime),
+    user: transformConvexUser(event.user!),
+    eventFollows: [],
+    comments: [],
+    eventToLists: [],
+  }));
+}
+
 export default function PublicListClient({ params }: Props) {
   const { userName } = use(params);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -78,12 +106,23 @@ export default function PublicListClient({ params }: Props) {
   });
   const stableNow = useStableTimestamp();
 
+  // Determine if we should use the user's feed (includes followed events) or just their created events
+  const shouldUseFeed = isOwner && isPublicListEnabled;
+
+  // Query for user's personal feed (includes followed events) when viewing own list
+  const myFeedQuery = usePaginatedQuery(
+    api.feeds.getMyFeed,
+    shouldUseFeed ? { filter: "upcoming" as const } : "skip",
+    { initialNumItems: 100 },
+  );
+
+  // Query for public list events (only created events) for all other cases
   const publicListEventsQuery = usePaginatedQuery(
     api.users.getPublicListEvents,
-    {
+    !shouldUseFeed ? {
       username: userName,
       filter: "upcoming" as const,
-    },
+    } : "skip",
     { initialNumItems: 100 },
   );
 
@@ -94,10 +133,16 @@ export default function PublicListClient({ params }: Props) {
   const isOwner = currentUser?.username === userName;
   const isPublicListEnabled = publicListData?.user.publicListEnabled;
 
-  const { results: convexEvents, status } = publicListEventsQuery;
+  // Use the appropriate query results based on whether we're using feed or public list
+  const activeQuery = shouldUseFeed ? myFeedQuery : publicListEventsQuery;
+  const { results: convexEvents, status } = activeQuery;
   const isLoading =
     status === "LoadingFirstPage" || publicListData === undefined;
-  const events = transformConvexEventsAsPublic(convexEvents);
+  
+  // Transform events - use different transformer for feed vs public list events
+  const events = shouldUseFeed 
+    ? transformConvexEvents(convexEvents) 
+    : transformConvexEventsAsPublic(convexEvents);
 
   // Client-side safety filter: hide events that have ended
   // This prevents showing ended events if the cron job hasn't run recently
