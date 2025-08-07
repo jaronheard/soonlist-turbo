@@ -48,6 +48,7 @@ function transformConvexEventsAsPublic(
   if (!events) return [];
 
   return events
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive programming for runtime safety
     .filter((event) => event.user !== null)
     .map((event) => ({
       id: event.id,
@@ -62,7 +63,7 @@ function transformConvexEventsAsPublic(
       startDateTime: new Date(event.startDateTime),
       visibility: event.visibility,
       createdAt: new Date(event._creationTime),
-      user: transformConvexUser(event.user!),
+      user: transformConvexUser(event.user),
       eventFollows: [],
       comments: [],
       eventToLists: [],
@@ -90,6 +91,7 @@ function transformConvexEvents(
       startDateTime: new Date(event.startDateTime),
       visibility: event.visibility,
       createdAt: new Date(event._creationTime),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user is guaranteed to exist after filter
       user: transformConvexUser(event.user!),
       eventFollows: [],
       comments: [],
@@ -183,6 +185,7 @@ export default function PublicListClient({ params }: Props) {
       publicListData?.user.publicListName ||
       `${publicListData?.user.displayName}'s events`;
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- navigator.share may not exist in all browsers
     if (navigator.share) {
       try {
         await navigator.share({
@@ -315,6 +318,7 @@ export default function PublicListClient({ params }: Props) {
                     onClick={() => {
                       setNewListName(
                         publicListData?.user.publicListName ||
+                          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- currentUser can be null
                           `${currentUser?.displayName}'s events` ||
                           "",
                       );
