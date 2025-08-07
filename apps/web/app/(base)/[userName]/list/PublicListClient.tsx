@@ -47,27 +47,29 @@ function transformConvexEventsAsPublic(
 ): EventWithUser[] {
   if (!events) return [];
 
-  return events
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive programming for runtime safety
-    .filter((event) => event.user !== null)
-    .map((event) => ({
-      id: event.id,
-      userId: event.userId,
-      updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
-      userName: event.userName,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      event: event.event,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      eventMetadata: event.eventMetadata,
-      endDateTime: new Date(event.endDateTime),
-      startDateTime: new Date(event.startDateTime),
-      visibility: event.visibility,
-      createdAt: new Date(event._creationTime),
-      user: transformConvexUser(event.user),
-      eventFollows: [],
-      comments: [],
-      eventToLists: [],
-    }));
+  return (
+    events
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive programming for runtime safety
+      .filter((event) => event.user !== null)
+      .map((event) => ({
+        id: event.id,
+        userId: event.userId,
+        updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+        userName: event.userName,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        event: event.event,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        eventMetadata: event.eventMetadata,
+        endDateTime: new Date(event.endDateTime),
+        startDateTime: new Date(event.startDateTime),
+        visibility: event.visibility,
+        createdAt: new Date(event._creationTime),
+        user: transformConvexUser(event.user),
+        eventFollows: [],
+        comments: [],
+        eventToLists: [],
+      }))
+  );
 }
 
 // Transform Convex events to EventWithUser format (for feed events)
