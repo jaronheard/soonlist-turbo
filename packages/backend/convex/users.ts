@@ -806,6 +806,116 @@ export const deleteUser = internalMutation({
 });
 
 /**
+ * Update user's public list settings
+ */
+export const updatePublicListSettings = mutation({
+  args: {
+    userId: v.string(),
+    publicListEnabled: v.optional(v.boolean()),
+    publicListName: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError(
+        "User must be logged in to update public list settings",
+      );
+    }
+
+    // Verify that the authenticated user's ID matches the userId being updated
+    if (identity.subject !== args.userId) {
+      throw new ConvexError(
+        "Unauthorized: You can only update your own public list settings",
+      );
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", args.userId))
+      .unique();
+
+    if (!user) {
+      throw new ConvexError("User not found");
+    }
+
+    const updates: Record<string, boolean | string | undefined> = {
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (args.publicListEnabled !== undefined) {
+      updates.publicListEnabled = args.publicListEnabled;
+    }
+
+    if (args.publicListName !== undefined) {
+      updates.publicListName = args.publicListName;
+    }
+
+    await ctx.db.patch(user._id, updates);
+
+    return null;
+  },
+});
+
+/**
+ * Get user's public list if enabled
+ */
+export const getPublicList = query({
+  args: { username: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", args.username))
+      .unique();
+
+    if (!user?.publicListEnabled) {
+      return null;
+    }
+
+    return {
+      user: {
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        userImage: user.userImage,
+        publicListName: user.publicListName,
+        publicListEnabled: user.publicListEnabled,
+      },
+    };
+  },
+});
+
+/**
+ * Get events for a user's public list
+ */
+export const getPublicListEvents = query({
+  args: { username: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", args.username))
+      .unique();
+
+    if (!user?.publicListEnabled) {
+      return [];
+    }
+
+    // Get all events created by this user (both public and private)
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", user.id))
+      .order("asc")
+      .collect();
+
+    // Return events with full user info
+    return events.map((event) => ({
+      ...event,
+      user: user,
+    }));
+  },
+});
+
+/**
  * INTERNAL: Centralized cascade deletion logic for a user.
  * This function should be called by other mutations that need to delete a user.
  */
