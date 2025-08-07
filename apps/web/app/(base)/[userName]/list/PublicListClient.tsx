@@ -46,7 +46,7 @@ function transformConvexEventsAsPublic(
     | undefined,
 ): EventWithUser[] {
   if (!events) return [];
-  
+
   return events.map((event) => ({
     id: event.id,
     userId: event.userId,
@@ -77,7 +77,7 @@ export default function PublicListClient({ params }: Props) {
     username: userName,
   });
   const stableNow = useStableTimestamp();
-  
+
   const publicListEventsQuery = usePaginatedQuery(
     api.users.getPublicListEvents,
     {
@@ -93,9 +93,10 @@ export default function PublicListClient({ params }: Props) {
 
   const isOwner = currentUser?.username === userName;
   const isPublicListEnabled = publicListData?.user.publicListEnabled;
-  
+
   const { results: convexEvents, status } = publicListEventsQuery;
-  const isLoading = status === "LoadingFirstPage" || publicListData === undefined;
+  const isLoading =
+    status === "LoadingFirstPage" || publicListData === undefined;
   const events = transformConvexEventsAsPublic(convexEvents);
 
   // Client-side safety filter: hide events that have ended

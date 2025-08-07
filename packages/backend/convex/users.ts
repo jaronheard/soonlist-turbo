@@ -890,13 +890,16 @@ export const getPublicList = query({
  * Get events for a user's public list
  */
 export const getPublicListEvents = query({
-  args: { 
+  args: {
     username: v.string(),
     paginationOpts: paginationOptsValidator,
     filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
     beforeThisDateTime: v.optional(v.string()),
   },
-  handler: async (ctx, { username, paginationOpts, filter = "upcoming", beforeThisDateTime }) => {
+  handler: async (
+    ctx,
+    { username, paginationOpts, filter = "upcoming", beforeThisDateTime },
+  ) => {
     const user = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", username))
@@ -906,7 +909,7 @@ export const getPublicListEvents = query({
       return {
         page: [],
         isDone: true,
-        continueCursor: null,
+        continueCursor: "",
       };
     }
 
