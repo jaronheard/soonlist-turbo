@@ -4,6 +4,7 @@ import { ConvexError, v } from "convex/values";
 import type { DatabaseReader } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { enrichEventsAndFilterNulls } from "./model/events";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
 const MAX_USERNAME_LENGTH = 64;
@@ -913,38 +914,52 @@ export const getPublicListEvents = query({
       };
     }
 
-    // Build query with proper index - same logic as getUserCreatedEvents
-    let eventsQuery = ctx.db
-      .query("events")
-      .withIndex("by_user_and_startDateTime", (q) => q.eq("userId", user.id));
+    // Include both events created by the user and events this user has saved (followed)
+    const eventFollows = await ctx.db
+      .query("eventFollows")
+      .withIndex("by_user", (q) => q.eq("userId", user.id))
+      .collect();
 
-    // Apply time filter - use current time if not provided
-    const referenceDateTime = beforeThisDateTime || new Date().toISOString();
-    eventsQuery = eventsQuery.filter((q) =>
-      filter === "upcoming"
-        ? q.gte(q.field("endDateTime"), referenceDateTime)
-        : q.lt(q.field("endDateTime"), referenceDateTime),
-    );
+    const followedEventIds = new Set(eventFollows.map((ef) => ef.eventId));
 
-    // Apply ordering based on filter
+    const eventsQuery = ctx.db.query("events").filter((q) => {
+      const createdByUserFilter = q.eq(q.field("userId"), user.id);
+
+      const reference = beforeThisDateTime || new Date().toISOString();
+      const dateFilter =
+        filter === "upcoming"
+          ? q.gte(q.field("endDateTime"), reference)
+          : q.lt(q.field("endDateTime"), reference);
+
+      if (followedEventIds.size === 0) {
+        return q.and(dateFilter, createdByUserFilter);
+      }
+
+      const followedFilters = Array.from(followedEventIds).map((eventId) =>
+        q.eq(q.field("id"), eventId),
+      );
+      const combinedEventFilter = q.or(createdByUserFilter, ...followedFilters);
+
+      return q.and(dateFilter, combinedEventFilter);
+    });
+
     const orderedQuery =
       filter === "upcoming"
         ? eventsQuery.order("asc")
         : eventsQuery.order("desc");
 
-    // Paginate
     const results = await orderedQuery.paginate(paginationOpts);
 
-    // Enrich events with user data
-    const enrichedEvents = results.page.map((event) => ({
-      ...event,
-      user: user,
-    }));
+    // Enrich events with correct creator data and related fields
+    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, results.page);
 
-    return {
-      ...results,
-      page: enrichedEvents,
-    };
+    // For public lists: include all of the owner's own events (even private),
+    // but only include followed events that are public
+    const filtered = enrichedEvents.filter(
+      (e) => e.userId === user.id || e.visibility === "public",
+    );
+
+    return { ...results, page: filtered };
   },
 });
 

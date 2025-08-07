@@ -28,6 +28,12 @@ interface Props {
   params: Promise<{ userName: string }>;
 }
 
+function hasConvexUser<T extends { user: Doc<"users"> | null }>(
+  item: T,
+): item is T & { user: Doc<"users"> } {
+  return item.user !== null;
+}
+
 const transformConvexUser = (user: Doc<"users">): User => {
   return {
     ...user,
@@ -47,29 +53,24 @@ function transformConvexEventsAsPublic(
 ): EventWithUser[] {
   if (!events) return [];
 
-  return (
-    events
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive programming for runtime safety
-      .filter((event) => event.user !== null)
-      .map((event) => ({
-        id: event.id,
-        userId: event.userId,
-        updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
-        userName: event.userName,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        event: event.event,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        eventMetadata: event.eventMetadata,
-        endDateTime: new Date(event.endDateTime),
-        startDateTime: new Date(event.startDateTime),
-        visibility: "public", // This is only used for public lists that a user have opted into, so we can safely set it to public.
-        createdAt: new Date(event._creationTime),
-        user: transformConvexUser(event.user),
-        eventFollows: [],
-        comments: [],
-        eventToLists: [],
-      }))
-  );
+  return events.filter(hasConvexUser).map((event) => ({
+    id: event.id,
+    userId: event.userId,
+    updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+    userName: event.userName,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    event: event.event,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    eventMetadata: event.eventMetadata,
+    endDateTime: new Date(event.endDateTime),
+    startDateTime: new Date(event.startDateTime),
+    visibility: event.visibility,
+    createdAt: new Date(event._creationTime),
+    user: transformConvexUser(event.user),
+    eventFollows: [],
+    comments: [],
+    eventToLists: [],
+  }));
 }
 
 // Transform Convex events to EventWithUser format (for feed events)
@@ -78,27 +79,24 @@ function transformConvexEvents(
 ): EventWithUser[] {
   if (!events) return [];
 
-  return events
-    .filter((event) => event.user !== null)
-    .map((event) => ({
-      id: event.id,
-      userId: event.userId,
-      updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
-      userName: event.userName,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      event: event.event,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      eventMetadata: event.eventMetadata,
-      endDateTime: new Date(event.endDateTime),
-      startDateTime: new Date(event.startDateTime),
-      visibility: event.visibility,
-      createdAt: new Date(event._creationTime),
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user is guaranteed to exist after filter
-      user: transformConvexUser(event.user!),
-      eventFollows: [],
-      comments: [],
-      eventToLists: [],
-    }));
+  return events.filter(hasConvexUser).map((event) => ({
+    id: event.id,
+    userId: event.userId,
+    updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+    userName: event.userName,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    event: event.event,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    eventMetadata: event.eventMetadata,
+    endDateTime: new Date(event.endDateTime),
+    startDateTime: new Date(event.startDateTime),
+    visibility: event.visibility,
+    createdAt: new Date(event._creationTime),
+    user: transformConvexUser(event.user),
+    eventFollows: [],
+    comments: [],
+    eventToLists: [],
+  }));
 }
 
 export default function PublicListClient({ params }: Props) {
