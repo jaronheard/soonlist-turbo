@@ -39,7 +39,7 @@ const transformConvexUser = (user: Doc<"users">): User => {
   };
 };
 
-// Transform Convex events to EventWithUser format
+// Transform Convex events to EventWithUser format (for public list events)
 function transformConvexEventsAsPublic(
   events:
     | FunctionReturnType<typeof api.users.getPublicListEvents>["page"]
@@ -47,24 +47,58 @@ function transformConvexEventsAsPublic(
 ): EventWithUser[] {
   if (!events) return [];
 
-  return events.map((event) => ({
-    id: event.id,
-    userId: event.userId,
-    updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
-    userName: event.userName,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    event: event.event,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    eventMetadata: event.eventMetadata,
-    endDateTime: new Date(event.endDateTime),
-    startDateTime: new Date(event.startDateTime),
-    visibility: event.visibility,
-    createdAt: new Date(event._creationTime),
-    user: transformConvexUser(event.user),
-    eventFollows: [],
-    comments: [],
-    eventToLists: [],
-  }));
+  return (
+    events
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive programming for runtime safety
+      .filter((event) => event.user !== null)
+      .map((event) => ({
+        id: event.id,
+        userId: event.userId,
+        updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+        userName: event.userName,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        event: event.event,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        eventMetadata: event.eventMetadata,
+        endDateTime: new Date(event.endDateTime),
+        startDateTime: new Date(event.startDateTime),
+        visibility: event.visibility,
+        createdAt: new Date(event._creationTime),
+        user: transformConvexUser(event.user),
+        eventFollows: [],
+        comments: [],
+        eventToLists: [],
+      }))
+  );
+}
+
+// Transform Convex events to EventWithUser format (for feed events)
+function transformConvexEvents(
+  events: FunctionReturnType<typeof api.feeds.getMyFeed>["page"] | undefined,
+): EventWithUser[] {
+  if (!events) return [];
+
+  return events
+    .filter((event) => event.user !== null)
+    .map((event) => ({
+      id: event.id,
+      userId: event.userId,
+      updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+      userName: event.userName,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      event: event.event,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      eventMetadata: event.eventMetadata,
+      endDateTime: new Date(event.endDateTime),
+      startDateTime: new Date(event.startDateTime),
+      visibility: event.visibility,
+      createdAt: new Date(event._creationTime),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user is guaranteed to exist after filter
+      user: transformConvexUser(event.user!),
+      eventFollows: [],
+      comments: [],
+      eventToLists: [],
+    }));
 }
 
 export default function PublicListClient({ params }: Props) {
@@ -78,12 +112,28 @@ export default function PublicListClient({ params }: Props) {
   });
   const stableNow = useStableTimestamp();
 
+  const isOwner = currentUser?.username === userName;
+  const isPublicListEnabled = publicListData?.user.publicListEnabled;
+
+  // Determine if we should use the user's feed (includes followed events) or just their created events
+  const shouldUseFeed = isOwner && isPublicListEnabled;
+
+  // Query for user's personal feed (includes followed events) when viewing own list
+  const myFeedQuery = usePaginatedQuery(
+    api.feeds.getMyFeed,
+    shouldUseFeed ? { filter: "upcoming" as const } : "skip",
+    { initialNumItems: 100 },
+  );
+
+  // Query for public list events (only created events) for all other cases
   const publicListEventsQuery = usePaginatedQuery(
     api.users.getPublicListEvents,
-    {
-      username: userName,
-      filter: "upcoming" as const,
-    },
+    !shouldUseFeed
+      ? {
+          username: userName,
+          filter: "upcoming" as const,
+        }
+      : "skip",
     { initialNumItems: 100 },
   );
 
@@ -91,13 +141,15 @@ export default function PublicListClient({ params }: Props) {
     api.users.updatePublicListSettings,
   );
 
-  const isOwner = currentUser?.username === userName;
-  const isPublicListEnabled = publicListData?.user.publicListEnabled;
-
-  const { results: convexEvents, status } = publicListEventsQuery;
+  // Use the appropriate query results based on whether we're using feed or public list
   const isLoading =
-    status === "LoadingFirstPage" || publicListData === undefined;
-  const events = transformConvexEventsAsPublic(convexEvents);
+    (shouldUseFeed ? myFeedQuery.status : publicListEventsQuery.status) ===
+      "LoadingFirstPage" || publicListData === undefined;
+
+  // Transform events - use different transformer for feed vs public list events
+  const events = shouldUseFeed
+    ? transformConvexEvents(myFeedQuery.results)
+    : transformConvexEventsAsPublic(publicListEventsQuery.results);
 
   // Client-side safety filter: hide events that have ended
   // This prevents showing ended events if the cron job hasn't run recently
@@ -135,6 +187,7 @@ export default function PublicListClient({ params }: Props) {
       publicListData?.user.publicListName ||
       `${publicListData?.user.displayName}'s events`;
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- navigator.share may not exist in all browsers
     if (navigator.share) {
       try {
         await navigator.share({
@@ -267,6 +320,7 @@ export default function PublicListClient({ params }: Props) {
                     onClick={() => {
                       setNewListName(
                         publicListData?.user.publicListName ||
+                          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- currentUser can be null
                           `${currentUser?.displayName}'s events` ||
                           "",
                       );
