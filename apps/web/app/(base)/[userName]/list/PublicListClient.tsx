@@ -2,7 +2,7 @@
 
 import type { FunctionReturnType } from "convex/server";
 import { use, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { Globe, Lock, Pencil, Share, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { FullPageLoadingSpinner } from "~/components/FullPageLoadingSpinner";
 import { UserInfo } from "~/components/UserInfo";
+import { useStableTimestamp } from "~/hooks/useStableQuery";
 
 interface Props {
   params: Promise<{ userName: string }>;
@@ -40,8 +41,12 @@ const transformConvexUser = (user: Doc<"users">): User => {
 
 // Transform Convex events to EventWithUser format
 function transformConvexEventsAsPublic(
-  events: FunctionReturnType<typeof api.users.getPublicListEvents>,
+  events:
+    | FunctionReturnType<typeof api.users.getPublicListEvents>["page"]
+    | undefined,
 ): EventWithUser[] {
+  if (!events) return [];
+
   return events.map((event) => ({
     id: event.id,
     userId: event.userId,
@@ -53,8 +58,8 @@ function transformConvexEventsAsPublic(
     eventMetadata: event.eventMetadata,
     endDateTime: new Date(event.endDateTime),
     startDateTime: new Date(event.startDateTime),
-    visibility: "public",
-    createdAt: new Date(event.created_at),
+    visibility: event.visibility,
+    createdAt: new Date(event._creationTime),
     user: transformConvexUser(event.user),
     eventFollows: [],
     comments: [],
@@ -71,9 +76,16 @@ export default function PublicListClient({ params }: Props) {
   const publicListData = useQuery(api.users.getPublicList, {
     username: userName,
   });
-  const publicListEvents = useQuery(api.users.getPublicListEvents, {
-    username: userName,
-  });
+  const stableNow = useStableTimestamp();
+
+  const publicListEventsQuery = usePaginatedQuery(
+    api.users.getPublicListEvents,
+    {
+      username: userName,
+      filter: "upcoming" as const,
+    },
+    { initialNumItems: 100 },
+  );
 
   const updatePublicListSettings = useMutation(
     api.users.updatePublicListSettings,
@@ -81,6 +93,29 @@ export default function PublicListClient({ params }: Props) {
 
   const isOwner = currentUser?.username === userName;
   const isPublicListEnabled = publicListData?.user.publicListEnabled;
+
+  const { results: convexEvents, status } = publicListEventsQuery;
+  const isLoading =
+    status === "LoadingFirstPage" || publicListData === undefined;
+  const events = transformConvexEventsAsPublic(convexEvents);
+
+  // Client-side safety filter: hide events that have ended
+  // This prevents showing ended events if the cron job hasn't run recently
+  const stableNowDate = new Date(stableNow);
+  const filteredEvents = events.filter((event) => {
+    return new Date(event.endDateTime) >= stableNowDate;
+  });
+
+  // Events are already filtered by the query, just separate current vs future
+  const currentEvents = filteredEvents.filter((item) => {
+    const startDate = new Date(item.startDateTime);
+    const endDate = new Date(item.endDateTime);
+    const isCurrent = startDate < stableNowDate && endDate > stableNowDate;
+    return isCurrent;
+  });
+  const futureEvents = filteredEvents.filter(
+    (item) => new Date(item.startDateTime) >= stableNowDate,
+  );
 
   const handleTogglePublicList = async (enabled: boolean) => {
     if (!currentUser) return;
@@ -134,18 +169,9 @@ export default function PublicListClient({ params }: Props) {
   };
 
   // Show full page spinner until all data is loaded
-  if (
-    currentUser === undefined ||
-    publicListData === undefined ||
-    publicListEvents === undefined
-  ) {
+  if (currentUser === undefined || publicListData === undefined) {
     return <FullPageLoadingSpinner />;
   }
-
-  // Transform events if they exist
-  const events = publicListEvents
-    ? transformConvexEventsAsPublic(publicListEvents)
-    : [];
 
   // If user is the owner and public list is not enabled, show setup
   if (isOwner && !isPublicListEnabled) {
@@ -309,23 +335,14 @@ export default function PublicListClient({ params }: Props) {
       </div>
 
       <EventList
-        currentEvents={events.filter((event) => {
-          const now = new Date();
-          const start = new Date(event.startDateTime);
-          const end = new Date(event.endDateTime);
-          return start <= now && end > now;
-        })}
-        pastEvents={events.filter(
-          (event) => new Date(event.endDateTime) < new Date(),
-        )}
-        futureEvents={events.filter(
-          (event) => new Date(event.startDateTime) > new Date(),
-        )}
+        currentEvents={currentEvents}
+        pastEvents={[]}
+        futureEvents={futureEvents}
         hideCurator={false}
         showOtherCurators={false}
         showPrivateEvents={isOwner}
         variant="future-minimal"
-        isLoading={!publicListEvents}
+        isLoading={isLoading}
       />
     </div>
   );
