@@ -901,9 +901,10 @@ export const getPublicListEvents = query({
     }
 
     // Get all events created by this user (both public and private)
+    // Sort by startDateTime to match the sorting behavior of /[username]/upcoming
     const events = await ctx.db
       .query("events")
-      .withIndex("by_user", (q) => q.eq("userId", user.id))
+      .withIndex("by_user_and_startDateTime", (q) => q.eq("userId", user.id))
       .order("asc")
       .collect();
 
