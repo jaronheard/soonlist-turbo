@@ -149,6 +149,9 @@ export default defineSchema({
     // Onboarding fields - now properly typed
     onboardingData: v.union(onboardingDataValidator, v.null()),
     onboardingCompletedAt: v.union(v.string(), v.null()), // ISO date string or null
+    // Public list sharing
+    publicListEnabled: v.optional(v.boolean()),
+    publicListName: v.optional(v.string()),
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null
   })
