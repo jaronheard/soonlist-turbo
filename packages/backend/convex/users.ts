@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
 import type { DatabaseReader } from "./_generated/server";
@@ -889,30 +890,58 @@ export const getPublicList = query({
  * Get events for a user's public list
  */
 export const getPublicListEvents = query({
-  args: { username: v.string() },
-  handler: async (ctx, args) => {
+  args: { 
+    username: v.string(),
+    paginationOpts: paginationOptsValidator,
+    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
+    beforeThisDateTime: v.optional(v.string()),
+  },
+  handler: async (ctx, { username, paginationOpts, filter = "upcoming", beforeThisDateTime }) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_username", (q) => q.eq("username", args.username))
+      .withIndex("by_username", (q) => q.eq("username", username))
       .unique();
 
     if (!user?.publicListEnabled) {
-      return [];
+      return {
+        page: [],
+        isDone: true,
+        continueCursor: null,
+      };
     }
 
-    // Get all events created by this user (both public and private)
-    // Sort by startDateTime to match the sorting behavior of /[username]/upcoming
-    const events = await ctx.db
+    // Build query with proper index - same logic as getUserCreatedEvents
+    let eventsQuery = ctx.db
       .query("events")
-      .withIndex("by_user_and_startDateTime", (q) => q.eq("userId", user.id))
-      .order("asc")
-      .collect();
+      .withIndex("by_user_and_startDateTime", (q) => q.eq("userId", user.id));
 
-    // Return events with full user info
-    return events.map((event) => ({
+    // Apply time filter - use current time if not provided
+    const referenceDateTime = beforeThisDateTime || new Date().toISOString();
+    eventsQuery = eventsQuery.filter((q) =>
+      filter === "upcoming"
+        ? q.gte(q.field("endDateTime"), referenceDateTime)
+        : q.lt(q.field("endDateTime"), referenceDateTime),
+    );
+
+    // Apply ordering based on filter
+    const orderedQuery =
+      filter === "upcoming"
+        ? eventsQuery.order("asc")
+        : eventsQuery.order("desc");
+
+    // Paginate
+    const results = await orderedQuery.paginate(paginationOpts);
+
+    // Enrich events with user data
+    const enrichedEvents = results.page.map((event) => ({
       ...event,
       user: user,
     }));
+
+    return {
+      ...results,
+      page: enrichedEvents,
+    };
   },
 });
 
