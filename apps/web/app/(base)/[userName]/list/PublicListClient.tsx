@@ -64,7 +64,7 @@ function transformConvexEventsAsPublic(
     eventMetadata: event.eventMetadata,
     endDateTime: new Date(event.endDateTime),
     startDateTime: new Date(event.startDateTime),
-    visibility: event.visibility,
+    visibility: "public",
     createdAt: new Date(event._creationTime),
     user: transformConvexUser(event.user),
     eventFollows: [],
