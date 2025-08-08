@@ -39,42 +39,14 @@ const transformConvexUser = (user: Doc<"users">): User => {
   };
 };
 
-// Transform Convex events to EventWithUser format (for public list events)
-function transformConvexEventsAsPublic(
-  events:
-    | FunctionReturnType<typeof api.users.getPublicListEvents>["page"]
-    | undefined,
-): EventWithUser[] {
-  if (!events) return [];
 
-  return (
-    events
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive programming for runtime safety
-      .filter((event) => event.user !== null)
-      .map((event) => ({
-        id: event.id,
-        userId: event.userId,
-        updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
-        userName: event.userName,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        event: event.event,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        eventMetadata: event.eventMetadata,
-        endDateTime: new Date(event.endDateTime),
-        startDateTime: new Date(event.startDateTime),
-        visibility: "public", // This is only used for public lists that a user have opted into, so we can safely set it to public.
-        createdAt: new Date(event._creationTime),
-        user: transformConvexUser(event.user),
-        eventFollows: [],
-        comments: [],
-        eventToLists: [],
-      }))
-  );
-}
 
 // Transform Convex events to EventWithUser format (for feed events)
 function transformConvexEvents(
-  events: FunctionReturnType<typeof api.feeds.getMyFeed>["page"] | undefined,
+  events:
+    | FunctionReturnType<typeof api.feeds.getMyFeed>["page"]
+     
+    | undefined,
 ): EventWithUser[] {
   if (!events) return [];
 
@@ -115,20 +87,14 @@ export default function PublicListClient({ params }: Props) {
   const isOwner = currentUser?.username === userName;
   const isPublicListEnabled = publicListData?.user.publicListEnabled;
 
-  // Determine if we should use the user's feed (includes followed events) or just their created events
-  const shouldUseFeed = isOwner && isPublicListEnabled;
+  // Use the new getPublicUserFeed when publicListEnabled is true
+  // This shows the user's full feed (created + followed events) instead of just created events
+  const shouldUseFeed = isPublicListEnabled;
 
-  // Query for user's personal feed (includes followed events) when viewing own list
-  const myFeedQuery = usePaginatedQuery(
-    api.feeds.getMyFeed,
-    shouldUseFeed ? { filter: "upcoming" as const } : "skip",
-    { initialNumItems: 100 },
-  );
-
-  // Query for public list events (only created events) for all other cases
-  const publicListEventsQuery = usePaginatedQuery(
-    api.users.getPublicListEvents,
-    !shouldUseFeed
+  // Query for user's public feed (includes followed events) when public list is enabled
+  const publicUserFeedQuery = usePaginatedQuery(
+    api.feeds.getPublicUserFeed,
+    shouldUseFeed
       ? {
           username: userName,
           filter: "upcoming" as const,
@@ -137,19 +103,19 @@ export default function PublicListClient({ params }: Props) {
     { initialNumItems: 100 },
   );
 
+  // No longer using getPublicListEvents - we either use getPublicUserFeed or show no data
+
   const updatePublicListSettings = useMutation(
     api.users.updatePublicListSettings,
   );
 
-  // Use the appropriate query results based on whether we're using feed or public list
+  // Use the public user feed query results
   const isLoading =
-    (shouldUseFeed ? myFeedQuery.status : publicListEventsQuery.status) ===
-      "LoadingFirstPage" || publicListData === undefined;
+    publicUserFeedQuery.status === "LoadingFirstPage" ||
+    publicListData === undefined;
 
-  // Transform events - use different transformer for feed vs public list events
-  const events = shouldUseFeed
-    ? transformConvexEvents(myFeedQuery.results)
-    : transformConvexEventsAsPublic(publicListEventsQuery.results);
+  // Transform events using the feed transformer (since we're now using feed data)
+  const events = transformConvexEvents(publicUserFeedQuery.results);
 
   // Client-side safety filter: hide events that have ended
   // This prevents showing ended events if the cron job hasn't run recently

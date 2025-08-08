@@ -130,6 +130,36 @@ export const getDiscoverFeed = query({
   },
 });
 
+// Helper query to get a user's public feed (when publicListEnabled is true)
+export const getPublicUserFeed = query({
+  args: {
+    username: v.string(),
+    paginationOpts: paginationOptsValidator,
+    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
+  },
+  handler: async (ctx, { username, paginationOpts, filter = "upcoming" }) => {
+    // Get the user by username
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", username))
+      .unique();
+
+    if (!user) {
+      throw new ConvexError("User not found");
+    }
+
+    // Check if the user has enabled public list sharing
+    if (!user.publicListEnabled) {
+      throw new ConvexError("User has not enabled public list sharing");
+    }
+
+    const feedId = `user_${user.id}`;
+
+    // Use the common query function
+    return queryFeed(ctx, feedId, paginationOpts, filter);
+  },
+});
+
 // Query to get only events created by a specific user (sorted by start time)
 export const getUserCreatedEvents = query({
   args: {
