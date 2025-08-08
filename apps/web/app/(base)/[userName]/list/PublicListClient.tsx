@@ -144,18 +144,10 @@ export default function PublicListClient({ params }: Props) {
 
   const handleShareClick = async () => {
     const url = `${window.location.origin}/${userName}/list`;
-    const listName =
-      publicListData?.user.publicListName ||
-      `${publicListData?.user.displayName}'s events`;
-
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- navigator.share may not exist in all browsers
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: `${listName} | Soonlist`,
-          text: `Check out ${listName} on Soonlist`,
-          url: url,
-        });
+        await navigator.share({ url });
         console.log("List shared successfully");
       } catch (error) {
         console.error("Error sharing:", error);

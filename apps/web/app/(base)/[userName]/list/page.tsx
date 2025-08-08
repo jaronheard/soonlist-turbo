@@ -31,19 +31,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const listName =
       publicListData.user.publicListName ||
       `${publicListData.user.displayName}'s events`;
+    const byline = `by ${publicListData.user.displayName}`;
 
     return {
-      title: `${listName} | Soonlist`,
-      description: `Check out ${publicListData.user.displayName}'s events on Soonlist`,
+      title: `${listName} ${byline}`,
+      description: `Check out ${listName} ${byline}`,
       openGraph: {
-        title: `${listName} | Soonlist`,
-        description: `Check out ${publicListData.user.displayName}'s events on Soonlist`,
+        title: `${listName} ${byline}`,
+        description: `Check out ${listName} ${byline}`,
         type: "website",
       },
       twitter: {
         card: "summary",
-        title: `${listName} | Soonlist`,
-        description: `Check out ${publicListData.user.displayName}'s events on Soonlist`,
+        title: `${listName} ${byline}`,
+        description: `Check out ${listName} ${byline}`,
       },
     };
   } catch (error) {
