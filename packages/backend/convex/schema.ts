@@ -79,6 +79,8 @@ export default defineSchema({
     description: v.optional(v.string()),
     // Batch tracking
     batchId: v.optional(v.string()),
+    // Semantic search
+    embedding: v.optional(v.array(v.float64())), // OpenAI embeddings (1536 dimensions)
   })
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"])
@@ -87,7 +89,12 @@ export default defineSchema({
     .index("by_visibility_and_startDateTime", ["visibility", "startDateTime"])
     .index("by_user_and_endDateTime", ["userId", "endDateTime"])
     .index("by_visibility_and_endDateTime", ["visibility", "endDateTime"])
-    .index("by_batch_id", ["batchId"]),
+    .index("by_batch_id", ["batchId"])
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      dimensions: 1536,
+      filterFields: ["visibility", "userId"],
+    }),
 
   eventToLists: defineTable({
     eventId: v.string(),

@@ -590,7 +590,7 @@ export async function createEvent(
   const endDateTime = parseDateTime(eventData.endDate, endTime, timeZone);
 
   // Create the event
-  await ctx.db.insert("events", {
+  const _id = await ctx.db.insert("events", {
     id: eventId,
     userId,
     userName,
@@ -646,6 +646,11 @@ export async function createEvent(
     visibility: visibility || "public",
     startDateTime: startDateTime.toISOString(),
     endDateTime: endDateTime.toISOString(),
+  });
+
+  // Generate embedding for semantic search
+  await ctx.scheduler.runAfter(0, internal.embeddings.generateEmbedding, {
+    eventId: _id,
   });
 
   return { id: eventId };
@@ -713,6 +718,11 @@ export async function updateEvent(
     startDate: eventData.startDate,
     startTime,
     description: eventData.description,
+  });
+
+  // Regenerate embedding for semantic search
+  await ctx.scheduler.runAfter(0, internal.embeddings.generateEmbedding, {
+    eventId: existingEvent._id,
   });
 
   // Handle comment
