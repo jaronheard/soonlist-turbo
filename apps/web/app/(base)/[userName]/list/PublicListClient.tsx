@@ -40,7 +40,7 @@ const transformConvexUser = (user: Doc<"users">): User => {
 };
 
 // Transform Convex events to EventWithUser format (for feed events)
-function transformConvexEvents(
+function transformConvexEventsAsPublic(
   events: FunctionReturnType<typeof api.feeds.getMyFeed>["page"] | undefined,
 ): EventWithUser[] {
   if (!events) return [];
@@ -58,7 +58,7 @@ function transformConvexEvents(
       eventMetadata: event.eventMetadata,
       endDateTime: new Date(event.endDateTime),
       startDateTime: new Date(event.startDateTime),
-      visibility: event.visibility,
+      visibility: "public", // Always make events public for public list
       createdAt: new Date(event._creationTime),
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user is guaranteed to exist after filter
       user: transformConvexUser(event.user!),
@@ -110,7 +110,7 @@ export default function PublicListClient({ params }: Props) {
     publicListData === undefined;
 
   // Transform events using the feed transformer (since we're now using feed data)
-  const events = transformConvexEvents(publicUserFeedQuery.results);
+  const events = transformConvexEventsAsPublic(publicUserFeedQuery.results);
 
   // Client-side safety filter: hide events that have ended
   // This prevents showing ended events if the cron job hasn't run recently
