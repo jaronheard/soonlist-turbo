@@ -27,7 +27,7 @@ const openrouter = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY || "",
   baseURL: process.env.OPENROUTER_BASE_URL || "",
 });
-const MODEL = "google/gemini-2.0-flash-001";
+const MODEL = "google/gemini-2.5-flash";
 const aiConfig = {
   model: openrouter(MODEL),
   mode: "json",
