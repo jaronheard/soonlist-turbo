@@ -579,7 +579,12 @@ export function AddToCalendarCard({
             <CalendarButton
               event={updatedProps as ATCBActionEventConfig}
               id={initialProps.updateId || undefined}
-              username={user?.username || undefined}
+              displayName={
+                user?.displayName ||
+                (user?.firstName && user?.lastName
+                  ? `${user.firstName} ${user.lastName}`
+                  : user?.username) || undefined
+              }
               type="button"
             />
           </div>
