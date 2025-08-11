@@ -11,8 +11,6 @@ import { sendBatchNotifications, sendNotification } from "../utils/oneSignal";
 import { posthog } from "../utils/posthog";
 import { createDeepLink } from "../utils/urlScheme";
 
-
-
 export const notificationRouter = createTRPCRouter({
   sendMarketingNotification: publicProcedure
     .input(
@@ -116,8 +114,6 @@ export const notificationRouter = createTRPCRouter({
         };
       }
     }),
-
-
 
   sendTrialExpirationReminders: publicProcedure
     .input(z.object({ cronSecret: z.string() }))
