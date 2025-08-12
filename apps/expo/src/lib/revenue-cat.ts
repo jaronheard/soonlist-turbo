@@ -72,3 +72,15 @@ export async function setPostHogUserId(userId: string) {
     logError("Error setting PostHog user ID in RevenueCat", error, { userId });
   }
 }
+
+// Add Clerk user id into RevenueCat subscriber attributes to aid joinability with analytics tools
+export async function setClerkUserId(userId: string) {
+  try {
+    await Purchases.setAttributes({
+      clerkUserId: userId,
+    });
+    logMessage("Clerk user ID set in RevenueCat", { userId });
+  } catch (error) {
+    logError("Error setting Clerk user ID in RevenueCat", error, { userId });
+  }
+}

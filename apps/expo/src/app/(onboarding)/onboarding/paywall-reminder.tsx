@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 
 import { useAppStore } from "~/store";
 import { shouldMockPaywall } from "~/utils/deviceInfo";
@@ -10,10 +11,14 @@ import { shouldMockPaywall } from "~/utils/deviceInfo";
 export default function PaywallReminderScreen() {
   const { setOnboardingData } = useAppStore();
   const [showMockPaywall] = useState(shouldMockPaywall());
+  const posthog = usePostHog();
 
   const handleSubscribe = async () => {
     if (showMockPaywall) {
       // Mock subscription for simulator
+      try {
+        posthog.capture("subscription_purchase_success", { from: "reminder_mock" });
+      } catch {/* no-op */}
       setOnboardingData({
         subscribed: true,
         trialMode: false,
@@ -26,6 +31,9 @@ export default function PaywallReminderScreen() {
     }
 
     try {
+      try {
+        posthog.capture("paywall_presented", { from: "reminder" });
+      } catch {/* no-op */}
       const paywallResult = await RevenueCatUI.presentPaywall();
 
       if (
@@ -33,6 +41,9 @@ export default function PaywallReminderScreen() {
         paywallResult === PAYWALL_RESULT.RESTORED
       ) {
         // User subscribed successfully
+        try {
+          posthog.capture("subscription_purchase_success", { from: "reminder" });
+        } catch {/* no-op */}
         setOnboardingData({
           subscribed: true,
           trialMode: false,
@@ -49,6 +60,9 @@ export default function PaywallReminderScreen() {
 
   const handleContinueTrial = () => {
     // Set trial mode state
+    try {
+      posthog.capture("trial_started", { reason: "reminder_continue" });
+    } catch {/* no-op */}
     setOnboardingData({
       subscribed: false,
       trialMode: true,

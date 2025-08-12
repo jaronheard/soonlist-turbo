@@ -13,6 +13,7 @@ import { useMountEffect } from "~/hooks/useMountEffect";
 import { initializeRevenueCat, setPostHogUserId } from "~/lib/revenue-cat";
 import { logError, logMessage } from "~/utils/errorLogging";
 import { useOneSignal } from "./OneSignalProvider";
+import { setClerkUserId } from "~/lib/revenue-cat";
 
 interface RevenueCatContextType {
   isInitialized: boolean;
@@ -53,6 +54,16 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
         if (!isMounted) return;
 
         setIsInitialized(true);
+
+        // Bridge PostHog distinctId to RevenueCat (works for anonymous users too)
+        try {
+          const distinctId = posthog.getDistinctId();
+          if (distinctId) {
+            await setPostHogUserId(distinctId);
+          }
+        } catch (err) {
+          logError("Failed to set PostHog ID on RevenueCat (init)", err);
+        }
 
         // Set up customer info update listener
         updateListener = (customerInfo: CustomerInfo) => {
@@ -107,6 +118,17 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       if (distinctId) {
         await setPostHogUserId(distinctId);
       }
+      // Also persist Clerk user id on RevenueCat to make joins easy
+      await setClerkUserId(userIdToLogin);
+
+      // Optionally attach RC id to future PostHog events (best-effort)
+      try {
+        // Some SDKs expose register; if unavailable, this no-ops
+        // @ts-expect-error - register may not be typed in RN SDK
+        posthog.register?.({ rc_app_user_id: customerInfo.originalAppUserId });
+      } catch {
+        // ignore
+      }
     } catch (error) {
       logError("Error logging in to RevenueCat", error, {
         userId: userIdToLogin,
@@ -157,6 +179,13 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       return;
     }
     try {
+      // Track that we attempted to present the paywall
+      try {
+        posthog.capture("paywall_presented", {
+          rc_app_user_id: customerInfo?.originalAppUserId ?? null,
+        });
+      } catch {/* no-op */}
+
       const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
         requiredEntitlementIdentifier: "unlimited",
       });
@@ -167,6 +196,12 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
           try {
             const updatedCustomerInfo = await Purchases.getCustomerInfo();
             setCustomerInfo(updatedCustomerInfo);
+            // Capture purchase success
+            try {
+              posthog.capture("subscription_purchase_success", {
+                rc_app_user_id: updatedCustomerInfo.originalAppUserId ?? null,
+              });
+            } catch {/* no-op */}
           } catch (error) {
             logError("Error refreshing customer info after purchase", error);
           }
@@ -202,7 +237,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     } catch (err) {
       logError("Error presenting paywall", err);
     }
-  }, [isInitialized, hasNotificationPermission]);
+  }, [isInitialized, hasNotificationPermission, customerInfo, posthog]);
 
   return (
     <RevenueCatContext.Provider
