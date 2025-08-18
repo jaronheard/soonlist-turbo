@@ -1,9 +1,10 @@
 "use client";
 
-import type { UserResource } from "@clerk/types";
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { UserResource } from "@clerk/types";
 import { Pencil, Shapes } from "lucide-react";
 
 import type { EventMetadata } from "@soonlist/cal";
@@ -45,6 +46,10 @@ declare module "@clerk/types" {
     displayName?: string;
   }
 }
+
+// Import UserResource for type augmentation
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { UserResource } from "@clerk/types";
 
 export type AddToCalendarCardProps = AddToCalendarButtonType & {
   update?: boolean;
