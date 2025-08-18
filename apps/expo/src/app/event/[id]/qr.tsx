@@ -69,11 +69,11 @@ export default function QRModal() {
           </Text>
 
           <Text className="mt-2 text-sm text-zinc-600">
-            Captured by {event.user?.displayName || event.user?.username || event.userName}
+            Captured by{" "}
+            {event.user?.displayName || event.user?.username || event.userName}
           </Text>
         </View>
       </View>
     </View>
   );
 }
-

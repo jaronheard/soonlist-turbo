@@ -1,5 +1,6 @@
 "use client";
 
+import type { UserResource } from "@clerk/types";
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
@@ -38,6 +39,12 @@ import { CalendarButton } from "./CalendarButton";
 import { SaveButton } from "./SaveButton";
 import { TimezoneSelect } from "./TimezoneSelect";
 import { UpdateButton } from "./UpdateButton";
+
+declare module "@clerk/types" {
+  interface UserResource {
+    displayName?: string;
+  }
+}
 
 export type AddToCalendarCardProps = AddToCalendarButtonType & {
   update?: boolean;
@@ -578,8 +585,10 @@ export function AddToCalendarCard({
                 user?.displayName ||
                 (user?.firstName && user?.lastName
                   ? `${user.firstName} ${user.lastName}`
-                  : user?.username) || undefined
+                  : user?.username) ||
+                undefined
               }
+              username={user?.username || undefined}
               type="button"
             />
           </div>
@@ -588,4 +597,3 @@ export function AddToCalendarCard({
     </Card>
   );
 }
-

@@ -687,15 +687,17 @@ function EventActionButtons({
 
 interface UserInfoMiniProps {
   username: string;
-  displayName: string;
+  displayName?: string;
   userImage: string;
   showFollowButton?: boolean;
 }
 
 export function UserInfoMini({
   username,
+  displayName,
   userImage,
-}: Omit<UserInfoMiniProps, "displayName">) {
+  showFollowButton = true,
+}: UserInfoMiniProps) {
   return (
     <div className="flex items-center gap-0.5">
       <Link
@@ -706,17 +708,25 @@ export function UserInfoMini({
           <Image
             className="inline-block size-3 rounded-full object-cover object-center"
             src={userImage}
-            alt={`${username}'s profile picture`}
-            width={16}
-            height={16}
+            alt={displayName || username}
+            width={12}
+            height={12}
           />
         </UserProfileFlair>
+        <span className="ml-1 text-xs text-gray-700">
+          {displayName || username}
+        </span>
       </Link>
-      <Link href={`/${username}/upcoming`} className="group flex items-center">
-        <p className="text-xs text-neutral-2 group-hover:text-neutral-1">
-          @{username}
-        </p>
-      </Link>
+      {showFollowButton && (
+        <Link
+          href={`/${username}/upcoming`}
+          className="group flex items-center"
+        >
+          <p className="text-xs text-neutral-2 group-hover:text-neutral-1">
+            @{username}
+          </p>
+        </Link>
+      )}
     </div>
   );
 }
@@ -776,6 +786,7 @@ export function EventListItem(props: EventListItemProps) {
               !isSelf &&
               (props.showOtherCurators || !props.hideCurator) && (
                 <UserInfoMini
+                  username={user.username}
                   displayName={user?.displayName || user?.username}
                   userImage={user.userImage}
                   showFollowButton={false}
@@ -861,6 +872,7 @@ export function EventListItem(props: EventListItemProps) {
       <div className="absolute bottom-2 left-2 z-10 flex gap-2">
         {user && (
           <UserInfoMini
+            username={user.username}
             displayName={user?.displayName || user?.username}
             userImage={user.userImage}
             showFollowButton={false}
