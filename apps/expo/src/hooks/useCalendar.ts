@@ -91,7 +91,8 @@ export function useCalendar() {
       const eventUrl =
         event.userName && event.id ? `${baseUrl}/event/${event.id}` : baseUrl;
 
-      const displayName = event.user?.displayName || (event.userName ? `@${event.userName}` : "");
+      const displayName =
+        event.user?.displayName || (event.userName ? `@${event.userName}` : "");
       const additionalText =
         event.userName && event.id
           ? `Captured by ${displayName} on Soonlist. \nFull details: ${eventUrl}`

@@ -70,7 +70,9 @@ export default function EventCard(props: {
           </div>
           <div>
             <p className="text-sm font-medium text-neutral-2">Captured by</p>
-            <p className="text-sm font-semibold text-neutral-1">{displayName}</p>
+            <p className="text-sm font-semibold text-neutral-1">
+              {displayName}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">

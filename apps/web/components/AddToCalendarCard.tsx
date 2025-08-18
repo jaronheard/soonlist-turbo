@@ -39,6 +39,11 @@ import { SaveButton } from "./SaveButton";
 import { TimezoneSelect } from "./TimezoneSelect";
 import { UpdateButton } from "./UpdateButton";
 
+interface ClerkUser {
+  username?: string | null;
+  displayName?: string | null;
+}
+
 export type AddToCalendarCardProps = AddToCalendarButtonType & {
   update?: boolean;
   updateId?: string;
@@ -62,6 +67,7 @@ export function AddToCalendarCard({
   ...initialProps
 }: AddToCalendarCardProps) {
   const { user } = useUser();
+  const typedUser = user as unknown as ClerkUser;
   const { croppedImagesUrls } = useCroppedImageContext();
   const { organizeData } = useNewEventContext();
   const { notes, visibility, lists } = organizeData;
@@ -579,8 +585,8 @@ export function AddToCalendarCard({
             <CalendarButton
               event={updatedProps as ATCBActionEventConfig}
               id={initialProps.updateId || undefined}
-              username={user?.username || undefined}
-              userDisplayName={user?.displayName || undefined}
+              username={typedUser?.username || undefined}
+              userDisplayName={typedUser?.displayName || undefined}
               type="button"
             />
           </div>

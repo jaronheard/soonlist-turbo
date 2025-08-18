@@ -19,7 +19,8 @@ interface CalendarButtonProps {
 
 export function CalendarButton(props: CalendarButtonProps) {
   const eventForCalendar = { ...props.event };
-  const displayName = props.userDisplayName || (props.username ? `@${props.username}` : "");
+  const displayName =
+    props.userDisplayName || (props.username ? `@${props.username}` : "");
   const additionalText =
     props.username && props.id
       ? `Captured by [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${props.username}/events|${displayName}[/url] on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
