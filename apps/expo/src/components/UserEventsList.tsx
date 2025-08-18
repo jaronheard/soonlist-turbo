@@ -218,17 +218,23 @@ export function UserEventListItem(props: UserEventListItemProps) {
         onPress={() => {
           // Prevent double navigation
           if (isNavigatingRef.current) return;
-          
+
           // Set navigating flag to true
           isNavigatingRef.current = true;
-          
+
           // Determine the route
           const isDemoEvent = id.startsWith("demo-");
-          const route = isDemoEvent ? `/onboarding/demo-event/${id}` : `/event/${id}`;
-          
-          // Navigate to the event
-          router.push(route);
-          
+
+          // Navigate to the event - using proper typed paths
+          if (isDemoEvent) {
+            router.push(`/onboarding/demo-event/${id}` as const);
+          } else {
+            router.push({
+              pathname: "/event/[id]",
+              params: { id },
+            });
+          }
+
           // Reset the flag after a delay to prevent rapid re-navigation
           // but allow navigation after returning to the list
           setTimeout(() => {

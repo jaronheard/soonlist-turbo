@@ -87,7 +87,12 @@ export default function Page() {
 
   // Track event view and show paywall if needed - defer until after initial render
   useEffect(() => {
-    if (event && isInitialRenderComplete && !hasUnlimited && !hasCountedViewRef.current) {
+    if (
+      event &&
+      isInitialRenderComplete &&
+      !hasUnlimited &&
+      !hasCountedViewRef.current
+    ) {
       hasCountedViewRef.current = true;
 
       // Defer view tracking and paywall to after initial render is complete
@@ -105,7 +110,13 @@ export default function Page() {
         }
       });
     }
-  }, [event, hasUnlimited, showProPaywallIfNeeded, customerInfo, isInitialRenderComplete]);
+  }, [
+    event,
+    hasUnlimited,
+    showProPaywallIfNeeded,
+    customerInfo,
+    isInitialRenderComplete,
+  ]);
 
   // Properly check if the event is saved by the current user
   const isSaved =
@@ -134,7 +145,7 @@ export default function Page() {
     if (!eventImage) {
       return;
     }
-    
+
     // Defer image processing until after initial render
     InteractionManager.runAfterInteractions(() => {
       const imageUri = `${eventImage}?max-w=1284&fit=cover&f=webp&q=80`;
