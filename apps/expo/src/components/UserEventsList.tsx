@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -90,6 +90,9 @@ export function UserEventListItem(props: UserEventListItemProps) {
     useEventActions({ event, isSaved, demoMode });
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
+
+  // Add a ref to track navigation state and prevent double navigation
+  const isNavigatingRef = useRef(false);
 
   const dateString = formatEventDateRange(
     e.startDate || "",
@@ -213,12 +216,24 @@ export function UserEventListItem(props: UserEventListItemProps) {
       <Pressable
         className="relative"
         onPress={() => {
+          // Prevent double navigation
+          if (isNavigatingRef.current) return;
+          
+          // Set navigating flag to true
+          isNavigatingRef.current = true;
+          
+          // Determine the route
           const isDemoEvent = id.startsWith("demo-");
-          if (isDemoEvent) {
-            router.push(`/onboarding/demo-event/${id}`);
-          } else {
-            router.push(`/event/${id}`);
-          }
+          const route = isDemoEvent ? `/onboarding/demo-event/${id}` : `/event/${id}`;
+          
+          // Navigate to the event
+          router.push(route);
+          
+          // Reset the flag after a delay to prevent rapid re-navigation
+          // but allow navigation after returning to the list
+          setTimeout(() => {
+            isNavigatingRef.current = false;
+          }, 1000);
         }}
         onLongPress={(e) => {
           e.stopPropagation();

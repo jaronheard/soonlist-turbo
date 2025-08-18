@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
+  InteractionManager,
   Pressable,
   Image as RNImage,
   ScrollView,
@@ -55,6 +56,8 @@ export default function Page() {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   // Track if we've already counted this event view to prevent multiple increments
   const hasCountedViewRef = useRef(false);
+  // Track if we've completed initial render
+  const [isInitialRenderComplete, setIsInitialRenderComplete] = useState(false);
 
   const event = useQuery(api.events.get, { eventId: id });
 
@@ -72,24 +75,37 @@ export default function Page() {
   const shouldShowViewPaywall = useShouldShowViewPaywall();
   const markPaywallShown = useMarkPaywallShown();
 
-  // Track event view and show paywall if needed
+  // Mark initial render as complete after first paint
   useEffect(() => {
-    if (event && !hasUnlimited && !hasCountedViewRef.current) {
+    if (event) {
+      // Use InteractionManager to defer non-critical work until after animations
+      InteractionManager.runAfterInteractions(() => {
+        setIsInitialRenderComplete(true);
+      });
+    }
+  }, [event]);
+
+  // Track event view and show paywall if needed - defer until after initial render
+  useEffect(() => {
+    if (event && isInitialRenderComplete && !hasUnlimited && !hasCountedViewRef.current) {
       hasCountedViewRef.current = true;
 
-      incrementEventView();
+      // Defer view tracking and paywall to after initial render is complete
+      InteractionManager.runAfterInteractions(() => {
+        incrementEventView();
 
-      if (shouldShowViewPaywall()) {
-        void showProPaywallIfNeeded()
-          .then(() => {
-            markPaywallShown();
-          })
-          .catch((error) => {
-            console.error("Failed to show paywall:", error);
-          });
-      }
+        if (shouldShowViewPaywall()) {
+          void showProPaywallIfNeeded()
+            .then(() => {
+              markPaywallShown();
+            })
+            .catch((error) => {
+              console.error("Failed to show paywall:", error);
+            });
+        }
+      });
     }
-  }, [event, hasUnlimited, showProPaywallIfNeeded, customerInfo]);
+  }, [event, hasUnlimited, showProPaywallIfNeeded, customerInfo, isInitialRenderComplete]);
 
   // Properly check if the event is saved by the current user
   const isSaved =
@@ -111,26 +127,30 @@ export default function Page() {
 
   // Pre-calculate the aspect ratio of the event image, if it exists
   useEffect(() => {
-    if (!event?.event) return;
+    if (!event?.event || !isInitialRenderComplete) return;
 
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     const eventImage = eventData?.images?.[3];
     if (!eventImage) {
       return;
     }
-    const imageUri = `${eventImage}?max-w=1284&fit=cover&f=webp&q=80`;
+    
+    // Defer image processing until after initial render
+    InteractionManager.runAfterInteractions(() => {
+      const imageUri = `${eventImage}?max-w=1284&fit=cover&f=webp&q=80`;
 
-    // Use RNImage to get actual width/height of the remote image
-    RNImage.getSize(
-      imageUri,
-      (naturalWidth, naturalHeight) => {
-        setImageAspectRatio(naturalWidth / naturalHeight);
-      },
-      (err) => {
-        logError("Failed to get image size", err);
-      },
-    );
-  }, [event?.event]);
+      // Use RNImage to get actual width/height of the remote image
+      RNImage.getSize(
+        imageUri,
+        (naturalWidth, naturalHeight) => {
+          setImageAspectRatio(naturalWidth / naturalHeight);
+        },
+        (err) => {
+          logError("Failed to get image size", err);
+        },
+      );
+    });
+  }, [event?.event, isInitialRenderComplete]);
 
   // Build the header-right UI if we have data
   const HeaderRight = useCallback(() => {
