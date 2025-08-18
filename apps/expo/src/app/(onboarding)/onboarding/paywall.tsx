@@ -11,6 +11,7 @@ import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import { router } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useSetHasSeenOnboarding } from "~/store";
@@ -23,6 +24,7 @@ export default function PaywallScreen() {
   const [paywallPresented, setPaywallPresented] = useState(false);
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+  const posthog = usePostHog();
 
   const setHasSeenOnboarding = useSetHasSeenOnboarding();
 
@@ -46,6 +48,10 @@ export default function PaywallScreen() {
   const presentPaywall = useCallback(async () => {
     try {
       setPaywallPresented(true);
+      // Track attempt to present paywall
+      try {
+        posthog.capture("paywall_presented", {});
+      } catch {/* no-op */}
       // Use presentPaywallIfNeeded to double-check entitlements
       const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
         requiredEntitlementIdentifier: "unlimited",
@@ -55,6 +61,10 @@ export default function PaywallScreen() {
         case PAYWALL_RESULT.PURCHASED:
         case PAYWALL_RESULT.RESTORED:
           // User subscribed successfully
+          // Track success
+          try {
+            posthog.capture("subscription_purchase_success", {});
+          } catch {/* no-op */}
           setOnboardingData({
             subscribed: true,
             subscribedAt: new Date().toISOString(),
@@ -69,7 +79,10 @@ export default function PaywallScreen() {
           break;
 
         case PAYWALL_RESULT.NOT_PRESENTED:
-          // User already has the required entitlement
+          // Track already subscribed
+          try {
+            posthog.capture("subscription_already_active", {});
+          } catch {/* no-op */}
           setOnboardingData({
             subscribed: true,
             subscribedAt: new Date().toISOString(),
@@ -89,7 +102,10 @@ export default function PaywallScreen() {
 
         case PAYWALL_RESULT.CANCELLED:
         case PAYWALL_RESULT.ERROR:
-          // User cancelled or error occurred - enter trial mode
+          // Track trial start via cancel/error path
+          try {
+            posthog.capture("trial_started", { reason: paywallResult });
+          } catch {/* no-op */}
           setOnboardingData({
             subscribed: false,
             trialMode: true,
@@ -106,6 +122,10 @@ export default function PaywallScreen() {
       }
     } catch (error) {
       console.error("Error presenting paywall:", error);
+      // Track trial start on error fallback
+      try {
+        posthog.capture("trial_started", { reason: "exception" });
+      } catch {/* no-op */}
       // On error, continue to sign-up in trial mode
       setOnboardingData({
         subscribed: false,
@@ -119,7 +139,7 @@ export default function PaywallScreen() {
         params: { fromPaywall: "true", trial: "true" },
       });
     }
-  }, [setOnboardingData, setPaywallPresented, completeOnboarding]);
+  }, [setOnboardingData, setPaywallPresented, completeOnboarding, posthog]);
 
   useEffect(() => {
     // Check if user is already subscribed
@@ -167,6 +187,11 @@ export default function PaywallScreen() {
       // Paywall will dismiss automatically
     }
 
+    // Track manual skip -> trial started
+    try {
+      posthog.capture("trial_started", { reason: "skip" });
+    } catch {/* no-op */}
+
     // Save that they're in trial mode
     setOnboardingData({
       subscribed: false,
@@ -186,6 +211,10 @@ export default function PaywallScreen() {
 
   const handleMockSubscribe = (plan: string) => {
     // Mock subscription for simulator
+    // Track success in mock flow
+    try {
+      posthog.capture("subscription_purchase_success", { mock: true, plan });
+    } catch {/* no-op */}
     setOnboardingData({
       subscribed: true,
       subscribedAt: new Date().toISOString(),
