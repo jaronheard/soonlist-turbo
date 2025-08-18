@@ -2,11 +2,12 @@
 
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import React, { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
 import { Pencil, Shapes } from "lucide-react";
 
 import type { EventMetadata } from "@soonlist/cal";
 import type { ATCBActionEventConfig } from "@soonlist/cal/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 import {
   ACCESSIBILITY_TYPES_OPTIONS,
   EVENT_CATEGORIES,
@@ -61,7 +62,7 @@ export function AddToCalendarCard({
   hideSourceLink = false,
   ...initialProps
 }: AddToCalendarCardProps) {
-  const { user } = useUser();
+  const currentUser = useQuery(api.users.getCurrentUser);
   const { croppedImagesUrls } = useCroppedImageContext();
   const { organizeData } = useNewEventContext();
   const { notes, visibility, lists } = organizeData;
@@ -579,7 +580,8 @@ export function AddToCalendarCard({
             <CalendarButton
               event={updatedProps as ATCBActionEventConfig}
               id={initialProps.updateId || undefined}
-              username={user?.username || undefined}
+              username={currentUser?.username || undefined}
+              userDisplayName={currentUser?.displayName || undefined}
               type="button"
             />
           </div>
