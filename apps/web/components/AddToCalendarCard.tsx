@@ -329,17 +329,12 @@ export function AddToCalendarCard({
           </InputDescription>
         </div>
         <div className="col-span-full">
-          <Label
-            htmlFor="description"
-            className="block text-sm font-medium leading-6 text-gray-900"
-          >
-            Description
-          </Label>
+          <Label htmlFor="description">Description</Label>
           <Textarea
-            id="description"
             name="description"
-            rows={6}
-            defaultValue={description}
+            id="description"
+            rows={5}
+            value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
           <div className="p-0.5"></div>
@@ -579,7 +574,12 @@ export function AddToCalendarCard({
             <CalendarButton
               event={updatedProps as ATCBActionEventConfig}
               id={initialProps.updateId || undefined}
-              username={user?.username || undefined}
+              displayName={
+                user?.displayName ||
+                (user?.firstName && user?.lastName
+                  ? `${user.firstName} ${user.lastName}`
+                  : user?.username) || undefined
+              }
               type="button"
             />
           </div>
@@ -588,3 +588,4 @@ export function AddToCalendarCard({
     </Card>
   );
 }
+

@@ -12,15 +12,18 @@ import { DropdownMenuItem } from "./DropdownMenu";
 interface CalendarButtonProps {
   event: ATCBActionEventConfig;
   id?: string;
-  username?: string;
+  username?: string; // deprecated, use displayName instead
+  displayName?: string;
   type: "button" | "dropdown" | "icon";
 }
 
 export function CalendarButton(props: CalendarButtonProps) {
   const eventForCalendar = { ...props.event };
+  const displayName = props.displayName || props.username; // fallback to username for backward compatibility
+  const usernameForUrl = props.username || props.displayName; // prefer username for URL, fallback to displayName
   const additionalText =
-    props.username && props.id
-      ? `Captured by [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${props.username}/events|@${props.username}[/url] on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
+    displayName && props.id && usernameForUrl
+      ? `Captured by [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${usernameForUrl}/events|${displayName}[/url] on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
       : `Captured on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}|Soonlist[/url]`;
   eventForCalendar.description = `${props.event.description}[br][br]${additionalText}`;
   eventForCalendar.options = [
@@ -68,3 +71,4 @@ export function CalendarButton(props: CalendarButtonProps) {
     );
   }
 }
+

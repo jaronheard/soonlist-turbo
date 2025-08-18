@@ -88,12 +88,14 @@ export function useCalendar() {
         throw new Error("EXPO_PUBLIC_API_BASE_URL is not defined");
       }
 
+      const displayName =
+        event.user?.displayName || event.user?.username || event.userName;
       const eventUrl =
-        event.userName && event.id ? `${baseUrl}/event/${event.id}` : baseUrl;
+        displayName && event.id ? `${baseUrl}/event/${event.id}` : baseUrl;
 
       const additionalText =
-        event.userName && event.id
-          ? `Captured by @${event.userName} on Soonlist. \nFull details: ${eventUrl}`
+        displayName && event.id
+          ? `Captured by ${displayName} on Soonlist. \nFull details: ${eventUrl}`
           : `Captured on Soonlist\n(${baseUrl})`;
 
       const fullDescription = `${e.description}\n\n${additionalText}`;
@@ -123,3 +125,4 @@ export function useCalendar() {
     handleAddToCal,
   };
 }
+

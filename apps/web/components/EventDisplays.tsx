@@ -620,7 +620,7 @@ function EventActionButtons({
           type="icon"
           event={event as ATCBActionEventConfig}
           id={id}
-          username={user.username}
+          displayName={user?.displayName || user?.username}
         />
         {!isOwner && (
           <FollowEventButton eventId={id} following={isFollowing} type="icon" />
@@ -670,7 +670,7 @@ function EventActionButtons({
         type="icon"
         event={event as ATCBActionEventConfig}
         id={id}
-        username={user.username}
+        displayName={user?.displayName || user?.username}
       />
       {!isOwner && (
         <FollowEventButton eventId={id} following={isFollowing} type="icon" />
@@ -776,7 +776,7 @@ export function EventListItem(props: EventListItemProps) {
               !isSelf &&
               (props.showOtherCurators || !props.hideCurator) && (
                 <UserInfoMini
-                  username={user.username}
+                  displayName={user?.displayName || user?.username}
                   userImage={user.userImage}
                   showFollowButton={false}
                 />
@@ -861,7 +861,7 @@ export function EventListItem(props: EventListItemProps) {
       <div className="absolute bottom-2 left-2 z-10 flex gap-2">
         {user && (
           <UserInfoMini
-            username={user.username}
+            displayName={user?.displayName || user?.username}
             userImage={user.userImage}
             showFollowButton={false}
           />
@@ -1036,7 +1036,7 @@ export function EventPage(props: EventPageProps) {
         <CalendarButton
           event={event as ATCBActionEventConfig}
           id={id}
-          username={user?.username}
+          displayName={user?.displayName || user?.username}
           type="button"
         />
       }
