@@ -17,6 +17,7 @@ export default function EventCard(props: {
   eventLink?: string;
   userAvatar: string;
   userName: string;
+  userDisplayName?: string;
   userEmoji?: string;
   shareButton: React.ReactNode;
   calendarButton?: React.ReactNode;
@@ -35,6 +36,7 @@ export default function EventCard(props: {
     eventLink,
     userAvatar,
     userName,
+    userDisplayName,
     userEmoji,
     shareButton,
     calendarButton,
@@ -42,6 +44,8 @@ export default function EventCard(props: {
     editButton,
     deleteButton,
   } = props;
+
+  const displayName = userDisplayName || (userName ? userName : "");
 
   return (
     <div className="w-full max-w-2xl">
@@ -66,7 +70,7 @@ export default function EventCard(props: {
           </div>
           <div>
             <p className="text-sm font-medium text-neutral-2">Captured by</p>
-            <p className="text-sm font-semibold text-neutral-1">{userName}</p>
+            <p className="text-sm font-semibold text-neutral-1">{displayName}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
