@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { OnboardingData, OnboardingStep } from "~/types/onboarding";
+import type { CalendarApp } from "~/utils/calendarAppDetection";
 import { getUserTimeZone } from "./utils/dates";
 
 export interface RecentPhoto {
@@ -77,6 +78,10 @@ interface AppState {
   setIntentParams: (
     params: { text?: string; imageUri?: string } | null,
   ) => void;
+
+  // Calendar preferences
+  preferredCalendarApp: CalendarApp | null;
+  setPreferredCalendarApp: (app: CalendarApp | null) => void;
 
   // Stable timestamp for query filtering
   stableTimestamp: string;
@@ -162,6 +167,10 @@ export const useAppStore = create<AppState>()(
       userPriority: null,
       userTimezone: getUserTimeZone(),
       hasShownTimezoneAlert: false,
+
+      // Calendar preferences
+      preferredCalendarApp: null,
+      setPreferredCalendarApp: (app) => set({ preferredCalendarApp: app }),
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
@@ -328,6 +337,7 @@ export const useAppStore = create<AppState>()(
         set({
           filter: "upcoming",
           intentParams: null,
+          preferredCalendarApp: null,
           addEventState: {
             input: "",
             imagePreview: null,
@@ -370,6 +380,7 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           filter: "upcoming",
           intentParams: null,
+          preferredCalendarApp: null,
           addEventState: {
             input: "",
             imagePreview: null,
@@ -538,3 +549,9 @@ export const useMarkPaywallShown = () =>
 // Auto-generated selector pattern for stable action references
 // Note: Use the individual hook exports above instead of this pattern
 // to avoid rules-of-hooks violations
+
+// Calendar preference selectors
+export const usePreferredCalendarApp = () => 
+  useAppStore((state) => state.preferredCalendarApp);
+export const useSetPreferredCalendarApp = () => 
+  useAppStore((state) => state.setPreferredCalendarApp);
