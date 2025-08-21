@@ -2,10 +2,10 @@
   "applinks": {
     "details": [
       {
-        "appIDs": [
-          "GQ59Z4XZHZ.com.soonlist.app"
-        ],
-        "components": []
+        "appID": "GQ59Z4XZHZ.com.soonlist.app",
+        "paths": [
+          "/event/*"
+        ]
       }
     ]
   },
