@@ -86,7 +86,7 @@ export default function SignUpScreen() {
         await signUp.prepareEmailAddressVerification({
           strategy: "email_code",
         });
-        router.push("/verify-email");
+        router.navigate("/verify-email");
       } catch (err: unknown) {
         const clerkError = err as {
           errors?: ClerkAPIError[];
@@ -323,7 +323,7 @@ export default function SignUpScreen() {
           </Pressable>
 
           <Pressable
-            onPress={() => router.push("/sign-in-email")}
+            onPress={() => router.navigate("/sign-in-email")}
             className="mt-4"
           >
             <Text className="text-center text-gray-600">

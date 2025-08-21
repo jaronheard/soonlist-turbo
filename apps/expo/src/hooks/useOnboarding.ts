@@ -92,7 +92,7 @@ export function useOnboarding() {
 
       // Navigate immediately if nextStep is provided
       if (nextStep) {
-        void router.push(nextStep as Href);
+        void router.navigate(nextStep as Href);
       }
 
       // Handle saving in the background

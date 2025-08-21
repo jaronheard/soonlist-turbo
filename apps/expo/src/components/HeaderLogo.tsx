@@ -29,7 +29,7 @@ export function HeaderLogo() {
         withTiming(0, { duration: 50 }),
       );
     } else {
-      router.push("/feed");
+      router.navigate("/feed");
     }
   };
 

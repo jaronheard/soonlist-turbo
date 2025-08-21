@@ -62,7 +62,7 @@ export default function PaywallScreen() {
           // Mark onboarding as seen
           completeOnboarding();
           // Navigate to sign-in screen with subscription status
-          router.push({
+          router.navigate({
             pathname: "/sign-in",
             params: { fromPaywall: "true", subscribed: "true" },
           });
@@ -77,7 +77,7 @@ export default function PaywallScreen() {
           // Mark onboarding as seen
           completeOnboarding();
           // Navigate to sign-in screen with subscription status
-          router.push({
+          router.navigate({
             pathname: "/sign-in",
             params: {
               fromPaywall: "true",
@@ -98,7 +98,7 @@ export default function PaywallScreen() {
           // Mark onboarding as seen
           completeOnboarding();
           // Navigate to sign-in screen in trial mode
-          router.push({
+          router.navigate({
             pathname: "/sign-in",
             params: { fromPaywall: "true", trial: "true" },
           });
@@ -114,7 +114,7 @@ export default function PaywallScreen() {
       });
       // Mark onboarding as seen
       completeOnboarding();
-      router.push({
+      router.navigate({
         pathname: "/sign-in",
         params: { fromPaywall: "true", trial: "true" },
       });
@@ -132,7 +132,7 @@ export default function PaywallScreen() {
       // Mark onboarding as seen
       completeOnboarding();
       // Navigate to sign-in screen with subscription status
-      router.push({
+      router.navigate({
         pathname: "/sign-in",
         params: {
           fromPaywall: "true",
@@ -178,7 +178,7 @@ export default function PaywallScreen() {
     completeOnboarding();
 
     // Navigate to sign-in screen
-    router.push({
+    router.navigate({
       pathname: "/sign-in",
       params: { fromPaywall: "true", trial: "true" },
     });
@@ -194,7 +194,7 @@ export default function PaywallScreen() {
     // Mark onboarding as seen
     completeOnboarding();
     // Navigate to sign-in screen
-    router.push({
+    router.navigate({
       pathname: "/sign-in",
       params: { fromPaywall: "true", subscribed: "true", plan },
     });

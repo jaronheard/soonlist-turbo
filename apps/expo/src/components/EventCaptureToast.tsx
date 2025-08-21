@@ -42,7 +42,7 @@ export function EventCaptureToast({ event }: EventCaptureToastProps) {
 
   const handleView = () => {
     toast.dismiss();
-    void router.push(`/event/${id}`);
+    void router.navigate(`/event/${id}`);
   };
 
   return (

@@ -208,7 +208,7 @@ export function useEventActions({
   const handleEdit = () => {
     if (!event || checkDemoMode() || !isOwner) return;
     triggerHaptic();
-    router.push(`/event/${event.id}/edit`);
+    router.navigate(`/event/${event.id}/edit`);
   };
 
   const handleDelete = async () => {
@@ -254,7 +254,7 @@ export function useEventActions({
   const handleShowQR = () => {
     if (!event || checkDemoMode()) return;
     triggerHaptic();
-    router.push(`/event/${event.id}/qr`);
+    router.navigate(`/event/${event.id}/qr`);
   };
 
   return {

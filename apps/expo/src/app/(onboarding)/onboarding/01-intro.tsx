@@ -8,7 +8,7 @@ import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function IntroScreen() {
   const handleContinue = () => {
-    router.push("/(onboarding)/onboarding/02-goals");
+    router.navigate("/(onboarding)/onboarding/02-goals");
   };
 
   return (
