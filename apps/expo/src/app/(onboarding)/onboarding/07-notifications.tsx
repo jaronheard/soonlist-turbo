@@ -53,7 +53,7 @@ export default function NotificationsScreen() {
     try {
       if (hasNotificationPermission) {
         // Already has permission, just continue
-        router.push("/(onboarding)/onboarding/08-demo-intro");
+        router.navigate("/(onboarding)/onboarding/08-demo-intro");
         return;
       }
 

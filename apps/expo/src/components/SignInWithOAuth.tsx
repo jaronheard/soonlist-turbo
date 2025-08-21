@@ -264,7 +264,7 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   };
 
   const navigateToEmailSignUp = () => {
-    router.push("/sign-up-email");
+    router.navigate("/sign-up-email");
   };
 
   const Container = banner ? SafeAreaView : View;

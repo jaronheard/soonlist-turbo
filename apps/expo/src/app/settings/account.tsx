@@ -426,7 +426,7 @@ export default function EditProfileScreen() {
                 Development Testing
               </Text>
               <TouchableOpacity
-                onPress={() => router.push("/settings/workflow-test")}
+                onPress={() => router.navigate("/settings/workflow-test")}
                 className="mt-2 rounded-md bg-blue-100 p-4"
               >
                 <Text className="text-base text-blue-800">

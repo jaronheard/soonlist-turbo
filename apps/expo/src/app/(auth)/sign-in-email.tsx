@@ -251,7 +251,7 @@ const SignInEmail = () => {
           </Pressable>
 
           <Pressable
-            onPress={() => router.push("/sign-up-email")}
+            onPress={() => router.navigate("/sign-up-email")}
             className="mt-4"
           >
             <Text className="text-center text-gray-600">

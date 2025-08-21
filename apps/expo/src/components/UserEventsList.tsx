@@ -215,9 +215,9 @@ export function UserEventListItem(props: UserEventListItemProps) {
         onPress={() => {
           const isDemoEvent = id.startsWith("demo-");
           if (isDemoEvent) {
-            router.push(`/onboarding/demo-event/${id}`);
+            router.navigate(`/onboarding/demo-event/${id}`);
           } else {
-            router.push(`/event/${id}`);
+            router.navigate(`/event/${id}`);
           }
         }}
         onLongPress={(e) => {

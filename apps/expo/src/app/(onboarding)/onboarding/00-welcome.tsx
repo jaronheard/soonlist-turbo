@@ -11,7 +11,7 @@ const AnimatedView = Animated.createAnimatedComponent(View);
 
 export default function WelcomeScreen() {
   const handleGetStarted = () => {
-    router.push("/(onboarding)/onboarding/01-intro");
+    router.navigate("/(onboarding)/onboarding/01-intro");
   };
 
   const setHasSeenOnboarding = useSetHasSeenOnboarding();
@@ -21,7 +21,7 @@ export default function WelcomeScreen() {
     setHasSeenOnboarding(true);
 
     // Navigate to sign-in screen
-    router.push("/sign-in");
+    router.navigate("/sign-in");
   };
 
   return (

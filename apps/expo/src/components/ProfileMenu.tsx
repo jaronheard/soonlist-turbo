@@ -34,7 +34,7 @@ export function ProfileMenu() {
   };
 
   const handleEditProfile = () => {
-    router.push("/settings/account");
+    router.navigate("/settings/account");
   };
 
   const presentIntercom = async () => {
