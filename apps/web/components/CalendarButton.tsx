@@ -65,8 +65,12 @@ export function CalendarButton(props: CalendarButtonProps) {
         onClick={() => atcb_action(eventForCalendar)}
         variant={"ghost"}
         size={"icon"}
+        aria-label="Add to calendar"
       >
-        <CalendarPlus className="size-4 text-interactive-1" />
+        <CalendarPlus
+          className="size-4 text-interactive-1"
+          aria-hidden="true"
+        />
       </Button>
     );
   }

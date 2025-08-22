@@ -59,8 +59,9 @@ export function DeleteButton(props: DeleteButtonProps) {
           variant={"ghost"}
           onClick={handleDelete}
           disabled={isDeleting}
+          aria-label="Delete event"
         >
-          <Trash className="size-4 text-red-600" />
+          <Trash className="size-4 text-red-600" aria-hidden="true" />
         </Button>
       </SignedIn>
     );

@@ -27,8 +27,8 @@ export function EditButton(props: EditButtonProps) {
     return (
       <SignedIn>
         <Button size={"icon"} asChild variant={"ghost"}>
-          <Link href={`/event/${props.id}/edit`}>
-            <Pencil className="size-4 text-interactive-1" />
+          <Link href={`/event/${props.id}/edit`} aria-label="Edit event">
+            <Pencil className="size-4 text-interactive-1" aria-hidden="true" />
           </Link>
         </Button>
       </SignedIn>
