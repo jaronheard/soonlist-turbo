@@ -10,7 +10,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
-import { Link, router, Stack, useLocalSearchParams, useNavigation } from "expo-router";
+import {
+  Link,
+  router,
+  Stack,
+  useLocalSearchParams,
+  useNavigation,
+} from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
@@ -218,11 +224,11 @@ export default function Page() {
 
   return (
     <>
-      <Stack.Screen 
-        options={{ 
+      <Stack.Screen
+        options={{
           headerRight: HeaderRight,
           headerLeft: !canGoBack ? HeaderLeft : undefined,
-        }} 
+        }}
       />
       <ScrollView
         className="flex-1 bg-white"
