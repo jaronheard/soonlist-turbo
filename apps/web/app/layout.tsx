@@ -53,9 +53,6 @@ export const metadata: Metadata = {
     telephone: false,
     date: false,
   },
-  other: {
-    "apple-itunes-app": "app-id=6670222216",
-  },
 };
 
 export const viewport: Viewport = {
