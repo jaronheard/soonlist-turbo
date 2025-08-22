@@ -259,7 +259,7 @@ export default function PublicListClient({ params }: Props) {
       <div className="mb-6">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="font-heading text-2xl font-bold">
+            <h1 className="text-2xl font-bold text-interactive-1">
               {publicListData?.user.publicListName ||
                 `${publicListData?.user.displayName}'s events`}
             </h1>

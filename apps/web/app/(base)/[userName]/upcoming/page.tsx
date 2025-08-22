@@ -114,9 +114,9 @@ export default function Page({ params }: Props) {
   return (
     <div className="mx-auto max-w-2xl">
       {self ? (
-        <h1 className="mb-4 font-sans text-2xl font-bold leading-[1.08333] tracking-tight text-neutral-1 ">
+        <h1 className="mb-4 text-2xl font-bold text-interactive-1">
           <div className="flex items-center gap-4">
-            <CalendarHeart className="size-6" />
+            <CalendarHeart className="size-6 text-interactive-1" />
             My Feed
           </div>
         </h1>
