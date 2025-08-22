@@ -7,6 +7,7 @@ import { SignedIn, useUser } from "@clerk/nextjs";
 import {
   Accessibility,
   CalendarIcon,
+  Copy,
   Ear,
   Earth,
   EyeOff,
@@ -15,9 +16,11 @@ import {
   MessageSquareIcon,
   Mic,
   PersonStanding,
+  Share,
   ShieldPlus,
   TagIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import type {
   DateInfo,
@@ -42,6 +45,7 @@ import { Label } from "@soonlist/ui/label";
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
+import { env } from "~/env";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
 import { feedback } from "~/lib/intercom/intercom";
 import { cn } from "~/lib/utils";
@@ -73,6 +77,7 @@ interface EventListItemProps {
   filePath?: string;
   happeningNow?: boolean;
   lists?: List[]; // this is all lists that this event is a part of
+  index?: number; // used to alternate image rotation like the Expo app
 }
 
 interface EventPageProps {
@@ -724,6 +729,7 @@ export function UserInfoMini({
 export function EventListItem(props: EventListItemProps) {
   const { user: clerkUser } = useUser();
   const { user, eventFollows, id, event, filePath, visibility } = props;
+  const { timezone: userTimezone } = useContext(TimezoneContext);
   const roles = clerkUser?.unsafeMetadata.roles as string[] | undefined;
   const isSelf = clerkUser?.id === user?.id;
   const isOwner = isSelf || roles?.includes("admin");
@@ -735,64 +741,239 @@ export function EventListItem(props: EventListItemProps) {
     (filePath ? buildDefaultUrl(props.filePath || "") : undefined);
 
   if (!props.variant || props.variant === "minimal") {
+    // Derive date/time info and status badges similar to the Expo card
+    const startDateInfo = event.startTime
+      ? getDateTimeInfo(
+          event.startDate || "",
+          event.startTime || "",
+          event.timeZone || DEFAULT_TIMEZONE,
+          userTimezone,
+        )
+      : getDateInfoUTC(event.startDate || "");
+    const endDateInfo = event.endTime
+      ? getDateTimeInfo(
+          event.endDate || event.startDate || "",
+          event.endTime || event.startTime || "",
+          event.timeZone || DEFAULT_TIMEZONE,
+          userTimezone,
+        )
+      : getDateInfoUTC(event.endDate || event.startDate || "");
+
+    const relativeTime = startDateInfo ? formatRelativeTime(startDateInfo) : "";
+    const isHappeningNow = relativeTime === "Happening now";
+
+    const isRecent = (() => {
+      if (!props.createdAt) return false;
+      const threeHoursAgo = Date.now() - 3 * 60 * 60 * 1000;
+      const createdAtTs = new Date(props.createdAt).getTime();
+      if (Number.isNaN(createdAtTs)) return false;
+      return createdAtTs > threeHoursAgo;
+    })();
+
+    // Visual constants to mimic Expo design
+    const thumbWidth = 110; // px
+    const thumbHeight = Math.round((thumbWidth * 16) / 9);
+    const imageRotation =
+      props.index !== undefined
+        ? props.index % 2 === 0
+          ? "10deg"
+          : "-10deg"
+        : Number(id?.charCodeAt(0) || 0) % 2 === 0
+          ? "10deg"
+          : "-10deg";
+
+    const baseBorderColor = "#E9E3FF";
+    const happeningBorderColor = "#FEEA9F"; // accent-yellow
+    const recentGlowColor = "#E0D9FF"; // light purple
+    const cardBorderColor = isRecent
+      ? recentGlowColor
+      : isHappeningNow
+        ? happeningBorderColor
+        : baseBorderColor;
+
+    const cardShadowRadius = isRecent ? 8 : 2.5;
+
+    function formatFullTimeRange(start: DateInfo, end: DateInfo): string {
+      const toHour = (h: number) => (h % 12 === 0 ? 12 : h % 12);
+      const toMinute = (m: number) => m.toString().padStart(2, "0");
+      const startHour = toHour(start.hour);
+      const endHour = toHour(end.hour);
+      const startMin = toMinute(start.minute);
+      const endMin = toMinute(end.minute);
+      const startPeriod = start.hour < 12 ? "AM" : "PM";
+      const endPeriod = end.hour < 12 ? "AM" : "PM";
+      return `${startHour}:${startMin}${startPeriod} - ${endHour}:${endMin}${endPeriod}`;
+    }
+
+    const dateText = (() => {
+      if (!startDateInfo || !endDateInfo) return "";
+      const dateStr = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${startDateInfo.monthName} ${startDateInfo.day}`;
+      const timeStr = formatFullTimeRange(startDateInfo, endDateInfo);
+      return `${dateStr} • ${timeStr}`;
+    })();
+
+    const relativeLabel = (() => {
+      if (isHappeningNow) return "Happening now";
+      if (!relativeTime) return "";
+      return `Starts in ${relativeTime
+        .replaceAll("hrs", "hours")
+        .replaceAll("hr", "hour")
+        .replaceAll("mins", "minutes")
+        .replaceAll("min", "minute")}`;
+    })();
+
+    const handleShareClick = async () => {
+      const e = event as AddToCalendarButtonPropsRestricted;
+      const isAllDay = e.startTime && e.endTime ? false : true;
+      const shareText = isAllDay
+        ? `(${e.startDate || ""}, ${e.location || ""}) ${e.description || ""}`
+        : `(${e.startDate || ""} ${e.startTime || ""}-${e.endTime || ""}, ${e.location || ""}) ${e.description || ""}`;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `${e.name || "Event"} | Soonlist`,
+            text: shareText,
+            url: `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${id}`,
+          });
+        } catch {
+          // ignored
+        }
+      } else {
+        await navigator.clipboard.writeText(
+          `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${id}`,
+        );
+        toast("Event URL copied to clipboard!");
+      }
+    };
+
+    const atcbEvent: ATCBActionEventConfig = {
+      name: event.name,
+      description: event.description,
+      startDate: event.startDate,
+      startTime: event.startTime,
+      endDate: event.endDate,
+      endTime: event.endTime,
+      timeZone: event.timeZone,
+      location: event.location,
+    };
+
     return (
-      <div className="relative border-b border-neutral-3 pb-1">
-        {image && (
-          <div className="absolute right-0 top-0 h-full w-[75px] overflow-hidden rounded-xl">
-            <Link
-              href={`/event/${id}`}
-              className="relative block h-full w-full"
-            >
-              <div className="relative h-[calc(100%-8px)] w-full overflow-hidden rounded-xl">
-                <Image
-                  className="object-cover"
-                  src={image}
-                  alt=""
-                  fill
-                  sizes="75px"
-                  style={{ objectPosition: "center" }}
-                />
-              </div>
-            </Link>
+      <li className="relative">
+        {/* Angled thumbnail on the right */}
+        <div
+          className="absolute -right-6 top-1/2 z-10"
+          style={{
+            transform: `translateY(-50%) rotate(${imageRotation})`,
+          }}
+        >
+          <div
+            style={{
+              width: thumbWidth,
+              height: thumbHeight,
+              borderRadius: 20,
+              overflow: "hidden",
+              backgroundColor: "white",
+              boxShadow: "0 2px 8px rgba(90,50,251,0.18)",
+            }}
+          >
+            {image ? (
+              <Image
+                src={`${image}`}
+                alt=""
+                width={thumbWidth}
+                height={thumbHeight}
+                className="object-cover"
+                style={{
+                  width: thumbWidth,
+                  height: thumbHeight,
+                  borderRadius: 20,
+                  borderWidth: 3,
+                  borderColor: "white",
+                  objectPosition: "top",
+                }}
+              />
+            ) : (
+              <div
+                className="border border-purple-300 bg-interactive-3"
+                style={{
+                  width: thumbWidth,
+                  height: thumbHeight,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 20,
+                  borderWidth: 3,
+                  borderColor: "white",
+                }}
+              />
+            )}
           </div>
-        )}
-        <li className="relative pr-20">
-          <div className="flex w-full items-start">
-            <EventDetails
-              id={id}
-              name={event.name!}
-              startDate={event.startDate!}
-              endDate={event.endDate!}
-              startTime={event.startTime!}
-              endTime={event.endTime!}
-              timezone={event.timeZone || DEFAULT_TIMEZONE}
-              location={event.location}
-              happeningNow={props.happeningNow}
-              visibility={visibility} // Add this line
-            />
-          </div>
-          <div className="p-1">
-            {user &&
-              !isSelf &&
-              (props.showOtherCurators || !props.hideCurator) && (
-                <UserInfoMini
-                  username={user.username}
-                  userImage={user.userImage}
-                  showFollowButton={false}
-                />
+        </div>
+
+        {/* Content card with dynamic border and right padding for image */}
+        <div
+          className="my-1 mt-4 rounded-[20px] bg-white p-3"
+          style={{
+            paddingRight: thumbWidth * 0.9,
+            borderWidth: 2,
+            borderColor: cardBorderColor,
+            boxShadow: `0 2px ${cardShadowRadius + 2}px rgba(90,50,251,0.12)`,
+          }}
+        >
+          <div className="mb-1 flex w-full items-center justify-between">
+            <div className="flex items-center gap-1">
+              <p className="text-sm font-medium text-neutral-2">{dateText}</p>
+            </div>
+            {isOwner &&
+              props.similarEvents &&
+              props.similarEvents.length > 0 && (
+                <div className="flex items-center gap-1 opacity-60">
+                  <div className="flex items-center gap-1 rounded-full bg-neutral-4/70 px-2 py-0.5">
+                    <Copy className="size-3.5" />
+                    <span className="text-xs text-neutral-2">
+                      {props.similarEvents.length}
+                    </span>
+                  </div>
+                </div>
               )}
           </div>
-          <div className="absolute -bottom-0.5 -right-2 z-10">
-            {/* <EventActionButtons
-              user={user}
-              event={event as AddToCalendarButtonPropsRestricted}
+
+          <Link href={`/event/${id}`} className="block">
+            <h3 className="mb-1 truncate text-lg font-bold text-neutral-1">
+              {event.name}
+            </h3>
+          </Link>
+          {event.location && (
+            <div className="mb-1 flex items-center">
+              <p className="truncate text-sm text-neutral-2">
+                {event.location}
+              </p>
+            </div>
+          )}
+
+          {/* Actions row */}
+          <div className="-mb-1 mt-4 flex items-center gap-3">
+            {/* Share pill */}
+            <button
+              type="button"
+              onClick={handleShareClick}
+              className="inline-flex items-center gap-2 bg-interactive-2 px-4 py-2.5"
+              style={{ borderRadius: 16 }}
+              aria-label="Share"
+            >
+              <Share className="size-5 text-interactive-1" />
+              <span className="text-base font-bold text-interactive-1">
+                Share
+              </span>
+            </button>
+
+            <CalendarButton
+              type={"icon"}
+              event={atcbEvent}
               id={id}
-              isOwner={!!isOwner}
-              isFollowing={isFollowing}
-              visibility={props.visibility}
-              variant="minimal"
-              size="sm"
-            /> */}
+              username={user?.username}
+            />
 
             {!isOwner && (
               <FollowEventButton
@@ -801,9 +982,74 @@ export function EventListItem(props: EventListItemProps) {
                 type="icon"
               />
             )}
+
+            {user && isOwner && (
+              <>
+                <EditButton type="icon" userId={user.id} id={id} />
+                <DeleteButton type="icon" userId={user.id} id={id} />
+              </>
+            )}
           </div>
-        </li>
-      </div>
+        </div>
+
+        {/* Creator row */}
+        {user && !isSelf && (props.showOtherCurators || !props.hideCurator) && (
+          <div className="mx-1 mt-2 flex items-center justify-center gap-2">
+            <Link
+              href={`/${user.username}/upcoming`}
+              className="relative flex items-center"
+            >
+              <UserProfileFlair username={user.username} size="xs">
+                <Image
+                  className="inline-block size-3 rounded-full object-cover object-center"
+                  src={user.userImage}
+                  alt={`${user.username}'s profile picture`}
+                  width={16}
+                  height={16}
+                />
+              </UserProfileFlair>
+            </Link>
+            <Link
+              href={`/${user.username}/upcoming`}
+              className="group flex items-center"
+            >
+              <p className="text-xs text-neutral-2 group-hover:text-neutral-1">
+                {user.displayName || user.username || "unknown"}
+              </p>
+            </Link>
+          </div>
+        )}
+
+        {/* Top badges */}
+        <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-center gap-2">
+          {isRecent && (
+            <div
+              className="rounded-full px-2 py-0.5"
+              style={{
+                borderWidth: 2,
+                borderColor: "white",
+                backgroundColor: "#E0D9FF",
+              }}
+            >
+              <span className="text-xs font-medium text-neutral-1">New</span>
+            </div>
+          )}
+          {relativeLabel && (
+            <div
+              className="rounded-full px-2 py-0.5"
+              style={{
+                borderWidth: 2,
+                borderColor: "white",
+                backgroundColor: "#FEEA9F",
+              }}
+            >
+              <span className="text-xs font-medium text-neutral-1">
+                {relativeLabel}
+              </span>
+            </div>
+          )}
+        </div>
+      </li>
     );
   }
 

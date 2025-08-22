@@ -51,7 +51,7 @@ function ListContainer({
   }
 
   return (
-    <ul role="list" className="-mt-4 flex max-w-full flex-col gap-3">
+    <ul role="list" className="-mt-4 flex max-w-full flex-col gap-6">
       {children}
     </ul>
   );
@@ -141,23 +141,26 @@ export function EventList({
                 variant={variantToUse}
                 forceSingleColumn={forceSingleColumn}
               >
-                {pastEventsToUse.map(({ event: item, similarEvents }) => (
-                  <EventListItem
-                    variant={variantForListItems}
-                    key={item.id}
-                    user={item.user}
-                    eventFollows={item.eventFollows}
-                    comments={item.comments}
-                    id={item.id}
-                    event={item.event as AddToCalendarButtonPropsRestricted}
-                    visibility={item.visibility}
-                    lists={item.eventToLists?.map((list) => list.list)}
-                    createdAt={item.createdAt}
-                    hideCurator={hideCurator}
-                    showOtherCurators={showOtherCurators}
-                    similarEvents={similarEvents}
-                  />
-                ))}
+                {pastEventsToUse.map(
+                  ({ event: item, similarEvents }, index) => (
+                    <EventListItem
+                      variant={variantForListItems}
+                      key={item.id}
+                      user={item.user}
+                      eventFollows={item.eventFollows}
+                      comments={item.comments}
+                      id={item.id}
+                      event={item.event as AddToCalendarButtonPropsRestricted}
+                      visibility={item.visibility}
+                      lists={item.eventToLists?.map((list) => list.list)}
+                      createdAt={item.createdAt}
+                      hideCurator={hideCurator}
+                      showOtherCurators={showOtherCurators}
+                      similarEvents={similarEvents}
+                      index={index}
+                    />
+                  ),
+                )}
               </ListContainer>
             )}
           </AccordionContent>
@@ -187,24 +190,27 @@ export function EventList({
                 variant={variantToUse}
                 forceSingleColumn={forceSingleColumn}
               >
-                {currentEventsToUse.map(({ event: item, similarEvents }) => (
-                  <EventListItem
-                    variant={variantForListItems}
-                    key={item.id}
-                    user={item.user}
-                    eventFollows={item.eventFollows}
-                    comments={item.comments}
-                    id={item.id}
-                    event={item.event as AddToCalendarButtonPropsRestricted}
-                    visibility={item.visibility}
-                    lists={item.eventToLists?.map((list) => list.list)}
-                    createdAt={item.createdAt}
-                    hideCurator={hideCurator}
-                    showOtherCurators={showOtherCurators}
-                    similarEvents={similarEvents}
-                    happeningNow={true}
-                  />
-                ))}
+                {currentEventsToUse.map(
+                  ({ event: item, similarEvents }, index) => (
+                    <EventListItem
+                      variant={variantForListItems}
+                      key={item.id}
+                      user={item.user}
+                      eventFollows={item.eventFollows}
+                      comments={item.comments}
+                      id={item.id}
+                      event={item.event as AddToCalendarButtonPropsRestricted}
+                      visibility={item.visibility}
+                      lists={item.eventToLists?.map((list) => list.list)}
+                      createdAt={item.createdAt}
+                      hideCurator={hideCurator}
+                      showOtherCurators={showOtherCurators}
+                      similarEvents={similarEvents}
+                      happeningNow={true}
+                      index={index}
+                    />
+                  ),
+                )}
               </ListContainer>
             )}
           </AccordionContent>
@@ -235,23 +241,26 @@ export function EventList({
               variant={variantToUse}
               forceSingleColumn={forceSingleColumn}
             >
-              {futureEventsToUse.map(({ event: item, similarEvents }) => (
-                <EventListItem
-                  variant={variantForListItems}
-                  key={item.id}
-                  user={item.user}
-                  eventFollows={item.eventFollows}
-                  comments={item.comments}
-                  id={item.id}
-                  event={item.event as AddToCalendarButtonPropsRestricted}
-                  visibility={item.visibility}
-                  lists={item.eventToLists?.map((list) => list.list)}
-                  createdAt={item.createdAt}
-                  hideCurator={hideCurator}
-                  showOtherCurators={showOtherCurators}
-                  similarEvents={similarEvents}
-                />
-              ))}
+              {futureEventsToUse.map(
+                ({ event: item, similarEvents }, index) => (
+                  <EventListItem
+                    variant={variantForListItems}
+                    key={item.id}
+                    user={item.user}
+                    eventFollows={item.eventFollows}
+                    comments={item.comments}
+                    id={item.id}
+                    event={item.event as AddToCalendarButtonPropsRestricted}
+                    visibility={item.visibility}
+                    lists={item.eventToLists?.map((list) => list.list)}
+                    createdAt={item.createdAt}
+                    hideCurator={hideCurator}
+                    showOtherCurators={showOtherCurators}
+                    similarEvents={similarEvents}
+                    index={index}
+                  />
+                ),
+              )}
             </ListContainer>
           )}
         </AccordionContent>
