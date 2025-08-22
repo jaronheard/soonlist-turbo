@@ -172,6 +172,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           CFBundleURLSchemes: [getUniqueIdentifier()],
         },
       ],
+      LSApplicationQueriesSchemes: [
+        "comgooglecalendar",
+        "calshow",
+        "calendars",
+      ],
     },
     associatedDomains: ["applinks:www.soonlist.com", "applinks:soonlist.com"],
   },
