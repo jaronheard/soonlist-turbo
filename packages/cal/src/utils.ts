@@ -335,17 +335,19 @@ export function formatRelativeTime(dateInfo: DateInfo): string {
   const isTomorrow = timeIsTomorrow(now, startDate);
 
   if (difference < 0) {
-    return "in the past";
+    return "Happening now";
   }
 
   if (days === 0 && hours === 0) {
-    return `~${minutes} min${minutes === 1 ? "" : "s"}`;
+    return `Starts in ${minutes} minute${minutes === 1 ? "" : "s"}`;
   }
   if (days === 0 && hours < 1) {
-    return `~${hours} hr${hours === 1 ? "" : "s"} ${minutes} min${minutes === 1 ? "" : "s"}`;
+    return `Starts in ${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${
+      minutes === 1 ? "" : "s"
+    }`;
   }
   if (isToday) {
-    return `~${hours} hr${hours === 1 ? "" : "s"}`;
+    return `Starts in ~${hours} hour${hours === 1 ? "" : "s"}`;
   }
   if (isTomorrow) {
     return `Tomorrow`;
