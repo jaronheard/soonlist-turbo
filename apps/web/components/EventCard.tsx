@@ -24,6 +24,7 @@ export default function EventCard(props: {
   followButton?: React.ReactNode;
   editButton?: React.ReactNode;
   deleteButton?: React.ReactNode;
+  saveToSoonButton?: React.ReactNode;
 }) {
   const {
     eventImage,
@@ -43,6 +44,7 @@ export default function EventCard(props: {
     followButton,
     editButton,
     deleteButton,
+    saveToSoonButton,
   } = props;
 
   const displayName = userDisplayName || (userName ? userName : "");
@@ -76,6 +78,7 @@ export default function EventCard(props: {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {saveToSoonButton}
           {calendarButton}
           {shareButton}
         </div>

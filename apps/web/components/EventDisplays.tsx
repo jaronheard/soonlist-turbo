@@ -51,6 +51,7 @@ import { EditButton } from "./EditButton";
 import EventCard from "./EventCard";
 import { FollowEventButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
+import { SaveToSoonButton } from "./SaveToSoonButton";
 import { ShareButton } from "./ShareButton";
 import { UserProfileFlair } from "./UserProfileFlair";
 
@@ -615,6 +616,7 @@ function EventActionButtons({
       size === "sm" ? "transform scale-[0.55] origin-bottom-right" : "";
     return (
       <div className={cn("flex w-full flex-wrap items-center gap-3", scale)}>
+        <SaveToSoonButton eventId={id} type="icon" variant="outline" />
         <ShareButton type="icon" event={event} id={id} />
         <CalendarButton
           type="icon"
@@ -665,6 +667,7 @@ function EventActionButtons({
           />
         </Link>
       </div>
+      <SaveToSoonButton eventId={id} type="icon" variant="outline" />
       <ShareButton type="icon" event={event} id={id} />
       <CalendarButton
         type="icon"
@@ -782,18 +785,14 @@ export function EventListItem(props: EventListItemProps) {
                 />
               )}
           </div>
-          <div className="absolute -bottom-0.5 -right-2 z-10">
-            {/* <EventActionButtons
-              user={user}
-              event={event as AddToCalendarButtonPropsRestricted}
-              id={id}
-              isOwner={!!isOwner}
-              isFollowing={isFollowing}
-              visibility={props.visibility}
-              variant="minimal"
-              size="sm"
-            /> */}
-
+          <div className="absolute -bottom-0.5 -right-2 z-10 flex gap-1">
+            <SaveToSoonButton
+              eventId={id}
+              type="icon"
+              variant="outline"
+              size="icon"
+              className="origin-bottom-right scale-[0.55] transform"
+            />
             {!isOwner && (
               <FollowEventButton
                 eventId={id}
@@ -1041,6 +1040,9 @@ export function EventPage(props: EventPageProps) {
         />
       }
       shareButton={<ShareButton type="icon" event={event} id={id} />}
+      saveToSoonButton={
+        <SaveToSoonButton eventId={id} type="icon" variant="outline" />
+      }
       followButton={
         <div>
           {user && !isSelf && (
