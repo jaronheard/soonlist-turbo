@@ -51,21 +51,13 @@ export const detectCalendarApps = async (): Promise<CalendarAppInfo[]> => {
       urlScheme: "calshow://",
       isInstalled: false,
     },
-    {
-      id: "system",
-      name: "System Calendar",
-      urlScheme: "calshow://", // Same as Apple Calendar
-      isInstalled: true, // Always available as fallback
-    },
   ];
 
   // Check which apps are installed in parallel for better performance
-  const detectionPromises = calendarApps
-    .filter((app) => app.id !== "system")
-    .map(async (app) => {
-      app.isInstalled = await isAppInstalled(app.urlScheme);
-      return app;
-    });
+  const detectionPromises = calendarApps.map(async (app) => {
+    app.isInstalled = await isAppInstalled(app.urlScheme);
+    return app;
+  });
 
   await Promise.all(detectionPromises);
 

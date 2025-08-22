@@ -23,7 +23,7 @@ export default function CalendarSettingsScreen() {
 
   const handleSelectCalendarApp = (appId: string) => {
     // Type guard to ensure the appId is valid
-    if (appId === "google" || appId === "apple" || appId === "system") {
+    if (appId === "google" || appId === "apple") {
       setPreferredCalendarApp(appId);
       toast.success(`Set ${appId} as your preferred calendar app`);
     } else {
@@ -60,18 +60,20 @@ export default function CalendarSettingsScreen() {
             Preferred Calendar App
           </Text>
 
-          {calendarApps.map((app) => (
-            <CalendarAppOption
-              key={app.id}
-              app={app}
-              isSelected={preferredCalendarApp === app.id}
-              onSelect={handleSelectCalendarApp}
-            />
-          ))}
+          {calendarApps
+            .filter((app) => app.id !== "system")
+            .map((app) => (
+              <CalendarAppOption
+                key={app.id}
+                app={app}
+                isSelected={preferredCalendarApp === app.id}
+                onSelect={handleSelectCalendarApp}
+              />
+            ))}
 
           <Text className="mt-2 text-xs text-gray-500">
-            Note: If your preferred app is not installed, we'll fall back to the
-            system calendar.
+            Note: If your preferred app is not installed, we'll use Apple
+            Calendar.
           </Text>
         </View>
       )}
@@ -87,9 +89,7 @@ export default function CalendarSettingsScreen() {
         <Text className="mb-2 text-gray-600">
           • Apple Calendar: Uses the built-in iOS calendar
         </Text>
-        <Text className="text-gray-600">
-          • System Calendar: Uses the default calendar dialog on your device
-        </Text>
+        {/* iOS only; system calendar option is not shown separately */}
       </View>
     </ScrollView>
   );
