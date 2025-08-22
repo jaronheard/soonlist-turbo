@@ -56,7 +56,7 @@ import EventCard from "./EventCard";
 import { FollowEventButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
 import { ShareButton } from "./ShareButton";
-import { UserProfileFlair } from "./UserProfileFlair";
+import { UserAvatarMini } from "./UserAvatarMini";
 
 interface EventListItemProps {
   list?: List; // this is the list that this is a part of
@@ -690,41 +690,7 @@ function EventActionButtons({
   );
 }
 
-interface UserInfoMiniProps {
-  username: string;
-  displayName: string;
-  userImage: string;
-  showFollowButton?: boolean;
-}
-
-export function UserInfoMini({
-  username,
-  userImage,
-}: Omit<UserInfoMiniProps, "displayName">) {
-  return (
-    <div className="flex items-center gap-0.5">
-      <Link
-        href={`/${username}/upcoming`}
-        className="relative flex items-center"
-      >
-        <UserProfileFlair username={username} size="xs">
-          <Image
-            className="inline-block size-3 rounded-full object-cover object-center"
-            src={userImage}
-            alt={`${username}'s profile picture`}
-            width={16}
-            height={16}
-          />
-        </UserProfileFlair>
-      </Link>
-      <Link href={`/${username}/upcoming`} className="group flex items-center">
-        <p className="text-xs text-neutral-2 group-hover:text-neutral-1">
-          @{username}
-        </p>
-      </Link>
-    </div>
-  );
-}
+// Removed duplicated mini user info in favor of `UserAvatarMini`
 
 export function EventListItem(props: EventListItemProps) {
   const { user: clerkUser } = useUser();
@@ -995,28 +961,11 @@ export function EventListItem(props: EventListItemProps) {
         {/* Creator row */}
         {user && !isSelf && (props.showOtherCurators || !props.hideCurator) && (
           <div className="mx-1 mt-2 flex items-center justify-center gap-2">
-            <Link
-              href={`/${user.username}/upcoming`}
-              className="relative flex items-center"
-            >
-              <UserProfileFlair username={user.username} size="xs">
-                <Image
-                  className="inline-block size-3 rounded-full object-cover object-center"
-                  src={user.userImage}
-                  alt={`${user.username}'s profile picture`}
-                  width={16}
-                  height={16}
-                />
-              </UserProfileFlair>
-            </Link>
-            <Link
-              href={`/${user.username}/upcoming`}
-              className="group flex items-center"
-            >
-              <p className="text-xs text-neutral-2 group-hover:text-neutral-1">
-                {user.displayName || user.username || "unknown"}
-              </p>
-            </Link>
+            <UserAvatarMini
+              username={user.username}
+              displayName={user.displayName}
+              userImage={user.userImage}
+            />
           </div>
         )}
 
@@ -1106,10 +1055,10 @@ export function EventListItem(props: EventListItemProps) {
       <div className="p-3"></div>
       <div className="absolute bottom-2 left-2 z-10 flex gap-2">
         {user && (
-          <UserInfoMini
+          <UserAvatarMini
             username={user.username}
+            displayName={user.displayName}
             userImage={user.userImage}
-            showFollowButton={false}
           />
         )}
       </div>
