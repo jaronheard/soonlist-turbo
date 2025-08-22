@@ -51,6 +51,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "toolbox.marketingtools.apple.com",
       },
+      {
+        protocol: "https",
+        hostname: "api.qrserver.com",
+      },
     ],
   },
   async rewrites() {

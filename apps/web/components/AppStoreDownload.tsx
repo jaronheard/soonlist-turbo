@@ -7,24 +7,43 @@ interface AppStoreDownloadProps {
 export function AppStoreDownload({ className = "" }: AppStoreDownloadProps) {
   const appStoreUrl =
     "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216?itscg=30200&itsct=apps_box_badge&mttnsubad=6670222216";
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(
+    appStoreUrl,
+  )}`;
 
   return (
-    <a
-      href={appStoreUrl}
-      className={`group block ${className}`}
-      aria-label="Download Soonlist on the App Store"
-    >
+    <div className={`block ${className}`}>
       <div className="flex flex-col items-center justify-center gap-4">
-        {/* App Store Badge */}
-        <div className="transition-transform duration-200 group-hover:scale-105">
-          <Image
-            src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1739059200"
-            alt="Download on the App Store"
-            width={246}
-            height={82}
-            className="h-[82px] w-[246px] object-contain align-middle"
-          />
+        {/* Desktop-only QR code above badge */}
+        <div className="hidden flex-col items-center justify-center md:flex">
+          <div className="rounded-lg border border-neutral-3 bg-white p-3 shadow-sm">
+            <Image
+              src={qrCodeUrl}
+              alt="Scan to download Soonlist on the App Store"
+              width={240}
+              height={240}
+              className="h-60 w-60 object-contain"
+            />
+          </div>
+          <p className="mt-2 text-sm text-gray-500">Scan to download or</p>
         </div>
+
+        {/* App Store Badge */}
+        <a
+          href={appStoreUrl}
+          className="group block"
+          aria-label="Download Soonlist on the App Store"
+        >
+          <div className="transition-transform duration-200 group-hover:scale-105">
+            <Image
+              src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1739059200"
+              alt="Download on the App Store"
+              width={246}
+              height={82}
+              className="h-[82px] w-[246px] object-contain align-middle"
+            />
+          </div>
+        </a>
 
         {/* App Store Social Proof */}
         <div className="flex flex-col items-center justify-center gap-4">
@@ -53,6 +72,6 @@ export function AppStoreDownload({ className = "" }: AppStoreDownloadProps) {
           </p>
         </div>
       </div>
-    </a>
+    </div>
   );
 }

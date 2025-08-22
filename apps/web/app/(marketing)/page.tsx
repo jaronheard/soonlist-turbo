@@ -161,79 +161,83 @@ function HeroSection() {
   return (
     <Section className="pb-8 pt-16">
       <div className="relative isolate">
-        <div className="absolute inset-x-0 bottom-24 top-0 z-[-1] mx-auto max-w-lg">
-          <div className="relative h-full w-full">
-            <Image
-              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/events-collage.png"
-              fill
-              alt=""
-              priority
-              className="object-contain object-top opacity-[0.10]"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-interactive-3"></div>
-          </div>
+        {/* Background image removed for a cleaner header */}
+        <div className="mx-auto text-center">
+          <h1 className="font-heading text-5xl font-bold leading-tight tracking-tighterish text-gray-700 md:text-7xl md:leading-tight">
+            Turn screenshots into{" "}
+            <span className="relative inline-block text-interactive-1">
+              <svg
+                width="492"
+                height="96"
+                viewBox="0 0 492 96"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="tranform absolute inset-0 z-[-1] h-full w-full scale-110 opacity-100"
+              >
+                <path
+                  d="M0.977745 90.0631L13.3028 15.2256C13.6677 13.01 15.557 11.3673 17.8018 11.314L487.107 0.163765C490.41 0.0852941 492.749 3.36593 491.598 6.46257L474.712 51.884C474.083 53.5754 472.537 54.7535 470.739 54.9104L5.99405 95.4768C2.9558 95.742 0.482147 93.0724 0.977745 90.0631Z"
+                  fill="#FEEA9F"
+                />
+              </svg>
+              plans
+            </span>
+          </h1>
         </div>
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-8 md:grid-cols-1 md:gap-x-8">
-          <div className="mx-auto text-center">
-            <h1 className="font-heading text-5xl font-bold leading-tight tracking-tighterish text-gray-700 md:text-7xl md:leading-tight">
-              Turn screenshots into{" "}
-              <span className="relative inline-block text-interactive-1">
-                <svg
-                  width="492"
-                  height="96"
-                  viewBox="0 0 492 96"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="tranform absolute inset-0 z-[-1] h-full w-full scale-110 opacity-100"
-                >
-                  <path
-                    d="M0.977745 90.0631L13.3028 15.2256C13.6677 13.01 15.557 11.3673 17.8018 11.314L487.107 0.163765C490.41 0.0852941 492.749 3.36593 491.598 6.46257L474.712 51.884C474.083 53.5754 472.537 54.7535 470.739 54.9104L5.99405 95.4768C2.9558 95.742 0.482147 93.0724 0.977745 90.0631Z"
-                    fill="#FEEA9F"
-                  />
-                </svg>
-                plans
-              </span>
-            </h1>
-            <p className="mt-6 text-xl leading-7.5 text-gray-700 md:text-2xl md:leading-9">
-              The easiest way to save events and organize your social calendar,
-              all in one place.
-            </p>
+        <div className="mx-auto text-center">
+          <p className="mt-0 text-xl leading-7.5 text-neutral-2 md:text-2xl md:leading-9">
+            The easiest way to save events and organize your social calendar,
+            all in one place.
+          </p>
+        </div>
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-y-8 md:mt-8 md:grid-cols-2 md:items-center md:gap-x-24">
+          <div className="order-1 mx-auto text-center md:order-2 md:mx-0 md:self-center md:justify-self-start md:text-left">
             <AppStoreDownload className="mt-8" />
           </div>
-          <div className="mx-auto max-w-2xl">
-            <p className="mt-8 text-lg leading-7 text-gray-600 md:text-xl">
-              You see events everywhere: Instagram Stories, group chats, flyers
-              around town. But keeping track of them is messy.
-            </p>
-            <div className="mx-auto mt-8 max-w-2xl">
-              <div className="mt-6 flex flex-wrap justify-center gap-2">
-                <div className="rotate-2 transform">
-                  <div className="inline-block rounded-md bg-accent-yellow px-2 py-1 text-base font-bold text-neutral-1 shadow-sm">
-                    👀 You screenshot a show poster...
-                  </div>
-                </div>
-                <div className="-rotate-3 transform">
-                  <div className="inline-block rounded-md bg-accent-orange px-2 py-1 text-base font-bold text-neutral-1 shadow-sm">
-                    👀 You see a workshop in your IG feed…
-                  </div>
-                </div>
-                <div className="rotate-1 transform">
-                  <div className="inline-block rounded-md bg-accent-green px-2 py-1 text-base font-bold text-neutral-1 shadow-sm">
-                    👀 You get a text about a brunch hang…
-                  </div>
+          <div className="order-2 mx-auto flex items-center justify-center md:order-1 md:mx-0 md:w-full md:justify-end md:self-center md:justify-self-end">
+            <Image
+              src="https://upcdn.io/12a1yek/raw/uploads/Soonlist/feed.png"
+              alt="Soonlist app feed showing captured events in a device frame"
+              width={593}
+              height={1161}
+              priority
+              className="h-auto w-[260px] drop-shadow-2xl md:w-[300px] lg:w-[340px]"
+            />
+          </div>
+        </div>
+        {/* Supporting copy under the grid */}
+        <div className="mx-auto max-w-2xl">
+          <p className="mt-8 text-lg leading-7 text-gray-600 md:text-xl">
+            You see events everywhere: Instagram Stories, group chats, flyers
+            around town. But keeping track of them is messy.
+          </p>
+          <div className="mx-auto mt-8 max-w-2xl">
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              <div className="rotate-2 transform">
+                <div className="inline-block rounded-md bg-accent-yellow px-2 py-1 text-base font-bold text-neutral-1 shadow-sm">
+                  👀 You screenshot a show poster...
                 </div>
               </div>
-              <p className="mt-8 text-lg leading-7 text-gray-600 md:text-xl">
-                Then, when you want to plan your week, everything is scattered
-                and hard to find 😅
-              </p>
-              <p className="mt-6 text-lg leading-7 text-gray-600 md:text-xl">
-                <span className="font-bold">
-                  Soonlist makes it easy to save events & stay organized in one
-                  tap.
-                </span>
-              </p>
+              <div className="-rotate-3 transform">
+                <div className="inline-block rounded-md bg-accent-orange px-2 py-1 text-base font-bold text-neutral-1 shadow-sm">
+                  👀 You see a workshop in your IG feed…
+                </div>
+              </div>
+              <div className="rotate-1 transform">
+                <div className="inline-block rounded-md bg-accent-green px-2 py-1 text-base font-bold text-neutral-1 shadow-sm">
+                  👀 You get a text about a brunch hang…
+                </div>
+              </div>
             </div>
+            <p className="mt-8 text-lg leading-7 text-gray-600 md:text-xl">
+              Then, when you want to plan your week, everything is scattered and
+              hard to find 😅
+            </p>
+            <p className="mt-6 text-lg leading-7 text-gray-600 md:text-xl">
+              <span className="font-bold">
+                Soonlist makes it easy to save events & stay organized in one
+                tap.
+              </span>
+            </p>
           </div>
         </div>
       </div>
