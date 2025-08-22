@@ -838,7 +838,7 @@ export function EventListItem(props: EventListItemProps) {
       <li className="relative">
         {/* Angled thumbnail on the right */}
         <div
-          className="absolute -right-6 top-1/2 z-10"
+          className="absolute -right-2 top-1/2 z-10"
           style={{
             transform: `translateY(-50%) rotate(${imageRotation})`,
           }}
@@ -891,7 +891,8 @@ export function EventListItem(props: EventListItemProps) {
         <div
           className="my-1 mt-4 rounded-[20px] bg-white p-3"
           style={{
-            paddingRight: thumbWidth * 0.9,
+            paddingRight: thumbWidth * 0.7,
+            marginRight: 16,
             borderWidth: 2,
             borderColor: cardBorderColor,
             boxShadow: `0 2px ${cardShadowRadius + 2}px rgba(90,50,251,0.12)`,
@@ -899,7 +900,7 @@ export function EventListItem(props: EventListItemProps) {
         >
           <div className="mb-1 flex w-full items-center justify-between">
             <div className="flex items-center gap-1">
-              <p className="text-sm font-medium text-neutral-2">{dateText}</p>
+              <p className="text-xs font-medium text-neutral-2">{dateText}</p>
             </div>
             {isOwner &&
               props.similarEvents &&
@@ -916,13 +917,13 @@ export function EventListItem(props: EventListItemProps) {
           </div>
 
           <Link href={`/event/${id}`} className="block">
-            <h3 className="mb-1 truncate text-lg font-bold text-neutral-1">
+            <h3 className="mb-1 truncate text-base font-bold text-neutral-1">
               {event.name}
             </h3>
           </Link>
           {event.location && (
             <div className="mb-1 flex items-center">
-              <p className="truncate text-sm text-neutral-2">
+              <p className="truncate text-xs text-neutral-2">
                 {event.location}
               </p>
             </div>
@@ -934,12 +935,12 @@ export function EventListItem(props: EventListItemProps) {
             <button
               type="button"
               onClick={handleShareClick}
-              className="inline-flex items-center gap-2 bg-interactive-2 px-4 py-2.5"
-              style={{ borderRadius: 16 }}
+              className="inline-flex items-center gap-1.5 bg-interactive-2 px-3 py-2"
+              style={{ borderRadius: 14 }}
               aria-label="Share"
             >
-              <Share className="size-5 text-interactive-1" />
-              <span className="text-base font-bold text-interactive-1">
+              <Share className="size-4 text-interactive-1" />
+              <span className="text-sm font-bold text-interactive-1">
                 Share
               </span>
             </button>
@@ -990,7 +991,9 @@ export function EventListItem(props: EventListItemProps) {
                 backgroundColor: "#E0D9FF",
               }}
             >
-              <span className="text-xs font-medium text-neutral-1">New</span>
+              <span className="text-[10px] font-medium text-neutral-1">
+                New
+              </span>
             </div>
           )}
           {relativeLabel && (
@@ -1002,7 +1005,7 @@ export function EventListItem(props: EventListItemProps) {
                 backgroundColor: "#FEEA9F",
               }}
             >
-              <span className="text-xs font-medium text-neutral-1">
+              <span className="text-[10px] font-medium text-neutral-1">
                 {relativeLabel}
               </span>
             </div>
