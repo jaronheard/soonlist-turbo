@@ -44,16 +44,26 @@ export function Header() {
   const { user } = useUser();
   const pathname = usePathname();
   const hideMenu = excludedMenuRoutes.includes(pathname);
+  const [isIOSBannerVisible, setIsIOSBannerVisible] = React.useState(false);
+
+  // Check if iOS smart banner might be present
+  React.useEffect(() => {
+    // iOS devices typically show the smart banner
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    // Safari browser is more likely to show the banner
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    
+    setIsIOSBannerVisible(isIOS && isSafari);
+  }, []);
 
   if (hideMenu) {
     return (
-      <div className="sticky top-0 z-50 bg-interactive-3">
-        <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
-          <div className="flex items-center sm:grow sm:gap-0">
+      <div className="sticky top-0 z-50 bg-interactive-3 backdrop-blur-sm border-b border-gray-200/30">
+        <header className="mx-auto flex h-11 w-full max-w-7xl items-center justify-between px-4">
+          <div className="flex items-center">
             <NavigationMenu>
               <Link href="/" className="relative flex items-center">
-                <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
+                <Logo variant="hidePreview" small className="block" />
               </Link>
             </NavigationMenu>
           </div>
@@ -63,29 +73,27 @@ export function Header() {
   }
 
   return (
-    <div className="sticky top-0 z-50 bg-interactive-3">
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
-        <div className="flex items-center sm:grow sm:gap-0">
+    <div className="sticky top-0 z-50 bg-interactive-3 backdrop-blur-sm border-b border-gray-200/30">
+      <header className="mx-auto flex h-11 w-full max-w-7xl items-center justify-between px-4">
+        <div className="flex items-center">
           <NavigationMenu>
             <SignedIn>
               <Link
                 href={`/${user?.username}/upcoming`}
                 className="relative flex items-center"
               >
-                <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
+                <Logo variant="hidePreview" small className="block" />
               </Link>
             </SignedIn>
             <SignedOut>
               <Link href="/" className="relative flex items-center">
-                <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
+                <Logo variant="hidePreview" small className="block" />
               </Link>
             </SignedOut>
           </NavigationMenu>
         </div>
-        <div className="flex shrink-0 sm:gap-5">
-          <Nav />
+        <div className="flex items-center">
+          <Nav isIOSBannerVisible={isIOSBannerVisible} />
           <NavigationMenu>
             <SignedIn>
               <UserMenu />
@@ -98,7 +106,7 @@ export function Header() {
   );
 }
 
-export function Nav() {
+export function Nav({ isIOSBannerVisible = false }: { isIOSBannerVisible?: boolean }) {
   const { user } = useUser();
   const pathname = usePathname();
   const isJoinPage = pathname === "/join";
@@ -147,7 +155,7 @@ export function Nav() {
             </Link>
           </SignedIn>
           <SignedOut>
-            {!isJoinPage && (
+            {!isJoinPage && !isIOSBannerVisible && (
               <Button asChild>
                 <Link href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216">
                   Get the app
@@ -321,8 +329,8 @@ export function MobileNav() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" className="block lg:hidden">
-          <Menu className="size-6 text-interactive-1" />
+        <Button variant="ghost" className="block p-0">
+          <span className="text-2xl text-interactive-1">☰</span>
           <span className="sr-only">Toggle Menu</span>
         </Button>
       </SheetTrigger>

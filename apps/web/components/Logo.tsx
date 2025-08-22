@@ -2,15 +2,17 @@
 export function Logo({
   className,
   variant,
+  small = false,
 }: {
   variant?: "hidePreview";
   className?: string;
+  small?: boolean;
 }) {
   if (variant === "hidePreview") {
     return (
       <svg
-        width="158"
-        height="43"
+        width={small ? "100" : "158"}
+        height={small ? "27" : "43"}
         viewBox="0 0 158 43"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
