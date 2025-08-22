@@ -45,32 +45,38 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 // Settings section component
-function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
+function SettingsSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <View className="mb-8">
-      <Text className="text-lg font-semibold mb-3">{title}</Text>
+      <Text className="mb-3 text-lg font-semibold">{title}</Text>
       {children}
     </View>
   );
 }
 
 // Settings option component
-function SettingsOption({ 
-  title, 
-  subtitle, 
-  onPress 
-}: { 
-  title: string; 
-  subtitle?: string; 
+function SettingsOption({
+  title,
+  subtitle,
+  onPress,
+}: {
+  title: string;
+  subtitle?: string;
   onPress: () => void;
 }) {
   return (
-    <TouchableOpacity 
-      className="flex-row items-center p-4 mb-2 rounded-lg border border-gray-200"
+    <TouchableOpacity
+      className="mb-2 flex-row items-center rounded-lg border border-gray-200 p-4"
       onPress={onPress}
     >
       <View className="flex-1">
-        <Text className="font-semibold text-base">{title}</Text>
+        <Text className="text-base font-semibold">{title}</Text>
         {subtitle && <Text className="text-sm text-gray-500">{subtitle}</Text>}
       </View>
     </TouchableOpacity>
@@ -397,8 +403,8 @@ export default function EditProfileScreen() {
           </View>
 
           <SettingsSection title="App Settings">
-            <SettingsOption 
-              title="Calendar Settings" 
+            <SettingsOption
+              title="Calendar Settings"
               subtitle="Choose your preferred calendar app"
               onPress={() => router.navigate("/settings/calendar")}
             />

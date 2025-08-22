@@ -1,22 +1,21 @@
 import type { FunctionReturnType } from "convex/server";
+import { useEffect, useState } from "react";
 import { Linking, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
 import { Temporal } from "@js-temporal/polyfill";
 import { toast } from "sonner-native";
-import { useEffect, useState } from "react";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
+import type { CalendarAppInfo } from "~/utils/calendarAppDetection";
+import { usePreferredCalendarApp, useSetPreferredCalendarApp } from "~/store";
+import {
+  createGoogleCalendarLink,
+  detectCalendarApps,
+} from "~/utils/calendarAppDetection";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
-import { 
-  CalendarApp, 
-  CalendarAppInfo, 
-  createGoogleCalendarLink, 
-  detectCalendarApps 
-} from "~/utils/calendarAppDetection";
-import { usePreferredCalendarApp, useSetPreferredCalendarApp } from "~/store";
 
 export function useCalendar() {
   const preferredCalendarApp = usePreferredCalendarApp();
@@ -28,15 +27,17 @@ export function useCalendar() {
   useEffect(() => {
     const detectApps = async () => {
       if (isDetecting) return;
-      
+
       setIsDetecting(true);
       try {
         const apps = await detectCalendarApps();
         setCalendarApps(apps);
-        
+
         // If no preferred app is set and Google Calendar is installed, set it as preferred
         if (!preferredCalendarApp) {
-          const googleApp = apps.find(app => app.id === "google" && app.isInstalled);
+          const googleApp = apps.find(
+            (app) => app.id === "google" && app.isInstalled,
+          );
           if (googleApp) {
             setPreferredCalendarApp("google");
           } else {
@@ -45,12 +46,15 @@ export function useCalendar() {
           }
         }
       } catch (error) {
-        logError("Error detecting calendar apps", error);
+        logError(
+          "Error detecting calendar apps",
+          error instanceof Error ? error : new Error(String(error)),
+        );
       } finally {
         setIsDetecting(false);
       }
     };
-    
+
     void detectApps();
   }, [preferredCalendarApp, setPreferredCalendarApp, isDetecting]);
 
@@ -58,22 +62,30 @@ export function useCalendar() {
     event: NonNullable<FunctionReturnType<typeof api.events.get>>,
   ) => {
     try {
-      const e = event.event as AddToCalendarButtonPropsRestricted;
-      
+      // The event.event comes from Convex and should match our expected interface
+      const e = event.event;
+
+      // Type guard to ensure we have the required properties
+      if (!e || typeof e !== "object" || !("name" in e)) {
+        throw new Error("Invalid event data structure");
+      }
+
+      const calendarEvent = e as AddToCalendarButtonPropsRestricted;
+
       // If Google Calendar is preferred and installed, use it
       if (preferredCalendarApp === "google") {
-        const googleApp = calendarApps.find(app => app.id === "google");
+        const googleApp = calendarApps.find((app) => app.id === "google");
         if (googleApp?.isInstalled) {
           const googleCalendarUrl = createGoogleCalendarLink({
-            name: e.name,
-            description: e.description,
-            location: e.location,
-            startDate: e.startDate,
-            startTime: e.startTime,
-            endDate: e.endDate,
-            endTime: e.endTime,
+            name: calendarEvent.name,
+            description: calendarEvent.description,
+            location: calendarEvent.location,
+            startDate: calendarEvent.startDate,
+            startTime: calendarEvent.startTime,
+            endDate: calendarEvent.endDate,
+            endTime: calendarEvent.endTime,
           });
-          
+
           const canOpen = await Linking.canOpenURL(googleCalendarUrl);
           if (canOpen) {
             await Linking.openURL(googleCalendarUrl);
@@ -81,16 +93,20 @@ export function useCalendar() {
             return;
           } else {
             // Fall back to system calendar if Google Calendar URL can't be opened
-            toast.error("Couldn't open Google Calendar, falling back to system calendar");
+            toast.error(
+              "Couldn't open Google Calendar, falling back to system calendar",
+            );
             setPreferredCalendarApp("system");
           }
         } else {
           // Google Calendar was preferred but is no longer installed
-          toast.error("Google Calendar is not installed, falling back to system calendar");
+          toast.error(
+            "Google Calendar is not installed, falling back to system calendar",
+          );
           setPreferredCalendarApp("system");
         }
       }
-      
+
       // Check if we need calendar permissions
       // iOS 17+ doesn't require permissions when using the system calendar UI
       const needsPermissionCheck =
@@ -123,32 +139,44 @@ export function useCalendar() {
           );
           return new Date(eventDateTime.epochMilliseconds);
         } catch (error) {
-          logError("Error parsing date", error, {
-            dateString,
-            timeString,
-            timezone,
-          });
+          logError(
+            "Error parsing date",
+            error instanceof Error ? error : new Error(String(error)),
+            {
+              dateString,
+              timeString,
+              timezone,
+            },
+          );
           throw new Error("Invalid date or time format");
         }
       };
 
-      const eventTimezone = e.timeZone || Temporal.Now.timeZoneId();
+      const eventTimezone = calendarEvent.timeZone || Temporal.Now.timeZoneId();
 
       let startDate: Date;
       let endDate: Date;
 
-      if (e.startDate && e.startTime) {
-        startDate = parseDate(e.startDate, e.startTime, eventTimezone);
-      } else if (e.startDate) {
-        startDate = parseDate(e.startDate, "00:00", eventTimezone);
+      if (calendarEvent.startDate && calendarEvent.startTime) {
+        startDate = parseDate(
+          calendarEvent.startDate,
+          calendarEvent.startTime,
+          eventTimezone,
+        );
+      } else if (calendarEvent.startDate) {
+        startDate = parseDate(calendarEvent.startDate, "00:00", eventTimezone);
       } else {
         throw new Error("Start date is required");
       }
 
-      if (e.endDate && e.endTime) {
-        endDate = parseDate(e.endDate, e.endTime, eventTimezone);
-      } else if (e.endDate) {
-        endDate = parseDate(e.endDate, "23:59", eventTimezone);
+      if (calendarEvent.endDate && calendarEvent.endTime) {
+        endDate = parseDate(
+          calendarEvent.endDate,
+          calendarEvent.endTime,
+          eventTimezone,
+        );
+      } else if (calendarEvent.endDate) {
+        endDate = parseDate(calendarEvent.endDate, "23:59", eventTimezone);
       } else {
         endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
       }
@@ -172,13 +200,13 @@ export function useCalendar() {
           ? `Captured by ${displayName} on Soonlist. \nFull details: ${eventUrl}`
           : `Captured on Soonlist\n(${baseUrl})`;
 
-      const fullDescription = `${e.description}\n\n${additionalText}`;
+      const fullDescription = `${calendarEvent.description}\n\n${additionalText}`;
 
       const eventDetails = {
-        title: e.name,
+        title: calendarEvent.name,
         startDate,
         endDate,
-        location: e.location,
+        location: calendarEvent.location,
         notes: fullDescription,
         timeZone: eventTimezone,
         url: eventUrl, // iOS only, but included for platforms that support it
@@ -190,7 +218,10 @@ export function useCalendar() {
         toast.success("Event successfully added to calendar");
       }
     } catch (error) {
-      logError("Error adding event to calendar", error);
+      logError(
+        "Error adding event to calendar",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast.error("Failed to add event to calendar. Please try again.");
     }
   };
@@ -201,5 +232,5 @@ export function useCalendar() {
     preferredCalendarApp,
     setPreferredCalendarApp,
     isDetecting,
-  };
+  } as const;
 }

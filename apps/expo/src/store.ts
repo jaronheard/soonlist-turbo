@@ -551,7 +551,7 @@ export const useMarkPaywallShown = () =>
 // to avoid rules-of-hooks violations
 
 // Calendar preference selectors
-export const usePreferredCalendarApp = () => 
+export const usePreferredCalendarApp = () =>
   useAppStore((state) => state.preferredCalendarApp);
-export const useSetPreferredCalendarApp = () => 
+export const useSetPreferredCalendarApp = () =>
   useAppStore((state) => state.setPreferredCalendarApp);

@@ -1,23 +1,34 @@
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Stack } from "expo-router";
-import { Check } from "lucide-react-native";
 import { toast } from "sonner-native";
 
+import type { CalendarAppInfo } from "~/utils/calendarAppDetection";
+import { Check } from "~/components/icons";
 import { useCalendar } from "~/hooks/useCalendar";
-import { CalendarAppInfo } from "~/utils/calendarAppDetection";
 
 export default function CalendarSettingsScreen() {
-  const { 
-    calendarApps, 
-    preferredCalendarApp, 
-    setPreferredCalendarApp, 
-    isDetecting 
+  const {
+    calendarApps,
+    preferredCalendarApp,
+    setPreferredCalendarApp,
+    isDetecting,
   } = useCalendar();
-  
+
   const handleSelectCalendarApp = (appId: string) => {
-    setPreferredCalendarApp(appId as any);
-    toast.success(`Set ${appId} as your preferred calendar app`);
+    // Type guard to ensure the appId is valid
+    if (appId === "google" || appId === "apple" || appId === "system") {
+      setPreferredCalendarApp(appId);
+      toast.success(`Set ${appId} as your preferred calendar app`);
+    } else {
+      console.error("Invalid calendar app ID:", appId);
+    }
   };
 
   return (
@@ -30,8 +41,8 @@ export default function CalendarSettingsScreen() {
       />
 
       <View className="mb-6">
-        <Text className="text-xl font-bold mb-2">Calendar Preferences</Text>
-        <Text className="text-gray-600 mb-4">
+        <Text className="mb-2 text-xl font-bold">Calendar Preferences</Text>
+        <Text className="mb-4 text-gray-600">
           Choose which calendar app to use when adding events to your calendar.
         </Text>
       </View>
@@ -39,12 +50,16 @@ export default function CalendarSettingsScreen() {
       {isDetecting ? (
         <View className="items-center justify-center py-8">
           <ActivityIndicator size="large" color="#5A32FB" />
-          <Text className="mt-4 text-gray-600">Detecting installed calendar apps...</Text>
+          <Text className="mt-4 text-gray-600">
+            Detecting installed calendar apps...
+          </Text>
         </View>
       ) : (
         <View className="mb-8">
-          <Text className="text-lg font-semibold mb-3">Preferred Calendar App</Text>
-          
+          <Text className="mb-3 text-lg font-semibold">
+            Preferred Calendar App
+          </Text>
+
           {calendarApps.map((app) => (
             <CalendarAppOption
               key={app.id}
@@ -53,19 +68,23 @@ export default function CalendarSettingsScreen() {
               onSelect={handleSelectCalendarApp}
             />
           ))}
-          
-          <Text className="text-xs text-gray-500 mt-2">
-            Note: If your preferred app is not installed, we'll fall back to the system calendar.
+
+          <Text className="mt-2 text-xs text-gray-500">
+            Note: If your preferred app is not installed, we'll fall back to the
+            system calendar.
           </Text>
         </View>
       )}
 
       <View className="mb-6">
-        <Text className="text-lg font-semibold mb-2">About Calendar Integration</Text>
-        <Text className="text-gray-600 mb-2">
-          • Google Calendar: Opens the Google Calendar app with pre-filled event details
+        <Text className="mb-2 text-lg font-semibold">
+          About Calendar Integration
         </Text>
-        <Text className="text-gray-600 mb-2">
+        <Text className="mb-2 text-gray-600">
+          • Google Calendar: Opens the Google Calendar app with pre-filled event
+          details
+        </Text>
+        <Text className="mb-2 text-gray-600">
           • Apple Calendar: Uses the built-in iOS calendar
         </Text>
         <Text className="text-gray-600">
@@ -82,26 +101,27 @@ interface CalendarAppOptionProps {
   onSelect: (appId: string) => void;
 }
 
-function CalendarAppOption({ app, isSelected, onSelect }: CalendarAppOptionProps) {
+function CalendarAppOption({
+  app,
+  isSelected,
+  onSelect,
+}: CalendarAppOptionProps) {
   return (
     <TouchableOpacity
-      className={`flex-row items-center p-4 mb-2 rounded-lg border ${
+      className={`mb-2 flex-row items-center rounded-lg border p-4 ${
         isSelected ? "border-purple-500 bg-purple-50" : "border-gray-200"
       } ${!app.isInstalled ? "opacity-50" : ""}`}
       onPress={() => app.isInstalled && onSelect(app.id)}
       disabled={!app.isInstalled}
     >
       <View className="flex-1">
-        <Text className="font-semibold text-base">{app.name}</Text>
+        <Text className="text-base font-semibold">{app.name}</Text>
         {!app.isInstalled && (
           <Text className="text-sm text-gray-500">Not installed</Text>
         )}
       </View>
-      
-      {isSelected && (
-        <Check size={20} color="#5A32FB" />
-      )}
+
+      {isSelected && <Check size={20} color="#5A32FB" />}
     </TouchableOpacity>
   );
 }
-

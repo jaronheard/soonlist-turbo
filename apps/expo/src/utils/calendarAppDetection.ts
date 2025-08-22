@@ -18,7 +18,17 @@ export const isAppInstalled = async (urlScheme: string): Promise<boolean> => {
   try {
     return await Linking.canOpenURL(urlScheme);
   } catch (error) {
-    console.error("Error checking if app is installed:", error);
+    // If we get an error about LSApplicationQueriesSchemes, log it but don't treat as an error
+    if (
+      error instanceof Error &&
+      error.message.includes("LSApplicationQueriesSchemes")
+    ) {
+      console.warn(
+        `URL scheme ${urlScheme} not declared in LSApplicationQueriesSchemes. App detection may not work correctly.`,
+      );
+    } else {
+      console.error("Error checking if app is installed:", error);
+    }
     return false;
   }
 };
@@ -49,15 +59,15 @@ export const detectCalendarApps = async (): Promise<CalendarAppInfo[]> => {
     },
   ];
 
-  // Check which apps are installed
-  for (let i = 0; i < calendarApps.length; i++) {
-    if (calendarApps[i].id !== "system") {
-      // System calendar is always available
-      calendarApps[i].isInstalled = await isAppInstalled(
-        calendarApps[i].urlScheme,
-      );
-    }
-  }
+  // Check which apps are installed in parallel for better performance
+  const detectionPromises = calendarApps
+    .filter((app) => app.id !== "system")
+    .map(async (app) => {
+      app.isInstalled = await isAppInstalled(app.urlScheme);
+      return app;
+    });
+
+  await Promise.all(detectionPromises);
 
   return calendarApps;
 };
@@ -79,30 +89,32 @@ export const createGoogleCalendarLink = (event: {
   const text = encodeURIComponent(event.name || "");
   const details = encodeURIComponent(event.description || "");
   const location = encodeURIComponent(event.location || "");
-  
+
   // Format dates for Google Calendar
   // Format: YYYYMMDDTHHMMSS/YYYYMMDDTHHMMSS
   let dates = "";
-  
+
   if (event.startDate) {
     const startDate = event.startDate.replace(/-/g, "");
     const startTime = (event.startTime || "00:00").replace(/:/g, "");
     dates = `${startDate}T${startTime}00`;
-    
+
     if (event.endDate) {
       const endDate = event.endDate.replace(/-/g, "");
       const endTime = (event.endTime || "23:59").replace(/:/g, "");
       dates += `/${endDate}T${endTime}00`;
     } else {
       // If no end date, use start date + 1 hour
-      dates += `/${startDate}T${
-        event.startTime 
-          ? (parseInt(event.startTime.split(":")[0]) + 1).toString().padStart(2, "0") + event.startTime.substring(2)
-          : "010000"
-      }`;
+      const timeParts = event.startTime?.split(":");
+      const startTimeHour = timeParts?.[0] ? parseInt(timeParts[0], 10) : 0;
+      const endHour = (startTimeHour + 1).toString().padStart(2, "0");
+      const startTimeMinutes = event.startTime
+        ? event.startTime.substring(2)
+        : "0000";
+      const endTimeString = endHour + startTimeMinutes;
+      dates += `/${startDate}T${endTimeString}00`;
     }
   }
-  
+
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${location}&dates=${dates}`;
 };
-
