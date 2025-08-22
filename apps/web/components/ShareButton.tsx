@@ -61,8 +61,13 @@ export function ShareButton(props: ShareButtonProps) {
   }
   if (props.type === "icon") {
     return (
-      <Button onClick={handleShareClick} size={"icon"}>
-        <Share className="size-6" />
+      <Button
+        onClick={handleShareClick}
+        size={"icon"}
+        variant={"ghost"}
+        aria-label="Share event"
+      >
+        <Share className="size-4" aria-hidden="true" />
       </Button>
     );
   }

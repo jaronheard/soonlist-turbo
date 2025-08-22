@@ -16,11 +16,9 @@ import {
   MessageSquareIcon,
   Mic,
   PersonStanding,
-  Share,
   ShieldPlus,
   TagIcon,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import type {
   DateInfo,
@@ -45,7 +43,6 @@ import { Label } from "@soonlist/ui/label";
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
-import { env } from "~/env";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
 import { feedback } from "~/lib/intercom/intercom";
 import { cn } from "~/lib/utils";
@@ -55,6 +52,7 @@ import { EditButton } from "./EditButton";
 import EventCard from "./EventCard";
 import { FollowEventButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
+import { SaveButton } from "./SaveButton";
 import { ShareButton } from "./ShareButton";
 import { UserAvatarMini } from "./UserAvatarMini";
 
@@ -163,6 +161,7 @@ function EventDetailsCard({
   timezone,
   location,
   description,
+  noLinks = false,
 }: {
   id: string;
   name: string;
@@ -174,6 +173,7 @@ function EventDetailsCard({
   timezone: string;
   description?: string;
   location?: string;
+  noLinks?: boolean;
 }) {
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const [isClient, setIsClient] = useState(false);
@@ -219,23 +219,38 @@ function EventDetailsCard({
         variant="compact"
       />
       <div className="flex w-full flex-col items-start gap-2">
-        <Link
-          href={`/event/${id}`}
-          className={
-            "line-clamp-3 pr-12 text-2xl font-bold leading-9 tracking-wide text-interactive-1"
-          }
-        >
-          {name}
-        </Link>
+        {noLinks ? (
+          <h2 className="line-clamp-3 pr-12 text-2xl font-bold leading-9 tracking-wide text-interactive-1">
+            {name}
+          </h2>
+        ) : (
+          <Link
+            href={`/event/${id}`}
+            className={
+              "line-clamp-3 pr-12 text-2xl font-bold leading-9 tracking-wide text-interactive-1"
+            }
+          >
+            {name}
+          </Link>
+        )}
         <div className="flex-start flex gap-2 pr-12 text-lg font-medium leading-none">
           {location && (
-            <Link
-              href={`https://www.google.com/maps/search/?api=1&query=${location}`}
-              className="line-clamp-1 flex shrink items-center gap-0.5 break-all text-neutral-2"
-            >
-              <MapPin className="size-4 flex-shrink-0" />
-              <span className="line-clamp-1">{location}</span>
-            </Link>
+            <>
+              {noLinks ? (
+                <div className="line-clamp-1 flex shrink items-center gap-0.5 break-all text-neutral-2">
+                  <MapPin className="size-4 flex-shrink-0" />
+                  <span className="line-clamp-1">{location}</span>
+                </div>
+              ) : (
+                <Link
+                  href={`https://www.google.com/maps/search/?api=1&query=${location}`}
+                  className="line-clamp-1 flex shrink items-center gap-0.5 break-all text-neutral-2"
+                >
+                  <MapPin className="size-4 flex-shrink-0" />
+                  <span className="line-clamp-1">{location}</span>
+                </Link>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -738,7 +753,7 @@ export function EventListItem(props: EventListItemProps) {
     })();
 
     // Visual constants to mimic Expo design
-    const thumbWidth = 110; // px
+    const thumbWidth = 94; // px (85% of original 110px)
     const thumbHeight = Math.round((thumbWidth * 16) / 9);
     const imageRotation =
       props.index !== undefined
@@ -791,38 +806,6 @@ export function EventListItem(props: EventListItemProps) {
         .replaceAll("min", "minute")}`;
     })();
 
-    const handleShareClick = async () => {
-      const e = event as AddToCalendarButtonPropsRestricted;
-      const isAllDay = e.startTime && e.endTime ? false : true;
-      const shareText = isAllDay
-        ? `(${e.startDate || ""}, ${e.location || ""}) ${e.description || ""}`
-        : `(${e.startDate || ""} ${e.startTime || ""}-${e.endTime || ""}, ${e.location || ""}) ${e.description || ""}`;
-
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: `${e.name || "Event"} | Soonlist`,
-            text: shareText,
-            url: `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${id}`,
-          });
-        } catch {
-          // ignored
-        }
-      } else {
-        try {
-          await navigator.clipboard.writeText(
-            `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${id}`,
-          );
-          toast("Event URL copied to clipboard!");
-        } catch (error) {
-          console.error("Failed to copy to clipboard:", error);
-          toast.error(
-            "Failed to copy URL to clipboard. Please try again or copy the URL manually.",
-          );
-        }
-      }
-    };
-
     const atcbEvent: ATCBActionEventConfig = {
       name: event.name,
       description: event.description,
@@ -836,9 +819,10 @@ export function EventListItem(props: EventListItemProps) {
 
     return (
       <li className="relative">
-        {/* Angled thumbnail on the right */}
-        <div
-          className="absolute -right-6 top-1/2 z-10"
+        {/* Angled thumbnail on the right - wrapped in Link */}
+        <Link
+          href={`/event/${id}`}
+          className="absolute -right-2 top-1/2 z-10"
           style={{
             transform: `translateY(-50%) rotate(${imageRotation})`,
           }}
@@ -885,64 +869,63 @@ export function EventListItem(props: EventListItemProps) {
               />
             )}
           </div>
-        </div>
+        </Link>
 
         {/* Content card with dynamic border and right padding for image */}
         <div
           className="my-1 mt-4 rounded-[20px] bg-white p-3"
           style={{
-            paddingRight: thumbWidth * 0.9,
+            paddingRight: thumbWidth * 0.7,
+            marginRight: 16,
             borderWidth: 2,
             borderColor: cardBorderColor,
             boxShadow: `0 2px ${cardShadowRadius + 2}px rgba(90,50,251,0.12)`,
           }}
         >
-          <div className="mb-1 flex w-full items-center justify-between">
-            <div className="flex items-center gap-1">
-              <p className="text-sm font-medium text-neutral-2">{dateText}</p>
-            </div>
-            {isOwner &&
-              props.similarEvents &&
-              props.similarEvents.length > 0 && (
-                <div className="flex items-center gap-1 opacity-60">
-                  <div className="flex items-center gap-1 rounded-full bg-neutral-4/70 px-2 py-0.5">
-                    <Copy className="size-3.5" />
-                    <span className="text-xs text-neutral-2">
-                      {props.similarEvents.length}
-                    </span>
-                  </div>
-                </div>
-              )}
-          </div>
-
+          {/* Tappable content area */}
           <Link href={`/event/${id}`} className="block">
-            <h3 className="mb-1 truncate text-lg font-bold text-neutral-1">
+            <div className="mb-1 flex w-full items-center justify-between">
+              <div className="flex items-center gap-1">
+                <p className="text-xs font-medium text-neutral-2">{dateText}</p>
+              </div>
+              {isOwner &&
+                props.similarEvents &&
+                props.similarEvents.length > 0 && (
+                  <div className="flex items-center gap-1 opacity-60">
+                    <div className="flex items-center gap-1 rounded-full bg-neutral-4/70 px-2 py-0.5">
+                      <Copy className="size-3.5" />
+                      <span className="text-xs text-neutral-2">
+                        {props.similarEvents.length}
+                      </span>
+                    </div>
+                  </div>
+                )}
+            </div>
+
+            <h3 className="mb-1 truncate text-base font-bold text-neutral-1">
               {event.name}
             </h3>
-          </Link>
-          {event.location && (
-            <div className="mb-1 flex items-center">
-              <p className="truncate text-sm text-neutral-2">
-                {event.location}
-              </p>
-            </div>
-          )}
 
-          {/* Actions row */}
-          <div className="-mb-1 mt-4 flex items-center gap-3">
-            {/* Share pill */}
-            <button
-              type="button"
-              onClick={handleShareClick}
-              className="inline-flex items-center gap-2 bg-interactive-2 px-4 py-2.5"
-              style={{ borderRadius: 16 }}
-              aria-label="Share"
-            >
-              <Share className="size-5 text-interactive-1" />
-              <span className="text-base font-bold text-interactive-1">
-                Share
-              </span>
-            </button>
+            {event.location && (
+              <div className="mb-3 flex items-center">
+                <p className="truncate text-xs text-neutral-2">
+                  {event.location}
+                </p>
+              </div>
+            )}
+          </Link>
+
+          {/* Actions row - NOT wrapped in Link */}
+          <div className="-mb-2.5 flex items-center gap-3">
+            {/* Save/Share pill */}
+            <SaveButton
+              eventId={id}
+              event={event}
+              userId={clerkUser?.id}
+              eventUserId={user?.id}
+              isSaved={isFollowing}
+              className="-ml-2"
+            />
 
             <CalendarButton
               type={"icon"}
@@ -990,7 +973,9 @@ export function EventListItem(props: EventListItemProps) {
                 backgroundColor: "#E0D9FF",
               }}
             >
-              <span className="text-xs font-medium text-neutral-1">New</span>
+              <span className="text-[10px] font-medium text-neutral-1">
+                New
+              </span>
             </div>
           )}
           {relativeLabel && (
@@ -1002,7 +987,7 @@ export function EventListItem(props: EventListItemProps) {
                 backgroundColor: "#FEEA9F",
               }}
             >
-              <span className="text-xs font-medium text-neutral-1">
+              <span className="text-[10px] font-medium text-neutral-1">
                 {relativeLabel}
               </span>
             </div>
@@ -1019,50 +1004,56 @@ export function EventListItem(props: EventListItemProps) {
         "relative h-full overflow-hidden rounded-xl bg-white shadow-sm after:pointer-events-none after:absolute after:left-0 after:top-0 after:size-full after:rounded-xl after:border after:border-neutral-3 after:shadow-sm",
       )}
     >
-      {image && (
-        <div className="relative h-44 w-full grow">
-          <Image
-            className="rounded-t-xl object-cover"
-            src={image}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-            priority
-          />
-        </div>
-      )}
-      {!image && (
-        <div className="relative h-44 w-full grow bg-accent-yellow"></div>
-      )}
-      <div className="relative overflow-hidden">
-        <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
-        <div className="absolute right-0 top-0 p-3">
-          <EventDateDisplaySimple
-            startDate={event.startDate}
-            startTime={event.startTime}
-            endDate={event.endDate}
-            endTime={event.endTime}
-            timezone={event.timeZone || "America/Los_Angeles"}
-          />
-        </div>
-        <div className="flex w-full items-start gap-7 p-5">
-          {props.variant === "card" && (
-            <EventDetailsCard
-              id={id}
-              name={event.name!}
-              image={image}
-              startDate={event.startDate!}
-              endDate={event.endDate!}
-              startTime={event.startTime!}
-              endTime={event.endTime!}
-              timezone={event.timeZone || DEFAULT_TIMEZONE}
-              location={event.location}
-              description={event.description}
+      {/* Tappable main content area */}
+      <Link href={`/event/${id}`} className="block">
+        {image && (
+          <div className="relative h-44 w-full grow">
+            <Image
+              className="rounded-t-xl object-cover"
+              src={image}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+              priority
             />
-          )}
+          </div>
+        )}
+        {!image && (
+          <div className="relative h-44 w-full grow bg-accent-yellow"></div>
+        )}
+        <div className="relative overflow-hidden">
+          <div className="absolute -right-24 -top-20 size-44 overflow-hidden rounded-full bg-interactive-3"></div>
+          <div className="absolute right-0 top-0 p-3">
+            <EventDateDisplaySimple
+              startDate={event.startDate}
+              startTime={event.startTime}
+              endDate={event.endDate}
+              endTime={event.endTime}
+              timezone={event.timeZone || "America/Los_Angeles"}
+            />
+          </div>
+          <div className="flex w-full items-start gap-7 p-5">
+            {props.variant === "card" && (
+              <EventDetailsCard
+                id={id}
+                name={event.name!}
+                image={image}
+                startDate={event.startDate!}
+                endDate={event.endDate!}
+                startTime={event.startTime!}
+                endTime={event.endTime!}
+                timezone={event.timeZone || DEFAULT_TIMEZONE}
+                location={event.location}
+                description={event.description}
+                noLinks={true}
+              />
+            )}
+          </div>
         </div>
-      </div>
-      <div className="p-3"></div>
+        <div className="p-3"></div>
+      </Link>
+
+      {/* User avatar - positioned but not tappable for main link */}
       <div className="absolute bottom-2 left-2 z-10 flex gap-2">
         {user && (
           <UserAvatarMini
@@ -1072,6 +1063,8 @@ export function EventListItem(props: EventListItemProps) {
           />
         )}
       </div>
+
+      {/* Action buttons - separate from main tappable area */}
       <div className="absolute bottom-2 right-2 z-20">
         <EventActionButtons
           user={user}
