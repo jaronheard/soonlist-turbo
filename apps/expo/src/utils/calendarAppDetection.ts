@@ -99,12 +99,30 @@ export const createGoogleCalendarLink = (event: {
       // If no end date, use start date + 1 hour
       const timeParts = event.startTime?.split(":");
       const startTimeHour = timeParts?.[0] ? parseInt(timeParts[0], 10) : 0;
-      const endHour = (startTimeHour + 1).toString().padStart(2, "0");
-      const startTimeMinutes = event.startTime
-        ? event.startTime.substring(2)
-        : "0000";
-      const endTimeString = endHour + startTimeMinutes;
-      dates += `/${startDate}T${endTimeString}00`;
+      const startTimeMinutes = timeParts?.[1] ? timeParts[1] : "00";
+
+      // Handle hour overflow (23:xx -> 00:xx next day)
+      let endHour = startTimeHour + 1;
+      let endDateForCalculation = startDate;
+
+      if (endHour >= 24) {
+        endHour = 0;
+        // Need to increment the date
+        const dateObj = new Date(
+          parseInt(startDate.substring(0, 4), 10), // year
+          parseInt(startDate.substring(4, 6), 10) - 1, // month (0-indexed)
+          parseInt(startDate.substring(6, 8), 10), // day
+        );
+        dateObj.setDate(dateObj.getDate() + 1);
+        endDateForCalculation =
+          dateObj.getFullYear().toString() +
+          (dateObj.getMonth() + 1).toString().padStart(2, "0") +
+          dateObj.getDate().toString().padStart(2, "0");
+      }
+
+      const endHourString = endHour.toString().padStart(2, "0");
+      const endTimeString = endHourString + startTimeMinutes;
+      dates += `/${endDateForCalculation}T${endTimeString}00`;
     }
   }
 
