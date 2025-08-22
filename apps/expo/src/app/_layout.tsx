@@ -223,6 +223,7 @@ const InitialLayout = () => {
           headerShown: true,
           headerBackTitle: "Back",
           headerBackVisible: true,
+          // Note: headerLeft is conditionally set in the component based on source param
         }}
       />
       <Stack.Screen

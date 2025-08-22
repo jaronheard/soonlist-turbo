@@ -18,6 +18,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { EventMenu } from "~/components/EventMenu";
+import { HeaderLogo } from "~/components/HeaderLogo";
 import {
   CalendarPlus,
   EyeOff,
@@ -48,6 +49,10 @@ export default function Page() {
   const showDiscover = currentUser
     ? getPlanStatusFromUser(currentUser).showDiscover
     : false;
+
+  // Check if we came from a web redirect
+  const { source } = useLocalSearchParams<{ source: string }>();
+  const isFromWeb = source === "web";
 
   // Store the aspect ratio for the main event image
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
@@ -132,6 +137,14 @@ export default function Page() {
     );
   }, [event?.event]);
 
+  // Build the header-left UI if we came from web
+  const HeaderLeft = useCallback(() => {
+    if (isFromWeb) {
+      return <HeaderLogo />;
+    }
+    return null;
+  }, [isFromWeb]);
+
   // Build the header-right UI if we have data
   const HeaderRight = useCallback(() => {
     if (!event) return null;
@@ -205,7 +218,12 @@ export default function Page() {
 
   return (
     <>
-      <Stack.Screen options={{ headerRight: HeaderRight }} />
+      <Stack.Screen 
+        options={{ 
+          headerRight: HeaderRight,
+          headerLeft: isFromWeb ? HeaderLeft : undefined,
+        }} 
+      />
       <ScrollView
         className="flex-1 bg-white"
         contentContainerStyle={{
