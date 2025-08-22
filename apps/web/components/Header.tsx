@@ -110,8 +110,8 @@ export function Nav() {
           <NavigationMenuItem className="hidden lg:block">
             <Link href={`/${user?.username}/upcoming`} legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                <CalendarHeart className="mr-2 size-4" />
-                My Feed
+                <CalendarHeart className="mr-2 size-4 inline-flex items-center" />
+                <span className="font-sans">My Feed</span>
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
@@ -120,8 +120,8 @@ export function Nav() {
           <NavigationMenuItem className="hidden lg:block">
             <Link href={`/explore`} legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                <Globe2Icon className="mr-2 size-4" />
-                Discover
+                <Globe2Icon className="mr-2 size-4 inline-flex items-center" />
+                <span className="font-sans">Discover</span>
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
@@ -393,8 +393,8 @@ export function MobileNav() {
               signedInOnly
               className="flex items-center gap-2 text-interactive-1"
             >
-              <CalendarHeart className="size-4" />
-              My Feed
+              <CalendarHeart className="size-4 inline-flex items-center" />
+              <span className="font-sans">My Feed</span>
             </MobileLink>
             <MobileLink
               key={"user-nav-explore"}
@@ -403,8 +403,8 @@ export function MobileNav() {
               signedInOnly
               className="flex items-center gap-2 text-interactive-1"
             >
-              <Globe2Icon className="size-4" />
-              Discover
+              <Globe2Icon className="size-4 inline-flex items-center" />
+              <span className="font-sans">Discover</span>
             </MobileLink>
           </div>
           <SignedIn>
