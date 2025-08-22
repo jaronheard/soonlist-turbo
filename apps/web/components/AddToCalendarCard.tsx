@@ -36,7 +36,7 @@ import { useNewEventContext } from "~/context/NewEventContext";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
 import { feedback } from "~/lib/intercom/intercom";
 import { CalendarButton } from "./CalendarButton";
-import { SaveButton } from "./SaveButton";
+import { PublishButton } from "./PublishButton";
 import { TimezoneSelect } from "./TimezoneSelect";
 import { UpdateButton } from "./UpdateButton";
 
@@ -559,7 +559,7 @@ export function AddToCalendarCard({
         {!initialProps.onUpdate && !initialProps.hideFloatingActionButtons && (
           <div className="fixed bottom-4 left-1/2 flex -translate-x-1/2 transform gap-3">
             {!initialProps.update && (
-              <SaveButton
+              <PublishButton
                 notes={notes}
                 visibility={visibility}
                 lists={lists}

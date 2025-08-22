@@ -16,11 +16,9 @@ import {
   MessageSquareIcon,
   Mic,
   PersonStanding,
-  Share,
   ShieldPlus,
   TagIcon,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import type {
   DateInfo,
@@ -45,7 +43,6 @@ import { Label } from "@soonlist/ui/label";
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
-import { env } from "~/env";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
 import { feedback } from "~/lib/intercom/intercom";
 import { cn } from "~/lib/utils";
@@ -55,6 +52,7 @@ import { EditButton } from "./EditButton";
 import EventCard from "./EventCard";
 import { FollowEventButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
+import { SaveButton } from "./SaveButton";
 import { ShareButton } from "./ShareButton";
 import { UserAvatarMini } from "./UserAvatarMini";
 
@@ -791,38 +789,6 @@ export function EventListItem(props: EventListItemProps) {
         .replaceAll("min", "minute")}`;
     })();
 
-    const handleShareClick = async () => {
-      const e = event as AddToCalendarButtonPropsRestricted;
-      const isAllDay = e.startTime && e.endTime ? false : true;
-      const shareText = isAllDay
-        ? `(${e.startDate || ""}, ${e.location || ""}) ${e.description || ""}`
-        : `(${e.startDate || ""} ${e.startTime || ""}-${e.endTime || ""}, ${e.location || ""}) ${e.description || ""}`;
-
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: `${e.name || "Event"} | Soonlist`,
-            text: shareText,
-            url: `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${id}`,
-          });
-        } catch {
-          // ignored
-        }
-      } else {
-        try {
-          await navigator.clipboard.writeText(
-            `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${id}`,
-          );
-          toast("Event URL copied to clipboard!");
-        } catch (error) {
-          console.error("Failed to copy to clipboard:", error);
-          toast.error(
-            "Failed to copy URL to clipboard. Please try again or copy the URL manually.",
-          );
-        }
-      }
-    };
-
     const atcbEvent: ATCBActionEventConfig = {
       name: event.name,
       description: event.description,
@@ -931,19 +897,14 @@ export function EventListItem(props: EventListItemProps) {
 
           {/* Actions row */}
           <div className="-mb-1 mt-4 flex items-center gap-3">
-            {/* Share pill */}
-            <button
-              type="button"
-              onClick={handleShareClick}
-              className="inline-flex items-center gap-1.5 bg-interactive-2 px-3 py-2"
-              style={{ borderRadius: 14 }}
-              aria-label="Share"
-            >
-              <Share className="size-4 text-interactive-1" />
-              <span className="text-sm font-bold text-interactive-1">
-                Share
-              </span>
-            </button>
+            {/* Save/Share pill */}
+            <SaveButton
+              eventId={id}
+              event={event}
+              userId={clerkUser?.id}
+              eventUserId={user?.id}
+              isSaved={isFollowing}
+            />
 
             <CalendarButton
               type={"icon"}

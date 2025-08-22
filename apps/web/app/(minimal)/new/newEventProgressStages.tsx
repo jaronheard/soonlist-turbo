@@ -36,7 +36,7 @@ import { Textarea } from "@soonlist/ui/textarea";
 
 import { ImageUpload } from "~/components/ImageUpload";
 import { Logo } from "~/components/Logo";
-import { SaveButton } from "~/components/SaveButton";
+import { PublishButton } from "~/components/PublishButton";
 import { organizeFormSchema } from "~/components/YourDetails";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
@@ -170,7 +170,7 @@ export function ProgressStages({
           {inactiveMode}
         </Button>
         {eventData && (
-          <SaveButton
+          <PublishButton
             event={{ ...eventData, images }}
             eventMetadata={eventData.eventMetadata}
             notes={organizeData.notes}
