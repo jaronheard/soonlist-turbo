@@ -806,10 +806,17 @@ export function EventListItem(props: EventListItemProps) {
           // ignored
         }
       } else {
-        await navigator.clipboard.writeText(
-          `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${id}`,
-        );
-        toast("Event URL copied to clipboard!");
+        try {
+          await navigator.clipboard.writeText(
+            `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${id}`,
+          );
+          toast("Event URL copied to clipboard!");
+        } catch (error) {
+          console.error("Failed to copy to clipboard:", error);
+          toast.error(
+            "Failed to copy URL to clipboard. Please try again or copy the URL manually.",
+          );
+        }
       }
     };
 
