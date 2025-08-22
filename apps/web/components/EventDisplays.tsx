@@ -726,7 +726,8 @@ export function EventListItem(props: EventListItemProps) {
       : getDateInfoUTC(event.endDate || event.startDate || "");
 
     const relativeTime = startDateInfo ? formatRelativeTime(startDateInfo) : "";
-    const isHappeningNow = relativeTime === "Happening now";
+    const isHappeningNow =
+      props.happeningNow ?? relativeTime === "Happening now";
 
     const isRecent = (() => {
       if (!props.createdAt) return false;
@@ -781,6 +782,8 @@ export function EventListItem(props: EventListItemProps) {
     const relativeLabel = (() => {
       if (isHappeningNow) return "Happening now";
       if (!relativeTime) return "";
+      // Don't show "in the past" when happeningNow prop is explicitly true
+      if (props.happeningNow) return "Happening now";
       return `Starts in ${relativeTime
         .replaceAll("hrs", "hours")
         .replaceAll("hr", "hour")

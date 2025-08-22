@@ -157,6 +157,7 @@ export function EventList({
                       hideCurator={hideCurator}
                       showOtherCurators={showOtherCurators}
                       similarEvents={similarEvents}
+                      happeningNow={false}
                       index={index}
                     />
                   ),
@@ -257,6 +258,7 @@ export function EventList({
                     hideCurator={hideCurator}
                     showOtherCurators={showOtherCurators}
                     similarEvents={similarEvents}
+                    happeningNow={false}
                     index={index}
                   />
                 ),
