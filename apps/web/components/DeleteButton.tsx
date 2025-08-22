@@ -56,11 +56,11 @@ export function DeleteButton(props: DeleteButtonProps) {
       <SignedIn>
         <Button
           size={"icon"}
-          variant={"destructive"}
+          variant={"ghost"}
           onClick={handleDelete}
           disabled={isDeleting}
         >
-          <Trash className="size-6" />
+          <Trash className="size-4 text-red-600" />
         </Button>
       </SignedIn>
     );

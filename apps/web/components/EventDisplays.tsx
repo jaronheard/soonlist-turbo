@@ -896,7 +896,7 @@ export function EventListItem(props: EventListItemProps) {
           )}
 
           {/* Actions row */}
-          <div className="-mb-1 mt-4 flex items-center gap-3">
+          <div className="-mb-2.5 flex items-center gap-3">
             {/* Save/Share pill */}
             <SaveButton
               eventId={id}
@@ -904,6 +904,7 @@ export function EventListItem(props: EventListItemProps) {
               userId={clerkUser?.id}
               eventUserId={user?.id}
               isSaved={isFollowing}
+              className="-ml-2"
             />
 
             <CalendarButton

@@ -26,9 +26,9 @@ export function EditButton(props: EditButtonProps) {
   if (props.type === "icon") {
     return (
       <SignedIn>
-        <Button size={"icon"} asChild variant={"outline"}>
+        <Button size={"icon"} asChild variant={"ghost"}>
           <Link href={`/event/${props.id}/edit`}>
-            <Pencil className="size-6" />
+            <Pencil className="size-4 text-interactive-1" />
           </Link>
         </Button>
       </SignedIn>
@@ -39,7 +39,7 @@ export function EditButton(props: EditButtonProps) {
     <SignedIn>
       <DropdownMenuItem asChild>
         <Link href={`/event/${props.id}/edit`}>
-          <Pencil className="mr-2 size-4" />
+          <Pencil className="mr-2 size-4 text-interactive-1" />
           Edit
         </Link>
       </DropdownMenuItem>
