@@ -736,7 +736,7 @@ export function EventListItem(props: EventListItemProps) {
     })();
 
     // Visual constants to mimic Expo design
-    const thumbWidth = 110; // px
+    const thumbWidth = 94; // px (85% of original 110px)
     const thumbHeight = Math.round((thumbWidth * 16) / 9);
     const imageRotation =
       props.index !== undefined

@@ -79,7 +79,7 @@ export default function Page() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4">
+    <div className="mx-auto max-w-2xl">
       <h1 className="mb-4 text-2xl font-bold leading-[1.08333] tracking-tight text-neutral-1">
         <div className="flex gap-4">
           <Globe2 className="size-6" />
