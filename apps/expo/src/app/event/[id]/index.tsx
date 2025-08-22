@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
-import { Link, router, Stack, useLocalSearchParams } from "expo-router";
+import { Link, router, Stack, useLocalSearchParams, useNavigation } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
@@ -46,13 +46,13 @@ export default function Page() {
   const { width } = Dimensions.get("window");
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
+  const navigation = useNavigation();
   const showDiscover = currentUser
     ? getPlanStatusFromUser(currentUser).showDiscover
     : false;
 
-  // Check if we came from a web redirect
-  const { source } = useLocalSearchParams<{ source: string }>();
-  const isFromWeb = source === "web";
+  // Check if we can go back in the navigation stack
+  const canGoBack = navigation.canGoBack();
 
   // Store the aspect ratio for the main event image
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
@@ -137,13 +137,13 @@ export default function Page() {
     );
   }, [event?.event]);
 
-  // Build the header-left UI if we came from web
+  // Build the header-left UI if we can't go back
   const HeaderLeft = useCallback(() => {
-    if (isFromWeb) {
+    if (!canGoBack) {
       return <HeaderLogo />;
     }
     return null;
-  }, [isFromWeb]);
+  }, [canGoBack]);
 
   // Build the header-right UI if we have data
   const HeaderRight = useCallback(() => {
@@ -221,7 +221,7 @@ export default function Page() {
       <Stack.Screen 
         options={{ 
           headerRight: HeaderRight,
-          headerLeft: isFromWeb ? HeaderLeft : undefined,
+          headerLeft: !canGoBack ? HeaderLeft : undefined,
         }} 
       />
       <ScrollView
