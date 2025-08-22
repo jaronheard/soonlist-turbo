@@ -183,13 +183,20 @@ export default function PublicListClient({ params }: Props) {
   if (isOwner && !isPublicListEnabled) {
     return (
       <div className="mx-auto max-w-2xl">
-        <UserInfo userName={userName} />
-        <div className="p-2"></div>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-2">
+            {publicListData?.user.displayName}'s events
+          </h1>
+          <div className="mb-2 text-sm text-gray-500">
+            Event list by {publicListData?.user.displayName}
+          </div>
+          <UserInfo userName={userName} />
+        </div>
 
         <div className="rounded-lg border bg-white p-6">
           <div className="mb-4 flex items-center gap-3">
             <Share2 className="size-6 text-blue-500" />
-            <h2 className="font-heading text-xl font-bold">
+            <h2 className="text-xl font-bold">
               Share Your Events
             </h2>
           </div>
@@ -234,12 +241,19 @@ export default function PublicListClient({ params }: Props) {
   if (!isOwner && !isPublicListEnabled) {
     return (
       <div className="mx-auto max-w-2xl">
-        <UserInfo userName={userName} />
-        <div className="p-2"></div>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-2">
+            {publicListData?.user.displayName}'s events
+          </h1>
+          <div className="mb-2 text-sm text-gray-500">
+            Event list by {publicListData?.user.displayName}
+          </div>
+          <UserInfo userName={userName} />
+        </div>
 
         <div className="rounded-lg border bg-white p-6 text-center">
           <Lock className="mx-auto mb-4 size-12 text-gray-400" />
-          <h2 className="mb-2 font-heading text-xl font-bold">
+          <h2 className="mb-2 text-xl font-bold">
             Private Profile
           </h2>
           <p className="text-neutral-2">
@@ -253,13 +267,10 @@ export default function PublicListClient({ params }: Props) {
   // Show public list (either as owner or visitor)
   return (
     <div className="mx-auto max-w-2xl">
-      <UserInfo userName={userName} />
-      <div className="p-2"></div>
-
       <div className="mb-6">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="font-heading text-2xl font-bold">
+            <h1 className="text-2xl font-bold">
               {publicListData?.user.publicListName ||
                 `${publicListData?.user.displayName}'s events`}
             </h1>
@@ -339,6 +350,12 @@ export default function PublicListClient({ params }: Props) {
             </div>
           )}
         </div>
+        
+        <div className="mb-2 text-sm text-gray-500">
+          Event list by {publicListData?.user.displayName}
+        </div>
+        
+        <UserInfo userName={userName} />
       </div>
 
       <EventList
