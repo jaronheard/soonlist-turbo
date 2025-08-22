@@ -80,8 +80,8 @@ export default function Page() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-4 text-2xl font-bold leading-[1.08333] tracking-tight text-neutral-1">
-        <div className="flex gap-4">
+      <h1 className="mb-4 font-sans text-2xl font-bold leading-[1.08333] tracking-tight text-neutral-1">
+        <div className="flex items-center gap-4">
           <Globe2 className="size-6" />
           Discover
         </div>
