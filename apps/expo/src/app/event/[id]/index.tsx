@@ -10,7 +10,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
-import { Link, router, Stack, useLocalSearchParams } from "expo-router";
+import {
+  Link,
+  router,
+  Stack,
+  useLocalSearchParams,
+  useNavigation,
+} from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
@@ -18,6 +24,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { EventMenu } from "~/components/EventMenu";
+import { HeaderLogo } from "~/components/HeaderLogo";
 import {
   CalendarPlus,
   EyeOff,
@@ -45,9 +52,13 @@ export default function Page() {
   const { width } = Dimensions.get("window");
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
+  const navigation = useNavigation();
   const showDiscover = currentUser
     ? getPlanStatusFromUser(currentUser).showDiscover
     : false;
+
+  // Check if we can go back in the navigation stack
+  const canGoBack = navigation.canGoBack();
 
   // Store the aspect ratio for the main event image
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
@@ -132,6 +143,14 @@ export default function Page() {
     );
   }, [event?.event]);
 
+  // Build the header-left UI if we can't go back
+  const HeaderLeft = useCallback(() => {
+    if (!canGoBack) {
+      return <HeaderLogo />;
+    }
+    return null;
+  }, [canGoBack]);
+
   // Build the header-right UI if we have data
   const HeaderRight = useCallback(() => {
     if (!event) return null;
@@ -205,7 +224,12 @@ export default function Page() {
 
   return (
     <>
-      <Stack.Screen options={{ headerRight: HeaderRight }} />
+      <Stack.Screen
+        options={{
+          headerRight: HeaderRight,
+          headerLeft: !canGoBack ? HeaderLeft : undefined,
+        }}
+      />
       <ScrollView
         className="flex-1 bg-white"
         contentContainerStyle={{
