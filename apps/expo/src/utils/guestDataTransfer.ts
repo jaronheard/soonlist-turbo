@@ -1,7 +1,6 @@
 import Purchases from "react-native-purchases";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { DISCOVER_CODE_KEY } from "~/components/CodeEntryModal";
 import { GUEST_USER_KEY } from "~/hooks/useGuestUser";
 import { logError, logMessage } from "~/utils/errorLogging";
 
