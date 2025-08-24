@@ -82,10 +82,6 @@ export default function SignUpScreen() {
         await signUp.create({
           ...data,
           username,
-          // Set showDiscover to true by default for new signups
-          publicMetadata: {
-            showDiscover: true,
-          },
         });
         await signUp.prepareEmailAddressVerification({
           strategy: "email_code",

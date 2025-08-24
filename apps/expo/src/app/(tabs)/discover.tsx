@@ -22,6 +22,7 @@ import { getPlanStatusFromUser } from "~/utils/plan";
 
 function DiscoverContent() {
   const { user } = useUser();
+  const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
@@ -95,8 +96,8 @@ function DiscoverContent() {
   // Check if user has access to discover feature (only if authenticated)
   if (user) {
     const { showDiscover } = getPlanStatusFromUser(user);
-
-    if (!showDiscover) {
+    const canAccessDiscover = discoverAccessOverride || showDiscover;
+    if (!canAccessDiscover) {
       return <Redirect href="/feed" />;
     }
   }
