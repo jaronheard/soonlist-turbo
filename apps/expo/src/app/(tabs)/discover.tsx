@@ -12,6 +12,7 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
+import DiscoverShareBanner from "~/components/DiscoverShareBanner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveShareButton from "~/components/SaveShareButton";
 import UserEventsList from "~/components/UserEventsList";
@@ -132,6 +133,7 @@ function DiscoverContent() {
             hideDiscoverableButton={true}
             isDiscoverFeed={true}
             savedEventIds={savedEventIds}
+            HeaderComponent={DiscoverShareBanner}
           />
           {user && <AddEventButton showChevron={false} stats={stats} />}
         </View>
