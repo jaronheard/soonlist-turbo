@@ -1,6 +1,7 @@
 import Purchases from "react-native-purchases";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { DISCOVER_CODE_KEY } from "~/components/CodeEntryModal";
 import { GUEST_USER_KEY } from "~/hooks/useGuestUser";
 import { logError, logMessage } from "~/utils/errorLogging";
 
@@ -78,10 +79,25 @@ export const transferGuestData = async ({
       });
     }
 
-    // Step 3: Clear guest data from AsyncStorage
+    // Step 3: Check for stored discover code and log it
+    try {
+      const discoverCode = await AsyncStorage.getItem(DISCOVER_CODE_KEY);
+      if (discoverCode) {
+        logMessage("Found stored discover code during signup", {
+          discoverCode,
+          userId,
+        });
+        // Note: showDiscover is already set to true by default in signup
+        // so the stored code confirms the user has early access
+      }
+    } catch (codeError) {
+      logError("Failed to check for stored discover code", codeError);
+    }
+
+    // Step 4: Clear guest data from AsyncStorage
     // We can safely clear it now since the backend will handle retries if needed
     try {
-      await AsyncStorage.removeItem(GUEST_USER_KEY);
+      await AsyncStorage.multiRemove([GUEST_USER_KEY, DISCOVER_CODE_KEY]);
       logMessage("Guest data cleared from AsyncStorage");
     } catch (storageError) {
       logError("Failed to clear guest data from AsyncStorage", storageError, {
@@ -90,7 +106,7 @@ export const transferGuestData = async ({
       // Continue since backend data transfer was successful
     }
 
-    // Step 4: Log successful transfer completion
+    // Step 5: Log successful transfer completion
     logMessage("Guest data transfer completed successfully", {
       guestUserId,
       userId,
