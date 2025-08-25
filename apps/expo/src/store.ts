@@ -157,6 +157,12 @@ interface AppState {
   shouldShowViewPaywall: () => boolean;
   markPaywallShown: () => void;
   resetEventViews: () => void;
+
+  // (removed) ephemeral discover flag; rely on Clerk user.reload instead
+
+  // Discover access override for immediate UI update
+  discoverAccessOverride: boolean;
+  setDiscoverAccessOverride: (enabled: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -171,6 +177,13 @@ export const useAppStore = create<AppState>()(
       // Calendar preferences
       preferredCalendarApp: null,
       setPreferredCalendarApp: (app) => set({ preferredCalendarApp: app }),
+
+      // No ephemeral discover flag; UI listens to Clerk user metadata
+
+      // Discover override default state
+      discoverAccessOverride: false,
+      setDiscoverAccessOverride: (enabled) =>
+        set({ discoverAccessOverride: enabled }),
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),

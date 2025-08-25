@@ -12,6 +12,7 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
+import DiscoverShareBanner from "~/components/DiscoverShareBanner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveShareButton from "~/components/SaveShareButton";
 import UserEventsList from "~/components/UserEventsList";
@@ -22,6 +23,7 @@ import { getPlanStatusFromUser } from "~/utils/plan";
 
 function DiscoverContent() {
   const { user } = useUser();
+  const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
@@ -95,8 +97,8 @@ function DiscoverContent() {
   // Check if user has access to discover feature (only if authenticated)
   if (user) {
     const { showDiscover } = getPlanStatusFromUser(user);
-
-    if (!showDiscover) {
+    const canAccessDiscover = discoverAccessOverride || showDiscover;
+    if (!canAccessDiscover) {
       return <Redirect href="/feed" />;
     }
   }
@@ -131,6 +133,7 @@ function DiscoverContent() {
             hideDiscoverableButton={true}
             isDiscoverFeed={true}
             savedEventIds={savedEventIds}
+            HeaderComponent={DiscoverShareBanner}
           />
           {user && <AddEventButton showChevron={false} stats={stats} />}
         </View>

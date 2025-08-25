@@ -688,6 +688,7 @@ interface UserEventsListProps {
   hideDiscoverableButton?: boolean;
   isDiscoverFeed?: boolean;
   savedEventIds?: Set<string>;
+  HeaderComponent?: React.ComponentType;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -704,6 +705,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     hideDiscoverableButton = false,
     isDiscoverFeed = false,
     savedEventIds,
+    HeaderComponent,
   } = props;
   const { user } = useUser();
 
@@ -762,17 +764,18 @@ export default function UserEventsList(props: UserEventsListProps) {
   );
 
   const renderHeader = () => {
-    if (!stats) {
-      return null;
-    }
-
     return (
-      <EventStats
-        capturesThisWeek={stats.capturesThisWeek ?? 0}
-        weeklyGoal={stats.weeklyGoal ?? 0}
-        upcomingEvents={stats.upcomingEvents ?? 0}
-        allTimeEvents={stats.allTimeEvents ?? 0}
-      />
+      <View>
+        {HeaderComponent && <HeaderComponent />}
+        {stats && (
+          <EventStats
+            capturesThisWeek={stats.capturesThisWeek ?? 0}
+            weeklyGoal={stats.weeklyGoal ?? 0}
+            upcomingEvents={stats.upcomingEvents ?? 0}
+            allTimeEvents={stats.allTimeEvents ?? 0}
+          />
+        )}
+      </View>
     );
   };
 
