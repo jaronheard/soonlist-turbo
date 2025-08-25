@@ -86,11 +86,11 @@ async function generateUniqueUsername(
     candidateCount: candidates.length,
   });
 
-  // Filter candidates by length and ensure minimum length
+  // Filter candidates by length and ensure minimum length (4 characters minimum)
   const validCandidates = candidates
     .filter(
       (username) =>
-        username.length >= 3 && username.length <= MAX_USERNAME_LENGTH,
+        username.length >= 4 && username.length <= MAX_USERNAME_LENGTH,
     )
     .slice(0, 10); // Limit to first 10 candidates
 
@@ -136,7 +136,25 @@ async function generateUniqueUsername(
   }
 
   // If all candidates are taken, add numbers to the best candidate
-  const baseUsername = validCandidates[0] || "user";
+  // Ensure the base username is at least 4 characters long
+  let baseUsername = validCandidates[0] || "user";
+
+  // If the base username is too short, pad it to meet the 4-character minimum
+  if (baseUsername.length < 4) {
+    console.log(
+      "[USERNAME_GEN] Base username too short, padding to meet 4-character minimum",
+      {
+        originalBase: baseUsername,
+        length: baseUsername.length,
+      },
+    );
+    // Pad with 'x' characters to reach minimum length
+    baseUsername = baseUsername.padEnd(4, "x");
+    console.log("[USERNAME_GEN] Padded base username", {
+      paddedBase: baseUsername,
+      newLength: baseUsername.length,
+    });
+  }
 
   console.log(
     "[USERNAME_GEN] All primary candidates taken, trying numbered fallbacks",
@@ -234,10 +252,17 @@ async function generateUniqueUsername(
   }
 
   // If even timestamp is too long, truncate the base and add timestamp
+  // Ensure we have at least 1 character from the base to maintain some personalization
+  // while still ensuring the final username is at least 4 characters long
+  const minBaseChars = Math.max(1, 4 - timestamp.length);
+  const maxBaseChars = MAX_USERNAME_LENGTH - timestamp.length;
+
+  // Use the maximum possible characters from base while respecting constraints
   const truncatedBase = baseUsername.substring(
     0,
-    MAX_USERNAME_LENGTH - timestamp.length,
+    Math.max(minBaseChars, maxBaseChars),
   );
+
   const finalUsername = `${truncatedBase}${timestamp}`;
 
   console.log("[USERNAME_GEN] SUCCESS: Using truncated timestamp fallback", {
