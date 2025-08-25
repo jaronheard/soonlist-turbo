@@ -7,18 +7,26 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { Clerk, useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
+import {
+  Clerk,
+  useOAuth,
+  useSignIn,
+  useSignUp,
+  useUser,
+} from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
-import { useConvex, useMutation } from "convex/react";
+import { useAction, useConvex, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { X } from "~/components/icons";
 import { useGuestUser } from "~/hooks/useGuestUser";
+import { useAppStore } from "~/store";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { logError } from "../utils/errorLogging";
 import { transferGuestData } from "../utils/guestDataTransfer";
+import { redeemStoredDiscoverCode } from "../utils/redeemStoredDiscoverCode";
 import { AppleSignInButton } from "./AppleSignInButton";
 import { EmailSignInButton } from "./EmailSignInButton"; // You'll need to create this component
 import { GoogleSignInButton } from "./GoogleSignInButton";
@@ -36,10 +44,12 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
   const posthog = usePostHog();
   const convex = useConvex();
+  const { user } = useUser();
   const { guestUserId, isLoading: isGuestUserLoading } = useGuestUser();
   const transferGuestOnboardingData = useMutation(
     api.guestOnboarding.transferGuestOnboardingData,
   );
+  const redeemDiscoverCode = useAction(api.codes.redeemCode);
 
   const { signIn, setActive: setActiveSignIn } = useSignIn();
   const { signUp, setActive: setActiveSignUp } = useSignUp();
@@ -52,6 +62,9 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
 
   const [showOtherOptions, setShowOtherOptions] = useState(false);
   const [oauthError, setOauthError] = useState<string | null>(null);
+  const setDiscoverAccessOverride = useAppStore(
+    (s) => s.setDiscoverAccessOverride,
+  );
 
   const toggleOtherOptions = () => {
     setShowOtherOptions(!showOtherOptions);
@@ -129,6 +142,11 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
                   userId: session.user.id,
                   transferGuestOnboardingData,
                 });
+                await redeemStoredDiscoverCode(redeemDiscoverCode);
+                await user?.reload?.();
+                if (user?.publicMetadata?.showDiscover) {
+                  setDiscoverAccessOverride(false);
+                }
               }
 
               return true; // Success
@@ -238,6 +256,20 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
                   userId,
                   transferGuestOnboardingData,
                 });
+                // Redeem any stored discover code and refresh user metadata
+                try {
+                  await redeemStoredDiscoverCode(redeemDiscoverCode);
+                } catch (redeemErr) {
+                  logError("Redeem stored code error (sign-in)", redeemErr);
+                }
+                try {
+                  await user?.reload?.();
+                  if (user?.publicMetadata?.showDiscover) {
+                    setDiscoverAccessOverride(false);
+                  }
+                } catch (reloadErr) {
+                  logError("Clerk user reload error (sign-in)", reloadErr);
+                }
               } catch (transferError) {
                 logError("Guest data transfer error", transferError);
               }

@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
 import { Check, ChevronDown } from "~/components/icons";
+import { useAppStore } from "~/store";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import {
   DropdownMenuCheckboxItem,
@@ -34,17 +35,20 @@ function isRouteActive(routePath: string, active?: RouteType) {
 export function NavigationMenu({ active }: NavigationMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useUser();
+  const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
+
+  // Derive showDiscover explicitly so changes to discoverAccessOverride or user metadata trigger recompute
+  const showDiscover =
+    discoverAccessOverride ||
+    (user ? getPlanStatusFromUser(user).showDiscover : false);
 
   const { routes, currentRoute } = useMemo(() => {
-    const showDiscover = user
-      ? getPlanStatusFromUser(user).showDiscover
-      : false;
     const routes = showDiscover ? baseRoutes : baseRoutes.slice(0, 2);
     const currentRoute =
       routes.find((r) => isRouteActive(r.path, active))?.label ?? "Upcoming";
 
     return { routes, currentRoute };
-  }, [user, active]);
+  }, [showDiscover, active]);
 
   const handleNavigation = (path: (typeof routes)[number]["path"]) => {
     setMenuOpen(false);

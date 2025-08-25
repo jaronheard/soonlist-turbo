@@ -12,6 +12,7 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
+import DiscoverShareBanner from "~/components/DiscoverShareBanner";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveShareButton from "~/components/SaveShareButton";
 import UserEventsList from "~/components/UserEventsList";
@@ -22,14 +23,19 @@ import { getPlanStatusFromUser } from "~/utils/plan";
 
 function DiscoverContent() {
   const { user } = useUser();
+  const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  // Fetch user stats
+  // Compute access early to skip queries if denied
+  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
+  const canAccessDiscover = discoverAccessOverride || showDiscover;
+
+  // Fetch user stats (skip when access is denied or user missing)
   const stats = useQuery(
     api.events.getStats,
-    user?.username ? { userName: user.username } : "skip",
+    canAccessDiscover && user?.username ? { userName: user.username } : "skip",
   );
 
   // Use the stable timestamp from the store that updates every 15 minutes
@@ -43,9 +49,11 @@ function DiscoverContent() {
     isLoading,
   } = useStablePaginatedQuery(
     api.feeds.getDiscoverFeed,
-    {
-      filter: "upcoming" as const,
-    },
+    canAccessDiscover
+      ? {
+          filter: "upcoming" as const,
+        }
+      : "skip",
     {
       initialNumItems: 50,
     },
@@ -53,9 +61,9 @@ function DiscoverContent() {
 
   // Memoize saved events query args to prevent unnecessary re-renders
   const savedEventsQueryArgs = useMemo(() => {
-    if (!user?.username) return "skip";
+    if (!canAccessDiscover || !user?.username) return "skip";
     return { userName: user.username };
-  }, [user?.username]);
+  }, [canAccessDiscover, user?.username]);
 
   const savedEventIdsQuery = useQuery(
     api.events.getSavedIdsForUser,
@@ -93,12 +101,8 @@ function DiscoverContent() {
   }, [events, stableTimestamp]);
 
   // Check if user has access to discover feature (only if authenticated)
-  if (user) {
-    const { showDiscover } = getPlanStatusFromUser(user);
-
-    if (!showDiscover) {
-      return <Redirect href="/feed" />;
-    }
+  if (user && !canAccessDiscover) {
+    return <Redirect href="/feed" />;
   }
 
   function SaveShareButtonWrapper({ event }: { event: { id: string } }) {
@@ -131,6 +135,7 @@ function DiscoverContent() {
             hideDiscoverableButton={true}
             isDiscoverFeed={true}
             savedEventIds={savedEventIds}
+            HeaderComponent={DiscoverShareBanner}
           />
           {user && <AddEventButton showChevron={false} stats={stats} />}
         </View>
