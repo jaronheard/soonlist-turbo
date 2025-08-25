@@ -45,10 +45,11 @@ export function CodeEntryModal({
     try {
       const normalizedCode = code.trim().toUpperCase();
 
-      if (isAuthenticated) {
-        // User is authenticated, use the Convex action
-        const result = await redeemCode({ code: normalizedCode });
-        if (result.success) {
+      // Always validate the code first using the backend action
+      const result = await redeemCode({ code: normalizedCode });
+
+      if (result.success) {
+        if (isAuthenticated) {
           // Force UI to enable Discover immediately
           setDiscoverAccessOverride(true);
           // Refresh Clerk user so publicMetadata updates immediately
@@ -62,17 +63,17 @@ export function CodeEntryModal({
             setCode("");
           }, 1500);
         } else {
-          setError(result.error ?? "Invalid code. Please try again.");
+          // User is anonymous, store the validated code for later
+          await AsyncStorage.setItem(DISCOVER_CODE_KEY, normalizedCode);
+          setSuccess(true);
+          timeoutRef.current = setTimeout(() => {
+            onClose();
+            setSuccess(false);
+            setCode("");
+          }, 1500);
         }
       } else {
-        // User is anonymous, store the code for later
-        await AsyncStorage.setItem(DISCOVER_CODE_KEY, normalizedCode);
-        setSuccess(true);
-        timeoutRef.current = setTimeout(() => {
-          onClose();
-          setSuccess(false);
-          setCode("");
-        }, 1500);
+        setError(result.error ?? "Invalid code. Please try again.");
       }
     } catch (err: unknown) {
       console.error("Error redeeming code:", err);
