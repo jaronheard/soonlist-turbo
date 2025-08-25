@@ -139,6 +139,7 @@ export function useCalendar() {
             startTime: calendarEvent.startTime,
             endDate: calendarEvent.endDate,
             endTime: calendarEvent.endTime,
+            timeZone: calendarEvent.timeZone,
           });
 
           const canOpen = await Linking.canOpenURL(googleCalendarUrl);

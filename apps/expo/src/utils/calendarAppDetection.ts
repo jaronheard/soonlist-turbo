@@ -1,4 +1,5 @@
 import { Linking } from "react-native";
+import { Temporal } from "@js-temporal/polyfill";
 
 export type CalendarApp = "google" | "apple" | "system";
 
@@ -77,54 +78,66 @@ export const createGoogleCalendarLink = (event: {
   startTime?: string;
   endDate?: string;
   endTime?: string;
+  timeZone?: string;
 }): string => {
   const text = encodeURIComponent(event.name || "");
   const details = encodeURIComponent(event.description || "");
   const location = encodeURIComponent(event.location || "");
 
-  // Format dates for Google Calendar
-  // Format: YYYYMMDDTHHMMSS/YYYYMMDDTHHMMSS
+  // Build dates for Google Calendar
+  // For timed events: YYYYMMDDTHHMMSSZ/YYYYMMDDTHHMMSSZ (UTC)
+  // For all-day events: YYYYMMDD/YYYYMMDD (end is exclusive)
   let dates = "";
+  const tz = event.timeZone || Temporal.Now.timeZoneId();
+
+  const formatUtcForGoogle = (zdt: Temporal.ZonedDateTime): string => {
+    const instant = zdt.toInstant();
+    const d = new Date(instant.epochMilliseconds);
+    const yyyy = d.getUTCFullYear().toString();
+    const mm = (d.getUTCMonth() + 1).toString().padStart(2, "0");
+    const dd = d.getUTCDate().toString().padStart(2, "0");
+    const hh = d.getUTCHours().toString().padStart(2, "0");
+    const mi = d.getUTCMinutes().toString().padStart(2, "0");
+    const ss = d.getUTCSeconds().toString().padStart(2, "0");
+    return `${yyyy}${mm}${dd}T${hh}${mi}${ss}Z`;
+  };
 
   if (event.startDate) {
-    const startDate = event.startDate.replace(/-/g, "");
-    const startTime = (event.startTime || "00:00").replace(/:/g, "");
-    dates = `${startDate}T${startTime}00`;
+    const isAllDay = !event.startTime && !event.endTime;
 
-    if (event.endDate) {
-      const endDate = event.endDate.replace(/-/g, "");
-      const endTime = (event.endTime || "23:59").replace(/:/g, "");
-      dates += `/${endDate}T${endTime}00`;
+    if (isAllDay) {
+      // Use all-day format; Google expects end date exclusive
+      const startPlain = event.startDate.replace(/-/g, "");
+      const endBase = (event.endDate || event.startDate).replace(/-/g, "");
+      // Use Temporal.PlainDate for robust date arithmetic to compute the exclusive end
+      // This avoids edge cases at month/year boundaries and leap years.
+      const endPlain = Temporal.PlainDate.from(
+        `${endBase.substring(0, 4)}-${endBase.substring(4, 6)}-${endBase.substring(6, 8)}`,
+      ).add({ days: 1 });
+      const endExclusive = endPlain.toString().replace(/-/g, "");
+      dates = `${startPlain}/${endExclusive}`;
     } else {
-      // If no end date, use start date + 1 hour
-      const timeParts = event.startTime?.split(":");
-      const startTimeHour = timeParts?.[0] ? parseInt(timeParts[0], 10) : 0;
-      const startTimeMinutes = timeParts?.[1] ? timeParts[1] : "00";
+      const startTime = event.startTime || "00:00:00";
+      const endTime = event.endTime || (event.endDate ? "23:59:00" : undefined);
 
-      // Handle hour overflow (23:xx -> 00:xx next day)
-      let endHour = startTimeHour + 1;
-      let endDateForCalculation = startDate;
+      const startZdt = Temporal.ZonedDateTime.from(
+        `${event.startDate}T${startTime.length === 5 ? startTime + ":00" : startTime}[${tz}]`,
+      );
 
-      if (endHour >= 24) {
-        endHour = 0;
-        // Need to increment the date
-        const dateObj = new Date(
-          parseInt(startDate.substring(0, 4), 10), // year
-          parseInt(startDate.substring(4, 6), 10) - 1, // month (0-indexed)
-          parseInt(startDate.substring(6, 8), 10), // day
+      let endZdt: Temporal.ZonedDateTime;
+      if (event.endDate) {
+        const endTimeFinal = endTime || "23:59:00";
+        endZdt = Temporal.ZonedDateTime.from(
+          `${event.endDate}T${endTimeFinal.length === 5 ? endTimeFinal + ":00" : endTimeFinal}[${tz}]`,
         );
-        dateObj.setDate(dateObj.getDate() + 1);
-        endDateForCalculation =
-          dateObj.getFullYear().toString() +
-          (dateObj.getMonth() + 1).toString().padStart(2, "0") +
-          dateObj.getDate().toString().padStart(2, "0");
+      } else {
+        endZdt = startZdt.add({ hours: 1 });
       }
 
-      const endHourString = endHour.toString().padStart(2, "0");
-      const endTimeString = endHourString + startTimeMinutes;
-      dates += `/${endDateForCalculation}T${endTimeString}00`;
+      dates = `${formatUtcForGoogle(startZdt)}/${formatUtcForGoogle(endZdt)}`;
     }
   }
 
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${location}&dates=${dates}`;
+  const ctz = encodeURIComponent(tz);
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${location}&dates=${dates}&ctz=${ctz}`;
 };
