@@ -22,6 +22,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { X } from "~/components/icons";
 import { useGuestUser } from "~/hooks/useGuestUser";
+import { useAppStore } from "~/store";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 import { logError } from "../utils/errorLogging";
 import { transferGuestData } from "../utils/guestDataTransfer";
@@ -61,6 +62,9 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
 
   const [showOtherOptions, setShowOtherOptions] = useState(false);
   const [oauthError, setOauthError] = useState<string | null>(null);
+  const setDiscoverAccessOverride = useAppStore(
+    (s) => s.setDiscoverAccessOverride,
+  );
 
   const toggleOtherOptions = () => {
     setShowOtherOptions(!showOtherOptions);
@@ -140,6 +144,9 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
                 });
                 await redeemStoredDiscoverCode(redeemDiscoverCode);
                 await user?.reload?.();
+                if (user?.publicMetadata?.showDiscover) {
+                  setDiscoverAccessOverride(false);
+                }
               }
 
               return true; // Success
@@ -257,6 +264,9 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
                 }
                 try {
                   await user?.reload?.();
+                  if (user?.publicMetadata?.showDiscover) {
+                    setDiscoverAccessOverride(false);
+                  }
                 } catch (reloadErr) {
                   logError("Clerk user reload error (sign-in)", reloadErr);
                 }

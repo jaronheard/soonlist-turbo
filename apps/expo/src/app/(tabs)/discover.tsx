@@ -49,9 +49,11 @@ function DiscoverContent() {
     isLoading,
   } = useStablePaginatedQuery(
     api.feeds.getDiscoverFeed,
-    {
-      filter: "upcoming" as const,
-    },
+    canAccessDiscover
+      ? {
+          filter: "upcoming" as const,
+        }
+      : "skip",
     {
       initialNumItems: 50,
     },

@@ -10,6 +10,10 @@ export const redeemCode = action({
   args: {
     code: v.string(),
   },
+  returns: v.object({
+    success: v.boolean(),
+    error: v.optional(v.string()),
+  }),
   handler: async (ctx, { code }) => {
     const normalized = code.trim().toUpperCase();
     const validCode = "DISCOVER";

@@ -11,11 +11,11 @@ import { z } from "zod";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { Logo } from "~/components/Logo";
 import { useAppStore } from "~/store";
-import { Logo } from "../../components/Logo";
-import { logError } from "../../utils/errorLogging";
-import { transferGuestData } from "../../utils/guestDataTransfer";
-import { redeemStoredDiscoverCode } from "../../utils/redeemStoredDiscoverCode";
+import { logError } from "~/utils/errorLogging";
+import { transferGuestData } from "~/utils/guestDataTransfer";
+import { redeemStoredDiscoverCode } from "~/utils/redeemStoredDiscoverCode";
 
 const verifyEmailSchema = z.object({
   code: z
@@ -28,6 +28,9 @@ type VerifyEmailFormData = z.infer<typeof verifyEmailSchema>;
 
 const VerifyEmail = () => {
   const { user } = useUser();
+  const setDiscoverAccessOverride = useAppStore(
+    (s) => s.setDiscoverAccessOverride,
+  );
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [generalError, setGeneralError] = React.useState("");
   const { signUp, setActive } = useSignUp();
@@ -84,6 +87,9 @@ const VerifyEmail = () => {
           await redeemStoredDiscoverCode(redeemDiscoverCode);
           // Refresh Clerk user to reflect updated publicMetadata immediately
           await user?.reload?.();
+          if (user?.publicMetadata?.showDiscover) {
+            setDiscoverAccessOverride(false);
+          }
         }
       } else {
         logError("Verification failed", completeSignUp);

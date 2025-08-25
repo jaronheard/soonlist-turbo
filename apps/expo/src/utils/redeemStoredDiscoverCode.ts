@@ -11,6 +11,7 @@ type RedeemFn = (args: {
 export async function redeemStoredDiscoverCode(
   redeemCode: RedeemFn,
 ): Promise<void> {
+  let shouldClear: boolean | undefined;
   try {
     const code = await AsyncStorage.getItem(DISCOVER_CODE_KEY);
     if (!code) return;
@@ -27,18 +28,25 @@ export async function redeemStoredDiscoverCode(
       } catch {
         // ignore if store is not initialized in this context
       }
+      shouldClear = true;
     } else {
       logError(
         "Failed to redeem stored discover code",
         new Error(result.error || "Unknown error"),
         { code: normalized },
       );
+      // Only clear on known invalid-code responses to avoid losing retry on transient failures
+      if (result.error === "Invalid code") {
+        shouldClear = true;
+      }
     }
   } catch (err) {
     logError("Error redeeming stored discover code", err);
   } finally {
     try {
-      await AsyncStorage.removeItem(DISCOVER_CODE_KEY);
+      if (typeof shouldClear !== "undefined" && shouldClear) {
+        await AsyncStorage.removeItem(DISCOVER_CODE_KEY);
+      }
     } catch (clearErr) {
       logError("Failed to clear DISCOVER_CODE_KEY", clearErr);
     }

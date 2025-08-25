@@ -158,7 +158,7 @@ interface AppState {
   markPaywallShown: () => void;
   resetEventViews: () => void;
 
-  // (removed) ephemeral discover flag; rely on Clerk user.reload instead
+  // Ephemeral discover flag to bridge UI until Clerk metadata updates
 
   // Discover access override for immediate UI update
   discoverAccessOverride: boolean;
@@ -351,6 +351,8 @@ export const useAppStore = create<AppState>()(
           filter: "upcoming",
           intentParams: null,
           preferredCalendarApp: null,
+          // Ensure discover override never persists across global reset
+          discoverAccessOverride: false,
           addEventState: {
             input: "",
             imagePreview: null,
@@ -394,6 +396,8 @@ export const useAppStore = create<AppState>()(
           filter: "upcoming",
           intentParams: null,
           preferredCalendarApp: null,
+          // Ensure discover override never persists across logout
+          discoverAccessOverride: false,
           addEventState: {
             input: "",
             imagePreview: null,
@@ -485,6 +489,13 @@ export const useAppStore = create<AppState>()(
     {
       name: "app-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      // Do not persist ephemeral flags like discoverAccessOverride
+      partialize: (state) => {
+        const { discoverAccessOverride, ...rest } = state as typeof state & {
+          discoverAccessOverride?: boolean;
+        };
+        return rest;
+      },
     },
   ),
 );
