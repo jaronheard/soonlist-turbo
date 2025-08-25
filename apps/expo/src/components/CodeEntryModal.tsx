@@ -55,6 +55,10 @@ export function CodeEntryModal({
           // Refresh Clerk user so publicMetadata updates immediately
           if (user && typeof user.reload === "function") {
             await user.reload();
+            // Check if showDiscover is now true in metadata and clear override
+            if (user.publicMetadata.showDiscover) {
+              setDiscoverAccessOverride(false);
+            }
           }
           setSuccess(true);
           timeoutRef.current = setTimeout(() => {
