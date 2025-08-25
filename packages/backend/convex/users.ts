@@ -138,15 +138,18 @@ async function generateUniqueUsername(
   // If all candidates are taken, add numbers to the best candidate
   // Ensure the base username is at least 4 characters long
   let baseUsername = validCandidates[0] || "user";
-  
+
   // If the base username is too short, pad it to meet the 4-character minimum
   if (baseUsername.length < 4) {
-    console.log("[USERNAME_GEN] Base username too short, padding to meet 4-character minimum", {
-      originalBase: baseUsername,
-      length: baseUsername.length,
-    });
+    console.log(
+      "[USERNAME_GEN] Base username too short, padding to meet 4-character minimum",
+      {
+        originalBase: baseUsername,
+        length: baseUsername.length,
+      },
+    );
     // Pad with 'x' characters to reach minimum length
-    baseUsername = baseUsername.padEnd(4, 'x');
+    baseUsername = baseUsername.padEnd(4, "x");
     console.log("[USERNAME_GEN] Padded base username", {
       paddedBase: baseUsername,
       newLength: baseUsername.length,
@@ -253,13 +256,13 @@ async function generateUniqueUsername(
   // while still ensuring the final username is at least 4 characters long
   const minBaseChars = Math.max(1, 4 - timestamp.length);
   const maxBaseChars = MAX_USERNAME_LENGTH - timestamp.length;
-  
+
   // Use the maximum possible characters from base while respecting constraints
   const truncatedBase = baseUsername.substring(
     0,
-    Math.max(minBaseChars, maxBaseChars)
+    Math.max(minBaseChars, maxBaseChars),
   );
-  
+
   const finalUsername = `${truncatedBase}${timestamp}`;
 
   console.log("[USERNAME_GEN] SUCCESS: Using truncated timestamp fallback", {
