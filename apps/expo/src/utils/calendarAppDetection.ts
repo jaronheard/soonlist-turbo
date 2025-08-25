@@ -109,17 +109,12 @@ export const createGoogleCalendarLink = (event: {
       // Use all-day format; Google expects end date exclusive
       const startPlain = event.startDate.replace(/-/g, "");
       const endBase = (event.endDate || event.startDate).replace(/-/g, "");
-      const endDateObj = new Date(
-        parseInt(endBase.substring(0, 4), 10),
-        parseInt(endBase.substring(4, 6), 10) - 1,
-        parseInt(endBase.substring(6, 8), 10),
-      );
-      endDateObj.setDate(endDateObj.getDate() + 1);
-      const endExclusive = `${endDateObj.getFullYear()}${(
-        endDateObj.getMonth() + 1
-      )
-        .toString()
-        .padStart(2, "0")}${endDateObj.getDate().toString().padStart(2, "0")}`;
+      // Use Temporal.PlainDate for robust date arithmetic to compute the exclusive end
+      // This avoids edge cases at month/year boundaries and leap years.
+      const endPlain = Temporal.PlainDate.from(
+        `${endBase.substring(0, 4)}-${endBase.substring(4, 6)}-${endBase.substring(6, 8)}`,
+      ).add({ days: 1 });
+      const endExclusive = endPlain.toString().replace(/-/g, "");
       dates = `${startPlain}/${endExclusive}`;
     } else {
       const startTime = event.startTime || "00:00:00";
