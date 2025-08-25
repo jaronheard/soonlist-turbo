@@ -37,7 +37,7 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
   const { user } = useUser();
   const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
 
-  // Derive showDiscover explicitly so changes to publicMetadata trigger recompute
+  // Derive showDiscover explicitly so changes to discoverAccessOverride or user metadata trigger recompute
   const showDiscover =
     discoverAccessOverride ||
     (user ? getPlanStatusFromUser(user).showDiscover : false);

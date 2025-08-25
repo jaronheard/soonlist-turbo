@@ -17,7 +17,7 @@ Use code DISCOVER to join the Portland-only, invite-only Discover list with even
 
     try {
       await Share.share({
-        message: `${shareMessage}`,
+        message: shareMessage,
         url: appStoreUrl,
         title: "Soonlist — Discover events",
       });
