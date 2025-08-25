@@ -491,9 +491,8 @@ export const useAppStore = create<AppState>()(
       storage: createJSONStorage(() => AsyncStorage),
       // Do not persist ephemeral flags like discoverAccessOverride
       partialize: (state) => {
-        const { discoverAccessOverride, ...rest } = state as typeof state & {
-          discoverAccessOverride?: boolean;
-        };
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { discoverAccessOverride, ...rest } = state;
         return rest;
       },
     },
