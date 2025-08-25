@@ -39,13 +39,14 @@ const createLucideIcon = (iconName: string, iconNode: IconNode): LucideIcon => {
           ...customAttrs,
         },
         [
-          ...(iconNode.map(([tag, attrs]) => {
+          ...(iconNode.map(([tag, attrs], index) => {
             const upperCasedTag = (tag.charAt(0).toUpperCase() +
               tag.slice(1)) as keyof typeof NativeSvg;
             // duplicating the attributes here because generating the OTA update bundles don't inherit the SVG properties from parent (codepush, expo-updates)
             return createElement(
               NativeSvg[upperCasedTag] as FunctionComponent<LucideProps>,
               {
+                key: `${iconName}-${index}`,
                 ...childDefaultAttributes,
                 ...customAttrs,
                 ...attrs,
