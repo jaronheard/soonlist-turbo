@@ -1,12 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { DISCOVER_CODE_KEY } from "~/components/CodeEntryModal";
+import { DISCOVER_CODE_KEY } from "~/constants";
 import { useAppStore } from "~/store";
 import { logError, logMessage } from "~/utils/errorLogging";
 
-interface RedeemFn {
-  (args: { code: string }): Promise<{ success: boolean; error?: string }>;
-}
+type RedeemFn = (args: {
+  code: string;
+}) => Promise<{ success: boolean; error?: string }>;
 
 export async function redeemStoredDiscoverCode(
   redeemCode: RedeemFn,
@@ -18,7 +18,7 @@ export async function redeemStoredDiscoverCode(
     const normalized = code.trim().toUpperCase();
     const result = await redeemCode({ code: normalized });
 
-    if (result?.success) {
+    if (result.success) {
       logMessage("Redeemed stored discover code", { code: normalized });
       // Set override immediately so UI updates on first render post-signup
       try {
@@ -30,7 +30,7 @@ export async function redeemStoredDiscoverCode(
     } else {
       logError(
         "Failed to redeem stored discover code",
-        new Error(result?.error || "Unknown error"),
+        new Error(result.error || "Unknown error"),
         { code: normalized },
       );
     }

@@ -249,6 +249,17 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
                   userId,
                   transferGuestOnboardingData,
                 });
+                // Redeem any stored discover code and refresh user metadata
+                try {
+                  await redeemStoredDiscoverCode(redeemDiscoverCode);
+                } catch (redeemErr) {
+                  logError("Redeem stored code error (sign-in)", redeemErr);
+                }
+                try {
+                  await user?.reload?.();
+                } catch (reloadErr) {
+                  logError("Clerk user reload error (sign-in)", reloadErr);
+                }
               } catch (transferError) {
                 logError("Guest data transfer error", transferError);
               }

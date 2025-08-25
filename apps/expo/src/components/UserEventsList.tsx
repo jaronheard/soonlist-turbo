@@ -688,7 +688,7 @@ interface UserEventsListProps {
   hideDiscoverableButton?: boolean;
   isDiscoverFeed?: boolean;
   savedEventIds?: Set<string>;
-  HeaderComponent?: React.ComponentType;
+  HeaderComponent?: React.ComponentType<Record<string, never>>;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -764,6 +764,7 @@ export default function UserEventsList(props: UserEventsListProps) {
   );
 
   const renderHeader = () => {
+    if (!HeaderComponent && !stats) return null;
     return (
       <View>
         {HeaderComponent && <HeaderComponent />}

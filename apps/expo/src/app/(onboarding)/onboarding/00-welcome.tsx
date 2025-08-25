@@ -100,7 +100,12 @@ export default function WelcomeScreen() {
             </Pressable>
 
             {/* Code entry link */}
-            <Pressable onPress={handleCodeEntry} className="py-2">
+            <Pressable
+              onPress={handleCodeEntry}
+              className="py-2"
+              accessibilityRole="button"
+              accessibilityLabel="Enter a discover access code"
+            >
               <Text className="text-center text-sm text-gray-600">
                 🎟 Got a code?{" "}
                 <Text className="font-semibold text-interactive-1">

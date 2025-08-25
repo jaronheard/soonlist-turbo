@@ -183,7 +183,7 @@ export const useAppStore = create<AppState>()(
       // Discover override default state
       discoverAccessOverride: false,
       setDiscoverAccessOverride: (enabled) =>
-        set({ discoverAccessOverride: enabled }),
+        set((s) => ({ ...s, discoverAccessOverride: enabled })),
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),

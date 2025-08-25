@@ -7,11 +7,7 @@ import { logError } from "~/utils/errorLogging";
 
 const DiscoverShareBanner: React.FC = () => {
   const handleShare = async () => {
-    const triggerHaptic = () => {
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    };
-
-    triggerHaptic();
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     const appStoreUrl =
       "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216";
@@ -21,8 +17,9 @@ Use code DISCOVER to join the Portland-only, invite-only Discover list with even
 
     try {
       await Share.share({
-        message: shareMessage,
+        message: `${shareMessage}`,
         url: appStoreUrl,
+        title: "Soonlist — Discover events",
       });
     } catch (error) {
       logError("Error sharing Discover feed", error);
@@ -31,7 +28,11 @@ Use code DISCOVER to join the Portland-only, invite-only Discover list with even
 
   return (
     <View className="mb-3 mt-2">
-      <TouchableOpacity onPress={handleShare}>
+      <TouchableOpacity
+        onPress={handleShare}
+        accessibilityRole="button"
+        accessibilityLabel="Invite a friend to Discover"
+      >
         <View
           className="mx-4 rounded-2xl bg-accent-yellow/80 p-4"
           style={{

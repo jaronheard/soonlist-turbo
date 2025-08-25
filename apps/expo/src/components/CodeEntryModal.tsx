@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Modal, Pressable, Text, TextInput, View } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -6,36 +6,27 @@ import { useAction, useConvexAuth } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { DISCOVER_CODE_KEY } from "~/constants";
 import { useAppStore } from "~/store";
 
-export const DISCOVER_CODE_KEY = "soonlist_discover_code";
-
-interface RedeemResponse {
-  success: boolean;
-  error?: string;
-}
-
-function isRedeemResponse(value: unknown): value is RedeemResponse {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "success" in value &&
-    typeof (value as { success: unknown }).success === "boolean"
-  );
-}
+// Moved DISCOVER_CODE_KEY to shared constants
 
 interface CodeEntryModalProps {
   isVisible: boolean;
   onClose: () => void;
 }
 
-export function CodeEntryModal({ isVisible, onClose }: CodeEntryModalProps) {
+export function CodeEntryModal({
+  isVisible,
+  onClose,
+}: CodeEntryModalProps): React.ReactElement {
   const [code, setCode] = useState("");
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const { user } = useUser();
   const redeemCode = useAction(api.codes.redeemCode);
   const setDiscoverAccessOverride = useAppStore(
@@ -56,8 +47,8 @@ export function CodeEntryModal({ isVisible, onClose }: CodeEntryModalProps) {
 
       if (isAuthenticated) {
         // User is authenticated, use the Convex action
-        const result: unknown = await redeemCode({ code: normalizedCode });
-        if (isRedeemResponse(result) && result.success) {
+        const result = await redeemCode({ code: normalizedCode });
+        if (result.success) {
           // Force UI to enable Discover immediately
           setDiscoverAccessOverride(true);
           // Refresh Clerk user so publicMetadata updates immediately
@@ -65,20 +56,19 @@ export function CodeEntryModal({ isVisible, onClose }: CodeEntryModalProps) {
             await user.reload();
           }
           setSuccess(true);
-          setTimeout(() => {
+          timeoutRef.current = setTimeout(() => {
             onClose();
             setSuccess(false);
             setCode("");
           }, 1500);
         } else {
-          const errMsg = isRedeemResponse(result) ? result.error : undefined;
-          setError(errMsg || "Invalid code. Please try again.");
+          setError(result.error ?? "Invalid code. Please try again.");
         }
       } else {
         // User is anonymous, store the code for later
         await AsyncStorage.setItem(DISCOVER_CODE_KEY, normalizedCode);
         setSuccess(true);
-        setTimeout(() => {
+        timeoutRef.current = setTimeout(() => {
           onClose();
           setSuccess(false);
           setCode("");
@@ -93,12 +83,24 @@ export function CodeEntryModal({ isVisible, onClose }: CodeEntryModalProps) {
   };
 
   const handleClose = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     setCode("");
     setError("");
     setSuccess(false);
     setIsRedeeming(false);
     onClose();
   };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Modal
@@ -133,7 +135,10 @@ export function CodeEntryModal({ isVisible, onClose }: CodeEntryModalProps) {
 
               <TextInput
                 value={code}
-                onChangeText={(text) => setCode(text.toUpperCase())}
+                onChangeText={(text) => {
+                  setCode(text.toUpperCase());
+                  if (error) setError("");
+                }}
                 placeholder="Enter code"
                 autoCapitalize="characters"
                 autoCorrect={false}
@@ -150,7 +155,7 @@ export function CodeEntryModal({ isVisible, onClose }: CodeEntryModalProps) {
                 style={{ textAlign: "center", fontSize: 18, height: 48 }}
                 maxLength={32}
                 returnKeyType="done"
-                onSubmitEditing={handleRedeem}
+                onSubmitEditing={() => void handleRedeem()}
                 editable={!isRedeeming}
                 spellCheck={false}
               />
@@ -163,6 +168,8 @@ export function CodeEntryModal({ isVisible, onClose }: CodeEntryModalProps) {
 
               <View className="flex-row gap-3">
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel code entry"
                   onPress={handleClose}
                   disabled={isRedeeming}
                   className="flex-1 rounded-full border border-gray-300 py-4"
@@ -173,10 +180,12 @@ export function CodeEntryModal({ isVisible, onClose }: CodeEntryModalProps) {
                 </Pressable>
 
                 <Pressable
-                  onPress={handleRedeem}
-                  disabled={isRedeeming || !code.trim()}
+                  accessibilityRole="button"
+                  accessibilityLabel="Redeem code"
+                  onPress={() => void handleRedeem()}
+                  disabled={isRedeeming || !code.trim() || isLoading}
                   className={`flex-1 rounded-full py-4 ${
-                    isRedeeming || !code.trim()
+                    isRedeeming || !code.trim() || isLoading
                       ? "bg-gray-400"
                       : "bg-interactive-1"
                   }`}

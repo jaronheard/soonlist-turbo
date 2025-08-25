@@ -28,10 +28,14 @@ function DiscoverContent() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  // Fetch user stats
+  // Compute access early to skip queries if denied
+  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
+  const canAccessDiscover = discoverAccessOverride || showDiscover;
+
+  // Fetch user stats (skip when access is denied or user missing)
   const stats = useQuery(
     api.events.getStats,
-    user?.username ? { userName: user.username } : "skip",
+    canAccessDiscover && user?.username ? { userName: user.username } : "skip",
   );
 
   // Use the stable timestamp from the store that updates every 15 minutes
@@ -55,9 +59,9 @@ function DiscoverContent() {
 
   // Memoize saved events query args to prevent unnecessary re-renders
   const savedEventsQueryArgs = useMemo(() => {
-    if (!user?.username) return "skip";
+    if (!canAccessDiscover || !user?.username) return "skip";
     return { userName: user.username };
-  }, [user?.username]);
+  }, [canAccessDiscover, user?.username]);
 
   const savedEventIdsQuery = useQuery(
     api.events.getSavedIdsForUser,
@@ -95,12 +99,8 @@ function DiscoverContent() {
   }, [events, stableTimestamp]);
 
   // Check if user has access to discover feature (only if authenticated)
-  if (user) {
-    const { showDiscover } = getPlanStatusFromUser(user);
-    const canAccessDiscover = discoverAccessOverride || showDiscover;
-    if (!canAccessDiscover) {
-      return <Redirect href="/feed" />;
-    }
+  if (user && !canAccessDiscover) {
+    return <Redirect href="/feed" />;
   }
 
   function SaveShareButtonWrapper({ event }: { event: { id: string } }) {

@@ -11,18 +11,15 @@ export const redeemCode = action({
     code: v.string(),
   },
   handler: async (ctx, { code }) => {
+    const normalized = code.trim().toUpperCase();
+    const validCode = "DISCOVER";
     // Check if user is authenticated
     const identity = await ctx.auth.getUserIdentity();
 
-    // For anonymous users, store the code redemption in their guest data
-    // This will be transferred when they sign up
+    // For anonymous users: validation only. The client persists the code
+    // (e.g., AsyncStorage) and redeems post-auth.
     if (!identity) {
-      // Only support the "DISCOVER" code
-      const validCode = "DISCOVER";
-
-      if (code.toUpperCase() === validCode) {
-        // Store in localStorage or AsyncStorage for anonymous users
-        // This will be picked up during signup
+      if (normalized === validCode) {
         return { success: true };
       } else {
         return { success: false, error: "Invalid code" };
@@ -42,9 +39,7 @@ export const redeemCode = action({
       }
 
       // Only support the "DISCOVER" code
-      const validCode = "DISCOVER";
-
-      if (code.toUpperCase() !== validCode) {
+      if (normalized !== validCode) {
         return { success: false, error: "Invalid code" };
       }
 
@@ -67,7 +62,9 @@ export const redeemCode = action({
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Failed to update Clerk metadata:", errorText);
+        console.error(
+          `Failed to update Clerk metadata: ${response.status} ${response.statusText} — ${errorText}`,
+        );
         return { success: false, error: "Failed to update user access" };
       }
 
