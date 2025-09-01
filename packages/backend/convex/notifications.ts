@@ -8,8 +8,8 @@ import * as OneSignal from "./model/oneSignal";
 import { createDeepLink } from "./model/utils/urlScheme";
 import { generateNotificationId } from "./utils";
 
-// Helper to compute the preceding Sunday at 00:00:00 UTC (by taking next Monday 00:00 UTC minus 48 hours for stricter window)
-function getPrecedingSundayStartUtc(): string {
+// Helper to compute next Monday at 00:00:00 UTC
+function getNextMondayStartUtc(): string {
   const now = new Date();
   const day = now.getUTCDay(); // 0=Sun..6=Sat
   const daysUntilMonday = (1 - day + 7) % 7 || 7; // next Monday (avoid today if already Monday)
@@ -24,9 +24,7 @@ function getPrecedingSundayStartUtc(): string {
       0,
     ),
   );
-  // Subtract 48 hours to get Sunday 00:00 UTC with a stricter ≥24h window across UTC+ timezones.
-  const precedingSunday = new Date(nextMonday.getTime() - 48 * 60 * 60 * 1000);
-  return precedingSunday.toUTCString();
+  return nextMonday.toUTCString();
 }
 
 // Helper to create a stable idempotency key string for a given seed
@@ -59,6 +57,9 @@ function getNextMondayIsoDate(): string {
 
 /**
  * Schedule weekly notifications via OneSignal with timezone delivery at 9:00 AM Monday local time.
+ *
+ * Cron runs Sunday 09:00 UTC; we schedule with send_after of next Monday 00:00 UTC so all
+ * timezones receive at their local Monday 09:00 (via delayed_option "timezone").
  */
 export const scheduleWeeklyTimezoneDigest = internalAction({
   args: {},
@@ -80,7 +81,8 @@ export const scheduleWeeklyTimezoneDigest = internalAction({
       body,
       url,
       includedSegments: ["Subscribed Users"],
-      sendAfter: getPrecedingSundayStartUtc(),
+      // Ensure Monday 9:00 AM local for everyone by gating to next Monday 00:00 UTC
+      sendAfter: getNextMondayStartUtc(),
       deliveryTimeOfDay: "9:00AM",
       externalId: stableKey,
       data: {

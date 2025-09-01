@@ -4,10 +4,10 @@ import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 
-// Send weekly notifications every Sunday at 9 AM
+// Send weekly notifications every Sunday at 09:00 UTC
 crons.cron(
   "weekly notifications",
-  "0 9 * * 0", // Every Sunday at 9:00 AM
+  "0 9 * * 0", // Every Sunday at 09:00 UTC
   internal.notifications.scheduleWeeklyTimezoneDigest,
   {},
 );
