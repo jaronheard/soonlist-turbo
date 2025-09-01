@@ -65,6 +65,17 @@ interface OneSignalErrorResponse {
 
 type OneSignalResponse = OneSignalSuccessResponse | OneSignalErrorResponse;
 
+export interface ScheduleTimezoneParams {
+  title: string;
+  body: string;
+  url?: string;
+  data?: Record<string, unknown>;
+  includedSegments?: string[]; // Defaults to ["Subscribed Users"] if not provided
+  includeExternalUserIds?: string[]; // Optional explicit targeting by external user ids
+  sendAfter?: string; // RFC2822/HTTP date string; OneSignal also accepts "YYYY-MM-DD HH:MM:SS GMT-XXXX"
+  deliveryTimeOfDay?: string; // e.g. "9:00AM"
+}
+
 /**
  * Sends a notification to a specific user using OneSignal's API
  */
@@ -245,6 +256,103 @@ export async function sendBatchNotifications({
   } catch (error) {
     console.error("Error sending OneSignal batch notifications:", error);
 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Schedule a notification to deliver at a specific local time for each user (timezone-aware).
+ * Uses OneSignal's delayed_option: "timezone" with delivery_time_of_day.
+ */
+export async function scheduleTimezoneNotification({
+  title,
+  body,
+  url,
+  data,
+  includedSegments,
+  includeExternalUserIds,
+  sendAfter,
+  deliveryTimeOfDay,
+}: ScheduleTimezoneParams): Promise<{
+  success: boolean;
+  id?: string;
+  error?: string;
+  recipients?: number;
+}> {
+  if (!ONE_SIGNAL_REST_API_KEY || !EXPO_PUBLIC_ONE_SIGNAL_APP_ID) {
+    console.error("OneSignal API key or App ID not configured", {
+      title,
+      environment: IS_DEV ? "development" : "production",
+      hasApiKey: !!ONE_SIGNAL_REST_API_KEY,
+      hasAppId: !!EXPO_PUBLIC_ONE_SIGNAL_APP_ID,
+    });
+    return {
+      success: false,
+      error: "OneSignal API key or App ID not configured",
+    };
+  }
+
+  try {
+    const payload: Record<string, unknown> = {
+      app_id: EXPO_PUBLIC_ONE_SIGNAL_APP_ID,
+      headings: { en: title },
+      contents: { en: body },
+      data: { ...(data || {}), url },
+      url,
+      delayed_option: "timezone",
+      delivery_time_of_day: deliveryTimeOfDay || "9:00AM",
+    };
+
+    if (includeExternalUserIds && includeExternalUserIds.length > 0) {
+      Object.assign(payload, {
+        include_external_user_ids: includeExternalUserIds,
+        channel_for_external_user_ids: "push",
+      });
+    } else {
+      Object.assign(payload, {
+        included_segments:
+          includedSegments && includedSegments.length > 0
+            ? includedSegments
+            : ["Subscribed Users"],
+      });
+    }
+
+    if (sendAfter) {
+      Object.assign(payload, { send_after: sendAfter });
+    }
+
+    const response = await fetch(`${ONE_SIGNAL_API_URL}/notifications`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${ONE_SIGNAL_REST_API_KEY}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const result = (await response.json()) as OneSignalResponse;
+
+    if (!response.ok) {
+      throw new Error(
+        `OneSignal API error: ${response.status} ${
+          "errors" in result && result.errors
+            ? JSON.stringify(result.errors)
+            : "Unknown error"
+        }`,
+      );
+    }
+
+    return {
+      success: true,
+      id: "id" in result ? result.id : undefined,
+      recipients: "recipients" in result ? result.recipients : 0,
+    };
+  } catch (error) {
+    console.error("Error scheduling OneSignal timezone notification:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",

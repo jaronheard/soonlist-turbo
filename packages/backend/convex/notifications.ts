@@ -8,6 +8,54 @@ import * as OneSignal from "./model/oneSignal";
 import { createDeepLink } from "./model/utils/urlScheme";
 import { generateNotificationId } from "./utils";
 
+// Helper to compute next Monday at 00:00:00 UTC as RFC 2822 string
+function getNextMondayStartUtc(): string {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0=Sun..6=Sat
+  const daysUntilMonday = (1 - day + 7) % 7 || 7; // next Monday (avoid today if already Monday)
+  const nextMonday = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + daysUntilMonday,
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
+  return nextMonday.toUTCString();
+}
+
+/**
+ * Schedule weekly notifications via OneSignal with timezone delivery at 9:00 AM Monday local time.
+ */
+export const scheduleWeeklyTimezoneDigest = internalAction({
+  args: {},
+  returns: v.object({
+    success: v.boolean(),
+    id: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (_ctx) => {
+    const title = "Your friends need plans";
+    const body =
+      "Bulk add screenshots. Share a calendar-ready Soonlist link. They'll thank you.";
+    const url = createDeepLink("feed");
+
+    const result = await OneSignal.scheduleTimezoneNotification({
+      title,
+      body,
+      url,
+      includedSegments: ["Subscribed Users"],
+      sendAfter: getNextMondayStartUtc(),
+      deliveryTimeOfDay: "9:00AM",
+    });
+
+    return { success: result.success, id: result.id, error: result.error };
+  },
+});
+
 /**
  * Send a single notification to a specific user
  */
