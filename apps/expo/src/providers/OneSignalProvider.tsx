@@ -123,7 +123,7 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
     useState(false);
   const posthog = usePostHog();
 
-  // Initialize OneSignal
+  // Initialize OneSignal with non-blocking approach
   useEffect(() => {
     const oneSignalAppId = Constants.expoConfig?.extra
       ?.oneSignalAppId as string;
@@ -136,27 +136,34 @@ export function OneSignalProvider({ children }: OneSignalProviderProps) {
       return;
     }
 
-    // Enable logging for debugging (remove in production)
-    // if (__DEV__) {
-    OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-    // }
+    // Use setTimeout to defer OneSignal initialization to prevent blocking UI
+    const initTimeout = setTimeout(() => {
+      // Enable logging for debugging (remove in production)
+      // if (__DEV__) {
+      OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+      // }
 
-    // Initialize the OneSignal SDK
-    OneSignal.initialize(oneSignalAppId);
+      // Initialize the OneSignal SDK
+      OneSignal.initialize(oneSignalAppId);
 
-    // Check permission status
-    void OneSignal.Notifications.permissionNative()
-      .then((permission) => {
-        // Check if permission is granted
-        setHasNotificationPermission(
-          permission === OSNotificationPermission.Authorized ||
-            permission === OSNotificationPermission.Provisional ||
-            permission === OSNotificationPermission.Ephemeral,
-        );
-      })
-      .catch((error) => {
-        logError("Error checking notification permission", error);
-      });
+      // Check permission status
+      void OneSignal.Notifications.permissionNative()
+        .then((permission) => {
+          // Check if permission is granted
+          setHasNotificationPermission(
+            permission === OSNotificationPermission.Authorized ||
+              permission === OSNotificationPermission.Provisional ||
+              permission === OSNotificationPermission.Ephemeral,
+          );
+        })
+        .catch((error) => {
+          logError("Error checking notification permission", error);
+        });
+    }, 500); // Delay initialization by 500ms to prioritize UI rendering
+
+    return () => {
+      clearTimeout(initTimeout);
+    };
 
     // Set up notification handlers
     const setupNotificationListeners = () => {

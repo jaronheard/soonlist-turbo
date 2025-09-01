@@ -112,12 +112,22 @@ function MyFeedContent() {
 
 function MyFeed() {
   const { hasSeenOnboarding } = useAppStore();
+  const [showLoadingSpinner, setShowLoadingSpinner] = React.useState(false);
+  
+  // Only show loading spinner after a delay to prevent flashing for fast loads
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowLoadingSpinner(true);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <>
       <AuthLoading>
         <View className="flex-1 bg-white">
-          <LoadingSpinner />
+          {showLoadingSpinner && <LoadingSpinner />}
         </View>
       </AuthLoading>
 
