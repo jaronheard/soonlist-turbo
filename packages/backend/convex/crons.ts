@@ -5,12 +5,12 @@ import { internal } from "./_generated/api";
 const crons = cronJobs();
 
 // Send weekly notifications every Sunday at 9 AM
-crons.cron(
-  "weekly notifications",
-  "0 9 * * 0", // Every Sunday at 9:00 AM
-  internal.notifications.sendWeeklyNotifications,
-  {},
-);
+// crons.cron(
+//   "weekly notifications",
+//   "0 9 * * 0", // Every Sunday at 9:00 AM
+//   internal.notifications.sendWeeklyNotifications,
+//   {},
+// );
 
 // Send trial expiration reminders daily at 10 AM
 crons.cron(
