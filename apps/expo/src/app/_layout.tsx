@@ -24,6 +24,7 @@ import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
+import { useAuthStateManager } from "~/hooks/useAuthStateManager";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { useTimezoneAlert } from "~/hooks/useTimezoneAlert";
@@ -46,32 +47,65 @@ const queryClient = new QueryClient();
 // Export Expo Router's default error boundary
 export { ErrorBoundary } from "expo-router";
 
-// Custom token cache for Clerk
+// Custom token cache for Clerk with improved error handling
 const tokenCache = {
   async getToken(key: string) {
     try {
-      return SecureStore.getItemAsync(key, {
+      const token = await SecureStore.getItemAsync(key, {
         accessGroup: getAccessGroup(),
       });
-    } catch {
+      
+      // Log token retrieval for debugging (without exposing the actual token)
+      if (process.env.NODE_ENV === "development") {
+        console.log(`Token retrieved for key: ${key}, exists: ${Boolean(token)}`);
+      }
+      
+      return token;
+    } catch (error) {
+      // Log the error but don't expose it to the user
+      logError(`Failed to get token for key: ${key}`, error);
       return null;
     }
   },
   async saveToken(key: string, value: string) {
     try {
-      return SecureStore.setItemAsync(key, value, {
+      await SecureStore.setItemAsync(key, value, {
         accessGroup: getAccessGroup(),
       });
-    } catch {
+      
+      // Verify token was saved correctly
+      const savedToken = await SecureStore.getItemAsync(key, {
+        accessGroup: getAccessGroup(),
+      });
+      
+      if (!savedToken) {
+        logError(`Token verification failed for key: ${key}`);
+      }
+      
+      return;
+    } catch (error) {
+      logError(`Failed to save token for key: ${key}`, error);
       return;
     }
   },
   async clearToken(key: string) {
     try {
-      return SecureStore.deleteItemAsync(key, {
+      await SecureStore.deleteItemAsync(key, {
         accessGroup: getAccessGroup(),
       });
-    } catch {
+      
+      // Verify token was cleared
+      const token = await SecureStore.getItemAsync(key, {
+        accessGroup: getAccessGroup(),
+      });
+      
+      if (token) {
+        logError(`Token deletion verification failed for key: ${key}`);
+      }
+      
+      return;
+    } catch (error) {
+      logError(`Failed to clear token for key: ${key}`, error);
       return;
     }
   },
@@ -279,6 +313,9 @@ const InitialLayout = () => {
 function RootLayoutContent() {
   useMediaPermissions();
   const ref = useNavigationContainerRef();
+
+  // Use our auth state manager to handle authentication issues
+  useAuthStateManager();
 
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);
