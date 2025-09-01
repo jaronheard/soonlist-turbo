@@ -8,7 +8,7 @@ const crons = cronJobs();
 crons.cron(
   "weekly notifications",
   "0 9 * * 0", // Every Sunday at 9:00 AM
-  internal.notifications.sendWeeklyNotifications,
+  internal.notifications.scheduleWeeklyTimezoneDigest,
   {},
 );
 

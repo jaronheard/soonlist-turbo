@@ -7,13 +7,15 @@ const ONE_SIGNAL_API_URL = "https://onesignal.com/api/v1";
 const ENV = process.env.CONVEX_ENV || process.env.NODE_ENV || "production";
 const IS_DEV = ENV === "development";
 
-// Log environment detection for debugging
-console.log("OneSignal Environment Detection:", {
-  CONVEX_ENV: process.env.CONVEX_ENV,
-  NODE_ENV: process.env.NODE_ENV,
-  ENV,
-  IS_DEV,
-});
+// Log environment detection for debugging (gate to development)
+if (IS_DEV) {
+  console.log("OneSignal Environment Detection:", {
+    CONVEX_ENV: process.env.CONVEX_ENV,
+    NODE_ENV: process.env.NODE_ENV,
+    ENV,
+    IS_DEV,
+  });
+}
 
 // OneSignal API key from environment variables
 const ONE_SIGNAL_REST_API_KEY = IS_DEV
@@ -70,10 +72,32 @@ export interface ScheduleTimezoneParams {
   body: string;
   url?: string;
   data?: Record<string, unknown>;
+  externalId?: string; // Optional OneSignal idempotency key
   includedSegments?: string[]; // Defaults to ["Subscribed Users"] if not provided
   includeExternalUserIds?: string[]; // Optional explicit targeting by external user ids
   sendAfter?: string; // RFC2822/HTTP date string; OneSignal also accepts "YYYY-MM-DD HH:MM:SS GMT-XXXX"
   deliveryTimeOfDay?: string; // e.g. "9:00AM"
+}
+
+// Normalize a date to OneSignal's documented format when the input is UTC.
+// Otherwise, return the original string.
+function normalizeSendAfterIfUTC(ms: number, original: string): string {
+  const isUTC =
+    original.endsWith("Z") ||
+    original.endsWith("GMT+0000") ||
+    original.endsWith("GMT-0000") ||
+    original.endsWith("GMT") ||
+    original.endsWith("+00:00") ||
+    original.endsWith("-00:00");
+  if (!isUTC) return original;
+  const d = new Date(ms);
+  const YYYY = d.getUTCFullYear();
+  const MM = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const DD = String(d.getUTCDate()).padStart(2, "0");
+  const HH = String(d.getUTCHours()).padStart(2, "0");
+  const mm = String(d.getUTCMinutes()).padStart(2, "0");
+  const ss = String(d.getUTCSeconds()).padStart(2, "0");
+  return `${YYYY}-${MM}-${DD} ${HH}:${mm}:${ss} GMT+0000`;
 }
 
 /**
@@ -153,12 +177,14 @@ export async function sendNotification({
       );
     }
 
-    console.log("OneSignal notification sent successfully", {
-      userId,
-      title,
-      oneSignalId: "id" in result ? result.id : undefined,
-      environment: IS_DEV ? "development" : "production",
-    });
+    if (IS_DEV) {
+      console.log("OneSignal notification sent successfully", {
+        userId,
+        title,
+        oneSignalId: "id" in result ? result.id : undefined,
+        environment: IS_DEV ? "development" : "production",
+      });
+    }
 
     return {
       success: true,
@@ -272,6 +298,7 @@ export async function scheduleTimezoneNotification({
   body,
   url,
   data,
+  externalId,
   includedSegments,
   includeExternalUserIds,
   sendAfter,
@@ -295,6 +322,15 @@ export async function scheduleTimezoneNotification({
     };
   }
 
+  // Optional: validate deliveryTimeOfDay string matches OneSignal’s expected pattern ("H:MMAM/PM")
+  const deliveryPattern = /^(?:[1-9]|1[0-2]):[0-5][0-9](?:AM|PM)$/;
+  if (deliveryTimeOfDay && !deliveryPattern.test(deliveryTimeOfDay)) {
+    return {
+      success: false,
+      error: "Invalid deliveryTimeOfDay format. Expected e.g. '9:00AM'",
+    };
+  }
+
   try {
     const payload: Record<string, unknown> = {
       app_id: EXPO_PUBLIC_ONE_SIGNAL_APP_ID,
@@ -305,6 +341,10 @@ export async function scheduleTimezoneNotification({
       delayed_option: "timezone",
       delivery_time_of_day: deliveryTimeOfDay || "9:00AM",
     };
+
+    if (externalId) {
+      Object.assign(payload, { external_id: externalId });
+    }
 
     if (includeExternalUserIds && includeExternalUserIds.length > 0) {
       Object.assign(payload, {
@@ -321,7 +361,15 @@ export async function scheduleTimezoneNotification({
     }
 
     if (sendAfter) {
-      Object.assign(payload, { send_after: sendAfter });
+      const ms = Date.parse(sendAfter);
+      if (Number.isNaN(ms)) {
+        return {
+          success: false,
+          error: "Invalid sendAfter format for OneSignal",
+        };
+      }
+      const normalized = normalizeSendAfterIfUTC(ms, sendAfter);
+      Object.assign(payload, { send_after: normalized });
     }
 
     const response = await fetch(`${ONE_SIGNAL_API_URL}/notifications`, {
@@ -346,11 +394,15 @@ export async function scheduleTimezoneNotification({
       );
     }
 
-    return {
+    const successPayload = {
       success: true,
       id: "id" in result ? result.id : undefined,
       recipients: "recipients" in result ? result.recipients : 0,
-    };
+    } as const;
+    if (IS_DEV) {
+      console.log("OneSignal timezone notification scheduled", successPayload);
+    }
+    return successPayload;
   } catch (error) {
     console.error("Error scheduling OneSignal timezone notification:", error);
     return {

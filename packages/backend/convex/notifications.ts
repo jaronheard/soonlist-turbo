@@ -8,8 +8,8 @@ import * as OneSignal from "./model/oneSignal";
 import { createDeepLink } from "./model/utils/urlScheme";
 import { generateNotificationId } from "./utils";
 
-// Helper to compute next Monday at 00:00:00 UTC as RFC 2822 string
-function getNextMondayStartUtc(): string {
+// Helper to compute the preceding Sunday at 00:00:00 UTC (by taking next Monday 00:00 UTC minus 48 hours for stricter window)
+function getPrecedingSundayStartUtc(): string {
   const now = new Date();
   const day = now.getUTCDay(); // 0=Sun..6=Sat
   const daysUntilMonday = (1 - day + 7) % 7 || 7; // next Monday (avoid today if already Monday)
@@ -24,7 +24,37 @@ function getNextMondayStartUtc(): string {
       0,
     ),
   );
-  return nextMonday.toUTCString();
+  // Subtract 48 hours to get Sunday 00:00 UTC with a stricter ≥24h window across UTC+ timezones.
+  const precedingSunday = new Date(nextMonday.getTime() - 48 * 60 * 60 * 1000);
+  return precedingSunday.toUTCString();
+}
+
+// Helper to create a stable idempotency key string for a given seed
+function generateStableKey(seed: string): string {
+  const sanitized = seed.replace(/[^A-Za-z0-9_-]/g, "");
+  return `weekly_${sanitized}`;
+}
+
+// Helper to compute the next Monday ISO date (YYYY-MM-DD) in UTC
+function getNextMondayIsoDate(): string {
+  const now = new Date();
+  const day = now.getUTCDay();
+  const daysUntilMonday = (1 - day + 7) % 7 || 7;
+  const nextMonday = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + daysUntilMonday,
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
+  const YYYY = nextMonday.getUTCFullYear();
+  const MM = String(nextMonday.getUTCMonth() + 1).padStart(2, "0");
+  const DD = String(nextMonday.getUTCDate()).padStart(2, "0");
+  return `${YYYY}-${MM}-${DD}`;
 }
 
 /**
@@ -42,14 +72,21 @@ export const scheduleWeeklyTimezoneDigest = internalAction({
     const body =
       "Bulk add screenshots. Share a calendar-ready Soonlist link. They'll thank you.";
     const url = createDeepLink("feed");
+    const nextMondayIso = getNextMondayIsoDate();
+    const stableKey = generateStableKey(nextMondayIso);
 
     const result = await OneSignal.scheduleTimezoneNotification({
       title,
       body,
       url,
       includedSegments: ["Subscribed Users"],
-      sendAfter: getNextMondayStartUtc(),
+      sendAfter: getPrecedingSundayStartUtc(),
       deliveryTimeOfDay: "9:00AM",
+      externalId: stableKey,
+      data: {
+        source: "convex_weekly_timezone_digest",
+        idempotencyKey: stableKey,
+      },
     });
 
     return { success: result.success, id: result.id, error: result.error };
