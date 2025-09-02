@@ -238,7 +238,9 @@ export default function EditProfileScreen() {
                 {
                   text: "Submit Feedback",
                   onPress: () => {
-                    void Linking.openURL("mailto:feedback@soonlist.com?subject=Leaving%20Feedback");
+                    void Linking.openURL(
+                      "mailto:feedback@soonlist.com?subject=Leaving%20Feedback",
+                    );
                   },
                 },
               ],
@@ -448,7 +450,9 @@ export default function EditProfileScreen() {
                     {
                       text: "Submit",
                       onPress: () => {
-                        void Linking.openURL("mailto:feedback@soonlist.com?subject=App%20Feedback");
+                        void Linking.openURL(
+                          "mailto:feedback@soonlist.com?subject=App%20Feedback",
+                        );
                       },
                     },
                   ],

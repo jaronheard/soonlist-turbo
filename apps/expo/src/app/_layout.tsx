@@ -24,10 +24,10 @@ import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
+import { useFeedbackPrompt } from "~/hooks/useFeedbackPrompt";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { useTimezoneAlert } from "~/hooks/useTimezoneAlert";
-import { useFeedbackPrompt } from "~/hooks/useFeedbackPrompt";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getUserTimeZone } from "~/utils/dates";
