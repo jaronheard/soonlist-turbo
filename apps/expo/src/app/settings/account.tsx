@@ -221,6 +221,31 @@ export default function EditProfileScreen() {
           style: "cancel",
         },
         {
+          text: "Submit Feedback First",
+          onPress: () => {
+            Alert.alert(
+              "We'd Love Your Feedback",
+              "Please let us know why you're leaving so we can improve Soonlist.",
+              [
+                {
+                  text: "Skip",
+                  style: "cancel",
+                  onPress: () => {
+                    // Show the delete confirmation again
+                    handleDeleteAccount();
+                  },
+                },
+                {
+                  text: "Submit Feedback",
+                  onPress: () => {
+                    void Linking.openURL("mailto:feedback@soonlist.com?subject=Leaving%20Feedback");
+                  },
+                },
+              ],
+            );
+          },
+        },
+        {
           text: "Delete Account",
           style: "destructive",
           onPress: () => {
@@ -407,6 +432,28 @@ export default function EditProfileScreen() {
               title="Calendar Settings"
               subtitle="Choose your preferred calendar app"
               onPress={() => router.navigate("/settings/calendar")}
+            />
+            <SettingsOption
+              title="Submit Feedback"
+              subtitle="Help us improve your experience"
+              onPress={() => {
+                Alert.alert(
+                  "Submit Feedback",
+                  "We'd love to hear your thoughts on how we can improve Soonlist!",
+                  [
+                    {
+                      text: "Cancel",
+                      style: "cancel",
+                    },
+                    {
+                      text: "Submit",
+                      onPress: () => {
+                        void Linking.openURL("mailto:feedback@soonlist.com?subject=App%20Feedback");
+                      },
+                    },
+                  ],
+                );
+              }}
             />
           </SettingsSection>
 

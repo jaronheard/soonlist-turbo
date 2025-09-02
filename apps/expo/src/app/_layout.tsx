@@ -27,6 +27,7 @@ import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { useTimezoneAlert } from "~/hooks/useTimezoneAlert";
+import { useFeedbackPrompt } from "~/hooks/useFeedbackPrompt";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
 import { getUserTimeZone } from "~/utils/dates";
@@ -285,6 +286,7 @@ function RootLayoutContent() {
   }, [ref]);
 
   useTimezoneAlert();
+  useFeedbackPrompt();
 
   return (
     <View style={{ flex: 1 }}>
