@@ -46,7 +46,9 @@ import {
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
 import { TimezoneContext } from "~/context/TimezoneContext";
+import { usePasteImage } from "~/hooks/usePasteImage";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
+import { optimizeFileToBase64 } from "~/lib/imageOptimization";
 import {
   UploadImageForProcessingButton,
   UploadImageForProcessingDropzone,
@@ -352,6 +354,9 @@ function AddEvent() {
   // Mutations
   const createEventFromText = useMutation(api.ai.eventFromTextThenCreate);
   const createEventFromUrl = useMutation(api.ai.eventFromUrlThenCreate);
+  const createEventFromImage = useMutation(
+    api.ai.eventFromImageBase64ThenCreate,
+  );
 
   const onSubmitText = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -411,8 +416,45 @@ function AddEvent() {
     }
   };
 
+  const handleImagePaste = async (file: File) => {
+    if (!currentUser || isProcessing) return;
+
+    setIsProcessing(true);
+
+    try {
+      // Process image directly from file (matching existing approach)
+      const base64Image = await optimizeFileToBase64(file, 640, 0.5);
+
+      // Start the workflow
+      const result = await createEventFromImage({
+        base64Image,
+        timezone,
+        userId: currentUser.id,
+        username: currentUser.username || currentUser.id,
+        sendNotification: false,
+        visibility: "public",
+        lists: [],
+      });
+
+      if (result.workflowId) {
+        addWorkflowId(result.workflowId);
+        // Navigate directly to upcoming page
+        router.push(`/${currentUser.username || currentUser.id}/upcoming`);
+      }
+    } catch (error) {
+      console.error("Error creating event from pasted image:", error);
+      setIsProcessing(false);
+    }
+  };
+
+  // Add paste functionality for the entire tab area
+  const { elementRef } = usePasteImage({
+    onImagePaste: handleImagePaste,
+    enabled: !isProcessing && uploadOption === "image",
+  });
+
   return (
-    <div className="min-h-[60vh] ">
+    <div ref={elementRef} className="min-h-[60vh] ">
       <Tabs
         value={uploadOption}
         onValueChange={(value: string) => {

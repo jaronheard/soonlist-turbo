@@ -9,6 +9,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { Button } from "@soonlist/ui/button";
 
 import { TimezoneContext } from "~/context/TimezoneContext";
+import { usePasteImage } from "~/hooks/usePasteImage";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import { optimizeFileToBase64 } from "~/lib/imageOptimization";
 
@@ -57,8 +58,14 @@ export const UploadImageForProcessingDropzone = () => {
     }
   };
 
+  // Add paste functionality
+  const { elementRef } = usePasteImage({
+    onImagePaste: handleFileSelect,
+    enabled: !isProcessing,
+  });
+
   return (
-    <div className="relative">
+    <div ref={elementRef} className="relative">
       <input
         ref={fileInputRef}
         type="file"
@@ -103,7 +110,7 @@ export const UploadImageForProcessingDropzone = () => {
         <div className="text-center">
           <p className="text-lg font-medium text-primary">Tap to upload</p>
           <p className="text-sm text-muted-foreground">
-            or drag and drop an image
+            drag and drop, or paste an image
           </p>
         </div>
       </div>
