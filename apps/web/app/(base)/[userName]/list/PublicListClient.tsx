@@ -84,7 +84,7 @@ export default function PublicListClient({ params }: Props) {
   const isPublicListEnabled = publicListData?.user.publicListEnabled;
 
   // Enable image paste functionality for creating events (only for list owners)
-  const { isProcessing: isPasteProcessing } = usePasteImageHandler({
+  const { isProcessing: _isPasteProcessing } = usePasteImageHandler({
     enabled: isOwner && isPublicListEnabled, // Only enable for owners viewing their own public list
     showToasts: true,
   });

@@ -20,13 +20,26 @@ export interface PasteImageError {
 }
 
 /**
+ * Error class that implements PasteImageError interface
+ */
+class PasteImageErrorImpl extends Error implements PasteImageError {
+  public readonly type: PasteImageError["type"];
+
+  constructor(message: string, type: PasteImageError["type"]) {
+    super(message);
+    this.name = "PasteImageError";
+    this.type = type;
+  }
+}
+
+/**
  * Creates a properly typed PasteImageError
  */
 function createPasteImageError(
   type: PasteImageError["type"],
   message: string,
-): PasteImageError {
-  return { type, message };
+): PasteImageErrorImpl {
+  return new PasteImageErrorImpl(message, type);
 }
 
 /**
@@ -42,9 +55,8 @@ export async function extractImageFromClipboard(
 
   // Find the first image item in clipboard
   let imageItem: DataTransferItem | null = null;
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    if (item && item.type.startsWith("image/")) {
+  for (const item of items) {
+    if (item?.type.startsWith("image/")) {
       imageItem = item;
       break;
     }

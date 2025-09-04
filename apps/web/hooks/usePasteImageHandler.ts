@@ -146,7 +146,9 @@ export function usePasteImageHandler(
       } catch (error) {
         console.error("Error creating event from pasted image:", error);
 
-        const pasteError = error as PasteImageError;
+        const pasteError: PasteImageError = error instanceof Error && 'type' in error
+          ? error as PasteImageError
+          : { type: "processing-error", message: error instanceof Error ? error.message : "Unknown error" };
         let errorMessage = "Failed to create event from image";
 
         // Provide user-friendly error messages based on error type
