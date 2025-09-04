@@ -12,8 +12,8 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
-import { useStableTimestamp } from "~/hooks/useStableQuery";
 import { usePasteImageHandler } from "~/hooks/usePasteImageHandler";
+import { useStableTimestamp } from "~/hooks/useStableQuery";
 
 interface Props {
   params: Promise<{ userName: string }>;

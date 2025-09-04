@@ -4,9 +4,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { ImageIcon, Keyboard } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
+import { ImageIcon, Keyboard } from "lucide-react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -22,10 +22,10 @@ interface PasteImageIndicatorProps {
 /**
  * Shows a subtle indicator that users can paste images to create events
  */
-export function PasteImageIndicator({ 
-  enabled = true, 
+export function PasteImageIndicator({
+  enabled = true,
   show = true,
-  className = ""
+  className = "",
 }: PasteImageIndicatorProps) {
   const currentUser = useQuery(api.users.getCurrentUser);
   const [isVisible, setIsVisible] = useState(false);
@@ -51,15 +51,15 @@ export function PasteImageIndicator({
   }
 
   return (
-    <div 
+    <div
       className={`
         fixed bottom-4 right-4 z-50 
         transform transition-all duration-500 ease-in-out
-        ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}
+        ${isVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}
         ${className}
       `}
     >
-      <div className="rounded-lg border bg-white/95 backdrop-blur-sm px-3 py-2 shadow-lg">
+      <div className="rounded-lg border bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <ImageIcon className="size-4" />
           <span>Paste an image to create an event</span>
@@ -88,6 +88,6 @@ export function usePasteIndicator() {
   return {
     showIndicator,
     hideIndicator,
-    showIndicatorTemporarily
+    showIndicatorTemporarily,
   };
 }

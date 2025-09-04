@@ -10,13 +10,13 @@ import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { 
-  extractImageFromClipboard, 
-  shouldPreventPasteHandling,
-  type PasteImageError 
-} from "~/lib/imagePaste";
+import type { PasteImageError } from "~/lib/imagePaste";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
+import {
+  extractImageFromClipboard,
+  shouldPreventPasteHandling,
+} from "~/lib/imagePaste";
 
 export interface UsePasteImageHandlerOptions {
   /** Whether to enable the paste handler */
@@ -40,23 +40,25 @@ export interface PasteImageHandlerState {
 /**
  * Hook that handles image paste events and creates events from pasted images
  */
-export function usePasteImageHandler(options: UsePasteImageHandlerOptions = {}) {
+export function usePasteImageHandler(
+  options: UsePasteImageHandlerOptions = {},
+) {
   const {
     enabled = true,
     timezone = DEFAULT_TIMEZONE,
     showToasts = true,
     onSuccess,
-    onError
+    onError,
   } = options;
 
   const router = useRouter();
   const currentUser = useQuery(api.users.getCurrentUser);
   const { addWorkflowId } = useWorkflowStore();
-  
+
   const [state, setState] = useState<PasteImageHandlerState>({
     isProcessing: false,
     error: null,
-    lastProcessedImage: null
+    lastProcessedImage: null,
   });
 
   // Track if we're currently processing to prevent duplicate requests
@@ -66,139 +68,141 @@ export function usePasteImageHandler(options: UsePasteImageHandlerOptions = {}) 
     api.ai.eventFromImageBase64ThenCreate,
   );
 
-  const handlePasteEvent = useCallback(async (event: ClipboardEvent) => {
-    // Skip if disabled or already processing
-    if (!enabled || processingRef.current) {
-      return;
-    }
-
-    // Skip if user is typing in an input field
-    if (shouldPreventPasteHandling()) {
-      return;
-    }
-
-    // Skip if user is not authenticated
-    if (!currentUser) {
-      if (showToasts) {
-        toast.error("Please sign in to create events from images");
-      }
-      return;
-    }
-
-    // Prevent default paste behavior for images
-    event.preventDefault();
-    
-    processingRef.current = true;
-    setState(prev => ({ 
-      ...prev, 
-      isProcessing: true, 
-      error: null 
-    }));
-
-    try {
-      // Extract and process image from clipboard
-      const { base64Image, originalSize, optimizedSize } = await extractImageFromClipboard(event);
-      
-      if (showToasts) {
-        toast.loading("Creating event from image...", {
-          id: "paste-image-processing"
-        });
+  const handlePasteEvent = useCallback(
+    async (event: ClipboardEvent) => {
+      // Skip if disabled or already processing
+      if (!enabled || processingRef.current) {
+        return;
       }
 
-      console.log(
-        `Processing pasted image: ${Math.round(originalSize / 1024)}KB -> ${Math.round(optimizedSize / 1024)}KB`
-      );
+      // Skip if user is typing in an input field
+      if (shouldPreventPasteHandling()) {
+        return;
+      }
 
-      // Create event using the same API as the existing flow
-      const result = await createEventFromImage({
-        base64Image,
-        timezone,
-        userId: currentUser.id,
-        username: currentUser.username || currentUser.id,
-        sendNotification: false, // Web doesn't have push notifications
-        visibility: "public",
-        lists: [],
-      });
+      // Skip if user is not authenticated
+      if (!currentUser) {
+        if (showToasts) {
+          toast.error("Please sign in to create events from images");
+        }
+        return;
+      }
 
-      setState(prev => ({ 
-        ...prev, 
-        isProcessing: false,
-        lastProcessedImage: base64Image.substring(0, 50) + "..." // Store truncated version for debugging
+      // Prevent default paste behavior for images
+      event.preventDefault();
+
+      processingRef.current = true;
+      setState((prev) => ({
+        ...prev,
+        isProcessing: true,
+        error: null,
       }));
 
-      if (result.workflowId) {
-        addWorkflowId(result.workflowId);
-        
+      try {
+        // Extract and process image from clipboard
+        const { base64Image, originalSize, optimizedSize } =
+          await extractImageFromClipboard(event);
+
         if (showToasts) {
-          toast.success("Event created from pasted image! 🎉", {
-            id: "paste-image-processing"
+          toast.loading("Creating event from image...", {
+            id: "paste-image-processing",
           });
         }
 
-        // Call success callback if provided
-        if (onSuccess && result.eventId) {
-          onSuccess(result.eventId);
-        } else {
-          // Default behavior: navigate to user's upcoming events
+        console.log(
+          `Processing pasted image: ${Math.round(originalSize / 1024)}KB -> ${Math.round(optimizedSize / 1024)}KB`,
+        );
+
+        // Create event using the same API as the existing flow
+        const result = await createEventFromImage({
+          base64Image,
+          timezone,
+          userId: currentUser.id,
+          username: currentUser.username || currentUser.id,
+          sendNotification: false, // Web doesn't have push notifications
+          visibility: "public",
+          lists: [],
+        });
+
+        setState((prev) => ({
+          ...prev,
+          isProcessing: false,
+          lastProcessedImage: base64Image.substring(0, 50) + "...", // Store truncated version for debugging
+        }));
+
+        if (result.workflowId) {
+          addWorkflowId(result.workflowId);
+
+          if (showToasts) {
+            toast.success("Event created from pasted image! 🎉", {
+              id: "paste-image-processing",
+            });
+          }
+
+          // Navigate to user's upcoming events
+          // Note: onSuccess callback is not called since we only have workflowId, not eventId yet
           router.push(`/${currentUser.username || currentUser.id}/upcoming`);
         }
-      }
-    } catch (error) {
-      console.error("Error creating event from pasted image:", error);
-      
-      const pasteError = error as PasteImageError;
-      let errorMessage = "Failed to create event from image";
-      
-      // Provide user-friendly error messages based on error type
-      switch (pasteError.type) {
-        case 'no-image':
-          // Don't show error for no image - this is expected when pasting text
-          setState(prev => ({ ...prev, isProcessing: false }));
-          processingRef.current = false;
-          return;
-        case 'unsupported-format':
-          errorMessage = "Unsupported image format. Please use JPEG, PNG, WebP, or GIF.";
-          break;
-        case 'too-large':
-          errorMessage = pasteError.message;
-          break;
-        case 'processing-error':
-          errorMessage = pasteError.message || "Failed to process image";
-          break;
-        default:
-          errorMessage = pasteError.message || "Failed to create event from image";
-      }
+      } catch (error) {
+        console.error("Error creating event from pasted image:", error);
 
-      setState(prev => ({ 
-        ...prev, 
-        isProcessing: false,
-        error: errorMessage
-      }));
+        const pasteError = error as PasteImageError;
+        let errorMessage = "Failed to create event from image";
 
-      if (showToasts) {
-        toast.error(errorMessage, {
-          id: "paste-image-processing"
-        });
-      }
+        // Provide user-friendly error messages based on error type
+        switch (pasteError.type) {
+          case "no-image":
+            // Don't show error for no image - this is expected when pasting text
+            setState((prev) => ({ ...prev, isProcessing: false }));
+            processingRef.current = false;
+            return;
+          case "unsupported-format":
+            errorMessage =
+              "Unsupported image format. Please use JPEG, PNG, WebP, or GIF.";
+            break;
+          case "too-large":
+            errorMessage = pasteError.message;
+            break;
+          case "processing-error":
+            errorMessage = pasteError.message || "Failed to process image";
+            break;
+          default:
+            errorMessage =
+              pasteError.message || "Failed to create event from image";
+        }
 
-      // Call error callback if provided
-      if (onError) {
-        onError(pasteError);
+        setState((prev) => ({
+          ...prev,
+          isProcessing: false,
+          error: errorMessage,
+        }));
+
+        if (showToasts) {
+          toast.error(errorMessage, {
+            id: "paste-image-processing",
+          });
+        }
+
+        // Call error callback if provided
+        if (onError) {
+          onError(pasteError);
+        }
+      } finally {
+        processingRef.current = false;
       }
-    } finally {
-      processingRef.current = false;
-    }
-  }, [
-    enabled,
-    currentUser,
-    timezone,
-    showToasts,
-    createEventFromImage,
-    addWorkflowId,
-    router,
-    onSuccess,
-    onError
-  ]);
+    },
+    [
+      enabled,
+      currentUser,
+      timezone,
+      showToasts,
+      createEventFromImage,
+      addWorkflowId,
+      router,
+      onSuccess,
+      onError,
+    ],
+  );
 
   // Set up paste event listener
   useEffect(() => {
@@ -211,10 +215,10 @@ export function usePasteImageHandler(options: UsePasteImageHandlerOptions = {}) 
     };
 
     // Add document-level paste listener
-    document.addEventListener('paste', handlePaste);
+    document.addEventListener("paste", handlePaste);
 
     return () => {
-      document.removeEventListener('paste', handlePaste);
+      document.removeEventListener("paste", handlePaste);
     };
   }, [enabled, handlePasteEvent]);
 
@@ -228,6 +232,6 @@ export function usePasteImageHandler(options: UsePasteImageHandlerOptions = {}) 
   return {
     ...state,
     isEnabled: enabled && !!currentUser,
-    handlePasteEvent: enabled ? handlePasteEvent : undefined
+    handlePasteEvent: enabled ? handlePasteEvent : undefined,
   };
 }

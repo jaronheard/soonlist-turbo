@@ -10,9 +10,9 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
-import { useStableTimestamp } from "~/hooks/useStableQuery";
-import { usePasteImageHandler } from "~/hooks/usePasteImageHandler";
 import { PasteImageIndicator } from "~/components/PasteImageIndicator";
+import { usePasteImageHandler } from "~/hooks/usePasteImageHandler";
+import { useStableTimestamp } from "~/hooks/useStableQuery";
 
 const transformConvexUser = (user: Doc<"users">): User => {
   return {
@@ -102,7 +102,7 @@ export default function Page() {
         isLoading={isLoading}
       />
       <div className="p-6"></div>
-      
+
       {/* Show paste indicator for authenticated users */}
       <PasteImageIndicator enabled={!isPasteProcessing} />
     </div>
