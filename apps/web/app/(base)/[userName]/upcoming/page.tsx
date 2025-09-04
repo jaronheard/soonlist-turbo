@@ -13,6 +13,7 @@ import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { UserInfo } from "~/components/UserInfo";
 import { useStableTimestamp } from "~/hooks/useStableQuery";
+import { usePasteImageHandler } from "~/hooks/usePasteImageHandler";
 
 interface Props {
   params: Promise<{ userName: string }>;
@@ -92,6 +93,12 @@ export default function Page({ params }: Props) {
 
   const isLoading = status === "LoadingFirstPage" || (!self && !targetUser);
   const events = convexEvents ? transformConvexEvents(convexEvents) : [];
+
+  // Enable image paste functionality for creating events (only for authenticated users viewing their own feed)
+  const { isProcessing: isPasteProcessing } = usePasteImageHandler({
+    enabled: self, // Only enable for users viewing their own feed
+    showToasts: true,
+  });
 
   // Client-side safety filter: hide events that have ended
   // This prevents showing ended events if the cron job hasn't run recently

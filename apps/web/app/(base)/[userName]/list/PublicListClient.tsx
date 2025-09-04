@@ -23,6 +23,7 @@ import { EventList } from "~/components/EventList";
 import { FullPageLoadingSpinner } from "~/components/FullPageLoadingSpinner";
 import { UserInfo } from "~/components/UserInfo";
 import { useStableTimestamp } from "~/hooks/useStableQuery";
+import { usePasteImageHandler } from "~/hooks/usePasteImageHandler";
 
 interface Props {
   params: Promise<{ userName: string }>;
@@ -81,6 +82,12 @@ export default function PublicListClient({ params }: Props) {
 
   const isOwner = currentUser?.username === userName;
   const isPublicListEnabled = publicListData?.user.publicListEnabled;
+
+  // Enable image paste functionality for creating events (only for list owners)
+  const { isProcessing: isPasteProcessing } = usePasteImageHandler({
+    enabled: isOwner && isPublicListEnabled, // Only enable for owners viewing their own public list
+    showToasts: true,
+  });
 
   // Use the new getPublicUserFeed when publicListEnabled is true
   // This shows the user's full feed (created + followed events) instead of just created events

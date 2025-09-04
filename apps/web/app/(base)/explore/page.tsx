@@ -11,6 +11,8 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { useStableTimestamp } from "~/hooks/useStableQuery";
+import { usePasteImageHandler } from "~/hooks/usePasteImageHandler";
+import { PasteImageIndicator } from "~/components/PasteImageIndicator";
 
 const transformConvexUser = (user: Doc<"users">): User => {
   return {
@@ -57,6 +59,12 @@ export default function Page() {
     { initialNumItems: 50 },
   );
 
+  // Enable image paste functionality for creating events
+  const { isProcessing: isPasteProcessing } = usePasteImageHandler({
+    enabled: true,
+    showToasts: true,
+  });
+
   const isLoading = status === "LoadingFirstPage";
   const events = results ? transformConvexEvents(results) : [];
 
@@ -94,6 +102,9 @@ export default function Page() {
         isLoading={isLoading}
       />
       <div className="p-6"></div>
+      
+      {/* Show paste indicator for authenticated users */}
+      <PasteImageIndicator enabled={!isPasteProcessing} />
     </div>
   );
 }
