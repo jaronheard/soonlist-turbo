@@ -95,7 +95,7 @@ export default function Page({ params }: Props) {
   const events = convexEvents ? transformConvexEvents(convexEvents) : [];
 
   // Enable image paste functionality for creating events (only for authenticated users viewing their own feed)
-  const { isProcessing: isPasteProcessing } = usePasteImageHandler({
+  usePasteImageHandler({
     enabled: self, // Only enable for users viewing their own feed
     showToasts: true,
   });
