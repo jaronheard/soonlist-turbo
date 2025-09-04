@@ -14,18 +14,13 @@ export interface PasteImageResult {
   optimizedSize: number;
 }
 
-export interface PasteImageError {
-  type: "no-image" | "unsupported-format" | "too-large" | "processing-error";
-  message: string;
-}
-
 /**
- * Error class that implements PasteImageError interface
+ * Error class for paste image operations
  */
-class PasteImageErrorImpl extends Error implements PasteImageError {
-  public readonly type: PasteImageError["type"];
+export class PasteImageError extends Error {
+  public readonly type: "no-image" | "unsupported-format" | "too-large" | "processing-error";
 
-  constructor(message: string, type: PasteImageError["type"]) {
+  constructor(message: string, type: "no-image" | "unsupported-format" | "too-large" | "processing-error") {
     super(message);
     this.name = "PasteImageError";
     this.type = type;
@@ -36,10 +31,10 @@ class PasteImageErrorImpl extends Error implements PasteImageError {
  * Creates a properly typed PasteImageError
  */
 function createPasteImageError(
-  type: PasteImageError["type"],
+  type: "no-image" | "unsupported-format" | "too-large" | "processing-error",
   message: string,
-): PasteImageErrorImpl {
-  return new PasteImageErrorImpl(message, type);
+): PasteImageError {
+  return new PasteImageError(message, type);
 }
 
 /**
@@ -56,7 +51,7 @@ export async function extractImageFromClipboard(
   // Find the first image item in clipboard
   let imageItem: DataTransferItem | null = null;
   for (const item of items) {
-    if (item?.type.startsWith("image/")) {
+    if (item.type.startsWith("image/")) {
       imageItem = item;
       break;
     }

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import type { PasteImageError } from "~/lib/imagePaste";
+import { PasteImageError } from "~/lib/imagePaste";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
 import {
@@ -146,9 +146,9 @@ export function usePasteImageHandler(
       } catch (error) {
         console.error("Error creating event from pasted image:", error);
 
-        const pasteError: PasteImageError = error instanceof Error && 'type' in error
-          ? error as PasteImageError
-          : { type: "processing-error", message: error instanceof Error ? error.message : "Unknown error" };
+        const pasteError: PasteImageError = error instanceof PasteImageError
+          ? error
+          : new PasteImageError(error instanceof Error ? error.message : "Unknown error", "processing-error");
         let errorMessage = "Failed to create event from image";
 
         // Provide user-friendly error messages based on error type
