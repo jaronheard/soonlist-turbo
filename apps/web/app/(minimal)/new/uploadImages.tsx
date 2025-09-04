@@ -58,9 +58,13 @@ export const UploadImageForProcessingDropzone = () => {
     }
   };
 
+  const handleImagePaste = (file: File) => {
+    void handleFileSelect(file);
+  };
+
   // Add paste functionality
   const { elementRef } = usePasteImage({
-    onImagePaste: handleFileSelect,
+    onImagePaste: handleImagePaste,
     enabled: !isProcessing,
   });
 

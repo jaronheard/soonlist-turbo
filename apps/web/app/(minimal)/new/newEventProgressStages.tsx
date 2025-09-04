@@ -42,6 +42,7 @@ import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import {
   Status,
+  UploadOptions,
   UploadOptionsSchema,
   useNewEventProgressContext,
 } from "~/context/NewEventProgressContext";
@@ -416,41 +417,43 @@ function AddEvent() {
     }
   };
 
-  const handleImagePaste = async (file: File) => {
+  const handleImagePaste = (file: File) => {
     if (!currentUser || isProcessing) return;
 
     setIsProcessing(true);
 
-    try {
-      // Process image directly from file (matching existing approach)
-      const base64Image = await optimizeFileToBase64(file, 640, 0.5);
+    void (async () => {
+      try {
+        // Process image directly from file (matching existing approach)
+        const base64Image = await optimizeFileToBase64(file, 640, 0.5);
 
-      // Start the workflow
-      const result = await createEventFromImage({
-        base64Image,
-        timezone,
-        userId: currentUser.id,
-        username: currentUser.username || currentUser.id,
-        sendNotification: false,
-        visibility: "public",
-        lists: [],
-      });
+        // Start the workflow
+        const result = await createEventFromImage({
+          base64Image,
+          timezone,
+          userId: currentUser.id,
+          username: currentUser.username || currentUser.id,
+          sendNotification: false,
+          visibility: "public",
+          lists: [],
+        });
 
-      if (result.workflowId) {
-        addWorkflowId(result.workflowId);
-        // Navigate directly to upcoming page
-        router.push(`/${currentUser.username || currentUser.id}/upcoming`);
+        if (result.workflowId) {
+          addWorkflowId(result.workflowId);
+          // Navigate directly to upcoming page
+          router.push(`/${currentUser.username || currentUser.id}/upcoming`);
+        }
+      } catch (error) {
+        console.error("Error creating event from pasted image:", error);
+        setIsProcessing(false);
       }
-    } catch (error) {
-      console.error("Error creating event from pasted image:", error);
-      setIsProcessing(false);
-    }
+    })();
   };
 
   // Add paste functionality for the entire tab area
   const { elementRef } = usePasteImage({
     onImagePaste: handleImagePaste,
-    enabled: !isProcessing && uploadOption === "image",
+    enabled: !isProcessing && uploadOption === UploadOptions.Image,
   });
 
   return (
