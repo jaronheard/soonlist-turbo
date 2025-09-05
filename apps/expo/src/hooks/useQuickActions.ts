@@ -70,7 +70,7 @@ export function useQuickActions() {
       }
 
       // Handle internal navigation
-      router.navigate(href as any);
+      router.navigate(href);
     };
 
     // Subscribe to quick action events
