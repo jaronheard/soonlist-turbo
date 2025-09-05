@@ -2,12 +2,13 @@ import { Toaster } from "@soonlist/ui/sonner";
 
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
+import { ImagePasteProvider } from "~/components/ImagePasteProvider";
 import { WorkflowStatusToastContainer } from "~/components/WorkflowStatusToast";
 import { ResetNewEventContext } from "~/context/ResetNewEventContext";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <ImagePasteProvider>
       <ResetNewEventContext />
       <Header />
       <Toaster />
@@ -16,6 +17,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Footer />
-    </>
+    </ImagePasteProvider>
   );
 }
