@@ -14,14 +14,14 @@ export function useQuickActions() {
             title: "Upcoming",
             subtitle: "View your upcoming events",
             icon: "symbol:calendar",
-            params: { href: "/feed" },
+            params: { href: "/(tabs)/feed" },
           },
           {
             id: "past-events",
             title: "Capture Event",
             subtitle: "View your past events",
             icon: "symbol:calendar.circle",
-            params: { href: "/past" },
+            params: { href: "/(tabs)/past" },
           },
           {
             id: "leave-feedback",
@@ -70,7 +70,7 @@ export function useQuickActions() {
       }
 
       // Handle internal navigation
-      router.push(href);
+      router.navigate(href as any);
     };
 
     // Subscribe to quick action events
