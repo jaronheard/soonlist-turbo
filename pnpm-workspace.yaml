@@ -111,6 +111,7 @@ catalog:
   "expo-task-manager": ~13.1.6
   "expo-updates": ~0.28.17
   "expo-web-browser": ~14.2.0
+  "expo-quick-actions": ^5.0.0
 
   # React Native Additional packages
   "@react-native-async-storage/async-storage": 2.1.2
