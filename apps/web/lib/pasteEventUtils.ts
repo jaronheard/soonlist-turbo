@@ -8,14 +8,16 @@
 export function shouldHandlePasteEvent(event: ClipboardEvent): boolean {
   const target = event.target as Element;
   if (!target) return false;
-  
+
   // Don't handle if target is an editable element
   if (isEditableElement(target)) return false;
-  
+
   // Don't handle if target is inside an editable element
-  const closestEditable = target.closest('input, textarea, [contenteditable="true"]');
+  const closestEditable = target.closest(
+    'input, textarea, [contenteditable="true"]',
+  );
   if (closestEditable) return false;
-  
+
   return true;
 }
 
@@ -24,35 +26,37 @@ export function shouldHandlePasteEvent(event: ClipboardEvent): boolean {
  */
 export function isEditableElement(element: Element): boolean {
   const tagName = element.tagName.toLowerCase();
-  
+
   // Check for input and textarea elements
-  if (tagName === 'input' || tagName === 'textarea') return true;
-  
+  if (tagName === "input" || tagName === "textarea") return true;
+
   // Check for contenteditable elements
-  if (element.getAttribute('contenteditable') === 'true') return true;
-  
+  if (element.getAttribute("contenteditable") === "true") return true;
+
   // Check for elements with role="textbox"
-  if (element.getAttribute('role') === 'textbox') return true;
-  
+  if (element.getAttribute("role") === "textbox") return true;
+
   return false;
 }
 
 /**
  * Extracts image files from clipboard data
  */
-export function extractImagesFromClipboard(clipboardData: DataTransfer): File[] {
+export function extractImagesFromClipboard(
+  clipboardData: DataTransfer,
+): File[] {
   const images: File[] = [];
-  
+
   for (let i = 0; i < clipboardData.items.length; i++) {
     const item = clipboardData.items[i];
-    if (item && item.type.startsWith('image/')) {
+    if (item?.type.startsWith("image/")) {
       const file = item.getAsFile();
       if (file) {
         images.push(file);
       }
     }
   }
-  
+
   return images;
 }
 
@@ -61,25 +65,27 @@ export function extractImagesFromClipboard(clipboardData: DataTransfer): File[] 
  */
 export function isTargetPage(pathname: string): boolean {
   // /new page
-  if (pathname === '/new') return true;
-  
+  if (pathname === "/new") return true;
+
   // Event list pages: /[userName]/upcoming
-  if (pathname.match(/^\/[^/]+\/upcoming$/)) return true;
-  
+  if (/^\/[^/]+\/upcoming$/.exec(pathname)) return true;
+
   // Individual event pages: /event/[eventId]
-  if (pathname.match(/^\/event\/[^/]+$/)) return true;
-  
+  if (/^\/event\/[^/]+$/.exec(pathname)) return true;
+
   return false;
 }
 
 /**
  * Determines the page context based on pathname
  */
-export function getPageContext(pathname: string): 'new' | 'eventList' | 'eventPage' | 'other' {
-  if (pathname === '/new') return 'new';
-  if (pathname.match(/^\/[^/]+\/upcoming$/)) return 'eventList';
-  if (pathname.match(/^\/event\/[^/]+$/)) return 'eventPage';
-  return 'other';
+export function getPageContext(
+  pathname: string,
+): "new" | "eventList" | "eventPage" | "other" {
+  if (pathname === "/new") return "new";
+  if (/^\/[^/]+\/upcoming$/.exec(pathname)) return "eventList";
+  if (/^\/event\/[^/]+$/.exec(pathname)) return "eventPage";
+  return "other";
 }
 
 /**
@@ -87,15 +93,15 @@ export function getPageContext(pathname: string): 'new' | 'eventList' | 'eventPa
  */
 export function isValidImageFile(file: File): boolean {
   const supportedTypes = [
-    'image/jpeg',
-    'image/jpg', 
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'image/bmp',
-    'image/svg+xml'
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/bmp",
+    "image/svg+xml",
   ];
-  
+
   return supportedTypes.includes(file.type.toLowerCase());
 }
 
@@ -105,16 +111,16 @@ export function isValidImageFile(file: File): boolean {
 export function getNavigationPath(
   pageContext: ReturnType<typeof getPageContext>,
   currentPath: string,
-  username: string
+  username: string,
 ): string {
   switch (pageContext) {
-    case 'new':
+    case "new":
       // Stay on new page or go to upcoming - for now go to upcoming
       return `/${username}/upcoming`;
-    case 'eventList':
+    case "eventList":
       // Stay on the current event list page
       return currentPath;
-    case 'eventPage':
+    case "eventPage":
       // Go to user's upcoming page
       return `/${username}/upcoming`;
     default:

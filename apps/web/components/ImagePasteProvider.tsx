@@ -18,7 +18,9 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
   const currentUser = useQuery(api.users.getCurrentUser);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error" | "loading">("loading");
+  const [toastType, setToastType] = useState<"success" | "error" | "loading">(
+    "loading",
+  );
 
   // Only enable the paste handler on target pages and when user is authenticated
   const shouldEnable = isTargetPage(pathname) && !!currentUser;
@@ -30,7 +32,7 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
       setToastType("success");
       setToastMessage("🎉 Image processed! Creating your event...");
       setShowToast(true);
-      
+
       // Hide success toast after 3 seconds
       setTimeout(() => setShowToast(false), 3000);
     },
@@ -38,7 +40,7 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
       setToastType("error");
       setToastMessage(`❌ Failed to process image: ${error.message}`);
       setShowToast(true);
-      
+
       // Hide error toast after 5 seconds
       setTimeout(() => setShowToast(false), 5000);
     },
@@ -63,7 +65,7 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
   return (
     <>
       {children}
-      
+
       {/* Toast notification */}
       {showToast && (
         <div className="fixed bottom-4 right-4 z-50 max-w-sm">
@@ -72,8 +74,8 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
               toastType === "success"
                 ? "bg-green-500 text-white"
                 : toastType === "error"
-                ? "bg-red-500 text-white"
-                : "bg-blue-500 text-white"
+                  ? "bg-red-500 text-white"
+                  : "bg-blue-500 text-white"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -85,7 +87,7 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
           </div>
         </div>
       )}
-      
+
       {/* Debug info in development */}
       {process.env.NODE_ENV === "development" && shouldEnable && (
         <div className="fixed bottom-4 left-4 z-40 rounded bg-black/80 px-2 py-1 text-xs text-white">
