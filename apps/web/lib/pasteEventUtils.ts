@@ -47,8 +47,7 @@ export function extractImagesFromClipboard(
 ): File[] {
   const images: File[] = [];
 
-  for (let i = 0; i < clipboardData.items.length; i++) {
-    const item = clipboardData.items[i];
+  for (const item of clipboardData.items) {
     if (item?.type.startsWith("image/")) {
       const file = item.getAsFile();
       if (file) {

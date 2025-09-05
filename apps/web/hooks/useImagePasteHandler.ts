@@ -151,10 +151,14 @@ export function useImagePasteHandler(
   useEffect(() => {
     if (!enabled) return;
 
-    document.addEventListener("paste", handlePaste);
+    const pasteListener = (event: ClipboardEvent) => {
+      void handlePaste(event);
+    };
+
+    document.addEventListener("paste", pasteListener);
 
     return () => {
-      document.removeEventListener("paste", handlePaste);
+      document.removeEventListener("paste", pasteListener);
     };
   }, [enabled, handlePaste]);
 

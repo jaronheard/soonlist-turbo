@@ -22,7 +22,7 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
 
   useImagePasteHandler({
     enabled: shouldEnable,
-    onSuccess: () => {
+    onSuccess: (_workflowId) => {
       toast.success("Image received! Creating your event...");
     },
     onError: (error) => {
