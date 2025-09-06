@@ -799,6 +799,8 @@ export function EventListItem(props: EventListItemProps) {
       if (!relativeTime) return "";
       // Don't show "in the past" when happeningNow prop is explicitly true
       if (props.happeningNow) return "Happening now";
+      // Handle "Tomorrow" specially - don't add "Starts in" prefix
+      if (relativeTime === "Tomorrow") return "Tomorrow";
       return `Starts in ${relativeTime
         .replaceAll("hrs", "hours")
         .replaceAll("hr", "hour")
