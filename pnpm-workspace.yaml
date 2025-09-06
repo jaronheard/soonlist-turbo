@@ -76,7 +76,6 @@ catalog:
   "expo-dev-client": ~5.2.4
   "expo-image": ~2.3.2
   "expo-video": ~2.2.2
-  "expo-secure-store": ^14.2.3
   "expo-status-bar": ~2.2.3
   "react-native": ~0.79.5
   "react-native-reanimated": ~3.17.5
@@ -84,6 +83,7 @@ catalog:
   "react-native-safe-area-context": ~5.4.0
   "react-native-screens": ~4.11.1
   "react-native-svg": 15.11.2
+  "react-native-keychain": ^10.0.0
   nativewind: ~4.1.23
 
   # Additional Expo packages

@@ -84,7 +84,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         project: "soonlist",
       },
     ],
-    "expo-secure-store",
     [
       "expo-calendar",
       {

@@ -2,7 +2,6 @@ import { Platform, StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack, useNavigationContainerRef } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
@@ -32,6 +31,7 @@ import Config from "~/utils/config";
 import { getUserTimeZone } from "~/utils/dates";
 import { logDebug, logError } from "~/utils/errorLogging";
 import { getAccessGroup } from "~/utils/getAccessGroup";
+import { SecureKeychain, WHEN_UNLOCKED } from "~/utils/keychain";
 
 const styles = StyleSheet.create({
   container: {
@@ -50,8 +50,9 @@ export { ErrorBoundary } from "expo-router";
 const tokenCache = {
   async getToken(key: string) {
     try {
-      return SecureStore.getItemAsync(key, {
+      return SecureKeychain.getItemAsync(key, {
         accessGroup: getAccessGroup(),
+        keychainAccessible: WHEN_UNLOCKED,
       });
     } catch {
       return null;
@@ -59,8 +60,9 @@ const tokenCache = {
   },
   async saveToken(key: string, value: string) {
     try {
-      return SecureStore.setItemAsync(key, value, {
+      return SecureKeychain.setItemAsync(key, value, {
         accessGroup: getAccessGroup(),
+        keychainAccessible: WHEN_UNLOCKED,
       });
     } catch {
       return;
@@ -68,7 +70,7 @@ const tokenCache = {
   },
   async clearToken(key: string) {
     try {
-      return SecureStore.deleteItemAsync(key, {
+      return SecureKeychain.deleteItemAsync(key, {
         accessGroup: getAccessGroup(),
       });
     } catch {
