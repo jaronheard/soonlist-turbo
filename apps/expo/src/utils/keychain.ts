@@ -15,13 +15,15 @@ export const SecureKeychain = {
   /**
    * Get an item from the keychain
    */
-  async getItemAsync(key: string, options?: KeychainOptions): Promise<string | null> {
+  async getItemAsync(
+    key: string,
+    options?: KeychainOptions,
+  ): Promise<string | null> {
     try {
       const result = await Keychain.getInternetCredentials(key, {
         accessGroup: options?.accessGroup,
-        accessible: options?.keychainAccessible || Keychain.ACCESSIBLE.WHEN_UNLOCKED,
       });
-      
+
       if (result && result.password) {
         return result.password;
       }
@@ -35,11 +37,16 @@ export const SecureKeychain = {
   /**
    * Set an item in the keychain
    */
-  async setItemAsync(key: string, value: string, options?: KeychainOptions): Promise<void> {
+  async setItemAsync(
+    key: string,
+    value: string,
+    options?: KeychainOptions,
+  ): Promise<void> {
     try {
       await Keychain.setInternetCredentials(key, key, value, {
         accessGroup: options?.accessGroup,
-        accessible: options?.keychainAccessible || Keychain.ACCESSIBLE.WHEN_UNLOCKED,
+        accessible:
+          options?.keychainAccessible || Keychain.ACCESSIBLE.WHEN_UNLOCKED,
       });
     } catch (error) {
       logError(`Error setting keychain item for key: ${key}`, error);
@@ -52,7 +59,8 @@ export const SecureKeychain = {
    */
   async deleteItemAsync(key: string, options?: KeychainOptions): Promise<void> {
     try {
-      await Keychain.resetInternetCredentials(key, {
+      await Keychain.resetInternetCredentials({
+        server: key,
         accessGroup: options?.accessGroup,
       });
     } catch (error) {
@@ -64,6 +72,8 @@ export const SecureKeychain = {
 
 // Export constants for compatibility
 export const WHEN_UNLOCKED = Keychain.ACCESSIBLE.WHEN_UNLOCKED;
-export const WHEN_UNLOCKED_THIS_DEVICE_ONLY = Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY;
+export const WHEN_UNLOCKED_THIS_DEVICE_ONLY =
+  Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY;
 export const AFTER_FIRST_UNLOCK = Keychain.ACCESSIBLE.AFTER_FIRST_UNLOCK;
-export const AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY = Keychain.ACCESSIBLE.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY;
+export const AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY =
+  Keychain.ACCESSIBLE.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY;
