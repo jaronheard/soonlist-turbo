@@ -46,7 +46,7 @@ export function isEditableElement(element: Element): boolean {
   }
 
   // Check for contenteditable elements using the DOM API
-  if (element.isContentEditable) {
+  if ("isContentEditable" in element && element.isContentEditable) {
     return true;
   }
 
@@ -67,22 +67,22 @@ export function extractImagesFromClipboard(
   const images: File[] = [];
 
   // First try clipboardData.items (works in most browsers)
-  if (clipboardData.items) {
-    for (const item of clipboardData.items) {
-      if (item && item.type?.startsWith("image/")) {
-        const file = item.getAsFile();
-        if (file) {
-          images.push(file);
-        }
+  for (const item of clipboardData.items) {
+    // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+    if (item.type && item.type.startsWith("image/")) {
+      const file = item.getAsFile();
+      if (file) {
+        images.push(file);
       }
     }
   }
 
   // Fallback to clipboardData.files for Safari compatibility
   // Only use this if items was undefined or empty
-  if (images.length === 0 && clipboardData.files) {
+  if (images.length === 0) {
     for (const file of clipboardData.files) {
-      if (file && file.type?.startsWith("image/")) {
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+      if (file.type && file.type.startsWith("image/")) {
         images.push(file);
       }
     }
@@ -135,7 +135,7 @@ export function isValidImageFile(file: File): boolean {
   const supportedExtensions = ["jpg", "jpeg", "png", "gif", "webp", "bmp"];
 
   // Normalize MIME type to lowercase
-  const mimeType = file.type?.toLowerCase();
+  const mimeType = file.type.toLowerCase();
 
   // If MIME type is available and valid, use it
   if (mimeType && supportedTypes.includes(mimeType)) {
