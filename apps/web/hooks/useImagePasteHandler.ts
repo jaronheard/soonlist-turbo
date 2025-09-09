@@ -46,7 +46,7 @@ export function useImagePasteHandler(
   );
 
   // Synchronous ref lock to prevent duplicate event creation on rapid paste
-  const isProcessingRef = useRef<boolean>(false);
+  const isProcessingRef = useRef(false);
 
   const createEventFromImage = useMutation(
     api.ai.eventFromImageBase64ThenCreate,
@@ -61,39 +61,49 @@ export function useImagePasteHandler(
       // Don't handle if user is not authenticated
       if (!currentUser) return false;
 
-      // Don't handle if currently processing (check both state and ref for atomicity)
-      if (isProcessing || isProcessingRef.current) return false;
+      // Don't handle if currently processing (state check only - ref lock handled separately)
+      if (isProcessing) return false;
 
       // Use utility function for event filtering
       return shouldHandlePasteEvent(event);
     },
-    [enabled, currentUser, isProcessing, isProcessingRef],
+    [enabled, currentUser, isProcessing],
   );
 
   // Main paste handler function
   const handlePaste = useCallback(
     async (event: ClipboardEvent) => {
-      // Set synchronous ref lock immediately to prevent re-entry
-      if (isProcessingRef.current) return;
-      isProcessingRef.current = true;
-
       try {
         // Check if we should handle this paste event
         if (!shouldHandlePasteEventInternal(event)) return;
 
+        // Atomic lock check and set - prevents race conditions on rapid paste
+        if (isProcessingRef.current) return;
+        isProcessingRef.current = true;
+
         // Extract images from clipboard
         const clipboardData = event.clipboardData;
-        if (!clipboardData) return;
+        if (!clipboardData) {
+          isProcessingRef.current = false;
+          return;
+        }
 
         const images = extractImagesFromClipboard(clipboardData);
-        if (images.length === 0) return;
+        if (images.length === 0) {
+          isProcessingRef.current = false;
+          return;
+        }
 
         // Validate the first image
         const image = images[0];
-        if (!image || !currentUser) return;
+        if (!image || !currentUser) {
+          isProcessingRef.current = false;
+          return;
+        }
 
         if (!isValidImageFile(image)) {
           setError("Unsupported image format");
+          isProcessingRef.current = false;
           return;
         }
 
