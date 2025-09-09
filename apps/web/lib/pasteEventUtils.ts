@@ -6,15 +6,27 @@
  * Checks if a paste event should be handled by the image paste handler
  */
 export function shouldHandlePasteEvent(event: ClipboardEvent): boolean {
-  const target = event.target as Element;
+  // First ensure we have an Element
+  let target: Element | null = null;
+
+  if (event.target instanceof Element) {
+    target = event.target;
+  } else {
+    // Use composedPath to find the first Element in the event path
+    const path = event.composedPath();
+    target =
+      path.find((item): item is Element => item instanceof Element) || null;
+  }
+
   if (!target) return false;
 
   // Don't handle if target is an editable element
   if (isEditableElement(target)) return false;
 
   // Don't handle if target is inside an editable element
+  // Use broader selector to catch any contenteditable value and ARIA textboxes
   const closestEditable = target.closest(
-    'input, textarea, [contenteditable="true"]',
+    'input, textarea, [contenteditable], [role="textbox"]',
   );
   if (closestEditable) return false;
 
@@ -25,16 +37,23 @@ export function shouldHandlePasteEvent(event: ClipboardEvent): boolean {
  * Checks if an element is editable (input, textarea, contenteditable)
  */
 export function isEditableElement(element: Element): boolean {
-  const tagName = element.tagName.toLowerCase();
+  // Check for input and textarea elements using instance checks
+  if (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement
+  ) {
+    return true;
+  }
 
-  // Check for input and textarea elements
-  if (tagName === "input" || tagName === "textarea") return true;
+  // Check for contenteditable elements using the DOM API
+  if (element.isContentEditable) {
+    return true;
+  }
 
-  // Check for contenteditable elements
-  if (element.getAttribute("contenteditable") === "true") return true;
-
-  // Check for elements with role="textbox"
-  if (element.getAttribute("role") === "textbox") return true;
+  // Check for elements with role="textbox" (normalize case)
+  if (element.getAttribute("role")?.toLowerCase() === "textbox") {
+    return true;
+  }
 
   return false;
 }
@@ -47,10 +66,23 @@ export function extractImagesFromClipboard(
 ): File[] {
   const images: File[] = [];
 
-  for (const item of clipboardData.items) {
-    if (item?.type.startsWith("image/")) {
-      const file = item.getAsFile();
-      if (file) {
+  // First try clipboardData.items (works in most browsers)
+  if (clipboardData.items) {
+    for (const item of clipboardData.items) {
+      if (item && item.type?.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          images.push(file);
+        }
+      }
+    }
+  }
+
+  // Fallback to clipboardData.files for Safari compatibility
+  // Only use this if items was undefined or empty
+  if (images.length === 0 && clipboardData.files) {
+    for (const file of clipboardData.files) {
+      if (file && file.type?.startsWith("image/")) {
         images.push(file);
       }
     }
