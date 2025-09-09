@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 
@@ -45,6 +45,9 @@ export function useImagePasteHandler(
     null,
   );
 
+  // Synchronous ref lock to prevent duplicate event creation on rapid paste
+  const isProcessingRef = useRef<boolean>(false);
+
   const createEventFromImage = useMutation(
     api.ai.eventFromImageBase64ThenCreate,
   );
@@ -58,18 +61,22 @@ export function useImagePasteHandler(
       // Don't handle if user is not authenticated
       if (!currentUser) return false;
 
-      // Don't handle if currently processing
-      if (isProcessing) return false;
+      // Don't handle if currently processing (check both state and ref for atomicity)
+      if (isProcessing || isProcessingRef.current) return false;
 
       // Use utility function for event filtering
       return shouldHandlePasteEvent(event);
     },
-    [enabled, currentUser, isProcessing],
+    [enabled, currentUser, isProcessing, isProcessingRef],
   );
 
   // Main paste handler function
   const handlePaste = useCallback(
     async (event: ClipboardEvent) => {
+      // Set synchronous ref lock immediately to prevent re-entry
+      if (isProcessingRef.current) return;
+      isProcessingRef.current = true;
+
       try {
         // Check if we should handle this paste event
         if (!shouldHandlePasteEventInternal(event)) return;
@@ -131,6 +138,8 @@ export function useImagePasteHandler(
         onError?.(err instanceof Error ? err : new Error(errorMessage));
         console.error("Error processing pasted image:", err);
       } finally {
+        // Always clear both the ref lock and state, even on errors
+        isProcessingRef.current = false;
         setIsProcessing(false);
       }
     },
