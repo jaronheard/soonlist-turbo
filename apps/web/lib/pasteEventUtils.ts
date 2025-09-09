@@ -130,10 +130,29 @@ export function isValidImageFile(file: File): boolean {
     "image/gif",
     "image/webp",
     "image/bmp",
-    "image/svg+xml",
   ];
 
-  return supportedTypes.includes(file.type.toLowerCase());
+  const supportedExtensions = ["jpg", "jpeg", "png", "gif", "webp", "bmp"];
+
+  // Normalize MIME type to lowercase
+  const mimeType = file.type?.toLowerCase();
+
+  // If MIME type is available and valid, use it
+  if (mimeType && supportedTypes.includes(mimeType)) {
+    return true;
+  }
+
+  // Fallback to file extension if MIME type is empty or invalid
+  if (file.name) {
+    const fileName = file.name.toLowerCase();
+    const extension = fileName.split(".").pop();
+
+    if (extension && supportedExtensions.includes(extension)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
