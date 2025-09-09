@@ -163,18 +163,22 @@ export function getNavigationPath(
   currentPath: string,
   username: string,
 ): string {
+  // Compute safe username up front to prevent malformed URLs and path injection
+  const safeUsername =
+    username && username.trim() !== "" ? encodeURIComponent(username) : "me";
+
   switch (pageContext) {
     case "new":
       // Stay on new page or go to upcoming - for now go to upcoming
-      return `/${username}/upcoming`;
+      return `/${safeUsername}/upcoming`;
     case "eventList":
       // Stay on the current event list page
       return currentPath;
     case "eventPage":
       // Go to user's upcoming page
-      return `/${username}/upcoming`;
+      return `/${safeUsername}/upcoming`;
     default:
       // Default to upcoming page
-      return `/${username}/upcoming`;
+      return `/${safeUsername}/upcoming`;
   }
 }
