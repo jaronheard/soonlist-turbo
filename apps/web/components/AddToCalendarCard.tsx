@@ -557,7 +557,7 @@ export function AddToCalendarCard({
           </div>
         )}
         {!initialProps.onUpdate && !initialProps.hideFloatingActionButtons && (
-          <div className="fixed bottom-4 left-1/2 flex -translate-x-1/2 transform gap-3">
+          <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 transform gap-3">
             {!initialProps.update && (
               <PublishButton
                 notes={notes}
