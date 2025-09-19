@@ -9,11 +9,15 @@ import * as Files from "./model/files";
 export const uploadImage = internalAction({
   args: {
     base64Image: v.string(),
+    contentType: v.optional(v.string()),
   },
   returns: v.string(),
   handler: async (_, args) => {
     try {
-      const result = await Files.uploadImageToCDNFromBase64(args.base64Image);
+      const result = await Files.uploadImageToCDNFromBase64(
+        args.base64Image,
+        args.contentType,
+      );
       if (!result) {
         throw new ConvexError("Failed to upload image to CDN");
       }

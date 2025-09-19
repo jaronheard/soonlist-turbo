@@ -3,6 +3,7 @@
  */
 export async function uploadImageToCDNFromBase64(
   base64Image: string,
+  contentType?: string,
 ): Promise<string | null> {
   try {
     if (!base64Image || typeof base64Image !== "string") {
@@ -25,7 +26,9 @@ export async function uploadImageToCDNFromBase64(
       {
         method: "POST",
         headers: {
-          "Content-Type": "image/webp",
+          "Content-Type": contentType?.startsWith("image/")
+            ? contentType
+            : "image/webp",
           Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
         },
         body: imageBuffer,
