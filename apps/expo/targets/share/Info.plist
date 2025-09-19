@@ -24,8 +24,8 @@
 
     <!-- Convex base URLs for dev/prod switching -->
     <key>ConvexHttpBaseURL</key>
-    <string>https://YOUR-PROD-CONVEX.convex.site/share/</string>
+    <string>https://convex-http.soonlist.com/</string>
     <key>ConvexHttpBaseURLDev</key>
-    <string>https://YOUR-DEV-CONVEX.convex.site/share/</string>
+    <string>https://lovable-camel-478.convex.site/</string>
   </dict>
 </plist>

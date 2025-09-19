@@ -12,11 +12,8 @@ module.exports = {
     ],
   },
   infoPlist: {
-    // Allow configuring Convex base URL if not set via App Group
-    ConvexHttpBaseURL:
-      process.env.APP_VARIANT === "development"
-        ? "https://YOUR-DEV-CONVEX.convex.site/"
-        : "https://YOUR-PROD-CONVEX.convex.site/",
-    ConvexHttpBaseURLDev: "https://YOUR-DEV-CONVEX.convex.site/",
+    // Hardcoded Convex site URLs for HTTP endpoints
+    ConvexHttpBaseURL: "https://convex-http.soonlist.com",
+    ConvexHttpBaseURLDev: "https://lovable-camel-478.convex.site",
   },
 };
