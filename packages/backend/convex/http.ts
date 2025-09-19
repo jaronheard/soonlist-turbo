@@ -21,6 +21,72 @@ interface ClerkWebhookEvent {
 
 const http = httpRouter();
 
+// Helpers for JSON parsing, data URL handling, format validation, and size limits
+const ALLOWED_FORMATS = ["image/webp", "image/jpeg"] as const;
+type AllowedFormat = (typeof ALLOWED_FORMATS)[number];
+
+async function parseJsonOr400(
+  request: Request,
+): Promise<{ ok: true; body: unknown } | { ok: false; response: Response }> {
+  const contentType = request.headers.get("Content-Type") || "";
+  if (!contentType.includes("application/json")) {
+    return {
+      ok: false,
+      response: new Response(
+        JSON.stringify({ ok: false, error: "Invalid content type" }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      ),
+    };
+  }
+  try {
+    const body = (await request.json()) as unknown;
+    return { ok: true, body };
+  } catch {
+    return {
+      ok: false,
+      response: new Response(
+        JSON.stringify({ ok: false, error: "Invalid JSON" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    };
+  }
+}
+
+function stripDataUrl(base64Input: string): {
+  base64: string;
+  formatFromDataUrl?: AllowedFormat;
+} {
+  let base64 = base64Input.trim();
+  const dataUrlRegex = /^data:(image\/(?:jpeg|webp));base64,(.*)$/i;
+  const match = dataUrlRegex.exec(base64);
+  if (!match) return { base64 };
+  const mime = match[1].toLowerCase();
+  const formatFromDataUrl: AllowedFormat | undefined =
+    mime === "image/jpeg"
+      ? "image/jpeg"
+      : mime === "image/webp"
+        ? "image/webp"
+        : undefined;
+  base64 = match[2] || "";
+  return { base64, formatFromDataUrl };
+}
+
+function validateFormat(format: string | undefined): format is AllowedFormat {
+  return !!format && (ALLOWED_FORMATS as readonly string[]).includes(format);
+}
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB limit
+
+function isTooLargeBase64(base64: string): boolean {
+  const compact = base64.replace(/\s+/g, "");
+  // Base64 encoding increases size by ~33%, +2 for padding
+  const maxChars = Math.ceil(MAX_IMAGE_BYTES / 3) * 4 + 2;
+  return compact.length > maxChars;
+}
+
 http.route({
   path: "/clerk-webhook",
   method: "POST",
@@ -179,19 +245,10 @@ http.route({
         );
       }
 
-      // Parse body
-      const contentType = request.headers.get("Content-Type") || "";
-      if (!contentType.includes("application/json")) {
-        return new Response(
-          JSON.stringify({ ok: false, error: "Invalid content type" }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-      }
-
-      const body = (await request.json()) as {
+      // Parse body using helper
+      const parsedJson = await parseJsonOr400(request);
+      if (!parsedJson.ok) return parsedJson.response;
+      const body = parsedJson.body as {
         kind: string;
         base64Image?: string;
         format?: "image/webp" | "image/jpeg";
@@ -201,7 +258,7 @@ http.route({
         visibility?: "public" | "private";
       };
 
-      if (!body || body.kind !== "image" || !body.base64Image) {
+      if (body.kind !== "image" || !body.base64Image) {
         return new Response(
           JSON.stringify({ ok: false, error: "Invalid payload" }),
           {
@@ -215,16 +272,33 @@ http.route({
       const lists = Array.isArray(body.lists) ? body.lists : [];
       const visibility = body.visibility ?? "private";
 
-      // Validate format parameter
-      const validFormats = ["image/webp", "image/jpeg"] as const;
-      const format =
-        body.format && validFormats.includes(body.format)
-          ? body.format
-          : undefined;
+      // Handle data URL prefix and validate format + size (simplified)
+      const providedFormat = body.format;
+      if (providedFormat && !validateFormat(providedFormat)) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "Invalid format" }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      const stripped = stripDataUrl(body.base64Image);
+      const base64 = stripped.base64;
+      const format: AllowedFormat | undefined =
+        stripped.formatFromDataUrl ??
+        (providedFormat && validateFormat(providedFormat)
+          ? providedFormat
+          : undefined);
+
+      // Enforce maximum size using character-bound check
+      if (isTooLargeBase64(base64)) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "Payload too large" }),
+          { status: 413, headers: { "Content-Type": "application/json" } },
+        );
+      }
 
       // Schedule processing
       const result = await ctx.runMutation(api.ai.eventFromImageBase64Direct, {
-        base64Image: body.base64Image,
+        base64Image: base64,
         timezone,
         comment: body.comment ?? undefined,
         lists,
