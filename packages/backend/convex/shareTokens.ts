@@ -5,9 +5,10 @@ import { internalMutation, internalQuery, mutation } from "./_generated/server";
 function generateShareToken(): string {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
-  // Convert to base64url
-  const b64 = btoa(String.fromCharCode(...bytes));
-  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  // Convert to lowercase hex string
+  return Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 export const createShareToken = mutation({
