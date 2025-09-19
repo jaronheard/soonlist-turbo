@@ -211,12 +211,16 @@ http.route({
         );
       }
 
-      const timezone =
-        body.timezone && body.timezone.trim() !== ""
-          ? body.timezone
-          : DEFAULT_TIMEZONE;
+      const timezone = body.timezone?.trim() || DEFAULT_TIMEZONE;
       const lists = Array.isArray(body.lists) ? body.lists : [];
       const visibility = body.visibility ?? "private";
+
+      // Validate format parameter
+      const validFormats = ["image/webp", "image/jpeg"] as const;
+      const format =
+        body.format && validFormats.includes(body.format)
+          ? body.format
+          : undefined;
 
       // Schedule processing
       const result = await ctx.runMutation(api.ai.eventFromImageBase64Direct, {
@@ -228,7 +232,7 @@ http.route({
         sendNotification: true,
         userId: resolved.userId,
         username: resolved.username,
-        format: body.format,
+        format,
       });
 
       return new Response(

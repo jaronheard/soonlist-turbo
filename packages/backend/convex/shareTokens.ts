@@ -42,7 +42,20 @@ export const createShareToken = mutation({
       .withIndex("by_custom_id", (q) => q.eq("id", userId))
       .first();
 
-    const username = user?.username || userId;
+    if (!user) {
+      throw new ConvexError({
+        message: "User not found",
+        data: { userId },
+      });
+    }
+    if (!user.username) {
+      throw new ConvexError({
+        message: "User is missing username",
+        data: { userId },
+      });
+    }
+
+    const username = user.username;
 
     // Generate a unique token, checking for collisions
     let token: string;
