@@ -150,7 +150,7 @@ Pseudocode for resizing and WEBP encode:
 
 ### Acceptance criteria
 
-- Share extension sends a single image as base64 WebP (640 width, q=0.5) and dismisses on 2xx.
+- Share extension sends a single image as base64 WebP (640 width, q=0.5) and dismisses on 2xx (falls back to JPEG 0.5 if WebP unsupported).
 - Backend endpoint authenticates via share token and returns `{ ok: true, jobId }`.
 - Event is created and image uploaded; user receives a push notification.
 - No deep links used; works on iOS 16–18 (iOS 26 typo) without foregrounding the app.

@@ -11,4 +11,12 @@ module.exports = {
         : "group.com.soonlist",
     ],
   },
+  infoPlist: {
+    // Allow configuring Convex base URL if not set via App Group
+    ConvexHttpBaseURL:
+      process.env.APP_VARIANT === "development"
+        ? "https://YOUR-DEV-CONVEX.convex.site/"
+        : "https://YOUR-PROD-CONVEX.convex.site/",
+    ConvexHttpBaseURLDev: "https://YOUR-DEV-CONVEX.convex.site/",
+  },
 };

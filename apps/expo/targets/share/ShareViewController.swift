@@ -1,4 +1,6 @@
 import UIKit
+import UniformTypeIdentifiers
+import ImageIO
 
 class ShareViewController: UIViewController {
   let isProdBundle = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share")
@@ -8,6 +10,42 @@ class ShareViewController: UIViewController {
   let appGroup = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share")
     ? "group.com.soonlist"
     : "group.com.soonlist.dev"
+
+  private let statusLabel: UILabel = {
+    let label = UILabel()
+    label.textAlignment = .center
+    label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+    label.textColor = .label
+    label.numberOfLines = 2
+    label.text = "Capturing…"
+    return label
+  }()
+
+  private let spinner: UIActivityIndicatorView = {
+    let indicator = UIActivityIndicatorView(style: .large)
+    indicator.hidesWhenStopped = true
+    return indicator
+  }()
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    view.backgroundColor = .systemBackground
+
+    spinner.translatesAutoresizingMaskIntoConstraints = false
+    statusLabel.translatesAutoresizingMaskIntoConstraints = false
+    view.addSubview(spinner)
+    view.addSubview(statusLabel)
+
+    NSLayoutConstraint.activate([
+      spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -12),
+      statusLabel.topAnchor.constraint(equalTo: spinner.bottomAnchor, constant: 12),
+      statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+      statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+    ])
+
+    spinner.startAnimating()
+  }
 
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
@@ -22,116 +60,174 @@ class ShareViewController: UIViewController {
       return
     }
 
-    Task {
-      if firstAttachment.hasItemConformingToTypeIdentifier("public.text") {
-        NSLog("Attachment is public.text; handling text.")
-        await self.handleText(item: firstAttachment)
-      } else if firstAttachment.hasItemConformingToTypeIdentifier("public.image") {
-        NSLog("Attachment is public.image; handling image.")
-        await self.handleImage(item: firstAttachment)
-      } else if firstAttachment.hasItemConformingToTypeIdentifier("public.url") {
-        NSLog("Attachment is public.url; handling URL.")
-        await self.handleUrl(item: firstAttachment)
+    Task { await self.captureAndSend(firstAttachment) }
+  }
+
+  private func captureAndSend(_ item: NSItemProvider) async {
+    do {
+      guard item.hasItemConformingToTypeIdentifier("public.image") else {
+        NSLog("Not an image; finishing.")
+        self.showAndDismiss(text: "Nothing to share", success: false)
+        return
+      }
+
+      // Load first image
+      let image: UIImage? = try await loadImage(from: item)
+      guard let inputImage = image else {
+        self.showAndDismiss(text: "Failed to load image", success: false)
+        return
+      }
+
+      // Resize to width 640
+      guard let resized = resizeImage(inputImage, targetWidth: 640) else {
+        self.showAndDismiss(text: "Resize failed", success: false)
+        return
+      }
+
+      // Encode to WebP @ q=0.5; fallback to JPEG
+      let (data, format): (Data, String)? = encodeImage(resized)
+      guard let (encodedData, formatStr) = data != nil ? (data!, format!) : nil else {
+        self.showAndDismiss(text: "Encode failed", success: false)
+        return
+      }
+
+      // Read token from app group
+      guard let token = UserDefaults(suiteName: appGroup)?.string(forKey: "shareToken"), !token.isEmpty else {
+        NSLog("Missing share token in app group")
+        self.showAndDismiss(text: "Missing share token", success: false)
+        return
+      }
+
+      // Resolve Convex base URL
+      guard let baseUrl = resolveConvexBaseUrl() else {
+        NSLog("Missing Convex base URL")
+        self.showAndDismiss(text: "Config error", success: false)
+        return
+      }
+
+      let endpoint = baseUrl.appendingPathComponent("share/v1/capture")
+      let timezone = UserDefaults(suiteName: appGroup)?.string(forKey: "timezone") ?? TimeZone.current.identifier
+
+      let payload: [String: Any] = [
+        "kind": "image",
+        "base64Image": encodedData.base64EncodedString(),
+        "format": formatStr,
+        "timezone": timezone,
+        "comment": NSNull(),
+        "lists": [],
+        "visibility": "private",
+      ]
+
+      var request = URLRequest(url: endpoint)
+      request.httpMethod = "POST"
+      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+      request.setValue(token, forHTTPHeaderField: "X-Share-Token")
+      request.httpBody = try JSONSerialization.data(withJSONObject: payload, options: [])
+
+      let (responseData, response) = try await URLSession.shared.data(for: request)
+      if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) {
+        NSLog("Share sent successfully: status=\(http.statusCode)")
+        NSLog("Response: \(String(data: responseData, encoding: .utf8) ?? "<none>")")
+        self.showAndDismiss(text: "Sent!", success: true)
       } else {
-        NSLog("Attachment has unrecognized type; completing.")
+        let http = response as? HTTPURLResponse
+        NSLog("Share failed: status=\(http?.statusCode ?? -1)")
+        self.showAndDismiss(text: "Failed to send", success: false)
+      }
+    } catch {
+      NSLog("captureAndSend error: \(error)")
+      self.showAndDismiss(text: "Failed to send", success: false)
+    }
+  }
+
+  private func loadImage(from item: NSItemProvider) async throws -> UIImage? {
+    if let dataUrl = try await item.loadItem(forTypeIdentifier: "public.image") as? URL {
+      let data = try Data(contentsOf: dataUrl)
+      return UIImage(data: data)
+    }
+    if let uiImage = try await item.loadItem(forTypeIdentifier: "public.image") as? UIImage {
+      return uiImage
+    }
+    return nil
+  }
+
+  private func resizeImage(_ image: UIImage, targetWidth: CGFloat) -> UIImage? {
+    let size = image.size
+    if size.width <= targetWidth { return image }
+    let scale = targetWidth / size.width
+    let newSize = CGSize(width: targetWidth, height: floor(size.height * scale))
+
+    UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+    image.draw(in: CGRect(origin: .zero, size: newSize))
+    let result = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+    return result
+  }
+
+  private func encodeImage(_ image: UIImage) -> (Data, String)? {
+    guard let cgImage = image.cgImage else { return nil }
+
+    // Try WebP first
+    if let webpData = encodeWithImageIO(cgImage: cgImage, uti: webPIdentifier(), quality: 0.5) {
+      return (webpData, "image/webp")
+    }
+
+    // Fallback to JPEG
+    if #available(iOS 14.0, *) {
+      let jpegUti = (UTType.jpeg.identifier as NSString) as CFString
+      if let jpegData = encodeWithImageIO(cgImage: cgImage, uti: jpegUti, quality: 0.5) {
+        return (jpegData as Data, "image/jpeg")
+      }
+    }
+
+    // Ultimate fallback using UIImage API
+    if let jpegData2 = image.jpegData(compressionQuality: 0.5) {
+      return (jpegData2, "image/jpeg")
+    }
+    return nil
+  }
+
+  private func webPIdentifier() -> CFString {
+    if #available(iOS 14.0, *) {
+      return UTType.webP.identifier as CFString
+    }
+    // Known identifier for WebP on iOS
+    return "org.webmproject.webp" as CFString
+  }
+
+  private func encodeWithImageIO(cgImage: CGImage, uti: CFString, quality: Double) -> Data? {
+    let data = NSMutableData()
+    guard let dest = CGImageDestinationCreateWithData(data as CFMutableData, uti, 1, nil) else {
+      return nil
+    }
+    let properties = [kCGImageDestinationLossyCompressionQuality: quality] as CFDictionary
+    CGImageDestinationAddImage(dest, cgImage, properties)
+    guard CGImageDestinationFinalize(dest) else { return nil }
+    return data as Data
+  }
+
+  private func resolveConvexBaseUrl() -> URL? {
+    let defaults = UserDefaults(suiteName: appGroup)
+    if let urlStr = defaults?.string(forKey: "convexHttpBaseURL"), let url = URL(string: urlStr) {
+      return url
+    }
+    // Fallback to Info.plist
+    let key = isProdBundle ? "ConvexHttpBaseURL" : "ConvexHttpBaseURLDev"
+    if let value = Bundle.main.object(forInfoDictionaryKey: key) as? String, let url = URL(string: value) {
+      return url
+    }
+    return nil
+  }
+
+  private func showAndDismiss(text: String, success: Bool) {
+    DispatchQueue.main.async {
+      self.spinner.stopAnimating()
+      self.statusLabel.text = text
+      self.statusLabel.textColor = success ? .systemGreen : .systemRed
+      let delay: TimeInterval = success ? 0.6 : 1.2
+      DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
         self.completeRequest()
       }
-    }
-  }
-
-  private func handleText(item: NSItemProvider) async {
-    NSLog("In handleText...")
-    do {
-      if let data = try await item.loadItem(forTypeIdentifier: "public.text") as? String {
-        NSLog("Loaded text: \(data.prefix(100))...") // Log first 100 chars
-        if let encoded = data.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-           let url = URL(string: "\(appScheme)://new?text=\(encoded)") {
-          NSLog("Constructed URL: \(url.absoluteString)")
-          _ = self.openURL(url)
-        }
-      }
-      NSLog("Completing handleText")
-      self.completeRequest()
-    } catch {
-      NSLog("handleText error: \(error)")
-      _ = self.completeRequest()
-    }
-  }
-
-  private func handleUrl(item: NSItemProvider) async {
-    NSLog("In handleUrl...")
-    do {
-      if let data = try await item.loadItem(forTypeIdentifier: "public.url") as? URL {
-        NSLog("Loaded URL from extension: \(data)")
-        if let encoded = data.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-           let url = URL(string: "\(appScheme)://new?text=\(encoded)") {
-          NSLog("Constructed custom scheme URL: \(url.absoluteString)")
-          _ = self.openURL(url)
-        }
-      }
-      NSLog("Completing handleUrl")
-      self.completeRequest()
-    } catch {
-      NSLog("handleUrl error: \(error)")
-      self.completeRequest()
-    }
-  }
-
-  private func handleImage(item: NSItemProvider) async {
-    NSLog("In handleImage...")
-    var valid = true
-    var imageUriInfo: String?
-
-    do {
-      if let dataUri = try await item.loadItem(forTypeIdentifier: "public.image") as? URL {
-        NSLog("Got a dataUri: \(dataUri.absoluteString)")
-        let data = try Data(contentsOf: dataUri)
-        NSLog("Data size: \(data.count)")
-        let image = UIImage(data: data)
-        imageUriInfo = saveImageWithInfo(image)
-      } else if let image = try await item.loadItem(forTypeIdentifier: "public.image") as? UIImage {
-        NSLog("Got a UIImage in-memory")
-        imageUriInfo = saveImageWithInfo(image)
-      }
-    } catch {
-      NSLog("handleImage error: \(error)")
-      valid = false
-    }
-
-    if valid,
-       let imageUriInfo = imageUriInfo,
-       let encoded = imageUriInfo.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-       let url = URL(string: "\(appScheme)://new?imageUri=\(encoded)") {
-      NSLog("Constructed custom scheme URL for image: \(url.absoluteString)")
-      _ = self.openURL(url)
-      NSLog("Completing handleImage")
-      self.completeRequest()
-    } else {
-      NSLog("Image handling invalid or no imageUriInfo. Completing.")
-      self.completeRequest()
-    }
-  }
-
-  private func saveImageWithInfo(_ image: UIImage?) -> String? {
-    guard let image = image else { return nil }
-    NSLog("Saving image to app group...")
-
-    do {
-      if let dir = FileManager().containerURL(forSecurityApplicationGroupIdentifier: appGroup) {
-        let filePath = "\(dir.absoluteString)\(ProcessInfo.processInfo.globallyUniqueString).jpeg"
-        NSLog("File path: \(filePath)")
-        if let newUri = URL(string: filePath),
-           let jpegData = image.jpegData(compressionQuality: 1) {
-          try jpegData.write(to: newUri)
-          NSLog("Wrote image successfully to \(newUri.absoluteString)")
-          return "\(newUri.absoluteString)|\(image.size.width)|\(image.size.height)"
-        }
-      }
-      NSLog("No containerURL or could not write.")
-      return nil
-    } catch {
-      NSLog("Error writing image: \(error)")
-      return nil
     }
   }
 

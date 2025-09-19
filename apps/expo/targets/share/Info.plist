@@ -9,11 +9,11 @@
         <key>NSExtensionActivationRule</key>
         <dict>
           <key>NSExtensionActivationSupportsText</key>
-          <true/>
+          <false/>
           <key>NSExtensionActivationSupportsImageWithMaxCount</key>
           <integer>1</integer>
           <key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-          <integer>1</integer>
+          <false/>
         </dict>
       </dict>
       <key>NSExtensionPrincipalClass</key>
@@ -21,5 +21,11 @@
       <key>NSExtensionPointIdentifier</key>
       <string>com.apple.share-services</string>
     </dict>
+
+    <!-- Convex base URLs for dev/prod switching -->
+    <key>ConvexHttpBaseURL</key>
+    <string>https://YOUR-PROD-CONVEX.convex.site/share/</string>
+    <key>ConvexHttpBaseURLDev</key>
+    <string>https://YOUR-DEV-CONVEX.convex.site/share/</string>
   </dict>
 </plist>
