@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 import { internalMutation, internalQuery, mutation } from "./_generated/server";
 
@@ -17,6 +17,26 @@ export const createShareToken = mutation({
   },
   returns: v.object({ token: v.string() }),
   handler: async (ctx, { userId }) => {
+    // Authentication check
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        message: "User must be logged in to create a share token",
+        data: { userId },
+      });
+    }
+
+    // Authorization check - ensure the authenticated user matches the requested userId
+    if (identity.subject !== userId) {
+      throw new ConvexError({
+        message: "You can only create share tokens for yourself",
+        data: {
+          authenticatedUserId: identity.subject,
+          requestedUserId: userId,
+        },
+      });
+    }
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", userId))
