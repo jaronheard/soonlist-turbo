@@ -156,10 +156,13 @@ class ShareViewController: UIViewController {
     let scale = targetWidth / size.width
     let newSize = CGSize(width: targetWidth, height: floor(size.height * scale))
 
-    UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
-    image.draw(in: CGRect(origin: .zero, size: newSize))
-    let result = UIGraphicsGetImageFromCurrentImageContext()
-    UIGraphicsEndImageContext()
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1.0
+    format.opaque = false
+    let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
+    let result = renderer.image { _ in
+      image.draw(in: CGRect(origin: .zero, size: newSize))
+    }
     return result
   }
 
