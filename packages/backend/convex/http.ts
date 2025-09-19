@@ -154,12 +154,21 @@ http.route({
       }
 
       // Resolve token → user
-      const resolved = await ctx.runQuery(
-        internal.shareTokens.resolveShareToken,
-        {
+      let resolved;
+      try {
+        resolved = await ctx.runQuery(internal.shareTokens.resolveShareToken, {
           token,
-        },
-      );
+        });
+      } catch {
+        // If .unique() throws due to duplicate tokens, treat as unauthorized
+        return new Response(
+          JSON.stringify({ ok: false, error: "Unauthorized" }),
+          {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
       if (!resolved) {
         return new Response(
           JSON.stringify({ ok: false, error: "Unauthorized" }),

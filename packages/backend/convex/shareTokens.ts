@@ -22,7 +22,28 @@ export const createShareToken = mutation({
       .first();
 
     const username = user?.username || userId;
-    const token = generateShareToken();
+
+    // Generate a unique token, checking for collisions
+    let token: string;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    do {
+      token = generateShareToken();
+      const existing = await ctx.db
+        .query("shareTokens")
+        .withIndex("by_token", (q) => q.eq("token", token))
+        .first();
+      if (!existing) break;
+      attempts++;
+    } while (attempts < maxAttempts);
+
+    if (attempts >= maxAttempts) {
+      throw new Error(
+        "Failed to generate unique share token after maximum attempts",
+      );
+    }
+
     await ctx.db.insert("shareTokens", {
       token,
       userId,
@@ -45,7 +66,7 @@ export const resolveShareToken = internalQuery({
     const record = await ctx.db
       .query("shareTokens")
       .withIndex("by_token", (q) => q.eq("token", token))
-      .first();
+      .unique();
 
     if (!record || record.revokedAt) return null;
     return { userId: record.userId, username: record.username };
@@ -59,7 +80,7 @@ export const revokeShareToken = internalMutation({
     const record = await ctx.db
       .query("shareTokens")
       .withIndex("by_token", (q) => q.eq("token", token))
-      .first();
+      .unique();
     if (!record) return { success: false };
     await ctx.db.patch(record._id, { revokedAt: new Date().toISOString() });
     return { success: true };
