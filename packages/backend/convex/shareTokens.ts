@@ -1,0 +1,67 @@
+import { v } from "convex/values";
+
+import { internalMutation, internalQuery, mutation } from "./_generated/server";
+
+function generateShareToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  // Convert to base64url
+  const b64 = btoa(String.fromCharCode(...bytes));
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export const createShareToken = mutation({
+  args: {
+    userId: v.string(),
+  },
+  returns: v.object({ token: v.string() }),
+  handler: async (ctx, { userId }) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", userId))
+      .first();
+
+    const username = user?.username || userId;
+    const token = generateShareToken();
+    await ctx.db.insert("shareTokens", {
+      token,
+      userId,
+      username,
+      createdAt: new Date().toISOString(),
+      revokedAt: null,
+    });
+
+    return { token };
+  },
+});
+
+export const resolveShareToken = internalQuery({
+  args: { token: v.string() },
+  returns: v.union(
+    v.object({ userId: v.string(), username: v.string() }),
+    v.null(),
+  ),
+  handler: async (ctx, { token }) => {
+    const record = await ctx.db
+      .query("shareTokens")
+      .withIndex("by_token", (q) => q.eq("token", token))
+      .first();
+
+    if (!record || record.revokedAt) return null;
+    return { userId: record.userId, username: record.username };
+  },
+});
+
+export const revokeShareToken = internalMutation({
+  args: { token: v.string() },
+  returns: v.object({ success: v.boolean() }),
+  handler: async (ctx, { token }) => {
+    const record = await ctx.db
+      .query("shareTokens")
+      .withIndex("by_token", (q) => q.eq("token", token))
+      .first();
+    if (!record) return { success: false };
+    await ctx.db.patch(record._id, { revokedAt: new Date().toISOString() });
+    return { success: true };
+  },
+});

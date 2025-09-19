@@ -236,4 +236,14 @@ export default defineSchema({
     .index("by_batch_id", ["batchId"])
     .index("by_user", ["userId"])
     .index("by_user_and_status", ["userId", "status"]),
+
+  shareTokens: defineTable({
+    token: v.string(),
+    userId: v.string(),
+    username: v.string(),
+    createdAt: v.string(), // ISO date string
+    revokedAt: v.union(v.string(), v.null()), // ISO date string or null
+  })
+    .index("by_token", ["token"]) // For quick token lookup
+    .index("by_user", ["userId"]),
 });

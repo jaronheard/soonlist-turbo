@@ -160,6 +160,11 @@ To add new functions:
 
 The users table includes the following fields:
 
+- shareTokens: tokens for the iOS share extension authentication
+
+  - fields: `token`, `userId`, `username`, `createdAt`, `revokedAt`
+  - indexes: `by_token`, `by_user`
+
 - `id` - Custom user ID (from Clerk)
 - `username` - Unique username
 - `email` - User email

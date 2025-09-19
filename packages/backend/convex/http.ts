@@ -1,8 +1,9 @@
 import { httpRouter } from "convex/server";
 import { Webhook } from "svix";
 
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
+import { DEFAULT_TIMEZONE } from "./constants";
 
 interface ClerkWebhookEvent {
   type: string;
@@ -130,6 +131,106 @@ http.route({
           status: 500,
           headers: { "Content-Type": "application/json" },
         },
+      );
+    }
+  }),
+});
+
+// Share extension capture endpoint
+http.route({
+  path: "/share/v1/capture",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const token = request.headers.get("X-Share-Token") || "";
+      if (!token) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "Missing token" }),
+          {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Resolve token → user
+      const resolved = await ctx.runQuery(
+        internal.shareTokens.resolveShareToken,
+        {
+          token,
+        },
+      );
+      if (!resolved) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "Unauthorized" }),
+          {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Parse body
+      const contentType = request.headers.get("Content-Type") || "";
+      if (!contentType.includes("application/json")) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "Invalid content type" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const body = (await request.json()) as {
+        kind: string;
+        base64Image?: string;
+        format?: "image/webp" | "image/jpeg";
+        timezone?: string;
+        comment?: string | null;
+        lists?: { value: string }[] | undefined;
+        visibility?: "public" | "private";
+      };
+
+      if (!body || body.kind !== "image" || !body.base64Image) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "Invalid payload" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const timezone =
+        body.timezone && body.timezone.trim() !== ""
+          ? body.timezone
+          : DEFAULT_TIMEZONE;
+      const lists = Array.isArray(body.lists) ? body.lists : [];
+      const visibility = body.visibility ?? "private";
+
+      // Schedule processing
+      const result = await ctx.runMutation(api.ai.eventFromImageBase64Direct, {
+        base64Image: body.base64Image,
+        timezone,
+        comment: body.comment ?? undefined,
+        lists,
+        visibility,
+        sendNotification: true,
+        userId: resolved.userId,
+        username: resolved.username,
+        format: body.format,
+      });
+
+      return new Response(
+        JSON.stringify({ ok: result.success, jobId: result.jobId }),
+        { status: 202, headers: { "Content-Type": "application/json" } },
+      );
+    } catch (error) {
+      console.error("/share/v1/capture error", error);
+      return new Response(
+        JSON.stringify({ ok: false, error: "Internal error" }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
       );
     }
   }),

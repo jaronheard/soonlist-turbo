@@ -369,6 +369,9 @@ export const processSingleImage = internalAction({
     userId: v.string(),
     username: v.string(),
     batchId: v.optional(v.string()),
+    format: v.optional(
+      v.union(v.literal("image/webp"), v.literal("image/jpeg")),
+    ),
   },
   returns: v.object({
     success: v.boolean(),
@@ -388,6 +391,7 @@ export const processSingleImage = internalAction({
         }),
         ctx.runAction(internal.files.uploadImage, {
           base64Image: args.base64Image,
+          contentType: args.format,
         }),
       ]);
 
@@ -457,6 +461,9 @@ export const eventFromImageBase64Direct = mutation({
     sendNotification: v.optional(v.boolean()),
     userId: v.string(),
     username: v.string(),
+    format: v.optional(
+      v.union(v.literal("image/webp"), v.literal("image/jpeg")),
+    ),
   },
   returns: v.object({
     success: v.boolean(),
@@ -477,6 +484,7 @@ export const eventFromImageBase64Direct = mutation({
         userId: args.userId,
         username: args.username,
         sendNotification: args.sendNotification ?? true,
+        format: args.format,
       },
     );
 
@@ -621,6 +629,9 @@ export const processSingleImageWithNotification = internalAction({
     userId: v.string(),
     username: v.string(),
     sendNotification: v.boolean(),
+    format: v.optional(
+      v.union(v.literal("image/webp"), v.literal("image/jpeg")),
+    ),
   },
   handler: async (ctx, args) => {
     const result: { success: boolean; eventId?: string; error?: string } =
@@ -632,6 +643,7 @@ export const processSingleImageWithNotification = internalAction({
         visibility: args.visibility,
         userId: args.userId,
         username: args.username,
+        format: args.format,
       });
 
     if (result.success && result.eventId && args.sendNotification) {
