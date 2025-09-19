@@ -121,6 +121,7 @@ class ShareViewController: UIViewController {
       request.httpMethod = "POST"
       request.setValue("application/json", forHTTPHeaderField: "Content-Type")
       request.setValue(token, forHTTPHeaderField: "X-Share-Token")
+      request.timeoutInterval = 20
       request.httpBody = try JSONSerialization.data(withJSONObject: payload, options: [])
 
       let (responseData, response) = try await URLSession.shared.data(for: request)
@@ -134,8 +135,13 @@ class ShareViewController: UIViewController {
         self.showAndDismiss(text: "Failed to send", success: false)
       }
     } catch {
-      NSLog("captureAndSend error: \(error)")
-      self.showAndDismiss(text: "Failed to send", success: false)
+      if let urlError = error as? URLError, urlError.code == .timedOut {
+        NSLog("captureAndSend timed out: \(error)")
+        self.showAndDismiss(text: "Timed out — check connection", success: false)
+      } else {
+        NSLog("captureAndSend error: \(error)")
+        self.showAndDismiss(text: "Failed to send", success: false)
+      }
     }
   }
 
