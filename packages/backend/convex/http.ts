@@ -55,25 +55,6 @@ async function parseJsonOr400(
   }
 }
 
-function stripDataUrl(base64Input: string): {
-  base64: string;
-  formatFromDataUrl?: AllowedFormat;
-} {
-  let base64 = base64Input.trim();
-  const dataUrlRegex = /^data:(image\/(?:jpeg|webp));base64,(.*)$/i;
-  const match = dataUrlRegex.exec(base64);
-  if (!match) return { base64 };
-  const mime = match[1].toLowerCase();
-  const formatFromDataUrl: AllowedFormat | undefined =
-    mime === "image/jpeg"
-      ? "image/jpeg"
-      : mime === "image/webp"
-        ? "image/webp"
-        : undefined;
-  base64 = match[2] || "";
-  return { base64, formatFromDataUrl };
-}
-
 function validateFormat(format: string | undefined): format is AllowedFormat {
   return !!format && (ALLOWED_FORMATS as readonly string[]).includes(format);
 }
@@ -272,7 +253,7 @@ http.route({
       const lists = Array.isArray(body.lists) ? body.lists : [];
       const visibility = body.visibility ?? "private";
 
-      // Handle data URL prefix and validate format + size (simplified)
+      // Validate format
       const providedFormat = body.format;
       if (providedFormat && !validateFormat(providedFormat)) {
         return new Response(
@@ -280,13 +261,11 @@ http.route({
           { status: 400, headers: { "Content-Type": "application/json" } },
         );
       }
-      const stripped = stripDataUrl(body.base64Image);
-      const base64 = stripped.base64;
+      const base64 = body.base64Image;
       const format: AllowedFormat | undefined =
-        stripped.formatFromDataUrl ??
-        (providedFormat && validateFormat(providedFormat)
+        providedFormat && validateFormat(providedFormat)
           ? providedFormat
-          : undefined);
+          : undefined;
 
       // Enforce maximum size using character-bound check
       if (isTooLargeBase64(base64)) {
