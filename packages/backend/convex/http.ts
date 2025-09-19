@@ -68,6 +68,15 @@ function isTooLargeBase64(base64: string): boolean {
   return compact.length > maxChars;
 }
 
+// Helper function for classifying database constraint errors
+function isUniqueConstraintError(error: unknown): boolean {
+  const msg =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : String(error).toLowerCase();
+  return msg.includes("unique") || msg.includes("multiple");
+}
+
 http.route({
   path: "/clerk-webhook",
   method: "POST",
@@ -206,14 +215,21 @@ http.route({
         resolved = await ctx.runQuery(internal.shareTokens.resolveShareToken, {
           token,
         });
-      } catch {
-        // If .unique() throws due to duplicate tokens, treat as unauthorized
+      } catch (err) {
+        if (!isUniqueConstraintError(err)) {
+          console.error("resolveShareToken unexpected error:", {
+            error: err,
+            token: token.substring(0, 8) + "...", // Log partial token for debugging
+            timestamp: new Date().toISOString(),
+          });
+          return new Response(
+            JSON.stringify({ ok: false, error: "Internal error" }),
+            { status: 500, headers: { "Content-Type": "application/json" } },
+          );
+        }
         return new Response(
           JSON.stringify({ ok: false, error: "Unauthorized" }),
-          {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          },
+          { status: 401, headers: { "Content-Type": "application/json" } },
         );
       }
       if (!resolved) {
