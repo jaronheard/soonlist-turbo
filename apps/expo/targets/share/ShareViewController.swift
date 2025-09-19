@@ -85,8 +85,7 @@ class ShareViewController: UIViewController {
       }
 
       // Encode to WebP @ q=0.5; fallback to JPEG
-      let (data, format): (Data, String)? = encodeImage(resized)
-      guard let (encodedData, formatStr) = data != nil ? (data!, format!) : nil else {
+      guard let (encodedData, formatStr) = encodeImage(resized) else {
         self.showAndDismiss(text: "Encode failed", success: false)
         return
       }
