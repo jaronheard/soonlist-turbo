@@ -31,6 +31,7 @@ const useEnvSync = () => {
       EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.clerkPublishableKey,
       EXPO_PUBLIC_API_BASE_URL: Config.apiBaseUrl,
       EXPO_PUBLIC_APP_ENV: Config.env,
+      EXPO_PUBLIC_CONVEX_URL: Config.convexUrl,
     }),
     [],
   );

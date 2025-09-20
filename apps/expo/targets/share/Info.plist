@@ -9,11 +9,11 @@
         <key>NSExtensionActivationRule</key>
         <dict>
           <key>NSExtensionActivationSupportsText</key>
-          <true/>
+          <integer>0</integer>
           <key>NSExtensionActivationSupportsImageWithMaxCount</key>
           <integer>1</integer>
           <key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-          <integer>1</integer>
+          <integer>0</integer>
         </dict>
       </dict>
       <key>NSExtensionPrincipalClass</key>
@@ -21,5 +21,11 @@
       <key>NSExtensionPointIdentifier</key>
       <string>com.apple.share-services</string>
     </dict>
+
+    <!-- Convex base URLs for dev/prod switching -->
+    <key>ConvexHttpBaseURL</key>
+    <string>https://convex-http.soonlist.com/</string>
+    <key>ConvexHttpBaseURLDev</key>
+    <string>https://lovable-camel-478.convex.site/</string>
   </dict>
 </plist>
