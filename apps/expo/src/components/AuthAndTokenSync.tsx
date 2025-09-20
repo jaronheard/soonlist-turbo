@@ -22,6 +22,7 @@ export default function AuthAndTokenSync() {
   const createShareToken = useMutation(api.shareTokens.createShareToken);
 
   const didCreateRef = useRef(false);
+  const lastCreatedForUserRef = useRef<string | null>(null);
 
   const persistToKeychain = useCallback(async (kv: Record<string, string>) => {
     const accessGroup = getAccessGroup();
@@ -71,18 +72,20 @@ export default function AuthAndTokenSync() {
   // Clear share token on sign-out
   useEffect(() => {
     if (!isAuthenticated) {
-      didCreateRef.current = false;
       const accessGroup = getAccessGroup();
       void SecureStore.deleteItemAsync(SHARE_TOKEN_KEY, {
         accessGroup,
       }).catch((err) => logError("Failed clearing share token", err));
+      didCreateRef.current = false;
+      lastCreatedForUserRef.current = null;
     }
   }, [isAuthenticated]);
 
   // Create share token on first authenticated load and persist keychain values
   useEffect(() => {
     const run = async () => {
-      if (didCreateRef.current) return;
+      if (didCreateRef.current && lastCreatedForUserRef.current === userId)
+        return;
       if (!isAuthenticated || !userId || !username) return;
 
       try {
@@ -92,9 +95,11 @@ export default function AuthAndTokenSync() {
           EXPO_PUBLIC_CONVEX_URL: Config.convexUrl.replace(/\/$/, "") + "/",
         });
         didCreateRef.current = true;
+        lastCreatedForUserRef.current = userId;
       } catch (err) {
         logError("Failed to create or persist share token", err);
         didCreateRef.current = false;
+        lastCreatedForUserRef.current = null;
       }
     };
     void run();
