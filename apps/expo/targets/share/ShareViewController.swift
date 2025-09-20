@@ -229,8 +229,8 @@ class ShareViewController: UIViewController {
 
       // 2c) Fallback to legacy loadItem for this specific type
       do {
-        if let obj = try await item.loadItem(forTypeIdentifier: typeId) {
-          if let url = obj as? URL {
+        let obj = try await item.loadItem(forTypeIdentifier: typeId)
+        if let url = obj as? URL {
             do {
               let data = try Data(contentsOf: url)
               if let img = UIImage(data: data) {
@@ -242,17 +242,14 @@ class ShareViewController: UIViewController {
             } catch {
               NSLog("loadImage: loadItem URL->Data error type=\(typeId) error=\(error)")
             }
-          } else if let data = obj as? Data, let img = UIImage(data: data) {
+        } else if let data = obj as? Data, let img = UIImage(data: data) {
             NSLog("loadImage: succeeded via loadItem Data type=\(typeId) bytes=\(data.count)")
             return img
-          } else if let img = obj as? UIImage {
+        } else if let img = obj as? UIImage {
             NSLog("loadImage: succeeded via loadItem UIImage type=\(typeId)")
             return img
-          } else {
-            NSLog("loadImage: loadItem returned unexpected object type=\(type(of: obj)) for typeId=\(typeId)")
-          }
         } else {
-          NSLog("loadImage: loadItem returned nil for type=\(typeId)")
+            NSLog("loadImage: loadItem returned unexpected object type=\(type(of: obj)) for typeId=\(typeId)")
         }
       } catch {
         NSLog("loadImage: loadItem error for type=\(typeId) error=\(error)")
