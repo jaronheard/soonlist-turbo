@@ -102,7 +102,6 @@
     "react-native-gesture-handler": "catalog:",
     "react-native-ios-context-menu": "catalog:",
     "react-native-ios-utilities": "catalog:",
-    "react-native-shared-group-preferences": "^2.0.2",
     "react-native-keyboard-controller": "catalog:",
     "react-native-modal": "catalog:",
     "react-native-onesignal": "catalog:",

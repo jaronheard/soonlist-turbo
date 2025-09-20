@@ -1,6 +1,7 @@
 import UIKit
 import UniformTypeIdentifiers
 import ImageIO
+import Security
 
 class ShareViewController: UIViewController {
   let isProdBundle = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share")
@@ -10,6 +11,9 @@ class ShareViewController: UIViewController {
   let appGroup = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share")
     ? "group.com.soonlist"
     : "group.com.soonlist.dev"
+
+  // Shared Keychain configuration (match app access group; no custom service)
+  var keychainAccessGroup: String { appGroup }
 
   private let statusLabel: UILabel = {
     let label = UILabel()
@@ -90,9 +94,9 @@ class ShareViewController: UIViewController {
         return
       }
 
-      // Read token from app group
-      guard let token = UserDefaults(suiteName: appGroup)?.string(forKey: "shareToken"), !token.isEmpty else {
-        NSLog("Missing share token in app group")
+      // Read token from Keychain
+      guard let token = readKeychainString(account: "SL_SHARE_TOKEN"), !token.isEmpty else {
+        NSLog("Missing share token in Keychain")
         self.showAndDismiss(text: "Missing share token", success: false)
         return
       }
@@ -105,7 +109,7 @@ class ShareViewController: UIViewController {
       }
 
       let endpoint = baseUrl.appendingPathComponent("share/v1/capture")
-      let timezone = UserDefaults(suiteName: appGroup)?.string(forKey: "timezone") ?? TimeZone.current.identifier
+      let timezone = TimeZone.current.identifier
 
       let payload: [String: Any] = [
         "kind": "image",
@@ -215,8 +219,8 @@ class ShareViewController: UIViewController {
   }
 
   private func resolveConvexBaseUrl() -> URL? {
-    let defaults = UserDefaults(suiteName: appGroup)
-    if let urlStr = defaults?.string(forKey: "convexHttpBaseURL"), let url = URL(string: urlStr) {
+    // Try SecureStore-written key first (same key as env sync)
+    if let urlStr = readKeychainString(account: "EXPO_PUBLIC_CONVEX_URL"), let url = URL(string: urlStr) {
       return url
     }
     // Fallback to Info.plist
@@ -225,6 +229,23 @@ class ShareViewController: UIViewController {
       return url
     }
     return nil
+  }
+
+  private func readKeychainString(account: String) -> String? {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrAccount as String: account,
+      kSecAttrAccessGroup as String: keychainAccessGroup,
+      kSecReturnData as String: true,
+      kSecMatchLimit as String: kSecMatchLimitOne
+    ]
+
+    var item: CFTypeRef?
+    let status = SecItemCopyMatching(query as CFDictionary, &item)
+    guard status == errSecSuccess, let data = item as? Data else {
+      return nil
+    }
+    return String(data: data, encoding: .utf8)
   }
 
   private func showAndDismiss(text: String, success: Bool) {

@@ -10,6 +10,9 @@ module.exports = {
         ? "group.com.soonlist.dev"
         : "group.com.soonlist",
     ],
+    "keychain-access-groups": [
+      `${process.env.APP_VARIANT === "development" ? "$(AppIdentifierPrefix)group.com.soonlist.dev" : "$(AppIdentifierPrefix)group.com.soonlist"}`,
+    ],
   },
   infoPlist: {
     // Hardcoded Convex site URLs for HTTP endpoints

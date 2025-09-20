@@ -1,29 +1,18 @@
 import { useCallback, useEffect, useRef } from "react";
+import * as SecureStore from "expo-secure-store";
 import { useUser } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { api } from "@soonlist/backend/convex/_generated/api";
-import { useMutation } from "convex/react";
-import { logError } from "~/utils/errorLogging";
-import Config from "~/utils/config";
 
-// Lazy import to avoid React Native requiring native module on web
-let SharedGroupPreferences: undefined | {
-  setItem: (
-    key: string,
-    value: string,
-    suiteName: string,
-  ) => Promise<void>;
-};
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-  SharedGroupPreferences = require("react-native-shared-group-preferences");
-} catch (_) {
-  SharedGroupPreferences = undefined;
-}
+import { useRevenueCat } from "~/providers/RevenueCatProvider";
+import Config from "~/utils/config";
+import { logError } from "~/utils/errorLogging";
+import { getAccessGroup } from "~/utils/getAccessGroup";
+
+const SHARE_TOKEN_KEY = "SL_SHARE_TOKEN";
 
 export default function AuthAndTokenSync() {
   const { user } = useUser();
@@ -34,20 +23,21 @@ export default function AuthAndTokenSync() {
 
   const didCreateRef = useRef(false);
 
-  const appGroup = Config.env === "development"
-    ? "group.com.soonlist.dev"
-    : "group.com.soonlist";
-
-  const persistToAppGroup = useCallback(async (kv: Record<string, string>) => {
-    if (!SharedGroupPreferences) return;
+  const persistToKeychain = useCallback(async (kv: Record<string, string>) => {
+    const accessGroup = getAccessGroup();
     try {
-      for (const [key, value] of Object.entries(kv)) {
-        await SharedGroupPreferences.setItem(key, value, appGroup);
-      }
+      await Promise.all(
+        Object.entries(kv).map(([key, value]) =>
+          SecureStore.setItemAsync(key, value, {
+            accessGroup,
+            keychainAccessible: SecureStore.WHEN_UNLOCKED,
+          }),
+        ),
+      );
     } catch (err) {
-      logError("Failed writing to App Group", err);
+      logError("Failed writing to Keychain", err);
     }
-  }, [appGroup]);
+  }, []);
 
   const userId = user?.id;
   const username = user?.username;
@@ -78,28 +68,36 @@ export default function AuthAndTokenSync() {
     }
   }, [isInitialized, isAuthenticated, userId, login]);
 
-  // Create share token on first authenticated load and persist app group values
+  // Clear share token on sign-out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const accessGroup = getAccessGroup();
+      void SecureStore.deleteItemAsync(SHARE_TOKEN_KEY, {
+        accessGroup,
+      }).catch((err) => logError("Failed clearing share token", err));
+    }
+  }, [isAuthenticated]);
+
+  // Create share token on first authenticated load and persist keychain values
   useEffect(() => {
     const run = async () => {
       if (didCreateRef.current) return;
       if (!isAuthenticated || !userId || !username) return;
-      didCreateRef.current = true;
 
       try {
         const { token } = await createShareToken({ userId });
-        await persistToAppGroup({
-          shareToken: token,
-          userId,
-          username,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          convexHttpBaseURL: Config.convexUrl.replace(/\/$/, "") + "/", // ensure trailing slash
+        await persistToKeychain({
+          [SHARE_TOKEN_KEY]: token,
+          EXPO_PUBLIC_CONVEX_URL: Config.convexUrl.replace(/\/$/, "") + "/",
         });
+        didCreateRef.current = true;
       } catch (err) {
         logError("Failed to create or persist share token", err);
+        didCreateRef.current = false;
       }
     };
     void run();
-  }, [isAuthenticated, userId, username, createShareToken, persistToAppGroup]);
+  }, [isAuthenticated, userId, username, createShareToken, persistToKeychain]);
 
   return null;
 }
