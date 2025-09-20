@@ -150,14 +150,170 @@ class ShareViewController: UIViewController {
   }
 
   private func loadImage(from item: NSItemProvider) async throws -> UIImage? {
-    if let dataUrl = try await item.loadItem(forTypeIdentifier: "public.image") as? URL {
-      let data = try Data(contentsOf: dataUrl)
-      return UIImage(data: data)
+    NSLog("loadImage: registered types = \(item.registeredTypeIdentifiers)")
+
+    // 1) Try the most direct path — ask the provider for a UIImage it can produce
+    if item.canLoadObject(ofClass: UIImage.self) {
+      do {
+        if let image = try await loadUIImageViaLoadObject(item) {
+          NSLog("loadImage: succeeded via loadObject(UIImage)")
+          return image
+        } else {
+          NSLog("loadImage: loadObject(UIImage) returned nil")
+        }
+      } catch {
+        NSLog("loadImage: loadObject(UIImage) error: \(error)")
+      }
+    } else {
+      NSLog("loadImage: provider cannot load UIImage directly")
     }
-    if let uiImage = try await item.loadItem(forTypeIdentifier: "public.image") as? UIImage {
-      return uiImage
+
+    // 2) Try data/file representations for a set of likely identifiers
+    let candidates: [String] = {
+      var list: [String] = []
+      if #available(iOS 14.0, *) {
+        list.append(contentsOf: [
+          UTType.png.identifier,
+          UTType.jpeg.identifier,
+          UTType.heic.identifier,
+          UTType.tiff.identifier,
+          UTType.image.identifier
+        ])
+      } else {
+        list.append(contentsOf: [
+          "public.png",
+          "public.jpeg",
+          "public.heic",
+          "public.tiff",
+          "public.image"
+        ])
+      }
+      // Common private identifier used by some apps
+      list.append("com.apple.uikit.image")
+      // Also try any advertised identifiers from the provider, first
+      let advertised = item.registeredTypeIdentifiers
+      return advertised + list
+    }()
+
+    for typeId in candidates {
+      guard item.hasItemConformingToTypeIdentifier(typeId) else { continue }
+
+      // 2a) Try data representation
+      if let data = try? await loadDataRepresentation(item: item, typeIdentifier: typeId) {
+        if let img = UIImage(data: data) {
+          NSLog("loadImage: succeeded via dataRepresentation type=\(typeId) bytes=\(data.count)")
+          return img
+        } else {
+          NSLog("loadImage: dataRepresentation produced non-decodable data type=\(typeId) bytes=\(data.count)")
+        }
+      } else {
+        NSLog("loadImage: no dataRepresentation for type=\(typeId)")
+      }
+
+      // 2b) Try file representation (copy to our tmp before use)
+      if let url = try? await loadFileRepresentationCopy(item: item, typeIdentifier: typeId) {
+        do {
+          let data = try Data(contentsOf: url)
+          if let img = UIImage(data: data) {
+            NSLog("loadImage: succeeded via fileRepresentation type=\(typeId) path=\(url.path)")
+            return img
+          } else {
+            NSLog("loadImage: fileRepresentation data not decodable type=\(typeId) path=\(url.path)")
+          }
+        } catch {
+          NSLog("loadImage: failed to read fileRepresentation url=\(url) error=\(error)")
+        }
+      } else {
+        NSLog("loadImage: no fileRepresentation for type=\(typeId)")
+      }
+
+      // 2c) Fallback to legacy loadItem for this specific type
+      do {
+        if let obj = try await item.loadItem(forTypeIdentifier: typeId) {
+          if let url = obj as? URL {
+            do {
+              let data = try Data(contentsOf: url)
+              if let img = UIImage(data: data) {
+                NSLog("loadImage: succeeded via loadItem URL type=\(typeId)")
+                return img
+              } else {
+                NSLog("loadImage: loadItem URL data not decodable type=\(typeId)")
+              }
+            } catch {
+              NSLog("loadImage: loadItem URL->Data error type=\(typeId) error=\(error)")
+            }
+          } else if let data = obj as? Data, let img = UIImage(data: data) {
+            NSLog("loadImage: succeeded via loadItem Data type=\(typeId) bytes=\(data.count)")
+            return img
+          } else if let img = obj as? UIImage {
+            NSLog("loadImage: succeeded via loadItem UIImage type=\(typeId)")
+            return img
+          } else {
+            NSLog("loadImage: loadItem returned unexpected object type=\(type(of: obj)) for typeId=\(typeId)")
+          }
+        } else {
+          NSLog("loadImage: loadItem returned nil for type=\(typeId)")
+        }
+      } catch {
+        NSLog("loadImage: loadItem error for type=\(typeId) error=\(error)")
+      }
     }
+
+    NSLog("loadImage: exhausted candidates; returning nil")
     return nil
+  }
+
+  private func loadUIImageViaLoadObject(_ item: NSItemProvider) async throws -> UIImage? {
+    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<UIImage?, Error>) in
+      _ = item.loadObject(ofClass: UIImage.self) { object, error in
+        if let error = error {
+          continuation.resume(throwing: error)
+          return
+        }
+        let image = object as? UIImage
+        continuation.resume(returning: image)
+      }
+    }
+  }
+
+  private func loadDataRepresentation(item: NSItemProvider, typeIdentifier: String) async throws -> Data? {
+    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data?, Error>) in
+      _ = item.loadDataRepresentation(forTypeIdentifier: typeIdentifier) { data, error in
+        if let error = error {
+          continuation.resume(throwing: error)
+          return
+        }
+        continuation.resume(returning: data)
+      }
+    }
+  }
+
+  private func loadFileRepresentationCopy(item: NSItemProvider, typeIdentifier: String) async throws -> URL? {
+    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL?, Error>) in
+      _ = item.loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, error in
+        if let error = error {
+          continuation.resume(throwing: error)
+          return
+        }
+        guard let sourceURL = url else {
+          continuation.resume(returning: nil)
+          return
+        }
+        // Copy to our own tmp file to ensure lifetime beyond the callback
+        let ext = sourceURL.pathExtension
+        let tmpDir = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+        let destURL = tmpDir.appendingPathComponent(UUID().uuidString).appendingPathExtension(ext)
+        do {
+          if FileManager.default.fileExists(atPath: destURL.path) {
+            try FileManager.default.removeItem(at: destURL)
+          }
+          try FileManager.default.copyItem(at: sourceURL, to: destURL)
+          continuation.resume(returning: destURL)
+        } catch {
+          continuation.resume(throwing: error)
+        }
+      }
+    }
   }
 
   private func resizeImage(_ image: UIImage, targetWidth: CGFloat) -> UIImage? {
