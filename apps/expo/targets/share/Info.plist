@@ -9,11 +9,11 @@
         <key>NSExtensionActivationRule</key>
         <dict>
           <key>NSExtensionActivationSupportsText</key>
-          <false/>
+          <integer>0</integer>
           <key>NSExtensionActivationSupportsImageWithMaxCount</key>
           <integer>1</integer>
           <key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-          <false/>
+          <integer>0</integer>
         </dict>
       </dict>
       <key>NSExtensionPrincipalClass</key>

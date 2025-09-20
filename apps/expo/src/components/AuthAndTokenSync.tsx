@@ -71,6 +71,7 @@ export default function AuthAndTokenSync() {
   // Clear share token on sign-out
   useEffect(() => {
     if (!isAuthenticated) {
+      didCreateRef.current = false;
       const accessGroup = getAccessGroup();
       void SecureStore.deleteItemAsync(SHARE_TOKEN_KEY, {
         accessGroup,
