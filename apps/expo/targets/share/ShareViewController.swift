@@ -115,7 +115,9 @@ class ShareViewController: UIViewController {
       }
 
       let endpoint = baseUrl.appendingPathComponent("share/v1/capture")
+      os_log("Using Convex endpoint: %{public}@", log: log, type: .debug, endpoint.absoluteString)
       let timezone = TimeZone.current.identifier
+      os_log("Current timezone: %{public}@", log: log, type: .debug, timezone)
 
       let payload: [String: Any] = [
         "kind": "image",
