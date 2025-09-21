@@ -381,9 +381,9 @@ class ShareViewController: UIViewController {
 
   private func resolveConvexBaseUrl() -> URL? {
     // Try SecureStore-written key first (same key as env sync)
-    if let urlStr = readKeychainString(account: "EXPO_PUBLIC_CONVEX_URL"), let url = URL(string: urlStr) {
-      return url
-    }
+    // if let urlStr = readKeychainString(account: "EXPO_PUBLIC_CONVEX_URL"), let url = URL(string: urlStr) {
+    //   return url
+    // }
     // Fallback to Info.plist
     let key = isProdBundle ? "ConvexHttpBaseURL" : "ConvexHttpBaseURLDev"
     if let value = Bundle.main.object(forInfoDictionaryKey: key) as? String, let url = URL(string: value) {
