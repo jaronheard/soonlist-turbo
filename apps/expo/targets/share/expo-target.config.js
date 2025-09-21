@@ -11,7 +11,7 @@ module.exports = {
         : "group.com.soonlist",
     ],
     "keychain-access-groups": [
-      `${process.env.APP_VARIANT === "development" ? "group.com.soonlist.dev" : "group.com.soonlist"}`,
+      `${process.env.APP_VARIANT === "development" ? "$(AppIdentifierPrefix)group.com.soonlist.dev" : "$(AppIdentifierPrefix)group.com.soonlist"}`,
     ],
   },
   infoPlist: {
