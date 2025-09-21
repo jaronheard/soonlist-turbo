@@ -39,45 +39,63 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   const posthog = usePostHog();
 
   // Initialize RevenueCat only once when the component mounts
+  // Using a non-blocking approach to prevent UI freezing
   useMountEffect(() => {
     let updateListener: ((customerInfo: CustomerInfo) => void) | undefined;
     let isMounted = true;
+
+    // Set loading to false after a timeout to prevent long spinner
+    const timeoutId = setTimeout(() => {
+      if (isMounted && isLoading) {
+        setIsLoading(false);
+      }
+    }, 1500); // Allow 1.5 seconds for initialization before showing UI
 
     async function initializeRevenueCatOnce() {
       if (isInitialized) return;
 
       try {
-        await initializeRevenueCat();
+        // Initialize RevenueCat in the background
+        initializeRevenueCat().then(() => {
+          // Check if component is still mounted before proceeding
+          if (!isMounted) return;
 
-        // Check if component is still mounted before proceeding
-        if (!isMounted) return;
+          setIsInitialized(true);
 
-        setIsInitialized(true);
+          // Set up customer info update listener
+          updateListener = (customerInfo: CustomerInfo) => {
+            setCustomerInfo(customerInfo);
+          };
+          Purchases.addCustomerInfoUpdateListener(updateListener);
 
-        // Set up customer info update listener
-        updateListener = (customerInfo: CustomerInfo) => {
-          setCustomerInfo(customerInfo);
-        };
-        Purchases.addCustomerInfoUpdateListener(updateListener);
-
-        // Only try to log in if there's a userId after initialization
-        if (userId) {
-          await loginInternal(userId);
-        }
+          // Only try to log in if there's a userId after initialization
+          if (userId) {
+            loginInternal(userId).catch((error) => {
+              logError("Failed to login to RevenueCat", error);
+            });
+          }
+        }).catch((error) => {
+          logError("Failed to initialize RevenueCat", error);
+        }).finally(() => {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        });
       } catch (error) {
-        logError("Failed to initialize RevenueCat", error);
-      } finally {
+        logError("Failed to start RevenueCat initialization", error);
         if (isMounted) {
           setIsLoading(false);
         }
       }
     }
 
+    // Start initialization process
     void initializeRevenueCatOnce();
 
     // Cleanup listener on unmount
     return () => {
       isMounted = false;
+      clearTimeout(timeoutId);
       if (updateListener) {
         Purchases.removeCustomerInfoUpdateListener(updateListener);
       }
