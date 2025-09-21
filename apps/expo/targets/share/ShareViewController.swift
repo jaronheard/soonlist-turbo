@@ -2,6 +2,7 @@ import UIKit
 import UniformTypeIdentifiers
 import ImageIO
 import Security
+import os.log
 
 class ShareViewController: UIViewController {
   let isProdBundle = !Bundle.main.bundleIdentifier!.hasSuffix(".dev.share")
@@ -14,6 +15,11 @@ class ShareViewController: UIViewController {
 
   // Shared Keychain configuration (match app access group; no custom service)
   var keychainAccessGroup: String { appGroup }
+
+  private let log = OSLog(
+    subsystem: Bundle.main.bundleIdentifier ?? "com.soonlist",
+    category: "ShareViewController"
+  )
 
   private let statusLabel: UILabel = {
     let label = UILabel()
@@ -53,13 +59,13 @@ class ShareViewController: UIViewController {
 
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
-    NSLog("ShareViewController did appear — bundleID: \(Bundle.main.bundleIdentifier ?? "nil")")
-    NSLog("Using scheme: \(appScheme), group: \(appGroup)")
+    os_log("ShareViewController did appear — bundleID: %{public}@", log: log, type: .info, Bundle.main.bundleIdentifier ?? "nil")
+    os_log("Using scheme: %{public}@, group: %{public}@", log: log, type: .info, appScheme, appGroup)
 
     guard let extensionItem = extensionContext?.inputItems.first as? NSExtensionItem,
           let firstAttachment = extensionItem.attachments?.first
     else {
-      NSLog("No items/attachments to share. Completing.")
+      os_log("No items/attachments to share. Completing.", log: log, type: .info)
       self.completeRequest()
       return
     }
@@ -70,7 +76,7 @@ class ShareViewController: UIViewController {
   private func captureAndSend(_ item: NSItemProvider) async {
     do {
       guard item.hasItemConformingToTypeIdentifier("public.image") else {
-        NSLog("Not an image; finishing.")
+        os_log("Not an image; finishing.", log: log, type: .info)
         self.showAndDismiss(text: "Nothing to share", success: false)
         return
       }
@@ -96,14 +102,14 @@ class ShareViewController: UIViewController {
 
       // Read token from Keychain
       guard let token = readKeychainString(account: "SL_SHARE_TOKEN"), !token.isEmpty else {
-        NSLog("Missing share token in Keychain")
+        os_log("Missing share token in Keychain", log: log, type: .error)
         self.showAndDismiss(text: "Missing share token", success: false)
         return
       }
 
       // Resolve Convex base URL
       guard let baseUrl = resolveConvexBaseUrl() else {
-        NSLog("Missing Convex base URL")
+        os_log("Missing Convex base URL", log: log, type: .error)
         self.showAndDismiss(text: "Config error", success: false)
         return
       }
@@ -130,42 +136,42 @@ class ShareViewController: UIViewController {
 
       let (responseData, response) = try await URLSession.shared.data(for: request)
       if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) {
-        NSLog("Share sent successfully: status=\(http.statusCode)")
-        NSLog("Response: \(String(data: responseData, encoding: .utf8) ?? "<none>")")
+        os_log("Share sent successfully: status=%{public}@", log: log, type: .info, String(http.statusCode))
+        os_log("Response: %{public}@", log: log, type: .debug, String(data: responseData, encoding: .utf8) ?? "<none>")
         self.showAndDismiss(text: "Sent!", success: true)
       } else {
         let http = response as? HTTPURLResponse
-        NSLog("Share failed: status=\(http?.statusCode ?? -1)")
+        os_log("Share failed: status=%{public}@", log: log, type: .error, String(http?.statusCode ?? -1))
         self.showAndDismiss(text: "Failed to send", success: false)
       }
     } catch {
       if let urlError = error as? URLError, urlError.code == .timedOut {
-        NSLog("captureAndSend timed out: \(error)")
+        os_log("captureAndSend timed out: %{public}@", log: log, type: .error, String(describing: error))
         self.showAndDismiss(text: "Timed out — check connection", success: false)
       } else {
-        NSLog("captureAndSend error: \(error)")
+        os_log("captureAndSend error: %{public}@", log: log, type: .error, String(describing: error))
         self.showAndDismiss(text: "Failed to send", success: false)
       }
     }
   }
 
   private func loadImage(from item: NSItemProvider) async throws -> UIImage? {
-    NSLog("loadImage: registered types = \(item.registeredTypeIdentifiers)")
+    os_log("loadImage: registered types = %{public}@", log: log, type: .debug, String(describing: item.registeredTypeIdentifiers))
 
     // 1) Try the most direct path — ask the provider for a UIImage it can produce
     if item.canLoadObject(ofClass: UIImage.self) {
       do {
         if let image = try await loadUIImageViaLoadObject(item) {
-          NSLog("loadImage: succeeded via loadObject(UIImage)")
+          os_log("loadImage: succeeded via loadObject(UIImage)", log: log, type: .debug)
           return image
         } else {
-          NSLog("loadImage: loadObject(UIImage) returned nil")
+          os_log("loadImage: loadObject(UIImage) returned nil", log: log, type: .debug)
         }
       } catch {
-        NSLog("loadImage: loadObject(UIImage) error: \(error)")
+        os_log("loadImage: loadObject(UIImage) error: %{public}@", log: log, type: .error, String(describing: error))
       }
     } else {
-      NSLog("loadImage: provider cannot load UIImage directly")
+      os_log("loadImage: provider cannot load UIImage directly", log: log, type: .debug)
     }
 
     // 2) Try data/file representations for a set of likely identifiers
@@ -201,13 +207,13 @@ class ShareViewController: UIViewController {
       // 2a) Try data representation
       if let data = try? await loadDataRepresentation(item: item, typeIdentifier: typeId) {
         if let img = UIImage(data: data) {
-          NSLog("loadImage: succeeded via dataRepresentation type=\(typeId) bytes=\(data.count)")
+          os_log("loadImage: succeeded via dataRepresentation type=%{public}@ bytes=%{public}@", log: log, type: .debug, typeId, String(data.count))
           return img
         } else {
-          NSLog("loadImage: dataRepresentation produced non-decodable data type=\(typeId) bytes=\(data.count)")
+          os_log("loadImage: dataRepresentation produced non-decodable data type=%{public}@ bytes=%{public}@", log: log, type: .debug, typeId, String(data.count))
         }
       } else {
-        NSLog("loadImage: no dataRepresentation for type=\(typeId)")
+        os_log("loadImage: no dataRepresentation for type=%{public}@", log: log, type: .debug, typeId)
       }
 
       // 2b) Try file representation (copy to our tmp before use)
@@ -215,16 +221,16 @@ class ShareViewController: UIViewController {
         do {
           let data = try Data(contentsOf: url)
           if let img = UIImage(data: data) {
-            NSLog("loadImage: succeeded via fileRepresentation type=\(typeId) path=\(url.path)")
+            os_log("loadImage: succeeded via fileRepresentation type=%{public}@ path=%{public}@", log: log, type: .debug, typeId, url.path)
             return img
           } else {
-            NSLog("loadImage: fileRepresentation data not decodable type=\(typeId) path=\(url.path)")
+            os_log("loadImage: fileRepresentation data not decodable type=%{public}@ path=%{public}@", log: log, type: .debug, typeId, url.path)
           }
         } catch {
-          NSLog("loadImage: failed to read fileRepresentation url=\(url) error=\(error)")
+          os_log("loadImage: failed to read fileRepresentation url=%{public}@ error=%{public}@", log: log, type: .error, String(describing: url), String(describing: error))
         }
       } else {
-        NSLog("loadImage: no fileRepresentation for type=\(typeId)")
+        os_log("loadImage: no fileRepresentation for type=%{public}@", log: log, type: .debug, typeId)
       }
 
       // 2c) Fallback to legacy loadItem for this specific type
@@ -234,29 +240,29 @@ class ShareViewController: UIViewController {
             do {
               let data = try Data(contentsOf: url)
               if let img = UIImage(data: data) {
-                NSLog("loadImage: succeeded via loadItem URL type=\(typeId)")
+                os_log("loadImage: succeeded via loadItem URL type=%{public}@", log: log, type: .debug, typeId)
                 return img
               } else {
-                NSLog("loadImage: loadItem URL data not decodable type=\(typeId)")
+                os_log("loadImage: loadItem URL data not decodable type=%{public}@", log: log, type: .debug, typeId)
               }
             } catch {
-              NSLog("loadImage: loadItem URL->Data error type=\(typeId) error=\(error)")
+              os_log("loadImage: loadItem URL->Data error type=%{public}@ error=%{public}@", log: log, type: .error, typeId, String(describing: error))
             }
         } else if let data = obj as? Data, let img = UIImage(data: data) {
-            NSLog("loadImage: succeeded via loadItem Data type=\(typeId) bytes=\(data.count)")
+            os_log("loadImage: succeeded via loadItem Data type=%{public}@ bytes=%{public}@", log: log, type: .debug, typeId, String(data.count))
             return img
         } else if let img = obj as? UIImage {
-            NSLog("loadImage: succeeded via loadItem UIImage type=\(typeId)")
+            os_log("loadImage: succeeded via loadItem UIImage type=%{public}@", log: log, type: .debug, typeId)
             return img
         } else {
-            NSLog("loadImage: loadItem returned unexpected object type=\(type(of: obj)) for typeId=\(typeId)")
+            os_log("loadImage: loadItem returned unexpected object type=%{public}@ for typeId=%{public}@", log: log, type: .debug, String(describing: type(of: obj)), typeId)
         }
       } catch {
-        NSLog("loadImage: loadItem error for type=\(typeId) error=\(error)")
+        os_log("loadImage: loadItem error for type=%{public}@ error=%{public}@", log: log, type: .error, typeId, String(describing: error))
       }
     }
 
-    NSLog("loadImage: exhausted candidates; returning nil")
+    os_log("loadImage: exhausted candidates; returning nil", log: log, type: .debug)
     return nil
   }
 
@@ -414,7 +420,7 @@ class ShareViewController: UIViewController {
   }
 
   private func completeRequest() {
-    NSLog("completeRequest called. Dismissing share extension.")
+    os_log("completeRequest called. Dismissing share extension.", log: log, type: .info)
     self.extensionContext?.completeRequest(returningItems: nil)
   }
 
