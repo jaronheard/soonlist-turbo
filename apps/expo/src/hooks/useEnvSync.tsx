@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo } from "react";
-import * as SecureStore from "expo-secure-store";
 
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
+import { SecureKeychain, WHEN_UNLOCKED } from "~/utils/keychain";
 
 const getAccessGroup = () =>
   Config.env === "development"
@@ -14,12 +14,12 @@ const useEnvSync = () => {
     try {
       const accessGroup = getAccessGroup();
       if (value) {
-        await SecureStore.setItemAsync(key, value, {
-          keychainAccessible: SecureStore.WHEN_UNLOCKED,
+        await SecureKeychain.setItemAsync(key, value, {
+          keychainAccessible: WHEN_UNLOCKED,
           accessGroup,
         });
       } else {
-        await SecureStore.deleteItemAsync(key, { accessGroup });
+        await SecureKeychain.deleteItemAsync(key, { accessGroup });
       }
     } catch (error) {
       logError(`Error syncing ${key}`, error);
