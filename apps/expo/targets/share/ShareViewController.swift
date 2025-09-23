@@ -37,14 +37,33 @@ class ShareViewController: UIViewController {
     return indicator
   }()
 
+  private let checkmarkView: UIImageView = {
+    let imageView = UIImageView()
+    imageView.isHidden = true
+    imageView.contentMode = .scaleAspectFit
+    if var image = UIImage(systemName: "checkmark.circle.fill") {
+      image = image.withRenderingMode(.alwaysTemplate)
+      imageView.image = image
+    }
+    let brand = UIColor(red: 0.35, green: 0.20, blue: 0.98, alpha: 1.00)
+    if #available(iOS 15.0, *) {
+      imageView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(paletteColors: [brand, .white])
+    } else {
+      imageView.tintColor = brand
+    }
+    return imageView
+  }()
+
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .systemBackground
 
     spinner.translatesAutoresizingMaskIntoConstraints = false
     statusLabel.translatesAutoresizingMaskIntoConstraints = false
+    checkmarkView.translatesAutoresizingMaskIntoConstraints = false
     view.addSubview(spinner)
     view.addSubview(statusLabel)
+    view.addSubview(checkmarkView)
 
     NSLayoutConstraint.activate([
       spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -52,6 +71,10 @@ class ShareViewController: UIViewController {
       statusLabel.topAnchor.constraint(equalTo: spinner.bottomAnchor, constant: 12),
       statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
       statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+      checkmarkView.centerXAnchor.constraint(equalTo: spinner.centerXAnchor),
+      checkmarkView.centerYAnchor.constraint(equalTo: spinner.centerYAnchor),
+      checkmarkView.widthAnchor.constraint(equalTo: spinner.widthAnchor),
+      checkmarkView.heightAnchor.constraint(equalTo: spinner.heightAnchor),
     ])
 
     spinner.startAnimating()
@@ -412,8 +435,15 @@ class ShareViewController: UIViewController {
   private func showAndDismiss(text: String, success: Bool) {
     DispatchQueue.main.async {
       self.spinner.stopAnimating()
-      self.statusLabel.text = text
-      self.statusLabel.textColor = success ? .systemGreen : .systemRed
+      if success {
+        self.statusLabel.isHidden = true
+        self.checkmarkView.isHidden = false
+      } else {
+        self.statusLabel.isHidden = false
+        self.checkmarkView.isHidden = true
+        self.statusLabel.text = text
+        self.statusLabel.textColor = .systemRed
+      }
       let delay: TimeInterval = success ? 0.6 : 1.2
       DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
         self.completeRequest()
