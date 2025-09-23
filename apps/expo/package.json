@@ -81,6 +81,7 @@
     "expo-localization": "catalog:",
     "expo-media-library": "catalog:",
     "expo-notifications": "catalog:",
+    "expo-quick-actions": "catalog:",
     "expo-router": "catalog:",
     "expo-secure-store": "catalog:",
     "expo-splash-screen": "catalog:",
