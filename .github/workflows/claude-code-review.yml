@@ -82,9 +82,17 @@ jobs:
           ref: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.sha) || (github.event_name == 'issue_comment' && steps.pr-details.outputs.head_sha) }}
           fetch-depth: 1
 
+      - name: Setup Bun (workaround for rate limiting)
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.11"
+        continue-on-error: true
+
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@beta
+        timeout-minutes: 10
+        continue-on-error: true
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
