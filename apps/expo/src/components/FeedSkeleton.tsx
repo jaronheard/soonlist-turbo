@@ -8,6 +8,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
+import { CloudOff } from "~/components/icons";
+
 export default function FeedSkeleton() {
   const opacity = useSharedValue(0.3);
 
@@ -41,6 +43,11 @@ export default function FeedSkeleton() {
 
   return (
     <View className="flex-1 bg-white px-4">
+      {/* Offline indicator */}
+      <View className="absolute bottom-8 left-4 z-10 rounded-full bg-neutral-1 p-2">
+        <CloudOff size={16} color="#FFF" strokeWidth={3} />
+      </View>
+
       {/* Stats card skeleton */}
       <View className="mb-4 mt-6 rounded-lg bg-gray-50 p-4">
         <SkeletonBox width="60%" height={24} />
