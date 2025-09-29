@@ -27,13 +27,43 @@ const openrouter = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY || "",
   baseURL: process.env.OPENROUTER_BASE_URL || "",
 });
-const MODEL = "google/gemini-2.5-flash";
+
+// Primary model and fallbacks
+const PRIMARY_MODEL = "google/gemini-2.5-flash:nitro";
+const FALLBACK_MODELS = [
+  "google/gemini-2.0-flash:nitro",
+  "meta-llama/llama-4-maverick:nitro"
+];
+
 const aiConfig = {
-  model: openrouter(MODEL),
+  model: openrouter(PRIMARY_MODEL),
   mode: "json",
   temperature: 0.2,
   maxRetries: 0,
 } as const;
+
+async function generateObjectWithFallback<T>(
+  generateObjectOptions: Parameters<typeof generateObject<T>>[0],
+  models: string[] = [PRIMARY_MODEL, ...FALLBACK_MODELS],
+): Promise<ReturnType<typeof generateObject<T>>> {
+  let lastError: Error | null = null;
+  
+  for (const model of models) {
+    try {
+      const result = await generateObject({
+        ...generateObjectOptions,
+        model: openrouter(model),
+      });
+      return result;
+    } catch (error) {
+      console.warn(`Model ${model} failed, trying next fallback:`, error);
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+  
+  // If all models failed, throw the last error
+  throw lastError || new Error("All models failed");
+}
 
 function createLoggedObjectGenerator({
   ctx,
@@ -69,14 +99,19 @@ function createLoggedObjectGenerator({
     const generation = trace.generation({
       name: "generation",
       input: loggedInput,
-      model: MODEL,
+      model: PRIMARY_MODEL,
       version: promptVersion,
     });
     generation.update({
       completionStartTime: new Date(),
     });
     try {
-      const result = await generateObject(generateObjectOptions);
+      // Remove the model from generateObjectOptions since we handle it in the fallback function
+      const { model: _, ...optionsWithoutModel } = generateObjectOptions;
+      const result = await generateObjectWithFallback({
+        ...optionsWithoutModel,
+        // The model will be set inside generateObjectWithFallback
+      } as Parameters<typeof generateObject<T>>[0]);
       generation.end({
         output: result.object,
       });
