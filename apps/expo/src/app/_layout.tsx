@@ -5,6 +5,8 @@ import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { resourceCache } from "@clerk/clerk-expo/resource-cache";
 import * as Sentry from "@sentry/react-native";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { PostHogProvider } from "posthog-react-native";
@@ -46,8 +48,8 @@ const queryClient = new QueryClient();
 // Export Expo Router's default error boundary
 export { ErrorBoundary } from "expo-router";
 
-// Custom token cache for Clerk
-const tokenCache = {
+// Custom token cache for Clerk with application group support
+const customTokenCache = {
   async getToken(key: string) {
     try {
       return SecureStore.getItemAsync(key, {
@@ -76,6 +78,37 @@ const tokenCache = {
     }
   },
 };
+
+// Custom resource cache for Clerk with application group support
+const customResourceCache = () => ({
+  async get(key: string) {
+    try {
+      return SecureStore.getItemAsync(key, {
+        accessGroup: getAccessGroup(),
+      });
+    } catch {
+      return null;
+    }
+  },
+  async set(key: string, value: string) {
+    try {
+      return SecureStore.setItemAsync(key, value, {
+        accessGroup: getAccessGroup(),
+      });
+    } catch {
+      return;
+    }
+  },
+  async remove(key: string) {
+    try {
+      return SecureStore.deleteItemAsync(key, {
+        accessGroup: getAccessGroup(),
+      });
+    } catch {
+      return;
+    }
+  },
+});
 
 const routingInstrumentation = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: Constants.appOwnership !== AppOwnership.Expo, // Only in native builds, not in Expo Go.
@@ -136,7 +169,8 @@ function RootLayout() {
       <KeyboardProvider>
         <ClerkProvider
           publishableKey={clerkPublishableKey}
-          tokenCache={tokenCache}
+          tokenCache={customTokenCache}
+          __experimental_resourceCache={customResourceCache}
         >
           {/* eslint-disable-next-line react-compiler/react-compiler */}
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>

@@ -20,7 +20,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
-import { logError } from "../../utils/errorLogging";
+import { handleClerkError } from "../../utils/errorLogging";
 import { transferGuestData } from "../../utils/guestDataTransfer";
 
 const signInSchema = z.object({
@@ -101,11 +101,17 @@ const SignInEmail = () => {
           setGeneralError("Additional verification required");
         }
       } catch (err: unknown) {
-        logError("Error during sign in", err, {
-          name: err instanceof Error ? err.name : "Unknown",
-          message: err instanceof Error ? err.message : "Unknown error",
-          stack: err instanceof Error ? err.stack : undefined,
+        const isNetworkError = handleClerkError("sign in", err, {
+          email: data.email,
         });
+
+        // If it's a network error, show a user-friendly offline message
+        if (isNetworkError) {
+          setGeneralError(
+            "Unable to sign in while offline. Please check your internet connection and try again.",
+          );
+          return;
+        }
 
         if (err instanceof Error) {
           const clerkError = err as {
@@ -113,10 +119,6 @@ const SignInEmail = () => {
           };
           if (clerkError.errors?.[0]) {
             const errorDetails = clerkError.errors[0];
-            logError("Clerk error details", new Error(errorDetails.message), {
-              code: errorDetails.code,
-              message: errorDetails.message,
-            });
 
             switch (errorDetails.code) {
               case "form_identifier_not_found":
