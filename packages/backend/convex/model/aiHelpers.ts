@@ -82,6 +82,17 @@ function createLoggedObjectGenerator({
     });
     try {
       const result = await generateObject(generateObjectOptions);
+      
+      const actualModel =
+        typeof result.rawResponse === "object" &&
+        result.rawResponse !== null &&
+        "model" in result.rawResponse
+          ? (result.rawResponse as { model: string }).model
+          : MODEL;
+      
+      generation.update({
+        model: actualModel,
+      });
       generation.end({
         output: result.object,
       });
@@ -96,6 +107,7 @@ function createLoggedObjectGenerator({
           logprobs: result.logprobs,
           rawResponse: result.rawResponse,
           warnings: result.warnings,
+          actualModel,
         },
       });
       waitUntil(langfuse.flushAsync());
