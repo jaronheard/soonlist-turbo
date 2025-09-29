@@ -1,3 +1,4 @@
+import type { DimensionValue } from "react-native";
 import React from "react";
 import { View } from "react-native";
 import Animated, {
@@ -11,11 +12,7 @@ export default function FeedSkeleton() {
   const opacity = useSharedValue(0.3);
 
   React.useEffect(() => {
-    opacity.value = withRepeat(
-      withTiming(1, { duration: 800 }),
-      -1,
-      true,
-    );
+    opacity.value = withRepeat(withTiming(1, { duration: 800 }), -1, true);
   }, [opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -26,24 +23,28 @@ export default function FeedSkeleton() {
     width,
     height,
   }: {
-    width: string | number;
+    width: DimensionValue;
     height: number;
   }) => (
     <Animated.View
-      style={[animatedStyle]}
-      className="bg-gray-200 rounded"
-      // @ts-expect-error - width can be string or number
-      // eslint-disable-next-line react-native/no-inline-styles
-      style={{ width, height }}
+      style={[
+        animatedStyle,
+        {
+          width,
+          height,
+          backgroundColor: "#e5e7eb", // gray-200
+          borderRadius: 4,
+        },
+      ]}
     />
   );
 
   return (
     <View className="flex-1 bg-white px-4">
       {/* Stats card skeleton */}
-      <View className="mt-6 mb-4 p-4 bg-gray-50 rounded-lg">
+      <View className="mb-4 mt-6 rounded-lg bg-gray-50 p-4">
         <SkeletonBox width="60%" height={24} />
-        <View className="flex-row justify-between mt-3">
+        <View className="mt-3 flex-row justify-between">
           <SkeletonBox width="30%" height={40} />
           <SkeletonBox width="30%" height={40} />
           <SkeletonBox width="30%" height={40} />
@@ -52,7 +53,7 @@ export default function FeedSkeleton() {
 
       {/* Event cards skeleton */}
       {[1, 2, 3, 4].map((i) => (
-        <View key={i} className="mb-4 p-4 bg-gray-50 rounded-lg">
+        <View key={i} className="mb-4 rounded-lg bg-gray-50 p-4">
           {/* Image placeholder */}
           <SkeletonBox width="100%" height={200} />
 
@@ -68,7 +69,7 @@ export default function FeedSkeleton() {
           </View>
 
           {/* Action buttons */}
-          <View className="flex-row justify-between mt-3">
+          <View className="mt-3 flex-row justify-between">
             <SkeletonBox width="45%" height={36} />
             <SkeletonBox width="45%" height={36} />
           </View>
@@ -77,4 +78,3 @@ export default function FeedSkeleton() {
     </View>
   );
 }
-
