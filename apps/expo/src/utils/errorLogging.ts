@@ -1,3 +1,4 @@
+import { isClerkRuntimeError } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
 
 /**
@@ -170,4 +171,45 @@ export function logDebug(message: string, data?: unknown): void {
   if (__DEV__) {
     console.log(`[DEBUG] ${message}:`, data);
   }
+}
+
+/**
+ * Handles Clerk errors with special handling for network errors.
+ * Returns true if the error was a network error, false otherwise.
+ *
+ * @param message A descriptive message about the error context
+ * @param error The error object from Clerk
+ * @param additionalData Optional additional data to include with the error
+ * @returns true if it was a network error, false otherwise
+ */
+export function handleClerkError(
+  message: string,
+  error: unknown,
+  additionalData?: Record<string, unknown>,
+): boolean {
+  // Check if this is a Clerk runtime error
+  if (isClerkRuntimeError(error)) {
+    const isNetworkError = error.code === "network_error";
+
+    // Log network errors differently - they're expected in offline scenarios
+    if (isNetworkError) {
+      logDebug(`Network error during ${message}`, {
+        code: error.code,
+        message: error.message,
+        ...additionalData,
+      });
+      return true;
+    }
+
+    // Log other Clerk errors normally
+    logError(message, error, {
+      clerkErrorCode: error.code,
+      ...additionalData,
+    });
+    return false;
+  }
+
+  // Log non-Clerk errors normally
+  logError(message, error, additionalData);
+  return false;
 }
