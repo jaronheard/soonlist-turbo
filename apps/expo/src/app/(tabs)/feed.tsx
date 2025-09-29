@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -8,10 +8,12 @@ import {
   Unauthenticated,
   useQuery,
 } from "convex/react";
+import { usePostHog } from "posthog-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
+import FeedSkeleton from "~/components/FeedSkeleton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
@@ -23,6 +25,8 @@ function MyFeedContent() {
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+  const posthog = usePostHog();
+  const loadStartTime = useRef<number | null>(null);
 
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
@@ -46,7 +50,7 @@ function MyFeedContent() {
     status,
     loadMore,
   } = useStablePaginatedQuery(api.feeds.getMyFeed, queryArgs, {
-    initialNumItems: 50,
+    initialNumItems: 20, // Reduced from 50 to improve cold start performance
   });
 
   // Memoize saved events query args to prevent unnecessary re-renders
@@ -69,6 +73,24 @@ function MyFeedContent() {
   const savedEventIds = new Set(
     savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
+
+  // Track feed load performance
+  useEffect(() => {
+    if (status === "LoadingFirstPage" && !loadStartTime.current) {
+      loadStartTime.current = Date.now();
+    } else if (
+      status !== "LoadingFirstPage" &&
+      status !== "LoadingMore" &&
+      loadStartTime.current
+    ) {
+      const loadTime = Date.now() - loadStartTime.current;
+      posthog.capture("feed_load_time", {
+        duration_ms: loadTime,
+        initial_items: events.length,
+      });
+      loadStartTime.current = null;
+    }
+  }, [status, events.length, posthog]);
 
   // Add missing properties that UserEventsList expects and filter out ended events
   const enrichedEvents = useMemo(() => {
@@ -117,7 +139,8 @@ function MyFeed() {
     <>
       <AuthLoading>
         <View className="flex-1 bg-white">
-          <LoadingSpinner />
+          {/* Show skeleton UI instead of spinner for better perceived performance */}
+          <FeedSkeleton />
         </View>
       </AuthLoading>
 

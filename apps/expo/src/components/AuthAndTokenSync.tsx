@@ -82,6 +82,7 @@ export default function AuthAndTokenSync() {
   }, [isAuthenticated]);
 
   // Create share token on first authenticated load and persist keychain values
+  // Defer by 2 seconds to avoid blocking initial app render
   useEffect(() => {
     const run = async () => {
       if (didCreateRef.current && lastCreatedForUserRef.current === userId)
@@ -102,7 +103,13 @@ export default function AuthAndTokenSync() {
         lastCreatedForUserRef.current = null;
       }
     };
-    void run();
+
+    // Defer share token creation to avoid blocking cold start
+    const timer = setTimeout(() => {
+      void run();
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, [isAuthenticated, userId, username, createShareToken, persistToKeychain]);
 
   return null;

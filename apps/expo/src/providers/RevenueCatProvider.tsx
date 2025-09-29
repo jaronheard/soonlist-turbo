@@ -85,9 +85,13 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
   });
 
   // Handle Clerk user ID changes, but only after initialization
+  // Defer RevenueCat login by 1.5 seconds to avoid blocking initial render
   useMountEffect(() => {
     if (isInitialized && isAuthenticated && userId) {
-      void loginInternal(userId);
+      const timer = setTimeout(() => {
+        void loginInternal(userId);
+      }, 1500);
+      return () => clearTimeout(timer);
     }
   }, [isInitialized, isAuthenticated, userId]);
 

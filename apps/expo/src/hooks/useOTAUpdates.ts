@@ -97,14 +97,22 @@ export function useOTAUpdates() {
     // is suspect however with the Apple App Store guidelines, so we don't want to prompt production users to update
     // immediately.
     if (IS_TESTFLIGHT) {
-      void onIsTestFlight();
-      return;
+      // Defer TestFlight update check by 3 seconds to avoid blocking cold start
+      const timer = setTimeout(() => {
+        void onIsTestFlight();
+      }, 3000);
+      return () => clearTimeout(timer);
     } else if (!shouldReceiveUpdates || ranInitialCheck.current) {
       return;
     }
 
-    setCheckTimeout();
-    ranInitialCheck.current = true;
+    // Defer update check by 3 seconds to avoid blocking cold start
+    const timer = setTimeout(() => {
+      setCheckTimeout();
+      ranInitialCheck.current = true;
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, [onIsTestFlight, setCheckTimeout, shouldReceiveUpdates]);
 
   // After the app has been minimized for 15 minutes, we want to either A. install an update if one has become available
