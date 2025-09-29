@@ -126,7 +126,7 @@ class ShareViewController: UIViewController {
       // Read token from Keychain
       guard let token = readKeychainString(account: "SL_SHARE_TOKEN"), !token.isEmpty else {
         os_log("Missing share token in Keychain", log: log, type: .error)
-        self.showAndDismiss(text: "Missing share token", success: false)
+        self.showAndDismiss(text: "Missing share token. Open app to login.", success: false)
         return
       }
 
