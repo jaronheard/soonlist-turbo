@@ -44,12 +44,21 @@ const openrouter = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY || "",
   baseURL: process.env.OPENROUTER_BASE_URL || "",
 });
-const MODEL = "google/gemini-2.5-flash";
+const MODEL = "google/gemini-2.5-flash:nitro";
+const FALLBACK_MODELS = [
+  "google/gemini-2.0-flash:nitro",
+  "meta-llama/llama-4-maverick:nitro",
+];
+
+// aiConfig with fallback models for OpenRouter
+// The models array is passed to support OpenRouter's fallback feature
 const aiConfig = {
   model: openrouter(MODEL),
   mode: "json",
   temperature: 0.2,
   maxRetries: 0,
+  // @ts-expect-error - OpenRouter specific parameter
+  models: FALLBACK_MODELS,
 } as const;
 
 function createLoggedObjectGenerator({
