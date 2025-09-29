@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { CloudOff } from "~/components/icons";
 import { useNetworkStatus } from "~/hooks/useNetworkStatus";
 
 /**
- * Simple offline indicator that appears at the bottom of the screen
+ * Simple offline indicator that appears at the bottom-left of the screen
  * when the device loses internet connectivity
  */
 export function OfflineIndicator() {
@@ -36,14 +37,14 @@ export function OfflineIndicator() {
       style={[
         styles.container,
         {
-          bottom: insets.bottom,
+          bottom: insets.bottom + 16,
           opacity: fadeAnim,
         },
       ]}
       pointerEvents="none" // Allow touches to pass through
     >
-      <View style={styles.indicator}>
-        <Text style={styles.text}>📶 Offline</Text>
+      <View className="rounded-full bg-neutral-1 p-2">
+        <CloudOff size={16} color="#FFFFFF" strokeWidth={3} />
       </View>
     </Animated.View>
   );
@@ -52,31 +53,7 @@ export function OfflineIndicator() {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
+    left: 16,
     zIndex: 1000,
-  },
-  indicator: {
-    backgroundColor: "#6B7280", // Subtle gray background
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginHorizontal: 20,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3, // Android shadow
-  },
-  text: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "500",
-    textAlign: "center",
   },
 });

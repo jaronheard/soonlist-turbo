@@ -11,6 +11,7 @@ export { default as Check } from "./Check";
 export { default as ChevronDown } from "./ChevronDown";
 export { default as ChevronRight } from "./ChevronRight";
 export { default as ChevronUp } from "./ChevronUp";
+export { default as CloudOff } from "./CloudOff";
 export { default as Copy } from "./Copy";
 export { default as EyeOff } from "./EyeOff";
 export { default as Globe } from "./Globe";
