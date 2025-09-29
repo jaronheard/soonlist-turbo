@@ -27,12 +27,17 @@ const openrouter = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY || "",
   baseURL: process.env.OPENROUTER_BASE_URL || "",
 });
-const MODEL = "google/gemini-2.5-flash";
+const MODEL = "google/gemini-2.5-flash:nitro";
+const FALLBACK_MODELS = [
+  "google/gemini-2.0-flash:nitro",
+  "meta-llama/llama-4-maverick:nitro",
+];
 const aiConfig = {
   model: openrouter(MODEL),
   mode: "json",
   temperature: 0.2,
   maxRetries: 0,
+  models: FALLBACK_MODELS,
 } as const;
 
 function createLoggedObjectGenerator({
@@ -77,6 +82,17 @@ function createLoggedObjectGenerator({
     });
     try {
       const result = await generateObject(generateObjectOptions);
+
+      const actualModel =
+        typeof result.rawResponse === "object" &&
+        result.rawResponse !== null &&
+        "model" in result.rawResponse
+          ? (result.rawResponse as { model: string }).model
+          : MODEL;
+
+      generation.update({
+        model: actualModel,
+      });
       generation.end({
         output: result.object,
       });
@@ -91,6 +107,7 @@ function createLoggedObjectGenerator({
           logprobs: result.logprobs,
           rawResponse: result.rawResponse,
           warnings: result.warnings,
+          actualModel,
         },
       });
       waitUntil(langfuse.flushAsync());
