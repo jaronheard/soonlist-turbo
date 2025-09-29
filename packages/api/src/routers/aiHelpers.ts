@@ -49,7 +49,7 @@ const openrouter = createOpenAI({
 const PRIMARY_MODEL = "google/gemini-2.5-flash:nitro";
 const FALLBACK_MODELS = [
   "google/gemini-2.0-flash:nitro",
-  "meta-llama/llama-4-maverick:nitro"
+  "meta-llama/llama-4-maverick:nitro",
 ];
 
 const aiConfig = {
@@ -64,7 +64,7 @@ async function generateObjectWithFallback<T>(
   models: string[] = [PRIMARY_MODEL, ...FALLBACK_MODELS],
 ): Promise<ReturnType<typeof generateObject<T>>> {
   let lastError: Error | null = null;
-  
+
   for (const model of models) {
     try {
       const result = await generateObject({
@@ -77,7 +77,7 @@ async function generateObjectWithFallback<T>(
       lastError = error instanceof Error ? error : new Error(String(error));
     }
   }
-  
+
   // If all models failed, throw the last error
   throw lastError || new Error("All models failed");
 }
