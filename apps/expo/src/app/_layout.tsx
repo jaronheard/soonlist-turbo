@@ -5,6 +5,7 @@ import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { resourceCache } from "@clerk/clerk-expo/resource-cache";
 import * as Sentry from "@sentry/react-native";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { PostHogProvider } from "posthog-react-native";
@@ -46,12 +47,13 @@ const queryClient = new QueryClient();
 // Export Expo Router's default error boundary
 export { ErrorBoundary } from "expo-router";
 
-// Custom token cache for Clerk
+// This adds accessGroup support to Clerk's token cache: https://github.com/clerk/javascript/blob/main/packages/expo/src/token-cache/index.ts
 const tokenCache = {
   async getToken(key: string) {
     try {
       return SecureStore.getItemAsync(key, {
         accessGroup: getAccessGroup(),
+        keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
       });
     } catch {
       return null;
@@ -61,15 +63,7 @@ const tokenCache = {
     try {
       return SecureStore.setItemAsync(key, value, {
         accessGroup: getAccessGroup(),
-      });
-    } catch {
-      return;
-    }
-  },
-  async clearToken(key: string) {
-    try {
-      return SecureStore.deleteItemAsync(key, {
-        accessGroup: getAccessGroup(),
+        keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
       });
     } catch {
       return;
@@ -137,6 +131,7 @@ function RootLayout() {
         <ClerkProvider
           publishableKey={clerkPublishableKey}
           tokenCache={tokenCache}
+          __experimental_resourceCache={resourceCache}
         >
           {/* eslint-disable-next-line react-compiler/react-compiler */}
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
