@@ -24,7 +24,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
-import { OfflineIndicator } from "~/components/OfflineIndicator";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
@@ -296,7 +295,6 @@ function RootLayoutContent() {
           },
         }}
       />
-      <OfflineIndicator />
     </View>
   );
 }
