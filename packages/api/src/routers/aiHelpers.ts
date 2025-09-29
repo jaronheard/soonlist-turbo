@@ -49,9 +49,6 @@ const FALLBACK_MODELS = [
   "google/gemini-2.0-flash:nitro",
   "meta-llama/llama-4-maverick:nitro",
 ];
-
-// aiConfig with fallback models for OpenRouter
-// The models array is passed to support OpenRouter's fallback feature
 const aiConfig = {
   model: openrouter(MODEL),
   mode: "json",
