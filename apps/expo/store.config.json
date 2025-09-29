@@ -1,7 +1,7 @@
 {
   "configVersion": 0,
   "apple": {
-    "version": "1.2.5",
+    "version": "1.2.6",
     "copyright": "2025 Soonlist Company",
     "release": {
       "automaticRelease": false
