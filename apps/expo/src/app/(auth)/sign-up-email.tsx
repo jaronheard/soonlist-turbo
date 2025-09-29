@@ -14,7 +14,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { useGuestUser } from "~/hooks/useGuestUser";
 import { useAppStore } from "~/store";
 import { Logo } from "../../components/Logo";
-import { logError } from "../../utils/errorLogging";
+import { handleClerkError } from "../../utils/errorLogging";
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -131,10 +131,18 @@ export default function SignUpScreen() {
           );
         } else {
           // Handle other types of errors
-          if (errorMessage.includes("username")) {
+          const isNetworkError = handleClerkError("signup", err, {
+            email: data.emailAddress,
+            retryCount,
+          });
+
+          if (isNetworkError) {
+            setGeneralError(
+              "Unable to create account while offline. Please check your internet connection and try again.",
+            );
+          } else if (errorMessage.includes("username")) {
             setGeneralError("Username conflict. Please try again.");
           } else {
-            logError("Error during signup", err);
             setGeneralError(
               errorMessage || "Failed to create account. Please try again.",
             );
@@ -157,7 +165,10 @@ export default function SignUpScreen() {
           totalAttempts: retryCount + 1,
         },
       );
-      logError("Email signup retry process failed", err);
+      handleClerkError("signup retry process", err, {
+        guestUserId,
+        totalAttempts: retryCount + 1,
+      });
       setGeneralError("An unexpected error occurred. Please try again.");
       setIsSubmitting(false);
     }
