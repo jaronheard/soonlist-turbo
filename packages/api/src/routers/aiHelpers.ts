@@ -45,7 +45,6 @@ const openrouter = createOpenAI({
   baseURL: process.env.OPENROUTER_BASE_URL || "",
 });
 
-// Primary model and fallbacks
 const PRIMARY_MODEL = "google/gemini-2.5-flash:nitro";
 const FALLBACK_MODELS = [
   "google/gemini-2.0-flash:nitro",
@@ -78,7 +77,6 @@ async function generateObjectWithFallback<T>(
     }
   }
 
-  // If all models failed, throw the last error
   throw lastError || new Error("All models failed");
 }
 
@@ -121,11 +119,9 @@ function createLoggedObjectGenerator({
       completionStartTime: new Date(),
     });
     try {
-      // Remove the model from generateObjectOptions since we handle it in the fallback function
       const { model: _, ...optionsWithoutModel } = generateObjectOptions;
       const result = await generateObjectWithFallback({
         ...optionsWithoutModel,
-        // The model will be set inside generateObjectWithFallback
       } as Parameters<typeof generateObject<T>>[0]);
       generation.end({
         output: result.object,
