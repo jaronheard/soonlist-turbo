@@ -40,7 +40,6 @@ const aiConfig = {
   mode: "json",
   temperature: 0.2,
   maxRetries: 0,
-  // @ts-expect-error - OpenRouter specific parameter via provider metadata
   models: FALLBACK_MODELS,
 } as const;
 
