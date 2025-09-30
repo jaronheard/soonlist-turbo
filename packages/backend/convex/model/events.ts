@@ -1090,34 +1090,38 @@ export async function getUserStats(ctx: QueryCtx, userName: string) {
   const nowMs = now.getTime();
   const sevenDaysAgoMs = sevenDaysAgo.getTime();
 
-  // Count events created in last 7 days using aggregate - O(log(n))
-  const capturesThisWeek = await eventsByCreation.count(ctx, {
-    namespace: user.id,
-    bounds: {
-      lower: { key: sevenDaysAgoMs, inclusive: true },
-      upper: { key: nowMs, inclusive: true },
-    },
-  });
-
-  // Count all-time events (own) using aggregate - O(log(n))
-  const allTimeOwnEvents = await eventsByCreation.count(ctx, {
-    namespace: user.id,
-  });
-
-  // Count total event follows using aggregate - O(log(n))
-  const totalFollows = await eventFollowsAggregate.count(ctx, {
-    namespace: user.id,
-  });
-
-  // Count upcoming events (own + followed) using userFeeds aggregate - O(log(n))
+  // Run all aggregate queries in parallel for better performance
   const feedId = `user_${user.id}`;
-  const upcomingEvents = await userFeedsAggregate.count(ctx, {
-    namespace: feedId,
-    bounds: {
-      lower: { key: 0, inclusive: true },
-      upper: { key: 0, inclusive: true },
-    },
-  });
+  const [capturesThisWeek, allTimeOwnEvents, totalFollows, upcomingEvents] =
+    await Promise.all([
+      // Count events created in last 7 days using aggregate - O(log(n))
+      eventsByCreation.count(ctx, {
+        namespace: user.id,
+        bounds: {
+          lower: { key: sevenDaysAgoMs, inclusive: true },
+          upper: { key: nowMs, inclusive: true },
+        },
+      }),
+
+      // Count all-time events (own) using aggregate - O(log(n))
+      eventsByCreation.count(ctx, {
+        namespace: user.id,
+      }),
+
+      // Count total event follows using aggregate - O(log(n))
+      eventFollowsAggregate.count(ctx, {
+        namespace: user.id,
+      }),
+
+      // Count upcoming events (own + followed) using userFeeds aggregate - O(log(n))
+      userFeedsAggregate.count(ctx, {
+        namespace: feedId,
+        bounds: {
+          lower: { key: 0, inclusive: true },
+          upper: { key: 0, inclusive: true },
+        },
+      }),
+    ]);
   const allTimeEvents = allTimeOwnEvents + totalFollows;
 
   return {
