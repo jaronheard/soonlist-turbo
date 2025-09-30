@@ -10,9 +10,10 @@ import Animated, {
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { ChevronDown, Lock, PlusIcon } from "~/components/icons";
+import { ChevronDown, CloudOff, Lock, PlusIcon } from "~/components/icons";
 import { CircularSpinner } from "~/components/ui/CircularSpinner";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
+import { useNetworkStatus } from "~/hooks/useNetworkStatus";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 
@@ -42,6 +43,7 @@ export default function AddEventButton({
   stats,
 }: AddEventButtonProps) {
   const { isCapturing } = useInFlightEventStore();
+  const isOnline = useNetworkStatus();
 
   const {
     customerInfo,
@@ -136,13 +138,30 @@ export default function AddEventButton({
         </View>
       </View>
 
-      {/* Main action button */}
+      {/* Main action button or offline indicator */}
       {!isRevenueCatLoading && !isStatsLoading && (
         <TouchableOpacity
           onPress={handlePress}
+          disabled={!isOnline}
           className="absolute bottom-8 self-center"
         >
-          {canProceedWithAdd ? (
+          {!isOnline ? (
+            // Offline indicator - replaces button when offline
+            <View className="relative">
+              <View
+                className="relative flex-row items-center justify-center gap-2 rounded-full bg-neutral-2 p-3"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 6,
+                  elevation: 8,
+                }}
+              >
+                <CloudOff size={44} color="#FFF" strokeWidth={2} />
+              </View>
+            </View>
+          ) : canProceedWithAdd ? (
             <View className="relative">
               <View
                 className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
