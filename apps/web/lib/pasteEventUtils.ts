@@ -134,7 +134,7 @@ export function hasImageFiles(dataTransfer: DataTransfer): boolean {
   // Check types array for image types
   if (dataTransfer.types) {
     for (const type of dataTransfer.types) {
-      if (type === "Files" || type.startsWith("image/")) {
+      if (type.startsWith("image/")) {
         return true;
       }
     }
@@ -143,7 +143,7 @@ export function hasImageFiles(dataTransfer: DataTransfer): boolean {
   // Check items if available
   if (dataTransfer.items) {
     for (const item of dataTransfer.items) {
-      if (item.kind === "file" && item.type?.startsWith("image/")) {
+      if (item.kind === "file" && item.type.startsWith("image/")) {
         return true;
       }
     }

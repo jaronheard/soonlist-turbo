@@ -68,8 +68,7 @@ export function useDragAndDropHandler(
       dragCounterRef.current += 1;
 
       // Only set dragging state if we have image files
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (hasImageFiles(event.dataTransfer!)) {
+      if (event.dataTransfer && hasImageFiles(event.dataTransfer)) {
         if (dragCounterRef.current === 1) {
           setIsDragging(true);
         }
