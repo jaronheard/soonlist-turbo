@@ -623,8 +623,8 @@ export async function createEvent(
   // Sync with aggregates for efficient stats
   const createdEvent = await ctx.db.get(eventDocId);
   if (createdEvent) {
-    await eventsByCreation.replaceOrInsert(ctx, createdEvent, createdEvent);
-    await eventsByStartTime.replaceOrInsert(ctx, createdEvent, createdEvent);
+    await eventsByCreation.insert(ctx, createdEvent);
+    await eventsByStartTime.insert(ctx, createdEvent);
   }
 
   // Add comment if provided
@@ -732,8 +732,8 @@ export async function updateEvent(
   const updatedEvent = await ctx.db.get(existingEvent._id);
   if (updatedEvent) {
     // Sync with aggregates (replace updates the sort keys)
-    await eventsByCreation.replaceOrInsert(ctx, existingEvent, updatedEvent);
-    await eventsByStartTime.replaceOrInsert(ctx, existingEvent, updatedEvent);
+    await eventsByCreation.replace(ctx, existingEvent, updatedEvent);
+    await eventsByStartTime.replace(ctx, existingEvent, updatedEvent);
   }
 
   // Handle comment
@@ -856,7 +856,7 @@ export async function deleteEvent(
   // Delete all related records
   for (const ef of eventFollows) {
     // Remove from eventFollows aggregate before deleting
-    await eventFollowsAggregate.deleteIfExists(ctx, ef);
+    await eventFollowsAggregate.delete(ctx, ef);
     await ctx.db.delete(ef._id);
   }
 
@@ -875,8 +875,8 @@ export async function deleteEvent(
   });
 
   // Remove from aggregates before deleting the event
-  await eventsByCreation.deleteIfExists(ctx, event);
-  await eventsByStartTime.deleteIfExists(ctx, event);
+  await eventsByCreation.delete(ctx, event);
+  await eventsByStartTime.delete(ctx, event);
 
   // Delete the event
   await ctx.db.delete(event._id);
@@ -909,11 +909,7 @@ export async function followEvent(
     // Sync with eventFollows aggregate
     const createdFollow = await ctx.db.get(followId);
     if (createdFollow) {
-      await eventFollowsAggregate.replaceOrInsert(
-        ctx,
-        createdFollow,
-        createdFollow,
-      );
+      await eventFollowsAggregate.insert(ctx, createdFollow);
     }
 
     // Get event to add to user's feed
@@ -951,7 +947,7 @@ export async function unfollowEvent(
 
   if (existingFollow) {
     // Remove from eventFollows aggregate before deleting
-    await eventFollowsAggregate.deleteIfExists(ctx, existingFollow);
+    await eventFollowsAggregate.delete(ctx, existingFollow);
     await ctx.db.delete(existingFollow._id);
 
     // Remove from user's feed
