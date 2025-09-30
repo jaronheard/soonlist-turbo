@@ -15,8 +15,43 @@ import {
   eventsByStartTime,
 } from "../aggregates";
 
+const BATCH_SIZE = 100;
+
 /**
- * Initialize aggregates for all existing events
+ * Initialize aggregates for a batch of events
+ */
+export const initializeEventAggregatesBatch = internalMutation({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+  },
+  returns: v.object({
+    isDone: v.boolean(),
+    cursor: v.union(v.string(), v.null()),
+    processedCount: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const result = await ctx.db.query("events").paginate({
+      numItems: BATCH_SIZE,
+      cursor: args.cursor,
+    });
+
+    console.log(`Processing batch of ${result.page.length} events...`);
+
+    for (const event of result.page) {
+      await eventsByCreation.insert(ctx, event);
+      await eventsByStartTime.insert(ctx, event);
+    }
+
+    return {
+      isDone: result.isDone,
+      cursor: result.continueCursor,
+      processedCount: result.page.length,
+    };
+  },
+});
+
+/**
+ * Initialize aggregates for all existing events (orchestrator)
  */
 export const initializeEventAggregates = internalMutation({
   args: {},
@@ -24,21 +59,84 @@ export const initializeEventAggregates = internalMutation({
   handler: async (ctx) => {
     console.log("Starting event aggregates initialization...");
 
-    const events = await ctx.db.query("events").collect();
-    console.log(`Found ${events.length} events to process`);
+    let cursor: string | null = null;
+    let totalProcessed = 0;
+    let batchNumber = 0;
 
-    for (const event of events) {
-      await eventsByCreation.insert(ctx, event);
-      await eventsByStartTime.insert(ctx, event);
-    }
+    do {
+      const result: {
+        isDone: boolean;
+        cursor: string | null;
+        processedCount: number;
+      } = await ctx.runMutation(
+        internal.migrations.initializeAggregates.initializeEventAggregatesBatch,
+        { cursor },
+      );
 
-    console.log("Event aggregates initialization complete!");
+      batchNumber++;
+      totalProcessed += result.processedCount;
+      cursor = result.cursor;
+
+      console.log(
+        `Completed batch ${batchNumber}, processed ${totalProcessed} events total`,
+      );
+
+      if (result.isDone) {
+        console.log(
+          `Event aggregates initialization complete! Processed ${totalProcessed} total events`,
+        );
+        break;
+      }
+
+      // Schedule next batch
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.initializeAggregates.initializeEventAggregatesBatch,
+        { cursor },
+      );
+
+      // Exit this mutation and let the scheduled one continue
+      return null;
+    } while (false);
+
     return null;
   },
 });
 
 /**
- * Initialize aggregates for all existing eventFollows
+ * Initialize aggregates for a batch of eventFollows
+ */
+export const initializeEventFollowsAggregatesBatch = internalMutation({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+  },
+  returns: v.object({
+    isDone: v.boolean(),
+    cursor: v.union(v.string(), v.null()),
+    processedCount: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const result = await ctx.db.query("eventFollows").paginate({
+      numItems: BATCH_SIZE,
+      cursor: args.cursor,
+    });
+
+    console.log(`Processing batch of ${result.page.length} event follows...`);
+
+    for (const follow of result.page) {
+      await eventFollowsAggregate.insert(ctx, follow);
+    }
+
+    return {
+      isDone: result.isDone,
+      cursor: result.continueCursor,
+      processedCount: result.page.length,
+    };
+  },
+});
+
+/**
+ * Initialize aggregates for all existing eventFollows (orchestrator)
  */
 export const initializeEventFollowsAggregates = internalMutation({
   args: {},
@@ -46,14 +144,48 @@ export const initializeEventFollowsAggregates = internalMutation({
   handler: async (ctx) => {
     console.log("Starting eventFollows aggregates initialization...");
 
-    const follows = await ctx.db.query("eventFollows").collect();
-    console.log(`Found ${follows.length} event follows to process`);
+    let cursor: string | null = null;
+    let totalProcessed = 0;
+    let batchNumber = 0;
 
-    for (const follow of follows) {
-      await eventFollowsAggregate.insert(ctx, follow);
-    }
+    do {
+      const result: {
+        isDone: boolean;
+        cursor: string | null;
+        processedCount: number;
+      } = await ctx.runMutation(
+        internal.migrations.initializeAggregates
+          .initializeEventFollowsAggregatesBatch,
+        { cursor },
+      );
 
-    console.log("EventFollows aggregates initialization complete!");
+      batchNumber++;
+      totalProcessed += result.processedCount;
+      cursor = result.cursor;
+
+      console.log(
+        `Completed batch ${batchNumber}, processed ${totalProcessed} event follows total`,
+      );
+
+      if (result.isDone) {
+        console.log(
+          `EventFollows aggregates initialization complete! Processed ${totalProcessed} total event follows`,
+        );
+        break;
+      }
+
+      // Schedule next batch
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.initializeAggregates
+          .initializeEventFollowsAggregatesBatch,
+        { cursor },
+      );
+
+      // Exit this mutation and let the scheduled one continue
+      return null;
+    } while (false);
+
     return null;
   },
 });
@@ -65,11 +197,13 @@ export const initializeAllAggregates = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    await ctx.runMutation(
+    await ctx.scheduler.runAfter(
+      0,
       internal.migrations.initializeAggregates.initializeEventAggregates,
       {},
     );
-    await ctx.runMutation(
+    await ctx.scheduler.runAfter(
+      0,
       internal.migrations.initializeAggregates.initializeEventFollowsAggregates,
       {},
     );
