@@ -103,6 +103,7 @@ function MyFeedContent() {
           promoCard={{ type: "addEvents" }}
           hasUnlimited={hasUnlimited}
           savedEventIds={savedEventIds}
+          source="feed"
         />
         <AddEventButton stats={stats} showChevron={false} />
       </View>

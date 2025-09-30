@@ -90,6 +90,7 @@ function PastEventsContent() {
             isFetchingNextPage={status === "LoadingMore"}
             hasUnlimited={hasUnlimited}
             savedEventIds={savedEventIds}
+            source="past"
           />
           <AddEventButton showChevron={false} stats={stats} />
         </View>

@@ -1,11 +1,14 @@
 import React from "react";
 import { Share, Text, TouchableOpacity, View } from "react-native";
 import * as Haptics from "expo-haptics";
+import { usePostHog } from "posthog-react-native";
 
 import { ShareIcon } from "~/components/icons";
 import { logError } from "~/utils/errorLogging";
 
 const DiscoverShareBanner: React.FC = () => {
+  const posthog = usePostHog();
+
   const handleShare = async () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
@@ -16,12 +19,35 @@ const DiscoverShareBanner: React.FC = () => {
 Use code DISCOVER to join the Portland-only, invite-only Discover list with events from me and 50+ others.`;
 
     try {
-      await Share.share({
+      // Track invite initiated
+      posthog.capture("invite_friend_initiated", {
+        source: "discover_banner",
+        action: "bring_a_friend",
+      });
+
+      const result = await Share.share({
         message: shareMessage,
         url: appStoreUrl,
         title: "Soonlist — Discover events",
       });
+
+      // Track invite completed if user didn't dismiss
+      if (result.action === Share.sharedAction) {
+        posthog.capture("invite_friend_completed", {
+          source: "discover_banner",
+          action: "bring_a_friend",
+        });
+      } else if (result.action === Share.dismissedAction) {
+        posthog.capture("invite_friend_dismissed", {
+          source: "discover_banner",
+          action: "bring_a_friend",
+        });
+      }
     } catch (error) {
+      posthog.capture("invite_friend_error", {
+        source: "discover_banner",
+        error_message: (error as Error).message,
+      });
       logError("Error sharing Discover feed", error);
     }
   };
