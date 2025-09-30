@@ -5,8 +5,8 @@ import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 
 import { Check, ChevronDown, MessageSquare } from "~/components/icons";
-import { logError } from "~/utils/errorLogging";
 import { useAppStore } from "~/store";
+import { logError } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import {
   DropdownMenuCheckboxItem,

@@ -22,7 +22,6 @@ import {
   ShareIcon,
   Trash2,
 } from "~/components/icons";
-import { logError } from "~/utils/errorLogging";
 import {
   ContextMenuContent,
   ContextMenuItem,
@@ -40,6 +39,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu-primitives";
 import { useEventActions } from "~/hooks/useEventActions";
+import { logError } from "~/utils/errorLogging";
 
 const screenWidth = Dimensions.get("window").width;
 const menuMinWidth = screenWidth * 0.6;
