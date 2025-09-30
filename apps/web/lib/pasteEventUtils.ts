@@ -129,11 +129,17 @@ export function extractImagesFromDataTransfer(
  * Useful for dragover event handling
  */
 export function hasImageFiles(dataTransfer: DataTransfer): boolean {
-  // Check items for image files
-  // Note: dataTransfer.types contains general identifiers like "Files" or "text/plain",
-  // NOT specific MIME types, so we must check items instead
+  // Check items for image files first (preferred method)
   for (const item of dataTransfer.items) {
     if (item.kind === "file" && item.type.startsWith("image/")) {
+      return true;
+    }
+  }
+
+  // Fallback to dataTransfer.files for browsers that don't expose item.type during dragover
+  // This is especially important for dragenter/dragover events where item.type may not be available
+  for (const file of dataTransfer.files) {
+    if (file.type.startsWith("image/")) {
       return true;
     }
   }
