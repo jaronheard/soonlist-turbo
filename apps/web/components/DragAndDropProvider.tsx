@@ -37,13 +37,13 @@ export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
       {/* Drag overlay - shown when dragging files over the page */}
       {isDragging && (
         <div
-          className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/10 transition-all duration-200"
+          className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-interactive-1/10 transition-all duration-200"
           style={{
             backdropFilter: "blur(2px)",
           }}
         >
-          <div className="flex flex-col items-center gap-4 rounded-xl border-4 border-dashed border-blue-500 bg-white/90 p-8 shadow-2xl dark:bg-gray-900/90">
-            <ImagePlus className="h-16 w-16 animate-bounce text-blue-500" />
+          <div className="flex flex-col items-center gap-4 rounded-xl border-4 border-dashed border-interactive-1 bg-white/90 p-8 shadow-2xl dark:bg-gray-900/90">
+            <ImagePlus className="h-16 w-16 animate-bounce text-interactive-1" />
             <div className="text-center">
               <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Drop image to create event
