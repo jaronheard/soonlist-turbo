@@ -30,4 +30,3 @@ export const initializeUserFeedsAggregate = internalMutation({
     return null;
   },
 });
-
