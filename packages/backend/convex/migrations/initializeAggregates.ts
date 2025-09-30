@@ -30,6 +30,7 @@ export const initializeEventAggregatesBatch = internalMutation({
     processedCount: v.number(),
   }),
   handler: async (ctx, args) => {
+    const clearedNamespaces = new Set<string>();
     const result = await ctx.db.query("events").paginate({
       numItems: BATCH_SIZE,
       cursor: args.cursor,
@@ -38,8 +39,13 @@ export const initializeEventAggregatesBatch = internalMutation({
     console.log(`Processing batch of ${result.page.length} events...`);
 
     for (const event of result.page) {
-      await eventsByCreation.insert(ctx, event);
-      await eventsByStartTime.insert(ctx, event);
+      if (!clearedNamespaces.has(event.userId)) {
+        await eventsByCreation.clear(ctx, { namespace: event.userId });
+        await eventsByStartTime.clear(ctx, { namespace: event.userId });
+        clearedNamespaces.add(event.userId);
+      }
+      await eventsByCreation.replaceOrInsert(ctx, event, event);
+      await eventsByStartTime.replaceOrInsert(ctx, event, event);
     }
 
     return {
@@ -59,11 +65,14 @@ export const initializeEventAggregates = internalMutation({
   handler: async (ctx) => {
     console.log("Starting event aggregates initialization...");
 
+    // Note: We clear per-namespace inside the batch to avoid requiring a full scan of namespaces
+
     let cursor: string | null = null;
     let totalProcessed = 0;
     let batchNumber = 0;
+    let done = false;
 
-    do {
+    while (!done) {
       const result: {
         isDone: boolean;
         cursor: string | null;
@@ -85,6 +94,7 @@ export const initializeEventAggregates = internalMutation({
         console.log(
           `Event aggregates initialization complete! Processed ${totalProcessed} total events`,
         );
+        done = true;
         break;
       }
 
@@ -97,7 +107,7 @@ export const initializeEventAggregates = internalMutation({
 
       // Exit this mutation and let the scheduled one continue
       return null;
-    } while (false);
+    }
 
     return null;
   },
@@ -116,6 +126,7 @@ export const initializeEventFollowsAggregatesBatch = internalMutation({
     processedCount: v.number(),
   }),
   handler: async (ctx, args) => {
+    const clearedNamespaces = new Set<string>();
     const result = await ctx.db.query("eventFollows").paginate({
       numItems: BATCH_SIZE,
       cursor: args.cursor,
@@ -124,7 +135,11 @@ export const initializeEventFollowsAggregatesBatch = internalMutation({
     console.log(`Processing batch of ${result.page.length} event follows...`);
 
     for (const follow of result.page) {
-      await eventFollowsAggregate.insert(ctx, follow);
+      if (!clearedNamespaces.has(follow.userId)) {
+        await eventFollowsAggregate.clear(ctx, { namespace: follow.userId });
+        clearedNamespaces.add(follow.userId);
+      }
+      await eventFollowsAggregate.replaceOrInsert(ctx, follow, follow);
     }
 
     return {
@@ -144,11 +159,14 @@ export const initializeEventFollowsAggregates = internalMutation({
   handler: async (ctx) => {
     console.log("Starting eventFollows aggregates initialization...");
 
+    // Note: We clear per-namespace inside the batch to avoid requiring a full scan of namespaces
+
     let cursor: string | null = null;
     let totalProcessed = 0;
     let batchNumber = 0;
+    let done = false;
 
-    do {
+    while (!done) {
       const result: {
         isDone: boolean;
         cursor: string | null;
@@ -171,6 +189,7 @@ export const initializeEventFollowsAggregates = internalMutation({
         console.log(
           `EventFollows aggregates initialization complete! Processed ${totalProcessed} total event follows`,
         );
+        done = true;
         break;
       }
 
@@ -184,7 +203,7 @@ export const initializeEventFollowsAggregates = internalMutation({
 
       // Exit this mutation and let the scheduled one continue
       return null;
-    } while (false);
+    }
 
     return null;
   },

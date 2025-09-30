@@ -26,6 +26,7 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
     processedCount: v.number(),
   }),
   handler: async (ctx, args) => {
+    const clearedNamespaces = new Set<string>();
     const result = await ctx.db.query("userFeeds").paginate({
       numItems: BATCH_SIZE,
       cursor: args.cursor,
@@ -36,7 +37,11 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
     );
 
     for (const feedEntry of result.page) {
-      await userFeedsAggregate.insert(ctx, feedEntry);
+      if (!clearedNamespaces.has(feedEntry.feedId)) {
+        await userFeedsAggregate.clear(ctx, { namespace: feedEntry.feedId });
+        clearedNamespaces.add(feedEntry.feedId);
+      }
+      await userFeedsAggregate.replaceOrInsert(ctx, feedEntry, feedEntry);
     }
 
     return {
@@ -56,11 +61,14 @@ export const initializeUserFeedsAggregate = internalMutation({
   handler: async (ctx) => {
     console.log("Starting userFeeds aggregate initialization...");
 
+    // Note: We clear per-namespace inside the batch to avoid requiring a full scan of namespaces
+
     let cursor: string | null = null;
     let totalProcessed = 0;
     let batchNumber = 0;
+    let done = false;
 
-    do {
+    while (!done) {
       const result: {
         isDone: boolean;
         cursor: string | null;
@@ -83,6 +91,7 @@ export const initializeUserFeedsAggregate = internalMutation({
         console.log(
           `UserFeeds aggregate initialization complete! Processed ${totalProcessed} total userFeeds entries`,
         );
+        done = true;
         break;
       }
 
@@ -96,7 +105,7 @@ export const initializeUserFeedsAggregate = internalMutation({
 
       // Exit this mutation and let the scheduled one continue
       return null;
-    } while (false);
+    }
 
     return null;
   },

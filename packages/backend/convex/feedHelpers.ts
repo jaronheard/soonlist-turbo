@@ -46,7 +46,7 @@ export const updateEventInFeeds = internalMutation({
       };
       const id = await ctx.db.insert("userFeeds", doc);
       const insertedDoc = (await ctx.db.get(id))!;
-      await userFeedsAggregate.insert(ctx, insertedDoc);
+      await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
     } else {
       const oldDoc = existingCreatorEntry;
       const newHasEnded = eventEndTime < currentTime;
@@ -56,7 +56,7 @@ export const updateEventInFeeds = internalMutation({
         hasEnded: newHasEnded,
       });
       const updatedDoc = (await ctx.db.get(existingCreatorEntry._id))!;
-      await userFeedsAggregate.replace(ctx, oldDoc, updatedDoc);
+      await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
     }
 
     // 2. Add to discover feed if public
@@ -80,7 +80,7 @@ export const updateEventInFeeds = internalMutation({
         };
         const id = await ctx.db.insert("userFeeds", doc);
         const insertedDoc = (await ctx.db.get(id))!;
-        await userFeedsAggregate.insert(ctx, insertedDoc);
+        await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
       } else {
         const oldDoc = existingDiscoverEntry;
         const newHasEnded = eventEndTime < currentTime;
@@ -90,7 +90,7 @@ export const updateEventInFeeds = internalMutation({
           hasEnded: newHasEnded,
         });
         const updatedDoc = (await ctx.db.get(existingDiscoverEntry._id))!;
-        await userFeedsAggregate.replace(ctx, oldDoc, updatedDoc);
+        await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
       }
     }
 
@@ -120,7 +120,7 @@ export const updateEventInFeeds = internalMutation({
         };
         const id = await ctx.db.insert("userFeeds", doc);
         const insertedDoc = (await ctx.db.get(id))!;
-        await userFeedsAggregate.insert(ctx, insertedDoc);
+        await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
       } else {
         const oldDoc = existingFollowerEntry;
         const newHasEnded = eventEndTime < currentTime;
@@ -130,7 +130,7 @@ export const updateEventInFeeds = internalMutation({
           hasEnded: newHasEnded,
         });
         const updatedDoc = (await ctx.db.get(existingFollowerEntry._id))!;
-        await userFeedsAggregate.replace(ctx, oldDoc, updatedDoc);
+        await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
       }
     }
   },
@@ -177,7 +177,7 @@ export const addEventToUserFeed = internalMutation({
       };
       const id = await ctx.db.insert("userFeeds", doc);
       const insertedDoc = (await ctx.db.get(id))!;
-      await userFeedsAggregate.insert(ctx, insertedDoc);
+      await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
     }
   },
 });
@@ -211,7 +211,7 @@ export const removeEventFromFeeds = internalMutation({
       }
 
       // Delete all other entries (including discover and other user feeds)
-      await userFeedsAggregate.delete(ctx, entry);
+      await userFeedsAggregate.deleteIfExists(ctx, entry);
       await ctx.db.delete(entry._id);
     }
   },
