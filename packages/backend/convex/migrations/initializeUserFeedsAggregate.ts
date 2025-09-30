@@ -26,7 +26,6 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
     processedCount: v.number(),
   }),
   handler: async (ctx, args) => {
-    const clearedNamespaces = new Set<string>();
     const result = await ctx.db.query("userFeeds").paginate({
       numItems: BATCH_SIZE,
       cursor: args.cursor,
@@ -37,10 +36,6 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
     );
 
     for (const feedEntry of result.page) {
-      if (!clearedNamespaces.has(feedEntry.feedId)) {
-        await userFeedsAggregate.clear(ctx, { namespace: feedEntry.feedId });
-        clearedNamespaces.add(feedEntry.feedId);
-      }
       await userFeedsAggregate.replaceOrInsert(ctx, feedEntry, feedEntry);
     }
 
@@ -70,9 +65,6 @@ export const initializeUserFeedsAggregate = internalMutation({
   returns: v.null(),
   handler: async (ctx) => {
     console.log("Starting userFeeds aggregate initialization...");
-
-    // Note: We clear per-namespace inside the batch to avoid requiring a full scan of namespaces
-
     // Kick off the first batch; subsequent batches self-schedule
     await ctx.scheduler.runAfter(
       0,

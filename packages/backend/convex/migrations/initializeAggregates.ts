@@ -91,7 +91,6 @@ export const initializeEventFollowsAggregatesBatch = internalMutation({
     processedCount: v.number(),
   }),
   handler: async (ctx, args) => {
-    const clearedNamespaces = new Set<string>();
     const result = await ctx.db.query("eventFollows").paginate({
       numItems: BATCH_SIZE,
       cursor: args.cursor,
@@ -100,10 +99,6 @@ export const initializeEventFollowsAggregatesBatch = internalMutation({
     console.log(`Processing batch of ${result.page.length} event follows...`);
 
     for (const follow of result.page) {
-      if (!clearedNamespaces.has(follow.userId)) {
-        await eventFollowsAggregate.clear(ctx, { namespace: follow.userId });
-        clearedNamespaces.add(follow.userId);
-      }
       await eventFollowsAggregate.replaceOrInsert(ctx, follow, follow);
     }
 
@@ -156,6 +151,7 @@ export const initializeAllAggregates = internalMutation({
     await ctx.runMutation(components.eventsByCreation.public.clear, {});
     await ctx.runMutation(components.eventsByStartTime.public.clear, {});
     await ctx.runMutation(components.eventFollowsAggregate.public.clear, {});
+    await ctx.runMutation(components.userFeedsAggregate.public.clear, {});
 
     await ctx.scheduler.runAfter(
       0,
@@ -165,6 +161,12 @@ export const initializeAllAggregates = internalMutation({
     await ctx.scheduler.runAfter(
       0,
       internal.migrations.initializeAggregates.initializeEventFollowsAggregates,
+      {},
+    );
+    await ctx.scheduler.runAfter(
+      0,
+      internal.migrations.initializeUserFeedsAggregate
+        .initializeUserFeedsAggregate,
       {},
     );
     return null;
