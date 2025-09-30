@@ -246,7 +246,7 @@ export const updateHasEndedFlagsBatch = internalMutation({
           hasEnded: shouldHaveEnded,
         });
         const updatedDoc = (await ctx.db.get(entry._id))!;
-        await userFeedsAggregate.replace(ctx, oldDoc, updatedDoc);
+        await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
         updated++;
       }
     }
