@@ -22,8 +22,7 @@ export const eventsByCreation = new TableAggregate<{
   Key: number; // created_at timestamp in ms
   DataModel: DataModel;
   TableName: "events";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-}>(components.eventsByCreation as any, {
+}>(components.eventsByCreation, {
   namespace: (doc) => doc.userId,
   sortKey: (doc) => new Date(doc.created_at).getTime(),
 });
@@ -39,8 +38,7 @@ export const eventsByStartTime = new TableAggregate<{
   Key: number; // startDateTime timestamp in ms
   DataModel: DataModel;
   TableName: "events";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-}>(components.eventsByStartTime as any, {
+}>(components.eventsByStartTime, {
   namespace: (doc) => doc.userId,
   sortKey: (doc) => new Date(doc.startDateTime).getTime(),
 });
@@ -56,8 +54,7 @@ export const eventFollowsAggregate = new TableAggregate<{
   Key: null;
   DataModel: DataModel;
   TableName: "eventFollows";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-}>(components.eventFollowsAggregate as any, {
+}>(components.eventFollowsAggregate, {
   namespace: (doc) => doc.userId,
   sortKey: () => null,
 });
