@@ -26,6 +26,7 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
     processedCount: v.number(),
   }),
   handler: async (ctx, args) => {
+    const clearedNamespaces = new Set<string>();
     const result = await ctx.db.query("userFeeds").paginate({
       numItems: BATCH_SIZE,
       cursor: args.cursor,
@@ -65,7 +66,6 @@ export const initializeUserFeedsAggregate = internalMutation({
   returns: v.null(),
   handler: async (ctx) => {
     console.log("Starting userFeeds aggregate initialization...");
-
     // Kick off the first batch; subsequent batches self-schedule
     await ctx.scheduler.runAfter(
       0,

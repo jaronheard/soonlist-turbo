@@ -91,6 +91,7 @@ export const initializeEventFollowsAggregatesBatch = internalMutation({
     processedCount: v.number(),
   }),
   handler: async (ctx, args) => {
+    const clearedNamespaces = new Set<string>();
     const result = await ctx.db.query("eventFollows").paginate({
       numItems: BATCH_SIZE,
       cursor: args.cursor,
