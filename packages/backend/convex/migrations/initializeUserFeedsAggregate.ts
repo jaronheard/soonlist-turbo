@@ -56,14 +56,14 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
  * Initialize aggregate for all existing userFeeds entries (orchestrator)
  */
 export const initializeUserFeedsAggregate = internalMutation({
-  args: {},
+  args: { cursor: v.union(v.string(), v.null()) },
   returns: v.null(),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     console.log("Starting userFeeds aggregate initialization...");
 
     // Note: We clear per-namespace inside the batch to avoid requiring a full scan of namespaces
 
-    let cursor: string | null = null;
+    let cursor: string | null = args.cursor;
     let totalProcessed = 0;
     let batchNumber = 0;
     let done = false;
@@ -99,7 +99,7 @@ export const initializeUserFeedsAggregate = internalMutation({
       await ctx.scheduler.runAfter(
         0,
         internal.migrations.initializeUserFeedsAggregate
-          .initializeUserFeedsAggregateBatch,
+          .initializeUserFeedsAggregate,
         { cursor },
       );
 

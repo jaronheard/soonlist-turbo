@@ -60,14 +60,14 @@ export const initializeEventAggregatesBatch = internalMutation({
  * Initialize aggregates for all existing events (orchestrator)
  */
 export const initializeEventAggregates = internalMutation({
-  args: {},
+  args: { cursor: v.union(v.string(), v.null()) },
   returns: v.null(),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     console.log("Starting event aggregates initialization...");
 
     // Note: We clear per-namespace inside the batch to avoid requiring a full scan of namespaces
 
-    let cursor: string | null = null;
+    let cursor: string | null = args.cursor;
     let totalProcessed = 0;
     let batchNumber = 0;
     let done = false;
@@ -101,7 +101,7 @@ export const initializeEventAggregates = internalMutation({
       // Schedule next batch
       await ctx.scheduler.runAfter(
         0,
-        internal.migrations.initializeAggregates.initializeEventAggregatesBatch,
+        internal.migrations.initializeAggregates.initializeEventAggregates,
         { cursor },
       );
 
@@ -154,14 +154,14 @@ export const initializeEventFollowsAggregatesBatch = internalMutation({
  * Initialize aggregates for all existing eventFollows (orchestrator)
  */
 export const initializeEventFollowsAggregates = internalMutation({
-  args: {},
+  args: { cursor: v.union(v.string(), v.null()) },
   returns: v.null(),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     console.log("Starting eventFollows aggregates initialization...");
 
     // Note: We clear per-namespace inside the batch to avoid requiring a full scan of namespaces
 
-    let cursor: string | null = null;
+    let cursor: string | null = args.cursor;
     let totalProcessed = 0;
     let batchNumber = 0;
     let done = false;
@@ -197,7 +197,7 @@ export const initializeEventFollowsAggregates = internalMutation({
       await ctx.scheduler.runAfter(
         0,
         internal.migrations.initializeAggregates
-          .initializeEventFollowsAggregatesBatch,
+          .initializeEventFollowsAggregates,
         { cursor },
       );
 
@@ -219,12 +219,12 @@ export const initializeAllAggregates = internalMutation({
     await ctx.scheduler.runAfter(
       0,
       internal.migrations.initializeAggregates.initializeEventAggregates,
-      {},
+      { cursor: null },
     );
     await ctx.scheduler.runAfter(
       0,
       internal.migrations.initializeAggregates.initializeEventFollowsAggregates,
-      {},
+      { cursor: null },
     );
     return null;
   },
