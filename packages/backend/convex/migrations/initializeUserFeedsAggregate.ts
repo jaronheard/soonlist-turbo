@@ -26,6 +26,7 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
     processedCount: v.number(),
   }),
   handler: async (ctx, args) => {
+    const clearedNamespaces = new Set<string>();
     const result = await ctx.db.query("userFeeds").paginate({
       numItems: BATCH_SIZE,
       cursor: args.cursor,
@@ -36,7 +37,21 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
     );
 
     for (const feedEntry of result.page) {
-      await userFeedsAggregate.insert(ctx, feedEntry);
+      if (!clearedNamespaces.has(feedEntry.feedId)) {
+        await userFeedsAggregate.clear(ctx, { namespace: feedEntry.feedId });
+        clearedNamespaces.add(feedEntry.feedId);
+      }
+      await userFeedsAggregate.replaceOrInsert(ctx, feedEntry, feedEntry);
+    }
+
+    // If there are more pages, schedule the next batch
+    if (!result.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.initializeUserFeedsAggregate
+          .initializeUserFeedsAggregateBatch,
+        { cursor: result.continueCursor },
+      );
     }
 
     return {
@@ -56,48 +71,15 @@ export const initializeUserFeedsAggregate = internalMutation({
   handler: async (ctx) => {
     console.log("Starting userFeeds aggregate initialization...");
 
-    let cursor: string | null = null;
-    let totalProcessed = 0;
-    let batchNumber = 0;
+    // Note: We clear per-namespace inside the batch to avoid requiring a full scan of namespaces
 
-    do {
-      const result: {
-        isDone: boolean;
-        cursor: string | null;
-        processedCount: number;
-      } = await ctx.runMutation(
-        internal.migrations.initializeUserFeedsAggregate
-          .initializeUserFeedsAggregateBatch,
-        { cursor },
-      );
-
-      batchNumber++;
-      totalProcessed += result.processedCount;
-      cursor = result.cursor;
-
-      console.log(
-        `Completed batch ${batchNumber}, processed ${totalProcessed} userFeeds entries total`,
-      );
-
-      if (result.isDone) {
-        console.log(
-          `UserFeeds aggregate initialization complete! Processed ${totalProcessed} total userFeeds entries`,
-        );
-        break;
-      }
-
-      // Schedule next batch
-      await ctx.scheduler.runAfter(
-        0,
-        internal.migrations.initializeUserFeedsAggregate
-          .initializeUserFeedsAggregateBatch,
-        { cursor },
-      );
-
-      // Exit this mutation and let the scheduled one continue
-      return null;
-    } while (false);
-
+    // Kick off the first batch; subsequent batches self-schedule
+    await ctx.scheduler.runAfter(
+      0,
+      internal.migrations.initializeUserFeedsAggregate
+        .initializeUserFeedsAggregateBatch,
+      { cursor: null },
+    );
     return null;
   },
 });
