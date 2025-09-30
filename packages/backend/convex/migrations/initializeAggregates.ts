@@ -7,7 +7,7 @@
 
 import { v } from "convex/values";
 
-import { internal } from "../_generated/api";
+import { components, internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
 import {
   eventFollowsAggregate,
@@ -30,7 +30,6 @@ export const initializeEventAggregatesBatch = internalMutation({
     processedCount: v.number(),
   }),
   handler: async (ctx, args) => {
-    const clearedNamespaces = new Set<string>();
     const result = await ctx.db.query("events").paginate({
       numItems: BATCH_SIZE,
       cursor: args.cursor,
@@ -39,11 +38,6 @@ export const initializeEventAggregatesBatch = internalMutation({
     console.log(`Processing batch of ${result.page.length} events...`);
 
     for (const event of result.page) {
-      if (!clearedNamespaces.has(event.userId)) {
-        await eventsByCreation.clear(ctx, { namespace: event.userId });
-        await eventsByStartTime.clear(ctx, { namespace: event.userId });
-        clearedNamespaces.add(event.userId);
-      }
       await eventsByCreation.replaceOrInsert(ctx, event, event);
       await eventsByStartTime.replaceOrInsert(ctx, event, event);
     }
@@ -73,8 +67,6 @@ export const initializeEventAggregates = internalMutation({
   returns: v.null(),
   handler: async (ctx) => {
     console.log("Starting event aggregates initialization...");
-
-    // Note: We clear per-namespace inside the batch to avoid requiring a full scan of namespaces
 
     // Kick off the first batch; subsequent batches self-schedule
     await ctx.scheduler.runAfter(
@@ -142,8 +134,6 @@ export const initializeEventFollowsAggregates = internalMutation({
   handler: async (ctx) => {
     console.log("Starting eventFollows aggregates initialization...");
 
-    // Note: We clear per-namespace inside the batch to avoid requiring a full scan of namespaces
-
     // Kick off the first batch; subsequent batches self-schedule
     await ctx.scheduler.runAfter(
       0,
@@ -162,6 +152,11 @@ export const initializeAllAggregates = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
+    // Clear all namespaces once at the very beginning
+    await ctx.runMutation(components.eventsByCreation.public.clear, {});
+    await ctx.runMutation(components.eventsByStartTime.public.clear, {});
+    await ctx.runMutation(components.eventFollowsAggregate.public.clear, {});
+
     await ctx.scheduler.runAfter(
       0,
       internal.migrations.initializeAggregates.initializeEventAggregates,
