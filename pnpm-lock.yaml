@@ -1142,6 +1142,9 @@ importers:
       '@clerk/nextjs':
         specifier: 'catalog:'
         version: 6.20.0(next@15.1.8(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(svix@1.66.0(encoding@0.1.13))
+      '@convex-dev/aggregate':
+        specifier: ^0.1.24
+        version: 0.1.24(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))
       '@convex-dev/migrations':
         specifier: 'catalog:'
         version: 0.2.9(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))
@@ -2357,6 +2360,11 @@ packages:
 
   '@coinbase/wallet-sdk@4.3.0':
     resolution: {integrity: sha512-T3+SNmiCw4HzDm4we9wCHCxlP0pqCiwKe4sOwPH3YAK2KSKjxPRydKu6UQJrdONFVLG7ujXvbd/6ZqmvJb8rkw==}
+
+  '@convex-dev/aggregate@0.1.24':
+    resolution: {integrity: sha512-7u7kUAvo5IXR1eY/QUpgihV1VZUeM69ZesKZ9D5hqmNzD2LrTUfwWtVXnns3Kzef3CycNaG9NWMO9auU+g5GGg==}
+    peerDependencies:
+      convex: ~1.16.5 || >=1.17.0 <1.35.0
 
   '@convex-dev/migrations@0.2.9':
     resolution: {integrity: sha512-HfIv6/F8VbtJ1NVT2bQRTumJGdaqROl/+s5IOnubHm7vvgie0RjcfO6YiB7JoLFWwS19vjDQDKl63ihoA08zOA==}
@@ -11524,6 +11532,10 @@ snapshots:
       clsx: 1.2.1
       eventemitter3: 5.0.1
       preact: 10.26.7
+
+  '@convex-dev/aggregate@0.1.24(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))':
+    dependencies:
+      convex: 1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
 
   '@convex-dev/migrations@0.2.9(convex@1.24.1(@clerk/clerk-react@5.31.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))':
     dependencies:
