@@ -10,9 +10,14 @@ export function useNetworkStatus() {
 
   useEffect(() => {
     // Get initial network state
-    void NetInfo.fetch().then((state) => {
-      setIsOnline(state.isConnected ?? true);
-    });
+    void NetInfo.fetch()
+      .then((state) => {
+        setIsOnline(state.isConnected ?? true);
+      })
+      .catch(() => {
+        // Assume online if we can't determine network state initially
+        setIsOnline(true);
+      });
 
     // Subscribe to network state changes
     const unsubscribe = NetInfo.addEventListener((state) => {
