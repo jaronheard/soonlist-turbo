@@ -101,20 +101,18 @@ export function extractImagesFromDataTransfer(
   const images: File[] = [];
 
   // Try dataTransfer.items first (preferred method)
-  if (dataTransfer.items) {
-    for (const item of dataTransfer.items) {
-      if (item.kind === "file") {
-        const file = item.getAsFile();
-        // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
-        if (file && file.type && file.type.startsWith("image/")) {
-          images.push(file);
-        }
+  for (const item of dataTransfer.items) {
+    if (item.kind === "file") {
+      const file = item.getAsFile();
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+      if (file && file.type && file.type.startsWith("image/")) {
+        images.push(file);
       }
     }
   }
 
   // Fallback to dataTransfer.files
-  if (images.length === 0 && dataTransfer.files) {
+  if (images.length === 0) {
     for (const file of dataTransfer.files) {
       // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
       if (file.type && file.type.startsWith("image/")) {
@@ -131,21 +129,12 @@ export function extractImagesFromDataTransfer(
  * Useful for dragover event handling
  */
 export function hasImageFiles(dataTransfer: DataTransfer): boolean {
-  // Check types array for image types
-  if (dataTransfer.types) {
-    for (const type of dataTransfer.types) {
-      if (type.startsWith("image/")) {
-        return true;
-      }
-    }
-  }
-
-  // Check items if available
-  if (dataTransfer.items) {
-    for (const item of dataTransfer.items) {
-      if (item.kind === "file" && item.type.startsWith("image/")) {
-        return true;
-      }
+  // Check items for image files
+  // Note: dataTransfer.types contains general identifiers like "Files" or "text/plain",
+  // NOT specific MIME types, so we must check items instead
+  for (const item of dataTransfer.items) {
+    if (item.kind === "file" && item.type.startsWith("image/")) {
+      return true;
     }
   }
 
