@@ -92,6 +92,56 @@ export function extractImagesFromClipboard(
 }
 
 /**
+ * Extracts image files from drag and drop DataTransfer
+ * Similar to extractImagesFromClipboard but optimized for drag events
+ */
+export function extractImagesFromDataTransfer(
+  dataTransfer: DataTransfer,
+): File[] {
+  const images: File[] = [];
+
+  // Try dataTransfer.items first (preferred method)
+  for (const item of dataTransfer.items) {
+    if (item.kind === "file") {
+      const file = item.getAsFile();
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+      if (file && file.type && file.type.startsWith("image/")) {
+        images.push(file);
+      }
+    }
+  }
+
+  // Fallback to dataTransfer.files
+  if (images.length === 0) {
+    for (const file of dataTransfer.files) {
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+      if (file.type && file.type.startsWith("image/")) {
+        images.push(file);
+      }
+    }
+  }
+
+  return images;
+}
+
+/**
+ * Checks if a DataTransfer contains any image files
+ * Useful for dragover event handling
+ */
+export function hasImageFiles(dataTransfer: DataTransfer): boolean {
+  // Check items for image files
+  // Note: dataTransfer.types contains general identifiers like "Files" or "text/plain",
+  // NOT specific MIME types, so we must check items instead
+  for (const item of dataTransfer.items) {
+    if (item.kind === "file" && item.type.startsWith("image/")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * Checks if the current pathname is a target page for image paste handling
  */
 export function isTargetPage(pathname: string): boolean {
