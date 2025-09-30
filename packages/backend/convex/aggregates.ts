@@ -8,7 +8,6 @@
 import { TableAggregate } from "@convex-dev/aggregate";
 
 import type { DataModel } from "./_generated/dataModel";
-import type { QueryCtx } from "./_generated/server";
 import { components } from "./_generated/api";
 
 /**
@@ -60,81 +59,17 @@ export const eventFollowsAggregate = new TableAggregate<{
 });
 
 /**
- * Get user stats using aggregates - O(log(n)) instead of O(n)
- *
- * Note: The actual implementation is in model/events.ts
- * This is kept as a reference for the aggregate usage pattern.
+ * Aggregate for user feeds
+ * Used for: counting upcoming/past events in a user's feed (own + followed)
+ * Namespace: feedId - separate data per feed (user_${userId}, discover, etc.)
+ * SortKey: hasEnded flag (0 for upcoming/false, 1 for past/true)
  */
-export async function getUserStatsWithAggregates(
-  ctx: QueryCtx,
-  userId: string,
-) {
-  const now = new Date();
-  const sevenDaysAgo = new Date(now);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const nowMs = now.getTime();
-  const sevenDaysAgoMs = sevenDaysAgo.getTime();
-
-  // Count events created in last 7 days using aggregate
-  const capturesThisWeek = await eventsByCreation.count(ctx, {
-    namespace: userId,
-    bounds: {
-      lower: { key: sevenDaysAgoMs, inclusive: true },
-      upper: { key: nowMs, inclusive: true },
-    },
-  });
-
-  // Count upcoming events (own) using aggregate
-  const upcomingOwnEvents = await eventsByStartTime.count(ctx, {
-    namespace: userId,
-    bounds: {
-      lower: { key: nowMs, inclusive: false },
-    },
-  });
-
-  // Count all-time events (own) using aggregate
-  const allTimeOwnEvents = await eventsByCreation.count(ctx, {
-    namespace: userId,
-  });
-
-  // Count total event follows using aggregate
-  const totalFollows = await eventFollowsAggregate.count(ctx, {
-    namespace: userId,
-  });
-
-  // For upcoming followed events, we need to fetch follows and check event times
-  // This is the one part we can't fully optimize with current aggregate setup
-  const eventFollows = await ctx.db
-    .query("eventFollows")
-    .withIndex("by_user", (q) => q.eq("userId", userId))
-    .collect();
-
-  // Batch fetch events for follows (more efficient than N+1 queries)
-  let upcomingFollowedEvents = 0;
-
-  // Get unique event IDs
-  const eventIds = [...new Set(eventFollows.map((f) => f.eventId))];
-
-  // Fetch all followed events in one query using the index
-  for (const eventId of eventIds) {
-    const event = await ctx.db
-      .query("events")
-      .withIndex("by_custom_id", (q) => q.eq("id", eventId))
-      .unique();
-
-    if (event && new Date(event.startDateTime) >= now) {
-      upcomingFollowedEvents++;
-    }
-  }
-
-  const upcomingEvents = upcomingOwnEvents + upcomingFollowedEvents;
-  const allTimeEvents = allTimeOwnEvents + totalFollows;
-
-  return {
-    capturesThisWeek,
-    weeklyGoal: 5,
-    upcomingEvents,
-    allTimeEvents,
-  };
-}
+export const userFeedsAggregate = new TableAggregate<{
+  Namespace: string; // feedId (e.g., "user_${userId}")
+  Key: number; // hasEnded flag as number (0 or 1)
+  DataModel: DataModel;
+  TableName: "userFeeds";
+}>(components.userFeedsAggregate, {
+  namespace: (doc) => doc.feedId,
+  sortKey: (doc) => (doc.hasEnded ? 1 : 0),
+});

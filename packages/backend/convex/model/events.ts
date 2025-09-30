@@ -10,6 +10,7 @@ import {
   eventFollowsAggregate,
   eventsByCreation,
   eventsByStartTime,
+  userFeedsAggregate,
 } from "../aggregates";
 import { DEFAULT_TIMEZONE } from "../constants";
 import { generateNumericId, generatePublicId } from "../utils";
@@ -1094,14 +1095,6 @@ export async function getUserStats(ctx: QueryCtx, userName: string) {
     },
   });
 
-  // Count upcoming events (own) using aggregate - O(log(n))
-  const upcomingOwnEvents = await eventsByStartTime.count(ctx, {
-    namespace: user.id,
-    bounds: {
-      lower: { key: nowMs, inclusive: false },
-    },
-  });
-
   // Count all-time events (own) using aggregate - O(log(n))
   const allTimeOwnEvents = await eventsByCreation.count(ctx, {
     namespace: user.id,
@@ -1112,32 +1105,15 @@ export async function getUserStats(ctx: QueryCtx, userName: string) {
     namespace: user.id,
   });
 
-  // For upcoming followed events, we need to fetch follows and check event times
-  // This is still more efficient than the previous N+1 approach
-  const eventFollows = await ctx.db
-    .query("eventFollows")
-    .withIndex("by_user", (q) => q.eq("userId", user.id))
-    .collect();
-
-  // Batch fetch events for follows
-  let upcomingFollowedEvents = 0;
-
-  // Get unique event IDs
-  const eventIds = [...new Set(eventFollows.map((f) => f.eventId))];
-
-  // Fetch followed events
-  for (const eventId of eventIds) {
-    const event = await ctx.db
-      .query("events")
-      .withIndex("by_custom_id", (q) => q.eq("id", eventId))
-      .unique();
-
-    if (event && new Date(event.startDateTime) >= now) {
-      upcomingFollowedEvents++;
-    }
-  }
-
-  const upcomingEvents = upcomingOwnEvents + upcomingFollowedEvents;
+  // Count upcoming events (own + followed) using userFeeds aggregate - O(log(n))
+  const feedId = `user_${user.id}`;
+  const upcomingEvents = await userFeedsAggregate.count(ctx, {
+    namespace: feedId,
+    bounds: {
+      lower: { key: 0, inclusive: true },
+      upper: { key: 0, inclusive: true },
+    },
+  });
   const allTimeEvents = allTimeOwnEvents + totalFollows;
 
   return {

@@ -5,6 +5,7 @@ import { ConvexError, v } from "convex/values";
 import type { QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { internalAction, internalMutation, query } from "./_generated/server";
+import { userFeedsAggregate } from "./aggregates";
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -240,9 +241,12 @@ export const updateHasEndedFlagsBatch = internalMutation({
       const shouldHaveEnded = entry.eventEndTime < currentTime;
 
       if (entry.hasEnded !== shouldHaveEnded) {
+        const oldDoc = entry;
         await ctx.db.patch(entry._id, {
           hasEnded: shouldHaveEnded,
         });
+        const updatedDoc = (await ctx.db.get(entry._id))!;
+        await userFeedsAggregate.replace(ctx, oldDoc, updatedDoc);
         updated++;
       }
     }
