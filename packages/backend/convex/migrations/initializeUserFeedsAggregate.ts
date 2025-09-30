@@ -26,7 +26,6 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
     processedCount: v.number(),
   }),
   handler: async (ctx, args) => {
-    const clearedNamespaces = new Set<string>();
     const result = await ctx.db.query("userFeeds").paginate({
       numItems: BATCH_SIZE,
       cursor: args.cursor,
@@ -37,11 +36,7 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
     );
 
     for (const feedEntry of result.page) {
-      if (!clearedNamespaces.has(feedEntry.feedId)) {
-        await userFeedsAggregate.clear(ctx, { namespace: feedEntry.feedId });
-        clearedNamespaces.add(feedEntry.feedId);
-      }
-      await userFeedsAggregate.replaceOrInsert(ctx, feedEntry, feedEntry);
+      await userFeedsAggregate.insert(ctx, feedEntry);
     }
 
     return {
@@ -56,19 +51,16 @@ export const initializeUserFeedsAggregateBatch = internalMutation({
  * Initialize aggregate for all existing userFeeds entries (orchestrator)
  */
 export const initializeUserFeedsAggregate = internalMutation({
-  args: { cursor: v.union(v.string(), v.null()) },
+  args: {},
   returns: v.null(),
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
     console.log("Starting userFeeds aggregate initialization...");
 
-    // Note: We clear per-namespace inside the batch to avoid requiring a full scan of namespaces
-
-    let cursor: string | null = args.cursor;
+    let cursor: string | null = null;
     let totalProcessed = 0;
     let batchNumber = 0;
-    let done = false;
 
-    while (!done) {
+    do {
       const result: {
         isDone: boolean;
         cursor: string | null;
@@ -91,7 +83,6 @@ export const initializeUserFeedsAggregate = internalMutation({
         console.log(
           `UserFeeds aggregate initialization complete! Processed ${totalProcessed} total userFeeds entries`,
         );
-        done = true;
         break;
       }
 
@@ -99,13 +90,13 @@ export const initializeUserFeedsAggregate = internalMutation({
       await ctx.scheduler.runAfter(
         0,
         internal.migrations.initializeUserFeedsAggregate
-          .initializeUserFeedsAggregate,
+          .initializeUserFeedsAggregateBatch,
         { cursor },
       );
 
       // Exit this mutation and let the scheduled one continue
       return null;
-    }
+    } while (false);
 
     return null;
   },
