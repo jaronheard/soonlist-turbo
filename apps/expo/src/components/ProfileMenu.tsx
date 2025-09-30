@@ -8,7 +8,7 @@ import { useConvexAuth } from "convex/react";
 import { toast } from "sonner-native";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
-import { LogOut, MessageCircle, ShareIcon, User } from "~/components/icons";
+import { LogOut, MessageSquare, ShareIcon, User } from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
 import { logError } from "../utils/errorLogging";
 import { UserProfileFlair } from "./UserProfileFlair";
@@ -106,11 +106,11 @@ export function ProfileMenu() {
           <DropdownMenu.ItemTitle>Account</DropdownMenu.ItemTitle>
         </DropdownMenu.Item>
 
-        <DropdownMenu.Item key="support" onSelect={presentIntercom}>
-          <DropdownMenu.ItemIcon ios={{ name: "message.circle" }}>
-            <MessageCircle />
+        <DropdownMenu.Item key="feedback" onSelect={presentIntercom}>
+          <DropdownMenu.ItemIcon ios={{ name: "message" }}>
+            <MessageSquare />
           </DropdownMenu.ItemIcon>
-          <DropdownMenu.ItemTitle>Support</DropdownMenu.ItemTitle>
+          <DropdownMenu.ItemTitle>Feedback</DropdownMenu.ItemTitle>
         </DropdownMenu.Item>
 
         <DropdownMenu.Item key="sign-out" onSelect={handleSignOut} destructive>

@@ -2,6 +2,7 @@ import type { FunctionReturnType } from "convex/server";
 import React from "react";
 import { Dimensions, TouchableOpacity, View } from "react-native";
 import * as Haptics from "expo-haptics";
+import Intercom from "@intercom/intercom-react-native";
 import { toast } from "sonner-native";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
@@ -13,6 +14,7 @@ import {
   Globe2,
   Heart,
   Map,
+  MessageSquare,
   MinusCircle,
   MoreVertical,
   PenSquare,
@@ -20,6 +22,7 @@ import {
   ShareIcon,
   Trash2,
 } from "~/components/icons";
+import { logError } from "~/utils/errorLogging";
 import {
   ContextMenuContent,
   ContextMenuItem,
@@ -66,7 +69,8 @@ interface MenuItem {
     | "plus.circle"
     | "minus.circle"
     | "heart"
-    | "heart.fill";
+    | "heart.fill"
+    | "message";
   destructive?: boolean;
 }
 
@@ -92,6 +96,14 @@ export function EventMenu({
     showDiscover,
   } = useEventActions({ event, isSaved, demoMode, onDelete });
 
+  const presentIntercom = async () => {
+    try {
+      await Intercom.present();
+    } catch (error) {
+      logError("Error presenting Intercom", error);
+    }
+  };
+
   const getMenuItems = (): MenuItem[] => {
     const baseItems: MenuItem[] = [
       {
@@ -113,6 +125,11 @@ export function EventMenu({
         title: "Add to calendar",
         lucideIcon: CalendarPlus,
         systemIcon: "calendar.badge.plus",
+      },
+      {
+        title: "Feedback",
+        lucideIcon: MessageSquare,
+        systemIcon: "message",
       },
     ];
 
@@ -201,6 +218,9 @@ export function EventMenu({
         break;
       case "Show QR":
         handleShowQR();
+        break;
+      case "Feedback":
+        void presentIntercom();
         break;
     }
   };

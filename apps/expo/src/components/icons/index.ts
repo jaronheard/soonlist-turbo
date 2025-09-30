@@ -33,6 +33,7 @@ export { default as Map } from "./Map";
 export { default as MapPin } from "./MapPin";
 export { default as MapPinned } from "./MapPinned";
 export { default as MessageCircle } from "./MessageCircle";
+export { default as MessageSquare } from "./MessageSquare";
 export { default as MinusCircle } from "./MinusCircle";
 export { default as MoreVertical } from "./MoreVertical";
 export { default as PenSquare } from "./PenSquare";

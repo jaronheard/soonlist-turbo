@@ -2,13 +2,17 @@ import React, { useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import Intercom from "@intercom/intercom-react-native";
 
-import { Check, ChevronDown } from "~/components/icons";
+import { Check, ChevronDown, MessageSquare } from "~/components/icons";
+import { logError } from "~/utils/errorLogging";
 import { useAppStore } from "~/store";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuItemIcon,
   DropdownMenuItemIndicator,
   DropdownMenuItemTitle,
   DropdownMenuRoot,
@@ -55,6 +59,15 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
     router.replace(path);
   };
 
+  const presentIntercom = async () => {
+    try {
+      setMenuOpen(false);
+      await Intercom.present();
+    } catch (error) {
+      logError("Error presenting Intercom", error);
+    }
+  };
+
   return (
     <View className="flex-1 items-center justify-center">
       <DropdownMenuRoot open={menuOpen} onOpenChange={setMenuOpen}>
@@ -99,6 +112,19 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
               </DropdownMenuCheckboxItem>
             );
           })}
+
+          <DropdownMenuItem
+            key="feedback"
+            textValue="Feedback"
+            onSelect={presentIntercom}
+          >
+            <DropdownMenuItemTitle>
+              <Text className="text-xl text-black">Feedback</Text>
+            </DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: "message" }}>
+              <MessageSquare size={20} color="#000000" />
+            </DropdownMenuItemIcon>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenuRoot>
     </View>
