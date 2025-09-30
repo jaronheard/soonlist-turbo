@@ -29,6 +29,7 @@
   "dependencies": {
     "@ai-sdk/openai": "catalog:",
     "@clerk/nextjs": "catalog:",
+    "@convex-dev/aggregate": "^0.1.24",
     "@convex-dev/migrations": "catalog:",
     "@convex-dev/workflow": "catalog:",
     "@convex-dev/workpool": "catalog:",

@@ -6,6 +6,12 @@ import type { EventMetadataLoose } from "@soonlist/cal";
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
+import {
+  eventFollowsAggregate,
+  eventsByCreation,
+  eventsByStartTime,
+  userFeedsAggregate,
+} from "../aggregates";
 import { DEFAULT_TIMEZONE } from "../constants";
 import { generateNumericId, generatePublicId } from "../utils";
 
@@ -590,7 +596,7 @@ export async function createEvent(
   const endDateTime = parseDateTime(eventData.endDate, endTime, timeZone);
 
   // Create the event
-  await ctx.db.insert("events", {
+  const eventDocId = await ctx.db.insert("events", {
     id: eventId,
     userId,
     userName,
@@ -613,6 +619,13 @@ export async function createEvent(
     description: eventData.description,
     batchId,
   });
+
+  // Sync with aggregates for efficient stats
+  const createdEvent = await ctx.db.get(eventDocId);
+  if (createdEvent) {
+    await eventsByCreation.insert(ctx, createdEvent);
+    await eventsByStartTime.insert(ctx, createdEvent);
+  }
 
   // Add comment if provided
   if (comment && comment.length > 0) {
@@ -714,6 +727,14 @@ export async function updateEvent(
     startTime,
     description: eventData.description,
   });
+
+  // Get updated event for aggregates
+  const updatedEvent = await ctx.db.get(existingEvent._id);
+  if (updatedEvent) {
+    // Sync with aggregates (replace updates the sort keys)
+    await eventsByCreation.replace(ctx, existingEvent, updatedEvent);
+    await eventsByStartTime.replace(ctx, existingEvent, updatedEvent);
+  }
 
   // Handle comment
   const existingComment = await ctx.db
@@ -834,6 +855,8 @@ export async function deleteEvent(
 
   // Delete all related records
   for (const ef of eventFollows) {
+    // Remove from eventFollows aggregate before deleting
+    await eventFollowsAggregate.delete(ctx, ef);
     await ctx.db.delete(ef._id);
   }
 
@@ -850,6 +873,10 @@ export async function deleteEvent(
     eventId,
     keepCreatorFeed: false,
   });
+
+  // Remove from aggregates before deleting the event
+  await eventsByCreation.delete(ctx, event);
+  await eventsByStartTime.delete(ctx, event);
 
   // Delete the event
   await ctx.db.delete(event._id);
@@ -874,10 +901,16 @@ export async function followEvent(
     .unique();
 
   if (!existingFollow) {
-    await ctx.db.insert("eventFollows", {
+    const followId = await ctx.db.insert("eventFollows", {
       userId,
       eventId,
     });
+
+    // Sync with eventFollows aggregate
+    const createdFollow = await ctx.db.get(followId);
+    if (createdFollow) {
+      await eventFollowsAggregate.insert(ctx, createdFollow);
+    }
 
     // Get event to add to user's feed
     const event = await ctx.db
@@ -913,6 +946,8 @@ export async function unfollowEvent(
     .unique();
 
   if (existingFollow) {
+    // Remove from eventFollows aggregate before deleting
+    await eventFollowsAggregate.delete(ctx, existingFollow);
     await ctx.db.delete(existingFollow._id);
 
     // Remove from user's feed
@@ -1027,13 +1062,9 @@ export async function toggleEventVisibility(
 }
 
 /**
- * Get user stats
+ * Get user stats using aggregates for O(log(n)) performance
  */
 export async function getUserStats(ctx: QueryCtx, userName: string) {
-  const now = new Date();
-  const sevenDaysAgo = new Date(now);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
   const user = await ctx.db
     .query("users")
     .withIndex("by_username", (q) => q.eq("username", userName))
@@ -1048,41 +1079,42 @@ export async function getUserStats(ctx: QueryCtx, userName: string) {
     };
   }
 
-  // Get user's own events for the last 7 days
-  const allUserEvents = await ctx.db
-    .query("events")
-    .withIndex("by_user", (q) => q.eq("userId", user.id))
-    .collect();
+  const now = new Date();
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const capturesThisWeek = allUserEvents.filter((event) => {
-    const createdAt = new Date(event.created_at);
-    return createdAt >= sevenDaysAgo && createdAt <= now;
-  }).length;
+  const nowMs = now.getTime();
+  const sevenDaysAgoMs = sevenDaysAgo.getTime();
 
-  // Get upcoming events (own and followed)
-  const upcomingOwnEvents = allUserEvents.filter(
-    (event) => new Date(event.startDateTime) >= now,
-  );
+  // Count events created in last 7 days using aggregate - O(log(n))
+  const capturesThisWeek = await eventsByCreation.count(ctx, {
+    namespace: user.id,
+    bounds: {
+      lower: { key: sevenDaysAgoMs, inclusive: true },
+      upper: { key: nowMs, inclusive: true },
+    },
+  });
 
-  const eventFollows = await ctx.db
-    .query("eventFollows")
-    .withIndex("by_user", (q) => q.eq("userId", user.id))
-    .collect();
+  // Count all-time events (own) using aggregate - O(log(n))
+  const allTimeOwnEvents = await eventsByCreation.count(ctx, {
+    namespace: user.id,
+  });
 
-  let upcomingFollowedEvents = 0;
-  for (const follow of eventFollows) {
-    const event = await ctx.db
-      .query("events")
-      .withIndex("by_custom_id", (q) => q.eq("id", follow.eventId))
-      .unique();
+  // Count total event follows using aggregate - O(log(n))
+  const totalFollows = await eventFollowsAggregate.count(ctx, {
+    namespace: user.id,
+  });
 
-    if (event && new Date(event.startDateTime) >= now) {
-      upcomingFollowedEvents++;
-    }
-  }
-
-  const upcomingEvents = upcomingOwnEvents.length + upcomingFollowedEvents;
-  const allTimeEvents = allUserEvents.length + eventFollows.length;
+  // Count upcoming events (own + followed) using userFeeds aggregate - O(log(n))
+  const feedId = `user_${user.id}`;
+  const upcomingEvents = await userFeedsAggregate.count(ctx, {
+    namespace: feedId,
+    bounds: {
+      lower: { key: 0, inclusive: true },
+      upper: { key: 0, inclusive: true },
+    },
+  });
+  const allTimeEvents = allTimeOwnEvents + totalFollows;
 
   return {
     capturesThisWeek,

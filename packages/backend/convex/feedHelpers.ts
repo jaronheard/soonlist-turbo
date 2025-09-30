@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
 import { internalMutation } from "./_generated/server";
+import { userFeedsAggregate } from "./aggregates";
 
 // Helper to add an event to feeds when it's created or updated
 export const updateEventInFeeds = internalMutation({
@@ -35,20 +36,27 @@ export const updateEventInFeeds = internalMutation({
       .first();
 
     if (!existingCreatorEntry) {
-      await ctx.db.insert("userFeeds", {
+      const doc = {
         feedId: creatorFeedId,
         eventId,
         eventStartTime,
         eventEndTime,
         addedAt: currentTime,
         hasEnded: eventEndTime < currentTime, // always set
-      });
+      };
+      const id = await ctx.db.insert("userFeeds", doc);
+      const insertedDoc = (await ctx.db.get(id))!;
+      await userFeedsAggregate.insert(ctx, insertedDoc);
     } else {
+      const oldDoc = existingCreatorEntry;
+      const newHasEnded = eventEndTime < currentTime;
       await ctx.db.patch(existingCreatorEntry._id, {
         eventStartTime,
         eventEndTime,
-        hasEnded: eventEndTime < currentTime, // always set
+        hasEnded: newHasEnded,
       });
+      const updatedDoc = (await ctx.db.get(existingCreatorEntry._id))!;
+      await userFeedsAggregate.replace(ctx, oldDoc, updatedDoc);
     }
 
     // 2. Add to discover feed if public
@@ -62,20 +70,27 @@ export const updateEventInFeeds = internalMutation({
         .first();
 
       if (!existingDiscoverEntry) {
-        await ctx.db.insert("userFeeds", {
+        const doc = {
           feedId: discoverFeedId,
           eventId,
           eventStartTime,
           eventEndTime,
           addedAt: currentTime,
           hasEnded: eventEndTime < currentTime, // always set
-        });
+        };
+        const id = await ctx.db.insert("userFeeds", doc);
+        const insertedDoc = (await ctx.db.get(id))!;
+        await userFeedsAggregate.insert(ctx, insertedDoc);
       } else {
+        const oldDoc = existingDiscoverEntry;
+        const newHasEnded = eventEndTime < currentTime;
         await ctx.db.patch(existingDiscoverEntry._id, {
           eventStartTime,
           eventEndTime,
-          hasEnded: eventEndTime < currentTime, // always set
+          hasEnded: newHasEnded,
         });
+        const updatedDoc = (await ctx.db.get(existingDiscoverEntry._id))!;
+        await userFeedsAggregate.replace(ctx, oldDoc, updatedDoc);
       }
     }
 
@@ -95,20 +110,27 @@ export const updateEventInFeeds = internalMutation({
         .first();
 
       if (!existingFollowerEntry) {
-        await ctx.db.insert("userFeeds", {
+        const doc = {
           feedId: followerFeedId,
           eventId,
           eventStartTime,
           eventEndTime,
           addedAt: currentTime,
           hasEnded: eventEndTime < currentTime, // always set
-        });
+        };
+        const id = await ctx.db.insert("userFeeds", doc);
+        const insertedDoc = (await ctx.db.get(id))!;
+        await userFeedsAggregate.insert(ctx, insertedDoc);
       } else {
+        const oldDoc = existingFollowerEntry;
+        const newHasEnded = eventEndTime < currentTime;
         await ctx.db.patch(existingFollowerEntry._id, {
           eventStartTime,
           eventEndTime,
-          hasEnded: eventEndTime < currentTime, // always set
+          hasEnded: newHasEnded,
         });
+        const updatedDoc = (await ctx.db.get(existingFollowerEntry._id))!;
+        await userFeedsAggregate.replace(ctx, oldDoc, updatedDoc);
       }
     }
   },
@@ -145,14 +167,17 @@ export const addEventToUserFeed = internalMutation({
       .first();
 
     if (!existing) {
-      await ctx.db.insert("userFeeds", {
+      const doc = {
         feedId,
         eventId,
         eventStartTime,
         eventEndTime,
         addedAt: currentTime,
         hasEnded: eventEndTime < currentTime, // always set
-      });
+      };
+      const id = await ctx.db.insert("userFeeds", doc);
+      const insertedDoc = (await ctx.db.get(id))!;
+      await userFeedsAggregate.insert(ctx, insertedDoc);
     }
   },
 });
@@ -186,6 +211,7 @@ export const removeEventFromFeeds = internalMutation({
       }
 
       // Delete all other entries (including discover and other user feeds)
+      await userFeedsAggregate.delete(ctx, entry);
       await ctx.db.delete(entry._id);
     }
   },

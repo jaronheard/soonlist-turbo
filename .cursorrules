@@ -7,6 +7,7 @@ Code Style and Structure:
 - Prefer iteration and modularization over code duplication
 - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError)
 - Structure files: exported component, subcomponents, helpers, static content, types
+- Comments only when something is particularly tricky or not obvious
 
 Naming Conventions:
 

@@ -1,9 +1,5 @@
 {
   "mcpServers": {
-    "convex": {
-      "command": "npx",
-      "args": ["-y", "convex@latest", "mcp", "start"]
-    },
     "react-native-debugger-mcp": {
       "command": "npx",
       "args": ["-y", "@twodoorsdev/react-native-debugger-mcp"]
