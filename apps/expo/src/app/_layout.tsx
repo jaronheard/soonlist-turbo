@@ -27,6 +27,7 @@ import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
+import { useQuickActions } from "~/hooks/useQuickActions";
 import { useTimezoneAlert } from "~/hooks/useTimezoneAlert";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
@@ -273,6 +274,7 @@ const InitialLayout = () => {
 
 function RootLayoutContent() {
   useMediaPermissions();
+  useQuickActions();
   const ref = useNavigationContainerRef();
 
   useEffect(() => {
