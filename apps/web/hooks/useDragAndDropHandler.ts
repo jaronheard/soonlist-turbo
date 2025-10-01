@@ -44,7 +44,6 @@ export function useDragAndDropHandler(
   const currentUser = useQuery(api.users.getCurrentUser);
   const { timezone } = useContext(TimezoneContext);
 
-
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);

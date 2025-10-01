@@ -42,7 +42,6 @@ export function useImagePasteHandler(
   const currentUser = useQuery(api.users.getCurrentUser);
   const { timezone } = useContext(TimezoneContext);
 
-
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastProcessedImage, setLastProcessedImage] = useState<string | null>(
