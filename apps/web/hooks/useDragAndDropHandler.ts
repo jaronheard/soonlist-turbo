@@ -23,7 +23,7 @@ import {
 
 interface UseDragAndDropHandlerOptions {
   enabled?: boolean;
-  onSuccess?: (workflowId: string) => void;
+  onSuccess?: (batchId: string) => void;
   onError?: (error: Error) => void;
 }
 
@@ -33,6 +33,7 @@ interface UseDragAndDropHandlerReturn {
   error: string | null;
   lastProcessedImage: string | null;
   imageCount: number; // Number of images being dragged
+  currentBatchId: string | null; // Current batch being processed
 }
 
 export function useDragAndDropHandler(
@@ -51,6 +52,7 @@ export function useDragAndDropHandler(
     null,
   );
   const [imageCount, setImageCount] = useState(0);
+  const [currentBatchId, setCurrentBatchId] = useState<string | null>(null);
 
   // Counter to track drag enter/leave for nested elements
   const dragCounterRef = useRef(0);
@@ -206,6 +208,9 @@ export function useDragAndDropHandler(
         });
 
         if (result.batchId) {
+          // Store the batchId for progress tracking
+          setCurrentBatchId(result.batchId);
+
           // For multi-image batches, we don't get a single workflowId
           // The backend processes them asynchronously
           onSuccess?.(result.batchId);
@@ -300,5 +305,6 @@ export function useDragAndDropHandler(
     error,
     lastProcessedImage,
     imageCount,
+    currentBatchId,
   };
 }

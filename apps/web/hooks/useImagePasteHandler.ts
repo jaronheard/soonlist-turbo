@@ -23,7 +23,7 @@ import {
 
 interface UseImagePasteHandlerOptions {
   enabled?: boolean;
-  onSuccess?: (workflowId: string) => void;
+  onSuccess?: (batchId: string) => void;
   onError?: (error: Error) => void;
 }
 
@@ -31,6 +31,7 @@ interface UseImagePasteHandlerReturn {
   isProcessing: boolean;
   error: string | null;
   lastProcessedImage: string | null;
+  currentBatchId: string | null;
 }
 
 export function useImagePasteHandler(
@@ -47,6 +48,7 @@ export function useImagePasteHandler(
   const [lastProcessedImage, setLastProcessedImage] = useState<string | null>(
     null,
   );
+  const [currentBatchId, setCurrentBatchId] = useState<string | null>(null);
 
   // Synchronous ref lock to prevent duplicate event creation on rapid paste
   const isProcessingRef = useRef(false);
@@ -153,6 +155,9 @@ export function useImagePasteHandler(
         });
 
         if (result.batchId) {
+          // Store the batchId for progress tracking
+          setCurrentBatchId(result.batchId);
+
           // For multi-image batches, we don't get a single workflowId
           // The backend processes them asynchronously
           onSuccess?.(result.batchId);
@@ -217,5 +222,6 @@ export function useImagePasteHandler(
     isProcessing,
     error,
     lastProcessedImage,
+    currentBatchId,
   };
 }

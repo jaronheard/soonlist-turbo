@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { BatchUploadProgress } from "~/components/BatchUploadProgress";
+import { useBatchProgress } from "~/hooks/useBatchProgress";
 import { useImagePasteHandler } from "~/hooks/useImagePasteHandler";
 import { isTargetPage } from "~/lib/pasteEventUtils";
 
@@ -20,7 +22,7 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
   // Only enable the paste handler on target pages and when user is authenticated
   const shouldEnable = isTargetPage(pathname) && !!currentUser;
 
-  useImagePasteHandler({
+  const { currentBatchId } = useImagePasteHandler({
     enabled: shouldEnable,
     onSuccess: (_batchId) => {
       toast.success("Images received! Creating your events...");
@@ -30,5 +32,18 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
     },
   });
 
-  return <>{children}</>;
+  // Track batch progress
+  const batchProgress = useBatchProgress({
+    batchId: currentBatchId,
+  });
+
+  return (
+    <>
+      {children}
+      {/* Batch upload progress indicator */}
+      {batchProgress && batchProgress.status === "processing" && (
+        <BatchUploadProgress batch={batchProgress} />
+      )}
+    </>
+  );
 }
