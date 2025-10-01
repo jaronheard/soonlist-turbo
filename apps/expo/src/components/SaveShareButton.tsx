@@ -18,11 +18,13 @@ import { logError } from "~/utils/errorLogging";
 interface SaveShareButtonProps {
   eventId: string;
   isSaved: boolean;
+  source: string;
 }
 
 export default function SaveShareButton({
   eventId,
   isSaved,
+  source = "unknown",
 }: SaveShareButtonProps) {
   const { isLoaded } = useUser();
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
@@ -44,8 +46,8 @@ export default function SaveShareButton({
       // Track share initiated from discover list
       posthog.capture("share_event_initiated", {
         event_id: eventId,
-        source: "discover_list",
-        is_saved: true,
+        source: source,
+        is_saved: Boolean(isSaved),
       });
 
       const result = await Share.share({
@@ -56,20 +58,20 @@ export default function SaveShareButton({
       if (result.action === Share.sharedAction) {
         posthog.capture("share_event_completed", {
           event_id: eventId,
-          source: "discover_list",
-          is_saved: true,
+          source: source,
+          is_saved: Boolean(isSaved),
         });
       } else if (result.action === Share.dismissedAction) {
         posthog.capture("share_event_dismissed", {
           event_id: eventId,
-          source: "discover_list",
-          is_saved: true,
+          source: source,
+          is_saved: Boolean(isSaved),
         });
       }
     } catch (error) {
       posthog.capture("share_event_error", {
         event_id: eventId,
-        source: "discover_list",
+        source: source,
         error_message: (error as Error).message,
       });
       logError("Error sharing event", error);
