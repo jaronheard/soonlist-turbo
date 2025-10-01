@@ -21,13 +21,15 @@ export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
   // Only enable the drag and drop handler on target pages and when user is authenticated
   const shouldEnable = isTargetPage(pathname) && !!currentUser;
 
-  const { isDragging } = useDragAndDropHandler({
+  const { isDragging, imageCount } = useDragAndDropHandler({
     enabled: shouldEnable,
-    onSuccess: (_workflowId) => {
-      toast.success("Image received! Creating your event...");
+    onSuccess: (_batchId) => {
+      toast.success(
+        `${imageCount > 1 ? `${imageCount} images` : "Image"} received! Creating your ${imageCount > 1 ? "events" : "event"}...`,
+      );
     },
     onError: (error) => {
-      toast.error(`Failed to process image: ${error.message}`);
+      toast.error(`Failed to process images: ${error.message}`);
     },
   });
 
@@ -46,10 +48,14 @@ export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
             <ImagePlus className="h-16 w-16 animate-bounce text-interactive-1" />
             <div className="text-center">
               <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                Drop image to create event
+                {imageCount > 1
+                  ? `Drop ${imageCount} images to create events`
+                  : "Drop images to create events"}
               </p>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Release to process your image
+                {imageCount > 0
+                  ? `Release to process ${imageCount > 1 ? `${imageCount} images` : "your image"}`
+                  : "Up to 20 images at once"}
               </p>
             </div>
           </div>

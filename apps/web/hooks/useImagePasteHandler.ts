@@ -8,6 +8,11 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
+import {
+  generateBatchId,
+  generateTempId,
+  validateImageCount,
+} from "~/lib/batchUtils";
 import { optimizeFileToBase64 } from "~/lib/imageOptimization";
 import {
   extractImagesFromClipboard,
@@ -48,9 +53,7 @@ export function useImagePasteHandler(
   // Synchronous ref lock to prevent duplicate event creation on rapid paste
   const isProcessingRef = useRef(false);
 
-  const createEventFromImage = useMutation(
-    api.ai.eventFromImageBase64ThenCreate,
-  );
+  const createEventBatch = useMutation(api.ai.createEventBatch);
 
   // Helper function to check if paste event should be handled
   const shouldHandlePasteEventInternal = useCallback(
@@ -94,15 +97,24 @@ export function useImagePasteHandler(
           return;
         }
 
-        // Validate the first image
-        const image = images[0];
-        if (!image || !currentUser) {
+        if (!currentUser) {
           isProcessingRef.current = false;
           return;
         }
 
-        if (!isValidImageFile(image)) {
-          setError("Unsupported image format");
+        // Validate image count
+        const validation = validateImageCount(images.length);
+        if (!validation.valid) {
+          setError(validation.error ?? "Invalid image count");
+          isProcessingRef.current = false;
+          onError?.(new Error(validation.error ?? "Invalid image count"));
+          return;
+        }
+
+        // Validate all images
+        const invalidImages = images.filter((img) => !isValidImageFile(img));
+        if (invalidImages.length > 0) {
+          setError(`${invalidImages.length} image(s) have unsupported format`);
           isProcessingRef.current = false;
           return;
         }
@@ -113,13 +125,27 @@ export function useImagePasteHandler(
         setIsProcessing(true);
         setError(null);
 
-        // Convert image to base64
-        const base64Image = await optimizeFileToBase64(image, 640, 0.5);
-        setLastProcessedImage(base64Image);
+        // Convert all images to base64 and create batch
+        const batchId = generateBatchId();
+        const batchImages = await Promise.all(
+          images.map(async (image) => {
+            const base64Image = await optimizeFileToBase64(image, 640, 0.5);
+            return {
+              base64Image,
+              tempId: generateTempId(),
+            };
+          }),
+        );
 
-        // Create event from image
-        const result = await createEventFromImage({
-          base64Image,
+        // Store the last processed image (for backward compatibility)
+        if (batchImages.length > 0 && batchImages[0]) {
+          setLastProcessedImage(batchImages[0].base64Image);
+        }
+
+        // Create batch of events from images
+        const result = await createEventBatch({
+          batchId,
+          images: batchImages,
           timezone,
           userId: currentUser.id,
           username: currentUser.username || currentUser.id,
@@ -128,9 +154,10 @@ export function useImagePasteHandler(
           lists: [],
         });
 
-        if (result.workflowId) {
-          addWorkflowId(result.workflowId);
-          onSuccess?.(result.workflowId);
+        if (result.batchId) {
+          // For multi-image batches, we don't get a single workflowId
+          // The backend processes them asynchronously
+          onSuccess?.(result.batchId);
 
           // Navigate based on page context
           const pageContext = getPageContext(pathname);
@@ -143,10 +170,10 @@ export function useImagePasteHandler(
         }
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to process image";
+          err instanceof Error ? err.message : "Failed to process images";
         setError(errorMessage);
         onError?.(err instanceof Error ? err : new Error(errorMessage));
-        console.error("Error processing pasted image:", err);
+        console.error("Error processing pasted images:", err);
       } finally {
         // Always clear both the ref lock and state, even on errors
         isProcessingRef.current = false;
@@ -157,8 +184,7 @@ export function useImagePasteHandler(
       shouldHandlePasteEventInternal,
       currentUser,
       timezone,
-      createEventFromImage,
-      addWorkflowId,
+      createEventBatch,
       onSuccess,
       onError,
       router,

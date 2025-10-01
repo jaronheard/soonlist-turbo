@@ -22,11 +22,11 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
 
   useImagePasteHandler({
     enabled: shouldEnable,
-    onSuccess: (_workflowId) => {
-      toast.success("Image received! Creating your event...");
+    onSuccess: (_batchId) => {
+      toast.success("Images received! Creating your events...");
     },
     onError: (error) => {
-      toast.error(`Failed to process image: ${error.message}`);
+      toast.error(`Failed to process images: ${error.message}`);
     },
   });
 
