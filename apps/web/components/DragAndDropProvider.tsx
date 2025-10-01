@@ -7,7 +7,6 @@ import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { BatchUploadProgress } from "~/components/BatchUploadProgress";
 import { useBatchProgress } from "~/hooks/useBatchProgress";
 import { useDragAndDropHandler } from "~/hooks/useDragAndDropHandler";
 import { isTargetPage } from "~/lib/pasteEventUtils";
@@ -25,18 +24,13 @@ export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
 
   const { isDragging, imageCount, currentBatchId } = useDragAndDropHandler({
     enabled: shouldEnable,
-    onSuccess: (_batchId) => {
-      toast.success(
-        `${imageCount > 1 ? `${imageCount} images` : "Image"} received! Creating your ${imageCount > 1 ? "events" : "event"}...`,
-      );
-    },
     onError: (error) => {
       toast.error(`Failed to process images: ${error.message}`);
     },
   });
 
-  // Track batch progress
-  const batchProgress = useBatchProgress({
+  // Track batch progress with toast notifications
+  useBatchProgress({
     batchId: currentBatchId,
   });
 
@@ -67,11 +61,6 @@ export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Batch upload progress indicator */}
-      {batchProgress && batchProgress.status === "processing" && (
-        <BatchUploadProgress batch={batchProgress} />
       )}
     </>
   );
