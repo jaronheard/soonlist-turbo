@@ -70,6 +70,7 @@ interface UserEventListItemProps {
   index: number;
   hideDiscoverableButton?: boolean;
   isDiscoverFeed?: boolean;
+  source?: string;
 }
 
 export function UserEventListItem(props: UserEventListItemProps) {
@@ -84,10 +85,11 @@ export function UserEventListItem(props: UserEventListItemProps) {
     index,
     hideDiscoverableButton = false,
     isDiscoverFeed = false,
+    source,
   } = props;
   const { fontScale } = useWindowDimensions();
   const { handleAddToCal, handleToggleVisibility, handleShare, showDiscover } =
-    useEventActions({ event, isSaved, demoMode });
+    useEventActions({ event, isSaved, demoMode, source });
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
 
@@ -689,6 +691,7 @@ interface UserEventsListProps {
   isDiscoverFeed?: boolean;
   savedEventIds?: Set<string>;
   HeaderComponent?: React.ComponentType<Record<string, never>>;
+  source?: string;
 }
 
 export default function UserEventsList(props: UserEventsListProps) {
@@ -706,6 +709,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     isDiscoverFeed = false,
     savedEventIds,
     HeaderComponent,
+    source,
   } = props;
   const { user } = useUser();
 
@@ -813,6 +817,7 @@ export default function UserEventsList(props: UserEventsListProps) {
               index={index}
               hideDiscoverableButton={hideDiscoverableButton}
               isDiscoverFeed={isDiscoverFeed}
+              source={source}
             />
           );
         }}

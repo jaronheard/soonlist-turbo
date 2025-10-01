@@ -7,6 +7,7 @@ import {
   optimisticallyUpdateValueInPaginatedQuery,
   useMutation,
 } from "convex/react";
+import { usePostHog } from "posthog-react-native";
 import { toast } from "sonner-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -23,6 +24,7 @@ interface UseEventActionsProps {
   isSaved: boolean;
   demoMode?: boolean;
   onDelete?: () => Promise<void>;
+  source?: string;
 }
 
 export function useEventActions({
@@ -30,12 +32,14 @@ export function useEventActions({
   isSaved,
   demoMode = false,
   onDelete,
+  source,
 }: UseEventActionsProps) {
   const { handleAddToCal: addToCalendar } = useCalendar();
   const { user } = useUser();
   const isOwner = demoMode || (event && user?.id === event.user?.id);
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
   const stableTimestamp = useStableTimestamp();
+  const posthog = usePostHog();
 
   const deleteEventMutation = useMutation(api.events.deleteEvent);
 
@@ -156,11 +160,48 @@ export function useEventActions({
   const handleShare = async () => {
     if (!event || checkDemoMode()) return;
     triggerHaptic();
+
+    const eventData = event.event as AddToCalendarButtonPropsRestricted;
+
     try {
-      await Share.share({
+      // Track share initiated
+      posthog.capture("share_event_initiated", {
+        event_id: event.id,
+        event_title: eventData.name ?? "Unknown",
+        source: source ?? "event_detail",
+        is_owner: Boolean(isOwner),
+        is_saved: Boolean(isSaved),
+        has_location: !!eventData.location,
+      });
+
+      const result = await Share.share({
         url: `${Config.apiBaseUrl}/event/${event.id}`,
       });
+
+      // Track share completed if user didn't dismiss
+      if (result.action === Share.sharedAction) {
+        posthog.capture("share_event_completed", {
+          event_id: event.id,
+          event_title: eventData.name ?? "Unknown",
+          source: source ?? "event_detail",
+          is_owner: Boolean(isOwner),
+          is_saved: Boolean(isSaved),
+        });
+      } else if (result.action === Share.dismissedAction) {
+        posthog.capture("share_event_dismissed", {
+          event_id: event.id,
+          event_title: eventData.name ?? "Unknown",
+          source: source ?? "event_detail",
+          is_owner: Boolean(isOwner),
+          is_saved: Boolean(isSaved),
+        });
+      }
     } catch (error) {
+      posthog.capture("share_event_error", {
+        event_id: event.id,
+        source: source ?? "event_detail",
+        error_message: (error as Error).message,
+      });
       logError("Error sharing event", error);
     }
   };

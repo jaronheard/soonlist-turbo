@@ -115,6 +115,7 @@ function DiscoverContent() {
       <SaveShareButton
         eventId={event.id}
         isSaved={savedEventIds.has(event.id)}
+        source="discover_list"
       />
     );
   }

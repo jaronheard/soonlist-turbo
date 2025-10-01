@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useUser } from "@clerk/clerk-expo";
+import { usePostHog } from "posthog-react-native";
 
 import { Heart, ShareIcon } from "~/components/icons";
 import { useEventSaveActions } from "~/hooks/useEventActions";
@@ -17,16 +18,19 @@ import { logError } from "~/utils/errorLogging";
 interface SaveShareButtonProps {
   eventId: string;
   isSaved: boolean;
+  source: string;
 }
 
 export default function SaveShareButton({
   eventId,
   isSaved,
+  source = "unknown",
 }: SaveShareButtonProps) {
   const { isLoaded } = useUser();
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const { fontScale } = useWindowDimensions();
   const iconSize = 16 * fontScale;
+  const posthog = usePostHog();
 
   // Use the simplified event save actions hook
   const { handleFollow } = useEventSaveActions(eventId, isSaved);
@@ -37,11 +41,39 @@ export default function SaveShareButton({
     };
 
     triggerHaptic();
+
     try {
-      await Share.share({
+      // Track share initiated from discover list
+      posthog.capture("share_event_initiated", {
+        event_id: eventId,
+        source: source,
+        is_saved: Boolean(isSaved),
+      });
+
+      const result = await Share.share({
         url: `${Config.apiBaseUrl}/event/${eventId}`,
       });
+
+      // Track share completed if user didn't dismiss
+      if (result.action === Share.sharedAction) {
+        posthog.capture("share_event_completed", {
+          event_id: eventId,
+          source: source,
+          is_saved: Boolean(isSaved),
+        });
+      } else if (result.action === Share.dismissedAction) {
+        posthog.capture("share_event_dismissed", {
+          event_id: eventId,
+          source: source,
+          is_saved: Boolean(isSaved),
+        });
+      }
     } catch (error) {
+      posthog.capture("share_event_error", {
+        event_id: eventId,
+        source: source,
+        error_message: (error as Error).message,
+      });
       logError("Error sharing event", error);
     }
   };
