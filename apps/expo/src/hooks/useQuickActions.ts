@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Linking } from "react-native";
+import * as Application from "expo-application";
 import * as QuickActions from "expo-quick-actions";
 import { useRouter } from "expo-router";
 
@@ -17,35 +18,12 @@ export function useQuickActions() {
       try {
         await QuickActions.setItems([
           {
-            id: "upcoming-events",
-            title: "Upcoming",
-            subtitle: "View your upcoming events",
-            icon: "symbol:calendar",
-            params: { href: "/feed" },
-          },
-          {
-            id: "past-events",
-            title: "Capture Event",
-            subtitle: "View your past events",
-            icon: "symbol:calendar.circle",
-            params: { href: "/past" },
-          },
-          {
-            id: "leave-feedback",
-            title: "Leave Feedback",
-            subtitle: "Help us improve – don't delete yet!",
-            icon: "symbol:envelope",
+            id: "share-feedback",
+            title: "Deleting? Tell us why.",
+            subtitle: "Send feedback before you delete.",
+            icon: "symbol:square.and.pencil",
             params: {
-              href: "mailto:jaron@soonlist.com?subject=Feedback&body=Hi, I'd like to share some feedback...",
-            },
-          },
-          {
-            id: "rate-app",
-            title: "Rate App",
-            subtitle: "Love it? Leave a review!",
-            icon: "symbol:star.fill",
-            params: {
-              href: "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216",
+              href: `mailto:jaron@soonlist.com?subject=Delete Feedback - v${Application.nativeApplicationVersion} ${Application.nativeBuildVersion}&body=Hi, I'd like to share some feedback...`,
             },
           },
         ]);
@@ -74,16 +52,10 @@ export function useQuickActions() {
           logError("Failed to open URL", { href, error });
         });
       } else {
-        // Handle in-app navigation
-        try {
-          router.push(href as never);
-        } catch (error) {
-          logError("Failed to navigate to route", { href, error });
-        }
+        logError("Invalid href format", { href });
       }
     });
 
-    // Cleanup listener on unmount
     return () => {
       subscription.remove();
     };
