@@ -101,4 +101,3 @@ export function createBatchState(
     startedAt: Date.now(),
   };
 }
-

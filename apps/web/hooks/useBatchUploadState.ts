@@ -79,7 +79,9 @@ export function useBatchUploadState(): UseBatchUploadStateReturn {
         const batch = prev.get(batchId);
         if (!batch) return prev;
 
-        const imageIndex = batch.images.findIndex((img) => img.tempId === tempId);
+        const imageIndex = batch.images.findIndex(
+          (img) => img.tempId === tempId,
+        );
         if (imageIndex === -1) return prev;
 
         const updatedImages = [...batch.images];
@@ -110,9 +112,7 @@ export function useBatchUploadState(): UseBatchUploadStateReturn {
         next.set(batchId, {
           ...batch,
           processedCount: batch.processedCount + 1,
-          successCount: success
-            ? batch.successCount + 1
-            : batch.successCount,
+          successCount: success ? batch.successCount + 1 : batch.successCount,
           errorCount: success ? batch.errorCount : batch.errorCount + 1,
         });
         return next;
@@ -176,4 +176,3 @@ export function useBatchUploadState(): UseBatchUploadStateReturn {
     getActiveBatch,
   };
 }
-

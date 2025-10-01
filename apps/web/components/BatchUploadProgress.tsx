@@ -92,7 +92,9 @@ export function BatchUploadProgress({
               {isProcessing &&
                 `Processing ${batch.totalCount} ${batch.totalCount === 1 ? "image" : "images"}...`}
               {isComplete && batch.errorCount === 0 && "Upload complete!"}
-              {isComplete && batch.errorCount > 0 && "Upload complete with errors"}
+              {isComplete &&
+                batch.errorCount > 0 &&
+                "Upload complete with errors"}
               {isError && "Upload failed"}
             </p>
             <span className="text-xs text-gray-600 dark:text-gray-400">
@@ -115,8 +117,7 @@ export function BatchUploadProgress({
             </span>
             {batch.errorCount > 0 && (
               <span className="text-red-600">
-                {batch.errorCount}{" "}
-                {batch.errorCount === 1 ? "error" : "errors"}
+                {batch.errorCount} {batch.errorCount === 1 ? "error" : "errors"}
               </span>
             )}
           </div>
@@ -125,4 +126,3 @@ export function BatchUploadProgress({
     </div>
   );
 }
-
