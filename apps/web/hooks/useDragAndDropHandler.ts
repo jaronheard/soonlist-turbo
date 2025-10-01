@@ -7,7 +7,6 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { TimezoneContext } from "~/context/TimezoneContext";
-import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import {
   generateBatchId,
   generateTempId,
@@ -44,7 +43,7 @@ export function useDragAndDropHandler(
   const pathname = usePathname();
   const currentUser = useQuery(api.users.getCurrentUser);
   const { timezone } = useContext(TimezoneContext);
-  const { addWorkflowId } = useWorkflowStore();
+
 
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -80,8 +79,8 @@ export function useDragAndDropHandler(
           const items = event.dataTransfer.items;
           if (items) {
             let count = 0;
-            for (let i = 0; i < items.length; i++) {
-              if (items[i]?.type.startsWith("image/")) {
+            for (const item of items) {
+              if (item?.type.startsWith("image/")) {
                 count++;
               }
             }

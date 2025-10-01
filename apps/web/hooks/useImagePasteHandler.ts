@@ -7,7 +7,6 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { TimezoneContext } from "~/context/TimezoneContext";
-import { useWorkflowStore } from "~/hooks/useWorkflowStore";
 import {
   generateBatchId,
   generateTempId,
@@ -42,7 +41,7 @@ export function useImagePasteHandler(
   const pathname = usePathname();
   const currentUser = useQuery(api.users.getCurrentUser);
   const { timezone } = useContext(TimezoneContext);
-  const { addWorkflowId } = useWorkflowStore();
+
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
