@@ -15,7 +15,7 @@ import {
 } from "~/lib/batchUtils";
 import { optimizeFileToBase64 } from "~/lib/imageOptimization";
 import {
-  extractImagesFromClipboard,
+  extractFilesFromClipboard,
   getNavigationPath,
   getPageContext,
   isValidImageFile,
@@ -85,14 +85,14 @@ export function useImagePasteHandler(
         if (isProcessingRef.current) return;
         isProcessingRef.current = true;
 
-        // Extract images from clipboard
+        // Extract files from clipboard
         const clipboardData = event.clipboardData;
         if (!clipboardData) {
           isProcessingRef.current = false;
           return;
         }
 
-        const images = extractImagesFromClipboard(clipboardData);
+        const images = extractFilesFromClipboard(clipboardData);
         if (images.length === 0) {
           isProcessingRef.current = false;
           return;
@@ -119,7 +119,7 @@ export function useImagePasteHandler(
         // Show toast for unsupported formats
         if (invalidImages.length > 0) {
           toast.error(
-            `${invalidImages.length} ${invalidImages.length === 1 ? "image has" : "images have"} unsupported format${invalidImages.length === 1 ? "" : "s"}`,
+            `${invalidImages.length} ${invalidImages.length === 1 ? "file has" : "files have"} unsupported format${invalidImages.length === 1 ? "" : "s"}`,
             {
               duration: 6000, // Increased duration for error toasts
             },

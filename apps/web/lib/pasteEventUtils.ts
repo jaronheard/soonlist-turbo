@@ -59,81 +59,72 @@ export function isEditableElement(element: Element): boolean {
 }
 
 /**
- * Extracts image files from clipboard data
+ * Extracts files from clipboard data
+ * Returns all files so handlers can validate and show appropriate errors
  */
-export function extractImagesFromClipboard(
-  clipboardData: DataTransfer,
-): File[] {
-  const images: File[] = [];
+export function extractFilesFromClipboard(clipboardData: DataTransfer): File[] {
+  const files: File[] = [];
 
   // First try clipboardData.items (works in most browsers)
   for (const item of clipboardData.items) {
-    // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
-    if (item.type && item.type.startsWith("image/")) {
+    if (item.kind === "file") {
       const file = item.getAsFile();
       if (file) {
-        images.push(file);
+        files.push(file);
       }
     }
   }
 
   // Fallback to clipboardData.files for Safari compatibility
   // Only use this if items was undefined or empty
-  if (images.length === 0) {
+  if (files.length === 0) {
     for (const file of clipboardData.files) {
-      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
-      if (file.type && file.type.startsWith("image/")) {
-        images.push(file);
-      }
+      files.push(file);
     }
   }
 
-  return images;
+  return files;
 }
 
 /**
- * Extracts image files from drag and drop DataTransfer
- * Similar to extractImagesFromClipboard but optimized for drag events
+ * Extracts files from drag and drop DataTransfer
+ * Returns all files so handlers can validate and show appropriate errors
  */
-export function extractImagesFromDataTransfer(
+export function extractFilesFromDataTransfer(
   dataTransfer: DataTransfer,
 ): File[] {
-  const images: File[] = [];
+  const files: File[] = [];
 
   // Try dataTransfer.items first (preferred method)
   for (const item of dataTransfer.items) {
     if (item.kind === "file") {
       const file = item.getAsFile();
-      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
-      if (file && file.type && file.type.startsWith("image/")) {
-        images.push(file);
+      if (file) {
+        files.push(file);
       }
     }
   }
 
   // Fallback to dataTransfer.files
-  if (images.length === 0) {
+  if (files.length === 0) {
     for (const file of dataTransfer.files) {
-      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
-      if (file.type && file.type.startsWith("image/")) {
-        images.push(file);
-      }
+      files.push(file);
     }
   }
 
-  return images;
+  return files;
 }
 
 /**
- * Checks if a DataTransfer contains any image files
+ * Checks if a DataTransfer contains any files
  * Useful for dragover event handling
  */
-export function hasImageFiles(dataTransfer: DataTransfer): boolean {
-  // Check items for image files
+export function hasFiles(dataTransfer: DataTransfer): boolean {
+  // Check items for any files (not just images, so we can show appropriate errors)
   // Note: dataTransfer.types contains general identifiers like "Files" or "text/plain",
   // NOT specific MIME types, so we must check items instead
   for (const item of dataTransfer.items) {
-    if (item.kind === "file" && item.type.startsWith("image/")) {
+    if (item.kind === "file") {
       return true;
     }
   }
