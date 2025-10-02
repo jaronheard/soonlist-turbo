@@ -33,7 +33,7 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
       toastIdRef.current = toast.loading(
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span>
+          <span className="font-medium">
             Capturing {batchStatus.totalCount}{" "}
             {batchStatus.totalCount === 1 ? "event" : "events"}...
           </span>
