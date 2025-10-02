@@ -66,7 +66,7 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
         toast.error(
           `${successCount} out of ${totalCount} ${totalCount === 1 ? "event" : "events"} captured successfully`,
           {
-            duration: 5000,
+            duration: 6000, // Increased duration for error toasts
           },
         );
       } else {

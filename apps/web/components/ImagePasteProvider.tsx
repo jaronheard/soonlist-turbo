@@ -24,7 +24,9 @@ export function ImagePasteProvider({ children }: ImagePasteProviderProps) {
   const { currentBatchId } = useImagePasteHandler({
     enabled: shouldEnable,
     onError: (error) => {
-      toast.error(`Failed to process images: ${error.message}`);
+      toast.error(`Failed to process images: ${error.message}`, {
+        duration: 6000, // Increased duration for error toasts
+      });
     },
   });
 

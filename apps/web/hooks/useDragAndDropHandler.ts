@@ -34,6 +34,7 @@ interface UseDragAndDropHandlerReturn {
   lastProcessedImage: string | null;
   imageCount: number; // Number of images being dragged
   currentBatchId: string | null; // Current batch being processed
+  hasValidationError: boolean; // True if dragging too many images
 }
 
 export function useDragAndDropHandler(
@@ -53,6 +54,7 @@ export function useDragAndDropHandler(
   );
   const [imageCount, setImageCount] = useState(0);
   const [currentBatchId, setCurrentBatchId] = useState<string | null>(null);
+  const [hasValidationError, setHasValidationError] = useState(false);
 
   // Counter to track drag enter/leave for nested elements
   const dragCounterRef = useRef(0);
@@ -86,6 +88,13 @@ export function useDragAndDropHandler(
               }
             }
             setImageCount(count);
+            
+            // Validate image count immediately
+            if (count > MAX_IMAGES) {
+              setHasValidationError(true);
+            } else {
+              setHasValidationError(false);
+            }
           }
         }
       }
@@ -122,6 +131,7 @@ export function useDragAndDropHandler(
       if (dragCounterRef.current === 0) {
         setIsDragging(false);
         setImageCount(0);
+        setHasValidationError(false);
       }
     },
     [enabled, currentUser],
@@ -306,5 +316,6 @@ export function useDragAndDropHandler(
     lastProcessedImage,
     imageCount,
     currentBatchId,
+    hasValidationError,
   };
 }

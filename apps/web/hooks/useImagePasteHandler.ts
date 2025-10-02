@@ -3,6 +3,7 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
+import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -111,11 +112,36 @@ export function useImagePasteHandler(
           return;
         }
 
-        // Validate all images
+        // Separate valid and invalid images
+        const validImages = images.filter((img) => isValidImageFile(img));
         const invalidImages = images.filter((img) => !isValidImageFile(img));
+        
+        // Show toast for unsupported formats
         if (invalidImages.length > 0) {
-          setError(`${invalidImages.length} image(s) have unsupported format`);
+          toast.error(
+            `${invalidImages.length} ${invalidImages.length === 1 ? "image has" : "images have"} unsupported format${invalidImages.length === 1 ? "" : "s"}`,
+            {
+              duration: 6000, // Increased duration for error toasts
+            }
+          );
+        }
+
+        // If no valid images, stop processing
+        if (validImages.length === 0) {
+          setError("No valid images to process");
           isProcessingRef.current = false;
+          return;
+        }
+
+        // Validate valid image count
+        const validation = validateImageCount(validImages.length);
+        if (!validation.valid) {
+          toast.error(validation.error ?? "Invalid image count", {
+            duration: 6000,
+          });
+          setError(validation.error ?? "Invalid image count");
+          isProcessingRef.current = false;
+          onError?.(new Error(validation.error ?? "Invalid image count"));
           return;
         }
 
@@ -125,10 +151,10 @@ export function useImagePasteHandler(
         setIsProcessing(true);
         setError(null);
 
-        // Convert all images to base64 and create batch
+        // Convert valid images to base64 and create batch
         const batchId = generateBatchId();
         const batchImages = await Promise.all(
-          images.map(async (image) => {
+          validImages.map(async (image) => {
             const base64Image = await optimizeFileToBase64(image, 640, 0.5);
             return {
               base64Image,
