@@ -10,6 +10,7 @@ import { TimezoneContext } from "~/context/TimezoneContext";
 import {
   generateBatchId,
   generateTempId,
+  MAX_BATCH_SIZE,
   validateImageCount,
 } from "~/lib/batchUtils";
 import { optimizeFileToBase64 } from "~/lib/imageOptimization";
@@ -90,7 +91,7 @@ export function useDragAndDropHandler(
             setImageCount(count);
 
             // Validate image count immediately
-            if (count > MAX_IMAGES) {
+            if (count > MAX_BATCH_SIZE) {
               setHasValidationError(true);
             } else {
               setHasValidationError(false);
