@@ -88,7 +88,7 @@ export function useDragAndDropHandler(
               }
             }
             setImageCount(count);
-            
+
             // Validate image count immediately
             if (count > MAX_IMAGES) {
               setHasValidationError(true);
