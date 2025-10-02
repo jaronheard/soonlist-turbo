@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -11,13 +10,34 @@ interface UseBatchProgressOptions {
   batchId: string | null;
 }
 
+interface BatchStatusResult {
+  batchId: string;
+  status: "processing" | "completed" | "failed";
+  totalCount: number;
+  successCount: number;
+  failureCount: number;
+  progress: number;
+}
+
+interface BatchPromiseCallbacks {
+  resolve: (value: BatchStatusResult) => void;
+  reject: (reason: Error) => void;
+}
+
+// Extend window interface to include our custom property
+declare global {
+  interface Window {
+    __batchPromiseCallbacks?: Record<string, BatchPromiseCallbacks>;
+  }
+}
+
 /**
- * Hook to track batch upload progress with persistent toast
- * Shows a spinner while processing, then a completion message
+ * Hook to track batch upload progress with toast.promise
+ * Uses a single toast that transitions from loading → success/error
  */
 export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
-  const toastIdRef = useRef<string | number | null>(null);
-  const hasShownCompletionRef = useRef(false);
+  const hasShownToastRef = useRef(false);
+  const batchIdRef = useRef<string | null>(null);
 
   // Use Convex query to reactively track batch status
   const batchStatus = useQuery(
@@ -26,68 +46,67 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
   );
 
   useEffect(() => {
-    if (!batchStatus) return;
+    // Only show toast once per batch
+    if (!batchId || !batchStatus || hasShownToastRef.current) return;
 
-    // Show persistent processing toast
-    if (batchStatus.status === "processing" && !toastIdRef.current) {
-      toastIdRef.current = toast.loading(
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="font-medium">
-            Capturing {batchStatus.totalCount}{" "}
-            {batchStatus.totalCount === 1 ? "event" : "events"}...
-          </span>
-        </div>,
-        {
-          duration: Infinity, // Keep it until we dismiss it
+    // Only start the toast when we first detect a processing batch
+    if (batchStatus.status === "processing" && batchIdRef.current !== batchId) {
+      batchIdRef.current = batchId;
+      hasShownToastRef.current = true;
+
+      // Create a Promise that resolves when the batch is complete
+      const batchPromise = new Promise<BatchStatusResult>((resolve, reject) => {
+        // Store resolve/reject in a way the effect can access them
+        if (!window.__batchPromiseCallbacks) {
+          window.__batchPromiseCallbacks = {};
+        }
+        window.__batchPromiseCallbacks[batchId] = { resolve, reject };
+      });
+
+      // Use toast.promise for automatic state transitions
+      toast.promise(batchPromise, {
+        loading: `Capturing ${batchStatus.totalCount} ${batchStatus.totalCount === 1 ? "event" : "events"}...`,
+        success: (data) => {
+          const hasErrors = data.failureCount > 0;
+          if (hasErrors) {
+            return `${data.successCount} out of ${data.totalCount} ${data.totalCount === 1 ? "event" : "events"} captured successfully`;
+          }
+          return `${data.successCount} ${data.successCount === 1 ? "event" : "events"} captured successfully`;
         },
-      );
+        error: "Failed to capture events",
+        duration: 4000,
+      });
     }
 
-    // Show completion toast and dismiss the processing toast
-    if (
-      (batchStatus.status === "completed" || batchStatus.status === "failed") &&
-      !hasShownCompletionRef.current
-    ) {
-      hasShownCompletionRef.current = true;
-
-      // Dismiss the processing toast
-      if (toastIdRef.current) {
-        toast.dismiss(toastIdRef.current);
-        toastIdRef.current = null;
-      }
-
-      // Show completion message
-      const hasErrors = batchStatus.failureCount > 0;
-
-      if (hasErrors) {
-        const successCount = batchStatus.successCount;
-        const totalCount = batchStatus.totalCount;
-        toast.error(
-          `${successCount} out of ${totalCount} ${totalCount === 1 ? "event" : "events"} captured successfully`,
-          {
-            duration: 6000, // Increased duration for error toasts
-          },
-        );
-      } else {
-        toast.success(
-          `${batchStatus.successCount} ${batchStatus.successCount === 1 ? "event" : "events"} captured successfully`,
-          {
-            duration: 4000,
-          },
-        );
+    // Resolve the promise when batch completes
+    if (batchStatus.status === "completed" || batchStatus.status === "failed") {
+      const callbacks = window.__batchPromiseCallbacks?.[batchId];
+      if (callbacks) {
+        if (
+          batchStatus.status === "completed" ||
+          batchStatus.successCount > 0
+        ) {
+          callbacks.resolve(batchStatus);
+        } else {
+          callbacks.reject(new Error("Batch processing failed"));
+        }
+        if (window.__batchPromiseCallbacks) {
+          delete window.__batchPromiseCallbacks[batchId];
+        }
       }
     }
-  }, [batchStatus]);
+  }, [batchId, batchStatus]);
 
-  // Cleanup: dismiss toast when component unmounts or batchId changes
+  // Cleanup: reset state when batchId changes
   useEffect(() => {
     return () => {
-      if (toastIdRef.current) {
-        toast.dismiss(toastIdRef.current);
-        toastIdRef.current = null;
+      hasShownToastRef.current = false;
+      batchIdRef.current = null;
+
+      // Clean up any pending promise callbacks
+      if (batchId && window.__batchPromiseCallbacks?.[batchId]) {
+        delete window.__batchPromiseCallbacks[batchId];
       }
-      hasShownCompletionRef.current = false;
     };
   }, [batchId]);
 }
