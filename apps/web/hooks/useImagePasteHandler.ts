@@ -3,14 +3,19 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
+import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { TimezoneContext } from "~/context/TimezoneContext";
-import { useWorkflowStore } from "~/hooks/useWorkflowStore";
+import {
+  generateBatchId,
+  generateTempId,
+  validateImageCount,
+} from "~/lib/batchUtils";
 import { optimizeFileToBase64 } from "~/lib/imageOptimization";
 import {
-  extractImagesFromClipboard,
+  extractFilesFromClipboard,
   getNavigationPath,
   getPageContext,
   isValidImageFile,
@@ -19,7 +24,7 @@ import {
 
 interface UseImagePasteHandlerOptions {
   enabled?: boolean;
-  onSuccess?: (workflowId: string) => void;
+  onSuccess?: (batchId: string) => void;
   onError?: (error: Error) => void;
 }
 
@@ -27,6 +32,7 @@ interface UseImagePasteHandlerReturn {
   isProcessing: boolean;
   error: string | null;
   lastProcessedImage: string | null;
+  currentBatchId: string | null;
 }
 
 export function useImagePasteHandler(
@@ -37,20 +43,18 @@ export function useImagePasteHandler(
   const pathname = usePathname();
   const currentUser = useQuery(api.users.getCurrentUser);
   const { timezone } = useContext(TimezoneContext);
-  const { addWorkflowId } = useWorkflowStore();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastProcessedImage, setLastProcessedImage] = useState<string | null>(
     null,
   );
+  const [currentBatchId, setCurrentBatchId] = useState<string | null>(null);
 
   // Synchronous ref lock to prevent duplicate event creation on rapid paste
   const isProcessingRef = useRef(false);
 
-  const createEventFromImage = useMutation(
-    api.ai.eventFromImageBase64ThenCreate,
-  );
+  const createEventBatch = useMutation(api.ai.createEventBatch);
 
   // Helper function to check if paste event should be handled
   const shouldHandlePasteEventInternal = useCallback(
@@ -81,29 +85,63 @@ export function useImagePasteHandler(
         if (isProcessingRef.current) return;
         isProcessingRef.current = true;
 
-        // Extract images from clipboard
+        // Extract files from clipboard
         const clipboardData = event.clipboardData;
         if (!clipboardData) {
           isProcessingRef.current = false;
           return;
         }
 
-        const images = extractImagesFromClipboard(clipboardData);
+        const images = extractFilesFromClipboard(clipboardData);
         if (images.length === 0) {
           isProcessingRef.current = false;
           return;
         }
 
-        // Validate the first image
-        const image = images[0];
-        if (!image || !currentUser) {
+        if (!currentUser) {
           isProcessingRef.current = false;
           return;
         }
 
-        if (!isValidImageFile(image)) {
-          setError("Unsupported image format");
+        // Validate image count
+        const validation = validateImageCount(images.length);
+        if (!validation.valid) {
+          setError(validation.error ?? "Invalid image count");
           isProcessingRef.current = false;
+          onError?.(new Error(validation.error ?? "Invalid image count"));
+          return;
+        }
+
+        // Separate valid and invalid images
+        const validImages = images.filter((img) => isValidImageFile(img));
+        const invalidImages = images.filter((img) => !isValidImageFile(img));
+
+        // Show toast for unsupported formats
+        if (invalidImages.length > 0) {
+          toast.error(
+            `${invalidImages.length} ${invalidImages.length === 1 ? "file has" : "files have"} unsupported format${invalidImages.length === 1 ? "" : "s"}`,
+            {
+              duration: 6000, // Increased duration for error toasts
+            },
+          );
+        }
+
+        // If no valid images, stop processing
+        if (validImages.length === 0) {
+          setError("No valid images to process");
+          isProcessingRef.current = false;
+          return;
+        }
+
+        // Validate valid image count
+        const finalValidation = validateImageCount(validImages.length);
+        if (!finalValidation.valid) {
+          toast.error(finalValidation.error ?? "Invalid image count", {
+            duration: 6000,
+          });
+          setError(finalValidation.error ?? "Invalid image count");
+          isProcessingRef.current = false;
+          onError?.(new Error(finalValidation.error ?? "Invalid image count"));
           return;
         }
 
@@ -113,13 +151,27 @@ export function useImagePasteHandler(
         setIsProcessing(true);
         setError(null);
 
-        // Convert image to base64
-        const base64Image = await optimizeFileToBase64(image, 640, 0.5);
-        setLastProcessedImage(base64Image);
+        // Convert valid images to base64 and create batch
+        const batchId = generateBatchId();
+        const batchImages = await Promise.all(
+          validImages.map(async (image) => {
+            const base64Image = await optimizeFileToBase64(image, 640, 0.5);
+            return {
+              base64Image,
+              tempId: generateTempId(),
+            };
+          }),
+        );
 
-        // Create event from image
-        const result = await createEventFromImage({
-          base64Image,
+        // Store the last processed image (for backward compatibility)
+        if (batchImages.length > 0 && batchImages[0]) {
+          setLastProcessedImage(batchImages[0].base64Image);
+        }
+
+        // Create batch of events from images
+        const result = await createEventBatch({
+          batchId,
+          images: batchImages,
           timezone,
           userId: currentUser.id,
           username: currentUser.username || currentUser.id,
@@ -128,9 +180,13 @@ export function useImagePasteHandler(
           lists: [],
         });
 
-        if (result.workflowId) {
-          addWorkflowId(result.workflowId);
-          onSuccess?.(result.workflowId);
+        if (result.batchId) {
+          // Store the batchId for progress tracking
+          setCurrentBatchId(result.batchId);
+
+          // For multi-image batches, we don't get a single workflowId
+          // The backend processes them asynchronously
+          onSuccess?.(result.batchId);
 
           // Navigate based on page context
           const pageContext = getPageContext(pathname);
@@ -143,10 +199,10 @@ export function useImagePasteHandler(
         }
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to process image";
+          err instanceof Error ? err.message : "Failed to process images";
         setError(errorMessage);
         onError?.(err instanceof Error ? err : new Error(errorMessage));
-        console.error("Error processing pasted image:", err);
+        console.error("Error processing pasted images:", err);
       } finally {
         // Always clear both the ref lock and state, even on errors
         isProcessingRef.current = false;
@@ -157,8 +213,7 @@ export function useImagePasteHandler(
       shouldHandlePasteEventInternal,
       currentUser,
       timezone,
-      createEventFromImage,
-      addWorkflowId,
+      createEventBatch,
       onSuccess,
       onError,
       router,
@@ -193,5 +248,6 @@ export function useImagePasteHandler(
     isProcessing,
     error,
     lastProcessedImage,
+    currentBatchId,
   };
 }

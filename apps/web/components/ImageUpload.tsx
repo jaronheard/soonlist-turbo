@@ -55,7 +55,7 @@ export const bytescaleWidgetOptions = {
     "image/tiff",
     "image/webp",
   ],
-  maxFileCount: 1,
+  maxFileCount: 20,
   maxFileSizeBytes: 10485760, // 10MB limit before processing
   onPreUpload: async (file: File) => {
     // Only process image files
@@ -119,8 +119,8 @@ export const bytescaleWidgetOptions = {
     },
   },
   locale: {
-    uploadFileBtn: "Upload an image",
-    orDragDropFile: "...or drag and drop an image here",
+    uploadFileBtn: "Upload images",
+    orDragDropFile: "...or drag and drop images here (up to 20)",
   },
 };
 

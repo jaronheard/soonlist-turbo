@@ -3,23 +3,29 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
+import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { TimezoneContext } from "~/context/TimezoneContext";
-import { useWorkflowStore } from "~/hooks/useWorkflowStore";
+import {
+  generateBatchId,
+  generateTempId,
+  MAX_BATCH_SIZE,
+  validateImageCount,
+} from "~/lib/batchUtils";
 import { optimizeFileToBase64 } from "~/lib/imageOptimization";
 import {
-  extractImagesFromDataTransfer,
+  extractFilesFromDataTransfer,
   getNavigationPath,
   getPageContext,
-  hasImageFiles,
+  hasFiles,
   isValidImageFile,
 } from "~/lib/pasteEventUtils";
 
 interface UseDragAndDropHandlerOptions {
   enabled?: boolean;
-  onSuccess?: (workflowId: string) => void;
+  onSuccess?: (batchId: string) => void;
   onError?: (error: Error) => void;
 }
 
@@ -28,6 +34,9 @@ interface UseDragAndDropHandlerReturn {
   isProcessing: boolean;
   error: string | null;
   lastProcessedImage: string | null;
+  imageCount: number; // Number of images being dragged
+  currentBatchId: string | null; // Current batch being processed
+  hasValidationError: boolean; // True if dragging too many images
 }
 
 export function useDragAndDropHandler(
@@ -38,7 +47,6 @@ export function useDragAndDropHandler(
   const pathname = usePathname();
   const currentUser = useQuery(api.users.getCurrentUser);
   const { timezone } = useContext(TimezoneContext);
-  const { addWorkflowId } = useWorkflowStore();
 
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -46,6 +54,9 @@ export function useDragAndDropHandler(
   const [lastProcessedImage, setLastProcessedImage] = useState<string | null>(
     null,
   );
+  const [imageCount, setImageCount] = useState(0);
+  const [currentBatchId, setCurrentBatchId] = useState<string | null>(null);
+  const [hasValidationError, setHasValidationError] = useState(false);
 
   // Counter to track drag enter/leave for nested elements
   const dragCounterRef = useRef(0);
@@ -53,9 +64,7 @@ export function useDragAndDropHandler(
   // Synchronous ref lock to prevent duplicate event creation
   const isProcessingRef = useRef(false);
 
-  const createEventFromImage = useMutation(
-    api.ai.eventFromImageBase64ThenCreate,
-  );
+  const createEventBatch = useMutation(api.ai.createEventBatch);
 
   // Handle drag enter
   const handleDragEnter = useCallback(
@@ -67,10 +76,28 @@ export function useDragAndDropHandler(
 
       dragCounterRef.current += 1;
 
-      // Only set dragging state if we have image files
-      if (event.dataTransfer && hasImageFiles(event.dataTransfer)) {
+      // Only set dragging state if we have files
+      if (event.dataTransfer && hasFiles(event.dataTransfer)) {
         if (dragCounterRef.current === 1) {
           setIsDragging(true);
+          // Try to get the count of files being dragged
+          const items = event.dataTransfer.items;
+          if (items) {
+            let count = 0;
+            for (const item of items) {
+              if (item?.kind === "file") {
+                count++;
+              }
+            }
+            setImageCount(count);
+
+            // Validate file count immediately
+            if (count > MAX_BATCH_SIZE) {
+              setHasValidationError(true);
+            } else {
+              setHasValidationError(false);
+            }
+          }
         }
       }
     },
@@ -86,7 +113,7 @@ export function useDragAndDropHandler(
       event.stopPropagation();
 
       // Set dropEffect to indicate this is a valid drop zone
-      if (event.dataTransfer && hasImageFiles(event.dataTransfer)) {
+      if (event.dataTransfer && hasFiles(event.dataTransfer)) {
         event.dataTransfer.dropEffect = "copy";
       }
     },
@@ -105,6 +132,8 @@ export function useDragAndDropHandler(
 
       if (dragCounterRef.current === 0) {
         setIsDragging(false);
+        setImageCount(0);
+        setHasValidationError(false);
       }
     },
     [enabled, currentUser],
@@ -121,48 +150,100 @@ export function useDragAndDropHandler(
       // Reset drag state
       dragCounterRef.current = 0;
       setIsDragging(false);
+      setImageCount(0);
 
-      // Check processing lock
-      if (isProcessingRef.current || isProcessing) return;
+      // Atomic lock check-and-set - use only ref for lock
+      if (isProcessingRef.current) return;
       isProcessingRef.current = true;
+      setIsProcessing(true);
 
       try {
-        // Extract images from drop
+        // Extract files from drop
         const dataTransfer = event.dataTransfer;
         if (!dataTransfer) {
           isProcessingRef.current = false;
+          setIsProcessing(false);
           return;
         }
 
-        const images = extractImagesFromDataTransfer(dataTransfer);
+        const images = extractFilesFromDataTransfer(dataTransfer);
         if (images.length === 0) {
           isProcessingRef.current = false;
+          setIsProcessing(false);
           return;
         }
 
-        // Validate the first image
-        const image = images[0];
-        if (!image) {
+        // Validate image count
+        const validation = validateImageCount(images.length);
+        if (!validation.valid) {
+          toast.error(validation.error ?? "Invalid image count", {
+            duration: 6000,
+          });
+          setError(validation.error ?? "Invalid image count");
           isProcessingRef.current = false;
+          setIsProcessing(false);
+          onError?.(new Error(validation.error ?? "Invalid image count"));
           return;
         }
 
-        if (!isValidImageFile(image)) {
-          setError("Unsupported image format");
+        // Separate valid and invalid images
+        const validImages = images.filter((img) => isValidImageFile(img));
+        const invalidImages = images.filter((img) => !isValidImageFile(img));
+
+        // Show toast for unsupported formats
+        if (invalidImages.length > 0) {
+          toast.error(
+            `${invalidImages.length} ${invalidImages.length === 1 ? "file has" : "files have"} unsupported format${invalidImages.length === 1 ? "" : "s"}`,
+            {
+              duration: 6000,
+            },
+          );
+        }
+
+        // If no valid images, stop processing
+        if (validImages.length === 0) {
+          setError("No valid images to process");
           isProcessingRef.current = false;
+          setIsProcessing(false);
           return;
         }
 
-        setIsProcessing(true);
+        // Validate valid image count
+        const finalValidation = validateImageCount(validImages.length);
+        if (!finalValidation.valid) {
+          toast.error(finalValidation.error ?? "Invalid image count", {
+            duration: 6000,
+          });
+          setError(finalValidation.error ?? "Invalid image count");
+          isProcessingRef.current = false;
+          setIsProcessing(false);
+          onError?.(new Error(finalValidation.error ?? "Invalid image count"));
+          return;
+        }
+
         setError(null);
 
-        // Convert image to base64
-        const base64Image = await optimizeFileToBase64(image, 640, 0.5);
-        setLastProcessedImage(base64Image);
+        // Convert valid images to base64 and create batch
+        const batchId = generateBatchId();
+        const batchImages = await Promise.all(
+          validImages.map(async (image) => {
+            const base64Image = await optimizeFileToBase64(image, 640, 0.5);
+            return {
+              base64Image,
+              tempId: generateTempId(),
+            };
+          }),
+        );
 
-        // Create event from image
-        const result = await createEventFromImage({
-          base64Image,
+        // Store the last processed image (for backward compatibility)
+        if (batchImages.length > 0 && batchImages[0]) {
+          setLastProcessedImage(batchImages[0].base64Image);
+        }
+
+        // Create batch of events from images
+        const result = await createEventBatch({
+          batchId,
+          images: batchImages,
           timezone,
           userId: currentUser.id,
           username: currentUser.username || currentUser.id,
@@ -171,9 +252,13 @@ export function useDragAndDropHandler(
           lists: [],
         });
 
-        if (result.workflowId) {
-          addWorkflowId(result.workflowId);
-          onSuccess?.(result.workflowId);
+        if (result.batchId) {
+          // Store the batchId for progress tracking
+          setCurrentBatchId(result.batchId);
+
+          // For multi-image batches, we don't get a single workflowId
+          // The backend processes them asynchronously
+          onSuccess?.(result.batchId);
 
           // Navigate based on page context
           const pageContext = getPageContext(pathname);
@@ -186,10 +271,10 @@ export function useDragAndDropHandler(
         }
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to process image";
+          err instanceof Error ? err.message : "Failed to process images";
         setError(errorMessage);
         onError?.(err instanceof Error ? err : new Error(errorMessage));
-        console.error("Error processing dropped image:", err);
+        console.error("Error processing dropped images:", err);
       } finally {
         // Always clear both the ref lock and state
         isProcessingRef.current = false;
@@ -199,10 +284,8 @@ export function useDragAndDropHandler(
     [
       enabled,
       currentUser,
-      isProcessing,
       timezone,
-      createEventFromImage,
-      addWorkflowId,
+      createEventBatch,
       onSuccess,
       onError,
       router,
@@ -265,5 +348,8 @@ export function useDragAndDropHandler(
     isProcessing,
     error,
     lastProcessedImage,
+    imageCount,
+    currentBatchId,
+    hasValidationError,
   };
 }
