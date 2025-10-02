@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import { MapPin } from "lucide-react";
 
 import { Card } from "@soonlist/ui/card";
 
+import { getGoogleMapsUrl } from "~/lib/maps";
 import LightboxImage from "./LightboxImage";
 
 export default function EventCard(props: {
@@ -107,9 +109,18 @@ export default function EventCard(props: {
                   {eventTime}
                 </p>
               )}
-              <p className="text-sm font-medium text-neutral-2">
-                {eventLocation}
-              </p>
+              {eventLocation && (
+                <a
+                  href={getGoogleMapsUrl(eventLocation)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-interactive-1 transition-colors hover:text-interactive-2 hover:underline"
+                  aria-label={`Open ${eventLocation} in maps`}
+                >
+                  <MapPin className="h-4 w-4" />
+                  <span>{eventLocation}</span>
+                </a>
+              )}
             </div>
             <p className="text-neutral-1">{eventDescription}</p>
             {eventLink ? (
