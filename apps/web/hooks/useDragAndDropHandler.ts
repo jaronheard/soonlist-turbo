@@ -151,21 +151,24 @@ export function useDragAndDropHandler(
       setIsDragging(false);
       setImageCount(0);
 
-      // Check processing lock
-      if (isProcessingRef.current || isProcessing) return;
+      // Atomic lock check-and-set - use only ref for lock
+      if (isProcessingRef.current) return;
       isProcessingRef.current = true;
+      setIsProcessing(true);
 
       try {
         // Extract images from drop
         const dataTransfer = event.dataTransfer;
         if (!dataTransfer) {
           isProcessingRef.current = false;
+          setIsProcessing(false);
           return;
         }
 
         const images = extractImagesFromDataTransfer(dataTransfer);
         if (images.length === 0) {
           isProcessingRef.current = false;
+          setIsProcessing(false);
           return;
         }
 
@@ -174,6 +177,7 @@ export function useDragAndDropHandler(
         if (!validation.valid) {
           setError(validation.error ?? "Invalid image count");
           isProcessingRef.current = false;
+          setIsProcessing(false);
           onError?.(new Error(validation.error ?? "Invalid image count"));
           return;
         }
@@ -183,10 +187,9 @@ export function useDragAndDropHandler(
         if (invalidImages.length > 0) {
           setError(`${invalidImages.length} image(s) have unsupported format`);
           isProcessingRef.current = false;
+          setIsProcessing(false);
           return;
         }
-
-        setIsProcessing(true);
         setError(null);
 
         // Convert all images to base64 and create batch
@@ -250,7 +253,6 @@ export function useDragAndDropHandler(
     [
       enabled,
       currentUser,
-      isProcessing,
       timezone,
       createEventBatch,
       onSuccess,
