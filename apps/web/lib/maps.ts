@@ -14,4 +14,3 @@ export function getGoogleMapsUrl(location: string): string {
   const encodedLocation = encodeURIComponent(location.trim());
   return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
 }
-
