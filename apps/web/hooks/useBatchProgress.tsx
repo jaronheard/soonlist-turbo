@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
-import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
