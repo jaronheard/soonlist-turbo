@@ -106,6 +106,7 @@ export const EventMetadataSchema = z.object({
   type: EventTypeSchema.describe(
     "Type of the event: one of " + EVENT_TYPES.join(", "),
   ),
+  urls: z.array(z.string().url()).optional(),
 });
 export type EventMetadata = z.infer<typeof EventMetadataSchema>;
 export const EventMetadataSchemaLoose = EventMetadataSchema.extend({
@@ -115,6 +116,7 @@ export const EventMetadataSchemaLoose = EventMetadataSchema.extend({
   priceType: z.string().optional(),
   source: z.string().optional(),
   type: z.string().optional(),
+  urls: z.array(z.string()).optional(),
 });
 export type EventMetadataLoose = z.infer<typeof EventMetadataSchemaLoose>;
 
@@ -252,12 +254,13 @@ Below, I pasted a text or image from which to extract calendar event details.
 
 You will
 1. Identify details of the primary event mentioned in the text or image.Only the first event from multi-day events should be captured.
-2. Identify the platform from which the input text was extracted, and extract all usernames @-mentioned.
-3. Remove the perspective or opinion from the input, focusing only on factual details.
-4. Extract and format these details into a valid JSON response, strictly following the schema below. 
-5. Infer any missing information based on event context, type, or general conventions.
-6. Write your JSON response by summarizing the event details from the provided data or your own inferred knowledge. Your response must be detailed, specific, and directly relevant to the JSON schema requirements.
-7. Limit event to a single time within a <24 hour period. Late night events can extend into the next day.
+2. Identify the platform from which the input text was extracted (e.g., Instagram, Facebook, etc.) and extract all usernames @-mentioned. List mentions with the main author/poster FIRST, followed by any other mentioned users.
+3. Extract any URLs visible in the image or text (including event links, ticket links, or other relevant URLs).
+4. Remove the perspective or opinion from the input, focusing only on factual details.
+5. Extract and format these details into a valid JSON response, strictly following the schema below. 
+6. Infer any missing information based on event context, type, or general conventions.
+7. Write your JSON response by summarizing the event details from the provided data or your own inferred knowledge. Your response must be detailed, specific, and directly relevant to the JSON schema requirements.
+8. Limit event to a single time within a <24 hour period. Late night events can extend into the next day.
 
 Stylistically write in short, approachable, and professional language, like an editor of the Village Voice event section.
 Stick to known facts, and be concise. Use proper capitalization for all fields.

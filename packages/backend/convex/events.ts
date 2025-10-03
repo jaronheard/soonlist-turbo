@@ -37,6 +37,7 @@ const eventMetadataValidator = v.optional(
     priceType: v.optional(v.string()),
     source: v.optional(v.string()),
     type: v.optional(v.string()),
+    urls: v.optional(v.array(v.string())),
   }),
 );
 
@@ -519,7 +520,24 @@ export const insertEvent = internalMutation({
         ],
       }),
     };
-    const eventMetadata = undefined; // No metadata for now
+    // Use the eventMetadata from the AI extraction
+    // Type assertion is safe here because the AI extraction validates the schema
+    const eventMetadata = firstEvent.eventMetadata as
+      | {
+          type?: string;
+          accessibility?: string[];
+          accessibilityNotes?: string;
+          ageRestriction?: string;
+          category?: string;
+          mentions?: string[];
+          performers?: string[];
+          priceMax?: number;
+          priceMin?: number;
+          priceType?: string;
+          source?: string;
+          urls?: string[];
+        }
+      | undefined;
 
     const result = await Events.createEvent(
       ctx,

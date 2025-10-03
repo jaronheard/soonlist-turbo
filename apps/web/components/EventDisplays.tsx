@@ -20,6 +20,8 @@ import {
   TagIcon,
 } from "lucide-react";
 
+import { EventMetadataDisplay as EventMetadataDisplayComponent } from "./EventMetadataDisplay";
+
 import type {
   DateInfo,
   EventMetadata as EventMetadataDisplay,
@@ -1167,7 +1169,7 @@ function DateAndTimeDisplay({
 export function EventPage(props: EventPageProps) {
   const { user: clerkUser } = useUser();
 
-  const { user, eventFollows, id, event, image } = props;
+  const { user, eventFollows, id, event, image, eventMetadata } = props;
   const roles = clerkUser?.unsafeMetadata.roles as string[] | undefined;
   const isSelf = clerkUser?.id === user?.id;
   const isOwner = isSelf || roles?.includes("admin");
@@ -1254,6 +1256,9 @@ export function EventPage(props: EventPageProps) {
             <DeleteButton type="icon" userId={user.id} id={id} />
           )}
         </div>
+      }
+      metadataDisplay={
+        <EventMetadataDisplayComponent eventMetadata={eventMetadata} />
       }
     />
   );

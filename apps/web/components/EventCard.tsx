@@ -24,6 +24,7 @@ export default function EventCard(props: {
   followButton?: React.ReactNode;
   editButton?: React.ReactNode;
   deleteButton?: React.ReactNode;
+  metadataDisplay?: React.ReactNode;
 }) {
   const {
     eventImage,
@@ -43,6 +44,7 @@ export default function EventCard(props: {
     followButton,
     editButton,
     deleteButton,
+    metadataDisplay,
   } = props;
 
   const displayName = userDisplayName || (userName ? userName : "");
@@ -112,6 +114,10 @@ export default function EventCard(props: {
               </p>
             </div>
             <p className="text-neutral-1">{eventDescription}</p>
+            
+            {/* Metadata Display */}
+            {metadataDisplay}
+            
             {eventLink ? (
               <a
                 href={eventLink}
