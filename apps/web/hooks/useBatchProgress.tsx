@@ -74,21 +74,12 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
         success: (data) => {
           const hasErrors = data.failureCount > 0;
           if (hasErrors) {
-            return {
-              title: `${data.successCount} out of ${data.totalCount} ${data.totalCount === 1 ? "event" : "events"} captured successfully`,
-              duration: 6000,
-            };
+            return `${data.successCount} out of ${data.totalCount} ${data.totalCount === 1 ? "event" : "events"} captured successfully`;
           }
-          return {
-            title: `${data.successCount} ${data.successCount === 1 ? "event" : "events"} captured successfully`,
-            duration: 4000,
-          };
+          return `${data.successCount} ${data.successCount === 1 ? "event" : "events"} captured successfully`;
         },
-        error: (err) => ({
-          title: "Failed to capture events",
-          description: err instanceof Error ? err.message : undefined,
-          duration: 6000,
-        }),
+        error: () => "Failed to capture events",
+        duration: 6000, // Duration for all states
       });
     }
 
