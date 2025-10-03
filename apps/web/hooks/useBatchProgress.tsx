@@ -12,8 +12,8 @@ interface UseBatchProgressOptions {
 }
 
 /**
- * Hook to track batch upload progress with persistent toast
- * Shows a spinner while processing, then a completion message
+ * Hook to track batch upload progress with updating toast
+ * Updates the same toast from loading to success/error state
  */
 export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
   const toastIdRef = useRef<string | number | null>(null);
@@ -28,7 +28,7 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
   useEffect(() => {
     if (!batchStatus) return;
 
-    // Show persistent processing toast
+    // Show initial loading toast
     if (batchStatus.status === "processing" && !toastIdRef.current) {
       toastIdRef.current = toast.loading(
         <div className="flex items-center gap-2">
@@ -39,25 +39,18 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
           </span>
         </div>,
         {
-          duration: Infinity, // Keep it until we dismiss it
+          duration: Infinity,
         },
       );
     }
 
-    // Show completion toast and dismiss the processing toast
+    // Update the same toast when completed/failed (or create a new one if no loading toast exists)
     if (
       (batchStatus.status === "completed" || batchStatus.status === "failed") &&
       !hasShownCompletionRef.current
     ) {
       hasShownCompletionRef.current = true;
 
-      // Dismiss the processing toast
-      if (toastIdRef.current) {
-        toast.dismiss(toastIdRef.current);
-        toastIdRef.current = null;
-      }
-
-      // Show completion message
       const hasErrors = batchStatus.failureCount > 0;
 
       if (hasErrors) {
@@ -66,17 +59,22 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
         toast.error(
           `${successCount} out of ${totalCount} ${totalCount === 1 ? "event" : "events"} captured successfully`,
           {
-            duration: 6000, // Increased duration for error toasts
+            id: toastIdRef.current ?? undefined,
+            duration: 6000,
           },
         );
       } else {
         toast.success(
           `${batchStatus.successCount} ${batchStatus.successCount === 1 ? "event" : "events"} captured successfully`,
           {
+            id: toastIdRef.current ?? undefined,
             duration: 4000,
           },
         );
       }
+
+      // Clear the ref since the toast is now handled
+      toastIdRef.current = null;
     }
   }, [batchStatus]);
 
