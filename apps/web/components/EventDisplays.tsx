@@ -4,6 +4,7 @@ import { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SignedIn, useUser } from "@clerk/nextjs";
+import { atcb_action } from "add-to-calendar-button-react";
 import {
   Accessibility,
   CalendarIcon,
@@ -1208,6 +1209,27 @@ export function EventPage(props: EventPageProps) {
     return null;
   }
 
+  const handleAddToCalendar = () => {
+    const eventForCalendar = { ...event } as ATCBActionEventConfig;
+    const displayName =
+      user?.displayName || (user?.username ? `@${user.username}` : "");
+    const additionalText =
+      user?.username && id
+        ? `Captured by ${displayName} on Soonlist`
+        : `Captured on Soonlist`;
+    eventForCalendar.description = `${event.description || ""}\n\n${additionalText}`;
+    eventForCalendar.options = [
+      "Apple",
+      "Google",
+      "iCal",
+      "Microsoft365",
+      "MicrosoftTeams",
+      "Outlook.com",
+      "Yahoo",
+    ];
+    void atcb_action(eventForCalendar);
+  };
+
   return (
     <EventCard
       userName={user?.displayName || user?.username || ""}
@@ -1225,6 +1247,7 @@ export function EventPage(props: EventPageProps) {
       eventLocation={location || ""}
       eventDescription={description || ""}
       eventImage={image || null}
+      onAddToCalendar={handleAddToCalendar}
       calendarButton={
         <CalendarButton
           event={event as ATCBActionEventConfig}
