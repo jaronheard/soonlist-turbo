@@ -47,11 +47,16 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
 
   useEffect(() => {
     // Only show toast once per batch
-    if (!batchId || !batchStatus || hasShownToastRef.current) return;
+    if (!batchId || !batchStatus) return;
+
+    // Reset flags when we get a new batchId
+    if (batchIdRef.current !== batchId) {
+      hasShownToastRef.current = false;
+      batchIdRef.current = batchId;
+    }
 
     // Only start the toast when we first detect a processing batch
-    if (batchStatus.status === "processing" && batchIdRef.current !== batchId) {
-      batchIdRef.current = batchId;
+    if (batchStatus.status === "processing" && !hasShownToastRef.current) {
       hasShownToastRef.current = true;
 
       // Create a Promise that resolves when the batch is complete
@@ -69,12 +74,21 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
         success: (data) => {
           const hasErrors = data.failureCount > 0;
           if (hasErrors) {
-            return `${data.successCount} out of ${data.totalCount} ${data.totalCount === 1 ? "event" : "events"} captured successfully`;
+            return {
+              title: `${data.successCount} out of ${data.totalCount} ${data.totalCount === 1 ? "event" : "events"} captured successfully`,
+              duration: 6000,
+            };
           }
-          return `${data.successCount} ${data.successCount === 1 ? "event" : "events"} captured successfully`;
+          return {
+            title: `${data.successCount} ${data.successCount === 1 ? "event" : "events"} captured successfully`,
+            duration: 4000,
+          };
         },
-        error: "Failed to capture events",
-        duration: 4000,
+        error: (err) => ({
+          title: "Failed to capture events",
+          description: err instanceof Error ? err.message : undefined,
+          duration: 6000,
+        }),
       });
     }
 
