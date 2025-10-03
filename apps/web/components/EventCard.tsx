@@ -108,11 +108,10 @@ export default function EventCard(props: {
             {/* Enhanced Date & Location Section */}
             <div className="grid gap-3 sm:grid-cols-2">
               {/* Date & Time Card */}
-              {(eventDate || eventTime) && (
+              {eventDate && onAddToCalendar && (
                 <button
                   onClick={onAddToCalendar}
-                  disabled={!onAddToCalendar}
-                  className="group relative flex items-center justify-start gap-2 rounded-lg bg-interactive-3 px-4 py-2 text-left text-lg font-medium leading-none text-interactive-1 transition-colors hover:bg-interactive-3/80 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-interactive-3"
+                  className="group relative flex items-center justify-start gap-2 rounded-lg bg-interactive-3 px-4 py-2 text-left text-lg font-medium leading-none text-interactive-1 transition-colors hover:bg-interactive-3/80"
                   aria-label="Add to calendar"
                 >
                   <Calendar
@@ -127,17 +126,15 @@ export default function EventCard(props: {
                       </span>
                     )}
                   </span>
-                  {onAddToCalendar && (
-                    <Plus
-                      className="size-4 flex-shrink-0 opacity-60"
-                      aria-hidden="true"
-                    />
-                  )}
+                  <Plus
+                    className="size-4 flex-shrink-0 opacity-60"
+                    aria-hidden="true"
+                  />
                 </button>
               )}
 
               {/* Location Card */}
-              {eventLocation && (
+              {eventLocation.trim() && getGoogleMapsUrl(eventLocation) && (
                 <a
                   href={getGoogleMapsUrl(eventLocation)}
                   target="_blank"

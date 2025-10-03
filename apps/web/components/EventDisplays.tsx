@@ -46,6 +46,7 @@ import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
 import { feedback } from "~/lib/intercom/intercom";
+import { getGoogleMapsUrl } from "~/lib/maps";
 import { cn } from "~/lib/utils";
 import { CalendarButton } from "./CalendarButton";
 import { DeleteButton } from "./DeleteButton";
@@ -244,7 +245,7 @@ function EventDetailsCard({
                 </div>
               ) : (
                 <Link
-                  href={`https://www.google.com/maps/search/?api=1&query=${location}`}
+                  href={getGoogleMapsUrl(location)}
                   className="line-clamp-1 flex shrink items-center gap-0.5 break-all text-neutral-2"
                 >
                   <MapPin className="size-4 flex-shrink-0" />
@@ -529,7 +530,7 @@ function EventDetails({
         <div className="text-xs">
           {location && (
             <Link
-              href={`https://www.google.com/maps/search/?api=1&query=${location}`}
+              href={getGoogleMapsUrl(location)}
               className="line-clamp-1 break-all text-neutral-2"
             >
               <MapPin className="mr-0.5 inline size-4" />
