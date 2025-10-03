@@ -57,5 +57,3 @@ export function getGoogleCalendarUrl(params: CalendarEventParams): string {
 
   return `${baseUrl}?${searchParams.toString()}`;
 }
-
-
