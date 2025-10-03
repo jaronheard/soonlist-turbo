@@ -20,8 +20,6 @@ import {
   TagIcon,
 } from "lucide-react";
 
-import { EventMetadataDisplay as EventMetadataDisplayComponent } from "./EventMetadataDisplay";
-
 import type {
   DateInfo,
   EventMetadata as EventMetadataDisplay,
@@ -52,6 +50,7 @@ import { CalendarButton } from "./CalendarButton";
 import { DeleteButton } from "./DeleteButton";
 import { EditButton } from "./EditButton";
 import EventCard from "./EventCard";
+import { EventMetadataDisplay as EventMetadataDisplayComponent } from "./EventMetadataDisplay";
 import { FollowEventButton } from "./FollowButtons";
 import { buildDefaultUrl } from "./ImageUpload";
 import { SaveButton } from "./SaveButton";

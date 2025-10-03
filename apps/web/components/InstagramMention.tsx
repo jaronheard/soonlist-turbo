@@ -22,7 +22,7 @@ export function InstagramMention({
       rel="noopener noreferrer"
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all hover:scale-105 ${
         isMainAuthor
-          ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white ring-2 ring-purple-300 shadow-md"
+          ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md ring-2 ring-purple-300"
           : "bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 hover:from-purple-200 hover:to-pink-200"
       }`}
     >
@@ -38,4 +38,3 @@ export function InstagramMention({
     </a>
   );
 }
-

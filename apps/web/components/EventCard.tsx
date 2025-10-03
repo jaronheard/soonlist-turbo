@@ -114,10 +114,10 @@ export default function EventCard(props: {
               </p>
             </div>
             <p className="text-neutral-1">{eventDescription}</p>
-            
+
             {/* Metadata Display */}
             {metadataDisplay}
-            
+
             {eventLink ? (
               <a
                 href={eventLink}

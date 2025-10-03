@@ -1,6 +1,7 @@
 "use client";
 
 import type { EventMetadata } from "@soonlist/cal";
+
 import { InstagramMention } from "./InstagramMention";
 
 interface EventMetadataDisplayProps {
@@ -16,7 +17,8 @@ export function EventMetadataDisplay({
 
   const { source, mentions, urls } = eventMetadata;
 
-  const hasSomeData = source || (mentions && mentions.length > 0) || (urls && urls.length > 0);
+  const hasSomeData =
+    source || (mentions && mentions.length > 0) || (urls && urls.length > 0);
 
   if (!hasSomeData) {
     return null;
@@ -34,7 +36,7 @@ export function EventMetadataDisplay({
           <span className="text-xs font-medium uppercase text-neutral-500">
             Platform:
           </span>
-          <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800 capitalize">
+          <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium capitalize text-blue-800">
             {source}
           </span>
         </div>
@@ -94,7 +96,7 @@ export function EventMetadataDisplay({
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block text-sm text-blue-600 hover:text-blue-800 hover:underline truncate"
+                className="block truncate text-sm text-blue-600 hover:text-blue-800 hover:underline"
               >
                 {url}
               </a>
@@ -105,4 +107,3 @@ export function EventMetadataDisplay({
     </div>
   );
 }
-
