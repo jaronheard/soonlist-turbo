@@ -44,10 +44,9 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
       );
     }
 
-    // Update the same toast when completed/failed
+    // Update the same toast when completed/failed (or create a new one if no loading toast exists)
     if (
       (batchStatus.status === "completed" || batchStatus.status === "failed") &&
-      toastIdRef.current &&
       !hasShownCompletionRef.current
     ) {
       hasShownCompletionRef.current = true;
@@ -60,7 +59,7 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
         toast.error(
           `${successCount} out of ${totalCount} ${totalCount === 1 ? "event" : "events"} captured successfully`,
           {
-            id: toastIdRef.current,
+            id: toastIdRef.current ?? undefined,
             duration: 6000,
           },
         );
@@ -68,7 +67,7 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
         toast.success(
           `${batchStatus.successCount} ${batchStatus.successCount === 1 ? "event" : "events"} captured successfully`,
           {
-            id: toastIdRef.current,
+            id: toastIdRef.current ?? undefined,
             duration: 4000,
           },
         );
