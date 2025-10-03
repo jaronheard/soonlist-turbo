@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import { ArrowUpRight, Calendar, MapPin, Plus } from "lucide-react";
 
 import { Card } from "@soonlist/ui/card";
 
+import { getGoogleMapsUrl } from "~/lib/maps";
 import LightboxImage from "./LightboxImage";
 
 export default function EventCard(props: {
@@ -24,6 +26,7 @@ export default function EventCard(props: {
   followButton?: React.ReactNode;
   editButton?: React.ReactNode;
   deleteButton?: React.ReactNode;
+  onAddToCalendar?: () => void;
 }) {
   const {
     eventImage,
@@ -43,6 +46,7 @@ export default function EventCard(props: {
     followButton,
     editButton,
     deleteButton,
+    onAddToCalendar,
   } = props;
 
   const displayName = userDisplayName || (userName ? userName : "");
@@ -100,17 +104,54 @@ export default function EventCard(props: {
             <h2 className="text-2xl font-bold text-neutral-1">
               {eventTitle || eventName}
             </h2>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-neutral-2">{eventDate}</p>
-              {eventTime && (
-                <p className="text-sm font-medium text-neutral-2">
-                  {eventTime}
-                </p>
+
+            {/* Enhanced Date & Location Section */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {/* Date & Time Card */}
+              {eventDate && onAddToCalendar && (
+                <button
+                  onClick={onAddToCalendar}
+                  className="group relative flex items-center justify-start gap-2 rounded-lg bg-interactive-3 px-4 py-2 text-left text-lg font-medium leading-none text-interactive-1 transition-colors hover:bg-interactive-3/80"
+                  aria-label="Add to calendar"
+                >
+                  <Calendar
+                    className="size-4 flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span className="min-w-0 flex-1">
+                    {eventDate}
+                    {eventTime && (
+                      <span className="ml-1.5 font-normal opacity-80">
+                        {eventTime}
+                      </span>
+                    )}
+                  </span>
+                  <Plus
+                    className="size-4 flex-shrink-0 opacity-60"
+                    aria-hidden="true"
+                  />
+                </button>
               )}
-              <p className="text-sm font-medium text-neutral-2">
-                {eventLocation}
-              </p>
+
+              {/* Location Card */}
+              {eventLocation.trim() && getGoogleMapsUrl(eventLocation) && (
+                <a
+                  href={getGoogleMapsUrl(eventLocation)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative flex items-center justify-start gap-2 rounded-lg bg-interactive-3 px-4 py-2 text-lg font-medium leading-none text-interactive-1 transition-colors hover:bg-interactive-3/80"
+                  aria-label={`Open ${eventLocation} in maps`}
+                >
+                  <MapPin className="size-4 flex-shrink-0" aria-hidden="true" />
+                  <span className="min-w-0 flex-1">{eventLocation}</span>
+                  <ArrowUpRight
+                    className="size-4 flex-shrink-0 opacity-60"
+                    aria-hidden="true"
+                  />
+                </a>
+              )}
             </div>
+
             <p className="text-neutral-1">{eventDescription}</p>
             {eventLink ? (
               <a
