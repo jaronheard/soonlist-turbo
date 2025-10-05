@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowUpRight, Calendar, MapPin, Plus } from "lucide-react";
+import { CalendarPlus, MapPinned } from "lucide-react";
 
 import { Card } from "@soonlist/ui/card";
 
@@ -106,19 +106,19 @@ export default function EventCard(props: {
             </h2>
 
             {/* Enhanced Date & Location Section */}
-            <div className="grid gap-3 sm:grid-cols-2">
-              {/* Date & Time Card */}
+            <div className="flex flex-col gap-4">
+              {/* Date & Time */}
               {eventDate && onAddToCalendar && (
                 <button
                   onClick={onAddToCalendar}
-                  className="group relative flex items-center justify-start gap-2 rounded-lg bg-interactive-3 px-4 py-2 text-left text-lg font-medium leading-none text-interactive-1 transition-colors hover:bg-interactive-3/80"
+                  className="group flex items-center justify-start gap-2 text-left text-lg font-medium leading-none text-interactive-1 transition-colors hover:underline"
                   aria-label="Add to calendar"
                 >
-                  <Calendar
-                    className="size-4 flex-shrink-0"
+                  <CalendarPlus
+                    className="size-4 flex-shrink-0 text-interactive-1"
                     aria-hidden="true"
                   />
-                  <span className="min-w-0 flex-1">
+                  <span className="min-w-0">
                     {eventDate}
                     {eventTime && (
                       <span className="ml-1.5 font-normal opacity-80">
@@ -126,28 +126,23 @@ export default function EventCard(props: {
                       </span>
                     )}
                   </span>
-                  <Plus
-                    className="size-4 flex-shrink-0 opacity-60"
-                    aria-hidden="true"
-                  />
                 </button>
               )}
 
-              {/* Location Card */}
+              {/* Location */}
               {eventLocation.trim() && getGoogleMapsUrl(eventLocation) && (
                 <a
                   href={getGoogleMapsUrl(eventLocation)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group relative flex items-center justify-start gap-2 rounded-lg bg-interactive-3 px-4 py-2 text-lg font-medium leading-none text-interactive-1 transition-colors hover:bg-interactive-3/80"
+                  className="group flex items-center justify-start gap-2 text-lg font-medium leading-none text-interactive-1 transition-colors hover:underline"
                   aria-label={`Open ${eventLocation} in maps`}
                 >
-                  <MapPin className="size-4 flex-shrink-0" aria-hidden="true" />
-                  <span className="min-w-0 flex-1">{eventLocation}</span>
-                  <ArrowUpRight
-                    className="size-4 flex-shrink-0 opacity-60"
+                  <MapPinned
+                    className="size-4 flex-shrink-0 text-interactive-1"
                     aria-hidden="true"
                   />
+                  <span className="min-w-0">{eventLocation}</span>
                 </a>
               )}
             </div>
