@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import { CalendarPlus, MapPinned } from "lucide-react";
 
 import { Card } from "@soonlist/ui/card";
 
+import { getGoogleMapsUrl } from "~/lib/maps";
 import LightboxImage from "./LightboxImage";
 
 export default function EventCard(props: {
@@ -25,6 +27,7 @@ export default function EventCard(props: {
   editButton?: React.ReactNode;
   deleteButton?: React.ReactNode;
   metadataDisplay?: React.ReactNode;
+  onAddToCalendar?: () => void;
 }) {
   const {
     eventImage,
@@ -45,6 +48,7 @@ export default function EventCard(props: {
     editButton,
     deleteButton,
     metadataDisplay,
+    onAddToCalendar,
   } = props;
 
   const displayName = userDisplayName || (userName ? userName : "");
@@ -102,17 +106,49 @@ export default function EventCard(props: {
             <h2 className="text-2xl font-bold text-neutral-1">
               {eventTitle || eventName}
             </h2>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-neutral-2">{eventDate}</p>
-              {eventTime && (
-                <p className="text-sm font-medium text-neutral-2">
-                  {eventTime}
-                </p>
+
+            {/* Enhanced Date & Location Section */}
+            <div className="flex flex-col gap-4">
+              {/* Date & Time */}
+              {eventDate && onAddToCalendar && (
+                <button
+                  onClick={onAddToCalendar}
+                  className="group flex items-center justify-start gap-2 text-left text-lg font-medium leading-none text-interactive-1 transition-colors hover:underline"
+                  aria-label="Add to calendar"
+                >
+                  <CalendarPlus
+                    className="size-4 flex-shrink-0 text-interactive-1"
+                    aria-hidden="true"
+                  />
+                  <span className="min-w-0">
+                    {eventDate}
+                    {eventTime && (
+                      <span className="ml-1.5 font-normal opacity-80">
+                        {eventTime}
+                      </span>
+                    )}
+                  </span>
+                </button>
               )}
-              <p className="text-sm font-medium text-neutral-2">
-                {eventLocation}
-              </p>
+
+              {/* Location */}
+              {eventLocation.trim() && getGoogleMapsUrl(eventLocation) && (
+                <a
+                  href={getGoogleMapsUrl(eventLocation)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-start gap-2 text-lg font-medium leading-none text-interactive-1 transition-colors hover:underline"
+                  aria-label={`Open ${eventLocation} in maps`}
+                >
+                  <MapPinned
+                    className="size-4 flex-shrink-0 text-interactive-1"
+                    aria-hidden="true"
+                  />
+                  <span className="min-w-0">{eventLocation}</span>
+                </a>
+              )}
             </div>
+
             <p className="text-neutral-1">{eventDescription}</p>
 
             {/* Metadata Display */}

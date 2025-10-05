@@ -253,7 +253,7 @@ The current date is ${date}, and the default timezone is ${timezone} unless spec
 Below, I pasted a text or image from which to extract calendar event details.
 
 You will
-1. Identify details of the primary event mentioned in the text or image.Only the first event from multi-day events should be captured.
+1. Identify details of the primary event mentioned in the text or image. Only the first event from multi-day events should be captured.
 2. Identify the platform from which the input text was extracted (e.g., Instagram, Facebook, etc.) and extract all usernames @-mentioned. List mentions with the main author/poster FIRST, followed by any other mentioned users.
 3. Extract any URLs visible in the image or text (including event links, ticket links, or other relevant URLs).
 4. Remove the perspective or opinion from the input, focusing only on factual details.
@@ -262,11 +262,12 @@ You will
 7. Write your JSON response by summarizing the event details from the provided data or your own inferred knowledge. Your response must be detailed, specific, and directly relevant to the JSON schema requirements.
 8. Limit event to a single time within a <24 hour period. Late night events can extend into the next day.
 
-Stylistically write in short, approachable, and professional language, like an editor of the Village Voice event section.
+Stylistically write titles and descriptions in short, approachable, and professional language, like an editor of the Village Voice event section.
 Stick to known facts, and be concise. Use proper capitalization for all fields.
 No new adjectives/adverbs not in source text. No editorializing. No fluff. Nothing should be described as "engaging", "compelling", etc...
 Avoid using phrases like 'join us,' 'come celebrate,' or any other invitations. Instead, maintain a neutral and descriptive tone. For example, instead of saying 'Join a family-friendly bike ride,' describe it as 'A family-friendly bike ride featuring murals, light installations, and a light-up dance party.'"
 Use they/them pronouns when referring to people whose gender is not explicitly stated.
+Do not mention event times in the description unless they provide extra context beyond start and end times.
 
 ## DATE AND TIME PARSING AND FORMATTING
 The system using the output requires specific date and time formatting.
@@ -312,7 +313,7 @@ export const getPrompt = (
   return {
     text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2024.12.25.1", // Increment the version number
+    version: "v2025.10.02.1", // Increment the version number
   };
 };
 
