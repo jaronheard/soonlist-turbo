@@ -30,7 +30,7 @@ import {
   EyeOff,
   Globe2,
   Heart,
-  MapPin,
+  MapPinned,
   ShareIcon,
   User,
 } from "~/components/icons";
@@ -257,8 +257,8 @@ export default function Page() {
               >
                 <Pressable>
                   <View className="flex-row items-center">
-                    <MapPin size={16} color="#6b7280" />
-                    <Text className="ml-1 text-neutral-2">
+                    <MapPinned size={16} color="#5A32FB" />
+                    <Text className="ml-1 text-interactive-1">
                       {eventData.location}
                     </Text>
                   </View>
