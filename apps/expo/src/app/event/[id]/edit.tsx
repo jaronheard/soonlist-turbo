@@ -47,14 +47,7 @@ const formSchema = z.object({
     location: z.string().optional(),
     images: z.array(z.string()).optional(),
   }),
-  eventMetadata: z.object({
-    type: z.string().optional(),
-    category: z.string().optional(),
-    priceType: z.string().optional(),
-    ageRestriction: z.string().optional(),
-    performers: z.string().optional(),
-    accessibility: z.string().optional(),
-  }),
+  // eventMetadata is now auto-generated and not editable via this form
   comment: z.string().optional(),
   lists: z
     .array(
@@ -105,14 +98,7 @@ export default function EditEventScreen() {
         location: "",
         images: [],
       },
-      eventMetadata: {
-        type: "",
-        category: "",
-        priceType: "",
-        ageRestriction: "",
-        performers: "",
-        accessibility: "",
-      },
+
       comment: "",
       lists: [],
       visibility: DEFAULT_VISIBILITY,
@@ -134,16 +120,6 @@ export default function EditEventScreen() {
         images?: string[];
       };
 
-      const eventMetadata = eventQuery.eventMetadata as {
-        type?: string;
-        category?: string;
-        priceType?: string;
-        price?: string;
-        ageRestriction?: string;
-        performers?: string | string[];
-        accessibility?: string | string[];
-      };
-
       reset({
         event: {
           name: eventData?.name || "",
@@ -155,22 +131,6 @@ export default function EditEventScreen() {
           timeZone: eventData?.timeZone || "",
           location: eventData?.location || "",
           images: eventData?.images || [],
-        },
-        eventMetadata: {
-          type: eventMetadata?.type || "",
-          category: eventMetadata?.category || "",
-          priceType: eventMetadata?.priceType || "",
-          ageRestriction: eventMetadata?.ageRestriction || "",
-          performers: Array.isArray(eventMetadata?.performers)
-            ? eventMetadata.performers.join(", ")
-            : typeof eventMetadata?.performers === "string"
-              ? eventMetadata.performers
-              : "",
-          accessibility: Array.isArray(eventMetadata?.accessibility)
-            ? eventMetadata.accessibility.join(", ")
-            : typeof eventMetadata?.accessibility === "string"
-              ? eventMetadata.accessibility
-              : "",
         },
         comment: "",
         lists: [],
@@ -341,16 +301,6 @@ export default function EditEventScreen() {
         setIsSubmitting(true);
         const loadingToastId = toast.loading("Updating event...");
 
-        const accessibilityArray = data.eventMetadata.accessibility
-          ? data.eventMetadata.accessibility
-              .split(",")
-              .map((item) => item.trim())
-          : [];
-
-        const performersArray = data.eventMetadata.performers
-          ? data.eventMetadata.performers.split(",").map((item) => item.trim())
-          : [];
-
         let imageToUse = null;
 
         if (uploadedImageUrl) {
@@ -374,41 +324,13 @@ export default function EditEventScreen() {
           }
         }
 
-        // Only include eventMetadata if it has actual values
-        const hasEventMetadata =
-          accessibilityArray.length > 0 ||
-          performersArray.length > 0 ||
-          data.eventMetadata.type ||
-          data.eventMetadata.category ||
-          data.eventMetadata.priceType ||
-          data.eventMetadata.ageRestriction;
-
+        // Note: eventMetadata is now auto-generated and not edited via this form
         const updatedData = {
           id,
           event: {
             ...data.event,
             images: imagesArray,
           },
-          ...(hasEventMetadata && {
-            eventMetadata: {
-              ...(data.eventMetadata.type && { type: data.eventMetadata.type }),
-              ...(data.eventMetadata.category && {
-                category: data.eventMetadata.category,
-              }),
-              ...(data.eventMetadata.priceType && {
-                priceType: data.eventMetadata.priceType,
-              }),
-              ...(data.eventMetadata.ageRestriction && {
-                ageRestriction: data.eventMetadata.ageRestriction,
-              }),
-              ...(accessibilityArray.length > 0 && {
-                accessibility: accessibilityArray,
-              }),
-              ...(performersArray.length > 0 && {
-                performers: performersArray,
-              }),
-            },
-          }),
           comment: data.comment || "",
           lists: (data.lists || []).map((list) => ({
             value: list.value,
