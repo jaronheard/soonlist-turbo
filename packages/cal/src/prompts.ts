@@ -8,113 +8,36 @@ interface Response {
   events: Event[]; // An array of events.
 }
 
-export const PLATFORMS = ["instagram", "unknown"] as const;
+export const PLATFORMS = [
+  "instagram",
+  "facebook",
+  "tiktok",
+  "twitter",
+  "unknown",
+] as const;
 export const PlatformSchema = z.enum(PLATFORMS);
 export type Platform = z.infer<typeof PlatformSchema>;
 
-export const AGE_RESTRICTIONS = ["all-ages", "18+", "21+", "unknown"] as const;
-export const AgeRestrictionSchema = z.enum(AGE_RESTRICTIONS);
-export type AgeRestriction = z.infer<typeof AgeRestrictionSchema>;
-
-export const PRICE_TYPE = [
-  "donation",
-  "free",
-  "notaflof",
-  "paid",
-  "unknown",
-] as const;
-export const PriceTypeSchema = z.enum(PRICE_TYPE);
-export type PriceType = z.infer<typeof PriceTypeSchema>;
-
-export const EVENT_CATEGORIES = [
-  "arts",
-  "business",
-  "community",
-  "culture",
-  "education",
-  "entertainment",
-  "food",
-  "health",
-  "lifestyle",
-  "literature",
-  "music",
-  "religion",
-  "science",
-  "sports",
-  "tech",
-  "unknown",
-] as const;
-// export const EventCategorySchema = z.enum(EVENT_CATEGORIES);
-export const EventCategorySchema = z.string();
-export type EventCategory = z.infer<typeof EventCategorySchema>;
-
-export const EVENT_TYPES = [
-  "competition",
-  "concert",
-  "conference",
-  "exhibition",
-  "festival",
-  "game",
-  "meeting",
-  "movie",
-  "opening",
-  "party",
-  "performance",
-  "seminar",
-  "show",
-  "unknown",
-  "webinar",
-  "workshop",
-] as const;
-// export const EventTypeSchema = z.enum(EVENT_TYPES);
-export const EventTypeSchema = z.string();
-export type EventType = z.infer<typeof EventTypeSchema>;
-
-export const ACCESSIBILITY_TYPES = [
-  "closedCaptioning",
-  "masksRequired",
-  "masksSuggested",
-  "signLanguageInterpretation",
-  "wheelchairAccessible",
-] as const;
-export const AccessibilityTypeSchema = z.enum(ACCESSIBILITY_TYPES);
-export type AccessibilityType = z.infer<typeof AccessibilityTypeSchema>;
-export const ACCESSIBILITY_TYPES_OPTIONS = [
-  { value: "closedCaptioning", label: "Closed Captioning" },
-  { value: "masksRequired", label: "Masks Required" },
-  { value: "masksSuggested", label: "Masks Suggested" },
-  {
-    value: "signLanguageInterpretation",
-    label: "Sign Language Interpretation",
-  },
-  { value: "wheelchairAccessible", label: "Wheelchair Accessible" },
-];
-
 export const EventMetadataSchema = z.object({
-  accessibility: z.array(AccessibilityTypeSchema).optional(),
-  accessibilityNotes: z.string().optional(),
-  ageRestriction: AgeRestrictionSchema,
-  category: EventCategorySchema.describe(
-    "Category of the event: one of " + EVENT_CATEGORIES.join(", "),
+  platform: PlatformSchema.optional().describe(
+    "The social media platform where this event was found (e.g., instagram, facebook, tiktok, twitter)",
   ),
-  mentions: z.array(z.string()).optional(),
-  performers: z.array(z.string()).optional(),
-  priceMax: z.number().optional(),
-  priceMin: z.number().optional(),
-  priceType: PriceTypeSchema,
-  source: PlatformSchema.optional(),
-  type: EventTypeSchema.describe(
-    "Type of the event: one of " + EVENT_TYPES.join(", "),
-  ),
+  mentions: z
+    .array(z.string())
+    .optional()
+    .describe(
+      "Instagram/social media usernames mentioned in the post (without @ symbol). Extract just the username (e.g., 'username' not '@username'). The first mention should be the main author or account that posted the event.",
+    ),
+  sourceUrls: z
+    .array(z.string())
+    .optional()
+    .describe(
+      "Any URLs visible in the image or text (e.g., event website, ticket link, registration page)",
+    ),
 });
 export type EventMetadata = z.infer<typeof EventMetadataSchema>;
 export const EventMetadataSchemaLoose = EventMetadataSchema.extend({
-  accessibility: z.array(z.string()).optional(),
-  ageRestriction: z.string().optional(),
-  category: z.string().optional(),
-  priceType: z.string().optional(),
-  source: z.string().optional(),
-  type: z.string().optional(),
+  platform: z.string().optional(),
 });
 export type EventMetadataLoose = z.infer<typeof EventMetadataSchemaLoose>;
 
@@ -283,15 +206,22 @@ The system using the output requires specific date and time formatting.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const getTextMetadata = (date: string, timezone: string) => `
 # YOUR JOB
-Below, I pasted a text or image from which to extract event metadata. 
+Below, I pasted a text or image from which to extract event source metadata. 
 
 You will:
-1. Extract relevant metadata information from the event details.
-2. Generate values for the event metadata fields strictly adhering to the provided enums and schema.
-3. If a metadata field value is not explicitly mentioned or cannot be reasonably inferred from the event details, omit that field from the output.
-4. Format the event metadata as a valid JSON object, following the schema provided.
+1. Identify the social media platform (if visible) where this event was posted or shared.
+2. Extract usernames/mentions that appear in the post - these are typically prefixed with @ on social media. Remove the @ symbol and extract just the username.
+   - The FIRST mention should be the main author/account that posted or shared the event.
+   - Order matters: list the primary account first, then any other mentioned accounts.
+3. Extract any URLs that are visible in the image or mentioned in the text (e.g., event websites, ticket links, registration pages).
+4. If a metadata field value is not explicitly visible or cannot be clearly identified, omit that field from the output.
+5. Format the event metadata as a valid JSON object, following the schema provided.
 
-Ensure that the generated metadata values are concise, relevant, and adhere to the schema requirements. Do not include any additional fields or values not specified in the schema.
+Important guidelines:
+- For Instagram posts: The first username should be the account whose profile contains this post
+- For mentions: Extract ONLY the username without the @ symbol (e.g., "coachella" not "@coachella")
+- For URLs: Include complete, valid URLs visible in the image
+- Only include fields that you can clearly identify from the source material
 `;
 
 const formatOffsetAsIANASoft = (offset: string) => {

@@ -52,14 +52,7 @@ const CATEGORY_EMOJI: Record<string, EmojiConfig> = {
 };
 
 export function getEventEmoji(event: Event): EmojiConfig {
-  const eventMetadata = event.eventMetadata as EventMetadataLoose;
-
-  if (!eventMetadata) return DEFAULT_EMOJI;
-
-  // Try to match by type first, then by category
-  return (
-    TYPE_EMOJI[eventMetadata.type ?? ""] ??
-    CATEGORY_EMOJI[eventMetadata.category ?? ""] ??
-    DEFAULT_EMOJI
-  );
+  // Note: eventMetadata no longer contains type/category information
+  // Always return default emoji for now
+  return DEFAULT_EMOJI;
 }
