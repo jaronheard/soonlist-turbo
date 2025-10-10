@@ -10,12 +10,9 @@ import type { ATCBActionEventConfig } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 import { PLATFORMS } from "@soonlist/cal";
 import { cn } from "@soonlist/ui";
-import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
 import { Input, InputDescription } from "@soonlist/ui/input";
-import { InputTags } from "@soonlist/ui/input-tags";
 import { Label } from "@soonlist/ui/label";
-import { MultiSelect } from "@soonlist/ui/multiselect";
 import {
   Select,
   SelectContent,
@@ -28,7 +25,6 @@ import { Textarea } from "@soonlist/ui/textarea";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
-import { feedback } from "~/lib/intercom/intercom";
 import { CalendarButton } from "./CalendarButton";
 import { PublishButton } from "./PublishButton";
 import { TimezoneSelect } from "./TimezoneSelect";

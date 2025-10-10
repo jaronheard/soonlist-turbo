@@ -6,20 +6,13 @@ import Link from "next/link";
 import { SignedIn, useUser } from "@clerk/nextjs";
 import { atcb_action } from "add-to-calendar-button-react";
 import {
-  Accessibility,
-  CalendarIcon,
   Copy,
-  Ear,
   Earth,
   EyeOff,
   GlobeIcon,
   LinkIcon,
   MapPin,
   MessageSquareIcon,
-  Mic,
-  PersonStanding,
-  ShieldPlus,
-  TagIcon,
   TextIcon,
 } from "lucide-react";
 
