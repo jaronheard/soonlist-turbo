@@ -8,9 +8,7 @@ import { Pencil, Shapes } from "lucide-react";
 import type { EventMetadata } from "@soonlist/cal";
 import type { ATCBActionEventConfig } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
-import {
-  PLATFORMS,
-} from "@soonlist/cal";
+import { PLATFORMS } from "@soonlist/cal";
 import { cn } from "@soonlist/ui";
 import { Button } from "@soonlist/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
@@ -108,7 +106,6 @@ export function AddToCalendarCard({
   const [sourceUrls] = useState<string[]>(
     initialProps.eventMetadata?.sourceUrls || [],
   );
-
 
   const { listStyle, ...filteredProps } = initialProps;
   const acceptableListStyle = ["overlay", "modal"].includes(listStyle || "")
@@ -338,10 +335,15 @@ export function AddToCalendarCard({
                   <Label htmlFor="sourceUrls">Source URLs</Label>
                   <div className="text-sm text-gray-600">
                     {sourceUrls.length > 0 ? (
-                      <ul className="list-disc list-inside">
+                      <ul className="list-inside list-disc">
                         {sourceUrls.map((url, index) => (
                           <li key={index}>
-                            <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 underline"
+                            >
                               {url}
                             </a>
                           </li>

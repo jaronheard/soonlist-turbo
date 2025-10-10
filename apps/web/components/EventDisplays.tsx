@@ -330,7 +330,12 @@ function EventMetadataDisplay({
   metadata?: EventMetadataDisplay;
 }) {
   // Only show metadata if there's actual data to display
-  if (!metadata || (!metadata.platform && !metadata.mentions?.length && !metadata.sourceUrls?.length)) {
+  if (
+    !metadata ||
+    (!metadata.platform &&
+      !metadata.mentions?.length &&
+      !metadata.sourceUrls?.length)
+  ) {
     return null;
   }
 
@@ -346,7 +351,7 @@ function EventMetadataDisplay({
           Feedback
         </Badge>
       </SignedIn>
-      
+
       {metadata.platform && metadata.platform !== "unknown" && (
         <div className="flex flex-col gap-0.5">
           <Label className="flex items-center" htmlFor="platform">
@@ -358,7 +363,7 @@ function EventMetadataDisplay({
           </p>
         </div>
       )}
-      
+
       {metadata.mentions && metadata.mentions.length > 0 && (
         <div className="flex flex-col gap-0.5">
           <Label className="flex items-center" htmlFor="mentions">
@@ -370,7 +375,7 @@ function EventMetadataDisplay({
           </p>
         </div>
       )}
-      
+
       {metadata.sourceUrls && metadata.sourceUrls.length > 0 && (
         <div className="col-span-full flex flex-col gap-0.5">
           <Label className="flex items-center" htmlFor="sourceUrls">
@@ -380,7 +385,12 @@ function EventMetadataDisplay({
           <div className="text-sm text-neutral-1" id="sourceUrls">
             {metadata.sourceUrls.map((url, index) => (
               <div key={index}>
-                <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="break-all text-blue-600 underline"
+                >
                   {url}
                 </a>
               </div>
