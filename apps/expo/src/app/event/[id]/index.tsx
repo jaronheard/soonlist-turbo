@@ -239,13 +239,24 @@ export default function Page() {
       >
         <View className="p-4">
           <View className="flex flex-col gap-5">
-            <View>
-              <Text className="text-lg text-neutral-2">{date}</Text>
-              <Text className="text-lg text-neutral-2">{time}</Text>
-            </View>
             <Text className="font-heading text-4xl font-bold text-neutral-1">
               {eventData.name}
             </Text>
+
+            {/* Date & Time section */}
+            <View className="flex-row items-center gap-2">
+              <CalendarPlus size={16} color="#5A32FB" />
+              <View>
+                <Text className="text-lg leading-snug text-interactive-1">
+                  {date}
+                  {time && (
+                    <Text className="ml-1.5 font-normal opacity-80">
+                      {time}
+                    </Text>
+                  )}
+                </Text>
+              </View>
+            </View>
 
             {/* Location link */}
             {eventData.location && (
@@ -256,9 +267,9 @@ export default function Page() {
                 asChild
               >
                 <Pressable>
-                  <View className="flex-row items-center">
+                  <View className="flex-row items-center gap-2">
                     <MapPinned size={16} color="#5A32FB" />
-                    <Text className="ml-1 text-interactive-1">
+                    <Text className="text-lg text-interactive-1">
                       {eventData.location}
                     </Text>
                   </View>
