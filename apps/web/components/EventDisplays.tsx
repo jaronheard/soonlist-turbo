@@ -13,12 +13,14 @@ import {
   Earth,
   EyeOff,
   GlobeIcon,
+  LinkIcon,
   MapPin,
   MessageSquareIcon,
   Mic,
   PersonStanding,
   ShieldPlus,
   TagIcon,
+  TextIcon,
 } from "lucide-react";
 
 import type {
@@ -260,95 +262,80 @@ function EventDetailsCard({
   );
 }
 
-function EventAccessibility({ metadata }: { metadata?: EventMetadataDisplay }) {
-  return (
-    <div className="col-span-2 flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="accessibility">
-        <GlobeIcon className="mr-1.5 size-4" />
-        Accessibility
-      </Label>
-      <div
-        className="flex flex-wrap gap-1 text-sm capitalize text-neutral-1"
-        id="accessibility"
-      >
-        {(metadata?.accessibility?.length === 0 ||
-          !metadata?.accessibility?.length) &&
-          "Unknown"}
-        {metadata?.accessibility?.map((item) => {
-          // icon for each accessibility type
-          switch (item) {
-            case "masksRequired":
-              return (
-                <div className="flex items-center" key={item}>
-                  <ShieldPlus className="mr-0.5 inline-block size-4"></ShieldPlus>
-                  Masks Required
-                </div>
-              );
-            case "masksSuggested":
-              return (
-                <div className="flex items-center" key={item}>
-                  <ShieldPlus className="mr-0.5 inline-block size-4"></ShieldPlus>
-                  Masks Suggested
-                </div>
-              );
-            case "wheelchairAccessible":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Accessibility className="mr-0.5 inline-block size-4"></Accessibility>
-                  Wheelchair Accessible
-                </div>
-              );
-            case "signLanguageInterpretation":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Ear className="mr-0.5 inline-block size-4"></Ear>
-                  Sign Language Interpretation
-                </div>
-              );
-            case "closedCaptioning":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Ear className="mr-0.5 inline-block size-4"></Ear>
-                  Closed Captioning
-                </div>
-              );
-            default:
-              return null;
-          }
-        })}
-      </div>
-    </div>
-  );
-}
+// EventAccessibility component removed - accessibility field no longer part of metadata schema
+// function EventAccessibility({ metadata }: { metadata?: EventMetadataDisplay }) {
+//   return (
+//     <div className="col-span-2 flex flex-col gap-0.5">
+//       <Label className="flex items-center" htmlFor="accessibility">
+//         <GlobeIcon className="mr-1.5 size-4" />
+//         Accessibility
+//       </Label>
+//       <div
+//         className="flex flex-wrap gap-1 text-sm capitalize text-neutral-1"
+//         id="accessibility"
+//       >
+//         {(metadata?.accessibility?.length === 0 ||
+//           !metadata?.accessibility?.length) &&
+//           "Unknown"}
+//         {metadata?.accessibility?.map((item) => {
+//           // icon for each accessibility type
+//           switch (item) {
+//             case "masksRequired":
+//               return (
+//                 <div className="flex items-center" key={item}>
+//                   <ShieldPlus className="mr-0.5 inline-block size-4"></ShieldPlus>
+//                   Masks Required
+//                 </div>
+//               );
+//             case "masksSuggested":
+//               return (
+//                 <div className="flex items-center" key={item}>
+//                   <ShieldPlus className="mr-0.5 inline-block size-4"></ShieldPlus>
+//                   Masks Suggested
+//                 </div>
+//               );
+//             case "wheelchairAccessible":
+//               return (
+//                 <div className="flex items-center" key={item}>
+//                   <Accessibility className="mr-0.5 inline-block size-4"></Accessibility>
+//                   Wheelchair Accessible
+//                 </div>
+//               );
+//             case "signLanguageInterpretation":
+//               return (
+//                 <div className="flex items-center" key={item}>
+//                   <Ear className="mr-0.5 inline-block size-4"></Ear>
+//                   Sign Language Interpretation
+//                 </div>
+//               );
+//             case "closedCaptioning":
+//               return (
+//                 <div className="flex items-center" key={item}>
+//                   <Ear className="mr-0.5 inline-block size-4"></Ear>
+//                   Closed Captioning
+//                 </div>
+//               );
+//             default:
+//               return null;
+//           }
+//         })}
+//       </div>
+//     </div>
+//   );
+// }
 
 function EventMetadataDisplay({
   metadata,
 }: {
   metadata?: EventMetadataDisplay;
 }) {
-  const hasPriceMin =
-    (metadata?.priceMin && metadata.priceMin > 0) || metadata?.priceMin === 0;
-  const hasPriceMax = metadata?.priceMax && metadata.priceMax > 0;
-  const hasPrices = hasPriceMin && hasPriceMax;
-  const isPriceRange = hasPrices && metadata.priceMin !== metadata.priceMax;
-  const singlePriceText = `$${metadata?.priceMin}`;
-  const priceRangeText = `$${metadata?.priceMin}-$${metadata?.priceMax}`;
-  const priceText = isPriceRange ? priceRangeText : singlePriceText;
-  const isPaidPriceType = metadata?.priceType === "paid";
-  const isUnknownPriceType = metadata?.priceType === "unknown";
-  const showPriceType = isUnknownPriceType ? !hasPrices : !isPaidPriceType;
-  const showPrice = hasPrices;
-  const adjustedPriceTypeText =
-    metadata?.priceType === "notaflof" ? "NOTAFLOF" : metadata?.priceType;
-  const priceTypeText = showPriceType ? adjustedPriceTypeText : "";
-  const showSpace = showPrice && showPriceType;
-
-  const performersCharacterLength = metadata?.performers?.join(", ").length;
-  const performersSpanMultipleColumns =
-    performersCharacterLength && performersCharacterLength > 15;
+  // Only show metadata if there's actual data to display
+  if (!metadata || (!metadata.platform && !metadata.mentions?.length && !metadata.sourceUrls?.length)) {
+    return null;
+  }
 
   return (
-    <div className="relative -m-2 my-3 grid grid-cols-2 gap-x-1 gap-y-3 rounded-2xl border border-interactive-2 p-4 py-6 text-neutral-2 md:grid-cols-4">
+    <div className="relative -m-2 my-3 grid grid-cols-1 gap-x-1 gap-y-3 rounded-2xl border border-interactive-2 p-4 py-6 text-neutral-2 md:grid-cols-2">
       <SignedIn>
         <Badge
           className="absolute -bottom-3 left-1/2 -translate-x-1/2 hover:cursor-pointer"
@@ -359,78 +346,48 @@ function EventMetadataDisplay({
           Feedback
         </Badge>
       </SignedIn>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="category">
-          <CalendarIcon className="mr-1.5 size-4" />
-          Category
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="category">
-          {metadata?.category}
-        </p>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="type">
-          <GlobeIcon className="mr-1.5 size-4" />
-          Type
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="type">
-          {metadata?.type}
-        </p>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="price">
-          <TagIcon className="mr-1.5 size-4" />
-          Price
-        </Label>
-        <div className="text-sm capitalize text-neutral-1" id="price">
-          {`${showPrice ? priceText : ""}${showSpace ? ", " : ""}`}
-          {showPriceType && (
-            <div className="inline capitalize">{priceTypeText}</div>
-          )}
+      
+      {metadata.platform && metadata.platform !== "unknown" && (
+        <div className="flex flex-col gap-0.5">
+          <Label className="flex items-center" htmlFor="platform">
+            <GlobeIcon className="mr-1.5 size-4" />
+            Platform
+          </Label>
+          <p className="text-sm capitalize text-neutral-1" id="platform">
+            {metadata.platform}
+          </p>
         </div>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="age-restriction">
-          <PersonStanding className="mr-1.5 size-4" />
-          Ages
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="age-restriction">
-          {metadata?.ageRestriction}
-        </p>
-      </div>
-      <div
-        className={cn("col-span-2 flex flex-col gap-0.5 hyphens-auto", {
-          "col-span-1": !performersSpanMultipleColumns,
-          "col-span-2": performersSpanMultipleColumns,
-        })}
-      >
-        <Label className="flex items-center" htmlFor="performers">
-          <Mic className="mr-1.5 size-4" />
-          Performers
-        </Label>
-        <p className="text-sm text-neutral-1" id="performers">
-          {metadata?.performers?.join(", ")}
-        </p>
-      </div>
-      <EventAccessibility metadata={metadata} />
-      {/* <div className="flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="source">
-        <GlobeIcon className="mr-1.5 size-4" />
-        Source
-      </Label>
-      <p className="text-sm capitalize text-neutral-1" id="source">
-        {metadata?.source}
-      </p>
-    </div>
-    <div className="flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="mentions">
-        <TextIcon className="mr-1.5 size-4" />
-        Mentions
-      </Label>
-      <p className="text-sm text-neutral-1" id="mentions">
-        {metadata?.mentions}
-      </p>
-    </div> */}
+      )}
+      
+      {metadata.mentions && metadata.mentions.length > 0 && (
+        <div className="flex flex-col gap-0.5">
+          <Label className="flex items-center" htmlFor="mentions">
+            <TextIcon className="mr-1.5 size-4" />
+            Mentions
+          </Label>
+          <p className="text-sm text-neutral-1" id="mentions">
+            {metadata.mentions.join(", ")}
+          </p>
+        </div>
+      )}
+      
+      {metadata.sourceUrls && metadata.sourceUrls.length > 0 && (
+        <div className="col-span-full flex flex-col gap-0.5">
+          <Label className="flex items-center" htmlFor="sourceUrls">
+            <LinkIcon className="mr-1.5 size-4" />
+            Source URLs
+          </Label>
+          <div className="text-sm text-neutral-1" id="sourceUrls">
+            {metadata.sourceUrls.map((url, index) => (
+              <div key={index}>
+                <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">
+                  {url}
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

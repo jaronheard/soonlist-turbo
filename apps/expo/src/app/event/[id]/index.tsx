@@ -20,8 +20,8 @@ import {
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
-import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { EventMetadata } from "@soonlist/cal";
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { EventMenu } from "~/components/EventMenu";
@@ -39,12 +39,12 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { cn } from "~/utils/cn";
 import {
   useIncrementEventView,
   useMarkPaywallShown,
   useShouldShowViewPaywall,
 } from "~/store";
+import { cn } from "~/utils/cn";
 import { formatEventDateRange } from "~/utils/dates";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
@@ -324,10 +324,13 @@ export default function Page() {
             <View className="mb-6 rounded-lg bg-neutral-4/5 p-4">
               {(() => {
                 const metadata = event.eventMetadata as EventMetadata;
-                const hasPlatform = metadata.platform && metadata.platform !== "unknown";
-                const hasMentions = metadata.mentions && metadata.mentions.length > 0;
-                const hasUrls = metadata.sourceUrls && metadata.sourceUrls.length > 0;
-                
+                const hasPlatform =
+                  metadata.platform && metadata.platform !== "unknown";
+                const hasMentions =
+                  metadata.mentions && metadata.mentions.length > 0;
+                const hasUrls =
+                  metadata.sourceUrls && metadata.sourceUrls.length > 0;
+
                 // Only show the section if there's actual metadata
                 if (!hasPlatform && !hasMentions && !hasUrls) return null;
 
@@ -352,7 +355,7 @@ export default function Page() {
                           Posted by
                         </Text>
                         <View className="mt-2 flex-row flex-wrap gap-2">
-                          {metadata.mentions.map((username, index) => (
+                          {metadata.mentions?.map((username, index) => (
                             <Link
                               key={username}
                               href={`https://instagram.com/${username}`}
@@ -370,7 +373,9 @@ export default function Page() {
                                   <Text
                                     className={cn(
                                       "text-sm font-medium",
-                                      index === 0 ? "text-white" : "text-neutral-1",
+                                      index === 0
+                                        ? "text-white"
+                                        : "text-neutral-1",
                                     )}
                                   >
                                     @{username}
@@ -390,7 +395,7 @@ export default function Page() {
                           Links
                         </Text>
                         <View className="mt-2 gap-2">
-                          {metadata.sourceUrls.map((url) => (
+                          {metadata.sourceUrls?.map((url) => (
                             <Link key={url} href={url} asChild>
                               <Pressable>
                                 <Text
