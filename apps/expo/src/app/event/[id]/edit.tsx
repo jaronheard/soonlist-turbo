@@ -134,7 +134,7 @@ export default function EditEventScreen() {
         images?: string[];
       };
 
-      const eventMetadata = eventQuery.eventMetadata as {
+      const _eventMetadata = eventQuery.eventMetadata as {
         type?: string;
         category?: string;
         priceType?: string;

@@ -260,7 +260,7 @@ function EventDetailsCard({
   );
 }
 
-function EventAccessibility({ metadata }: { metadata?: EventMetadataDisplay }) {
+function EventAccessibility({ _metadata }: { _metadata?: EventMetadataDisplay }) {
   return (
     <div className="col-span-2 flex flex-col gap-0.5">
       <Label className="flex items-center" htmlFor="accessibility">
@@ -320,26 +320,12 @@ function EventAccessibility({ metadata }: { metadata?: EventMetadataDisplay }) {
 }
 
 function EventMetadataDisplay({
-  metadata,
+  _metadata,
 }: {
-  metadata?: EventMetadataDisplay;
+  _metadata?: EventMetadataDisplay;
 }) {
-  const hasPriceMin = false;
-  const hasPriceMax = false;
-  const hasPrices = false;
-  const isPriceRange = false;
-  const singlePriceText = "$0";
-  const priceRangeText = "$0-$0";
-  const priceText = "$0";
-  const isPaidPriceType = false;
-  const isUnknownPriceType = true;
-  const showPriceType = true;
-  const showPrice = false;
-  const adjustedPriceTypeText = "unknown";
-  const priceTypeText = "unknown";
-  const showSpace = false;
-
-  const _performersCharacterLength = 0;
+  // Legacy metadata display - simplified to show static values
+  // The new metadata structure (platform, mentions, sourceUrls) is displayed in EventCard
   const performersSpanMultipleColumns = false;
 
   return (
@@ -378,10 +364,7 @@ function EventMetadataDisplay({
           Price
         </Label>
         <div className="text-sm capitalize text-neutral-1" id="price">
-          {`${showPrice ? priceText : ""}${showSpace ? ", " : ""}`}
-          {showPriceType && (
-            <div className="inline capitalize">{priceTypeText}</div>
-          )}
+          Unknown
         </div>
       </div>
       <div className="flex flex-col gap-0.5">
@@ -407,7 +390,7 @@ function EventMetadataDisplay({
           -
         </p>
       </div>
-      <EventAccessibility metadata={metadata} />
+      <EventAccessibility _metadata={_metadata} />
       {/* <div className="flex flex-col gap-0.5">
       <Label className="flex items-center" htmlFor="source">
         <GlobeIcon className="mr-1.5 size-4" />
@@ -541,7 +524,7 @@ function EventDetails({
         */}
         {preview && (
           <div className="w-full">
-            <EventMetadataDisplay metadata={metadata} />
+            <EventMetadataDisplay _metadata={metadata} />
           </div>
         )}
         <div className="absolute bottom-2 right-2 z-10">
