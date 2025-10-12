@@ -1249,6 +1249,7 @@ export function EventPage(props: EventPageProps) {
       eventDescription={description || ""}
       eventImage={image || null}
       onAddToCalendar={handleAddToCalendar}
+      eventMetadata={props.eventMetadata}
       calendarButton={
         <CalendarButton
           event={event as ATCBActionEventConfig}

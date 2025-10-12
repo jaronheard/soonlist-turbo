@@ -8,9 +8,36 @@ interface Response {
   events: Event[]; // An array of events.
 }
 
-export const PLATFORMS = ["instagram", "unknown"] as const;
+// Platform types for event sources
+export const PLATFORMS = [
+  "instagram",
+  "tiktok",
+  "facebook",
+  "twitter",
+  "unknown",
+] as const;
 export const PlatformSchema = z.enum(PLATFORMS);
 export type Platform = z.infer<typeof PlatformSchema>;
+
+// New simplified metadata schema focusing on social media attribution
+export const EventMetadataSchema = z.object({
+  platform: PlatformSchema.describe(
+    "The platform where this event was sourced from (e.g., instagram, tiktok, facebook, twitter, or unknown)",
+  ),
+  mentions: z
+    .array(z.string())
+    .describe(
+      "Array of usernames (without @ symbol) mentioned in the post. The FIRST username must be the main author/organizer of the event.",
+    ),
+  sourceUrls: z
+    .array(z.string().url())
+    .describe("Array of URLs to the original posts or related content"),
+});
+export type EventMetadata = z.infer<typeof EventMetadataSchema>;
+
+// Legacy schemas kept for backward compatibility
+// These are deprecated and should not be used for new events
+// ============================================================
 
 export const AGE_RESTRICTIONS = ["all-ages", "18+", "21+", "unknown"] as const;
 export const AgeRestrictionSchema = z.enum(AGE_RESTRICTIONS);
@@ -44,7 +71,6 @@ export const EVENT_CATEGORIES = [
   "tech",
   "unknown",
 ] as const;
-// export const EventCategorySchema = z.enum(EVENT_CATEGORIES);
 export const EventCategorySchema = z.string();
 export type EventCategory = z.infer<typeof EventCategorySchema>;
 
@@ -66,7 +92,6 @@ export const EVENT_TYPES = [
   "webinar",
   "workshop",
 ] as const;
-// export const EventTypeSchema = z.enum(EVENT_TYPES);
 export const EventTypeSchema = z.string();
 export type EventType = z.infer<typeof EventTypeSchema>;
 
@@ -90,25 +115,23 @@ export const ACCESSIBILITY_TYPES_OPTIONS = [
   { value: "wheelchairAccessible", label: "Wheelchair Accessible" },
 ];
 
-export const EventMetadataSchema = z.object({
+// Legacy metadata schema - kept for backward compatibility with old events
+export const EventMetadataSchemaLegacy = z.object({
   accessibility: z.array(AccessibilityTypeSchema).optional(),
   accessibilityNotes: z.string().optional(),
-  ageRestriction: AgeRestrictionSchema,
-  category: EventCategorySchema.describe(
-    "Category of the event: one of " + EVENT_CATEGORIES.join(", "),
-  ),
+  ageRestriction: AgeRestrictionSchema.optional(),
+  category: EventCategorySchema.optional(),
   mentions: z.array(z.string()).optional(),
   performers: z.array(z.string()).optional(),
   priceMax: z.number().optional(),
   priceMin: z.number().optional(),
-  priceType: PriceTypeSchema,
+  priceType: PriceTypeSchema.optional(),
   source: PlatformSchema.optional(),
-  type: EventTypeSchema.describe(
-    "Type of the event: one of " + EVENT_TYPES.join(", "),
-  ),
+  type: EventTypeSchema.optional(),
 });
-export type EventMetadata = z.infer<typeof EventMetadataSchema>;
-export const EventMetadataSchemaLoose = EventMetadataSchema.extend({
+export type EventMetadataLegacy = z.infer<typeof EventMetadataSchemaLegacy>;
+
+export const EventMetadataSchemaLoose = EventMetadataSchemaLegacy.extend({
   accessibility: z.array(z.string()).optional(),
   ageRestriction: z.string().optional(),
   category: z.string().optional(),
@@ -283,15 +306,44 @@ The system using the output requires specific date and time formatting.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const getTextMetadata = (date: string, timezone: string) => `
 # YOUR JOB
-Below, I pasted a text or image from which to extract event metadata. 
+Below, I pasted a text or image from which to extract event metadata focusing on social media attribution.
 
-You will:
-1. Extract relevant metadata information from the event details.
-2. Generate values for the event metadata fields strictly adhering to the provided enums and schema.
-3. If a metadata field value is not explicitly mentioned or cannot be reasonably inferred from the event details, omit that field from the output.
-4. Format the event metadata as a valid JSON object, following the schema provided.
+You will extract exactly 3 fields:
 
-Ensure that the generated metadata values are concise, relevant, and adhere to the schema requirements. Do not include any additional fields or values not specified in the schema.
+## 1. platform (required)
+Identify the social media platform where this event was posted or sourced from.
+- Valid values: "instagram", "tiktok", "facebook", "twitter", or "unknown"
+- Look for visual clues in the image (app UI, icons, layout)
+- Check for platform-specific URLs in the text
+- If uncertain, use "unknown"
+
+## 2. mentions (required)
+Extract ALL usernames mentioned in the post as an array of strings.
+- **CRITICAL**: The FIRST username in the array MUST be the main author/organizer (the user whose profile this post is from)
+- Include ONLY the username without the @ symbol
+- Example: If the text shows "@eventorganizer presents with @venue and @dj", extract: ["eventorganizer", "venue", "dj"]
+- If no usernames are found, return an empty array: []
+
+## 3. sourceUrls (required)
+Extract all URLs found in the source text or image.
+- Include the full URL (e.g., "https://instagram.com/p/ABC123/")
+- Look for URLs in the text, bio, or visible in the image
+- Include links to the original post if visible
+- If no URLs are found, return an empty array: []
+
+## IMPORTANT RULES:
+1. Always return all 3 fields even if some are empty arrays
+2. Usernames should NOT include the @ symbol
+3. The first mention MUST be the main event organizer/author
+4. All URLs must be valid and complete
+5. Strictly adhere to the JSON schema - no extra fields
+
+## EXAMPLE OUTPUT:
+{
+  "platform": "instagram",
+  "mentions": ["maineventorganizer", "venue", "specialguest"],
+  "sourceUrls": ["https://instagram.com/p/ABC123xyz/"]
+}
 `;
 
 const formatOffsetAsIANASoft = (offset: string) => {

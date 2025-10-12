@@ -317,6 +317,95 @@ export default function Page() {
             <Text className="text-neutral-1">{eventData.description}</Text>
           </View>
 
+          {/* Metadata Section */}
+          {eventData.eventMetadata && (
+            <View className="mb-6 flex flex-col gap-3">
+              {/* Platform */}
+              {eventData.eventMetadata.platform &&
+                eventData.eventMetadata.platform !== "unknown" && (
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-sm font-medium text-neutral-2">
+                      Source:
+                    </Text>
+                    <Text className="text-sm capitalize text-neutral-1">
+                      {eventData.eventMetadata.platform}
+                    </Text>
+                  </View>
+                )}
+
+              {/* Mentions */}
+              {eventData.eventMetadata.mentions &&
+                eventData.eventMetadata.mentions.length > 0 && (
+                  <View className="flex-col gap-1">
+                    {/* Main Author (first mention) */}
+                    <Link
+                      href={`https://instagram.com/${eventData.eventMetadata.mentions[0]}`}
+                      asChild
+                    >
+                      <Pressable>
+                        <Text className="text-sm text-neutral-2">
+                          <Text className="font-medium">by </Text>
+                          <Text className="text-interactive-1">
+                            @{eventData.eventMetadata.mentions[0]}
+                          </Text>
+                        </Text>
+                      </Pressable>
+                    </Link>
+
+                    {/* Additional Mentions */}
+                    {eventData.eventMetadata.mentions.length > 1 && (
+                      <View className="flex-row flex-wrap items-center gap-1">
+                        <Text className="text-sm text-neutral-2">with </Text>
+                        {eventData.eventMetadata.mentions
+                          .slice(1)
+                          .map((mention: string, index: number) => (
+                            <React.Fragment key={mention}>
+                              <Link
+                                href={`https://instagram.com/${mention}`}
+                                asChild
+                              >
+                                <Pressable>
+                                  <Text className="text-sm text-interactive-1">
+                                    @{mention}
+                                  </Text>
+                                </Pressable>
+                              </Link>
+                              {index <
+                                eventData.eventMetadata.mentions.length - 2 && (
+                                <Text className="text-sm text-neutral-2">
+                                  ,{" "}
+                                </Text>
+                              )}
+                            </React.Fragment>
+                          ))}
+                      </View>
+                    )}
+                  </View>
+                )}
+
+              {/* Source URLs */}
+              {eventData.eventMetadata.sourceUrls &&
+                eventData.eventMetadata.sourceUrls.length > 0 && (
+                  <View className="flex-col gap-1">
+                    {eventData.eventMetadata.sourceUrls.map(
+                      (url: string, index: number) => (
+                        <Link key={index} href={url} asChild>
+                          <Pressable>
+                            <Text
+                              className="text-sm text-interactive-1"
+                              numberOfLines={1}
+                            >
+                              {url}
+                            </Text>
+                          </Pressable>
+                        </Link>
+                      ),
+                    )}
+                  </View>
+                )}
+            </View>
+          )}
+
           {/* Main Event Image if it exists and aspect ratio is known */}
           {eventData.images?.[3] && imageAspectRatio && (
             <View
