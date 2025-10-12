@@ -157,20 +157,12 @@ export default function EditEventScreen() {
           images: eventData?.images || [],
         },
         eventMetadata: {
-          type: eventMetadata?.type || "",
-          category: eventMetadata?.category || "",
-          priceType: eventMetadata?.priceType || "",
-          ageRestriction: eventMetadata?.ageRestriction || "",
-          performers: Array.isArray(eventMetadata?.performers)
-            ? eventMetadata.performers.join(", ")
-            : typeof eventMetadata?.performers === "string"
-              ? eventMetadata.performers
-              : "",
-          accessibility: Array.isArray(eventMetadata?.accessibility)
-            ? eventMetadata.accessibility.join(", ")
-            : typeof eventMetadata?.accessibility === "string"
-              ? eventMetadata.accessibility
-              : "",
+          type: "event",
+          category: "unknown",
+          priceType: "unknown",
+          ageRestriction: "none",
+          performers: "",
+          accessibility: "",
         },
         comment: "",
         lists: [],

@@ -190,19 +190,22 @@ export default function EventCard(props: {
                       {eventMetadata.mentions.length > 1 && (
                         <div className="flex flex-wrap items-center gap-1 text-sm text-neutral-2">
                           <span>with </span>
-                          {eventMetadata.mentions.slice(1).map((mention, index) => (
-                            <span key={mention}>
-                              <Link
-                                href={`https://instagram.com/${mention}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-interactive-1 hover:underline"
-                              >
-                                @{mention}
-                              </Link>
-                              {index < eventMetadata.mentions.length - 2 && ", "}
-                            </span>
-                          ))}
+                          {eventMetadata.mentions
+                            .slice(1)
+                            .map((mention, index) => (
+                              <span key={mention}>
+                                <Link
+                                  href={`https://instagram.com/${mention}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-interactive-1 hover:underline"
+                                >
+                                  @{mention}
+                                </Link>
+                                {index < eventMetadata.mentions.length - 2 &&
+                                  ", "}
+                              </span>
+                            ))}
                         </div>
                       )}
                     </div>

@@ -318,45 +318,45 @@ export default function Page() {
           </View>
 
           {/* Metadata Section */}
-          {eventData.eventMetadata && (
+          {event.eventMetadata && (
             <View className="mb-6 flex flex-col gap-3">
               {/* Platform */}
-              {eventData.eventMetadata.platform &&
-                eventData.eventMetadata.platform !== "unknown" && (
+              {event.eventMetadata.platform &&
+                event.eventMetadata.platform !== "unknown" && (
                   <View className="flex-row items-center gap-2">
                     <Text className="text-sm font-medium text-neutral-2">
                       Source:
                     </Text>
                     <Text className="text-sm capitalize text-neutral-1">
-                      {eventData.eventMetadata.platform}
+                      {event.eventMetadata.platform}
                     </Text>
                   </View>
                 )}
 
               {/* Mentions */}
-              {eventData.eventMetadata.mentions &&
-                eventData.eventMetadata.mentions.length > 0 && (
+              {event.eventMetadata.mentions &&
+                event.eventMetadata.mentions.length > 0 && (
                   <View className="flex-col gap-1">
                     {/* Main Author (first mention) */}
                     <Link
-                      href={`https://instagram.com/${eventData.eventMetadata.mentions[0]}`}
+                      href={`https://instagram.com/${event.eventMetadata.mentions[0]}`}
                       asChild
                     >
                       <Pressable>
                         <Text className="text-sm text-neutral-2">
                           <Text className="font-medium">by </Text>
                           <Text className="text-interactive-1">
-                            @{eventData.eventMetadata.mentions[0]}
+                            @{event.eventMetadata.mentions[0]}
                           </Text>
                         </Text>
                       </Pressable>
                     </Link>
 
                     {/* Additional Mentions */}
-                    {eventData.eventMetadata.mentions.length > 1 && (
+                    {event.eventMetadata.mentions.length > 1 && (
                       <View className="flex-row flex-wrap items-center gap-1">
                         <Text className="text-sm text-neutral-2">with </Text>
-                        {eventData.eventMetadata.mentions
+                        {event.eventMetadata.mentions
                           .slice(1)
                           .map((mention: string, index: number) => (
                             <React.Fragment key={mention}>
@@ -371,7 +371,7 @@ export default function Page() {
                                 </Pressable>
                               </Link>
                               {index <
-                                eventData.eventMetadata.mentions.length - 2 && (
+                                event.eventMetadata.mentions.length - 2 && (
                                 <Text className="text-sm text-neutral-2">
                                   ,{" "}
                                 </Text>
@@ -384,10 +384,10 @@ export default function Page() {
                 )}
 
               {/* Source URLs */}
-              {eventData.eventMetadata.sourceUrls &&
-                eventData.eventMetadata.sourceUrls.length > 0 && (
+              {event.eventMetadata.sourceUrls &&
+                event.eventMetadata.sourceUrls.length > 0 && (
                   <View className="flex-col gap-1">
-                    {eventData.eventMetadata.sourceUrls.map(
+                    {event.eventMetadata.sourceUrls.map(
                       (url: string, index: number) => (
                         <Link key={index} href={url} asChild>
                           <Pressable>

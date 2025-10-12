@@ -106,40 +106,17 @@ export function AddToCalendarCard({
   const [mentions] = useState<string[]>(
     initialProps.eventMetadata?.mentions || [],
   );
-  const [source] = useState<string>(
-    initialProps.eventMetadata?.source || "unknown",
-  );
-  const [priceMin, setPriceMin] = useState<number>(
-    initialProps.eventMetadata?.priceMin || 0,
-  );
-  const [priceMax, setPriceMax] = useState<number>(
-    initialProps.eventMetadata?.priceMax || 0,
-  );
-  const [priceType, setPriceType] = useState<string>(
-    initialProps.eventMetadata?.priceType || "unknown",
-  );
-  const [ageRestriction, setAgeRestriction] = useState(
-    (initialProps.eventMetadata?.ageRestriction || "none") as string,
-  );
-  const [category, setCategory] = useState(
-    initialProps.eventMetadata?.category || "unknown",
-  );
-  const [type, setType] = useState(initialProps.eventMetadata?.type || "event");
-  const [performers, setPerformers] = useState(
-    initialProps.eventMetadata?.performers || [],
-  );
+  const [source] = useState<string>("unknown");
+  const [priceMin, setPriceMin] = useState<number>(0);
+  const [priceMax, setPriceMax] = useState<number>(0);
+  const [priceType, setPriceType] = useState<string>("unknown");
+  const [ageRestriction, setAgeRestriction] = useState("none" as string);
+  const [category, setCategory] = useState("unknown");
+  const [type, setType] = useState("event");
+  const [performers, setPerformers] = useState<string[]>([]);
   const [accessibility, setAccessibility] = useState<
     Record<"value" | "label", string>[]
-  >(
-    initialProps.eventMetadata?.accessibility
-      ? initialProps.eventMetadata.accessibility.map(
-          (value) =>
-            ACCESSIBILITY_TYPES_OPTIONS.find(
-              (option) => option.value === value,
-            ) as Record<"value" | "label", string>,
-        )
-      : [],
-  );
+  >([]);
   const [accessibilityNotes, setAccessibilityNotes] = useState<string>("");
 
   const { listStyle, ...filteredProps } = initialProps;

@@ -271,10 +271,8 @@ function EventAccessibility({ metadata }: { metadata?: EventMetadataDisplay }) {
         className="flex flex-wrap gap-1 text-sm capitalize text-neutral-1"
         id="accessibility"
       >
-        {(metadata?.accessibility?.length === 0 ||
-          !metadata?.accessibility?.length) &&
-          "Unknown"}
-        {metadata?.accessibility?.map((item) => {
+        Unknown
+        {([] as string[]).map((item) => {
           // icon for each accessibility type
           switch (item) {
             case "masksRequired":
@@ -326,26 +324,23 @@ function EventMetadataDisplay({
 }: {
   metadata?: EventMetadataDisplay;
 }) {
-  const hasPriceMin =
-    (metadata?.priceMin && metadata.priceMin > 0) || metadata?.priceMin === 0;
-  const hasPriceMax = metadata?.priceMax && metadata.priceMax > 0;
-  const hasPrices = hasPriceMin && hasPriceMax;
-  const isPriceRange = hasPrices && metadata.priceMin !== metadata.priceMax;
-  const singlePriceText = `$${metadata?.priceMin}`;
-  const priceRangeText = `$${metadata?.priceMin}-$${metadata?.priceMax}`;
-  const priceText = isPriceRange ? priceRangeText : singlePriceText;
-  const isPaidPriceType = metadata?.priceType === "paid";
-  const isUnknownPriceType = metadata?.priceType === "unknown";
-  const showPriceType = isUnknownPriceType ? !hasPrices : !isPaidPriceType;
-  const showPrice = hasPrices;
-  const adjustedPriceTypeText =
-    metadata?.priceType === "notaflof" ? "NOTAFLOF" : metadata?.priceType;
-  const priceTypeText = showPriceType ? adjustedPriceTypeText : "";
-  const showSpace = showPrice && showPriceType;
+  const hasPriceMin = false;
+  const hasPriceMax = false;
+  const hasPrices = false;
+  const isPriceRange = false;
+  const singlePriceText = "$0";
+  const priceRangeText = "$0-$0";
+  const priceText = "$0";
+  const isPaidPriceType = false;
+  const isUnknownPriceType = true;
+  const showPriceType = true;
+  const showPrice = false;
+  const adjustedPriceTypeText = "unknown";
+  const priceTypeText = "unknown";
+  const showSpace = false;
 
-  const performersCharacterLength = metadata?.performers?.join(", ").length;
-  const performersSpanMultipleColumns =
-    performersCharacterLength && performersCharacterLength > 15;
+  const _performersCharacterLength = 0;
+  const performersSpanMultipleColumns = false;
 
   return (
     <div className="relative -m-2 my-3 grid grid-cols-2 gap-x-1 gap-y-3 rounded-2xl border border-interactive-2 p-4 py-6 text-neutral-2 md:grid-cols-4">
@@ -365,7 +360,7 @@ function EventMetadataDisplay({
           Category
         </Label>
         <p className="text-sm capitalize text-neutral-1" id="category">
-          {metadata?.category}
+          Unknown
         </p>
       </div>
       <div className="flex flex-col gap-0.5">
@@ -374,7 +369,7 @@ function EventMetadataDisplay({
           Type
         </Label>
         <p className="text-sm capitalize text-neutral-1" id="type">
-          {metadata?.type}
+          Event
         </p>
       </div>
       <div className="flex flex-col gap-0.5">
@@ -395,7 +390,7 @@ function EventMetadataDisplay({
           Ages
         </Label>
         <p className="text-sm capitalize text-neutral-1" id="age-restriction">
-          {metadata?.ageRestriction}
+          All Ages
         </p>
       </div>
       <div
@@ -409,7 +404,7 @@ function EventMetadataDisplay({
           Performers
         </Label>
         <p className="text-sm text-neutral-1" id="performers">
-          {metadata?.performers?.join(", ")}
+          -
         </p>
       </div>
       <EventAccessibility metadata={metadata} />
