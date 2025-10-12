@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
+  Linking,
   Pressable,
   Image as RNImage,
   ScrollView,
@@ -389,16 +390,17 @@ export default function Page() {
                   <View className="flex-col gap-1">
                     {event.eventMetadata.sourceUrls.map(
                       (url: string, index: number) => (
-                        <Link key={index} href={url} asChild>
-                          <Pressable>
-                            <Text
-                              className="text-sm text-interactive-1"
-                              numberOfLines={1}
-                            >
-                              {url}
-                            </Text>
-                          </Pressable>
-                        </Link>
+                        <Pressable
+                          key={index}
+                          onPress={() => Linking.openURL(url)}
+                        >
+                          <Text
+                            className="text-sm text-interactive-1"
+                            numberOfLines={1}
+                          >
+                            {url}
+                          </Text>
+                        </Pressable>
                       ),
                     )}
                   </View>
