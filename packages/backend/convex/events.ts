@@ -26,17 +26,9 @@ export const eventDataValidator = v.object({
 
 const eventMetadataValidator = v.optional(
   v.object({
-    accessibility: v.optional(v.array(v.string())),
-    accessibilityNotes: v.optional(v.string()),
-    ageRestriction: v.optional(v.string()),
-    category: v.optional(v.string()),
+    platform: v.optional(v.string()),
     mentions: v.optional(v.array(v.string())),
-    performers: v.optional(v.array(v.string())),
-    priceMax: v.optional(v.number()),
-    priceMin: v.optional(v.number()),
-    priceType: v.optional(v.string()),
-    source: v.optional(v.string()),
-    type: v.optional(v.string()),
+    sourceUrls: v.optional(v.array(v.string())),
   }),
 );
 

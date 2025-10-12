@@ -364,7 +364,11 @@ export async function fetchAndProcessEvent({
   const generatedEvent = event.object;
   const generatedMetadata = metadata.object;
 
-  const eventObject = { ...generatedEvent, eventMetadata: generatedMetadata };
+  const eventObject = {
+    ...generatedEvent,
+    eventMetadata: generatedMetadata,
+    metadata: generatedMetadata,
+  };
 
   const events = addCommonAddToCalendarProps([eventObject]);
   const response = `${

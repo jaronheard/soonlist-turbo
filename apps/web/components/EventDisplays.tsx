@@ -3,22 +3,17 @@
 import { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { SignedIn, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { atcb_action } from "add-to-calendar-button-react";
+import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import {
-  Accessibility,
-  CalendarIcon,
   Copy,
-  Ear,
   Earth,
   EyeOff,
+  ExternalLink,
   GlobeIcon,
   MapPin,
   MessageSquareIcon,
-  Mic,
-  PersonStanding,
-  ShieldPlus,
-  TagIcon,
 } from "lucide-react";
 
 import type {
@@ -26,10 +21,7 @@ import type {
   EventMetadata as EventMetadataDisplay,
   SimilarityDetails,
 } from "@soonlist/cal";
-import type {
-  AddToCalendarButtonPropsRestricted,
-  ATCBActionEventConfig,
-} from "@soonlist/cal/types";
+import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { Comment, EventFollow, List, User } from "@soonlist/db/types";
 import {
   eventTimesAreDefined,
@@ -45,7 +37,6 @@ import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
-import { feedback } from "~/lib/intercom/intercom";
 import { getGoogleMapsUrl } from "~/lib/maps";
 import { cn } from "~/lib/utils";
 import { CalendarButton } from "./CalendarButton";
@@ -260,177 +251,88 @@ function EventDetailsCard({
   );
 }
 
-function EventAccessibility({ metadata }: { metadata?: EventMetadataDisplay }) {
-  return (
-    <div className="col-span-2 flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="accessibility">
-        <GlobeIcon className="mr-1.5 size-4" />
-        Accessibility
-      </Label>
-      <div
-        className="flex flex-wrap gap-1 text-sm capitalize text-neutral-1"
-        id="accessibility"
-      >
-        {(metadata?.accessibility?.length === 0 ||
-          !metadata?.accessibility?.length) &&
-          "Unknown"}
-        {metadata?.accessibility?.map((item) => {
-          // icon for each accessibility type
-          switch (item) {
-            case "masksRequired":
-              return (
-                <div className="flex items-center" key={item}>
-                  <ShieldPlus className="mr-0.5 inline-block size-4"></ShieldPlus>
-                  Masks Required
-                </div>
-              );
-            case "masksSuggested":
-              return (
-                <div className="flex items-center" key={item}>
-                  <ShieldPlus className="mr-0.5 inline-block size-4"></ShieldPlus>
-                  Masks Suggested
-                </div>
-              );
-            case "wheelchairAccessible":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Accessibility className="mr-0.5 inline-block size-4"></Accessibility>
-                  Wheelchair Accessible
-                </div>
-              );
-            case "signLanguageInterpretation":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Ear className="mr-0.5 inline-block size-4"></Ear>
-                  Sign Language Interpretation
-                </div>
-              );
-            case "closedCaptioning":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Ear className="mr-0.5 inline-block size-4"></Ear>
-                  Closed Captioning
-                </div>
-              );
-            default:
-              return null;
-          }
-        })}
-      </div>
-    </div>
-  );
-}
-
 function EventMetadataDisplay({
   metadata,
 }: {
   metadata?: EventMetadataDisplay;
 }) {
-  const hasPriceMin =
-    (metadata?.priceMin && metadata.priceMin > 0) || metadata?.priceMin === 0;
-  const hasPriceMax = metadata?.priceMax && metadata.priceMax > 0;
-  const hasPrices = hasPriceMin && hasPriceMax;
-  const isPriceRange = hasPrices && metadata.priceMin !== metadata.priceMax;
-  const singlePriceText = `$${metadata?.priceMin}`;
-  const priceRangeText = `$${metadata?.priceMin}-$${metadata?.priceMax}`;
-  const priceText = isPriceRange ? priceRangeText : singlePriceText;
-  const isPaidPriceType = metadata?.priceType === "paid";
-  const isUnknownPriceType = metadata?.priceType === "unknown";
-  const showPriceType = isUnknownPriceType ? !hasPrices : !isPaidPriceType;
-  const showPrice = hasPrices;
-  const adjustedPriceTypeText =
-    metadata?.priceType === "notaflof" ? "NOTAFLOF" : metadata?.priceType;
-  const priceTypeText = showPriceType ? adjustedPriceTypeText : "";
-  const showSpace = showPrice && showPriceType;
+  const platform = metadata?.platform?.trim();
+  const mentions = metadata?.mentions?.filter((mention) => mention.trim().length > 0) ?? [];
+  const sourceUrls = metadata?.sourceUrls?.filter((url) => url.trim().length > 0) ?? [];
 
-  const performersCharacterLength = metadata?.performers?.join(", ").length;
-  const performersSpanMultipleColumns =
-    performersCharacterLength && performersCharacterLength > 15;
+  if (!platform && mentions.length === 0 && sourceUrls.length === 0) {
+    return null;
+  }
+
+  const instagramUrl = (username: string) =>
+    `https://instagram.com/${encodeURIComponent(username)}`;
 
   return (
-    <div className="relative -m-2 my-3 grid grid-cols-2 gap-x-1 gap-y-3 rounded-2xl border border-interactive-2 p-4 py-6 text-neutral-2 md:grid-cols-4">
-      <SignedIn>
-        <Badge
-          className="absolute -bottom-3 left-1/2 -translate-x-1/2 hover:cursor-pointer"
-          variant={"secondary"}
-          onClick={() => feedback("Event Metadata")}
-        >
-          <MessageSquareIcon size={16} className="mr-1 scale-x-[-1]" />
-          Feedback
-        </Badge>
-      </SignedIn>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="category">
-          <CalendarIcon className="mr-1.5 size-4" />
-          Category
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="category">
-          {metadata?.category}
-        </p>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="type">
-          <GlobeIcon className="mr-1.5 size-4" />
-          Type
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="type">
-          {metadata?.type}
-        </p>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="price">
-          <TagIcon className="mr-1.5 size-4" />
-          Price
-        </Label>
-        <div className="text-sm capitalize text-neutral-1" id="price">
-          {`${showPrice ? priceText : ""}${showSpace ? ", " : ""}`}
-          {showPriceType && (
-            <div className="inline capitalize">{priceTypeText}</div>
-          )}
+    <div className="relative -m-2 my-3 flex flex-col gap-4 rounded-2xl border border-interactive-2 p-4 py-6 text-neutral-2">
+      {platform && (
+        <div className="flex flex-col gap-0.5">
+          <Label className="flex items-center" htmlFor="metadata-platform">
+            <GlobeIcon className="mr-1.5 size-4" />
+            Platform
+          </Label>
+          <span
+            className="text-sm font-medium capitalize text-neutral-1"
+            id="metadata-platform"
+          >
+            {platform}
+          </span>
         </div>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="age-restriction">
-          <PersonStanding className="mr-1.5 size-4" />
-          Ages
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="age-restriction">
-          {metadata?.ageRestriction}
-        </p>
-      </div>
-      <div
-        className={cn("col-span-2 flex flex-col gap-0.5 hyphens-auto", {
-          "col-span-1": !performersSpanMultipleColumns,
-          "col-span-2": performersSpanMultipleColumns,
-        })}
-      >
-        <Label className="flex items-center" htmlFor="performers">
-          <Mic className="mr-1.5 size-4" />
-          Performers
-        </Label>
-        <p className="text-sm text-neutral-1" id="performers">
-          {metadata?.performers?.join(", ")}
-        </p>
-      </div>
-      <EventAccessibility metadata={metadata} />
-      {/* <div className="flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="source">
-        <GlobeIcon className="mr-1.5 size-4" />
-        Source
-      </Label>
-      <p className="text-sm capitalize text-neutral-1" id="source">
-        {metadata?.source}
-      </p>
-    </div>
-    <div className="flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="mentions">
-        <TextIcon className="mr-1.5 size-4" />
-        Mentions
-      </Label>
-      <p className="text-sm text-neutral-1" id="mentions">
-        {metadata?.mentions}
-      </p>
-    </div> */}
+      )}
+      {mentions.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <Label className="flex items-center" htmlFor="metadata-mentions">
+            <MessageSquareIcon className="mr-1.5 size-4" />
+            Mentions
+          </Label>
+          <ul className="flex flex-wrap gap-2 text-sm" id="metadata-mentions">
+            {mentions.map((username, index) => (
+              <li key={`${username}-${index}`} className="flex items-center gap-2">
+                <Link
+                  href={instagramUrl(username)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-full border border-interactive-3 px-3 py-1 font-medium text-neutral-1 transition-colors hover:bg-interactive-3/20"
+                >
+                  @{username}
+                </Link>
+                {index === 0 && (
+                  <Badge variant="secondary" className="uppercase">
+                    Main author
+                  </Badge>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {sourceUrls.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <Label className="flex items-center" htmlFor="metadata-sources">
+            <ExternalLink className="mr-1.5 size-4" />
+            Source links
+          </Label>
+          <ul className="flex flex-col gap-2 text-sm" id="metadata-sources">
+            {sourceUrls.map((url) => (
+              <li key={url}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 break-all rounded-full border border-interactive-3 px-3 py-1 text-neutral-1 transition-colors hover:bg-interactive-3/20"
+                >
+                  {url}
+                  <ExternalLink className="size-3" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -544,8 +446,8 @@ function EventDetails({
           <EventDescription description={description} truncate />
         </div>
         */}
-        {preview && (
-          <div className="w-full">
+        {metadata && (
+          <div className={cn("w-full", preview ? "" : "pt-4")}>
             <EventMetadataDisplay metadata={metadata} />
           </div>
         )}
@@ -640,7 +542,7 @@ function EventActionButtons({
         <ShareButton type="icon" event={event} id={id} />
         <CalendarButton
           type="icon"
-          event={event as ATCBActionEventConfig}
+          event={event}
           id={id}
           username={user.username}
         />
@@ -690,7 +592,7 @@ function EventActionButtons({
       <ShareButton type="icon" event={event} id={id} />
       <CalendarButton
         type="icon"
-        event={event as ATCBActionEventConfig}
+        event={event}
         id={id}
         username={user.username}
       />
@@ -803,7 +705,7 @@ export function EventListItem(props: EventListItemProps) {
       return relativeTime;
     })();
 
-    const atcbEvent: ATCBActionEventConfig = {
+    const atcbEvent: AddToCalendarButtonType = {
       name: event.name,
       description: event.description,
       startDate: event.startDate,
@@ -1210,13 +1112,13 @@ export function EventPage(props: EventPageProps) {
     return null;
   }
 
-  const handleAddToCalendar = () => {
-    const eventForCalendar = { ...event } as ATCBActionEventConfig;
-    const displayName =
-      user?.displayName || (user?.username ? `@${user.username}` : "");
-    const additionalText =
-      user?.username && id
-        ? `Captured by ${displayName} on Soonlist`
+    const handleAddToCalendar = () => {
+      const eventForCalendar: AddToCalendarButtonType = { ...event };
+      const displayName =
+        user?.displayName || (user?.username ? `@${user.username}` : "");
+      const additionalText =
+        user?.username && id
+          ? `Captured by ${displayName} on Soonlist`
         : `Captured on Soonlist`;
     eventForCalendar.description = `${event.description || ""}\n\n${additionalText}`;
     eventForCalendar.options = [
@@ -1249,14 +1151,14 @@ export function EventPage(props: EventPageProps) {
       eventDescription={description || ""}
       eventImage={image || null}
       onAddToCalendar={handleAddToCalendar}
-      calendarButton={
-        <CalendarButton
-          event={event as ATCBActionEventConfig}
-          id={id}
-          username={user?.username}
-          type="button"
-        />
-      }
+        calendarButton={
+          <CalendarButton
+            event={event}
+            id={id}
+            username={user?.username}
+            type="button"
+          />
+        }
       shareButton={<ShareButton type="icon" event={event} id={id} />}
       followButton={
         <div>

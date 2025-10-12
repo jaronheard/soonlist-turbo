@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 
-import type { EventMetadata } from "@soonlist/cal";
+import { EventMetadataSchemaLoose } from "@soonlist/cal";
+import type { EventMetadataLoose } from "@soonlist/cal";
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -27,7 +28,12 @@ export default async function Page(props: {
   }
 
   const eventData = event.event as AddToCalendarButtonProps;
-  const eventMetadata = event.eventMetadata as EventMetadata;
+  const metadataParseResult = EventMetadataSchemaLoose.safeParse(
+    event.metadata ?? event.eventMetadata,
+  );
+  const eventMetadata: EventMetadataLoose | undefined = metadataParseResult.success
+    ? metadataParseResult.data
+    : undefined;
   const mostRecentComment = event.comments
     .filter((comment) => comment.content)
     .pop()?.content;

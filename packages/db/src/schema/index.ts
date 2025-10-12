@@ -55,6 +55,7 @@ export const events = mysqlTable(
     updatedAt: timestamp("updatedAt").onUpdateNow(),
     event: json("event").notNull(),
     eventMetadata: json("eventMetadata"),
+    metadata: json("metadata"),
     endDateTime: datetime("endDateTime", { mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),

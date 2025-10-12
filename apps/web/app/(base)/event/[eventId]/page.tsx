@@ -13,6 +13,24 @@ interface Props {
   }>;
 }
 
+const isRecord = (input: unknown): input is Record<string, unknown> => {
+  return typeof input === "object" && input !== null;
+};
+
+const isAddToCalendarEvent = (
+  value: unknown,
+): value is AddToCalendarButtonPropsRestricted => {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.name === "string" &&
+    typeof value.startDate === "string" &&
+    typeof value.endDate === "string"
+  );
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { eventId } = await params;
 
@@ -21,18 +39,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const convex = await getAuthenticatedConvex();
 
     // First, try to fetch from Convex
-    let event = await convex.query(api.events.get, { eventId });
-
-    // If not found in Convex, fallback to TRPC
-    if (!event) {
-      const trpcEvent = await trpcApiServer.event.get({ eventId });
-
-      if (trpcEvent) {
-        // Use the tRPC event as-is since we handle differences in the client
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-        event = trpcEvent as any;
-      }
-    }
+    const convexEvent = await convex.query(api.events.get, { eventId });
+    const trpcEvent = convexEvent ? null : await trpcApiServer.event.get({ eventId });
+    const event = convexEvent ?? trpcEvent;
 
     if (!event) {
       return {
@@ -48,7 +57,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       };
     }
 
-    const eventData = event.event as AddToCalendarButtonPropsRestricted;
+    if (!isAddToCalendarEvent(event.event)) {
+      return {
+        title: "Invalid Event Data | Soonlist",
+        description: "The event data is corrupted or incomplete.",
+      };
+    }
+
+    const eventData = event.event;
     const eventImage = eventData.images?.[0];
 
     // Generate Open Graph metadata
@@ -102,3 +118,18 @@ export default async function Page({ params }: Props) {
 
   return <EventPageClient eventId={eventId} />;
 }
+const isAddToCalendarEvent = (
+  value: unknown,
+): value is AddToCalendarButtonPropsRestricted => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.name === "string" &&
+    typeof candidate.startDate === "string" &&
+    typeof candidate.endDate === "string"
+  );
+};

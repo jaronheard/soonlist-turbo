@@ -602,6 +602,7 @@ export async function createEvent(
     userName,
     event: eventData,
     eventMetadata,
+    metadata: eventMetadata,
     startDateTime: startDateTime.toISOString(),
     endDateTime: endDateTime.toISOString(),
     visibility: visibility || "public",
@@ -712,6 +713,7 @@ export async function updateEvent(
   await ctx.db.patch(existingEvent._id, {
     event: eventData,
     eventMetadata,
+    metadata: eventMetadata,
     startDateTime: startDateTime.toISOString(),
     endDateTime: endDateTime.toISOString(),
     ...(visibility && { visibility }),

@@ -62,6 +62,7 @@ export default defineSchema({
     userName: v.string(),
     event: v.any(), // JSON field
     eventMetadata: v.optional(v.any()), // JSON field for event metadata
+    metadata: v.optional(v.any()), // JSON field for consolidated metadata
     endDateTime: v.string(), // ISO date string
     startDateTime: v.string(), // ISO date string
     visibility: v.union(v.literal("public"), v.literal("private")),

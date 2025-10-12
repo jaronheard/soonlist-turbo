@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { useQuery } from "convex/react";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
-import type { EventMetadata } from "@soonlist/cal";
+import { EventMetadataSchemaLoose } from "@soonlist/cal";
+import type { EventMetadataLoose } from "@soonlist/cal";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { User } from "@soonlist/db/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -32,6 +33,92 @@ const transformConvexUser = (user: Doc<"users">): User => {
       : null,
     createdAt: new Date(user.created_at),
     updatedAt: user.updatedAt ? new Date(user.updatedAt) : null,
+  };
+};
+
+const isRecord = (input: unknown): input is Record<string, unknown> => {
+  return typeof input === "object" && input !== null;
+};
+
+const isAddToCalendarEvent = (
+  value: unknown,
+): value is AddToCalendarButtonPropsRestricted => {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.name === "string" &&
+    typeof value.startDate === "string" &&
+    typeof value.endDate === "string"
+  );
+};
+
+const coerceUser = (value: unknown): User | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const {
+    id,
+    username,
+    email,
+    displayName,
+    userImage,
+    bio,
+    publicEmail,
+    publicPhone,
+    publicInsta,
+    publicMetadata,
+    publicWebsite,
+    emoji,
+    onboardingData,
+    onboardingCompletedAt,
+    createdAt,
+    updatedAt,
+  } = value;
+
+  if (
+    typeof id !== "string" ||
+    typeof username !== "string" ||
+    typeof email !== "string" ||
+    typeof displayName !== "string" ||
+    typeof userImage !== "string"
+  ) {
+    return undefined;
+  }
+
+  const toDate = (input: unknown): Date | null => {
+    if (input instanceof Date) return input;
+    if (typeof input === "string") {
+      const parsed = new Date(input);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    return null;
+  };
+
+  const normalizedOnboardingData =
+    typeof onboardingData === "object" && onboardingData !== null
+      ? onboardingData
+      : null;
+
+  return {
+    id,
+    username,
+    email,
+    displayName,
+    userImage,
+    bio: typeof bio === "string" ? bio : null,
+    publicEmail: typeof publicEmail === "string" ? publicEmail : null,
+    publicPhone: typeof publicPhone === "string" ? publicPhone : null,
+    publicInsta: typeof publicInsta === "string" ? publicInsta : null,
+    publicMetadata: isRecord(publicMetadata) ? publicMetadata : null,
+    publicWebsite: typeof publicWebsite === "string" ? publicWebsite : null,
+    emoji: typeof emoji === "string" ? emoji : null,
+    onboardingData: normalizedOnboardingData,
+    onboardingCompletedAt: toDate(onboardingCompletedAt),
+    createdAt: toDate(createdAt) ?? new Date(),
+    updatedAt: toDate(updatedAt),
   };
 };
 
@@ -71,16 +158,29 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
   // Handle data structure differences between Convex and tRPC
   const isConvexEvent = "_creationTime" in eventData;
 
-  const calendarData = eventData.event as AddToCalendarButtonPropsRestricted;
+  if (!isAddToCalendarEvent(eventData.event)) {
+    console.error("Invalid event payload received for event", eventId);
+    return (
+      <p className="text-lg text-gray-500">Invalid event data for ID: {eventId}</p>
+    );
+  }
 
-  const metadata = eventData.eventMetadata as EventMetadata;
+  const calendarData = eventData.event;
+
+  const metadataParseResult = EventMetadataSchemaLoose.safeParse(
+    eventData.metadata ?? eventData.eventMetadata,
+  );
+  const metadata: EventMetadataLoose | undefined = metadataParseResult.success
+    ? metadataParseResult.data
+    : undefined;
 
   const fullImageUrl = calendarData.images?.[3] || null;
 
-  const user =
-    isConvexEvent && eventData.user
+  const user = isConvexEvent
+    ? eventData.user
       ? transformConvexUser(eventData.user)
-      : (eventData.user as User) || undefined;
+      : undefined
+    : coerceUser(eventData.user);
 
   const createdAt = isConvexEvent
     ? new Date(eventData._creationTime)

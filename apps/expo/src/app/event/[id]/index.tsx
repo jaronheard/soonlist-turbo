@@ -20,6 +20,8 @@ import {
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
+import { EventMetadataSchemaLoose } from "@soonlist/cal";
+import type { EventMetadataLoose } from "@soonlist/cal";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -210,6 +212,29 @@ export default function Page() {
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const isCurrentUserEvent = currentUser?.id === event.userId;
 
+  const metadataParseResult = EventMetadataSchemaLoose.safeParse(
+    event.metadata ?? event.eventMetadata,
+  );
+  const metadata: EventMetadataLoose | undefined = metadataParseResult.success
+    ? metadataParseResult.data
+    : undefined;
+
+  const platform = metadata?.platform?.trim();
+  const mentions = Array.isArray(metadata?.mentions)
+    ? metadata.mentions
+        .map((mention) => mention?.trim())
+        .filter((mention): mention is string => !!mention)
+    : [];
+  const sourceUrls = Array.isArray(metadata?.sourceUrls)
+    ? metadata.sourceUrls
+        .map((url) => url?.trim())
+        .filter((url): url is string => !!url)
+    : [];
+  const hasMetadata = Boolean(platform || mentions.length > 0 || sourceUrls.length > 0);
+
+  const getInstagramUrl = (username: string) =>
+    `https://instagram.com/${encodeURIComponent(username)}`;
+
   // Compute event date/time strings
   const { date, time } = formatEventDateRange(
     eventData.startDate || "",
@@ -266,11 +291,11 @@ export default function Page() {
               </Link>
             )}
 
-            {/* Visibility or user info */}
-            {showDiscover && (
-              <>
-                {isCurrentUserEvent ? (
-                  <View className="flex-row items-center gap-2">
+          {/* Visibility or user info */}
+          {showDiscover && (
+            <>
+              {isCurrentUserEvent ? (
+                <View className="flex-row items-center gap-2">
                     {event.visibility === "public" ? (
                       <Globe2 size={16} color="#627496" />
                     ) : (
@@ -309,11 +334,67 @@ export default function Page() {
                   </View>
                 )}
               </>
-            )}
-          </View>
+          )}
 
-          {/* Description */}
-          <View className="my-8">
+          {hasMetadata && (
+            <View className="mt-6 flex flex-col gap-6">
+              {platform && (
+                <View className="gap-1">
+                  <Text className="text-xs uppercase text-neutral-2">Platform</Text>
+                  <Text className="text-base font-semibold text-neutral-1">
+                    {platform}
+                  </Text>
+                </View>
+              )}
+
+              {mentions.length > 0 && (
+                <View className="gap-2">
+                  <Text className="text-xs uppercase text-neutral-2">Mentions</Text>
+                  <View className="flex flex-row flex-wrap gap-2">
+                    {mentions.map((mention, index) => (
+                      <Link
+                        key={`${mention}-${index}`}
+                        href={getInstagramUrl(mention)}
+                        asChild
+                      >
+                        <Pressable className="rounded-full border border-neutral-3 px-3 py-1">
+                          <View className="flex-row items-center gap-2">
+                            <Text className="text-base font-medium text-neutral-1">
+                              @{mention}
+                            </Text>
+                            {index === 0 && (
+                              <Text className="text-xs font-semibold uppercase text-interactive-1">
+                                Main author
+                              </Text>
+                            )}
+                          </View>
+                        </Pressable>
+                      </Link>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {sourceUrls.length > 0 && (
+                <View className="gap-2">
+                  <Text className="text-xs uppercase text-neutral-2">Source links</Text>
+                  <View className="gap-2">
+                    {sourceUrls.map((url) => (
+                      <Link key={url} href={url} asChild>
+                        <Pressable className="rounded-lg border border-neutral-3 px-3 py-2">
+                          <Text className="text-base text-interactive-1">{url}</Text>
+                        </Pressable>
+                      </Link>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+
+        {/* Description */}
+        <View className="my-8">
             <Text className="text-neutral-1">{eventData.description}</Text>
           </View>
 

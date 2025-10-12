@@ -23,6 +23,8 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner-native";
 import { z } from "zod";
 
+import { EventMetadataSchemaLoose } from "@soonlist/cal";
+import type { EventMetadataLoose } from "@soonlist/cal";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
@@ -48,12 +50,9 @@ const formSchema = z.object({
     images: z.array(z.string()).optional(),
   }),
   eventMetadata: z.object({
-    type: z.string().optional(),
-    category: z.string().optional(),
-    priceType: z.string().optional(),
-    ageRestriction: z.string().optional(),
-    performers: z.string().optional(),
-    accessibility: z.string().optional(),
+    platform: z.string().optional(),
+    mentions: z.string().optional(),
+    sourceUrls: z.string().optional(),
   }),
   comment: z.string().optional(),
   lists: z
@@ -106,12 +105,9 @@ export default function EditEventScreen() {
         images: [],
       },
       eventMetadata: {
-        type: "",
-        category: "",
-        priceType: "",
-        ageRestriction: "",
-        performers: "",
-        accessibility: "",
+        platform: "",
+        mentions: "",
+        sourceUrls: "",
       },
       comment: "",
       lists: [],
@@ -134,15 +130,11 @@ export default function EditEventScreen() {
         images?: string[];
       };
 
-      const eventMetadata = eventQuery.eventMetadata as {
-        type?: string;
-        category?: string;
-        priceType?: string;
-        price?: string;
-        ageRestriction?: string;
-        performers?: string | string[];
-        accessibility?: string | string[];
-      };
+      const metadataParseResult = EventMetadataSchemaLoose.safeParse(
+        eventQuery.metadata ?? eventQuery.eventMetadata,
+      );
+      const eventMetadata: EventMetadataLoose | undefined =
+        metadataParseResult.success ? metadataParseResult.data : undefined;
 
       reset({
         event: {
@@ -157,20 +149,13 @@ export default function EditEventScreen() {
           images: eventData?.images || [],
         },
         eventMetadata: {
-          type: eventMetadata?.type || "",
-          category: eventMetadata?.category || "",
-          priceType: eventMetadata?.priceType || "",
-          ageRestriction: eventMetadata?.ageRestriction || "",
-          performers: Array.isArray(eventMetadata?.performers)
-            ? eventMetadata.performers.join(", ")
-            : typeof eventMetadata?.performers === "string"
-              ? eventMetadata.performers
-              : "",
-          accessibility: Array.isArray(eventMetadata?.accessibility)
-            ? eventMetadata.accessibility.join(", ")
-            : typeof eventMetadata?.accessibility === "string"
-              ? eventMetadata.accessibility
-              : "",
+          platform: eventMetadata?.platform || "",
+          mentions: Array.isArray(eventMetadata?.mentions)
+            ? eventMetadata.mentions.join(", ")
+            : "",
+          sourceUrls: Array.isArray(eventMetadata?.sourceUrls)
+            ? eventMetadata.sourceUrls.join(", ")
+            : "",
         },
         comment: "",
         lists: [],
@@ -341,15 +326,22 @@ export default function EditEventScreen() {
         setIsSubmitting(true);
         const loadingToastId = toast.loading("Updating event...");
 
-        const accessibilityArray = data.eventMetadata.accessibility
-          ? data.eventMetadata.accessibility
+        const mentionsArray = data.eventMetadata.mentions
+          ? data.eventMetadata.mentions
               .split(",")
-              .map((item) => item.trim())
+              .map((item) => item.replace(/^@+/, "").trim())
+              .filter((item) => item.length > 0)
           : [];
 
-        const performersArray = data.eventMetadata.performers
-          ? data.eventMetadata.performers.split(",").map((item) => item.trim())
+        const sourceUrlArray = data.eventMetadata.sourceUrls
+          ? data.eventMetadata.sourceUrls
+              .split(",")
+              .map((item) => item.trim())
+              .filter((item) => item.length > 0)
           : [];
+
+        const platformValue =
+          data.eventMetadata.platform?.trim().toLowerCase() ?? "";
 
         let imageToUse = null;
 
@@ -376,12 +368,9 @@ export default function EditEventScreen() {
 
         // Only include eventMetadata if it has actual values
         const hasEventMetadata =
-          accessibilityArray.length > 0 ||
-          performersArray.length > 0 ||
-          data.eventMetadata.type ||
-          data.eventMetadata.category ||
-          data.eventMetadata.priceType ||
-          data.eventMetadata.ageRestriction;
+          platformValue.length > 0 ||
+          mentionsArray.length > 0 ||
+          sourceUrlArray.length > 0;
 
         const updatedData = {
           id,
@@ -391,22 +380,9 @@ export default function EditEventScreen() {
           },
           ...(hasEventMetadata && {
             eventMetadata: {
-              ...(data.eventMetadata.type && { type: data.eventMetadata.type }),
-              ...(data.eventMetadata.category && {
-                category: data.eventMetadata.category,
-              }),
-              ...(data.eventMetadata.priceType && {
-                priceType: data.eventMetadata.priceType,
-              }),
-              ...(data.eventMetadata.ageRestriction && {
-                ageRestriction: data.eventMetadata.ageRestriction,
-              }),
-              ...(accessibilityArray.length > 0 && {
-                accessibility: accessibilityArray,
-              }),
-              ...(performersArray.length > 0 && {
-                performers: performersArray,
-              }),
+              ...(platformValue && { platform: platformValue }),
+              ...(mentionsArray.length > 0 && { mentions: mentionsArray }),
+              ...(sourceUrlArray.length > 0 && { sourceUrls: sourceUrlArray }),
             },
           }),
           comment: data.comment || "",
@@ -692,6 +668,70 @@ export default function EditEventScreen() {
                 );
               }}
             />
+
+            <View className="mt-4">
+              <Text className="mb-2 text-lg font-semibold">Social metadata</Text>
+
+              <Controller
+                control={control}
+                name="eventMetadata.platform"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View className="mb-4">
+                    <Text className="mb-2 text-base font-semibold">Platform</Text>
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="e.g. instagram"
+                      className="h-10 rounded-md border border-neutral-300 px-3 py-2"
+                      autoCapitalize="none"
+                    />
+                  </View>
+                )}
+              />
+
+              <Controller
+                control={control}
+                name="eventMetadata.mentions"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View className="mb-4">
+                    <Text className="mb-2 text-base font-semibold">Mentions</Text>
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="Comma-separated usernames"
+                      className="h-10 rounded-md border border-neutral-300 px-3 py-2"
+                      autoCapitalize="none"
+                    />
+                    <Text className="mt-1 text-xs text-neutral-2">
+                      The first username should be the main author. Do not include the @ symbol.
+                    </Text>
+                  </View>
+                )}
+              />
+
+              <Controller
+                control={control}
+                name="eventMetadata.sourceUrls"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View>
+                    <Text className="mb-2 text-base font-semibold">Source links</Text>
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="Comma-separated URLs"
+                      className="h-10 rounded-md border border-neutral-300 px-3 py-2"
+                      autoCapitalize="none"
+                    />
+                    <Text className="mt-1 text-xs text-neutral-2">
+                      Include full URLs (e.g. https://example.com).
+                    </Text>
+                  </View>
+                )}
+              />
+            </View>
 
             <View>
               <Text className="mb-2 text-lg font-semibold">Event Image</Text>

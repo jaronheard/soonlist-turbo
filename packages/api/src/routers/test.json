@@ -37,76 +37,13 @@
       "eventMetadata": {
         "type": "object",
         "properties": {
-          "accessibility": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "closedCaptioning",
-                "masksRequired",
-                "masksSuggested",
-                "signLanguageInterpretation",
-                "wheelchairAccessible"
-              ]
-            }
-          },
-          "accessibilityNotes": { "type": "string" },
-          "ageRestriction": {
-            "type": "string",
-            "enum": ["all-ages", "18+", "21+", "unknown"]
-          },
-          "category": {
-            "type": "string",
-            "enum": [
-              "arts",
-              "business",
-              "community",
-              "culture",
-              "education",
-              "entertainment",
-              "food",
-              "health",
-              "lifestyle",
-              "literature",
-              "music",
-              "religion",
-              "science",
-              "sports",
-              "tech",
-              "unknown"
-            ]
-          },
+          "platform": { "type": "string" },
           "mentions": { "type": "array", "items": { "type": "string" } },
-          "performers": { "type": "array", "items": { "type": "string" } },
-          "priceMax": { "type": "number" },
-          "priceMin": { "type": "number" },
-          "priceType": {
-            "type": "string",
-            "enum": ["donation", "free", "notaflof", "paid", "unknown"]
-          },
-          "source": { "type": "string", "enum": ["instagram", "unknown"] },
-          "type": {
-            "type": "string",
-            "enum": [
-              "competition",
-              "concert",
-              "conference",
-              "exhibition",
-              "festival",
-              "game",
-              "meeting",
-              "opening",
-              "party",
-              "performance",
-              "seminar",
-              "show",
-              "unknown",
-              "webinar",
-              "workshop"
-            ]
+          "sourceUrls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
           }
         },
-        "required": ["ageRestriction", "category", "priceType", "type"],
         "additionalProperties": false
       }
     },
@@ -116,8 +53,7 @@
       "startDate",
       "endDate",
       "timeZone",
-      "location",
-      "eventMetadata"
+      "location"
     ],
     "additionalProperties": false
   },

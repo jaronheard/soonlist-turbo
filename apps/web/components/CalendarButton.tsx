@@ -1,16 +1,16 @@
 "use client";
 
 import { atcb_action } from "add-to-calendar-button-react";
+import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import { CalendarPlus } from "lucide-react";
 
-import type { ATCBActionEventConfig } from "@soonlist/cal/types";
 import { Button } from "@soonlist/ui/button";
 
 import { env } from "~/env";
 import { DropdownMenuItem } from "./DropdownMenu";
 
 interface CalendarButtonProps {
-  event: ATCBActionEventConfig;
+  event: AddToCalendarButtonType;
   id?: string;
   username?: string;
   userDisplayName?: string;
@@ -25,7 +25,8 @@ export function CalendarButton(props: CalendarButtonProps) {
     props.username && props.id
       ? `Captured by [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/${props.username}/events|${displayName}[/url] on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}/event/${props.id}|Soonlist[/url]`
       : `Captured on [url]${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}|Soonlist[/url]`;
-  eventForCalendar.description = `${props.event.description}[br][br]${additionalText}`;
+  const baseDescription = props.event.description ?? "";
+  eventForCalendar.description = `${baseDescription}[br][br]${additionalText}`;
   eventForCalendar.options = [
     "Apple",
     "Google",

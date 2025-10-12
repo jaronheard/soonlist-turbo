@@ -8,113 +8,25 @@ interface Response {
   events: Event[]; // An array of events.
 }
 
-export const PLATFORMS = ["instagram", "unknown"] as const;
-export const PlatformSchema = z.enum(PLATFORMS);
-export type Platform = z.infer<typeof PlatformSchema>;
-
-export const AGE_RESTRICTIONS = ["all-ages", "18+", "21+", "unknown"] as const;
-export const AgeRestrictionSchema = z.enum(AGE_RESTRICTIONS);
-export type AgeRestriction = z.infer<typeof AgeRestrictionSchema>;
-
-export const PRICE_TYPE = [
-  "donation",
-  "free",
-  "notaflof",
-  "paid",
-  "unknown",
-] as const;
-export const PriceTypeSchema = z.enum(PRICE_TYPE);
-export type PriceType = z.infer<typeof PriceTypeSchema>;
-
-export const EVENT_CATEGORIES = [
-  "arts",
-  "business",
-  "community",
-  "culture",
-  "education",
-  "entertainment",
-  "food",
-  "health",
-  "lifestyle",
-  "literature",
-  "music",
-  "religion",
-  "science",
-  "sports",
-  "tech",
-  "unknown",
-] as const;
-// export const EventCategorySchema = z.enum(EVENT_CATEGORIES);
-export const EventCategorySchema = z.string();
-export type EventCategory = z.infer<typeof EventCategorySchema>;
-
-export const EVENT_TYPES = [
-  "competition",
-  "concert",
-  "conference",
-  "exhibition",
-  "festival",
-  "game",
-  "meeting",
-  "movie",
-  "opening",
-  "party",
-  "performance",
-  "seminar",
-  "show",
-  "unknown",
-  "webinar",
-  "workshop",
-] as const;
-// export const EventTypeSchema = z.enum(EVENT_TYPES);
-export const EventTypeSchema = z.string();
-export type EventType = z.infer<typeof EventTypeSchema>;
-
-export const ACCESSIBILITY_TYPES = [
-  "closedCaptioning",
-  "masksRequired",
-  "masksSuggested",
-  "signLanguageInterpretation",
-  "wheelchairAccessible",
-] as const;
-export const AccessibilityTypeSchema = z.enum(ACCESSIBILITY_TYPES);
-export type AccessibilityType = z.infer<typeof AccessibilityTypeSchema>;
-export const ACCESSIBILITY_TYPES_OPTIONS = [
-  { value: "closedCaptioning", label: "Closed Captioning" },
-  { value: "masksRequired", label: "Masks Required" },
-  { value: "masksSuggested", label: "Masks Suggested" },
-  {
-    value: "signLanguageInterpretation",
-    label: "Sign Language Interpretation",
-  },
-  { value: "wheelchairAccessible", label: "Wheelchair Accessible" },
-];
-
 export const EventMetadataSchema = z.object({
-  accessibility: z.array(AccessibilityTypeSchema).optional(),
-  accessibilityNotes: z.string().optional(),
-  ageRestriction: AgeRestrictionSchema,
-  category: EventCategorySchema.describe(
-    "Category of the event: one of " + EVENT_CATEGORIES.join(", "),
-  ),
-  mentions: z.array(z.string()).optional(),
-  performers: z.array(z.string()).optional(),
-  priceMax: z.number().optional(),
-  priceMin: z.number().optional(),
-  priceType: PriceTypeSchema,
-  source: PlatformSchema.optional(),
-  type: EventTypeSchema.describe(
-    "Type of the event: one of " + EVENT_TYPES.join(", "),
-  ),
+  platform: z.string().min(1).optional(),
+  mentions: z
+    .array(
+      z
+        .string()
+        .min(1)
+        .regex(/^[^@\s]+$/, {
+          message: "Mentions should be usernames without the @ symbol",
+        }),
+    )
+    .optional(),
+  sourceUrls: z.array(z.string().url()).optional(),
 });
 export type EventMetadata = z.infer<typeof EventMetadataSchema>;
 export const EventMetadataSchemaLoose = EventMetadataSchema.extend({
-  accessibility: z.array(z.string()).optional(),
-  ageRestriction: z.string().optional(),
-  category: z.string().optional(),
-  priceType: z.string().optional(),
-  source: z.string().optional(),
-  type: z.string().optional(),
+  platform: z.string().optional(),
+  mentions: z.array(z.string()).optional(),
+  sourceUrls: z.array(z.string()).optional(),
 });
 export type EventMetadataLoose = z.infer<typeof EventMetadataSchemaLoose>;
 
@@ -283,15 +195,15 @@ The system using the output requires specific date and time formatting.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const getTextMetadata = (date: string, timezone: string) => `
 # YOUR JOB
-Below, I pasted a text or image from which to extract event metadata. 
+Below, I pasted a text or image from which to extract social metadata for the event.
 
 You will:
-1. Extract relevant metadata information from the event details.
-2. Generate values for the event metadata fields strictly adhering to the provided enums and schema.
-3. If a metadata field value is not explicitly mentioned or cannot be reasonably inferred from the event details, omit that field from the output.
-4. Format the event metadata as a valid JSON object, following the schema provided.
+1. Identify the social platform hosting the post (for example, instagram, tiktok, facebook). Return the platform name in lowercase without additional words.
+2. Build an ordered list of account usernames referenced in the content. Usernames must never include the "@" symbol. The first username **must** be the main author of the post (the profile that published the content). Include other mentioned accounts after the main author in the order they appear. Remove duplicates.
+3. Collect every additional source URL found in the content (excluding the platform URL itself). Return fully qualified URLs.
+4. Omit any field that cannot be confidently determined. Never invent usernames or links.
 
-Ensure that the generated metadata values are concise, relevant, and adhere to the schema requirements. Do not include any additional fields or values not specified in the schema.
+Respond with a JSON object that exactly matches the metadata schema. Do not include comments or extra fields.
 `;
 
 const formatOffsetAsIANASoft = (offset: string) => {
