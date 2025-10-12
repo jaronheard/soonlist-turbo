@@ -260,7 +260,11 @@ function EventDetailsCard({
   );
 }
 
-function EventAccessibility({ _metadata }: { _metadata?: EventMetadataDisplay }) {
+function EventAccessibility({
+  _metadata,
+}: {
+  _metadata?: EventMetadataDisplay;
+}) {
   return (
     <div className="col-span-2 flex flex-col gap-0.5">
       <Label className="flex items-center" htmlFor="accessibility">
