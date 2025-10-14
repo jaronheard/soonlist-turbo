@@ -507,9 +507,12 @@ export const insertEvent = internalMutation({
       batchId,
     } = args;
 
+    // Extract eventMetadata from firstEvent before creating eventData
+    const { eventMetadata, ...eventDataWithoutMetadata } = firstEvent;
+
     // Add uploaded image to event if available
     const eventData = {
-      ...firstEvent,
+      ...eventDataWithoutMetadata,
       ...(uploadedImageUrl && {
         images: [
           uploadedImageUrl,
@@ -519,7 +522,6 @@ export const insertEvent = internalMutation({
         ],
       }),
     };
-    const eventMetadata = undefined; // No metadata for now
 
     const result = await Events.createEvent(
       ctx,

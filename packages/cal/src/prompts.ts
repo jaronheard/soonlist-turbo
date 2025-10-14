@@ -305,45 +305,244 @@ The system using the output requires specific date and time formatting.
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const getTextMetadata = (date: string, timezone: string) => `
-# YOUR JOB
-Below, I pasted a text or image from which to extract event metadata focusing on social media attribution.
+# YOUR TASK
+Extract social media attribution metadata from the provided text or image.
 
-You will extract exactly 3 fields:
+Return a JSON object with exactly 3 fields: platform, mentions, and sourceUrls.
 
-## 1. platform (required)
-Identify the social media platform where this event was posted or sourced from.
-- Valid values: "instagram", "tiktok", "facebook", "twitter", or "unknown"
-- Look for visual clues in the image (app UI, icons, layout)
-- Check for platform-specific URLs in the text
-- If uncertain, use "unknown"
+---
 
-## 2. mentions (required)
-Extract ALL usernames mentioned in the post as an array of strings.
-- **CRITICAL**: The FIRST username in the array MUST be the main author/organizer (the user whose profile this post is from)
-- Include ONLY the username without the @ symbol
-- Example: If the text shows "@eventorganizer presents with @venue and @dj", extract: ["eventorganizer", "venue", "dj"]
-- If no usernames are found, return an empty array: []
+## FIELD 1: platform (string, required)
 
-## 3. sourceUrls (required)
-Extract all URLs found in the source text or image.
-- Include the full URL (e.g., "https://instagram.com/p/ABC123/")
-- Look for URLs in the text, bio, or visible in the image
-- Include links to the original post if visible
-- If no URLs are found, return an empty array: []
+Identify which social media platform this content is from.
 
-## IMPORTANT RULES:
-1. Always return all 3 fields even if some are empty arrays
-2. Usernames should NOT include the @ symbol
-3. The first mention MUST be the main event organizer/author
-4. All URLs must be valid and complete
-5. Strictly adhere to the JSON schema - no extra fields
+**Valid values ONLY:** "instagram", "tiktok", "facebook", "twitter", "unknown"
 
-## EXAMPLE OUTPUT:
+**CRITICAL RULES:**
+- **Default to "unknown"** - Only identify a platform if you can CLEARLY and CONFIDENTLY see platform-specific UI elements
+- **If no usernames are visible, platform MUST be "unknown"** - Without usernames, we cannot attribute content
+- Platform must be immediately obvious from visual indicators (icons, distinctive layouts, verified platform fonts/colors)
+- Check for platform-specific URLs that are fully visible
+- When in doubt, use "unknown"
+
+---
+
+## FIELD 2: mentions (array of strings, required)
+
+Extract Instagram usernames that are FULLY VISIBLE in the image or text.
+
+**CRITICAL RULES - READ CAREFULLY:**
+
+1. **ONLY extract COMPLETE usernames** - If you see "johndoe...", "john..." or any text with ellipsis (...), DO NOT extract it
+2. **⚠️ WATCH FOR COLLAB POST PATTERNS ⚠️** - Instagram collab posts show multiple authors like "username1 and username2..." where the second username is ALWAYS truncated. If you see "and username" or "username..." patterns in the author line, that username is incomplete - DO NOT extract it
+3. **Verify it's actually a username** - Only extract text shown with @ symbol (like @username) or clearly labeled as a username in the UI
+4. **NO display names** - "John Doe" is NOT a username. Only extract actual handles like "johndoe"
+5. **NO truncated text** - Any username that appears cut off or abbreviated must be excluded. If the username appears before "..." or is followed by ellipsis anywhere nearby in the UI, it is truncated
+6. **⚠️ ABSOLUTELY NO ENGAGEMENT SECTIONS ⚠️** - This is critical:
+   - **NEVER** extract from "Liked by..." sections
+   - **NEVER** extract from "Followed by..." sections  
+   - **NEVER** extract from like counts or follower lists
+   - Even if usernames are fully visible in these sections, DO NOT include them
+   - Engagement sections show who interacted with content, NOT who created/organized it
+7. **NO DUPLICATES** - Each username should only appear ONCE in the array. If the post author is mentioned again in the caption or tags, do NOT list them twice
+8. **Remove the @ symbol** - Return just "johndoe", not "@johndoe"
+
+**Order matters:**
+- First item: The main author/organizer (person who posted the content)
+- Remaining items: Any other fully visible usernames mentioned in the post
+
+**Special case - Shared Story Posts:**
+When someone shares another person's post in their Instagram story:
+- First item: Original post author (the creator of the content being shared)
+- Second item: Story sharer (the person who shared it to their story)
+
+**If no complete usernames are visible:** Return empty array []
+
+**⛔ NEVER EXTRACT FROM THESE LOCATIONS:**
+- "Liked by username1, username2 and others" ❌
+- "Liked by username and 42 others" ❌
+- "Followed by username1, username2 and 3 others" ❌
+- Any text near heart icons or like counts ❌
+- Any usernames in engagement metrics at the bottom of posts ❌
+
+**Examples of what NOT to extract:**
+- "john..." ❌ (truncated)
+- "John Doe" ❌ (display name, not username)
+- "Liked by johndoe, janedoe and others" ❌ (from engagement - IGNORE all these usernames)
+- "Followed by musicfan" ❌ (from engagement section)
+- "@john" where the full username is cut off ❌
+
+**Examples of what TO extract:**
+- "@eventorganizer" in post caption/text → "eventorganizer" ✓
+- Username in profile header (post author) → "username" ✓
+- "@venue" tagged in caption → "venue" ✓
+- "@dj" mentioned in event description → "dj" ✓
+
+---
+
+## FIELD 3: sourceUrls (array of strings, required)
+
+Extract any URLs visible in the text or image.
+
+**Include:**
+- Full URLs to posts (e.g., "https://instagram.com/p/ABC123/")
+- Links in bio or caption
+- Any visible web addresses
+
+**Format:** Must be complete, valid URLs
+
+**If no URLs found:** Return empty array []
+
+---
+
+## OUTPUT FORMAT
+
+Always return valid JSON with all 3 fields:
+
+\`\`\`json
 {
   "platform": "instagram",
-  "mentions": ["maineventorganizer", "venue", "specialguest"],
-  "sourceUrls": ["https://instagram.com/p/ABC123xyz/"]
+  "mentions": ["username1", "username2"],
+  "sourceUrls": ["https://example.com"]
 }
+\`\`\`
+
+If a field has no values, use an empty array:
+
+\`\`\`json
+{
+  "platform": "unknown",
+  "mentions": [],
+  "sourceUrls": []
+}
+\`\`\`
+
+---
+
+## EXAMPLES
+
+**Example 1 - Regular Instagram Post:**
+Image shows: "@musicvenue presents @djname this Friday"
+Output:
+\`\`\`json
+{
+  "platform": "instagram",
+  "mentions": ["musicvenue", "djname"],
+  "sourceUrls": []
+}
+\`\`\`
+
+**Example 2 - Collab post with truncated second author:**
+Image shows post header: "theoffbeatpdx and friendsofnoi..."
+Output:
+\`\`\`json
+{
+  "platform": "instagram",
+  "mentions": ["theoffbeatpdx"],
+  "sourceUrls": []
+}
+\`\`\`
+Note: "friendsofnoi" was excluded (truncated in collab post pattern)
+
+**Example 3 - Post with truncated username:**
+Image shows: "@fullvisiblename with John Doe... and @anotherclear"
+Output:
+\`\`\`json
+{
+  "platform": "instagram",
+  "mentions": ["fullvisiblename", "anotherclear"],
+  "sourceUrls": []
+}
+\`\`\`
+Note: "John Doe..." was excluded (truncated/display name)
+
+**Example 4 - Shared story:**
+Story by @storysharer sharing a post from @originalcreator
+Output:
+\`\`\`json
+{
+  "platform": "instagram",
+  "mentions": ["originalcreator", "storysharer"],
+  "sourceUrls": []
+}
+\`\`\`
+Note: Original creator comes first
+
+**Example 5 - Post with engagement section (CRITICAL):**
+Image shows: 
+- Post by @venueofficial: "Live music tonight with @bandname"
+- Below post: "Liked by musicfan1, musicfan2 and 50 others"
+
+Output:
+\`\`\`json
+{
+  "platform": "instagram",
+  "mentions": ["venueofficial", "bandname"],
+  "sourceUrls": []
+}
+\`\`\`
+Note: "musicfan1" and "musicfan2" were EXCLUDED (from "Liked by" engagement section)
+
+**Example 6 - Multiple engagement patterns:**
+Image shows:
+- Post by @eventspace about a show
+- "Followed by artistfriend and 5 others" at top
+- Caption mentions "@headliner and @supportact"
+- "Liked by randomuser1, randomuser2 and others" at bottom
+
+Output:
+\`\`\`json
+{
+  "platform": "instagram",
+  "mentions": ["eventspace", "headliner", "supportact"],
+  "sourceUrls": []
+}
+\`\`\`
+Note: ALL users from "Followed by" and "Liked by" sections were EXCLUDED
+
+**Example 7 - No visible usernames:**
+Image shows event flyer with no @ mentions visible
+Output:
+\`\`\`json
+{
+  "platform": "unknown",
+  "mentions": [],
+  "sourceUrls": []
+}
+\`\`\`
+Note: Platform is "unknown" because no usernames are visible
+
+**Example 8 - Duplicate mentions:**
+Image shows: Post by @musicvenue with caption "Join us @musicvenue this Friday with @djname"
+Output:
+\`\`\`json
+{
+  "platform": "instagram",
+  "mentions": ["musicvenue", "djname"],
+  "sourceUrls": []
+}
+\`\`\`
+Note: "musicvenue" only appears once despite being mentioned twice
+
+---
+
+## FINAL REMINDER
+
+**MOST COMMON MISTAKES TO AVOID:**
+- ⚠️ DO NOT extract usernames from "Liked by..." or "Followed by..." text
+- ⚠️ Engagement sections are NEVER relevant for event attribution
+- ⚠️ DO NOT list the same username multiple times (deduplicate!)
+- ⚠️ DO NOT guess the platform - if unclear, use "unknown"
+- ⚠️ If no usernames are visible, platform MUST be "unknown"
+
+**General rules:**
+- When in doubt, EXCLUDE the username
+- Truncated = excluded
+- Display names = excluded  
+- Duplicates = excluded (only list each username once)
+- **Engagement lists = ALWAYS excluded**
+- Only COMPLETE, VERIFIED usernames from POST CONTENT
+- Platform identification requires clear, obvious visual indicators
 `;
 
 const formatOffsetAsIANASoft = (offset: string) => {
@@ -361,7 +560,7 @@ export const getPrompt = (
   return {
     text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2025.10.02.1", // Increment the version number
+    version: "v2025.10.14.5", // Added explicit collab post truncation rules and example
   };
 };
 
