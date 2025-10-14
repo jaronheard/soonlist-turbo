@@ -3,23 +3,9 @@
 import { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { SignedIn, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { atcb_action } from "add-to-calendar-button-react";
-import {
-  Accessibility,
-  CalendarIcon,
-  Copy,
-  Ear,
-  Earth,
-  EyeOff,
-  GlobeIcon,
-  MapPin,
-  MessageSquareIcon,
-  Mic,
-  PersonStanding,
-  ShieldPlus,
-  TagIcon,
-} from "lucide-react";
+import { Copy, Earth, EyeOff, MapPin } from "lucide-react";
 
 import type {
   DateInfo,
@@ -38,14 +24,11 @@ import {
   getDateInfoUTC,
   getDateTimeInfo,
 } from "@soonlist/cal";
-import { Badge } from "@soonlist/ui/badge";
-import { Label } from "@soonlist/ui/label";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
-import { feedback } from "~/lib/intercom/intercom";
 import { getGoogleMapsUrl } from "~/lib/maps";
 import { cn } from "~/lib/utils";
 import { CalendarButton } from "./CalendarButton";
@@ -260,163 +243,6 @@ function EventDetailsCard({
   );
 }
 
-function EventAccessibility({
-  _metadata,
-}: {
-  _metadata?: EventMetadataDisplay;
-}) {
-  return (
-    <div className="col-span-2 flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="accessibility">
-        <GlobeIcon className="mr-1.5 size-4" />
-        Accessibility
-      </Label>
-      <div
-        className="flex flex-wrap gap-1 text-sm capitalize text-neutral-1"
-        id="accessibility"
-      >
-        Unknown
-        {([] as string[]).map((item) => {
-          // icon for each accessibility type
-          switch (item) {
-            case "masksRequired":
-              return (
-                <div className="flex items-center" key={item}>
-                  <ShieldPlus className="mr-0.5 inline-block size-4"></ShieldPlus>
-                  Masks Required
-                </div>
-              );
-            case "masksSuggested":
-              return (
-                <div className="flex items-center" key={item}>
-                  <ShieldPlus className="mr-0.5 inline-block size-4"></ShieldPlus>
-                  Masks Suggested
-                </div>
-              );
-            case "wheelchairAccessible":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Accessibility className="mr-0.5 inline-block size-4"></Accessibility>
-                  Wheelchair Accessible
-                </div>
-              );
-            case "signLanguageInterpretation":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Ear className="mr-0.5 inline-block size-4"></Ear>
-                  Sign Language Interpretation
-                </div>
-              );
-            case "closedCaptioning":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Ear className="mr-0.5 inline-block size-4"></Ear>
-                  Closed Captioning
-                </div>
-              );
-            default:
-              return null;
-          }
-        })}
-      </div>
-    </div>
-  );
-}
-
-function EventMetadataDisplay({
-  _metadata,
-}: {
-  _metadata?: EventMetadataDisplay;
-}) {
-  // Legacy metadata display - simplified to show static values
-  // The new metadata structure (platform, mentions, sourceUrls) is displayed in EventCard
-  const performersSpanMultipleColumns = false;
-
-  return (
-    <div className="relative -m-2 my-3 grid grid-cols-2 gap-x-1 gap-y-3 rounded-2xl border border-interactive-2 p-4 py-6 text-neutral-2 md:grid-cols-4">
-      <SignedIn>
-        <Badge
-          className="absolute -bottom-3 left-1/2 -translate-x-1/2 hover:cursor-pointer"
-          variant={"secondary"}
-          onClick={() => feedback("Event Metadata")}
-        >
-          <MessageSquareIcon size={16} className="mr-1 scale-x-[-1]" />
-          Feedback
-        </Badge>
-      </SignedIn>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="category">
-          <CalendarIcon className="mr-1.5 size-4" />
-          Category
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="category">
-          Unknown
-        </p>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="type">
-          <GlobeIcon className="mr-1.5 size-4" />
-          Type
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="type">
-          Event
-        </p>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="price">
-          <TagIcon className="mr-1.5 size-4" />
-          Price
-        </Label>
-        <div className="text-sm capitalize text-neutral-1" id="price">
-          Unknown
-        </div>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="age-restriction">
-          <PersonStanding className="mr-1.5 size-4" />
-          Ages
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="age-restriction">
-          All Ages
-        </p>
-      </div>
-      <div
-        className={cn("col-span-2 flex flex-col gap-0.5 hyphens-auto", {
-          "col-span-1": !performersSpanMultipleColumns,
-          "col-span-2": performersSpanMultipleColumns,
-        })}
-      >
-        <Label className="flex items-center" htmlFor="performers">
-          <Mic className="mr-1.5 size-4" />
-          Performers
-        </Label>
-        <p className="text-sm text-neutral-1" id="performers">
-          -
-        </p>
-      </div>
-      <EventAccessibility _metadata={_metadata} />
-      {/* <div className="flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="source">
-        <GlobeIcon className="mr-1.5 size-4" />
-        Source
-      </Label>
-      <p className="text-sm capitalize text-neutral-1" id="source">
-        {metadata?.source}
-      </p>
-    </div>
-    <div className="flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="mentions">
-        <TextIcon className="mr-1.5 size-4" />
-        Mentions
-      </Label>
-      <p className="text-sm text-neutral-1" id="mentions">
-        {metadata?.mentions}
-      </p>
-    </div> */}
-    </div>
-  );
-}
-
 function EventDetails({
   id,
   name,
@@ -429,7 +255,6 @@ function EventDetails({
   description,
   preview,
   EventActionButtons,
-  metadata,
   happeningNow,
   visibility, // Add this prop
 }: {
@@ -444,7 +269,6 @@ function EventDetails({
   location?: string;
   EventActionButtons?: React.ReactNode;
   preview?: boolean;
-  metadata?: EventMetadataDisplay;
   variant?: "minimal";
   happeningNow?: boolean;
   visibility: "public" | "private"; // Add this to the props type
@@ -526,11 +350,6 @@ function EventDetails({
           <EventDescription description={description} truncate />
         </div>
         */}
-        {preview && (
-          <div className="w-full">
-            <EventMetadataDisplay _metadata={metadata} />
-          </div>
-        )}
         <div className="absolute bottom-2 right-2 z-10">
           {EventActionButtons}
         </div>
@@ -1093,7 +912,6 @@ export function EventPreview(
           timezone={event.timeZone || "America/Los_Angeles"}
           location={event.location}
           description={event.description}
-          metadata={event.eventMetadata}
           visibility={"public"}
         />
       </div>
