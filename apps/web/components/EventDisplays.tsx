@@ -41,6 +41,81 @@ import { SaveButton } from "./SaveButton";
 import { ShareButton } from "./ShareButton";
 import { UserAvatarMini } from "./UserAvatarMini";
 
+export function EventMetadataDisplay({
+  eventMetadata,
+}: {
+  eventMetadata: EventMetadataDisplay;
+}) {
+  return (
+    <div className="mt-4 flex flex-col gap-2 border-t border-neutral-3/20 pt-4">
+      {/* Platform */}
+      {eventMetadata.platform && eventMetadata.platform !== "unknown" && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-neutral-2">Source:</span>
+          <span className="text-sm capitalize text-neutral-1">
+            {eventMetadata.platform}
+          </span>
+        </div>
+      )}
+
+      {/* Mentions */}
+      {eventMetadata.mentions && eventMetadata.mentions.length > 0 && (
+        <div className="flex flex-col gap-1">
+          {/* Main Author (first mention) */}
+          <div className="text-sm text-neutral-2">
+            <span className="font-medium">by </span>
+            <Link
+              href={`https://instagram.com/${eventMetadata.mentions[0]}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-interactive-1 hover:underline"
+            >
+              @{eventMetadata.mentions[0]}
+            </Link>
+          </div>
+
+          {/* Additional Mentions */}
+          {eventMetadata.mentions.length > 1 && (
+            <div className="flex flex-wrap items-center gap-1 text-sm text-neutral-2">
+              <span>with </span>
+              {eventMetadata.mentions.slice(1).map((mention, index) => (
+                <span key={mention}>
+                  <Link
+                    href={`https://instagram.com/${mention}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-interactive-1 hover:underline"
+                  >
+                    @{mention}
+                  </Link>
+                  {index < eventMetadata.mentions.length - 2 && ", "}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Source URLs */}
+      {eventMetadata.sourceUrls && eventMetadata.sourceUrls.length > 0 && (
+        <div className="flex flex-col gap-1">
+          {eventMetadata.sourceUrls.map((url, index) => (
+            <Link
+              key={index}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="truncate text-sm text-interactive-1 hover:underline"
+            >
+              {url}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface EventListItemProps {
   list?: List; // this is the list that this is a part of
   variant?: "card" | "minimal";
