@@ -351,6 +351,7 @@ export const getBatchStatus = query({
     successCount: v.number(),
     failureCount: v.number(),
     progress: v.number(),
+    firstEventId: v.union(v.string(), v.null()),
   }),
   handler: async (ctx, args) => {
     const batch = await ctx.db
@@ -371,6 +372,16 @@ export const getBatchStatus = query({
         ? Math.round((processedCount / batch.totalCount) * 100)
         : 0;
 
+    // Get the first event ID if there's exactly one successful event
+    let firstEventId: string | null = null;
+    if (batch.successCount === 1) {
+      const firstEvent = await ctx.db
+        .query("events")
+        .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
+        .first();
+      firstEventId = firstEvent?.id ?? null;
+    }
+
     return {
       batchId: batch.batchId,
       status: batch.status,
@@ -378,6 +389,7 @@ export const getBatchStatus = query({
       successCount: batch.successCount,
       failureCount: batch.failureCount,
       progress,
+      firstEventId,
     };
   },
 });
