@@ -11,19 +11,6 @@ import * as Events from "./model/events";
 import { enrichEventsAndFilterNulls } from "./model/events";
 
 // Validators for complex types
-export const eventDataValidator = v.object({
-  name: v.string(),
-  startDate: v.string(),
-  endDate: v.string(),
-  startTime: v.optional(v.string()),
-  endTime: v.optional(v.string()),
-  timeZone: v.optional(v.string()),
-  location: v.optional(v.string()),
-  description: v.optional(v.string()),
-  images: v.optional(v.array(v.string())),
-  eventMetadata: v.optional(v.any()), // Allow eventMetadata to pass through
-});
-
 const eventMetadataValidator = v.optional(
   v.object({
     accessibility: v.optional(v.array(v.string())),
@@ -39,6 +26,19 @@ const eventMetadataValidator = v.optional(
     type: v.optional(v.string()),
   }),
 );
+
+export const eventDataValidator = v.object({
+  name: v.string(),
+  startDate: v.string(),
+  endDate: v.string(),
+  startTime: v.optional(v.string()),
+  endTime: v.optional(v.string()),
+  timeZone: v.optional(v.string()),
+  location: v.optional(v.string()),
+  description: v.optional(v.string()),
+  images: v.optional(v.array(v.string())),
+  eventMetadata: eventMetadataValidator,
+});
 
 const listValidator = v.object({
   value: v.string(),
