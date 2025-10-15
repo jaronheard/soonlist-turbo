@@ -19,10 +19,12 @@ const eventMetadataValidator = v.optional(
     category: v.optional(v.string()),
     mentions: v.optional(v.array(v.string())),
     performers: v.optional(v.array(v.string())),
+    platform: v.optional(v.string()),
     priceMax: v.optional(v.number()),
     priceMin: v.optional(v.number()),
     priceType: v.optional(v.string()),
     source: v.optional(v.string()),
+    sourceUrls: v.optional(v.array(v.string())),
     type: v.optional(v.string()),
   }),
 );
