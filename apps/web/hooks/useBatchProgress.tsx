@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ interface UseBatchProgressOptions {
  * Updates the same toast from loading to success/error state
  */
 export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
+  const router = useRouter();
   const toastIdRef = useRef<string | number | null>(null);
   const hasShownCompletionRef = useRef(false);
 
@@ -64,13 +66,23 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
           },
         );
       } else {
-        toast.success(
-          `${batchStatus.successCount} ${batchStatus.successCount === 1 ? "event" : "events"} captured successfully`,
-          {
-            id: toastIdRef.current ?? undefined,
-            duration: 4000,
-          },
-        );
+        const isSingleEvent = batchStatus.successCount === 1;
+        const message = isSingleEvent
+          ? "Event captured successfully"
+          : `${batchStatus.successCount} events captured successfully`;
+
+        toast.success(message, {
+          id: toastIdRef.current ?? undefined,
+          duration: 4000,
+          action:
+            isSingleEvent && batchStatus.firstEventId
+              ? {
+                  label: "View event",
+                  onClick: () =>
+                    router.push(`/event/${batchStatus.firstEventId}`),
+                }
+              : undefined,
+        });
       }
 
       // Clear the ref since the toast is now handled
