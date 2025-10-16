@@ -87,3 +87,32 @@ export function valuesToOptions(
 export function optionsToValues(options: { value: string; label: string }[]) {
   return options.map((option) => option.value);
 }
+
+// URL helpers
+export function normalizeUrlForStorage(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) return trimmed;
+  // Preserve entered protocol if provided
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://"))
+    return trimmed;
+  // Handle protocol-relative URLs
+  if (trimmed.startsWith("//")) return `https:${trimmed}`;
+  // Default to https for bare domains/paths
+  return `https://${trimmed}`;
+}
+
+export function formatUrlForDisplay(url: string): string {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./i, "");
+    const path = `${u.pathname}${u.search}${u.hash}`;
+    return `${host}${path}`;
+  } catch {
+    // Fallback for non-standard strings
+    const withoutProtocol = url
+      .replace(/^https?:\/\//i, "")
+      .replace(/^\/\//, "");
+    const withoutWww = withoutProtocol.replace(/^www\./i, "");
+    return withoutWww;
+  }
+}

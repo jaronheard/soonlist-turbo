@@ -26,7 +26,7 @@ import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
 import { getGoogleMapsUrl } from "~/lib/maps";
-import { cn } from "~/lib/utils";
+import { cn, formatUrlForDisplay } from "~/lib/utils";
 import { CalendarButton } from "./CalendarButton";
 import { DeleteButton } from "./DeleteButton";
 import { EditButton } from "./EditButton";
@@ -86,7 +86,7 @@ export function EventMetadataDisplay({
                 rel="noopener noreferrer"
                 className="break-all text-interactive-1 hover:underline"
               >
-                {url}
+                {formatUrlForDisplay(url)}
               </Link>
               {index < sourceUrls.length - 1 && <span>, </span>}
             </span>

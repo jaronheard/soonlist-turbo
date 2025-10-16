@@ -8,6 +8,7 @@ interface InputTagsProps {
   onChange: (value: string[]) => void;
   placeholder?: string;
   id?: string;
+  normalizeItem?: (value: string) => string;
 }
 
 export function InputTags({
@@ -15,14 +16,16 @@ export function InputTags({
   onChange,
   placeholder = "Add item",
   id,
+  normalizeItem,
 }: InputTagsProps) {
   const [pendingDataPoint, setPendingDataPoint] = useState("");
 
   const addPendingDataPoint = () => {
     if (pendingDataPoint.trim()) {
       const trimmed = pendingDataPoint.trim();
-      if (!value.includes(trimmed)) {
-        onChange([...value, trimmed]);
+      const candidate = normalizeItem ? normalizeItem(trimmed) : trimmed;
+      if (!value.includes(candidate)) {
+        onChange([...value, candidate]);
       }
       setPendingDataPoint("");
     }

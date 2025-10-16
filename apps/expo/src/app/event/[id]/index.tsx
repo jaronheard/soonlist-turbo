@@ -55,6 +55,7 @@ import {
 import { formatEventDateRange } from "~/utils/dates";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
+import { formatUrlForDisplay } from "../../../utils/links";
 
 // Helper to get platform URL for mentions
 function getPlatformUrl(
@@ -393,7 +394,7 @@ export default function Page() {
                               }}
                             >
                               <Text className="break-all text-sm text-interactive-1">
-                                {url}
+                                {formatUrlForDisplay(url)}
                               </Text>
                             </Pressable>
                             {index < sourceUrls.length - 1 && (

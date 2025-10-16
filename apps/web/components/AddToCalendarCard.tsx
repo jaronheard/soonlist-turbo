@@ -26,6 +26,7 @@ import { Textarea } from "@soonlist/ui/textarea";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
+import { normalizeUrlForStorage } from "~/lib/utils";
 import { CalendarButton } from "./CalendarButton";
 import { PublishButton } from "./PublishButton";
 import { TimezoneSelect } from "./TimezoneSelect";
@@ -349,6 +350,7 @@ export function AddToCalendarCard({
                 placeholder="https://example.com/tickets"
                 value={sourceUrls}
                 onChange={setSourceUrls}
+                normalizeItem={normalizeUrlForStorage}
               />
             </div>
           </div>

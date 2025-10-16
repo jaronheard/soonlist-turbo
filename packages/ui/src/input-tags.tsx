@@ -12,15 +12,19 @@ type OverrideInputProps = Omit<InputProps, "onChange">;
 type InputTagsProps = OverrideInputProps & {
   value: string[];
   onChange: Dispatch<SetStateAction<string[]>>;
+  normalizeItem?: (value: string) => string;
 };
 
 export const InputTags = forwardRef<HTMLInputElement, InputTagsProps>(
-  ({ value, onChange, ...props }, ref) => {
+  ({ value, onChange, normalizeItem, ...props }, ref) => {
     const [pendingDataPoint, setPendingDataPoint] = useState("");
 
     const addPendingDataPoint = () => {
       if (pendingDataPoint) {
-        const newDataPoints = new Set([...value, pendingDataPoint]);
+        const candidate = normalizeItem
+          ? normalizeItem(pendingDataPoint)
+          : pendingDataPoint;
+        const newDataPoints = new Set([...value, candidate]);
         onChange(Array.from(newDataPoints));
         setPendingDataPoint("");
       }

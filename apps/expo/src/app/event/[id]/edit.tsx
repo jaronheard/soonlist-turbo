@@ -34,6 +34,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { PlatformSelectNative } from "~/components/PlatformSelectNative";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { DEFAULT_VISIBILITY } from "~/constants";
+import { normalizeUrlForStorage } from "~/utils/links";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
 
@@ -763,6 +764,7 @@ export default function EditEventScreen() {
                         value={value || []}
                         onChange={onChange}
                         placeholder="https://example.com/tickets"
+                        normalizeItem={normalizeUrlForStorage}
                       />
                     </View>
                   )}
