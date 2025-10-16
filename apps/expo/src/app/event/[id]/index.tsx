@@ -426,7 +426,7 @@ export default function Page() {
                                 key={index}
                                 // Recommended: Add URL validation
                                 onPress={() => {
-                                  if (/^https?:\/\//.exec(url)) {
+                                  if (/^https?:\/\//.test(url)) {
                                     void Linking.openURL(url);
                                   }
                                 }}
