@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Dimensions,
   Linking,
@@ -142,27 +148,42 @@ export default function Page() {
   }, [handleDelete]);
 
   // Pre-calculate the aspect ratio of the event image, if it exists
-  useEffect(() => {
-    if (!event?.event) return;
+  const imageUri = useMemo(() => {
+    if (!event?.event) return null;
 
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     const eventImage = eventData?.images?.[3];
     if (!eventImage) {
+      return null;
+    }
+    return `${eventImage}?max-w=1284&fit=cover&f=webp&q=80`;
+  }, [event?.event?.images]);
+
+  useEffect(() => {
+    if (!imageUri) {
+      setImageAspectRatio(null);
       return;
     }
-    const imageUri = `${eventImage}?max-w=1284&fit=cover&f=webp&q=80`;
+
+    let cancelled = false;
 
     // Use RNImage to get actual width/height of the remote image
     RNImage.getSize(
       imageUri,
       (naturalWidth, naturalHeight) => {
+        if (cancelled) return;
         setImageAspectRatio(naturalWidth / naturalHeight);
       },
       (err) => {
+        if (cancelled) return;
         logError("Failed to get image size", err);
       },
     );
-  }, [event?.event]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [imageUri]);
 
   // Build the header-left UI if we can't go back
   const HeaderLeft = useCallback(() => {
@@ -343,6 +364,7 @@ export default function Page() {
             <>
               {(() => {
                 const eventMetadata = event.eventMetadata as EventMetadata;
+                const mentions = eventMetadata.mentions ?? [];
                 return (
                   <View className="mb-6 flex flex-col gap-3">
                     {/* Platform */}
@@ -359,62 +381,60 @@ export default function Page() {
                       )}
 
                     {/* Mentions */}
-                    {eventMetadata.mentions &&
-                      eventMetadata.mentions.length > 0 && (
-                        <View className="flex-col gap-1">
-                          {/* Main Author (first mention) */}
-                          <Pressable
-                            onPress={() => {
-                              const url = getPlatformUrl(
-                                eventMetadata.platform,
-                                eventMetadata.mentions[0] || "",
-                              );
-                              void Linking.openURL(url);
-                            }}
-                          >
-                            <Text className="text-sm text-neutral-2">
-                              <Text className="font-medium">by </Text>
-                              <Text className="text-interactive-1">
-                                @{eventMetadata.mentions[0]}
-                              </Text>
+                    {mentions.length > 0 && (
+                      <View className="flex-col gap-1">
+                        {/* Main Author (first mention) */}
+                        <Pressable
+                          onPress={() => {
+                            const url = getPlatformUrl(
+                              eventMetadata.platform,
+                              mentions[0] || "",
+                            );
+                            void Linking.openURL(url);
+                          }}
+                        >
+                          <Text className="text-sm text-neutral-2">
+                            <Text className="font-medium">by </Text>
+                            <Text className="text-interactive-1">
+                              @{mentions[0]}
                             </Text>
-                          </Pressable>
+                          </Text>
+                        </Pressable>
 
-                          {/* Additional Mentions */}
-                          {eventMetadata.mentions.length > 1 && (
-                            <View className="flex-row flex-wrap items-center gap-1">
-                              <Text className="text-sm text-neutral-2">
-                                with{" "}
-                              </Text>
-                              {eventMetadata.mentions
-                                .slice(1)
-                                .map((mention: string, index: number) => (
-                                  <React.Fragment key={mention}>
-                                    <Pressable
-                                      onPress={() => {
-                                        const url = getPlatformUrl(
-                                          eventMetadata.platform,
-                                          mention,
-                                        );
-                                        void Linking.openURL(url);
-                                      }}
-                                    >
-                                      <Text className="text-sm text-interactive-1">
-                                        @{mention}
-                                      </Text>
-                                    </Pressable>
-                                    {index <
-                                      eventMetadata.mentions.length - 2 && (
-                                      <Text className="text-sm text-neutral-2">
-                                        ,{" "}
-                                      </Text>
-                                    )}
-                                  </React.Fragment>
-                                ))}
-                            </View>
-                          )}
-                        </View>
-                      )}
+                        {/* Additional Mentions */}
+                        {mentions.length > 1 && (
+                          <View className="flex-row flex-wrap items-center gap-1">
+                            <Text className="text-sm text-neutral-2">
+                              with{" "}
+                            </Text>
+                            {mentions
+                              .slice(1)
+                              .map((mention: string, index: number) => (
+                                <React.Fragment key={mention}>
+                                  <Pressable
+                                    onPress={() => {
+                                      const url = getPlatformUrl(
+                                        eventMetadata.platform,
+                                        mention,
+                                      );
+                                      void Linking.openURL(url);
+                                    }}
+                                  >
+                                    <Text className="text-sm text-interactive-1">
+                                      @{mention}
+                                    </Text>
+                                  </Pressable>
+                                  {index < mentions.length - 2 && (
+                                    <Text className="text-sm text-neutral-2">
+                                      ,{" "}
+                                    </Text>
+                                  )}
+                                </React.Fragment>
+                              ))}
+                          </View>
+                        )}
+                      </View>
+                    )}
 
                     {/* Source URLs */}
                     {eventMetadata.sourceUrls &&
