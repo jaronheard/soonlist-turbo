@@ -62,7 +62,23 @@ function getPlatformUrl(
   platform: string | undefined,
   username: string,
 ): string {
-  const cleanUsername = username.replace(/^@/, "");
+  // Check if username is already a full URL
+  const trimmedUsername = username.trim();
+  if (
+    trimmedUsername.startsWith("http://") ||
+    trimmedUsername.startsWith("https://")
+  ) {
+    try {
+      new URL(trimmedUsername);
+      return trimmedUsername; // Return as-is if it's a valid URL
+    } catch {
+      // Invalid URL, continue with platform logic
+    }
+  }
+
+  const cleanUsername = trimmedUsername.replace(/^@/, "");
+
+  // Only return URLs for explicitly supported platforms
   switch (platform?.toLowerCase()) {
     case "tiktok":
       return `https://tiktok.com/@${cleanUsername}`;
@@ -71,8 +87,9 @@ function getPlatformUrl(
     case "facebook":
       return `https://facebook.com/${cleanUsername}`;
     case "instagram":
-    default:
       return `https://instagram.com/${cleanUsername}`;
+    default:
+      return ""; // Return empty string for unsupported platforms
   }
 }
 
@@ -417,7 +434,9 @@ export default function Page() {
                               eventMetadata.platform,
                               firstMentionCandidate,
                             );
-                            void Linking.openURL(url);
+                            if (url) {
+                              void Linking.openURL(url);
+                            }
                           }}
                         >
                           <View className="flex-row items-center gap-0.5">
@@ -447,7 +466,9 @@ export default function Page() {
                                       eventMetadata.platform,
                                       mention,
                                     );
-                                    void Linking.openURL(url);
+                                    if (url) {
+                                      void Linking.openURL(url);
+                                    }
                                   }}
                                 >
                                   <View className="flex-row items-center gap-0.5">

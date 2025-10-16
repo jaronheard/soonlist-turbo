@@ -1,7 +1,8 @@
 export function normalizeUrlForStorage(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) return trimmed;
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://"))
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith("http://") || lower.startsWith("https://"))
     return trimmed; // preserve entered protocol
   if (trimmed.startsWith("//")) return `https:${trimmed}`; // protocol-relative
   return `https://${trimmed}`; // default to https

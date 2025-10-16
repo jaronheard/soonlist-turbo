@@ -41,8 +41,24 @@ import { UserAvatarMini } from "./UserAvatarMini";
 function getPlatformUrl(
   platform: string | undefined,
   username: string,
-): string {
-  const cleanUsername = username.replace(/^@/, "");
+): string | null {
+  // Check if username is already a full URL
+  const trimmedUsername = username.trim();
+  if (
+    trimmedUsername.startsWith("http://") ||
+    trimmedUsername.startsWith("https://")
+  ) {
+    try {
+      new URL(trimmedUsername);
+      return trimmedUsername; // Return as-is if it's a valid URL
+    } catch {
+      // Invalid URL, continue with platform logic
+    }
+  }
+
+  const cleanUsername = trimmedUsername.replace(/^@/, "");
+
+  // Only return URLs for explicitly supported platforms
   switch (platform?.toLowerCase()) {
     case "tiktok":
       return `https://tiktok.com/@${cleanUsername}`;
@@ -51,8 +67,9 @@ function getPlatformUrl(
     case "facebook":
       return `https://facebook.com/${cleanUsername}`;
     case "instagram":
-    default:
       return `https://instagram.com/${cleanUsername}`;
+    default:
+      return null; // Return null for unsupported platforms
   }
 }
 
@@ -98,33 +115,53 @@ export function EventMetadataDisplay({
       {hasMentions && firstMentionCandidate && (
         <>
           <span>via</span>
-          <Link
-            href={getPlatformUrl(eventMetadata.platform, firstMentionCandidate)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-0.5 text-interactive-1 hover:underline"
-          >
-            {isInstagram && (
-              <Instagram className="mt-[3px] size-3 flex-shrink-0" />
-            )}
-            {firstMentionCandidate}
-          </Link>
+          {(() => {
+            const platformUrl = getPlatformUrl(
+              eventMetadata.platform,
+              firstMentionCandidate,
+            );
+            return platformUrl ? (
+              <Link
+                href={platformUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-0.5 text-interactive-1 hover:underline"
+              >
+                {isInstagram && (
+                  <Instagram className="mt-[3px] size-3 flex-shrink-0" />
+                )}
+                {firstMentionCandidate}
+              </Link>
+            ) : (
+              <span className="text-neutral-1">{firstMentionCandidate}</span>
+            );
+          })()}
           {(eventMetadata.mentions || []).length > 1 && (
             <>
               <span>with</span>
               {(eventMetadata.mentions || []).slice(1).map((mention, index) => (
                 <span key={mention} className="flex items-center">
-                  <Link
-                    href={getPlatformUrl(eventMetadata.platform, mention)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-0.5 text-interactive-1 hover:underline"
-                  >
-                    {isInstagram && (
-                      <Instagram className="mt-[3px] size-3 flex-shrink-0" />
-                    )}
-                    {mention}
-                  </Link>
+                  {(() => {
+                    const platformUrl = getPlatformUrl(
+                      eventMetadata.platform,
+                      mention,
+                    );
+                    return platformUrl ? (
+                      <Link
+                        href={platformUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-0.5 text-interactive-1 hover:underline"
+                      >
+                        {isInstagram && (
+                          <Instagram className="mt-[3px] size-3 flex-shrink-0" />
+                        )}
+                        {mention}
+                      </Link>
+                    ) : (
+                      <span className="text-neutral-1">{mention}</span>
+                    );
+                  })()}
                   {index < (eventMetadata.mentions || []).length - 2 && (
                     <span>, </span>
                   )}

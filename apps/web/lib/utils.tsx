@@ -93,7 +93,8 @@ export function normalizeUrlForStorage(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) return trimmed;
   // Preserve entered protocol if provided
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://"))
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith("http://") || lower.startsWith("https://"))
     return trimmed;
   // Handle protocol-relative URLs
   if (trimmed.startsWith("//")) return `https:${trimmed}`;
