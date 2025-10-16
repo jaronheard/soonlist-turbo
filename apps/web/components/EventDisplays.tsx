@@ -61,46 +61,77 @@ export function EventMetadataDisplay({
 }: {
   eventMetadata: EventMetadata;
 }) {
-  // Only show if we have mentions
-  if (!eventMetadata.mentions || eventMetadata.mentions.length === 0) {
-    return null;
-  }
+  const sourceUrls = eventMetadata.sourceUrls || [];
+  const hasSourceUrls = sourceUrls.length > 0;
+  const hasMentions = !!(
+    eventMetadata.mentions && eventMetadata.mentions.length > 0
+  );
+  if (!hasSourceUrls && !hasMentions) return null;
 
-  const firstMention = eventMetadata.mentions[0];
-  const additionalMentions = eventMetadata.mentions.slice(1);
+  const firstMentionCandidate = hasMentions
+    ? (eventMetadata.mentions || [])[0]
+    : undefined;
   const isInstagram = eventMetadata.platform === "instagram";
 
   return (
     <div className="mt-3 flex flex-wrap items-center gap-1 text-sm text-neutral-2">
-      <span>Via</span>
-      <Link
-        href={getPlatformUrl(eventMetadata.platform, firstMention!)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-0.5 text-interactive-1 hover:underline"
-      >
-        {isInstagram && <Instagram className="mt-[3px] size-3 flex-shrink-0" />}
-        {firstMention}
-      </Link>
-      {additionalMentions.length > 0 && (
+      {hasSourceUrls && (
         <>
-          <span>with</span>
-          {additionalMentions.map((mention, index) => (
-            <span key={mention} className="flex items-center">
+          <span>link:</span>
+          {sourceUrls.map((url, index) => (
+            <span key={`${url}-${index}`} className="flex items-center">
               <Link
-                href={getPlatformUrl(eventMetadata.platform, mention)}
+                href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-0.5 text-interactive-1 hover:underline"
+                className="break-all text-interactive-1 hover:underline"
               >
-                {isInstagram && (
-                  <Instagram className="mt-[3px] size-3 flex-shrink-0" />
-                )}
-                {mention}
+                {url}
               </Link>
-              {index < additionalMentions.length - 1 && <span>, </span>}
+              {index < sourceUrls.length - 1 && <span>, </span>}
             </span>
           ))}
+          {hasMentions && <span className="mx-1">•</span>}
+        </>
+      )}
+
+      {hasMentions && firstMentionCandidate && (
+        <>
+          <span>via</span>
+          <Link
+            href={getPlatformUrl(eventMetadata.platform, firstMentionCandidate)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-0.5 text-interactive-1 hover:underline"
+          >
+            {isInstagram && (
+              <Instagram className="mt-[3px] size-3 flex-shrink-0" />
+            )}
+            {firstMentionCandidate}
+          </Link>
+          {(eventMetadata.mentions || []).length > 1 && (
+            <>
+              <span>with</span>
+              {(eventMetadata.mentions || []).slice(1).map((mention, index) => (
+                <span key={mention} className="flex items-center">
+                  <Link
+                    href={getPlatformUrl(eventMetadata.platform, mention)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-0.5 text-interactive-1 hover:underline"
+                  >
+                    {isInstagram && (
+                      <Instagram className="mt-[3px] size-3 flex-shrink-0" />
+                    )}
+                    {mention}
+                  </Link>
+                  {index < (eventMetadata.mentions || []).length - 2 && (
+                    <span>, </span>
+                  )}
+                </span>
+              ))}
+            </>
+          )}
         </>
       )}
     </div>
