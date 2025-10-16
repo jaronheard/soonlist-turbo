@@ -41,6 +41,25 @@ import { SaveButton } from "./SaveButton";
 import { ShareButton } from "./ShareButton";
 import { UserAvatarMini } from "./UserAvatarMini";
 
+// Helper to get platform URL for mentions
+function getPlatformUrl(
+  platform: string | undefined,
+  username: string,
+): string {
+  const cleanUsername = username.replace(/^@/, "");
+  switch (platform?.toLowerCase()) {
+    case "tiktok":
+      return `https://tiktok.com/@${cleanUsername}`;
+    case "twitter":
+      return `https://twitter.com/${cleanUsername}`;
+    case "facebook":
+      return `https://facebook.com/${cleanUsername}`;
+    case "instagram":
+    default:
+      return `https://instagram.com/${cleanUsername}`;
+  }
+}
+
 export function EventMetadataDisplay({
   eventMetadata,
 }: {
@@ -73,7 +92,7 @@ export function EventMetadataDisplay({
           {additionalMentions.map((mention, index) => (
             <span key={mention} className="flex items-center">
               <Link
-                href={`https://instagram.com/${mention}`}
+                href={getPlatformUrl(eventMetadata.platform, mention)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-0.5 text-interactive-1 hover:underline"

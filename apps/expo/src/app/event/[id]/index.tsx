@@ -21,6 +21,7 @@ import {
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
+import type { EventMetadata } from "@soonlist/cal";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -47,6 +48,25 @@ import {
 import { formatEventDateRange } from "~/utils/dates";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
+
+// Helper to get platform URL for mentions
+function getPlatformUrl(
+  platform: string | undefined,
+  username: string,
+): string {
+  const cleanUsername = username.replace(/^@/, "");
+  switch (platform?.toLowerCase()) {
+    case "tiktok":
+      return `https://tiktok.com/@${cleanUsername}`;
+    case "twitter":
+      return `https://twitter.com/${cleanUsername}`;
+    case "facebook":
+      return `https://facebook.com/${cleanUsername}`;
+    case "instagram":
+    default:
+      return `https://instagram.com/${cleanUsername}`;
+  }
+}
 
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -320,92 +340,112 @@ export default function Page() {
 
           {/* Metadata Section */}
           {event.eventMetadata && (
-            <View className="mb-6 flex flex-col gap-3">
-              {/* Platform */}
-              {event.eventMetadata.platform &&
-                event.eventMetadata.platform !== "unknown" && (
-                  <View className="flex-row items-center gap-2">
-                    <Text className="text-sm font-medium text-neutral-2">
-                      Source:
-                    </Text>
-                    <Text className="text-sm capitalize text-neutral-1">
-                      {event.eventMetadata.platform}
-                    </Text>
-                  </View>
-                )}
-
-              {/* Mentions */}
-              {event.eventMetadata.mentions &&
-                event.eventMetadata.mentions.length > 0 && (
-                  <View className="flex-col gap-1">
-                    {/* Main Author (first mention) */}
-                    <Link
-                      href={`https://instagram.com/${event.eventMetadata.mentions[0]}`}
-                      asChild
-                    >
-                      <Pressable>
-                        <Text className="text-sm text-neutral-2">
-                          <Text className="font-medium">by </Text>
-                          <Text className="text-interactive-1">
-                            @{event.eventMetadata.mentions[0]}
+            <>
+              {(() => {
+                const eventMetadata = event.eventMetadata as EventMetadata;
+                return (
+                  <View className="mb-6 flex flex-col gap-3">
+                    {/* Platform */}
+                    {eventMetadata.platform &&
+                      eventMetadata.platform !== "unknown" && (
+                        <View className="flex-row items-center gap-2">
+                          <Text className="text-sm font-medium text-neutral-2">
+                            Source:
                           </Text>
-                        </Text>
-                      </Pressable>
-                    </Link>
+                          <Text className="text-sm capitalize text-neutral-1">
+                            {eventMetadata.platform}
+                          </Text>
+                        </View>
+                      )}
 
-                    {/* Additional Mentions */}
-                    {event.eventMetadata.mentions.length > 1 && (
-                      <View className="flex-row flex-wrap items-center gap-1">
-                        <Text className="text-sm text-neutral-2">with </Text>
-                        {event.eventMetadata.mentions
-                          .slice(1)
-                          .map((mention: string, index: number) => (
-                            <React.Fragment key={mention}>
-                              <Link
-                                href={`https://instagram.com/${mention}`}
-                                asChild
-                              >
-                                <Pressable>
-                                  <Text className="text-sm text-interactive-1">
-                                    @{mention}
-                                  </Text>
-                                </Pressable>
-                              </Link>
-                              {index <
-                                event.eventMetadata.mentions.length - 2 && (
-                                <Text className="text-sm text-neutral-2">
-                                  ,{" "}
-                                </Text>
-                              )}
-                            </React.Fragment>
-                          ))}
-                      </View>
-                    )}
-                  </View>
-                )}
-
-              {/* Source URLs */}
-              {event.eventMetadata.sourceUrls &&
-                event.eventMetadata.sourceUrls.length > 0 && (
-                  <View className="flex-col gap-1">
-                    {event.eventMetadata.sourceUrls.map(
-                      (url: string, index: number) => (
-                        <Pressable
-                          key={index}
-                          onPress={() => Linking.openURL(url)}
-                        >
-                          <Text
-                            className="text-sm text-interactive-1"
-                            numberOfLines={1}
+                    {/* Mentions */}
+                    {eventMetadata.mentions &&
+                      eventMetadata.mentions.length > 0 && (
+                        <View className="flex-col gap-1">
+                          {/* Main Author (first mention) */}
+                          <Pressable
+                            onPress={() => {
+                              const url = getPlatformUrl(
+                                eventMetadata.platform,
+                                eventMetadata.mentions[0] || "",
+                              );
+                              void Linking.openURL(url);
+                            }}
                           >
-                            {url}
-                          </Text>
-                        </Pressable>
-                      ),
-                    )}
+                            <Text className="text-sm text-neutral-2">
+                              <Text className="font-medium">by </Text>
+                              <Text className="text-interactive-1">
+                                @{eventMetadata.mentions[0]}
+                              </Text>
+                            </Text>
+                          </Pressable>
+
+                          {/* Additional Mentions */}
+                          {eventMetadata.mentions.length > 1 && (
+                            <View className="flex-row flex-wrap items-center gap-1">
+                              <Text className="text-sm text-neutral-2">
+                                with{" "}
+                              </Text>
+                              {eventMetadata.mentions
+                                .slice(1)
+                                .map((mention: string, index: number) => (
+                                  <React.Fragment key={mention}>
+                                    <Pressable
+                                      onPress={() => {
+                                        const url = getPlatformUrl(
+                                          eventMetadata.platform,
+                                          mention,
+                                        );
+                                        void Linking.openURL(url);
+                                      }}
+                                    >
+                                      <Text className="text-sm text-interactive-1">
+                                        @{mention}
+                                      </Text>
+                                    </Pressable>
+                                    {index <
+                                      eventMetadata.mentions.length - 2 && (
+                                      <Text className="text-sm text-neutral-2">
+                                        ,{" "}
+                                      </Text>
+                                    )}
+                                  </React.Fragment>
+                                ))}
+                            </View>
+                          )}
+                        </View>
+                      )}
+
+                    {/* Source URLs */}
+                    {eventMetadata.sourceUrls &&
+                      eventMetadata.sourceUrls.length > 0 && (
+                        <View className="flex-col gap-1">
+                          {eventMetadata.sourceUrls.map(
+                            (url: string, index: number) => (
+                              <Pressable
+                                key={index}
+                                // Recommended: Add URL validation
+                                onPress={() => {
+                                  if (/^https?:\/\//.exec(url)) {
+                                    void Linking.openURL(url);
+                                  }
+                                }}
+                              >
+                                <Text
+                                  className="text-sm text-interactive-1"
+                                  numberOfLines={1}
+                                >
+                                  {url}
+                                </Text>
+                              </Pressable>
+                            ),
+                          )}
+                        </View>
+                      )}
                   </View>
-                )}
-            </View>
+                );
+              })()}
+            </>
           )}
 
           {/* Main Event Image if it exists and aspect ratio is known */}
