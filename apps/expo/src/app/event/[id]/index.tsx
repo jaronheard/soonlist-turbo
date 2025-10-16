@@ -38,6 +38,7 @@ import {
   EyeOff,
   Globe2,
   Heart,
+  Instagram,
   MapPinned,
   ShareIcon,
   User,
@@ -364,104 +365,115 @@ export default function Page() {
             <>
               {(() => {
                 const eventMetadata = event.eventMetadata as EventMetadata;
-                const mentions = eventMetadata.mentions ?? [];
-                return (
-                  <View className="mb-6 flex flex-col gap-3">
-                    {/* Platform */}
-                    {eventMetadata.platform &&
-                      eventMetadata.platform !== "unknown" && (
-                        <View className="flex-row items-center gap-2">
-                          <Text className="text-sm font-medium text-neutral-2">
-                            Source:
-                          </Text>
-                          <Text className="text-sm capitalize text-neutral-1">
-                            {eventMetadata.platform}
-                          </Text>
-                        </View>
-                      )}
+                const sourceUrls = eventMetadata.sourceUrls || [];
+                const hasSourceUrls = sourceUrls.length > 0;
+                const hasMentions = !!(
+                  eventMetadata.mentions && eventMetadata.mentions.length > 0
+                );
+                const mentions = eventMetadata.mentions || [];
+                const firstMentionCandidate = hasMentions
+                  ? mentions[0]
+                  : undefined;
+                const isInstagram = eventMetadata.platform === "instagram";
 
-                    {/* Mentions */}
-                    {mentions.length > 0 && (
-                      <View className="flex-col gap-1">
-                        {/* Main Author (first mention) */}
+                if (!hasSourceUrls && !hasMentions) return null;
+
+                return (
+                  <View className="mb-6 flex-row flex-wrap items-center gap-1">
+                    {hasSourceUrls && (
+                      <>
+                        <Text className="text-sm text-neutral-2">link:</Text>
+                        {sourceUrls.map((url, index) => (
+                          <React.Fragment key={`${url}-${index}`}>
+                            <Pressable
+                              onPress={() => {
+                                if (/^https?:\/\//.test(url)) {
+                                  void Linking.openURL(url);
+                                }
+                              }}
+                            >
+                              <Text className="break-all text-sm text-interactive-1">
+                                {url}
+                              </Text>
+                            </Pressable>
+                            {index < sourceUrls.length - 1 && (
+                              <Text className="text-sm text-neutral-2">, </Text>
+                            )}
+                          </React.Fragment>
+                        ))}
+                        {hasMentions && (
+                          <Text className="mx-1 text-sm text-neutral-2">•</Text>
+                        )}
+                      </>
+                    )}
+
+                    {hasMentions && firstMentionCandidate && (
+                      <>
+                        <Text className="text-sm text-neutral-2">via</Text>
                         <Pressable
                           onPress={() => {
                             const url = getPlatformUrl(
                               eventMetadata.platform,
-                              mentions[0] || "",
+                              firstMentionCandidate,
                             );
                             void Linking.openURL(url);
                           }}
                         >
-                          <Text className="text-sm text-neutral-2">
-                            <Text className="font-medium">by </Text>
-                            <Text className="text-interactive-1">
-                              @{mentions[0]}
+                          <View className="flex-row items-center gap-0.5">
+                            {isInstagram && (
+                              <Instagram
+                                className="mt-[3px] flex-shrink-0"
+                                color="#5A32FB"
+                                size={12}
+                              />
+                            )}
+                            <Text className="text-sm text-interactive-1">
+                              {firstMentionCandidate}
                             </Text>
-                          </Text>
-                        </Pressable>
-
-                        {/* Additional Mentions */}
-                        {mentions.length > 1 && (
-                          <View className="flex-row flex-wrap items-center gap-1">
-                            <Text className="text-sm text-neutral-2">
-                              with{" "}
-                            </Text>
-                            {mentions
-                              .slice(1)
-                              .map((mention: string, index: number) => (
-                                <React.Fragment key={mention}>
-                                  <Pressable
-                                    onPress={() => {
-                                      const url = getPlatformUrl(
-                                        eventMetadata.platform,
-                                        mention,
-                                      );
-                                      void Linking.openURL(url);
-                                    }}
-                                  >
-                                    <Text className="text-sm text-interactive-1">
-                                      @{mention}
-                                    </Text>
-                                  </Pressable>
-                                  {index < mentions.length - 2 && (
-                                    <Text className="text-sm text-neutral-2">
-                                      ,{" "}
-                                    </Text>
-                                  )}
-                                </React.Fragment>
-                              ))}
                           </View>
-                        )}
-                      </View>
-                    )}
-
-                    {/* Source URLs */}
-                    {eventMetadata.sourceUrls &&
-                      eventMetadata.sourceUrls.length > 0 && (
-                        <View className="flex-col gap-1">
-                          {eventMetadata.sourceUrls.map(
-                            (url: string, index: number) => (
-                              <Pressable
-                                key={index}
-                                // Recommended: Add URL validation
-                                onPress={() => {
-                                  if (/^https?:\/\//.test(url)) {
-                                    void Linking.openURL(url);
-                                  }
-                                }}
+                        </Pressable>
+                        {mentions.length > 1 && (
+                          <>
+                            <Text className="text-sm text-neutral-2">with</Text>
+                            {mentions.slice(1).map((mention, index) => (
+                              <View
+                                key={mention}
+                                className="flex-row items-center"
                               >
-                                <Text
-                                  className="text-sm text-interactive-1"
-                                  numberOfLines={1}
+                                <Pressable
+                                  onPress={() => {
+                                    const url = getPlatformUrl(
+                                      eventMetadata.platform,
+                                      mention,
+                                    );
+                                    void Linking.openURL(url);
+                                  }}
                                 >
-                                  {url}
-                                </Text>
-                              </Pressable>
-                            ),
-                          )}
-                        </View>
-                      )}
+                                  <View className="flex-row items-center gap-0.5">
+                                    {isInstagram && (
+                                      <Instagram
+                                        className="mt-[3px] flex-shrink-0"
+                                        color="#5A32FB"
+                                        size={12}
+                                      />
+                                    )}
+                                    <Text className="text-sm text-interactive-1">
+                                      {mention}
+                                    </Text>
+                                  </View>
+                                </Pressable>
+                                {index <
+                                  (eventMetadata.mentions || []).length - 2 && (
+                                  <Text className="text-sm text-neutral-2">
+                                    ,{" "}
+                                  </Text>
+                                )}
+                              </View>
+                            ))}
+                          </>
+                        )}
+                      </>
+                    )}
                   </View>
                 );
               })()}

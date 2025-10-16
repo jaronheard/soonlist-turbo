@@ -29,7 +29,9 @@ import { Button } from "~/components/Button";
 import { DatePickerField, TimePickerField } from "~/components/date-picker";
 import { EyeOff, Globe2, Image as ImageIcon } from "~/components/icons";
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
+import { InputTags } from "~/components/InputTags";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { PlatformSelectNative } from "~/components/PlatformSelectNative";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { DEFAULT_VISIBILITY } from "~/constants";
 import { getPlanStatusFromUser } from "~/utils/plan";
@@ -47,14 +49,9 @@ const formSchema = z.object({
     location: z.string().optional(),
     images: z.array(z.string()).optional(),
   }),
-  eventMetadata: z.object({
-    type: z.string().optional(),
-    category: z.string().optional(),
-    priceType: z.string().optional(),
-    ageRestriction: z.string().optional(),
-    performers: z.string().optional(),
-    accessibility: z.string().optional(),
-  }),
+  platform: z.string().optional(),
+  mentions: z.array(z.string()).optional(),
+  sourceUrls: z.array(z.string()).optional(),
   comment: z.string().optional(),
   lists: z
     .array(
@@ -105,14 +102,9 @@ export default function EditEventScreen() {
         location: "",
         images: [],
       },
-      eventMetadata: {
-        type: "",
-        category: "",
-        priceType: "",
-        ageRestriction: "",
-        performers: "",
-        accessibility: "",
-      },
+      platform: "unknown",
+      mentions: [],
+      sourceUrls: [],
       comment: "",
       lists: [],
       visibility: DEFAULT_VISIBILITY,
@@ -134,7 +126,11 @@ export default function EditEventScreen() {
         images?: string[];
       };
 
-      const _eventMetadata = eventQuery.eventMetadata as {
+      const eventMetadata = eventQuery.eventMetadata as {
+        platform?: string;
+        mentions?: string[];
+        sourceUrls?: string[];
+        // Legacy fields for backward compatibility
         type?: string;
         category?: string;
         priceType?: string;
@@ -146,31 +142,22 @@ export default function EditEventScreen() {
 
       reset({
         event: {
-          name: eventData?.name || "",
-          description: eventData?.description || "",
-          startDate: eventData?.startDate || "",
-          endDate: eventData?.endDate || "",
-          startTime: eventData?.startTime || "",
-          endTime: eventData?.endTime || "",
-          timeZone: eventData?.timeZone || "",
-          location: eventData?.location || "",
-          images: eventData?.images || [],
+          name: eventData.name || "",
+          description: eventData.description || "",
+          startDate: eventData.startDate || "",
+          endDate: eventData.endDate || "",
+          startTime: eventData.startTime || "",
+          endTime: eventData.endTime || "",
+          timeZone: eventData.timeZone || "",
+          location: eventData.location || "",
+          images: eventData.images || [],
         },
-        eventMetadata: {
-          type: "event",
-          category: "unknown",
-          priceType: "unknown",
-          ageRestriction: "none",
-          performers: "",
-          accessibility: "",
-        },
+        platform: eventMetadata.platform || "unknown",
+        mentions: eventMetadata.mentions || [],
+        sourceUrls: eventMetadata.sourceUrls || [],
         comment: "",
         lists: [],
-        visibility:
-          eventQuery.visibility === "public" ||
-          eventQuery.visibility === "private"
-            ? eventQuery.visibility
-            : DEFAULT_VISIBILITY,
+        visibility: eventQuery.visibility || DEFAULT_VISIBILITY,
       });
 
       if (
@@ -333,16 +320,6 @@ export default function EditEventScreen() {
         setIsSubmitting(true);
         const loadingToastId = toast.loading("Updating event...");
 
-        const accessibilityArray = data.eventMetadata.accessibility
-          ? data.eventMetadata.accessibility
-              .split(",")
-              .map((item) => item.trim())
-          : [];
-
-        const performersArray = data.eventMetadata.performers
-          ? data.eventMetadata.performers.split(",").map((item) => item.trim())
-          : [];
-
         let imageToUse = null;
 
         if (uploadedImageUrl) {
@@ -368,12 +345,9 @@ export default function EditEventScreen() {
 
         // Only include eventMetadata if it has actual values
         const hasEventMetadata =
-          accessibilityArray.length > 0 ||
-          performersArray.length > 0 ||
-          data.eventMetadata.type ||
-          data.eventMetadata.category ||
-          data.eventMetadata.priceType ||
-          data.eventMetadata.ageRestriction;
+          (data.platform && data.platform !== "unknown") ||
+          (data.mentions && data.mentions.length > 0) ||
+          (data.sourceUrls && data.sourceUrls.length > 0);
 
         const updatedData = {
           id,
@@ -383,22 +357,12 @@ export default function EditEventScreen() {
           },
           ...(hasEventMetadata && {
             eventMetadata: {
-              ...(data.eventMetadata.type && { type: data.eventMetadata.type }),
-              ...(data.eventMetadata.category && {
-                category: data.eventMetadata.category,
-              }),
-              ...(data.eventMetadata.priceType && {
-                priceType: data.eventMetadata.priceType,
-              }),
-              ...(data.eventMetadata.ageRestriction && {
-                ageRestriction: data.eventMetadata.ageRestriction,
-              }),
-              ...(accessibilityArray.length > 0 && {
-                accessibility: accessibilityArray,
-              }),
-              ...(performersArray.length > 0 && {
-                performers: performersArray,
-              }),
+              ...(data.platform &&
+                data.platform !== "unknown" && { platform: data.platform }),
+              ...(data.mentions &&
+                data.mentions.length > 0 && { mentions: data.mentions }),
+              ...(data.sourceUrls &&
+                data.sourceUrls.length > 0 && { sourceUrls: data.sourceUrls }),
             },
           }),
           comment: data.comment || "",
@@ -747,6 +711,62 @@ export default function EditEventScreen() {
                     </View>
                   </TouchableOpacity>
                 )}
+              </View>
+            </View>
+
+            <View>
+              <Text className="mb-2 text-lg font-semibold">Source</Text>
+              <View className="space-y-4">
+                <Controller
+                  control={control}
+                  name="platform"
+                  render={({ field: { onChange, value } }) => (
+                    <View>
+                      <Text className="mb-2 text-base font-semibold">
+                        Platform
+                      </Text>
+                      <PlatformSelectNative
+                        value={value}
+                        onValueChange={onChange}
+                        placeholder="Select platform"
+                      />
+                    </View>
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="mentions"
+                  render={({ field: { onChange, value } }) => (
+                    <View>
+                      <Text className="mb-2 text-base font-semibold">
+                        Accounts
+                      </Text>
+                      <InputTags
+                        value={value || []}
+                        onChange={onChange}
+                        placeholder="e.g. @soonlistapp, @realisticmoment"
+                      />
+                    </View>
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="sourceUrls"
+                  render={({ field: { onChange, value } }) => (
+                    <View>
+                      <Text className="mb-2 text-base font-semibold">
+                        Links
+                      </Text>
+                      <InputTags
+                        value={value || []}
+                        onChange={onChange}
+                        placeholder="https://example.com/tickets"
+                      />
+                    </View>
+                  )}
+                />
               </View>
             </View>
 
