@@ -722,7 +722,7 @@ export default function EditEventScreen() {
                   control={control}
                   name="platform"
                   render={({ field: { onChange, value } }) => (
-                    <View>
+                    <View className="mt-2">
                       <Text className="mb-2 text-base font-semibold">
                         Platform
                       </Text>
@@ -739,7 +739,7 @@ export default function EditEventScreen() {
                   control={control}
                   name="mentions"
                   render={({ field: { onChange, value } }) => (
-                    <View>
+                    <View className="mt-2">
                       <Text className="mb-2 text-base font-semibold">
                         Accounts
                       </Text>
@@ -756,7 +756,7 @@ export default function EditEventScreen() {
                   control={control}
                   name="sourceUrls"
                   render={({ field: { onChange, value } }) => (
-                    <View>
+                    <View className="mt-2">
                       <Text className="mb-2 text-base font-semibold">
                         Links
                       </Text>
