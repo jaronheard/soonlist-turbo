@@ -7,11 +7,7 @@ import { useUser } from "@clerk/nextjs";
 import { atcb_action } from "add-to-calendar-button-react";
 import { Copy, Earth, EyeOff, Instagram, MapPin } from "lucide-react";
 
-import type {
-  DateInfo,
-  EventMetadata as EventMetadataDisplay,
-  SimilarityDetails,
-} from "@soonlist/cal";
+import type { DateInfo, EventMetadata, SimilarityDetails } from "@soonlist/cal";
 import type {
   AddToCalendarButtonPropsRestricted,
   ATCBActionEventConfig,
@@ -63,7 +59,7 @@ function getPlatformUrl(
 export function EventMetadataDisplay({
   eventMetadata,
 }: {
-  eventMetadata: EventMetadataDisplay;
+  eventMetadata: EventMetadata;
 }) {
   // Only show if we have mentions
   if (eventMetadata.mentions.length === 0) {
@@ -151,7 +147,7 @@ interface EventPageProps {
   }[];
   lists?: List[];
   children?: React.ReactNode;
-  eventMetadata?: EventMetadataDisplay;
+  eventMetadata?: EventMetadata;
 }
 
 function EventDateDisplaySimple({
