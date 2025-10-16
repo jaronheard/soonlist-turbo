@@ -21,11 +21,9 @@ export type Platform = z.infer<typeof PlatformSchema>;
 
 // New simplified metadata schema focusing on social media attribution
 export const EventMetadataSchema = z.object({
-  platform: PlatformSchema.optional()
-    .default("unknown")
-    .describe(
-      "The platform where this event was sourced from (e.g., instagram, tiktok, facebook, twitter, or unknown)",
-    ),
+  platform: PlatformSchema.default("unknown").describe(
+    "The platform where this event was sourced from (e.g., instagram, tiktok, facebook, twitter, or unknown)",
+  ),
   mentions: z
     .array(z.string())
     .optional()
