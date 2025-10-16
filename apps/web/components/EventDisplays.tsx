@@ -62,7 +62,7 @@ export function EventMetadataDisplay({
   eventMetadata: EventMetadata;
 }) {
   // Only show if we have mentions
-  if (eventMetadata.mentions.length === 0) {
+  if (!eventMetadata.mentions || eventMetadata.mentions.length === 0) {
     return null;
   }
 
