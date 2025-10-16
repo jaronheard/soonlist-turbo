@@ -74,7 +74,7 @@ export function EventMetadataDisplay({
     <div className="mt-3 flex flex-wrap items-center gap-1 text-sm text-neutral-2">
       <span>Via</span>
       <Link
-        href={`https://instagram.com/${firstMention}`}
+        href={getPlatformUrl(eventMetadata.platform, firstMention!)}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-0.5 text-interactive-1 hover:underline"
