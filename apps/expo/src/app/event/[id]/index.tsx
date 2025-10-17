@@ -65,8 +65,8 @@ function getPlatformUrl(
   // Check if username is already a full URL
   const trimmedUsername = username.trim();
   if (
-    trimmedUsername.startsWith("http://") ||
-    trimmedUsername.startsWith("https://")
+    trimmedUsername.toLowerCase().startsWith("http://") ||
+    trimmedUsername.toLowerCase().startsWith("https://")
   ) {
     try {
       new URL(trimmedUsername);
@@ -405,7 +405,7 @@ export default function Page() {
                           <React.Fragment key={`${url}-${index}`}>
                             <Pressable
                               onPress={() => {
-                                if (/^https?:\/\//.test(url)) {
+                                if (/^https?:\/\//i.test(url)) {
                                   void Linking.openURL(url);
                                 }
                               }}
