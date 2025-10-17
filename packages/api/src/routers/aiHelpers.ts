@@ -362,7 +362,7 @@ export async function fetchAndProcessEvent({
   ]);
 
   const generatedEvent = event.object;
-  const generatedMetadata = metadata.object;
+  const generatedMetadata = EventMetadataSchema.parse(metadata.object);
 
   const eventObject = { ...generatedEvent, eventMetadata: generatedMetadata };
 

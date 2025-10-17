@@ -11,6 +11,24 @@ import * as Events from "./model/events";
 import { enrichEventsAndFilterNulls } from "./model/events";
 
 // Validators for complex types
+const eventMetadataValidator = v.optional(
+  v.object({
+    accessibility: v.optional(v.array(v.string())),
+    accessibilityNotes: v.optional(v.string()),
+    ageRestriction: v.optional(v.string()),
+    category: v.optional(v.string()),
+    mentions: v.optional(v.array(v.string())),
+    performers: v.optional(v.array(v.string())),
+    platform: v.optional(v.string()),
+    priceMax: v.optional(v.number()),
+    priceMin: v.optional(v.number()),
+    priceType: v.optional(v.string()),
+    source: v.optional(v.string()),
+    sourceUrls: v.optional(v.array(v.string())),
+    type: v.optional(v.string()),
+  }),
+);
+
 export const eventDataValidator = v.object({
   name: v.string(),
   startDate: v.string(),
@@ -21,24 +39,8 @@ export const eventDataValidator = v.object({
   location: v.optional(v.string()),
   description: v.optional(v.string()),
   images: v.optional(v.array(v.string())),
-  eventMetadata: v.optional(v.any()), // Allow eventMetadata to pass through
+  eventMetadata: eventMetadataValidator,
 });
-
-const eventMetadataValidator = v.optional(
-  v.object({
-    accessibility: v.optional(v.array(v.string())),
-    accessibilityNotes: v.optional(v.string()),
-    ageRestriction: v.optional(v.string()),
-    category: v.optional(v.string()),
-    mentions: v.optional(v.array(v.string())),
-    performers: v.optional(v.array(v.string())),
-    priceMax: v.optional(v.number()),
-    priceMin: v.optional(v.number()),
-    priceType: v.optional(v.string()),
-    source: v.optional(v.string()),
-    type: v.optional(v.string()),
-  }),
-);
 
 const listValidator = v.object({
   value: v.string(),
@@ -507,9 +509,12 @@ export const insertEvent = internalMutation({
       batchId,
     } = args;
 
+    // Extract eventMetadata from firstEvent before creating eventData
+    const { eventMetadata, ...eventDataWithoutMetadata } = firstEvent;
+
     // Add uploaded image to event if available
     const eventData = {
-      ...firstEvent,
+      ...eventDataWithoutMetadata,
       ...(uploadedImageUrl && {
         images: [
           uploadedImageUrl,
@@ -519,7 +524,6 @@ export const insertEvent = internalMutation({
         ],
       }),
     };
-    const eventMetadata = undefined; // No metadata for now
 
     const result = await Events.createEvent(
       ctx,

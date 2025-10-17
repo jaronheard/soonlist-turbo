@@ -1,6 +1,13 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Dimensions,
+  Linking,
   Pressable,
   Image as RNImage,
   ScrollView,
@@ -20,6 +27,7 @@ import {
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery } from "convex/react";
 
+import type { EventMetadata } from "@soonlist/cal";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -30,6 +38,7 @@ import {
   EyeOff,
   Globe2,
   Heart,
+  Instagram,
   MapPinned,
   ShareIcon,
   User,
@@ -46,6 +55,43 @@ import {
 import { formatEventDateRange } from "~/utils/dates";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
+import { formatUrlForDisplay } from "../../../utils/links";
+
+// Helper to get platform URL for mentions
+function getPlatformUrl(
+  platform: string | undefined,
+  username: string,
+): string {
+  // Check if username is already a full URL
+  const trimmedUsername = username.trim();
+  if (
+    trimmedUsername.toLowerCase().startsWith("http://") ||
+    trimmedUsername.toLowerCase().startsWith("https://")
+  ) {
+    try {
+      new URL(trimmedUsername);
+      return trimmedUsername; // Return as-is if it's a valid URL
+    } catch {
+      // Invalid URL, continue with platform logic
+    }
+  }
+
+  const cleanUsername = trimmedUsername.replace(/^@/, "");
+
+  // Only return URLs for explicitly supported platforms
+  switch (platform?.toLowerCase()) {
+    case "tiktok":
+      return `https://tiktok.com/@${cleanUsername}`;
+    case "twitter":
+      return `https://twitter.com/${cleanUsername}`;
+    case "facebook":
+      return `https://facebook.com/${cleanUsername}`;
+    case "instagram":
+      return `https://instagram.com/${cleanUsername}`;
+    default:
+      return ""; // Return empty string for unsupported platforms
+  }
+}
 
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -121,27 +167,42 @@ export default function Page() {
   }, [handleDelete]);
 
   // Pre-calculate the aspect ratio of the event image, if it exists
-  useEffect(() => {
-    if (!event?.event) return;
+  const imageUri = useMemo(() => {
+    if (!event?.event) return null;
 
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     const eventImage = eventData?.images?.[3];
     if (!eventImage) {
+      return null;
+    }
+    return `${eventImage}?max-w=1284&fit=cover&f=webp&q=80`;
+  }, [event?.event?.images]);
+
+  useEffect(() => {
+    if (!imageUri) {
+      setImageAspectRatio(null);
       return;
     }
-    const imageUri = `${eventImage}?max-w=1284&fit=cover&f=webp&q=80`;
+
+    let cancelled = false;
 
     // Use RNImage to get actual width/height of the remote image
     RNImage.getSize(
       imageUri,
       (naturalWidth, naturalHeight) => {
+        if (cancelled) return;
         setImageAspectRatio(naturalWidth / naturalHeight);
       },
       (err) => {
+        if (cancelled) return;
         logError("Failed to get image size", err);
       },
     );
-  }, [event?.event]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [imageUri]);
 
   // Build the header-left UI if we can't go back
   const HeaderLeft = useCallback(() => {
@@ -316,6 +377,130 @@ export default function Page() {
           <View className="my-8">
             <Text className="text-neutral-1">{eventData.description}</Text>
           </View>
+
+          {/* Metadata Section */}
+          {event.eventMetadata && (
+            <>
+              {(() => {
+                const eventMetadata = event.eventMetadata as EventMetadata;
+                const sourceUrls = eventMetadata.sourceUrls || [];
+                const hasSourceUrls = sourceUrls.length > 0;
+                const hasMentions = !!(
+                  eventMetadata.mentions && eventMetadata.mentions.length > 0
+                );
+                const mentions = eventMetadata.mentions || [];
+                const firstMentionCandidate = hasMentions
+                  ? mentions[0]
+                  : undefined;
+                const isInstagram = eventMetadata.platform === "instagram";
+
+                if (!hasSourceUrls && !hasMentions) return null;
+
+                return (
+                  <View className="mb-6 flex-row flex-wrap items-center gap-1">
+                    {hasSourceUrls && (
+                      <>
+                        <Text className="text-sm text-neutral-2">link:</Text>
+                        {sourceUrls.map((url, index) => (
+                          <React.Fragment key={`${url}-${index}`}>
+                            <Pressable
+                              onPress={() => {
+                                if (/^https?:\/\//i.test(url)) {
+                                  void Linking.openURL(url);
+                                }
+                              }}
+                            >
+                              <Text className="break-all text-sm text-interactive-1">
+                                {formatUrlForDisplay(url)}
+                              </Text>
+                            </Pressable>
+                            {index < sourceUrls.length - 1 && (
+                              <Text className="text-sm text-neutral-2">, </Text>
+                            )}
+                          </React.Fragment>
+                        ))}
+                        {hasMentions && (
+                          <Text className="mx-1 text-sm text-neutral-2">•</Text>
+                        )}
+                      </>
+                    )}
+
+                    {hasMentions && firstMentionCandidate && (
+                      <>
+                        <Text className="text-sm text-neutral-2">via</Text>
+                        <Pressable
+                          onPress={() => {
+                            const url = getPlatformUrl(
+                              eventMetadata.platform,
+                              firstMentionCandidate,
+                            );
+                            if (url) {
+                              void Linking.openURL(url);
+                            }
+                          }}
+                        >
+                          <View className="flex-row items-center gap-0.5">
+                            {isInstagram && (
+                              <Instagram
+                                className="mt-[3px] flex-shrink-0"
+                                color="#5A32FB"
+                                size={12}
+                              />
+                            )}
+                            <Text className="text-sm text-interactive-1">
+                              {firstMentionCandidate}
+                            </Text>
+                          </View>
+                        </Pressable>
+                        {mentions.length > 1 && (
+                          <>
+                            <Text className="text-sm text-neutral-2">with</Text>
+                            {mentions.slice(1).map((mention, index) => (
+                              <View
+                                key={mention}
+                                className="flex-row items-center"
+                              >
+                                <Pressable
+                                  onPress={() => {
+                                    const url = getPlatformUrl(
+                                      eventMetadata.platform,
+                                      mention,
+                                    );
+                                    if (url) {
+                                      void Linking.openURL(url);
+                                    }
+                                  }}
+                                >
+                                  <View className="flex-row items-center gap-0.5">
+                                    {isInstagram && (
+                                      <Instagram
+                                        className="mt-[3px] flex-shrink-0"
+                                        color="#5A32FB"
+                                        size={12}
+                                      />
+                                    )}
+                                    <Text className="text-sm text-interactive-1">
+                                      {mention}
+                                    </Text>
+                                  </View>
+                                </Pressable>
+                                {index <
+                                  (eventMetadata.mentions || []).length - 2 && (
+                                  <Text className="text-sm text-neutral-2">
+                                    ,{" "}
+                                  </Text>
+                                )}
+                              </View>
+                            ))}
+                          </>
+                        )}
+                      </>
+                    )}
+                  </View>
+                );
+              })()}
+            </>
+          )}
 
           {/* Main Event Image if it exists and aspect ratio is known */}
           {eventData.images?.[3] && imageAspectRatio && (

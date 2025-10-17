@@ -3,29 +3,11 @@
 import { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { SignedIn, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { atcb_action } from "add-to-calendar-button-react";
-import {
-  Accessibility,
-  CalendarIcon,
-  Copy,
-  Ear,
-  Earth,
-  EyeOff,
-  GlobeIcon,
-  MapPin,
-  MessageSquareIcon,
-  Mic,
-  PersonStanding,
-  ShieldPlus,
-  TagIcon,
-} from "lucide-react";
+import { Copy, Earth, EyeOff, Instagram, MapPin } from "lucide-react";
 
-import type {
-  DateInfo,
-  EventMetadata as EventMetadataDisplay,
-  SimilarityDetails,
-} from "@soonlist/cal";
+import type { DateInfo, EventMetadata, SimilarityDetails } from "@soonlist/cal";
 import type {
   AddToCalendarButtonPropsRestricted,
   ATCBActionEventConfig,
@@ -38,16 +20,13 @@ import {
   getDateInfoUTC,
   getDateTimeInfo,
 } from "@soonlist/cal";
-import { Badge } from "@soonlist/ui/badge";
-import { Label } from "@soonlist/ui/label";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
 import type { EventWithUser } from "./EventList";
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
-import { feedback } from "~/lib/intercom/intercom";
 import { getGoogleMapsUrl } from "~/lib/maps";
-import { cn } from "~/lib/utils";
+import { cn, formatUrlForDisplay } from "~/lib/utils";
 import { CalendarButton } from "./CalendarButton";
 import { DeleteButton } from "./DeleteButton";
 import { EditButton } from "./EditButton";
@@ -57,6 +36,144 @@ import { buildDefaultUrl } from "./ImageUpload";
 import { SaveButton } from "./SaveButton";
 import { ShareButton } from "./ShareButton";
 import { UserAvatarMini } from "./UserAvatarMini";
+
+// Helper to get platform URL for mentions
+function getPlatformUrl(
+  platform: string | undefined,
+  username: string,
+): string | null {
+  // Check if username is already a full URL
+  const trimmedUsername = username.trim();
+  if (
+    trimmedUsername.startsWith("http://") ||
+    trimmedUsername.startsWith("https://")
+  ) {
+    try {
+      new URL(trimmedUsername);
+      return trimmedUsername; // Return as-is if it's a valid URL
+    } catch {
+      // Invalid URL, continue with platform logic
+    }
+  }
+
+  const cleanUsername = trimmedUsername.replace(/^@/, "");
+
+  // Only return URLs for explicitly supported platforms
+  switch (platform?.toLowerCase()) {
+    case "tiktok":
+      return `https://tiktok.com/@${cleanUsername}`;
+    case "twitter":
+      return `https://twitter.com/${cleanUsername}`;
+    case "facebook":
+      return `https://facebook.com/${cleanUsername}`;
+    case "instagram":
+      return `https://instagram.com/${cleanUsername}`;
+    default:
+      return null; // Return null for unsupported platforms
+  }
+}
+
+export function EventMetadataDisplay({
+  eventMetadata,
+}: {
+  eventMetadata: EventMetadata;
+}) {
+  const sourceUrls = eventMetadata.sourceUrls || [];
+  const hasSourceUrls = sourceUrls.length > 0;
+  const hasMentions = !!(
+    eventMetadata.mentions && eventMetadata.mentions.length > 0
+  );
+  if (!hasSourceUrls && !hasMentions) return null;
+
+  const firstMentionCandidate = hasMentions
+    ? (eventMetadata.mentions || [])[0]
+    : undefined;
+  const isInstagram = eventMetadata.platform === "instagram";
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-1 text-sm text-neutral-2">
+      {hasSourceUrls && (
+        <>
+          <span>link:</span>
+          {sourceUrls.map((url, index) => (
+            <span key={`${url}-${index}`} className="flex items-center">
+              <Link
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all text-interactive-1 hover:underline"
+              >
+                {formatUrlForDisplay(url)}
+              </Link>
+              {index < sourceUrls.length - 1 && <span>, </span>}
+            </span>
+          ))}
+          {hasMentions && <span className="mx-1">•</span>}
+        </>
+      )}
+
+      {hasMentions && firstMentionCandidate && (
+        <>
+          <span>via</span>
+          {(() => {
+            const platformUrl = getPlatformUrl(
+              eventMetadata.platform,
+              firstMentionCandidate,
+            );
+            return platformUrl ? (
+              <Link
+                href={platformUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-0.5 text-interactive-1 hover:underline"
+              >
+                {isInstagram && (
+                  <Instagram className="mt-[3px] size-3 flex-shrink-0" />
+                )}
+                {firstMentionCandidate}
+              </Link>
+            ) : (
+              <span className="text-neutral-1">{firstMentionCandidate}</span>
+            );
+          })()}
+          {(eventMetadata.mentions || []).length > 1 && (
+            <>
+              <span>with</span>
+              {(eventMetadata.mentions || []).slice(1).map((mention, index) => (
+                <span key={mention} className="flex items-center">
+                  {(() => {
+                    const platformUrl = getPlatformUrl(
+                      eventMetadata.platform,
+                      mention,
+                    );
+                    return platformUrl ? (
+                      <Link
+                        href={platformUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-0.5 text-interactive-1 hover:underline"
+                      >
+                        {isInstagram && (
+                          <Instagram className="mt-[3px] size-3 flex-shrink-0" />
+                        )}
+                        {mention}
+                      </Link>
+                    ) : (
+                      <span className="text-neutral-1">{mention}</span>
+                    );
+                  })()}
+                  {index < (eventMetadata.mentions || []).length - 2 && (
+                    <span>, </span>
+                  )}
+                </span>
+              ))}
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
 interface EventListItemProps {
   list?: List; // this is the list that this is a part of
@@ -98,7 +215,7 @@ interface EventPageProps {
   }[];
   lists?: List[];
   children?: React.ReactNode;
-  eventMetadata?: EventMetadataDisplay;
+  eventMetadata?: EventMetadata;
 }
 
 function EventDateDisplaySimple({
@@ -260,181 +377,6 @@ function EventDetailsCard({
   );
 }
 
-function EventAccessibility({ metadata }: { metadata?: EventMetadataDisplay }) {
-  return (
-    <div className="col-span-2 flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="accessibility">
-        <GlobeIcon className="mr-1.5 size-4" />
-        Accessibility
-      </Label>
-      <div
-        className="flex flex-wrap gap-1 text-sm capitalize text-neutral-1"
-        id="accessibility"
-      >
-        {(metadata?.accessibility?.length === 0 ||
-          !metadata?.accessibility?.length) &&
-          "Unknown"}
-        {metadata?.accessibility?.map((item) => {
-          // icon for each accessibility type
-          switch (item) {
-            case "masksRequired":
-              return (
-                <div className="flex items-center" key={item}>
-                  <ShieldPlus className="mr-0.5 inline-block size-4"></ShieldPlus>
-                  Masks Required
-                </div>
-              );
-            case "masksSuggested":
-              return (
-                <div className="flex items-center" key={item}>
-                  <ShieldPlus className="mr-0.5 inline-block size-4"></ShieldPlus>
-                  Masks Suggested
-                </div>
-              );
-            case "wheelchairAccessible":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Accessibility className="mr-0.5 inline-block size-4"></Accessibility>
-                  Wheelchair Accessible
-                </div>
-              );
-            case "signLanguageInterpretation":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Ear className="mr-0.5 inline-block size-4"></Ear>
-                  Sign Language Interpretation
-                </div>
-              );
-            case "closedCaptioning":
-              return (
-                <div className="flex items-center" key={item}>
-                  <Ear className="mr-0.5 inline-block size-4"></Ear>
-                  Closed Captioning
-                </div>
-              );
-            default:
-              return null;
-          }
-        })}
-      </div>
-    </div>
-  );
-}
-
-function EventMetadataDisplay({
-  metadata,
-}: {
-  metadata?: EventMetadataDisplay;
-}) {
-  const hasPriceMin =
-    (metadata?.priceMin && metadata.priceMin > 0) || metadata?.priceMin === 0;
-  const hasPriceMax = metadata?.priceMax && metadata.priceMax > 0;
-  const hasPrices = hasPriceMin && hasPriceMax;
-  const isPriceRange = hasPrices && metadata.priceMin !== metadata.priceMax;
-  const singlePriceText = `$${metadata?.priceMin}`;
-  const priceRangeText = `$${metadata?.priceMin}-$${metadata?.priceMax}`;
-  const priceText = isPriceRange ? priceRangeText : singlePriceText;
-  const isPaidPriceType = metadata?.priceType === "paid";
-  const isUnknownPriceType = metadata?.priceType === "unknown";
-  const showPriceType = isUnknownPriceType ? !hasPrices : !isPaidPriceType;
-  const showPrice = hasPrices;
-  const adjustedPriceTypeText =
-    metadata?.priceType === "notaflof" ? "NOTAFLOF" : metadata?.priceType;
-  const priceTypeText = showPriceType ? adjustedPriceTypeText : "";
-  const showSpace = showPrice && showPriceType;
-
-  const performersCharacterLength = metadata?.performers?.join(", ").length;
-  const performersSpanMultipleColumns =
-    performersCharacterLength && performersCharacterLength > 15;
-
-  return (
-    <div className="relative -m-2 my-3 grid grid-cols-2 gap-x-1 gap-y-3 rounded-2xl border border-interactive-2 p-4 py-6 text-neutral-2 md:grid-cols-4">
-      <SignedIn>
-        <Badge
-          className="absolute -bottom-3 left-1/2 -translate-x-1/2 hover:cursor-pointer"
-          variant={"secondary"}
-          onClick={() => feedback("Event Metadata")}
-        >
-          <MessageSquareIcon size={16} className="mr-1 scale-x-[-1]" />
-          Feedback
-        </Badge>
-      </SignedIn>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="category">
-          <CalendarIcon className="mr-1.5 size-4" />
-          Category
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="category">
-          {metadata?.category}
-        </p>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="type">
-          <GlobeIcon className="mr-1.5 size-4" />
-          Type
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="type">
-          {metadata?.type}
-        </p>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="price">
-          <TagIcon className="mr-1.5 size-4" />
-          Price
-        </Label>
-        <div className="text-sm capitalize text-neutral-1" id="price">
-          {`${showPrice ? priceText : ""}${showSpace ? ", " : ""}`}
-          {showPriceType && (
-            <div className="inline capitalize">{priceTypeText}</div>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <Label className="flex items-center" htmlFor="age-restriction">
-          <PersonStanding className="mr-1.5 size-4" />
-          Ages
-        </Label>
-        <p className="text-sm capitalize text-neutral-1" id="age-restriction">
-          {metadata?.ageRestriction}
-        </p>
-      </div>
-      <div
-        className={cn("col-span-2 flex flex-col gap-0.5 hyphens-auto", {
-          "col-span-1": !performersSpanMultipleColumns,
-          "col-span-2": performersSpanMultipleColumns,
-        })}
-      >
-        <Label className="flex items-center" htmlFor="performers">
-          <Mic className="mr-1.5 size-4" />
-          Performers
-        </Label>
-        <p className="text-sm text-neutral-1" id="performers">
-          {metadata?.performers?.join(", ")}
-        </p>
-      </div>
-      <EventAccessibility metadata={metadata} />
-      {/* <div className="flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="source">
-        <GlobeIcon className="mr-1.5 size-4" />
-        Source
-      </Label>
-      <p className="text-sm capitalize text-neutral-1" id="source">
-        {metadata?.source}
-      </p>
-    </div>
-    <div className="flex flex-col gap-0.5">
-      <Label className="flex items-center" htmlFor="mentions">
-        <TextIcon className="mr-1.5 size-4" />
-        Mentions
-      </Label>
-      <p className="text-sm text-neutral-1" id="mentions">
-        {metadata?.mentions}
-      </p>
-    </div> */}
-    </div>
-  );
-}
-
 function EventDetails({
   id,
   name,
@@ -447,7 +389,6 @@ function EventDetails({
   description,
   preview,
   EventActionButtons,
-  metadata,
   happeningNow,
   visibility, // Add this prop
 }: {
@@ -462,7 +403,6 @@ function EventDetails({
   location?: string;
   EventActionButtons?: React.ReactNode;
   preview?: boolean;
-  metadata?: EventMetadataDisplay;
   variant?: "minimal";
   happeningNow?: boolean;
   visibility: "public" | "private"; // Add this to the props type
@@ -544,11 +484,6 @@ function EventDetails({
           <EventDescription description={description} truncate />
         </div>
         */}
-        {preview && (
-          <div className="w-full">
-            <EventMetadataDisplay metadata={metadata} />
-          </div>
-        )}
         <div className="absolute bottom-2 right-2 z-10">
           {EventActionButtons}
         </div>
@@ -1111,7 +1046,6 @@ export function EventPreview(
           timezone={event.timeZone || "America/Los_Angeles"}
           location={event.location}
           description={event.description}
-          metadata={event.eventMetadata}
           visibility={"public"}
         />
       </div>
@@ -1249,6 +1183,7 @@ export function EventPage(props: EventPageProps) {
       eventDescription={description || ""}
       eventImage={image || null}
       onAddToCalendar={handleAddToCalendar}
+      eventMetadata={props.eventMetadata}
       calendarButton={
         <CalendarButton
           event={event as ATCBActionEventConfig}

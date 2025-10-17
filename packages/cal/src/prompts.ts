@@ -8,9 +8,38 @@ interface Response {
   events: Event[]; // An array of events.
 }
 
-export const PLATFORMS = ["instagram", "unknown"] as const;
+// Platform types for event sources
+export const PLATFORMS = [
+  "instagram",
+  "tiktok",
+  "facebook",
+  "twitter",
+  "unknown",
+] as const;
 export const PlatformSchema = z.enum(PLATFORMS);
 export type Platform = z.infer<typeof PlatformSchema>;
+
+// New simplified metadata schema focusing on social media attribution
+export const EventMetadataSchema = z.object({
+  platform: PlatformSchema.default("unknown").describe(
+    "The platform where this event was sourced from (e.g., instagram, tiktok, facebook, twitter, or unknown)",
+  ),
+  mentions: z
+    .array(z.string())
+    .optional()
+    .describe(
+      "Array of usernames (without @ symbol) mentioned in the post. The FIRST username must be the main author/organizer of the event.",
+    ),
+  sourceUrls: z
+    .array(z.string().url())
+    .optional()
+    .describe("Array of URLs to the original posts or related content"),
+});
+export type EventMetadata = z.infer<typeof EventMetadataSchema>;
+
+// Legacy schemas kept for backward compatibility
+// These are deprecated and should not be used for new events
+// ============================================================
 
 export const AGE_RESTRICTIONS = ["all-ages", "18+", "21+", "unknown"] as const;
 export const AgeRestrictionSchema = z.enum(AGE_RESTRICTIONS);
@@ -44,7 +73,6 @@ export const EVENT_CATEGORIES = [
   "tech",
   "unknown",
 ] as const;
-// export const EventCategorySchema = z.enum(EVENT_CATEGORIES);
 export const EventCategorySchema = z.string();
 export type EventCategory = z.infer<typeof EventCategorySchema>;
 
@@ -66,7 +94,6 @@ export const EVENT_TYPES = [
   "webinar",
   "workshop",
 ] as const;
-// export const EventTypeSchema = z.enum(EVENT_TYPES);
 export const EventTypeSchema = z.string();
 export type EventType = z.infer<typeof EventTypeSchema>;
 
@@ -90,25 +117,23 @@ export const ACCESSIBILITY_TYPES_OPTIONS = [
   { value: "wheelchairAccessible", label: "Wheelchair Accessible" },
 ];
 
-export const EventMetadataSchema = z.object({
+// Legacy metadata schema - kept for backward compatibility with old events
+export const EventMetadataSchemaLegacy = z.object({
   accessibility: z.array(AccessibilityTypeSchema).optional(),
   accessibilityNotes: z.string().optional(),
-  ageRestriction: AgeRestrictionSchema,
-  category: EventCategorySchema.describe(
-    "Category of the event: one of " + EVENT_CATEGORIES.join(", "),
-  ),
+  ageRestriction: AgeRestrictionSchema.optional(),
+  category: EventCategorySchema.optional(),
   mentions: z.array(z.string()).optional(),
   performers: z.array(z.string()).optional(),
   priceMax: z.number().optional(),
   priceMin: z.number().optional(),
-  priceType: PriceTypeSchema,
+  priceType: PriceTypeSchema.optional(),
   source: PlatformSchema.optional(),
-  type: EventTypeSchema.describe(
-    "Type of the event: one of " + EVENT_TYPES.join(", "),
-  ),
+  type: EventTypeSchema.optional(),
 });
-export type EventMetadata = z.infer<typeof EventMetadataSchema>;
-export const EventMetadataSchemaLoose = EventMetadataSchema.extend({
+export type EventMetadataLegacy = z.infer<typeof EventMetadataSchemaLegacy>;
+
+export const EventMetadataSchemaLoose = EventMetadataSchemaLegacy.extend({
   accessibility: z.array(z.string()).optional(),
   ageRestriction: z.string().optional(),
   category: z.string().optional(),
@@ -282,16 +307,48 @@ The system using the output requires specific date and time formatting.
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const getTextMetadata = (date: string, timezone: string) => `
-# YOUR JOB
-Below, I pasted a text or image from which to extract event metadata. 
+# YOUR TASK
+Extract social media attribution metadata.
+Return JSON with exactly: platform, mentions, sourceUrls.
 
-You will:
-1. Extract relevant metadata information from the event details.
-2. Generate values for the event metadata fields strictly adhering to the provided enums and schema.
-3. If a metadata field value is not explicitly mentioned or cannot be reasonably inferred from the event details, omit that field from the output.
-4. Format the event metadata as a valid JSON object, following the schema provided.
+## platform (required)
+- One of: "instagram" | "tiktok" | "facebook" | "twitter" | "unknown".
+- Default to "unknown" unless platform is clearly identifiable from UI or a fully visible platform URL.
+- If no usernames are extracted, platform MUST be "unknown".
 
-Ensure that the generated metadata values are concise, relevant, and adhere to the schema requirements. Do not include any additional fields or values not specified in the schema.
+## mentions (required)
+- Array of complete usernames (no "@"), deduplicated.
+- Extract ONLY from post content (caption/text/tags/profile author). Never from engagement: "Liked by...", "Followed by...", like counts, or follower lists.
+- Exclude display names.
+- Exclude any truncated handles. If a handle is directly followed by ellipsis characters ("..." or "…"), EXCLUDE it. Do not guess or complete it.
+- Collab author headers (e.g., "user1 and user2...") always have a truncated second author → include only the fully visible first author.
+- Order: author first; then other fully visible mentions. Shared story: [original creator, story sharer].
+- If none, return [].
+
+## sourceUrls (required)
+- Any complete, valid URLs visible. If none, [].
+
+## Output
+Always return valid JSON:
+\`\`\`json
+{ "platform": "instagram", "mentions": ["username1", "username2"], "sourceUrls": ["https://example.com"] }
+\`\`\`
+
+Empty-case example:
+\`\`\`json
+{ "platform": "unknown", "mentions": [], "sourceUrls": [] }
+\`\`\`
+
+Collab header example (truncation):
+Input UI: "jaronheard and friendsofnoi..."
+\`\`\`json
+{ "platform": "instagram", "mentions": ["jaronheard"], "sourceUrls": [] }
+\`\`\`
+
+Common pitfalls (avoid):
+- Extracting from "Liked by..." or "Followed by...".
+- Including truncated or display names.
+- Guessing platform; when unsure, use "unknown".
 `;
 
 const formatOffsetAsIANASoft = (offset: string) => {
@@ -309,7 +366,7 @@ export const getPrompt = (
   return {
     text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2025.10.02.1", // Increment the version number
+    version: "v2025.10.14.7", // Strengthened collab truncation rule and example
   };
 };
 

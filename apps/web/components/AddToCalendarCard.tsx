@@ -3,25 +3,17 @@
 import type { AddToCalendarButtonType } from "add-to-calendar-button-react";
 import React, { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
-import { Pencil, Shapes } from "lucide-react";
+import { Pencil } from "lucide-react";
 
-import type { EventMetadata } from "@soonlist/cal";
+import type { EventMetadata, EventMetadataLegacy } from "@soonlist/cal";
 import type { ATCBActionEventConfig } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
-import {
-  ACCESSIBILITY_TYPES_OPTIONS,
-  EVENT_CATEGORIES,
-  EVENT_TYPES,
-  // PLATFORMS,
-  PRICE_TYPE,
-} from "@soonlist/cal";
+import { PLATFORMS } from "@soonlist/cal";
 import { cn } from "@soonlist/ui";
-import { Button } from "@soonlist/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@soonlist/ui/card";
+import { Card, CardContent, CardTitle } from "@soonlist/ui/card";
 import { Input, InputDescription } from "@soonlist/ui/input";
 import { InputTags } from "@soonlist/ui/input-tags";
 import { Label } from "@soonlist/ui/label";
-import { MultiSelect } from "@soonlist/ui/multiselect";
 import {
   Select,
   SelectContent,
@@ -34,7 +26,7 @@ import { Textarea } from "@soonlist/ui/textarea";
 import { useCroppedImageContext } from "~/context/CroppedImageContext";
 import { useNewEventContext } from "~/context/NewEventContext";
 import { DEFAULT_TIMEZONE } from "~/lib/constants";
-import { feedback } from "~/lib/intercom/intercom";
+import { normalizeUrlForStorage } from "~/lib/utils";
 import { CalendarButton } from "./CalendarButton";
 import { PublishButton } from "./PublishButton";
 import { TimezoneSelect } from "./TimezoneSelect";
@@ -47,18 +39,16 @@ export type AddToCalendarCardProps = AddToCalendarButtonType & {
   children?: React.ReactNode;
   firstInputRef?: React.RefObject<HTMLInputElement | null>;
   setAddToCalendarButtonProps?: (props: AddToCalendarButtonType) => void;
-  eventMetadata?: EventMetadata;
+  eventMetadata?: EventMetadata | EventMetadataLegacy;
   onUpdate?: (props: AddToCalendarButtonType) => void;
   hideFloatingActionButtons?: boolean;
   hideBorder?: boolean;
-  hideEventMetadata?: boolean;
   hideSourceLink?: boolean;
 };
 
 export function AddToCalendarCard({
   firstInputRef,
   hideBorder,
-  hideEventMetadata = false,
   hideSourceLink = false,
   ...initialProps
 }: AddToCalendarCardProps) {
@@ -103,44 +93,28 @@ export function AddToCalendarCard({
     initialProps.timeZone || DEFAULT_TIMEZONE,
   );
   const [link, setLink] = useState<string>("");
-  const [mentions] = useState<string[]>(
+  const [mentions, setMentions] = useState<string[]>(
     initialProps.eventMetadata?.mentions || [],
   );
-  const [source] = useState<string>(
-    initialProps.eventMetadata?.source || "unknown",
+  const [platform, setPlatform] = useState<string>(
+    "platform" in (initialProps.eventMetadata || {})
+      ? (initialProps.eventMetadata as EventMetadata).platform || "unknown"
+      : "source" in (initialProps.eventMetadata || {})
+        ? (initialProps.eventMetadata as EventMetadataLegacy).source ||
+          "unknown"
+        : "unknown",
   );
-  const [priceMin, setPriceMin] = useState<number>(
-    initialProps.eventMetadata?.priceMin || 0,
-  );
-  const [priceMax, setPriceMax] = useState<number>(
-    initialProps.eventMetadata?.priceMax || 0,
-  );
-  const [priceType, setPriceType] = useState<string>(
-    initialProps.eventMetadata?.priceType || "unknown",
-  );
-  const [ageRestriction, setAgeRestriction] = useState(
-    (initialProps.eventMetadata?.ageRestriction || "none") as string,
-  );
-  const [category, setCategory] = useState(
-    initialProps.eventMetadata?.category || "unknown",
-  );
-  const [type, setType] = useState(initialProps.eventMetadata?.type || "event");
-  const [performers, setPerformers] = useState(
-    initialProps.eventMetadata?.performers || [],
-  );
-  const [accessibility, setAccessibility] = useState<
-    Record<"value" | "label", string>[]
-  >(
-    initialProps.eventMetadata?.accessibility
-      ? initialProps.eventMetadata.accessibility.map(
-          (value) =>
-            ACCESSIBILITY_TYPES_OPTIONS.find(
-              (option) => option.value === value,
-            ) as Record<"value" | "label", string>,
+  const [sourceUrls, setSourceUrls] = useState<string[]>(
+    "sourceUrls" in (initialProps.eventMetadata || {})
+      ? ((initialProps.eventMetadata as EventMetadata).sourceUrls || []).filter(
+          Boolean,
         )
       : [],
   );
-  const [accessibilityNotes, setAccessibilityNotes] = useState<string>("");
+  const legacySource =
+    "source" in (initialProps.eventMetadata || {})
+      ? (initialProps.eventMetadata as EventMetadataLegacy).source || "unknown"
+      : "unknown";
 
   const { listStyle, ...filteredProps } = initialProps;
   const acceptableListStyle = ["overlay", "modal"].includes(listStyle || "")
@@ -163,16 +137,9 @@ export function AddToCalendarCard({
     images,
     eventMetadata: {
       mentions,
-      source,
-      priceMin,
-      priceMax,
-      priceType,
-      ageRestriction,
-      category,
-      type,
-      performers,
-      accessibility: accessibility.map((a) => a.value),
-      accessibilityNotes,
+      platform,
+      sourceUrls,
+      source: platform !== "unknown" ? platform : legacySource,
     },
   };
 
@@ -194,16 +161,9 @@ export function AddToCalendarCard({
         images,
         eventMetadata: {
           mentions,
-          source,
-          priceMin,
-          priceMax,
-          priceType,
-          ageRestriction,
-          category,
-          type,
-          performers,
-          accessibility: accessibility.map((a) => a.value),
-          accessibilityNotes,
+          platform,
+          sourceUrls,
+          source: platform !== "unknown" ? platform : legacySource,
         },
       };
 
@@ -223,16 +183,9 @@ export function AddToCalendarCard({
     timeZone,
     images,
     mentions,
-    source,
-    priceMin,
-    priceMax,
-    priceType,
-    ageRestriction,
-    category,
-    type,
-    performers,
-    accessibility,
-    accessibilityNotes,
+    platform,
+    sourceUrls,
+    legacySource,
     initialProps,
     filteredProps,
     acceptableListStyle,
@@ -357,193 +310,51 @@ export function AddToCalendarCard({
             </a>
           </InputDescription>
         </div>
-        {!hideEventMetadata && (
-          <div className="col-span-full">
-            <Card className="w-full max-w-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Shapes className="mr-2 size-6" />
-                    Event Metadata
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="type">Event Type</Label>
-                  <div className="flex items-center justify-between">
-                    <Select name="type" value={type} onValueChange={setType}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {EVENT_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            <span className="capitalize">{type}</span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size={"sm"}
-                      className="ml-2 h-12"
-                      onClick={() => feedback("Suggested Event Type")}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="category">Category</Label>
-                  <div className="flex items-center justify-between">
-                    <Select
-                      defaultValue="unknown"
-                      name="category"
-                      value={category}
-                      onValueChange={setCategory}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {EVENT_CATEGORIES.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            <span className="capitalize">{category}</span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size={"sm"}
-                      className="ml-2 h-12"
-                      onClick={() => feedback("Suggested Event Category")}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="price-type">Payment</Label>
-                  <Select
-                    defaultValue="unknown"
-                    name="price-type"
-                    value={priceType}
-                    onValueChange={setPriceType}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Free" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PRICE_TYPE.map((priceType) => (
-                        <SelectItem key={priceType} value={priceType}>
-                          <span className="capitalize">{priceType}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="price">Price Min($)</Label>
-                  <Input
-                    id="price"
-                    placeholder="Enter lowest possible price"
-                    value={priceMin}
-                    // type="number"
-                    onChange={(e) => setPriceMin(Number(e.target.value))}
-                    className="w-[180px]"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="price">Price Max($)</Label>
-                  <Input
-                    id="price"
-                    placeholder="Enter highest possible price"
-                    value={priceMax}
-                    // type="number"
-                    onChange={(e) => setPriceMax(Number(e.target.value))}
-                    className="w-[180px]"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="age-restriction">Ages</Label>
-                  <Select
-                    defaultValue="All Ages"
-                    name="age-restriction"
-                    value={ageRestriction}
-                    onValueChange={setAgeRestriction}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="All Ages" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all-ages">All Ages</SelectItem>
-                      <SelectItem value="18+">18+</SelectItem>
-                      <SelectItem value="21+">21+</SelectItem>
-                      <SelectItem value="unknown">Unknown</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="performers">Performers</Label>
-                  <InputTags
-                    id="performers"
-                    placeholder="e.g. @sza, @tylerthecreator"
-                    value={performers}
-                    onChange={setPerformers}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="performers">Accessibility</Label>
-                  <MultiSelect
-                    options={ACCESSIBILITY_TYPES_OPTIONS}
-                    selected={accessibility}
-                    onChange={setAccessibility}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="accessibility-notes">
-                    Accessibility Notes
-                  </Label>
-                  <Textarea
-                    id="accessibility-notes"
-                    name="accessibility-notes"
-                    rows={3}
-                    value={accessibilityNotes}
-                    onChange={(e) => setAccessibilityNotes(e.target.value)}
-                  />
-                </div>
-                {/* <div className="grid gap-2">
-                <Label htmlFor="source">Social Platform</Label>
-                <Select name="source" value={source} onValueChange={setSource}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PLATFORMS.map((platform) => (
-                      <SelectItem key={platform} value={platform}>
-                        <span className="capitalize">{platform}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="mentions">Social Mentions</Label>
-                <InputTags
-                  id="mentions"
-                  placeholder="e.g. @shad, @vercel"
-                  value={mentions}
-                  onChange={setMentions}
-                />
-              </div> */}
-              </CardContent>
-            </Card>
+        <fieldset className="col-span-full">
+          <legend className="mb-4 text-sm font-medium text-neutral-1">
+            Source
+          </legend>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="platform">Platform</Label>
+              <Select
+                name="platform"
+                value={platform}
+                onValueChange={setPlatform}
+              >
+                <SelectTrigger className="w-full max-w-xs">
+                  <SelectValue placeholder="Select platform" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLATFORMS.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      <span className="capitalize">{item}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="mentions">Accounts</Label>
+              <InputTags
+                id="mentions"
+                placeholder="e.g. @soonlistapp, @realisticmoment"
+                value={mentions}
+                onChange={setMentions}
+              />
+            </div>
+            <div>
+              <Label htmlFor="source-urls">Links</Label>
+              <InputTags
+                id="source-urls"
+                placeholder="https://example.com/tickets"
+                value={sourceUrls}
+                onChange={setSourceUrls}
+                normalizeItem={normalizeUrlForStorage}
+              />
+            </div>
           </div>
-        )}
+        </fieldset>
         {!hideSourceLink && (
           <div className="col-span-full">
             <Label htmlFor="location">Source Link (optional)</Label>

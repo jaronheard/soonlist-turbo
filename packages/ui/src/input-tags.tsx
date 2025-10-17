@@ -12,15 +12,19 @@ type OverrideInputProps = Omit<InputProps, "onChange">;
 type InputTagsProps = OverrideInputProps & {
   value: string[];
   onChange: Dispatch<SetStateAction<string[]>>;
+  normalizeItem?: (value: string) => string;
 };
 
 export const InputTags = forwardRef<HTMLInputElement, InputTagsProps>(
-  ({ value, onChange, ...props }, ref) => {
+  ({ value, onChange, normalizeItem, ...props }, ref) => {
     const [pendingDataPoint, setPendingDataPoint] = useState("");
 
     const addPendingDataPoint = () => {
       if (pendingDataPoint) {
-        const newDataPoints = new Set([...value, pendingDataPoint]);
+        const candidate = normalizeItem
+          ? normalizeItem(pendingDataPoint)
+          : pendingDataPoint;
+        const newDataPoints = new Set([...value, candidate]);
         onChange(Array.from(newDataPoints));
         setPendingDataPoint("");
       }
@@ -56,22 +60,24 @@ export const InputTags = forwardRef<HTMLInputElement, InputTagsProps>(
             Add
           </Button>
         </div>
-        <div className="flex min-h-[2.5rem] flex-wrap items-center gap-2 overflow-y-auto rounded-md border p-2">
-          {value.map((item, idx) => (
-            <Badge key={idx} variant="secondary">
-              {item}
-              <button
-                type="button"
-                className="ml-2 w-3"
-                onClick={() => {
-                  onChange(value.filter((i) => i !== item));
-                }}
-              >
-                <XIcon className="w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
+        {value.length > 0 && (
+          <div className="my-2 flex min-h-[2.5rem] flex-wrap items-center gap-2 overflow-y-auto rounded-md p-2">
+            {value.map((item, idx) => (
+              <Badge key={idx} variant="secondary">
+                {item}
+                <button
+                  type="button"
+                  className="ml-2 w-3"
+                  onClick={() => {
+                    onChange(value.filter((i) => i !== item));
+                  }}
+                >
+                  <XIcon className="w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
       </>
     );
   },

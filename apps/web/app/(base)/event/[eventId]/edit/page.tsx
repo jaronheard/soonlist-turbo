@@ -53,7 +53,6 @@ export default async function Page(props: {
             key={event.id}
             update
             updateId={params.eventId}
-            hideEventMetadata
             hideSourceLink
           />
         </>

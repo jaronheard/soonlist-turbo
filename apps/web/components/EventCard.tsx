@@ -3,9 +3,11 @@
 import Image from "next/image";
 import { CalendarPlus, MapPinned } from "lucide-react";
 
+import type { EventMetadata } from "@soonlist/cal";
 import { Card } from "@soonlist/ui/card";
 
 import { getGoogleMapsUrl } from "~/lib/maps";
+import { EventMetadataDisplay } from "./EventDisplays";
 import LightboxImage from "./LightboxImage";
 
 export default function EventCard(props: {
@@ -27,6 +29,7 @@ export default function EventCard(props: {
   editButton?: React.ReactNode;
   deleteButton?: React.ReactNode;
   onAddToCalendar?: () => void;
+  eventMetadata?: EventMetadata;
 }) {
   const {
     eventImage,
@@ -47,6 +50,7 @@ export default function EventCard(props: {
     editButton,
     deleteButton,
     onAddToCalendar,
+    eventMetadata,
   } = props;
 
   const displayName = userDisplayName || (userName ? userName : "");
@@ -148,6 +152,12 @@ export default function EventCard(props: {
             </div>
 
             <p className="text-neutral-1">{eventDescription}</p>
+
+            {/* Metadata Section */}
+            {eventMetadata && (
+              <EventMetadataDisplay eventMetadata={eventMetadata} />
+            )}
+
             {eventLink ? (
               <a
                 href={eventLink}
