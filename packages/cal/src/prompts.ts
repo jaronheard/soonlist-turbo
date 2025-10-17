@@ -8,6 +8,17 @@ interface Response {
   events: Event[]; // An array of events.
 }
 
+// URL helpers (kept minimal and framework-agnostic)
+function normalizeUrlForStorage(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) return trimmed;
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith("http://") || lower.startsWith("https://"))
+    return trimmed;
+  if (trimmed.startsWith("//")) return `https:${trimmed}`;
+  return `https://${trimmed}`;
+}
+
 // Platform types for event sources
 export const PLATFORMS = [
   "instagram",
@@ -31,7 +42,12 @@ export const EventMetadataSchema = z.object({
       "Array of usernames (without @ symbol) mentioned in the post. The FIRST username must be the main author/organizer of the event.",
     ),
   sourceUrls: z
-    .array(z.string().url())
+    .array(
+      z.preprocess(
+        (val) => (typeof val === "string" ? normalizeUrlForStorage(val) : val),
+        z.string().url(),
+      ),
+    )
     .optional()
     .describe("Array of URLs to the original posts or related content"),
 });
