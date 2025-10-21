@@ -4,10 +4,10 @@ import Svg, { Path, Rect } from "react-native-svg";
 
 interface LogoProps {
   className?: string;
-  variant?: "default" | "hidePreview" | "icon" | "white";
+  variant?: "default" | "hidePreview" | "icon" | "white" | "showPreview";
 }
 
-export function Logo({ className, variant = "default" }: LogoProps) {
+export function Logo({ className, variant = "hidePreview" }: LogoProps) {
   if (variant === "icon") {
     return (
       <View className={className}>
