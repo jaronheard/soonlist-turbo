@@ -865,6 +865,17 @@ export const updatePublicListSettings = mutation({
       throw new ConvexError("User not found");
     }
 
+    // Check if user has showDiscover enabled - prevent enabling public list if they do
+    const userShowDiscover =
+      (user.publicMetadata as { showDiscover?: boolean } | null)
+        ?.showDiscover ?? false;
+
+    if (args.publicListEnabled === true && userShowDiscover) {
+      throw new ConvexError(
+        "Cannot enable public list when showDiscover is enabled. Please contact support if you need both features.",
+      );
+    }
+
     const updates: Record<string, boolean | string | undefined> = {
       updatedAt: new Date().toISOString(),
     };
