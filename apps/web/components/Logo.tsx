@@ -1,9 +1,9 @@
 // use the lucide calendar icon for now
 export function Logo({
   className,
-  variant,
+  variant = "hidePreview",
 }: {
-  variant?: "hidePreview";
+  variant?: "hidePreview" | "showPreview";
   className?: string;
 }) {
   if (variant === "hidePreview") {
