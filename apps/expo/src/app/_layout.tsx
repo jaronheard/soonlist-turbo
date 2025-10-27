@@ -1,14 +1,19 @@
 import { Platform, StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Stack, useNavigationContainerRef } from "expo-router";
+import {
+  Stack,
+  useNavigationContainerRef,
+  usePathname,
+  useGlobalSearchParams,
+} from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { resourceCache } from "@clerk/clerk-expo/resource-cache";
 import * as Sentry from "@sentry/react-native";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { PostHogProvider } from "posthog-react-native";
+import { PostHogProvider, usePostHog } from "posthog-react-native";
 
 import { convex } from "~/lib/convex";
 import { OneSignalProvider } from "~/providers/OneSignalProvider";
@@ -276,10 +281,20 @@ function RootLayoutContent() {
   useMediaPermissions();
   useQuickActions();
   const ref = useNavigationContainerRef();
+  const pathname = usePathname();
+  const params = useGlobalSearchParams();
+  const posthog = usePostHog();
 
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
+
+  // Enable automatic PostHog screen tracking
+  useEffect(() => {
+    if (posthog) {
+      posthog.screen(pathname, params);
+    }
+  }, [pathname, params, posthog]);
 
   useTimezoneAlert();
 
