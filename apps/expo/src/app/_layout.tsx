@@ -3,9 +3,9 @@ import appsFlyer from "react-native-appsflyer";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
   Stack,
+  useGlobalSearchParams,
   useNavigationContainerRef,
   usePathname,
-  useGlobalSearchParams,
 } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
@@ -292,7 +292,7 @@ function RootLayoutContent() {
   // Enable automatic PostHog screen tracking
   useEffect(() => {
     if (posthog) {
-      posthog.screen(pathname, params);
+      void posthog.screen(pathname, params);
     }
   }, [pathname, params, posthog]);
 
