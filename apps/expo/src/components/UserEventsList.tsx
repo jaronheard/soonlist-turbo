@@ -17,6 +17,10 @@ import { useUser } from "@clerk/clerk-expo";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+import {
+  getTimezoneAbbreviation,
+  shouldShowTimezoneConversion,
+} from "@soonlist/cal";
 
 import {
   CalendarPlus,
@@ -36,6 +40,7 @@ import {
   formatEventDateRange,
   formatRelativeTime,
   getDateTimeInfo,
+  getUserTimeZone,
   isOver,
 } from "~/utils/dates";
 import { getEventEmoji } from "~/utils/eventEmoji";
@@ -99,6 +104,16 @@ export function UserEventListItem(props: UserEventListItemProps) {
     e.endTime,
     e.timeZone || "",
   );
+
+  // Check if we should show timezone conversion badge
+  const userTimezone = getUserTimeZone();
+  const showTimezoneBadge = shouldShowTimezoneConversion(
+    e.timeZone,
+    userTimezone,
+  );
+  const eventTimezoneAbbr = showTimezoneBadge
+    ? getTimezoneAbbreviation(e.timeZone || "", e.startDate)
+    : "";
 
   const startDateInfo = useMemo(
     () => getDateTimeInfo(e.startDate || "", e.startTime || ""),
@@ -296,10 +311,17 @@ export function UserEventListItem(props: UserEventListItemProps) {
             style={dynamicCardStyle}
           >
             <View className="mb-1 flex-row items-center justify-between">
-              <View className="flex-row items-center gap-1">
+              <View className="flex-shrink flex-row flex-wrap items-center gap-1">
                 <Text className="text-sm font-medium text-neutral-2">
                   {dateString.date} • {dateString.time}
                 </Text>
+                {showTimezoneBadge && (
+                  <View className="rounded-full bg-accent-yellow/20 px-2 py-0.5">
+                    <Text className="text-xs font-medium text-neutral-2">
+                      converted from {eventTimezoneAbbr}
+                    </Text>
+                  </View>
+                )}
               </View>
               {isOwner && !ActionButton && similarEventsCount ? (
                 <View className="flex-row items-center gap-1 opacity-60">

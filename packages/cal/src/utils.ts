@@ -377,3 +377,49 @@ export function formatCompactTimeRange(start: DateInfo, end: DateInfo): string {
     return `${startHour}${startMinute}${startPeriod}–${endHour}${endMinute}${endPeriod}`;
   }
 }
+
+/**
+ * Get timezone abbreviation (e.g., "PST", "EST", "GMT") for a given IANA timezone identifier
+ */
+export function getTimezoneAbbreviation(
+  timezone: string,
+  date?: string,
+): string {
+  try {
+    // Use a specific date if provided, otherwise use current date
+    const targetDate = date
+      ? Temporal.PlainDate.from(date)
+      : Temporal.Now.plainDateISO();
+    const zonedDateTime = targetDate.toZonedDateTime({
+      timeZone: timezone,
+      plainTime: Temporal.PlainTime.from("12:00"),
+    });
+
+    // Format to get timezone abbreviation
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      timeZoneName: "short",
+    });
+    const parts = formatter.formatToParts(
+      new Date(zonedDateTime.toString({ timeZoneName: "never" })),
+    );
+    const tzNamePart = parts.find((part) => part.type === "timeZoneName");
+    return tzNamePart?.value || timezone;
+  } catch (error) {
+    console.error(`Error getting timezone abbreviation for ${timezone}`, error);
+    return timezone;
+  }
+}
+
+/**
+ * Check if an event's timezone differs from the user's timezone and should show a conversion indicator
+ */
+export function shouldShowTimezoneConversion(
+  eventTimezone: string | undefined,
+  userTimezone: string,
+): boolean {
+  if (!eventTimezone || eventTimezone === "unknown" || eventTimezone === "") {
+    return false;
+  }
+  return eventTimezone !== userTimezone;
+}

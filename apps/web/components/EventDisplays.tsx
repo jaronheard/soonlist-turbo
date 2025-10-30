@@ -19,6 +19,8 @@ import {
   formatRelativeTime,
   getDateInfoUTC,
   getDateTimeInfo,
+  getTimezoneAbbreviation,
+  shouldShowTimezoneConversion,
 } from "@soonlist/cal";
 
 import type { AddToCalendarCardProps } from "./AddToCalendarCard";
@@ -731,6 +733,14 @@ export function EventListItem(props: EventListItemProps) {
       return `${dateStr} • ${timeStr}`;
     })();
 
+    const showTimezoneBadge = shouldShowTimezoneConversion(
+      event.timeZone,
+      userTimezone,
+    );
+    const eventTimezoneAbbr = showTimezoneBadge
+      ? getTimezoneAbbreviation(event.timeZone || "", event.startDate)
+      : "";
+
     const relativeLabel = (() => {
       if (!relativeTime) return "";
       // Don't show "in the past" when happeningNow prop is explicitly true
@@ -817,8 +827,13 @@ export function EventListItem(props: EventListItemProps) {
           {/* Tappable content area */}
           <Link href={`/event/${id}`} className="block">
             <div className="mb-1 flex w-full items-center justify-between">
-              <div className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center gap-1">
                 <p className="text-xs font-medium text-neutral-2">{dateText}</p>
+                {showTimezoneBadge && (
+                  <span className="rounded-full bg-accent-yellow/20 px-2 py-0.5 text-xs font-medium text-neutral-2">
+                    converted from {eventTimezoneAbbr}
+                  </span>
+                )}
               </div>
               {isOwner &&
                 props.similarEvents &&
