@@ -139,7 +139,7 @@ export default function EditEventScreen() {
         ageRestriction?: string;
         performers?: string | string[];
         accessibility?: string | string[];
-      };
+      } | undefined;
 
       reset({
         event: {
@@ -153,9 +153,9 @@ export default function EditEventScreen() {
           location: eventData.location || "",
           images: eventData.images || [],
         },
-        platform: eventMetadata.platform || "unknown",
-        mentions: eventMetadata.mentions || [],
-        sourceUrls: eventMetadata.sourceUrls || [],
+        platform: eventMetadata?.platform || "unknown",
+        mentions: eventMetadata?.mentions || [],
+        sourceUrls: eventMetadata?.sourceUrls || [],
         comment: "",
         lists: [],
         visibility: eventQuery.visibility || DEFAULT_VISIBILITY,

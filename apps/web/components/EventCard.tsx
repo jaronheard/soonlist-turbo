@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 import { CalendarPlus, MapPinned } from "lucide-react";
 
@@ -15,7 +16,7 @@ export default function EventCard(props: {
   eventTitle?: string;
   eventName?: string;
   eventDate: string;
-  eventTime?: string;
+  eventTime?: string | React.ReactNode;
   eventLocation: string;
   eventDescription: string;
   eventLink?: string;

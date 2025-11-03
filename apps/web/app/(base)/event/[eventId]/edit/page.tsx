@@ -27,7 +27,7 @@ export default async function Page(props: {
   }
 
   const eventData = event.event as AddToCalendarButtonProps;
-  const eventMetadata = event.eventMetadata as EventMetadata;
+  const eventMetadata = event.eventMetadata as EventMetadata | undefined;
   const mostRecentComment = event.comments
     .filter((comment) => comment.content)
     .pop()?.content;

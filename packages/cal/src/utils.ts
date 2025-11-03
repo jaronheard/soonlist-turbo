@@ -355,7 +355,56 @@ export function formatRelativeTime(dateInfo: DateInfo): string {
   return ``;
 }
 
-export function formatCompactTimeRange(start: DateInfo, end: DateInfo): string {
+/**
+ * Get timezone abbreviation (e.g., "PST", "EST", "EDT") for a given timezone.
+ * Uses Intl.DateTimeFormat with timeZoneName: 'short' to get the abbreviation.
+ */
+export function getTimezoneAbbreviation(timezone: string): string {
+  if (!timezone || timezone === "unknown" || timezone.trim() === "") {
+    return "";
+  }
+
+  try {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      timeZoneName: "short",
+    });
+    const parts = formatter.formatToParts(new Date());
+    const timeZoneNamePart = parts.find((part) => part.type === "timeZoneName");
+    return timeZoneNamePart?.value || "";
+  } catch (error) {
+    console.error(
+      `Error getting timezone abbreviation for ${timezone}:`,
+      error,
+    );
+    return "";
+  }
+}
+
+/**
+ * Get DateInfo in the event's original timezone (not converted to user timezone).
+ * This is useful for displaying the original event time alongside the converted time.
+ */
+export function getDateTimeInfoInTimezone(
+  dateString: string,
+  timeString: string,
+  timezone: string,
+): DateInfo | null {
+  // Call getDateTimeInfo with the same timezone for both parameters to keep it in original timezone
+  return getDateTimeInfo(dateString, timeString, timezone, timezone);
+}
+
+/**
+ * Format time range with optional event timezone display.
+ * Returns an object with userTime and optional eventTime for flexible rendering.
+ */
+export function formatCompactTimeRangeWithEventTimezone(
+  start: DateInfo,
+  end: DateInfo,
+  eventTimezoneStart?: DateInfo,
+  eventTimezoneEnd?: DateInfo,
+  timezoneAbbreviation?: string,
+): { userTime: string; eventTime?: string } {
   const formatHour = (hour: number): string => {
     const h = hour % 12 || 12;
     return h.toString();
@@ -368,12 +417,64 @@ export function formatCompactTimeRange(start: DateInfo, end: DateInfo): string {
   const startMinute = formatMinute(start.minute);
   const endHour = formatHour(end.hour);
   const endMinute = formatMinute(end.minute);
-  const startPeriod = start.hour < 12 ? "am" : "pm";
-  const endPeriod = end.hour < 12 ? "am" : "pm";
+  const startPeriod = start.hour < 12 ? "AM" : "PM";
+  const endPeriod = end.hour < 12 ? "AM" : "PM";
 
+  let timeRange: string;
   if (startPeriod === endPeriod) {
-    return `${startHour}${startMinute}–${endHour}${endMinute}${endPeriod}`;
+    timeRange = `${startHour}${startMinute}–${endHour}${endMinute}${startPeriod}`;
   } else {
-    return `${startHour}${startMinute}${startPeriod}–${endHour}${endMinute}${endPeriod}`;
+    timeRange = `${startHour}${startMinute}${startPeriod}–${endHour}${endMinute}${endPeriod}`;
   }
+
+  // If event timezone info is provided, return both
+  if (eventTimezoneStart && timezoneAbbreviation) {
+    const eventStartHour = formatHour(eventTimezoneStart.hour);
+    const eventStartMinute = formatMinute(eventTimezoneStart.minute);
+    const eventStartPeriod = eventTimezoneStart.hour < 12 ? "AM" : "PM";
+
+    let eventTimeRange: string;
+    if (eventTimezoneEnd) {
+      const eventEndHour = formatHour(eventTimezoneEnd.hour);
+      const eventEndMinute = formatMinute(eventTimezoneEnd.minute);
+      const eventEndPeriod = eventTimezoneEnd.hour < 12 ? "AM" : "PM";
+
+      if (eventStartPeriod === eventEndPeriod) {
+        eventTimeRange = `${eventStartHour}${eventStartMinute}–${eventEndHour}${eventEndMinute}${eventStartPeriod}`;
+      } else {
+        eventTimeRange = `${eventStartHour}${eventStartMinute}${eventStartPeriod}–${eventEndHour}${eventEndMinute}${eventEndPeriod}`;
+      }
+    } else {
+      eventTimeRange = `${eventStartHour}${eventStartMinute}${eventStartPeriod}`;
+    }
+
+    return {
+      userTime: timeRange,
+      eventTime: `${eventTimeRange} ${timezoneAbbreviation}`,
+    };
+  }
+
+  return { userTime: timeRange };
+}
+
+export function formatCompactTimeRange(
+  start: DateInfo,
+  end: DateInfo,
+  eventTimezoneStart?: DateInfo,
+  eventTimezoneEnd?: DateInfo,
+  timezoneAbbreviation?: string,
+): string {
+  const result = formatCompactTimeRangeWithEventTimezone(
+    start,
+    end,
+    eventTimezoneStart,
+    eventTimezoneEnd,
+    timezoneAbbreviation,
+  );
+
+  if (result.eventTime) {
+    return `${result.userTime} (${result.eventTime})`;
+  }
+
+  return result.userTime;
 }
