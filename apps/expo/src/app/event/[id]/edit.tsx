@@ -127,19 +127,21 @@ export default function EditEventScreen() {
         images?: string[];
       };
 
-      const eventMetadata = eventQuery.eventMetadata as {
-        platform?: string;
-        mentions?: string[];
-        sourceUrls?: string[];
-        // Legacy fields for backward compatibility
-        type?: string;
-        category?: string;
-        priceType?: string;
-        price?: string;
-        ageRestriction?: string;
-        performers?: string | string[];
-        accessibility?: string | string[];
-      } | undefined;
+      const eventMetadata = eventQuery.eventMetadata as
+        | {
+            platform?: string;
+            mentions?: string[];
+            sourceUrls?: string[];
+            // Legacy fields for backward compatibility
+            type?: string;
+            category?: string;
+            priceType?: string;
+            price?: string;
+            ageRestriction?: string;
+            performers?: string | string[];
+            accessibility?: string | string[];
+          }
+        | undefined;
 
       reset({
         event: {
