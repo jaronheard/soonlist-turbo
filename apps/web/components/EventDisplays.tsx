@@ -15,7 +15,6 @@ import type {
 import type { Comment, EventFollow, List, User } from "@soonlist/db/types";
 import {
   eventTimesAreDefined,
-  formatCompactTimeRange,
   formatRelativeTime,
   getDateInfoUTC,
   getDateTimeInfo,
@@ -318,6 +317,14 @@ function EventDetailsCard({
     ? getDateTimeInfo(endDate, endTime, timezone, userTimezone.toString())
     : getDateInfoUTC(endDate);
 
+  // Get event timezone DateInfo for displaying original time
+  const eventTimezoneStartDateInfo: DateInfo | null = startTime
+    ? getDateTimeInfo(startDate, startTime, timezone, timezone)
+    : null;
+  const eventTimezoneEndDateInfo: DateInfo | null = endTime
+    ? getDateTimeInfo(endDate, endTime, timezone, timezone)
+    : null;
+
   if (!startDateInfo || !endDateInfo) {
     console.error("startDateInfo or endDateInfo is missing");
     return null;
@@ -336,6 +343,10 @@ function EventDetailsCard({
         startDateInfo={startDateInfo}
         startTime={startTime}
         variant="compact"
+        eventTimezone={timezone}
+        userTimezone={userTimezone.toString()}
+        eventTimezoneStartDateInfo={eventTimezoneStartDateInfo || undefined}
+        eventTimezoneEndDateInfo={eventTimezoneEndDateInfo || undefined}
       />
       <div className="flex w-full flex-col items-start gap-2">
         {noLinks ? (
@@ -431,6 +442,14 @@ function EventDetails({
     ? getDateTimeInfo(endDate, endTime, timezone, userTimezone.toString())
     : getDateInfoUTC(endDate);
 
+  // Get event timezone DateInfo for displaying original time
+  const eventTimezoneStartDateInfo = startTime
+    ? getDateTimeInfo(startDate, startTime, timezone, timezone)
+    : null;
+  const eventTimezoneEndDateInfo = endTime
+    ? getDateTimeInfo(endDate, endTime, timezone, timezone)
+    : null;
+
   if (!startDateInfo || !endDateInfo) {
     console.error("startDateInfo or endDateInfo is missing");
     return null;
@@ -456,6 +475,10 @@ function EventDetails({
           startTime={startTime}
           happeningNow={happeningNow}
           variant="compact"
+          eventTimezone={timezone}
+          userTimezone={userTimezone.toString()}
+          eventTimezoneStartDateInfo={eventTimezoneStartDateInfo || undefined}
+          eventTimezoneEndDateInfo={eventTimezoneEndDateInfo || undefined}
         />
       </div>
       <div className="">
@@ -712,7 +735,23 @@ export function EventListItem(props: EventListItemProps) {
 
     const cardShadowRadius = isRecent ? 8 : 2.5;
 
-    function formatFullTimeRange(start: DateInfo, end: DateInfo): string {
+    function formatFullTimeRange(
+      start: DateInfo,
+      end: DateInfo,
+    ): string | React.ReactNode {
+      const resolveTZAbbr = (tz?: string): string | undefined => {
+        try {
+          if (!tz) return undefined;
+          const parts = new Intl.DateTimeFormat("en-US", {
+            timeZone: tz,
+            timeZoneName: "short",
+          }).formatToParts(new Date());
+          const val = parts.find((p) => p.type === "timeZoneName")?.value;
+          return val?.trim() ? val : undefined;
+        } catch {
+          return undefined;
+        }
+      };
       const toHour = (h: number) => (h % 12 === 0 ? 12 : h % 12);
       const toMinute = (m: number) => m.toString().padStart(2, "0");
       const startHour = toHour(start.hour);
@@ -721,14 +760,82 @@ export function EventListItem(props: EventListItemProps) {
       const endMin = toMinute(end.minute);
       const startPeriod = start.hour < 12 ? "AM" : "PM";
       const endPeriod = end.hour < 12 ? "AM" : "PM";
-      return `${startHour}:${startMin}${startPeriod} - ${endHour}:${endMin}${endPeriod}`;
+
+      // Normalize timezones for comparison
+      const normalizeTimezone = (tz?: string): string => {
+        const val = tz?.trim().toLowerCase();
+        return !val || val === "unknown" ? "" : val;
+      };
+
+      const normalizedEventTz = normalizeTimezone(event.timeZone);
+      const normalizedUserTz = normalizeTimezone(userTimezone);
+
+      // Get timezone abbreviation if timezones differ
+      const shouldShowTimezone =
+        normalizedEventTz &&
+        normalizedUserTz &&
+        normalizedEventTz !== normalizedUserTz &&
+        event.startTime; // Only show for timed events
+
+      const timeStr = `${startHour}:${startMin}${startPeriod} - ${endHour}:${endMin}${endPeriod}`;
+
+      if (
+        shouldShowTimezone &&
+        event.startDate &&
+        event.startTime &&
+        event.endTime
+      ) {
+        const timezoneAbbreviation: string | undefined = resolveTZAbbr(
+          event.timeZone || "",
+        );
+        if (timezoneAbbreviation) {
+          // Get event timezone DateInfo
+          const eventStartDateInfo = getDateTimeInfo(
+            event.startDate || "",
+            event.startTime || "",
+            event.timeZone || "",
+            event.timeZone || "",
+          );
+          const eventEndDateInfo = getDateTimeInfo(
+            event.endDate || event.startDate || "",
+            event.endTime || event.startTime || "",
+            event.timeZone || "",
+            event.timeZone || "",
+          );
+
+          if (eventStartDateInfo && eventEndDateInfo) {
+            const eventStartHour = toHour(eventStartDateInfo.hour);
+            const eventStartMin = toMinute(eventStartDateInfo.minute);
+            const eventEndHour = toHour(eventEndDateInfo.hour);
+            const eventEndMin = toMinute(eventEndDateInfo.minute);
+            const eventStartPeriod = eventStartDateInfo.hour < 12 ? "AM" : "PM";
+            const eventEndPeriod = eventEndDateInfo.hour < 12 ? "AM" : "PM";
+
+            const eventTimeStr = `${eventStartHour}:${eventStartMin}${eventStartPeriod} - ${eventEndHour}:${eventEndMin}${eventEndPeriod}`;
+            return (
+              <>
+                {timeStr}{" "}
+                <em>
+                  ({eventTimeStr} {timezoneAbbreviation})
+                </em>
+              </>
+            );
+          }
+        }
+      }
+
+      return timeStr;
     }
 
     const dateText = (() => {
       if (!startDateInfo || !endDateInfo) return "";
       const dateStr = `${startDateInfo.dayOfWeek.substring(0, 3)}, ${startDateInfo.monthName} ${startDateInfo.day}`;
       const timeStr = formatFullTimeRange(startDateInfo, endDateInfo);
-      return `${dateStr} • ${timeStr}`;
+      return (
+        <>
+          {dateStr} • {timeStr}
+        </>
+      );
     })();
 
     const relativeLabel = (() => {
@@ -1061,6 +1168,10 @@ function DateAndTimeDisplay({
   startDateInfo,
   startTime,
   variant = "default",
+  eventTimezone,
+  userTimezone,
+  eventTimezoneStartDateInfo,
+  eventTimezoneEndDateInfo,
 }: {
   happeningNow?: boolean;
   endDateInfo: DateInfo;
@@ -1069,7 +1180,45 @@ function DateAndTimeDisplay({
   startDateInfo: DateInfo;
   startTime?: string;
   variant?: "default" | "compact";
+  eventTimezone?: string;
+  userTimezone?: string;
+  eventTimezoneStartDateInfo?: DateInfo;
+  eventTimezoneEndDateInfo?: DateInfo;
 }) {
+  // Normalize timezones for comparison
+  const normalizeTimezone = (tz?: string): string => {
+    const val = tz?.trim().toLowerCase();
+    return !val || val === "unknown" ? "" : val;
+  };
+
+  const normalizedEventTz = normalizeTimezone(eventTimezone);
+  const normalizedUserTz = normalizeTimezone(userTimezone);
+
+  // Get timezone abbreviation if timezones differ
+  const shouldShowTimezone =
+    normalizedEventTz &&
+    normalizedUserTz &&
+    normalizedEventTz !== normalizedUserTz &&
+    startTime; // Only show for timed events
+
+  const resolveTZAbbr = (tz?: string): string | undefined => {
+    try {
+      if (!tz) return undefined;
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        timeZoneName: "short",
+      }).formatToParts(new Date());
+      const val = parts.find((p) => p.type === "timeZoneName")?.value;
+      return val?.trim() ? val : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const timezoneAbbreviation: string | undefined = shouldShowTimezone
+    ? resolveTZAbbr(eventTimezone)
+    : undefined;
+
   return (
     <div className="flex flex-col gap-2 font-medium leading-none">
       {isClient && eventTimesAreDefined(startTime, endTime) && (
@@ -1084,7 +1233,44 @@ function DateAndTimeDisplay({
             {startDateInfo.dayOfWeek.substring(0, 3)}{" "}
             {startDateInfo.monthName.substring(0, 3)} {startDateInfo.day}
             {" • "}
-            {formatCompactTimeRange(startDateInfo, endDateInfo)}
+            {(() => {
+              const fmt = (d: DateInfo) => {
+                const h = d.hour % 12 || 12;
+                const m =
+                  d.minute === 0
+                    ? ""
+                    : `:${d.minute.toString().padStart(2, "0")}`;
+                const p = d.hour < 12 ? "AM" : "PM";
+                return { h, m, p };
+              };
+              const u1 = fmt(startDateInfo);
+              const u2 = fmt(endDateInfo);
+              const userStr =
+                u1.p === u2.p
+                  ? `${u1.h}${u1.m}–${u2.h}${u2.m}${u2.p}`
+                  : `${u1.h}${u1.m}${u1.p}–${u2.h}${u2.m}${u2.p}`;
+
+              if (timezoneAbbreviation && eventTimezoneStartDateInfo) {
+                const e1 = fmt(eventTimezoneStartDateInfo);
+                const e2 = eventTimezoneEndDateInfo
+                  ? fmt(eventTimezoneEndDateInfo)
+                  : undefined;
+                const eventStr = e2
+                  ? e1.p === e2.p
+                    ? `${e1.h}${e1.m}–${e2.h}${e2.m}${e2.p}`
+                    : `${e1.h}${e1.m}${e1.p}–${e2.h}${e2.m}${e2.p}`
+                  : `${e1.h}${e1.m}${e1.p}`;
+                return (
+                  <>
+                    {userStr}{" "}
+                    <em>
+                      ({eventStr} {timezoneAbbreviation})
+                    </em>
+                  </>
+                );
+              }
+              return userStr;
+            })()}
           </span>
           {happeningNow && (
             <span className="ml-1 rounded-full bg-yellow-100 px-1 text-yellow-700">
@@ -1139,6 +1325,48 @@ export function EventPage(props: EventPageProps) {
     ? getDateTimeInfo(endDate, endTime, timezone, userTimezone.toString())
     : getDateInfoUTC(endDate);
 
+  // Get event timezone DateInfo for displaying original time
+  const eventTimezoneStartDateInfo = startTime
+    ? getDateTimeInfo(startDate, startTime, timezone, timezone)
+    : null;
+  const eventTimezoneEndDateInfo = endTime
+    ? getDateTimeInfo(endDate, endTime, timezone, timezone)
+    : null;
+
+  // Normalize timezones for comparison
+  const normalizeTimezone = (tz?: string): string => {
+    const val = tz?.trim().toLowerCase();
+    return !val || val === "unknown" ? "" : val;
+  };
+
+  const normalizedEventTz = normalizeTimezone(timezone);
+  const normalizedUserTz = normalizeTimezone(userTimezone.toString());
+
+  // Get timezone abbreviation if timezones differ
+  const shouldShowTimezone =
+    normalizedEventTz &&
+    normalizedUserTz &&
+    normalizedEventTz !== normalizedUserTz &&
+    startTime; // Only show for timed events
+
+  const resolveTZAbbr = (tz?: string): string | undefined => {
+    try {
+      if (!tz) return undefined;
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        timeZoneName: "short",
+      }).formatToParts(new Date());
+      const val = parts.find((p) => p.type === "timeZoneName")?.value;
+      return val?.trim() ? val : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const timezoneAbbreviation: string | undefined = shouldShowTimezone
+    ? resolveTZAbbr(timezone)
+    : undefined;
+
   if (!startDateInfo || !endDateInfo) {
     console.error("startDateInfo or endDateInfo is missing");
     return null;
@@ -1178,7 +1406,41 @@ export function EventPage(props: EventPageProps) {
         " " +
         startDateInfo.day
       }
-      eventTime={formatCompactTimeRange(startDateInfo, endDateInfo)}
+      eventTime={(() => {
+        const fmt = (d: DateInfo) => {
+          const h = d.hour % 12 || 12;
+          const m =
+            d.minute === 0 ? "" : `:${d.minute.toString().padStart(2, "0")}`;
+          const p = d.hour < 12 ? "AM" : "PM";
+          return { h, m, p };
+        };
+        const u1 = fmt(startDateInfo);
+        const u2 = fmt(endDateInfo);
+        const userStr =
+          u1.p === u2.p
+            ? `${u1.h}${u1.m}–${u2.h}${u2.m}${u2.p}`
+            : `${u1.h}${u1.m}${u1.p}–${u2.h}${u2.m}${u2.p}`;
+        if (timezoneAbbreviation && eventTimezoneStartDateInfo) {
+          const e1 = fmt(eventTimezoneStartDateInfo);
+          const e2 = eventTimezoneEndDateInfo
+            ? fmt(eventTimezoneEndDateInfo)
+            : undefined;
+          const eventStr = e2
+            ? e1.p === e2.p
+              ? `${e1.h}${e1.m}–${e2.h}${e2.m}${e2.p}`
+              : `${e1.h}${e1.m}${e1.p}–${e2.h}${e2.m}${e2.p}`
+            : `${e1.h}${e1.m}${e1.p}`;
+          return (
+            <>
+              {userStr}{" "}
+              <em>
+                ({eventStr} {timezoneAbbreviation})
+              </em>
+            </>
+          );
+        }
+        return userStr;
+      })()}
       eventLocation={location || ""}
       eventDescription={description || ""}
       eventImage={image || null}

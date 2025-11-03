@@ -17,6 +17,7 @@ import { useUser } from "@clerk/clerk-expo";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
+import { getTimezoneAbbreviation } from "@soonlist/cal";
 
 import {
   CalendarPlus,
@@ -31,6 +32,7 @@ import {
 } from "~/components/icons";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
+import { useUserTimezone } from "~/store";
 import { cn } from "~/utils/cn";
 import {
   formatEventDateRange,
@@ -92,12 +94,34 @@ export function UserEventListItem(props: UserEventListItemProps) {
     useEventActions({ event, isSaved, demoMode, source });
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
+  const userTimezone = useUserTimezone();
+
+  // Normalize timezones for comparison
+  const normalizeTimezone = (tz?: string): string => {
+    if (!tz || tz === "unknown" || tz.trim() === "") return "";
+    return tz.trim().toLowerCase();
+  };
+
+  const normalizedEventTz = normalizeTimezone(e.timeZone);
+  const normalizedUserTz = normalizeTimezone(userTimezone);
+
+  // Get timezone abbreviation if timezones differ
+  const shouldShowTimezone =
+    normalizedEventTz &&
+    normalizedUserTz &&
+    normalizedEventTz !== normalizedUserTz &&
+    e.startTime; // Only show for timed events
+
+  const timezoneAbbreviation = shouldShowTimezone
+    ? getTimezoneAbbreviation(e.timeZone || "")
+    : undefined;
 
   const dateString = formatEventDateRange(
     e.startDate || "",
     e.startTime,
     e.endTime,
     e.timeZone || "",
+    timezoneAbbreviation,
   );
 
   const startDateInfo = useMemo(
@@ -299,6 +323,14 @@ export function UserEventListItem(props: UserEventListItemProps) {
               <View className="flex-row items-center gap-1">
                 <Text className="text-sm font-medium text-neutral-2">
                   {dateString.date} • {dateString.time}
+                  {dateString.eventTime && (
+                    <>
+                      {" "}
+                      <Text style={{ fontStyle: "italic" }}>
+                        {dateString.eventTime}
+                      </Text>
+                    </>
+                  )}
                 </Text>
               </View>
               {isOwner && !ActionButton && similarEventsCount ? (

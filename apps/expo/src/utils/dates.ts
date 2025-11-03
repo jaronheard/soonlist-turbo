@@ -345,18 +345,84 @@ export function isOver(endDateInfo: DateInfo): boolean {
 }
 
 /**
+ * Get DateInfo in the event's original timezone (not converted to user timezone).
+ * This is useful for displaying the original event time alongside the converted time.
+ */
+export function getDateTimeInfoInTimezone(
+  dateString: string,
+  timeString: string,
+  eventTimezone: string,
+): DateInfo | null {
+  // Validate input
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  if (!datePattern.test(dateString)) {
+    logError("Invalid date format", new Error("Use YYYY-MM-DD."));
+    return null;
+  }
+
+  // Ensure timeString is valid enough to parse
+  timeString = coerceTimeString(timeString);
+
+  const parseInTimezone =
+    eventTimezone && eventTimezone !== "unknown"
+      ? eventTimezone
+      : getUserTimeZone();
+
+  try {
+    // Parse in event timezone and keep it in that timezone (don't convert)
+    const zonedDateTime = Temporal.ZonedDateTime.from(
+      `${dateString}T${timeString}[${parseInTimezone}]`,
+    );
+    // Keep it in the same timezone
+    const localDateTime = zonedDateTime.withTimeZone(parseInTimezone);
+
+    const dayOfWeek = daysOfWeekTemporal[localDateTime.dayOfWeek - 1];
+    if (!dayOfWeek) {
+      logError(
+        "Invalid dayOfWeek / date format",
+        new Error("Invalid dayOfWeek / date format. Use YYYY-MM-DD."),
+      );
+      return null;
+    }
+    const monthName = monthNames[localDateTime.month - 1];
+    if (!monthName) {
+      logError(
+        "Invalid monthName / date format",
+        new Error("Invalid monthName / date format. Use YYYY-MM-DD."),
+      );
+      return null;
+    }
+
+    return {
+      month: localDateTime.month,
+      day: localDateTime.day,
+      year: localDateTime.year,
+      dayOfWeek,
+      monthName,
+      hour: localDateTime.hour,
+      minute: localDateTime.minute,
+    };
+  } catch (error) {
+    logError("Error parsing date/time", error);
+    return null;
+  }
+}
+
+/**
  * Takes a date (YYYY-MM-DD), optional start/end times (HH:MM), and an event timezone.
  * Returns a user-facing { date, time } string pair in local time.
+ * If timezones differ, returns { date, time, eventTime } for separate rendering.
  */
 export function formatEventDateRange(
   date: string,
   startTime: string | undefined,
   endTime: string | undefined,
   eventTimezone: string,
-): { date: string; time: string } {
+  timezoneAbbreviation?: string,
+): { date: string; time: string; eventTime?: string } {
   if (!date) return { date: "", time: "" };
 
-  // Get local DateInfo for the start
+  // Get local DateInfo for the start (converted to user timezone)
   const startDateInfo = getDateTimeInfo(
     date,
     startTime || "",
@@ -386,6 +452,43 @@ export function formatEventDateRange(
     startTime && endTime
       ? `${formattedStartTime} - ${formattedEndTime}`
       : formattedStartTime;
+
+  // If timezone abbreviation is provided, return event time separately for italic styling
+  if (timezoneAbbreviation && startTime) {
+    // Get event timezone DateInfo (original timezone)
+    const eventStartDateInfo = getDateTimeInfoInTimezone(
+      date,
+      startTime,
+      eventTimezone || "unknown",
+    );
+    let eventTimeRange = "";
+
+    if (eventStartDateInfo) {
+      const eventStartTime = timeFormatDateInfo(eventStartDateInfo);
+
+      if (endTime) {
+        const eventEndDateInfo = getDateTimeInfoInTimezone(
+          date,
+          endTime,
+          eventTimezone || "unknown",
+        );
+        if (eventEndDateInfo) {
+          const eventEndTime = timeFormatDateInfo(eventEndDateInfo);
+          eventTimeRange = `${eventStartTime} - ${eventEndTime}`;
+        } else {
+          eventTimeRange = eventStartTime;
+        }
+      } else {
+        eventTimeRange = eventStartTime;
+      }
+
+      return {
+        date: formattedDate,
+        time: timeRange.trim(),
+        eventTime: `(${eventTimeRange} ${timezoneAbbreviation})`,
+      };
+    }
+  }
 
   return { date: formattedDate, time: timeRange.trim() };
 }
