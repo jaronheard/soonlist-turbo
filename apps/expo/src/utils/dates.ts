@@ -1,10 +1,10 @@
 import { Temporal } from "@js-temporal/polyfill";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
+import { didDstChangeBetween, getTimezoneAbbreviationAt } from "@soonlist/cal";
 
 import { logError } from "./errorLogging";
 
-// Existing event defaults
 export const blankEvent = {
   options: [
     "Apple",
@@ -411,14 +411,13 @@ export function getDateTimeInfoInTimezone(
 /**
  * Takes a date (YYYY-MM-DD), optional start/end times (HH:MM), and an event timezone.
  * Returns a user-facing { date, time } string pair in local time.
- * If timezones differ, returns { date, time, eventTime } for separate rendering.
+ * If timezones differ and times/dates differ, returns { date, time, eventTime } for separate rendering.
  */
 export function formatEventDateRange(
   date: string,
   startTime: string | undefined,
   endTime: string | undefined,
   eventTimezone: string,
-  timezoneAbbreviation?: string,
 ): { date: string; time: string; eventTime?: string } {
   if (!date) return { date: "", time: "" };
 
@@ -437,12 +436,9 @@ export function formatEventDateRange(
 
   // Handle end
   let formattedEndTime = "";
+  let endDateInfo: DateInfo | null = null;
   if (endTime) {
-    const endDateInfo = getDateTimeInfo(
-      date,
-      endTime,
-      eventTimezone || "unknown",
-    );
+    endDateInfo = getDateTimeInfo(date, endTime, eventTimezone || "unknown");
     if (endDateInfo) {
       formattedEndTime = timeFormatDateInfo(endDateInfo);
     }
@@ -453,39 +449,86 @@ export function formatEventDateRange(
       ? `${formattedStartTime} - ${formattedEndTime}`
       : formattedStartTime;
 
-  // If timezone abbreviation is provided, return event time separately for italic styling
-  if (timezoneAbbreviation && startTime) {
-    // Get event timezone DateInfo (original timezone)
-    const eventStartDateInfo = getDateTimeInfoInTimezone(
+  // Get event timezone DateInfo (original timezone)
+  const eventStartDateInfo = getDateTimeInfoInTimezone(
+    date,
+    startTime || "",
+    eventTimezone || "unknown",
+  );
+
+  if (!eventStartDateInfo || !startTime) {
+    return { date: formattedDate, time: timeRange.trim() };
+  }
+
+  // Get user timezone for comparison
+  const userTimezone = getUserTimeZone();
+
+  // Normalize timezones for comparison
+  const normalizeTimezone = (tz?: string): string => {
+    const val = tz?.trim().toLowerCase();
+    return !val || val === "unknown" ? "" : val;
+  };
+
+  const normalizedEventTz = normalizeTimezone(eventTimezone);
+  const normalizedUserTz = normalizeTimezone(userTimezone);
+
+  // Check if timezones differ
+  const timezonesDiffer =
+    normalizedEventTz &&
+    normalizedUserTz &&
+    normalizedEventTz !== normalizedUserTz;
+
+  if (!timezonesDiffer) {
+    return { date: formattedDate, time: timeRange.trim() };
+  }
+
+  // Get event end DateInfo if endTime exists
+  let eventEndDateInfo: DateInfo | null = null;
+  if (endTime) {
+    eventEndDateInfo = getDateTimeInfoInTimezone(
       date,
-      startTime,
+      endTime,
       eventTimezone || "unknown",
     );
-    let eventTimeRange = "";
+  }
 
-    if (eventStartDateInfo) {
-      const eventStartTime = timeFormatDateInfo(eventStartDateInfo);
+  // Format event time strings for comparison
+  const eventStartTime = timeFormatDateInfo(eventStartDateInfo);
+  let eventTimeRange = eventStartTime;
+  if (endTime && eventEndDateInfo) {
+    const eventEndTime = timeFormatDateInfo(eventEndDateInfo);
+    eventTimeRange = `${eventStartTime} - ${eventEndTime}`;
+  }
 
-      if (endTime) {
-        const eventEndDateInfo = getDateTimeInfoInTimezone(
-          date,
-          endTime,
-          eventTimezone || "unknown",
-        );
-        if (eventEndDateInfo) {
-          const eventEndTime = timeFormatDateInfo(eventEndDateInfo);
-          eventTimeRange = `${eventStartTime} - ${eventEndTime}`;
-        } else {
-          eventTimeRange = eventStartTime;
-        }
-      } else {
-        eventTimeRange = eventStartTime;
-      }
+  // Check if times are equal
+  const timesEqual = timeRange.trim() === eventTimeRange;
 
+  // Check if dates are equal
+  const startDatesEqual =
+    startDateInfo.year === eventStartDateInfo.year &&
+    startDateInfo.month === eventStartDateInfo.month &&
+    startDateInfo.day === eventStartDateInfo.day;
+  const endDatesEqual =
+    eventEndDateInfo && endDateInfo && endTime
+      ? endDateInfo.year === eventEndDateInfo.year &&
+        endDateInfo.month === eventEndDateInfo.month &&
+        endDateInfo.day === eventEndDateInfo.day
+      : true;
+
+  const datesEqual = startDatesEqual && endDatesEqual;
+
+  // Only show secondary timezone if times or dates differ
+  if (!timesEqual || !datesEqual) {
+    const abbr = getTimezoneAbbreviationAt(eventTimezone, eventStartDateInfo);
+    const dstChanged =
+      eventEndDateInfo &&
+      didDstChangeBetween(eventTimezone, eventStartDateInfo, eventEndDateInfo);
+
+    if (abbr) {
       return {
         date: formattedDate,
         time: timeRange.trim(),
-        eventTime: `(${eventTimeRange} ${timezoneAbbreviation})`,
+        eventTime: `(${eventTimeRange} ${abbr}${dstChanged ? ", DST change" : ""})`,
       };
     }
   }

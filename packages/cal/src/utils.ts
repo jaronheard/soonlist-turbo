@@ -358,6 +358,7 @@ export function formatRelativeTime(dateInfo: DateInfo): string {
 /**
  * Get timezone abbreviation (e.g., "PST", "EST", "EDT") for a given timezone.
  * Uses Intl.DateTimeFormat with timeZoneName: 'short' to get the abbreviation.
+ * Uses current date/time - for event-specific times, use getTimezoneAbbreviationAt.
  */
 export function getTimezoneAbbreviation(timezone: string): string {
   if (!timezone || timezone === "unknown" || timezone.trim() === "") {
@@ -378,6 +379,105 @@ export function getTimezoneAbbreviation(timezone: string): string {
       error,
     );
     return "";
+  }
+}
+
+/**
+ * Get timezone abbreviation at a specific date/time.
+ * This is needed for accurate DST-aware abbreviations (e.g., PDT vs PST).
+ */
+export function getTimezoneAbbreviationAt(
+  timezone: string,
+  dateInfo: DateInfo,
+): string {
+  if (!timezone || timezone === "unknown" || timezone.trim() === "") {
+    return "";
+  }
+
+  try {
+    // Create a ZonedDateTime in the event's timezone at the specified date/time
+    const zonedDateTime = Temporal.ZonedDateTime.from({
+      timeZone: timezone,
+      year: dateInfo.year,
+      month: dateInfo.month,
+      day: dateInfo.day,
+      hour: dateInfo.hour,
+      minute: dateInfo.minute,
+      second: 0,
+      millisecond: 0,
+    });
+
+    // Convert to an Instant, then to a JavaScript Date
+    const instant = zonedDateTime.toInstant();
+    const jsDate = new Date(instant.epochMilliseconds);
+
+    // Use Intl.DateTimeFormat to get the abbreviation for this specific moment
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      timeZoneName: "short",
+    });
+    const parts = formatter.formatToParts(jsDate);
+    const timeZoneNamePart = parts.find((part) => part.type === "timeZoneName");
+    return timeZoneNamePart?.value || "";
+  } catch (error) {
+    console.error(
+      `Error getting timezone abbreviation for ${timezone} at ${dateInfo.year}-${dateInfo.month}-${dateInfo.day}:`,
+      error,
+    );
+    return "";
+  }
+}
+
+/**
+ * Check if a DST change occurs between start and end times in the given timezone.
+ * Returns true if the UTC offset differs between start and end.
+ */
+export function didDstChangeBetween(
+  timezone: string,
+  start: DateInfo,
+  end?: DateInfo,
+): boolean {
+  if (!timezone || timezone === "unknown" || timezone.trim() === "") {
+    return false;
+  }
+
+  if (!end) {
+    return false;
+  }
+
+  try {
+    // Create ZonedDateTime for start
+    const startZdt = Temporal.ZonedDateTime.from({
+      timeZone: timezone,
+      year: start.year,
+      month: start.month,
+      day: start.day,
+      hour: start.hour,
+      minute: start.minute,
+      second: 0,
+      millisecond: 0,
+    });
+
+    // Create ZonedDateTime for end
+    const endZdt = Temporal.ZonedDateTime.from({
+      timeZone: timezone,
+      year: end.year,
+      month: end.month,
+      day: end.day,
+      hour: end.hour,
+      minute: end.minute,
+      second: 0,
+      millisecond: 0,
+    });
+
+    // Compare UTC offsets - if they differ, DST changed
+    return startZdt.offsetNanoseconds !== endZdt.offsetNanoseconds;
+  } catch (error) {
+    console.error(
+      `Error checking DST change between ${start.year}-${start.month}-${start.day} and ${end.year}-${end.month}-${end.day} in ${timezone}:`,
+      error,
+    );
+    return false;
   }
 }
 

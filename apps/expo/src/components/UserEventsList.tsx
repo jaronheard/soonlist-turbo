@@ -17,7 +17,6 @@ import { useUser } from "@clerk/clerk-expo";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
-import { getTimezoneAbbreviation } from "@soonlist/cal";
 
 import {
   CalendarPlus,
@@ -96,32 +95,11 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const e = event.event as AddToCalendarButtonPropsRestricted;
   const userTimezone = useUserTimezone();
 
-  // Normalize timezones for comparison
-  const normalizeTimezone = (tz?: string): string => {
-    if (!tz || tz === "unknown" || tz.trim() === "") return "";
-    return tz.trim().toLowerCase();
-  };
-
-  const normalizedEventTz = normalizeTimezone(e.timeZone);
-  const normalizedUserTz = normalizeTimezone(userTimezone);
-
-  // Get timezone abbreviation if timezones differ
-  const shouldShowTimezone =
-    normalizedEventTz &&
-    normalizedUserTz &&
-    normalizedEventTz !== normalizedUserTz &&
-    e.startTime; // Only show for timed events
-
-  const timezoneAbbreviation = shouldShowTimezone
-    ? getTimezoneAbbreviation(e.timeZone || "")
-    : undefined;
-
   const dateString = formatEventDateRange(
     e.startDate || "",
     e.startTime,
     e.endTime,
     e.timeZone || "",
-    timezoneAbbreviation,
   );
 
   const startDateInfo = useMemo(

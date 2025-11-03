@@ -30,7 +30,6 @@ import { useQuery } from "convex/react";
 import type { EventMetadata } from "@soonlist/cal";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
-import { getTimezoneAbbreviation } from "@soonlist/cal";
 
 import { EventMenu } from "~/components/EventMenu";
 import { HeaderLogo } from "~/components/HeaderLogo";
@@ -274,33 +273,12 @@ export default function Page() {
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const isCurrentUserEvent = currentUser?.id === event.userId;
 
-  // Normalize timezones for comparison
-  const normalizeTimezone = (tz?: string): string => {
-    if (!tz || tz === "unknown" || tz.trim() === "") return "";
-    return tz.trim().toLowerCase();
-  };
-
-  const normalizedEventTz = normalizeTimezone(eventData.timeZone);
-  const normalizedUserTz = normalizeTimezone(userTimezone);
-
-  // Get timezone abbreviation if timezones differ
-  const shouldShowTimezone =
-    normalizedEventTz &&
-    normalizedUserTz &&
-    normalizedEventTz !== normalizedUserTz &&
-    eventData.startTime; // Only show for timed events
-
-  const timezoneAbbreviation = shouldShowTimezone
-    ? getTimezoneAbbreviation(eventData.timeZone || "")
-    : undefined;
-
   // Compute event date/time strings
   const { date, time, eventTime } = formatEventDateRange(
     eventData.startDate || "",
     eventData.startTime,
     eventData.endTime,
     eventData.timeZone || "",
-    timezoneAbbreviation,
   );
 
   // Determine primary and secondary actions
