@@ -5,7 +5,6 @@ import { Redirect, Stack } from "expo-router";
 import { useSignUp, useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction, useConvexAuth, useMutation } from "convex/react";
-import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -34,7 +33,6 @@ const VerifyEmail = () => {
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [generalError, setGeneralError] = React.useState("");
   const { signUp, setActive } = useSignUp();
-  const posthog = usePostHog();
   const { isAuthenticated } = useConvexAuth();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
@@ -71,10 +69,6 @@ const VerifyEmail = () => {
 
       if (completeSignUp.status === "complete") {
         await setActive({ session: completeSignUp.createdSessionId });
-        posthog.identify(completeSignUp.emailAddress ?? "", {
-          email: completeSignUp.emailAddress,
-          username: completeSignUp.username,
-        });
 
         // Transfer guest data after successful sign up
         // Use the createdUserId from the sign-up response

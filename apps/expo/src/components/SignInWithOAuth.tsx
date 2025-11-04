@@ -16,7 +16,6 @@ import {
 } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { useAction, useConvex, useMutation } from "convex/react";
-import { usePostHog } from "posthog-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -42,7 +41,6 @@ interface SignInWithOAuthProps {
 
 const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
   useWarmUpBrowser();
-  const posthog = usePostHog();
   const convex = useConvex();
   const { user } = useUser();
   const { guestUserId, isLoading: isGuestUserLoading } = useGuestUser();
@@ -241,14 +239,6 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
                 });
               } catch (intercomError) {
                 logError("Intercom login error", intercomError);
-              }
-
-              try {
-                posthog.identify(email, {
-                  email,
-                });
-              } catch (posthogError) {
-                logError("PostHog identify error", posthogError);
               }
 
               try {
