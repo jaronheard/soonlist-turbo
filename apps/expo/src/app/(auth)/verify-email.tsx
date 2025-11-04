@@ -72,30 +72,23 @@ const VerifyEmail = () => {
       if (completeSignUp.status === "complete") {
         await setActive({ session: completeSignUp.createdSessionId });
         
-        // Wait a bit for the session to be fully initialized
         await new Promise((resolve) => setTimeout(resolve, 100));
         
-        // Get the user ID from Clerk session (more reliable than createdUserId)
         const session = Clerk.session;
         const userId = session?.user?.id ?? completeSignUp.createdUserId;
         
-        // Only proceed with PostHog and guest data transfer if we have a proper user ID
         if (userId) {
-          // Get the anonymous PostHog ID before identifying
           const anonymousId = posthog.getDistinctId();
           
-          // Alias the anonymous ID to the new user ID
           if (anonymousId && anonymousId !== userId) {
-            posthog.alias(userId, anonymousId);
+            posthog.alias(userId);
           }
           
-          // Then identify the user
           posthog.identify(userId, {
             email: completeSignUp.emailAddress,
             username: completeSignUp.username,
           });
 
-          // Transfer guest data after successful sign up
           await transferGuestData({
             userId,
             transferGuestOnboardingData,

@@ -34,6 +34,7 @@ import type * as model_oneSignal from "../model/oneSignal.js";
 import type * as model_utils_urlScheme from "../model/utils/urlScheme.js";
 import type * as notifications from "../notifications.js";
 import type * as planetscaleSync from "../planetscaleSync.js";
+import type * as posthogBackfill from "../posthogBackfill.js";
 import type * as shareTokens from "../shareTokens.js";
 import type * as users from "../users.js";
 import type * as utils from "../utils.js";
@@ -82,6 +83,7 @@ declare const fullApi: ApiFromModules<{
   "model/utils/urlScheme": typeof model_utils_urlScheme;
   notifications: typeof notifications;
   planetscaleSync: typeof planetscaleSync;
+  posthogBackfill: typeof posthogBackfill;
   shareTokens: typeof shareTokens;
   users: typeof users;
   utils: typeof utils;

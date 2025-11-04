@@ -1175,6 +1175,9 @@ importers:
       nanoid:
         specifier: 'catalog:'
         version: 5.1.5
+      posthog-node:
+        specifier: ^5.11.0
+        version: 5.11.0
     devDependencies:
       '@soonlist/eslint-config':
         specifier: workspace:*
@@ -3574,6 +3577,9 @@ packages:
   '@planetscale/database@1.19.0':
     resolution: {integrity: sha512-Tv4jcFUFAFjOWrGSio49H6R2ijALv0ZzVBfJKIdm+kl9X046Fh4LLawrF9OMsglVbK6ukqMJsUCeucGAFTBcMA==}
     engines: {node: '>=16'}
+
+  '@posthog/core@1.5.0':
+    resolution: {integrity: sha512-oxfV20QMNwH30jKybUyqi3yGuMghULQz1zkJgQG3rjpHDxhD2vDN6E7UpmaqgphMIvGG3Q+DgfU10zfSPA7w7w==}
 
   '@prisma/instrumentation@5.22.0':
     resolution: {integrity: sha512-LxccF392NN37ISGxIurUljZSh1YWnphO34V5a0+T7FVQG2u9bhAXRTJpgmQ3483woVhkraQZFF7cbRrpbw/F4Q==}
@@ -8663,6 +8669,10 @@ packages:
     resolution: {integrity: sha512-bFmwOTk4QdYavopeHVXtyFGQ9vyLMVaNWkWocwjix+0n6sQgv7Zq5nYjYulz7ThmK18zsvNJ337ahuMLv3ulow==}
     engines: {node: '>=15.0.0'}
 
+  posthog-node@5.11.0:
+    resolution: {integrity: sha512-9+gmWp/7AEryJMi0+/ywJjKQhpkmcjxf+eT030fTIIPvFTF84zeeagdZBGNC/Nh2Jc0grIAW6O1n5lxXiX3daA==}
+    engines: {node: '>=20'}
+
   posthog-react-native-session-replay@1.0.6:
     resolution: {integrity: sha512-IOVFaMpdpyMsemnpKNKrIdU2XI7Qfb6Ctp1hOc4gsHKDctGWgwbgZu4a6Sn1viChlSBlTBUCj8BqgUSlkgK2Zg==}
     peerDependencies:
@@ -12850,6 +12860,8 @@ snapshots:
     optional: true
 
   '@planetscale/database@1.19.0': {}
+
+  '@posthog/core@1.5.0': {}
 
   '@prisma/instrumentation@5.22.0':
     dependencies:
@@ -18641,6 +18653,10 @@ snapshots:
       axios: 1.9.0
     transitivePeerDependencies:
       - debug
+
+  posthog-node@5.11.0:
+    dependencies:
+      '@posthog/core': 1.5.0
 
   posthog-react-native-session-replay@1.0.6(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0):
     dependencies:

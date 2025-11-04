@@ -38,7 +38,8 @@
     "ai": "catalog:",
     "convex": "catalog:",
     "langfuse": "catalog:",
-    "nanoid": "catalog:"
+    "nanoid": "catalog:",
+    "posthog-node": "^5.11.0"
   },
   "devDependencies": {
     "@soonlist/eslint-config": "workspace:*",

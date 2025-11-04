@@ -82,26 +82,23 @@ const SignInEmail = () => {
         if (completeSignIn.status === "complete") {
           await setActive({ session: completeSignIn.createdSessionId });
 
-          // Wait a bit for the session to be fully initialized
           await new Promise((resolve) => setTimeout(resolve, 100));
           
-          // Get the anonymous PostHog ID before identifying
-          const anonymousId = posthog.getDistinctId();
           const activeSession = Clerk.session;
-          const userId = activeSession?.user?.id ?? data.email;
+          const userId = activeSession?.user?.id;
           
-          // Alias the anonymous ID to the new user ID
-          if (anonymousId && userId && anonymousId !== userId) {
-            posthog.alias(userId, anonymousId);
+          if (userId) {
+            const anonymousId = posthog.getDistinctId();
+            
+            if (anonymousId && anonymousId !== userId) {
+              posthog.alias(userId);
+            }
+            
+            posthog.identify(userId, {
+              email: data.email,
+            });
           }
-          
-          // Then identify the user
-          posthog.identify(userId, {
-            email: data.email,
-          });
 
-          // Transfer guest data after successful sign in
-          // After setActive and delay, the session should be available via Clerk
           if (activeSession?.user?.id) {
             await transferGuestData({
               userId: activeSession.user.id,

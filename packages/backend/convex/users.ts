@@ -3,7 +3,7 @@ import { ConvexError, v } from "convex/values";
 
 import type { DatabaseReader } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query, internalQuery } from "./_generated/server";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
 const MAX_USERNAME_LENGTH = 64;
@@ -1137,5 +1137,16 @@ export const deleteUserAndCascade = internalMutation({
 
     // Finally, delete the user record
     await ctx.db.delete(user._id);
+  },
+});
+
+export const getAllUsersForBackfill = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db.query("users").collect();
+    return users.map((user) => ({
+      id: user.id,
+      email: user.email,
+    }));
   },
 });

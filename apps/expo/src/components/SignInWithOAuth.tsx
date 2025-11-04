@@ -135,20 +135,16 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               await Intercom.loginUnidentifiedUser();
               setOauthError(null);
 
-              // Transfer guest data after successful sign up
               const session = Clerk.session;
               if (session?.user?.id) {
                 const userId = session.user.id;
                 
-                // Get the anonymous PostHog ID before identifying
                 const anonymousId = posthog.getDistinctId();
                 
-                // Alias the anonymous ID to the new user ID
                 if (anonymousId && userId && anonymousId !== userId) {
-                  posthog.alias(userId, anonymousId);
+                  posthog.alias(userId);
                 }
                 
-                // Then identify the user
                 posthog.identify(userId, {
                   email: email,
                   username: username,
@@ -240,10 +236,8 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
         if (result.signIn?.status === "complete") {
           await setActiveSignIn({ session: result.createdSessionId });
 
-          // Wait a bit for the session to be fully initialized
           await new Promise((resolve) => setTimeout(resolve, 100));
 
-          // Safely access session data
           const session = Clerk.session;
           if (session?.user) {
             const email = session.user.emailAddresses?.[0]?.emailAddress;
@@ -260,15 +254,12 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               }
 
               try {
-                // Get the anonymous PostHog ID before identifying
                 const anonymousId = posthog.getDistinctId();
                 
-                // Alias the anonymous ID to the new user ID
                 if (anonymousId && userId && anonymousId !== userId) {
-                  posthog.alias(userId, anonymousId);
+                  posthog.alias(userId);
                 }
                 
-                // Then identify the user
                 posthog.identify(userId, {
                   email,
                 });

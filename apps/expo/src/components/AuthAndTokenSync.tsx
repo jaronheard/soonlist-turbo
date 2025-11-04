@@ -50,14 +50,12 @@ export default function AuthAndTokenSync() {
     if (isLoading) return;
 
     if (isAuthenticated && userId && username) {
-      // User is authenticated in Convex
       Sentry.setUser({ id: userId, username, email });
       
-      // PostHog: alias anonymous ID to user ID if not already identified
-      if (posthog && !posthog._isIdentified()) {
+      if (posthog) {
         const anonymousId = posthog.getDistinctId();
         if (anonymousId && anonymousId !== userId) {
-          posthog.alias(userId, anonymousId);
+          posthog.alias(userId);
         }
       }
       
