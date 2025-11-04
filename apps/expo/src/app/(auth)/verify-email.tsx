@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Redirect, Stack } from "expo-router";
-import { useSignUp, useUser } from "@clerk/clerk-expo";
+import { Clerk, useSignUp, useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction, useConvexAuth, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
@@ -71,15 +71,31 @@ const VerifyEmail = () => {
 
       if (completeSignUp.status === "complete") {
         await setActive({ session: completeSignUp.createdSessionId });
-        posthog.identify(completeSignUp.emailAddress ?? "", {
-          email: completeSignUp.emailAddress,
-          username: completeSignUp.username,
-        });
-
-        // Transfer guest data after successful sign up
-        // Use the createdUserId from the sign-up response
-        const userId = completeSignUp.createdUserId;
+        
+        // Wait a bit for the session to be fully initialized
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        
+        // Get the user ID from Clerk session (more reliable than createdUserId)
+        const session = Clerk.session;
+        const userId = session?.user?.id ?? completeSignUp.createdUserId;
+        
+        // Only proceed with PostHog and guest data transfer if we have a proper user ID
         if (userId) {
+          // Get the anonymous PostHog ID before identifying
+          const anonymousId = posthog.getDistinctId();
+          
+          // Alias the anonymous ID to the new user ID
+          if (anonymousId && anonymousId !== userId) {
+            posthog.alias(userId, anonymousId);
+          }
+          
+          // Then identify the user
+          posthog.identify(userId, {
+            email: completeSignUp.emailAddress,
+            username: completeSignUp.username,
+          });
+
+          // Transfer guest data after successful sign up
           await transferGuestData({
             userId,
             transferGuestOnboardingData,

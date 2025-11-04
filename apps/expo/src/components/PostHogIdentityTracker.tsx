@@ -15,6 +15,15 @@ export function PostHogIdentityTracker() {
     if (userId) {
       // Track user in PostHog
       if (posthog) {
+        // Get the anonymous PostHog ID before identifying
+        const anonymousId = posthog.getDistinctId();
+        
+        // Alias the anonymous ID to the new user ID (if different)
+        if (anonymousId && anonymousId !== userId) {
+          posthog.alias(userId, anonymousId);
+        }
+        
+        // Then identify the user
         const properties: Record<string, string> = {};
         if (username) properties.username = username;
         if (email) properties.email = email;

@@ -40,7 +40,15 @@ export default function PostHogPageView(): null {
     // Check the sign in status and user info,
     // and identify the user if they aren't already
     if (isSignedIn && userId && currentUser && !posthog._isIdentified()) {
-      // Identify the user
+      // Get the anonymous PostHog ID before identifying
+      const anonymousId = posthog.getDistinctId();
+      
+      // Alias the anonymous ID to the new user ID (if different)
+      if (anonymousId && anonymousId !== userId) {
+        posthog.alias(userId, anonymousId);
+      }
+      
+      // Then identify the user
       posthog.identify(userId, {
         email: currentUser.email,
         username: currentUser.username,
