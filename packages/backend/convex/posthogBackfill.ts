@@ -1,21 +1,9 @@
-import { internalAction, internalQuery } from "./_generated/server";
-import { internal } from "./_generated/api";
-import { posthog } from "@soonlist/api/utils/posthog";
-import { v } from "convex/values";
+"use node";
 
-/**
- * Internal query to get all users for backfill
- */
-export const getAllUsersForBackfill = internalQuery({
-  args: {},
-  handler: async (ctx) => {
-    const users = await ctx.db.query("users").collect();
-    return users.map((user) => ({
-      id: user.id,
-      email: user.email,
-    }));
-  },
-});
+import { internalAction } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { PostHog } from "posthog-node";
+import { v } from "convex/values";
 
 /**
  * Backfill PostHog aliases for users who converted from guest to identified
@@ -56,11 +44,17 @@ export const backfillPostHogAliases = internalAction({
       throw new Error("PostHog API key is required");
     }
 
+    // Create PostHog instance for this action
+    const posthog = new PostHog(posthogApiKey, {
+      host: posthogHost,
+      flushAt: 1,
+      flushInterval: 0,
+    });
+
     console.log("Starting PostHog alias backfill...", { dryRun });
 
-    // Get all users from Convex
     const allUsers = await ctx.runQuery(
-      internal.posthogBackfill.getAllUsersForBackfill,
+      internal.users.getAllUsersForBackfill,
     );
 
     const results: Array<{
@@ -72,14 +66,6 @@ export const backfillPostHogAliases = internalAction({
 
     for (const user of allUsers) {
       try {
-        // Query PostHog REST API for events with this user's ID
-        // We're looking for cases where:
-        // 1. User has events identified with their user ID (userId)
-        // 2. User also has onboarding events with a different distinct ID (anonymous)
-
-        // Query PostHog API for events
-        // Note: PostHog API endpoint format may vary - this is a simplified approach
-        // You may need to adjust based on your PostHog instance configuration
         const identifiedEventsUrl = `${posthogHost}/api/projects/${posthogApiKey}/events/?distinct_id=${encodeURIComponent(user.id)}&event=onboarding_step_completed&limit=1`;
         const trialEventsUrl = `${posthogHost}/api/projects/${posthogApiKey}/events/?distinct_id=${encodeURIComponent(user.id)}&event=rc_trial_started_event&limit=1`;
 
@@ -96,14 +82,10 @@ export const backfillPostHogAliases = internalAction({
           }).catch(() => null),
         ]);
 
-        // If user has trial events but no onboarding events with same ID,
-        // they likely need aliasing
         const hasTrialEvents = trialResponse?.ok ?? false;
         const hasOnboardingEvents = identifiedResponse?.ok ?? false;
 
         if (hasTrialEvents && !hasOnboardingEvents) {
-          // Need to find the anonymous ID that has onboarding events
-          // Query PostHog for onboarding events by email
           if (user.email) {
             const emailQueryUrl = `${posthogHost}/api/projects/${posthogApiKey}/events/?properties=%5B%7B%22key%22%3A%22email%22%2C%22value%22%3A%22${encodeURIComponent(user.email)}%22%7D%5D&event=onboarding_step_completed&limit=100`;
 
@@ -121,7 +103,6 @@ export const backfillPostHogAliases = internalAction({
                 }>;
               };
 
-              // Find distinct IDs that are different from the user ID
               const anonymousIds = new Set<string>();
               emailData.results?.forEach((event) => {
                 if (
@@ -133,13 +114,13 @@ export const backfillPostHogAliases = internalAction({
                 }
               });
 
-              // Create aliases for each anonymous ID
               for (const anonymousId of anonymousIds) {
                 if (!dryRun) {
-                  // Use PostHog SDK to create alias
-                  // Note: alias(identifiedId, anonymousId) links anonymousId -> identifiedId
-                  posthog.alias(user.id, anonymousId);
-                  await new Promise((resolve) => setTimeout(resolve, 100)); // Rate limiting
+                  posthog.alias({
+                    distinctId: anonymousId,
+                    alias: user.id,
+                  });
+                  await new Promise((resolve) => setTimeout(resolve, 100));
                 }
 
                 results.push({
@@ -168,10 +149,12 @@ export const backfillPostHogAliases = internalAction({
       }
     }
 
-    // Flush PostHog events
-    if (!dryRun) {
-      await posthog.shutdown();
-    }
+    // Note: We don't call shutdown() here because:
+    // 1. In serverless environments like Convex, the process terminates naturally
+    // 2. With flushAt: 1 and flushInterval: 0, events are sent immediately
+    // 3. Calling shutdown() on a PostHog instance could potentially affect other
+    //    PostHog instances if they share any global state, even though we use a
+    //    dedicated instance here. Removing shutdown() is safer for serverless.
 
     return {
       success: true,
@@ -182,4 +165,3 @@ export const backfillPostHogAliases = internalAction({
     };
   },
 });
-
