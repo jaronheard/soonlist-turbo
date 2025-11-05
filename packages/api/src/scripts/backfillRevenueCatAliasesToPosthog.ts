@@ -214,8 +214,7 @@ async function getRevenueCatOriginalAppUserId(
   try {
     const subscriber = await getRevenueCatSubscriber(appUserId);
     if (
-      subscriber &&
-      subscriber.subscriber.original_app_user_id?.startsWith("$RCAnonymousID:")
+      subscriber?.subscriber.original_app_user_id?.startsWith("$RCAnonymousID:")
     ) {
       return subscriber.subscriber.original_app_user_id;
     }
