@@ -452,8 +452,11 @@ export const getAllUsersPaginated = query({
   }),
   handler: async (ctx, args) => {
     const result = await ctx.db.query("users").paginate(args.paginationOpts);
+    // Explicitly return only validated fields to avoid extra keys like `splitCursor`
     return {
-      ...result,
+      page: result.page,
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
       pageStatus: result.pageStatus ?? null,
     };
   },
