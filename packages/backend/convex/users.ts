@@ -438,6 +438,24 @@ export const getCurrentUser = query({
 });
 
 /**
+ * Get all users with pagination (for backfill scripts)
+ */
+export const getAllUsersPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: v.object({
+    page: v.array(v.any()),
+    continueCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    const result = await ctx.db.query("users").paginate(args.paginationOpts);
+    return result;
+  },
+});
+
+/**
  * Update user additional info (bio, public contact info)
  */
 export const updateAdditionalInfo = mutation({

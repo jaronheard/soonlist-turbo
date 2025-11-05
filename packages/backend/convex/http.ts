@@ -382,4 +382,55 @@ function generateDisplayName(
   return first || last;
 }
 
+http.route({
+  path: "/posthog/backfill",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const authHeader = request.headers.get("Authorization");
+    const expectedToken = process.env.POSTHOG_BACKFILL_TOKEN;
+
+    if (expectedToken) {
+      const providedToken = authHeader?.replace("Bearer ", "") || "";
+      if (providedToken !== expectedToken) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+    }
+
+    const parsed = await parseJsonOr400(request);
+    if (!parsed.ok) {
+      return parsed.response;
+    }
+
+    const body = parsed.body as {
+      paginationOpts: { numItems: number; cursor: string | null };
+    };
+
+    try {
+      const result = await ctx.runAction(
+        internal.posthog.listUsersForBackfill,
+        {
+          paginationOpts: body.paginationOpts,
+        },
+      );
+
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("PostHog backfill error:", error);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: String(error),
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+  }),
+});
+
 export default http;

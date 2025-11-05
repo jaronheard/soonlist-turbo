@@ -3,6 +3,11 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import * as Sentry from "@sentry/react-native";
 import { usePostHog } from "posthog-react-native";
 
+import {
+  resetPostHogIdentity,
+  syncPostHogIdentity,
+} from "~/lib/posthogIdentity";
+
 export function PostHogIdentityTracker() {
   const posthog = usePostHog();
   const { userId } = useAuth();
@@ -13,15 +18,11 @@ export function PostHogIdentityTracker() {
 
   useEffect(() => {
     if (userId) {
-      // Track user in PostHog
-      if (posthog) {
-        const properties: Record<string, string> = {};
-        if (username) properties.username = username;
-        if (email) properties.email = email;
-        posthog.identify(userId, properties);
-      }
+      const properties: Record<string, string | undefined> = {};
+      if (username) properties.username = username;
+      if (email) properties.email = email;
+      syncPostHogIdentity(posthog, userId, properties);
 
-      // Track user in Sentry
       const sentryUser: { id: string; username?: string; email?: string } = {
         id: userId,
       };
@@ -29,10 +30,7 @@ export function PostHogIdentityTracker() {
       if (email) sentryUser.email = email;
       Sentry.setUser(sentryUser);
     } else {
-      // Clear user tracking when signed out
-      if (posthog) {
-        posthog.reset();
-      }
+      resetPostHogIdentity(posthog);
       Sentry.setUser(null);
     }
   }, [posthog, userId, username, email]);
