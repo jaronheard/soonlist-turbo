@@ -49,6 +49,11 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       try {
         await initializeRevenueCat();
 
+        const initialDistinctId = posthog.getDistinctId();
+        if (initialDistinctId) {
+          await setPostHogUserId(initialDistinctId);
+        }
+
         // Check if component is still mounted before proceeding
         if (!isMounted) return;
 
@@ -102,11 +107,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
       const { customerInfo } = await Purchases.logIn(userIdToLogin);
       setCustomerInfo(customerInfo);
 
-      // After successful login, synchronize the PostHog ID once
-      const distinctId = posthog.getDistinctId();
-      if (distinctId) {
-        await setPostHogUserId(distinctId);
-      }
+      await setPostHogUserId(userIdToLogin);
     } catch (error) {
       logError("Error logging in to RevenueCat", error, {
         userId: userIdToLogin,
@@ -132,11 +133,16 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     try {
       await Purchases.logOut();
       setCustomerInfo(null);
+
+      const nextDistinctId = posthog.getDistinctId();
+      if (nextDistinctId) {
+        await setPostHogUserId(nextDistinctId);
+      }
     } catch (error) {
       // Ignore errors about logging out anonymous users - this is expected
       if (
         error instanceof Error &&
-        error.message?.includes("current user is anonymous")
+        error.message.includes("current user is anonymous")
       ) {
         logMessage(
           "Attempted to logout anonymous user from RevenueCat - this is expected",
@@ -147,7 +153,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     } finally {
       setIsLoading(false);
     }
-  }, [isInitialized]);
+  }, [isInitialized, posthog]);
 
   const showProPaywallIfNeeded = useCallback(async () => {
     if (!isInitialized) {
