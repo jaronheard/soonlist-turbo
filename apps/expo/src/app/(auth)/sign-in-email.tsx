@@ -12,6 +12,7 @@ import { Redirect, router, Stack } from "expo-router";
 import { Clerk, useSignIn } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth, useMutation } from "convex/react";
+import { usePostHog } from "posthog-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -33,6 +34,7 @@ const SignInEmail = () => {
   const [isSigningIn, setIsSigningIn] = React.useState(false);
   const [generalError, setGeneralError] = React.useState("");
   const { signIn, setActive, isLoaded } = useSignIn();
+  const posthog = usePostHog();
   const { isAuthenticated } = useConvexAuth();
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
@@ -78,6 +80,9 @@ const SignInEmail = () => {
         });
 
         if (completeSignIn.status === "complete") {
+          posthog.identify(data.email, {
+            email: data.email,
+          });
           await setActive({ session: completeSignIn.createdSessionId });
 
           // Wait a bit for the session to be fully initialized

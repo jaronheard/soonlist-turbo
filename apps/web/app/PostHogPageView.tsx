@@ -22,9 +22,9 @@ export default function PostHogPageView(): null {
     if (process.env.NODE_ENV == "development") {
       return;
     }
-    if (pathname) {
+    if (pathname && posthog) {
       let url = window.origin + pathname;
-      if (searchParams.toString()) {
+      if (searchParams?.toString()) {
         url = url + `?${searchParams.toString()}`;
       }
       posthog.capture("$pageview", {
@@ -37,12 +37,10 @@ export default function PostHogPageView(): null {
     if (process.env.NODE_ENV == "development") {
       return;
     }
-
+    // Check the sign in status and user info,
+    // and identify the user if they aren't already
     if (isSignedIn && userId && currentUser && !posthog._isIdentified()) {
-      const anonId = posthog.get_distinct_id();
-      if (anonId && anonId !== userId) {
-        posthog.alias(userId);
-      }
+      // Identify the user
       posthog.identify(userId, {
         email: currentUser.email,
         username: currentUser.username,

@@ -100,9 +100,6 @@ This package contains the Convex backend functions for the Soonlist application.
 - `schema.ts` - Database schema definitions
 - `users.ts` - User management functions (migrated from tRPC)
 - `utils.ts` - Utility functions
-- `posthog.ts` - PostHog integration functions
-
-See [README_POSTHOG.md](./README_POSTHOG.md) for PostHog integration documentation.
 
 ## Users Functions
 
@@ -158,6 +155,10 @@ To add new functions:
 2. Add proper argument and return validators
 3. Update this README with the new function
 4. Test the function in your application
+
+## Schema
+
+The users table includes the following fields:
 
 ## Schema
 
