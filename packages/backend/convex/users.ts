@@ -453,7 +453,9 @@ export const getAllUsersPaginated = query({
   handler: async (ctx, args) => {
     const result = await ctx.db.query("users").paginate(args.paginationOpts);
     return {
-      ...result,
+      page: result.page,
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
       pageStatus: result.pageStatus ?? null,
     };
   },
