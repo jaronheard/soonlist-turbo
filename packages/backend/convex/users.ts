@@ -448,14 +448,10 @@ export const getAllUsersPaginated = query({
     page: v.array(v.any()),
     continueCursor: v.union(v.string(), v.null()),
     isDone: v.boolean(),
-    pageStatus: v.union(v.string(), v.null()),
   }),
   handler: async (ctx, args) => {
     const result = await ctx.db.query("users").paginate(args.paginationOpts);
-    return {
-      ...result,
-      pageStatus: result.pageStatus ?? null,
-    };
+    return result;
   },
 });
 

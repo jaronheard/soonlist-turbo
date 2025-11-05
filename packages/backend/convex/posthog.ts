@@ -19,14 +19,12 @@ export const listUsersForBackfill = internalAction({
     ),
     continueCursor: v.union(v.string(), v.null()),
     isDone: v.boolean(),
-    pageStatus: v.union(v.string(), v.null()),
   }),
   handler: async (ctx, args) => {
     const users: {
       page: Doc<"users">[];
       continueCursor: string | null;
       isDone: boolean;
-      pageStatus: string | null;
     } = await ctx.runQuery(api.users.getAllUsersPaginated, {
       paginationOpts: args.paginationOpts,
     });
@@ -41,7 +39,6 @@ export const listUsersForBackfill = internalAction({
       page: mappedUsers,
       continueCursor: users.continueCursor,
       isDone: users.isDone,
-      pageStatus: users.pageStatus,
     };
   },
 });
