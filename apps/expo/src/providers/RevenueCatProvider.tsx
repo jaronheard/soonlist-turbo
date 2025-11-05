@@ -60,6 +60,11 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
         };
         Purchases.addCustomerInfoUpdateListener(updateListener);
 
+        const anonymousDistinctId = posthog.getDistinctId();
+        if (anonymousDistinctId) {
+          await setPostHogUserId(anonymousDistinctId);
+        }
+
         // Only try to log in if there's a userId after initialization
         if (userId) {
           await loginInternal(userId);
@@ -99,14 +104,10 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     }
     setIsLoading(true);
     try {
+      await setPostHogUserId(userIdToLogin);
       const { customerInfo } = await Purchases.logIn(userIdToLogin);
       setCustomerInfo(customerInfo);
-
-      // After successful login, synchronize the PostHog ID once
-      const distinctId = posthog.getDistinctId();
-      if (distinctId) {
-        await setPostHogUserId(distinctId);
-      }
+      await setPostHogUserId(userIdToLogin);
     } catch (error) {
       logError("Error logging in to RevenueCat", error, {
         userId: userIdToLogin,
@@ -132,6 +133,11 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     try {
       await Purchases.logOut();
       setCustomerInfo(null);
+
+      const anonymousDistinctId = posthog.getDistinctId();
+      if (anonymousDistinctId) {
+        await setPostHogUserId(anonymousDistinctId);
+      }
     } catch (error) {
       // Ignore errors about logging out anonymous users - this is expected
       if (
@@ -147,7 +153,7 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
     } finally {
       setIsLoading(false);
     }
-  }, [isInitialized]);
+  }, [isInitialized, posthog]);
 
   const showProPaywallIfNeeded = useCallback(async () => {
     if (!isInitialized) {
