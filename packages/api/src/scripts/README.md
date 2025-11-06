@@ -25,9 +25,6 @@ subscription events forwarded from RevenueCat land on the same user profile.
 ### Usage
 
 ```bash
-REVENUECAT_API_KEY=sk_pqqbVFmxXJRAydJMUETwtoTgWiPjl
-POSTHOG_PERSONAL_API_KEY=phx_QMEtlP1Mt1L3EpWjCsEkvdOjhCGRDMcW91hJqJWqjR1RP84 CONVEX_URL=https://convex-api.soonlist.com
-npx ts-node packages/api/src/scripts/backfillRevenueCatAliasesToPosthog.ts --dry-run
 # Preview without performing merges
 POSTHOG_PERSONAL_API_KEY=ph_key \
 REVENUECAT_API_KEY=rc_key \
