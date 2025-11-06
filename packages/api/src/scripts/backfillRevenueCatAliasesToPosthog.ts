@@ -194,7 +194,7 @@ function extractAnonymousIds(subscriber: RevenueCatSubscriber): string[] {
   }
 
   for (const alias of subscriber.aliases ?? []) {
-    if (alias && alias.startsWith("$RCAnonymousID:")) {
+    if (alias.startsWith("$RCAnonymousID:")) {
       anonymousIds.add(alias);
     }
   }
