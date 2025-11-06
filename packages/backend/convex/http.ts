@@ -394,12 +394,73 @@ http.route({
       // Parse body
       const parsed = await parseJsonOr400(request);
       if (!parsed.ok) return parsed.response;
-      const body = parsed.body as {
-        paginationOpts: { numItems: number; cursor: string | null };
-      };
-      const result = await ctx.runQuery(api.users.listForBackfill, {
-        paginationOpts: body.paginationOpts,
-      });
+
+      // Validate request body structure
+      if (
+        typeof parsed.body !== "object" ||
+        parsed.body === null ||
+        !("paginationOpts" in parsed.body)
+      ) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error: "Invalid request body: missing paginationOpts",
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const body = parsed.body as { paginationOpts: unknown };
+      const paginationOpts = body.paginationOpts;
+
+      if (
+        typeof paginationOpts !== "object" ||
+        paginationOpts === null ||
+        !("numItems" in paginationOpts) ||
+        !("cursor" in paginationOpts)
+      ) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error:
+              "Invalid paginationOpts: must have numItems (number) and cursor (string | null)",
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const numItems = paginationOpts.numItems;
+      const cursor = paginationOpts.cursor;
+
+      if (
+        typeof numItems !== "number" ||
+        (cursor !== null && typeof cursor !== "string")
+      ) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error:
+              "Invalid paginationOpts: numItems must be a number and cursor must be a string or null",
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const result: unknown = await ctx.runQuery(
+        internal.users.listForBackfill,
+        {
+          paginationOpts: { numItems, cursor },
+        },
+      );
       return new Response(JSON.stringify(result), {
         status: 200,
         headers: { "Content-Type": "application/json" },
