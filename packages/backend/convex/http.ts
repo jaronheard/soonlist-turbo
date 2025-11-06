@@ -369,6 +369,58 @@ http.route({
   }),
 });
 
+// PostHog backfill endpoint
+http.route({
+  path: "/posthog/backfill",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      // Check for Bearer token authentication
+      const authHeader = request.headers.get("Authorization");
+      const expectedToken = process.env.POSTHOG_BACKFILL_TOKEN;
+
+      if (expectedToken) {
+        const providedToken = authHeader?.replace("Bearer ", "") || "";
+        // Constant-time comparison to prevent timing attacks
+        const tokensMatch =
+          providedToken.length === expectedToken.length &&
+          providedToken.split("").every((char, i) => char === expectedToken[i]);
+
+        if (!tokensMatch) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+      }
+
+      // Parse body
+      const parsed = await parseJsonOr400(request);
+      if (!parsed.ok) return parsed.response;
+      const body = parsed.body as {
+        paginationOpts: { numItems: number; cursor: string | null };
+      };
+      const result = await ctx.runQuery(api.users.listForBackfill, {
+        paginationOpts: body.paginationOpts,
+      });
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("PostHog backfill error:", error);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: String(error),
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+  }),
+});
+
 function generateDisplayName(
   firstName?: string | null,
   lastName?: string | null,

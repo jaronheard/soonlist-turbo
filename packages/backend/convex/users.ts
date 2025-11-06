@@ -438,6 +438,29 @@ export const getCurrentUser = query({
 });
 
 /**
+ * List users for PostHog backfill - paginated query
+ */
+export const listForBackfill = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { paginationOpts }) => {
+    const results = await ctx.db
+      .query("users")
+      .order("asc")
+      .paginate(paginationOpts);
+    return {
+      ...results,
+      page: results.page.map((u) => ({
+        id: u.id,
+        email: u.email,
+        username: u.username,
+      })),
+    };
+  },
+});
+
+/**
  * Update user additional info (bio, public contact info)
  */
 export const updateAdditionalInfo = mutation({
