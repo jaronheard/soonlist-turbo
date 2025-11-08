@@ -387,20 +387,20 @@ export const getPrompt = (
   return {
     text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2025.10.14.7", // Strengthened collab truncation rule and example
+    version: "v2025.11.07.1", // Enforce strict JSON output format (no markdown code fences)
   };
 };
 
 export const getSystemMessage = () => {
   return {
     text: systemMessage(),
-    version: "v2024.06.02.4",
+    version: "v2025.11.07.1", // Enforce strict JSON output format (no markdown code fences)
   };
 };
 
 export const getSystemMessageMetadata = () => {
   return {
     text: systemMessage(eventMetadataSchemaAsText),
-    version: "v2024.06.02.4",
+    version: "v2025.11.07.1", // Enforce strict JSON output format (no markdown code fences)
   };
 };
