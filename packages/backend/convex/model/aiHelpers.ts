@@ -4,6 +4,7 @@ import { waitUntil } from "@vercel/functions";
 import { generateObject } from "ai";
 import { ConvexError } from "convex/values";
 import { Langfuse } from "langfuse";
+import type { z } from "zod";
 
 import type { EventWithMetadata } from "@soonlist/cal";
 import {
@@ -39,6 +40,62 @@ const aiConfig = {
   maxRetries: 0,
   models: FALLBACK_MODELS,
 } as const;
+
+/**
+ * Extracts JSON from text that may be wrapped in markdown code fences or contain extra text.
+ * Handles cases where AI models return responses like ```json\n{...}\n``` instead of pure JSON.
+ */
+export function extractJsonFromText(text: string): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  // Strip code fences if present (handle both full-match and partial cases)
+  const fencedFull = /^```(?:json)?\n([\s\S]*?)\n```\s*$/i.exec(trimmed);
+  if (fencedFull) return fencedFull[1].trim();
+
+  // Also try to find code fences anywhere in the text
+  const fencedPartial = /```(?:json)?\n([\s\S]*?)\n```/i.exec(trimmed);
+  if (fencedPartial) return fencedPartial[1].trim();
+
+  // Find first top-level JSON object/array using a brace/bracket stack, skipping strings
+  let start = -1;
+  for (let i = 0; i < trimmed.length; i++) {
+    const ch = trimmed[i];
+    if (ch === "{" || ch === "[") {
+      start = i;
+      break;
+    }
+  }
+  if (start === -1) return null;
+
+  let i = start;
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  const open = trimmed[start];
+  const close = open === "{" ? "}" : "]";
+  for (; i < trimmed.length; i++) {
+    const c = trimmed[i];
+    if (inStr) {
+      if (!esc && c === '"') inStr = false;
+      esc = c === "\\" && !esc;
+      continue;
+    }
+    if (c === '"') {
+      inStr = true;
+      esc = false;
+      continue;
+    }
+    if (c === open) depth++;
+    else if (c === close) {
+      depth--;
+      if (depth === 0) {
+        return trimmed.slice(start, i + 1);
+      }
+    }
+  }
+  return null;
+}
 
 function createLoggedObjectGenerator({
   ctx,
@@ -113,6 +170,74 @@ function createLoggedObjectGenerator({
       waitUntil(langfuse.flushAsync());
       return result;
     } catch (error) {
+      // Check if this is a JSON parsing error with text we can sanitize
+      const isJsonParseError =
+        error &&
+        typeof error === "object" &&
+        "name" in error &&
+        (error as { name: string }).name === "AI_JSONParseError" &&
+        "text" in error &&
+        typeof (error as { text: unknown }).text === "string";
+
+      if (isJsonParseError) {
+        const errorWithText = error as { text: string; message?: string };
+        const jsonText = extractJsonFromText(errorWithText.text);
+
+        if (jsonText) {
+          try {
+            const parsedValue = JSON.parse(jsonText);
+            // Validate against the schema from generateObjectOptions
+            const schema = generateObjectOptions.schema as z.ZodSchema;
+            const validatedObject = schema.parse(parsedValue);
+
+            // Synthesize a success-like result
+            const sanitizedResult = {
+              object: validatedObject,
+              rawResponse: errorWithText.text,
+              warnings: ["sanitized-json-fallback"],
+              finishReason: "stop" as const,
+              logprobs: undefined,
+            };
+
+            const actualModel =
+              typeof sanitizedResult.rawResponse === "object" &&
+              sanitizedResult.rawResponse !== null &&
+              "model" in sanitizedResult.rawResponse
+                ? (sanitizedResult.rawResponse as { model: string }).model
+                : MODEL;
+
+            generation.update({
+              model: actualModel,
+            });
+            generation.end({
+              output: sanitizedResult.object,
+            });
+            generation.score({
+              name: "eventToJson",
+              value: 1,
+            });
+            trace.update({
+              output: sanitizedResult.object,
+              metadata: {
+                finishReason: sanitizedResult.finishReason,
+                rawResponse: sanitizedResult.rawResponse,
+                warnings: sanitizedResult.warnings,
+                actualModel,
+                sanitizedJsonFallback: true,
+              },
+            });
+            waitUntil(langfuse.flushAsync());
+            return sanitizedResult as ReturnType<typeof generateObject<T>>;
+          } catch (sanitizeError) {
+            // If sanitization fails, log and fall through to original error handling
+            console.error(
+              "Failed to sanitize JSON from error response:",
+              sanitizeError,
+            );
+          }
+        }
+      }
+
       console.error("An error occurred while generating the response:", error);
       generation.score({
         name: "eventToJson",
