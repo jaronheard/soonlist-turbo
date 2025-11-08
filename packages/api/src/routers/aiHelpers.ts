@@ -52,6 +52,7 @@ const FALLBACK_MODELS = [
 const aiConfig = {
   model: openrouter(MODEL),
   mode: "json",
+  response_format: { type: "json_object" as const },
   temperature: 0.2,
   maxRetries: 0,
   models: FALLBACK_MODELS,
