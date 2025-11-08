@@ -38,6 +38,11 @@ const aiConfig = {
   temperature: 0.2,
   maxRetries: 0,
   models: FALLBACK_MODELS,
+  // Provider-specific JSON output options for better JSON generation
+  // OpenAI-style: response_format for OpenAI-compatible models (via OpenRouter)
+  response_format: { type: "json_object" as const },
+  // Google-style: response_mime_type for Google models (via OpenRouter)
+  response_mime_type: "application/json",
 } as const;
 
 function createLoggedObjectGenerator({
