@@ -3,11 +3,7 @@ import { ConvexError, v } from "convex/values";
 
 import type { DatabaseReader } from "./_generated/server";
 import { internal } from "./_generated/api";
-import {
-  internalMutation,
-  mutation,
-  query,
-} from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
 const MAX_USERNAME_LENGTH = 64;
