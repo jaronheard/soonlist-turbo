@@ -276,6 +276,11 @@ export const systemMessage = (schema?: string) =>
 
   **Output Style:** Keep responses concise, clear, and relevant.
 
+  **Critical Output Format:**
+  * Return ONLY a single JSON object with no extra text, no markdown code fences, no backticks, and no explanations.
+  * The response must be pure JSON that can be parsed directly without any preprocessing.
+  * Do NOT wrap the JSON in markdown code blocks (no \`\`\`json or \`\`\`).
+
   ${
     schema
       ? `
@@ -298,6 +303,8 @@ You will
 4. Infer any missing information based on event context, type, or general conventions.
 5. Write your JSON response by summarizing the event details from the provided data or your own inferred knowledge. Your response must be detailed, specific, and directly relevant to the JSON schema requirements.
 6. Limit event to a single time within a <24 hour period. Late night events can extend into the next day.
+
+**CRITICAL: Return ONLY pure JSON. No markdown code fences, no backticks, no extra text. The response must be a single JSON object that can be parsed directly.**
 
 Stylistically write titles and descriptions in short, approachable, and professional language, like an editor of the Village Voice event section.
 Stick to known facts, and be concise. Use proper capitalization for all fields.
@@ -345,21 +352,19 @@ Return JSON with exactly: platform, mentions, sourceUrls.
 - Any complete, valid URLs visible. If none, [].
 
 ## Output
-Always return valid JSON:
-\`\`\`json
+Always return valid JSON as a pure JSON object with no markdown code fences, no backticks, and no extra text.
+
+Example:
 { "platform": "instagram", "mentions": ["username1", "username2"], "sourceUrls": ["https://example.com"] }
-\`\`\`
 
 Empty-case example:
-\`\`\`json
 { "platform": "unknown", "mentions": [], "sourceUrls": [] }
-\`\`\`
 
 Collab header example (truncation):
 Input UI: "jaronheard and friendsofnoi..."
-\`\`\`json
 { "platform": "instagram", "mentions": ["jaronheard"], "sourceUrls": [] }
-\`\`\`
+
+**CRITICAL: Return ONLY pure JSON. No markdown code fences, no backticks, no extra text. The response must be a single JSON object that can be parsed directly.**
 
 Common pitfalls (avoid):
 - Extracting from "Liked by..." or "Followed by...".
@@ -382,20 +387,20 @@ export const getPrompt = (
   return {
     text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2025.10.14.7", // Strengthened collab truncation rule and example
+    version: "v2025.11.07.1", // Enforce strict JSON output format (no markdown code fences)
   };
 };
 
 export const getSystemMessage = () => {
   return {
     text: systemMessage(),
-    version: "v2024.06.02.4",
+    version: "v2025.11.07.1", // Enforce strict JSON output format (no markdown code fences)
   };
 };
 
 export const getSystemMessageMetadata = () => {
   return {
     text: systemMessage(eventMetadataSchemaAsText),
-    version: "v2024.06.02.4",
+    version: "v2025.11.07.1", // Enforce strict JSON output format (no markdown code fences)
   };
 };
