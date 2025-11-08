@@ -5,7 +5,6 @@ import type { DatabaseReader } from "./_generated/server";
 import { internal } from "./_generated/api";
 import {
   internalMutation,
-  internalQuery,
   mutation,
   query,
 } from "./_generated/server";
