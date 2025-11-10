@@ -1,7 +1,7 @@
 import type { CoreMessage } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { waitUntil } from "@vercel/functions";
-import { generateObject } from "ai";
+import { generateObject, GenerateObjectResult } from "ai";
 import { ConvexError } from "convex/values";
 import { Langfuse } from "langfuse";
 
@@ -39,6 +39,55 @@ const aiConfig = {
   maxRetries: 0,
   models: FALLBACK_MODELS,
 } as const;
+
+function extractJsonFromText(text: string): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  const fencedFull = /^```(?:json)?\n([\s\S]*?)\n```\s*$/i.exec(trimmed);
+  if (fencedFull?.[1]) return fencedFull[1].trim();
+
+  const fencedPartial = /```(?:json)?\n([\s\S]*?)\n```/i.exec(trimmed);
+  if (fencedPartial?.[1]) return fencedPartial[1].trim();
+
+  let start = -1;
+  for (let i = 0; i < trimmed.length; i++) {
+    const ch = trimmed[i];
+    if (ch === "{" || ch === "[") {
+      start = i;
+      break;
+    }
+  }
+  if (start === -1) return null;
+
+  let i = start;
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  const open = trimmed[start];
+  const close = open === "{" ? "}" : "]";
+  for (; i < trimmed.length; i++) {
+    const c = trimmed[i];
+    if (inStr) {
+      if (!esc && c === '"') inStr = false;
+      esc = c === "\\" && !esc;
+      continue;
+    }
+    if (c === '"') {
+      inStr = true;
+      esc = false;
+      continue;
+    }
+    if (c === open) depth++;
+    else if (c === close) {
+      depth--;
+      if (depth === 0) {
+        return trimmed.slice(start, i + 1);
+      }
+    }
+  }
+  return null;
+}
 
 function createLoggedObjectGenerator({
   ctx,
@@ -113,6 +162,64 @@ function createLoggedObjectGenerator({
       waitUntil(langfuse.flushAsync());
       return result;
     } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "name" in error &&
+        error.name === "AI_JSONParseError" &&
+        "text" in error &&
+        typeof error.text === "string"
+      ) {
+        const jsonText = extractJsonFromText(error.text);
+        if (jsonText) {
+          try {
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+            const parsedJson = JSON.parse(jsonText) as unknown;
+            const validatedObject =
+              generateObjectOptions.schema.parse(parsedJson);
+
+            const sanitizedResult = new GenerateObjectResult<T>({
+              object: validatedObject,
+              finishReason: "stop",
+              usage: {
+                promptTokens: 0,
+                completionTokens: 0,
+                totalTokens: 0,
+              },
+              warnings: [],
+              rawResponse: {
+                headers: {
+                  "x-error-text": error.text,
+                  "x-sanitized-json-fallback": "true",
+                },
+              },
+              logprobs: undefined,
+            });
+
+            generation.update({ model: MODEL });
+            generation.end({ output: sanitizedResult.object });
+            generation.score({ name: "eventToJson", value: 1 });
+            trace.update({
+              output: sanitizedResult.object,
+              metadata: {
+                finishReason: sanitizedResult.finishReason,
+                warnings: ["sanitized-json-fallback"],
+                actualModel: MODEL,
+                sanitizedJsonFallback: true,
+                errorText: error.text,
+              },
+            });
+            waitUntil(langfuse.flushAsync());
+            return sanitizedResult;
+          } catch (sanitizeError) {
+            console.error(
+              "Failed to sanitize JSON from error response:",
+              sanitizeError,
+            );
+          }
+        }
+      }
+
       console.error("An error occurred while generating the response:", error);
       generation.score({
         name: "eventToJson",
