@@ -45,10 +45,10 @@ function extractJsonFromText(text: string): string | null {
   if (!trimmed) return null;
 
   const fencedFull = /^```(?:json)?\n([\s\S]*?)\n```\s*$/i.exec(trimmed);
-  if (fencedFull) return fencedFull[1].trim();
+  if (fencedFull?.[1]) return fencedFull[1].trim();
 
   const fencedPartial = /```(?:json)?\n([\s\S]*?)\n```/i.exec(trimmed);
-  if (fencedPartial) return fencedPartial[1].trim();
+  if (fencedPartial?.[1]) return fencedPartial[1].trim();
 
   let start = -1;
   for (let i = 0; i < trimmed.length; i++) {
