@@ -1,14 +1,13 @@
 import React, { useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
-import { useQuery } from "convex/react";
-
-import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Check, ChevronDown, MessageSquare } from "~/components/icons";
 import { useAppStore } from "~/store";
 import { logError } from "~/utils/errorLogging";
+import { getPlanStatusFromUser } from "~/utils/plan";
 import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -39,13 +38,13 @@ function isRouteActive(routePath: string, active?: RouteType) {
 
 export function NavigationMenu({ active }: NavigationMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user } = useUser();
   const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
 
-  // Check if user follows any lists
-  const followedLists = useQuery(api.lists.getFollowedLists);
+  // Derive showDiscover explicitly so changes to discoverAccessOverride or user metadata trigger recompute
   const showDiscover =
     discoverAccessOverride ||
-    (followedLists !== undefined && followedLists.length > 0);
+    (user ? getPlanStatusFromUser(user).showDiscover : false);
 
   const { routes, currentRoute } = useMemo(() => {
     const routes = showDiscover ? baseRoutes : baseRoutes.slice(0, 2);

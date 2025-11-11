@@ -142,12 +142,7 @@ export const getDiscoverFeed = query({
     filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
   },
   handler: async (ctx, { paginationOpts, filter = "upcoming" }) => {
-    const userId = await getUserId(ctx);
-    if (!userId) {
-      throw new ConvexError("Authentication required");
-    }
-
-    const feedId = `followedLists_${userId}`;
+    const feedId = "discover";
     return queryFeed(ctx, feedId, paginationOpts, filter);
   },
 });

@@ -19,6 +19,7 @@ import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useStableTimestamp } from "~/store";
+import { getPlanStatusFromUser } from "~/utils/plan";
 
 function DiscoverContent() {
   const { user } = useUser();
@@ -27,17 +28,14 @@ function DiscoverContent() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  // Check if user follows any lists
-  const followedLists = useQuery(api.lists.getFollowedLists);
-  // Only consider hasFollowedLists true if query has loaded (followedLists !== undefined)
-  const hasFollowedLists =
-    discoverAccessOverride ||
-    (followedLists !== undefined && followedLists.length > 0);
+  // Compute access early to skip queries if denied
+  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
+  const canAccessDiscover = discoverAccessOverride || showDiscover;
 
   // Fetch user stats (skip when access is denied or user missing)
   const stats = useQuery(
     api.events.getStats,
-    hasFollowedLists && user?.username ? { userName: user.username } : "skip",
+    canAccessDiscover && user?.username ? { userName: user.username } : "skip",
   );
 
   // Use the stable timestamp from the store that updates every 15 minutes
@@ -50,8 +48,8 @@ function DiscoverContent() {
     loadMore,
     isLoading,
   } = useStablePaginatedQuery(
-    api.feeds.getFollowedListsFeed,
-    hasFollowedLists
+    api.feeds.getDiscoverFeed,
+    canAccessDiscover
       ? {
           filter: "upcoming" as const,
         }
@@ -63,9 +61,9 @@ function DiscoverContent() {
 
   // Memoize saved events query args to prevent unnecessary re-renders
   const savedEventsQueryArgs = useMemo(() => {
-    if (!hasFollowedLists || !user?.username) return "skip";
+    if (!canAccessDiscover || !user?.username) return "skip";
     return { userName: user.username };
-  }, [hasFollowedLists, user?.username]);
+  }, [canAccessDiscover, user?.username]);
 
   const savedEventIdsQuery = useQuery(
     api.events.getSavedIdsForUser,
@@ -103,14 +101,7 @@ function DiscoverContent() {
   }, [events, stableTimestamp]);
 
   // Check if user has access to discover feature (only if authenticated)
-  // Redirect if user doesn't follow any lists (only after query has loaded)
-  // Don't redirect while query is still loading (followedLists === undefined)
-  if (
-    user &&
-    followedLists !== undefined &&
-    !discoverAccessOverride &&
-    followedLists.length === 0
-  ) {
+  if (user && !canAccessDiscover) {
     return <Redirect href="/feed" />;
   }
 

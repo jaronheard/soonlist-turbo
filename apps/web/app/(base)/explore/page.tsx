@@ -1,9 +1,7 @@
 "use client";
 
 import type { FunctionReturnType } from "convex/server";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { usePaginatedQuery, useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { Globe2 } from "lucide-react";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
@@ -27,63 +25,40 @@ const transformConvexUser = (user: Doc<"users">): User => {
 
 // Transform Convex events to EventWithUser format
 function transformConvexEvents(
-  events: FunctionReturnType<typeof api.feeds.getFollowedListsFeed>["page"],
+  events: FunctionReturnType<typeof api.feeds.getDiscoverFeed>["page"],
 ): EventWithUser[] {
-  return events
-    .filter(
-      (
-        event,
-      ): event is typeof event & { user: NonNullable<typeof event.user> } =>
-        event.user !== null,
-    )
-    .map((event) => ({
-      id: event.id,
-      userId: event.userId,
-      updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
-      userName: event.userName,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      event: event.event,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      eventMetadata: event.eventMetadata,
-      endDateTime: new Date(event.endDateTime),
-      startDateTime: new Date(event.startDateTime),
-      visibility: event.visibility,
-      createdAt: new Date(event._creationTime),
-      user: transformConvexUser(event.user),
-      eventFollows: [],
-      comments: [],
-      eventToLists: [],
-    }));
+  return events.map((event) => ({
+    id: event.id,
+    userId: event.userId,
+    updatedAt: event.updatedAt ? new Date(event.updatedAt) : null,
+    userName: event.userName,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    event: event.event,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    eventMetadata: event.eventMetadata,
+    endDateTime: new Date(event.endDateTime),
+    startDateTime: new Date(event.startDateTime),
+    visibility: event.visibility,
+    createdAt: new Date(event._creationTime),
+    user: transformConvexUser(event.user!),
+    eventFollows: [],
+    comments: [],
+    eventToLists: [],
+  }));
 }
 
 export default function Page() {
   const stableNow = useStableTimestamp();
-  const router = useRouter();
-
-  // Check if user follows any lists
-  const followedLists = useQuery(api.lists.getFollowedLists);
-  const hasFollowedLists =
-    followedLists !== undefined && followedLists.length > 0;
-
   const { results, status } = usePaginatedQuery(
-    api.feeds.getFollowedListsFeed,
-    hasFollowedLists
-      ? {
-          filter: "upcoming",
-        }
-      : "skip",
+    api.feeds.getDiscoverFeed,
+    {
+      filter: "upcoming",
+    },
     { initialNumItems: 50 },
   );
 
-  // Redirect if user doesn't follow any lists
-  useEffect(() => {
-    if (followedLists !== undefined && !hasFollowedLists) {
-      router.push("/feed");
-    }
-  }, [followedLists, hasFollowedLists, router]);
-
   const isLoading = status === "LoadingFirstPage";
-  const events = transformConvexEvents(results);
+  const events = results ? transformConvexEvents(results) : [];
 
   // Client-side safety filter: hide events that have ended
   // This prevents showing ended events if the cron job hasn't run recently

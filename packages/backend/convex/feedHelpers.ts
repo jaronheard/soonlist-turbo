@@ -28,6 +28,16 @@ export const updateEventInFeeds = internalMutation({
     const eventEndTime = new Date(endDateTime).getTime();
     const currentTime = Date.now();
 
+    // Get user to check showDiscover setting
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", userId))
+      .first();
+
+    const userShowDiscover =
+      (user?.publicMetadata as { showDiscover?: boolean } | null)
+        ?.showDiscover ?? false;
+
     // 1. Always add to creator's personal feed
     const creatorFeedId = `user_${userId}`;
     const existingCreatorEntry = await ctx.db
@@ -61,7 +71,56 @@ export const updateEventInFeeds = internalMutation({
       await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
     }
 
-    // 2. Add to feeds of users who follow this event
+    // 2. Add to discover feed if public AND user has showDiscover enabled
+    if (visibility === "public" && userShowDiscover) {
+      const discoverFeedId = "discover";
+      const existingDiscoverEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", discoverFeedId).eq("eventId", eventId),
+        )
+        .first();
+
+      if (!existingDiscoverEntry) {
+        const doc = {
+          feedId: discoverFeedId,
+          eventId,
+          eventStartTime,
+          eventEndTime,
+          addedAt: currentTime,
+          hasEnded: eventEndTime < currentTime, // always set
+        };
+        const id = await ctx.db.insert("userFeeds", doc);
+        const insertedDoc = (await ctx.db.get(id))!;
+        await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
+      } else {
+        const oldDoc = existingDiscoverEntry;
+        const newHasEnded = eventEndTime < currentTime;
+        await ctx.db.patch(existingDiscoverEntry._id, {
+          eventStartTime,
+          eventEndTime,
+          hasEnded: newHasEnded,
+        });
+        const updatedDoc = (await ctx.db.get(existingDiscoverEntry._id))!;
+        await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
+      }
+    } else if (visibility === "private" || !userShowDiscover) {
+      // Remove from discover feed if event is now private or user no longer has showDiscover
+      const discoverFeedId = "discover";
+      const existingDiscoverEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", discoverFeedId).eq("eventId", eventId),
+        )
+        .first();
+
+      if (existingDiscoverEntry) {
+        await userFeedsAggregate.deleteIfExists(ctx, existingDiscoverEntry);
+        await ctx.db.delete(existingDiscoverEntry._id);
+      }
+    }
+
+    // 3. Add to feeds of users who follow this event
     const eventFollows = await ctx.db
       .query("eventFollows")
       .withIndex("by_event", (q) => q.eq("eventId", eventId))
@@ -101,7 +160,7 @@ export const updateEventInFeeds = internalMutation({
       }
     }
 
-    // 3. Update feeds for users following lists that contain this event
+    // 4. Update feeds for users following lists that contain this event
     if (visibility === "public") {
       const eventToLists = await ctx.db
         .query("eventToLists")
