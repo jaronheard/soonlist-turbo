@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 
+import type { MutationCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { internalMutation } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
 
@@ -25,16 +27,6 @@ export const updateEventInFeeds = internalMutation({
     const eventStartTime = new Date(startDateTime).getTime();
     const eventEndTime = new Date(endDateTime).getTime();
     const currentTime = Date.now();
-
-    // Get user to check showDiscover setting
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_custom_id", (q) => q.eq("id", userId))
-      .first();
-
-    const userShowDiscover =
-      (user?.publicMetadata as { showDiscover?: boolean } | null)
-        ?.showDiscover ?? false;
 
     // 1. Always add to creator's personal feed
     const creatorFeedId = `user_${userId}`;
@@ -69,56 +61,7 @@ export const updateEventInFeeds = internalMutation({
       await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
     }
 
-    // 2. Add to discover feed if public AND user has showDiscover enabled
-    if (visibility === "public" && userShowDiscover) {
-      const discoverFeedId = "discover";
-      const existingDiscoverEntry = await ctx.db
-        .query("userFeeds")
-        .withIndex("by_feed_event", (q) =>
-          q.eq("feedId", discoverFeedId).eq("eventId", eventId),
-        )
-        .first();
-
-      if (!existingDiscoverEntry) {
-        const doc = {
-          feedId: discoverFeedId,
-          eventId,
-          eventStartTime,
-          eventEndTime,
-          addedAt: currentTime,
-          hasEnded: eventEndTime < currentTime, // always set
-        };
-        const id = await ctx.db.insert("userFeeds", doc);
-        const insertedDoc = (await ctx.db.get(id))!;
-        await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
-      } else {
-        const oldDoc = existingDiscoverEntry;
-        const newHasEnded = eventEndTime < currentTime;
-        await ctx.db.patch(existingDiscoverEntry._id, {
-          eventStartTime,
-          eventEndTime,
-          hasEnded: newHasEnded,
-        });
-        const updatedDoc = (await ctx.db.get(existingDiscoverEntry._id))!;
-        await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
-      }
-    } else if (visibility === "private" || !userShowDiscover) {
-      // Remove from discover feed if event is now private or user no longer has showDiscover
-      const discoverFeedId = "discover";
-      const existingDiscoverEntry = await ctx.db
-        .query("userFeeds")
-        .withIndex("by_feed_event", (q) =>
-          q.eq("feedId", discoverFeedId).eq("eventId", eventId),
-        )
-        .first();
-
-      if (existingDiscoverEntry) {
-        await userFeedsAggregate.deleteIfExists(ctx, existingDiscoverEntry);
-        await ctx.db.delete(existingDiscoverEntry._id);
-      }
-    }
-
-    // 3. Add to feeds of users who follow this event
+    // 2. Add to feeds of users who follow this event
     const eventFollows = await ctx.db
       .query("eventFollows")
       .withIndex("by_event", (q) => q.eq("eventId", eventId))
@@ -155,6 +98,24 @@ export const updateEventInFeeds = internalMutation({
         });
         const updatedDoc = (await ctx.db.get(existingFollowerEntry._id))!;
         await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
+      }
+    }
+
+    // 3. Update feeds for users following lists that contain this event
+    if (visibility === "public") {
+      const eventToLists = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event", (q) => q.eq("eventId", eventId))
+        .collect();
+
+      for (const etl of eventToLists) {
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId,
+            listId: etl.listId,
+          },
+        );
       }
     }
   },
@@ -237,6 +198,241 @@ export const removeEventFromFeeds = internalMutation({
       // Delete all other entries (including discover and other user feeds)
       await userFeedsAggregate.deleteIfExists(ctx, entry);
       await ctx.db.delete(entry._id);
+    }
+  },
+});
+
+async function canUserViewListForFeed(
+  ctx: MutationCtx,
+  listId: string,
+  userId: string,
+): Promise<boolean> {
+  const list = await ctx.db
+    .query("lists")
+    .withIndex("by_custom_id", (q) => q.eq("id", listId))
+    .first();
+
+  if (!list) {
+    return false;
+  }
+
+  if (list.visibility === "public" || list.visibility === "unlisted") {
+    return true;
+  }
+
+  if (list.userId === userId) {
+    return true;
+  }
+
+  const membership = await ctx.db
+    .query("listMembers")
+    .withIndex("by_list_and_user", (q) =>
+      q.eq("listId", listId).eq("userId", userId),
+    )
+    .first();
+  return !!membership;
+}
+
+// Helper to add all events from a list to a user's followedLists feed
+export const addListEventsToUserFeed = internalMutation({
+  args: {
+    userId: v.string(),
+    listId: v.string(),
+  },
+  handler: async (ctx, { userId, listId }) => {
+    const canView = await canUserViewListForFeed(ctx, listId, userId);
+    if (!canView) {
+      return;
+    }
+
+    const eventToLists = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_list", (q) => q.eq("listId", listId))
+      .collect();
+
+    const currentTime = Date.now();
+    const followedListsFeedId = `followedLists_${userId}`;
+
+    for (const etl of eventToLists) {
+      const event = await ctx.db
+        .query("events")
+        .withIndex("by_custom_id", (q) => q.eq("id", etl.eventId))
+        .first();
+
+      if (!event) {
+        continue;
+      }
+
+      if (event.visibility !== "public") {
+        continue;
+      }
+
+      const eventStartTime = new Date(event.startDateTime).getTime();
+      const eventEndTime = new Date(event.endDateTime).getTime();
+
+      const existingFollowedListsEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", followedListsFeedId).eq("eventId", etl.eventId),
+        )
+        .first();
+
+      if (!existingFollowedListsEntry) {
+        const doc = {
+          feedId: followedListsFeedId,
+          eventId: etl.eventId,
+          eventStartTime,
+          eventEndTime,
+          addedAt: currentTime,
+          hasEnded: eventEndTime < currentTime,
+        };
+        const id = await ctx.db.insert("userFeeds", doc);
+        const insertedDoc = (await ctx.db.get(id))!;
+        await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
+      }
+
+      const personalFeedId = `user_${userId}`;
+      const existingPersonalEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", personalFeedId).eq("eventId", etl.eventId),
+        )
+        .first();
+
+      if (!existingPersonalEntry) {
+        const doc = {
+          feedId: personalFeedId,
+          eventId: etl.eventId,
+          eventStartTime,
+          eventEndTime,
+          addedAt: currentTime,
+          hasEnded: eventEndTime < currentTime,
+        };
+        const id = await ctx.db.insert("userFeeds", doc);
+        const insertedDoc = (await ctx.db.get(id))!;
+        await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
+      }
+    }
+  },
+});
+
+// Helper to remove all events from a list from a user's followedLists feed
+export const removeListEventsFromUserFeed = internalMutation({
+  args: {
+    userId: v.string(),
+    listId: v.string(),
+  },
+  handler: async (ctx, { userId, listId }) => {
+    const eventToLists = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_list", (q) => q.eq("listId", listId))
+      .collect();
+
+    const followedListsFeedId = `followedLists_${userId}`;
+
+    for (const etl of eventToLists) {
+      const existingEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", followedListsFeedId).eq("eventId", etl.eventId),
+        )
+        .first();
+
+      if (existingEntry) {
+        await userFeedsAggregate.deleteIfExists(ctx, existingEntry);
+        await ctx.db.delete(existingEntry._id);
+      }
+    }
+  },
+});
+
+// Helper to add an event to all followers' followedLists feeds when added to a list
+export const addEventToListFollowersFeeds = internalMutation({
+  args: {
+    eventId: v.string(),
+    listId: v.string(),
+  },
+  handler: async (ctx, { eventId, listId }) => {
+    const event = await ctx.db
+      .query("events")
+      .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+      .first();
+
+    if (!event) {
+      return;
+    }
+
+    if (event.visibility !== "public") {
+      return;
+    }
+
+    const listFollows = await ctx.db
+      .query("listFollows")
+      .withIndex("by_list", (q) => q.eq("listId", listId))
+      .collect();
+
+    const eventStartTime = new Date(event.startDateTime).getTime();
+    const eventEndTime = new Date(event.endDateTime).getTime();
+    const currentTime = Date.now();
+
+    for (const follow of listFollows) {
+      const canView = await canUserViewListForFeed(ctx, listId, follow.userId);
+      if (!canView) {
+        continue;
+      }
+
+      const followedListsFeedId = `followedLists_${follow.userId}`;
+
+      const existingEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", followedListsFeedId).eq("eventId", eventId),
+        )
+        .first();
+
+      if (!existingEntry) {
+        const doc = {
+          feedId: followedListsFeedId,
+          eventId,
+          eventStartTime,
+          eventEndTime,
+          addedAt: currentTime,
+          hasEnded: eventEndTime < currentTime,
+        };
+        const id = await ctx.db.insert("userFeeds", doc);
+        const insertedDoc = (await ctx.db.get(id))!;
+        await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
+      }
+    }
+  },
+});
+
+// Helper to remove an event from all followers' followedLists feeds when removed from a list
+export const removeEventFromListFollowersFeeds = internalMutation({
+  args: {
+    eventId: v.string(),
+    listId: v.string(),
+  },
+  handler: async (ctx, { eventId, listId }) => {
+    const listFollows = await ctx.db
+      .query("listFollows")
+      .withIndex("by_list", (q) => q.eq("listId", listId))
+      .collect();
+
+    for (const follow of listFollows) {
+      const followedListsFeedId = `followedLists_${follow.userId}`;
+
+      const existingEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", followedListsFeedId).eq("eventId", eventId),
+        )
+        .first();
+
+      if (existingEntry) {
+        await userFeedsAggregate.deleteIfExists(ctx, existingEntry);
+        await ctx.db.delete(existingEntry._id);
+      }
     }
   },
 });

@@ -661,6 +661,21 @@ export async function createEvent(
     endDateTime: endDateTime.toISOString(),
   });
 
+  // Add event to list followers' feeds (updateEventInFeeds handles this, but we ensure it's called for new lists)
+  if (lists && lists.length > 0 && (visibility || "public") === "public") {
+    for (const list of lists) {
+      if (list.value) {
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId,
+            listId: list.value,
+          },
+        );
+      }
+    }
+  }
+
   return { id: eventId };
 }
 
@@ -770,19 +785,47 @@ export async function updateEvent(
     .withIndex("by_event", (q) => q.eq("eventId", eventId))
     .collect();
 
-  // Delete existing list associations
+  // Track which lists were removed and which were added
+  const existingListIds = new Set(
+    existingEventToLists.map((etl) => etl.listId),
+  );
+  const newListIds = lists
+    ? new Set(lists.filter((l) => l.value).map((l) => l.value))
+    : new Set<string>();
+
+  // Delete existing list associations that are no longer in the new list
   for (const etl of existingEventToLists) {
-    await ctx.db.delete(etl._id);
+    if (!newListIds.has(etl.listId)) {
+      await ctx.db.delete(etl._id);
+      // Remove from followers' feeds
+      await ctx.runMutation(
+        internal.feedHelpers.removeEventFromListFollowersFeeds,
+        {
+          eventId,
+          listId: etl.listId,
+        },
+      );
+    }
   }
 
   // Add new list associations
   if (lists && lists.length > 0) {
     for (const list of lists) {
-      if (list.value) {
+      if (list.value && !existingListIds.has(list.value)) {
         await ctx.db.insert("eventToLists", {
           eventId,
           listId: list.value,
         });
+        // Add to followers' feeds if event is public
+        if ((visibility || existingEvent.visibility) === "public") {
+          await ctx.runMutation(
+            internal.feedHelpers.addEventToListFollowersFeeds,
+            {
+              eventId,
+              listId: list.value,
+            },
+          );
+        }
       }
     }
   }
@@ -978,7 +1021,39 @@ export async function addEventToList(
   ctx: MutationCtx,
   eventId: string,
   listId: string,
+  userId: string,
 ) {
+  const list = await ctx.db
+    .query("lists")
+    .withIndex("by_custom_id", (q) => q.eq("id", listId))
+    .first();
+
+  if (!list) {
+    throw new ConvexError("List not found");
+  }
+
+  const contribution = list.contribution ?? "open";
+
+  if (list.userId === userId) {
+    // Owner can always contribute
+  } else if (contribution === "open") {
+    // Open mode: anyone can contribute
+  } else {
+    // Restricted/owner modes: only members can contribute
+    const membership = await ctx.db
+      .query("listMembers")
+      .withIndex("by_list_and_user", (q) =>
+        q.eq("listId", listId).eq("userId", userId),
+      )
+      .first();
+
+    if (!membership) {
+      throw new ConvexError(
+        "Cannot add event to list: contribution is restricted to members only",
+      );
+    }
+  }
+
   // Check if already in list
   const existing = await ctx.db
     .query("eventToLists")
@@ -992,6 +1067,12 @@ export async function addEventToList(
       eventId,
       listId,
     });
+
+    // Add event to followers' feeds
+    await ctx.runMutation(internal.feedHelpers.addEventToListFollowersFeeds, {
+      eventId,
+      listId,
+    });
   }
 }
 
@@ -1002,7 +1083,39 @@ export async function removeEventFromList(
   ctx: MutationCtx,
   eventId: string,
   listId: string,
+  userId: string,
 ) {
+  const list = await ctx.db
+    .query("lists")
+    .withIndex("by_custom_id", (q) => q.eq("id", listId))
+    .first();
+
+  if (!list) {
+    throw new ConvexError("List not found");
+  }
+
+  const contribution = list.contribution ?? "open";
+
+  if (list.userId === userId) {
+    // Owner can always contribute
+  } else if (contribution === "open") {
+    // Open mode: anyone can contribute
+  } else {
+    // Restricted/owner modes: only members can contribute
+    const membership = await ctx.db
+      .query("listMembers")
+      .withIndex("by_list_and_user", (q) =>
+        q.eq("listId", listId).eq("userId", userId),
+      )
+      .first();
+
+    if (!membership) {
+      throw new ConvexError(
+        "Cannot remove event from list: contribution is restricted to members only",
+      );
+    }
+  }
+
   const existing = await ctx.db
     .query("eventToLists")
     .withIndex("by_event_and_list", (q) =>
@@ -1012,6 +1125,15 @@ export async function removeEventFromList(
 
   if (existing) {
     await ctx.db.delete(existing._id);
+
+    // Remove event from followers' feeds
+    await ctx.runMutation(
+      internal.feedHelpers.removeEventFromListFollowersFeeds,
+      {
+        eventId,
+        listId,
+      },
+    );
   }
 }
 

@@ -21,6 +21,7 @@ import type * as feeds from "../feeds.js";
 import type * as files from "../files.js";
 import type * as guestOnboarding from "../guestOnboarding.js";
 import type * as http from "../http.js";
+import type * as lists from "../lists.js";
 import type * as migrations_initializeAggregates from "../migrations/initializeAggregates.js";
 import type * as migrations_initializeUserFeedsAggregate from "../migrations/initializeUserFeedsAggregate.js";
 import type * as migrations_userFeedsMigration from "../migrations/userFeedsMigration.js";
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   files: typeof files;
   guestOnboarding: typeof guestOnboarding;
   http: typeof http;
+  lists: typeof lists;
   "migrations/initializeAggregates": typeof migrations_initializeAggregates;
   "migrations/initializeUserFeedsAggregate": typeof migrations_initializeUserFeedsAggregate;
   "migrations/userFeedsMigration": typeof migrations_userFeedsMigration;
