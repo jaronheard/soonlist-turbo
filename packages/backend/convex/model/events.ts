@@ -661,21 +661,6 @@ export async function createEvent(
     endDateTime: endDateTime.toISOString(),
   });
 
-  // Add event to list followers' feeds (updateEventInFeeds handles this, but we ensure it's called for new lists)
-  if (lists && lists.length > 0 && (visibility || "public") === "public") {
-    for (const list of lists) {
-      if (list.value) {
-        await ctx.runMutation(
-          internal.feedHelpers.addEventToListFollowersFeeds,
-          {
-            eventId,
-            listId: list.value,
-          },
-        );
-      }
-    }
-  }
-
   return { id: eventId };
 }
 
