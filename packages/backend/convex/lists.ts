@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
 
+import type { Doc } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
@@ -13,42 +14,69 @@ async function getUserId(ctx: QueryCtx): Promise<string | null> {
   return identity.subject;
 }
 
+// Result type for list access check
+type ListAccessResult =
+  | { status: "notFound" }
+  | { status: "forbidden" }
+  | { status: "ok"; list: Doc<"lists"> };
+
 // Helper function to check if user can view a list
-async function canUserViewList(
+// Returns a discriminated union to distinguish "not found" from "access denied"
+async function checkListAccess(
   ctx: QueryCtx,
   listId: string,
   userId: string | null,
-): Promise<boolean> {
+): Promise<ListAccessResult> {
   const list = await ctx.db
     .query("lists")
     .withIndex("by_custom_id", (q) => q.eq("id", listId))
     .first();
 
   if (!list) {
-    return false;
+    return { status: "notFound" };
   }
 
   // Public and unlisted lists are viewable by anyone
   if (list.visibility === "public" || list.visibility === "unlisted") {
-    return true;
+    return { status: "ok", list };
   }
 
   // Private lists are only viewable by owner or members
   if (!userId) {
-    return false;
+    return { status: "forbidden" };
   }
+
+  // At this point, userId is guaranteed to be a string
+  const userIdString = userId;
+
   // Owner can always view
-  if (list.userId === userId) {
-    return true;
+  if (list.userId === userIdString) {
+    return { status: "ok", list };
   }
   // Check if user is a member
   const membership = await ctx.db
     .query("listMembers")
     .withIndex("by_list_and_user", (q) =>
-      q.eq("listId", listId).eq("userId", userId),
+      q.eq("listId", listId).eq("userId", userIdString),
     )
     .first();
-  return !!membership;
+
+  if (membership) {
+    return { status: "ok", list };
+  }
+
+  return { status: "forbidden" };
+}
+
+// Helper function to check if user can view a list (backward compatibility)
+// Returns boolean for cases where we don't need to distinguish error types
+async function canUserViewList(
+  ctx: QueryCtx,
+  listId: string,
+  userId: string | null,
+): Promise<boolean> {
+  const result = await checkListAccess(ctx, listId, userId);
+  return result.status === "ok";
 }
 
 async function _canUserContributeToList(
@@ -60,6 +88,9 @@ async function _canUserContributeToList(
     return false;
   }
 
+  // At this point, userId is guaranteed to be a string
+  const userIdString = userId;
+
   const list = await ctx.db
     .query("lists")
     .withIndex("by_custom_id", (q) => q.eq("id", listId))
@@ -70,7 +101,7 @@ async function _canUserContributeToList(
   }
 
   // Owner can always contribute
-  if (list.userId === userId) {
+  if (list.userId === userIdString) {
     return true;
   }
 
@@ -78,14 +109,14 @@ async function _canUserContributeToList(
 
   // Open contribution mode: anyone who can view can contribute
   if (contribution === "open") {
-    return canUserViewList(ctx, listId, userId);
+    return canUserViewList(ctx, listId, userIdString);
   }
 
   // Restricted and owner modes: only members can contribute
   const membership = await ctx.db
     .query("listMembers")
     .withIndex("by_list_and_user", (q) =>
-      q.eq("listId", listId).eq("userId", userId),
+      q.eq("listId", listId).eq("userId", userIdString),
     )
     .first();
   return !!membership;
@@ -104,20 +135,15 @@ export const followList = mutation({
       throw new ConvexError("Authentication required");
     }
 
-    const canView = await canUserViewList(ctx, listId, userId);
-    if (!canView) {
+    const accessResult = await checkListAccess(ctx, listId, userId);
+    if (accessResult.status === "notFound") {
+      throw new ConvexError("List not found");
+    }
+    if (accessResult.status === "forbidden") {
       throw new ConvexError("Cannot follow this list: access denied");
     }
 
-    const list = await ctx.db
-      .query("lists")
-      .withIndex("by_custom_id", (q) => q.eq("id", listId))
-      .first();
-
-    if (!list) {
-      throw new ConvexError("List not found");
-    }
-
+    // accessResult.status === "ok", and we have the list
     const existingFollow = await ctx.db
       .query("listFollows")
       .withIndex("by_user_and_list", (q) =>
@@ -230,11 +256,15 @@ export const getListFollowers = query({
       throw new ConvexError("Authentication required");
     }
 
-    const canView = await canUserViewList(ctx, listId, userId);
-    if (!canView) {
+    const accessResult = await checkListAccess(ctx, listId, userId);
+    if (accessResult.status === "notFound") {
+      throw new ConvexError("List not found");
+    }
+    if (accessResult.status === "forbidden") {
       throw new ConvexError("Cannot view this list: access denied");
     }
 
+    // accessResult.status === "ok"
     const follows = await ctx.db
       .query("listFollows")
       .withIndex("by_list", (q) => q.eq("listId", listId))
@@ -282,6 +312,9 @@ export const addListMember = mutation({
       throw new ConvexError("Authentication required");
     }
 
+    // At this point, userId is guaranteed to be a string
+    const userIdString = userId;
+
     const list = await ctx.db
       .query("lists")
       .withIndex("by_custom_id", (q) => q.eq("id", listId))
@@ -291,7 +324,7 @@ export const addListMember = mutation({
       throw new ConvexError("List not found");
     }
 
-    if (list.userId !== userId) {
+    if (list.userId !== userIdString) {
       throw new ConvexError("Only the list owner can add members");
     }
 
@@ -329,6 +362,9 @@ export const removeListMember = mutation({
       throw new ConvexError("Authentication required");
     }
 
+    // At this point, userId is guaranteed to be a string
+    const userIdString = userId;
+
     const list = await ctx.db
       .query("lists")
       .withIndex("by_custom_id", (q) => q.eq("id", listId))
@@ -338,7 +374,7 @@ export const removeListMember = mutation({
       throw new ConvexError("List not found");
     }
 
-    if (list.userId !== userId) {
+    if (list.userId !== userIdString) {
       throw new ConvexError("Only the list owner can remove members");
     }
 
