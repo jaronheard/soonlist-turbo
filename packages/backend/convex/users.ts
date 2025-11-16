@@ -3,12 +3,7 @@ import { ConvexError, v } from "convex/values";
 
 import type { DatabaseReader } from "./_generated/server";
 import { internal } from "./_generated/api";
-import {
-  internalMutation,
-  internalQuery,
-  mutation,
-  query,
-} from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { onboardingDataValidator, userAdditionalInfoValidator } from "./schema";
 
 const MAX_USERNAME_LENGTH = 64;
@@ -439,48 +434,6 @@ export const getCurrentUser = query({
       .withIndex("by_custom_id", (q) => q.eq("id", identity.subject))
       .unique();
     return user || null;
-  },
-});
-
-/**
- * List users for PostHog backfill - paginated query
- */
-export const listForBackfill = internalQuery({
-  args: {
-    paginationOpts: paginationOptsValidator,
-  },
-  returns: v.object({
-    page: v.array(
-      v.object({
-        id: v.string(),
-        email: v.string(),
-        username: v.string(),
-      }),
-    ),
-    isDone: v.boolean(),
-    continueCursor: v.string(),
-    splitCursor: v.optional(v.union(v.string(), v.null())),
-    pageStatus: v.optional(
-      v.union(
-        v.literal("SplitRecommended"),
-        v.literal("SplitRequired"),
-        v.null(),
-      ),
-    ),
-  }),
-  handler: async (ctx, { paginationOpts }) => {
-    const results = await ctx.db
-      .query("users")
-      .order("asc")
-      .paginate(paginationOpts);
-    return {
-      ...results,
-      page: results.page.map((u) => ({
-        id: u.id,
-        email: u.email,
-        username: u.username,
-      })),
-    };
   },
 });
 
