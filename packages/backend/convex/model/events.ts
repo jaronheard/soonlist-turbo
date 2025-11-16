@@ -780,51 +780,53 @@ export async function updateEvent(
   }
 
   // Handle lists
-  const existingEventToLists = await ctx.db
-    .query("eventToLists")
-    .withIndex("by_event", (q) => q.eq("eventId", eventId))
-    .collect();
+  if (lists !== undefined) {
+    const existingEventToLists = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_event", (q) => q.eq("eventId", eventId))
+      .collect();
 
-  // Track which lists were removed and which were added
-  const existingListIds = new Set(
-    existingEventToLists.map((etl) => etl.listId),
-  );
-  const newListIds = lists
-    ? new Set(lists.filter((l) => l.value).map((l) => l.value))
-    : new Set<string>();
+    // Track which lists were removed and which were added
+    const existingListIds = new Set(
+      existingEventToLists.map((etl) => etl.listId),
+    );
+    const newListIds = new Set(
+      lists.filter((l) => l.value).map((l) => l.value),
+    );
 
-  // Delete existing list associations that are no longer in the new list
-  for (const etl of existingEventToLists) {
-    if (!newListIds.has(etl.listId)) {
-      await ctx.db.delete(etl._id);
-      // Remove from followers' feeds
-      await ctx.runMutation(
-        internal.feedHelpers.removeEventFromListFollowersFeeds,
-        {
-          eventId,
-          listId: etl.listId,
-        },
-      );
+    // Delete existing list associations that are no longer in the new list
+    for (const etl of existingEventToLists) {
+      if (!newListIds.has(etl.listId)) {
+        await ctx.db.delete(etl._id);
+        // Remove from followers' feeds
+        await ctx.runMutation(
+          internal.feedHelpers.removeEventFromListFollowersFeeds,
+          {
+            eventId,
+            listId: etl.listId,
+          },
+        );
+      }
     }
-  }
 
-  // Add new list associations
-  if (lists && lists.length > 0) {
-    for (const list of lists) {
-      if (list.value && !existingListIds.has(list.value)) {
-        await ctx.db.insert("eventToLists", {
-          eventId,
-          listId: list.value,
-        });
-        // Add to followers' feeds if event is public
-        if ((visibility || existingEvent.visibility) === "public") {
-          await ctx.runMutation(
-            internal.feedHelpers.addEventToListFollowersFeeds,
-            {
-              eventId,
-              listId: list.value,
-            },
-          );
+    // Add new list associations
+    if (lists.length > 0) {
+      for (const list of lists) {
+        if (list.value && !existingListIds.has(list.value)) {
+          await ctx.db.insert("eventToLists", {
+            eventId,
+            listId: list.value,
+          });
+          // Add to followers' feeds if event is public
+          if ((visibility || existingEvent.visibility) === "public") {
+            await ctx.runMutation(
+              internal.feedHelpers.addEventToListFollowersFeeds,
+              {
+                eventId,
+                listId: list.value,
+              },
+            );
+          }
         }
       }
     }
