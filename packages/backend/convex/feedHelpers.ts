@@ -388,18 +388,36 @@ export const removeListEventsFromUserFeed = internalMutation({
       .collect();
 
     const followedListsFeedId = `followedLists_${userId}`;
+    const personalFeedId = `user_${userId}`;
 
     for (const etl of eventToLists) {
-      const existingEntry = await ctx.db
+      // Remove from followedLists feed
+      const existingFollowedListsEntry = await ctx.db
         .query("userFeeds")
         .withIndex("by_feed_event", (q) =>
           q.eq("feedId", followedListsFeedId).eq("eventId", etl.eventId),
         )
         .first();
 
-      if (existingEntry) {
-        await userFeedsAggregate.deleteIfExists(ctx, existingEntry);
-        await ctx.db.delete(existingEntry._id);
+      if (existingFollowedListsEntry) {
+        await userFeedsAggregate.deleteIfExists(
+          ctx,
+          existingFollowedListsEntry,
+        );
+        await ctx.db.delete(existingFollowedListsEntry._id);
+      }
+
+      // Remove from personal feed
+      const existingPersonalEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", personalFeedId).eq("eventId", etl.eventId),
+        )
+        .first();
+
+      if (existingPersonalEntry) {
+        await userFeedsAggregate.deleteIfExists(ctx, existingPersonalEntry);
+        await ctx.db.delete(existingPersonalEntry._id);
       }
     }
   },
@@ -442,16 +460,38 @@ export const addEventToListFollowersFeeds = internalMutation({
 
       const followedListsFeedId = `followedLists_${follow.userId}`;
 
-      const existingEntry = await ctx.db
+      const existingFollowedListsEntry = await ctx.db
         .query("userFeeds")
         .withIndex("by_feed_event", (q) =>
           q.eq("feedId", followedListsFeedId).eq("eventId", eventId),
         )
         .first();
 
-      if (!existingEntry) {
+      if (!existingFollowedListsEntry) {
         const doc = {
           feedId: followedListsFeedId,
+          eventId,
+          eventStartTime,
+          eventEndTime,
+          addedAt: currentTime,
+          hasEnded: eventEndTime < currentTime,
+        };
+        const id = await ctx.db.insert("userFeeds", doc);
+        const insertedDoc = (await ctx.db.get(id))!;
+        await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
+      }
+
+      const personalFeedId = `user_${follow.userId}`;
+      const existingPersonalEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", personalFeedId).eq("eventId", eventId),
+        )
+        .first();
+
+      if (!existingPersonalEntry) {
+        const doc = {
+          feedId: personalFeedId,
           eventId,
           eventStartTime,
           eventEndTime,
