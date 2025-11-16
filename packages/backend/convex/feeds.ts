@@ -2,7 +2,7 @@ import type { PaginationOptions } from "convex/server";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
-import type { MutationCtx, QueryCtx } from "./_generated/server";
+import type { QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { internalAction, internalMutation, query } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
@@ -320,71 +320,3 @@ export const updateHasEndedFlagsAction = internalAction({
     };
   },
 });
-
-/**
- * TEMPORARY: Test version of getFollowedListsFeed (no auth required)
- * TODO: Remove after testing
- */
-export const testGetFollowedListsFeed = internalMutation({
-  args: {
-    userId: v.string(),
-    paginationOpts: paginationOptsValidator,
-    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
-  },
-  handler: async (ctx, { userId, paginationOpts, filter = "upcoming" }) => {
-    const feedId = `followedLists_${userId}`;
-    return queryFeedForMutation(ctx, feedId, paginationOpts, filter);
-  },
-});
-
-/**
- * Helper to query feed from mutation context (for test functions)
- */
-async function queryFeedForMutation(
-  ctx: MutationCtx,
-  feedId: string,
-  paginationOpts: PaginationOptions,
-  filter: "upcoming" | "past" = "upcoming",
-) {
-  const hasEnded = filter === "past";
-  const order = filter === "upcoming" ? "asc" : "desc";
-
-  const feedQuery = ctx.db
-    .query("userFeeds")
-    .withIndex("by_feed_hasEnded_startTime", (q) =>
-      q.eq("feedId", feedId).eq("hasEnded", hasEnded),
-    )
-    .order(order);
-
-  const feedResults = await feedQuery.paginate(paginationOpts);
-
-  const events = await Promise.all(
-    feedResults.page.map(async (feedEntry) => {
-      const event = await ctx.db
-        .query("events")
-        .withIndex("by_custom_id", (q) => q.eq("id", feedEntry.eventId))
-        .first();
-
-      if (!event) return null;
-
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
-        .first();
-
-      return {
-        ...event,
-        user,
-      };
-    }),
-  );
-
-  const validEvents = events.filter(
-    (event): event is NonNullable<typeof event> => event !== null,
-  );
-
-  return {
-    ...feedResults,
-    page: validEvents,
-  };
-}
