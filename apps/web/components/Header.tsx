@@ -24,7 +24,13 @@ import {
 } from "@soonlist/ui/navigation-menu";
 import { ScrollArea } from "@soonlist/ui/scroll-area";
 import { Separator } from "@soonlist/ui/separator";
-import { Sheet, SheetContent, SheetTrigger } from "@soonlist/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@soonlist/ui/sheet";
+import { VisuallyHidden } from "@soonlist/ui/visually-hidden";
 
 import { cn } from "~/lib/utils";
 import {
@@ -331,6 +337,9 @@ export function MobileNav() {
         position="right"
         className="bg-interactive-3 pl-0 pt-2"
       >
+        <VisuallyHidden>
+          <SheetTitle>Navigation Menu</SheetTitle>
+        </VisuallyHidden>
         <MobileLink href="/" className="" onOpenChange={setOpen}>
           <Logo className="scale-75" variant="hidePreview" />
         </MobileLink>
