@@ -1009,6 +1009,7 @@ export async function unfollowEvent(
       .unique();
 
     if (feedEntry) {
+      await userFeedsAggregate.deleteIfExists(ctx, feedEntry);
       await ctx.db.delete(feedEntry._id);
     }
   }

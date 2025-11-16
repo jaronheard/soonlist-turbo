@@ -390,6 +390,16 @@ export const removeListEventsFromUserFeed = internalMutation({
     const followedListsFeedId = `followedLists_${userId}`;
     const personalFeedId = `user_${userId}`;
 
+    // Get all lists the user follows (excluding the one being unfollowed)
+    // This is used to check if events are in other followed lists
+    const userListFollows = await ctx.db
+      .query("listFollows")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const followedListIds = new Set(userListFollows.map((f) => f.listId));
+    followedListIds.delete(listId); // Exclude the list being unfollowed
+
     for (const etl of eventToLists) {
       // Remove from followedLists feed
       const existingFollowedListsEntry = await ctx.db
@@ -407,7 +417,60 @@ export const removeListEventsFromUserFeed = internalMutation({
         await ctx.db.delete(existingFollowedListsEntry._id);
       }
 
-      // Remove from personal feed
+      // Check if event should remain in personal feed before removing
+      // Event should stay if:
+      // 1. User created the event
+      // 2. User follows the event directly (via eventFollows)
+      // 3. Event is in another list the user follows
+      const event = await ctx.db
+        .query("events")
+        .withIndex("by_custom_id", (q) => q.eq("id", etl.eventId))
+        .first();
+
+      if (!event) {
+        continue;
+      }
+
+      // Check if user created the event
+      const isCreator = event.userId === userId;
+      if (isCreator) {
+        // User created the event, so it should remain in personal feed
+        continue;
+      }
+
+      // Check if user follows the event directly
+      const eventFollow = await ctx.db
+        .query("eventFollows")
+        .withIndex("by_user_and_event", (q) =>
+          q.eq("userId", userId).eq("eventId", etl.eventId),
+        )
+        .first();
+
+      if (eventFollow) {
+        // User follows the event directly, so it should remain in personal feed
+        continue;
+      }
+
+      // Check if event is in another list the user follows
+      if (followedListIds.size > 0) {
+        // Check if event is in any other followed list
+        const otherEventToLists = await ctx.db
+          .query("eventToLists")
+          .withIndex("by_event", (q) => q.eq("eventId", etl.eventId))
+          .collect();
+
+        const isInOtherFollowedList = otherEventToLists.some((otherEtl) =>
+          followedListIds.has(otherEtl.listId),
+        );
+
+        if (isInOtherFollowedList) {
+          // Event is in another list the user follows, so it should remain in personal feed
+          continue;
+        }
+      }
+
+      // Safe to remove from personal feed - user didn't create it,
+      // doesn't follow it directly, and it's not in another followed list
       const existingPersonalEntry = await ctx.db
         .query("userFeeds")
         .withIndex("by_feed_event", (q) =>
@@ -518,19 +581,88 @@ export const removeEventFromListFollowersFeeds = internalMutation({
       .withIndex("by_list", (q) => q.eq("listId", listId))
       .collect();
 
+    const event = await ctx.db
+      .query("events")
+      .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+      .first();
+
+    if (!event) {
+      return;
+    }
+
     for (const follow of listFollows) {
       const followedListsFeedId = `followedLists_${follow.userId}`;
+      const personalFeedId = `user_${follow.userId}`;
 
-      const existingEntry = await ctx.db
+      const existingFollowedListsEntry = await ctx.db
         .query("userFeeds")
         .withIndex("by_feed_event", (q) =>
           q.eq("feedId", followedListsFeedId).eq("eventId", eventId),
         )
         .first();
 
-      if (existingEntry) {
-        await userFeedsAggregate.deleteIfExists(ctx, existingEntry);
-        await ctx.db.delete(existingEntry._id);
+      if (existingFollowedListsEntry) {
+        await userFeedsAggregate.deleteIfExists(
+          ctx,
+          existingFollowedListsEntry,
+        );
+        await ctx.db.delete(existingFollowedListsEntry._id);
+      }
+
+      // Check if event should remain in personal feed before removing
+      // Event should stay if:
+      // 1. User created the event
+      // 2. User follows the event directly (via eventFollows)
+      // 3. Event is in another list the user follows
+      const isCreator = event.userId === follow.userId;
+      if (isCreator) {
+        continue;
+      }
+
+      const eventFollow = await ctx.db
+        .query("eventFollows")
+        .withIndex("by_user_and_event", (q) =>
+          q.eq("userId", follow.userId).eq("eventId", eventId),
+        )
+        .first();
+
+      if (eventFollow) {
+        continue;
+      }
+
+      const userListFollows = await ctx.db
+        .query("listFollows")
+        .withIndex("by_user", (q) => q.eq("userId", follow.userId))
+        .collect();
+
+      const followedListIds = new Set(userListFollows.map((f) => f.listId));
+      followedListIds.delete(listId);
+
+      if (followedListIds.size > 0) {
+        const otherEventToLists = await ctx.db
+          .query("eventToLists")
+          .withIndex("by_event", (q) => q.eq("eventId", eventId))
+          .collect();
+
+        const isInOtherFollowedList = otherEventToLists.some((otherEtl) =>
+          followedListIds.has(otherEtl.listId),
+        );
+
+        if (isInOtherFollowedList) {
+          continue;
+        }
+      }
+
+      const existingPersonalEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", personalFeedId).eq("eventId", eventId),
+        )
+        .first();
+
+      if (existingPersonalEntry) {
+        await userFeedsAggregate.deleteIfExists(ctx, existingPersonalEntry);
+        await ctx.db.delete(existingPersonalEntry._id);
       }
     }
   },
