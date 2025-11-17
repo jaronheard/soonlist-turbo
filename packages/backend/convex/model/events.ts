@@ -640,14 +640,11 @@ export async function createEvent(
     });
   }
 
-  // Add to lists if provided
+  // Add to lists if provided, enforcing list contribution rules
   if (lists && lists.length > 0) {
     for (const list of lists) {
       if (list.value) {
-        await ctx.db.insert("eventToLists", {
-          eventId,
-          listId: list.value,
-        });
+        await addEventToList(ctx, eventId, list.value, userId);
       }
     }
   }
@@ -660,21 +657,6 @@ export async function createEvent(
     startDateTime: startDateTime.toISOString(),
     endDateTime: endDateTime.toISOString(),
   });
-
-  // Fan out to list followers if event is public and has lists
-  if ((visibility || "public") === "public" && lists && lists.length > 0) {
-    for (const list of lists) {
-      if (list.value) {
-        await ctx.runMutation(
-          internal.feedHelpers.addEventToListFollowersFeeds,
-          {
-            eventId,
-            listId: list.value,
-          },
-        );
-      }
-    }
-  }
 
   return { id: eventId };
 }
