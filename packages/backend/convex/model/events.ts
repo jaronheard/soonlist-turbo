@@ -661,6 +661,21 @@ export async function createEvent(
     endDateTime: endDateTime.toISOString(),
   });
 
+  // Fan out to list followers if event is public and has lists
+  if ((visibility || "public") === "public" && lists && lists.length > 0) {
+    for (const list of lists) {
+      if (list.value) {
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId,
+            listId: list.value,
+          },
+        );
+      }
+    }
+  }
+
   return { id: eventId };
 }
 
@@ -800,7 +815,8 @@ export async function updateEvent(
   const visibilityChanged =
     visibility && existingEvent.visibility !== visibility;
   const timeChanged =
-    existingEvent.startDateTime !== startDateTime.toISOString();
+    existingEvent.startDateTime !== startDateTime.toISOString() ||
+    existingEvent.endDateTime !== endDateTime.toISOString();
 
   if (visibilityChanged || timeChanged) {
     // If changing to private, remove from discover feed
@@ -819,6 +835,24 @@ export async function updateEvent(
       startDateTime: startDateTime.toISOString(),
       endDateTime: endDateTime.toISOString(),
     });
+
+    // If changing to public, fan out to list followers
+    if (visibility === "public" && existingEvent.visibility === "private") {
+      const eventToLists = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event", (q) => q.eq("eventId", eventId))
+        .collect();
+
+      for (const etl of eventToLists) {
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId,
+            listId: etl.listId,
+          },
+        );
+      }
+    }
   }
 
   return { id: eventId };
@@ -1148,6 +1182,22 @@ export async function toggleEventVisibility(
         startDateTime: event.startDateTime,
         endDateTime: event.endDateTime,
       });
+
+      // Fan out to list followers when event becomes public
+      const eventToLists = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event", (q) => q.eq("eventId", eventId))
+        .collect();
+
+      for (const etl of eventToLists) {
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId,
+            listId: etl.listId,
+          },
+        );
+      }
     }
   }
 
