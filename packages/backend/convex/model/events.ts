@@ -835,6 +835,14 @@ export async function updateEvent(
         );
       }
     }
+
+    if (timeChanged) {
+      await ctx.runMutation(internal.feedHelpers.updateEventTimesInAllFeeds, {
+        eventId,
+        startDateTime: startDateTime.toISOString(),
+        endDateTime: endDateTime.toISOString(),
+      });
+    }
   }
 
   return { id: eventId };

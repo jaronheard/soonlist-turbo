@@ -181,6 +181,44 @@ export const removeEventFromFeeds = internalMutation({
   },
 });
 
+// Helper to update event times across all feed entries for an event
+export const updateEventTimesInAllFeeds = internalMutation({
+  args: {
+    eventId: v.string(),
+    startDateTime: v.string(),
+    endDateTime: v.string(),
+  },
+  handler: async (ctx, { eventId, startDateTime, endDateTime }) => {
+    if (isNaN(new Date(startDateTime).getTime())) {
+      throw new Error(`Invalid startDateTime: ${startDateTime}`);
+    }
+    if (isNaN(new Date(endDateTime).getTime())) {
+      throw new Error(`Invalid endDateTime: ${endDateTime}`);
+    }
+
+    const eventStartTime = new Date(startDateTime).getTime();
+    const eventEndTime = new Date(endDateTime).getTime();
+    const currentTime = Date.now();
+    const hasEnded = eventEndTime < currentTime;
+
+    const feedEntries = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_event", (q) => q.eq("eventId", eventId))
+      .collect();
+
+    for (const entry of feedEntries) {
+      const oldDoc = entry;
+      await ctx.db.patch(entry._id, {
+        eventStartTime,
+        eventEndTime,
+        hasEnded,
+      });
+      const updatedDoc = (await ctx.db.get(entry._id))!;
+      await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
+    }
+  },
+});
+
 async function canUserViewListForFeed(
   ctx: MutationCtx,
   listId: string,
