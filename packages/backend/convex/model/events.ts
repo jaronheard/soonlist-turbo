@@ -782,15 +782,7 @@ export async function updateEvent(
     // Delete existing list associations that are no longer in the new list
     for (const etl of existingEventToLists) {
       if (!newListIds.has(etl.listId)) {
-        await ctx.db.delete(etl._id);
-        // Remove from followers' feeds
-        await ctx.runMutation(
-          internal.feedHelpers.removeEventFromListFollowersFeeds,
-          {
-            eventId,
-            listId: etl.listId,
-          },
-        );
+        await removeEventFromList(ctx, eventId, etl.listId, userId);
       }
     }
 
@@ -798,20 +790,7 @@ export async function updateEvent(
     if (lists.length > 0) {
       for (const list of lists) {
         if (list.value && !existingListIds.has(list.value)) {
-          await ctx.db.insert("eventToLists", {
-            eventId,
-            listId: list.value,
-          });
-          // Add to followers' feeds if event is public
-          if ((visibility || existingEvent.visibility) === "public") {
-            await ctx.runMutation(
-              internal.feedHelpers.addEventToListFollowersFeeds,
-              {
-                eventId,
-                listId: list.value,
-              },
-            );
-          }
+          await addEventToList(ctx, eventId, list.value, userId);
         }
       }
     }
