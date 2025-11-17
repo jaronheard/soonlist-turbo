@@ -1021,8 +1021,13 @@ export async function addEventToList(
     // Owner can always contribute
   } else if (contribution === "open") {
     // Open mode: anyone can contribute
+  } else if (contribution === "owner") {
+    // Owner mode: only the list owner can contribute
+    throw new ConvexError(
+      "Cannot add event to list: contribution is restricted to owner only",
+    );
   } else {
-    // Restricted/owner modes: only members can contribute
+    // Restricted mode: only members can contribute
     const membership = await ctx.db
       .query("listMembers")
       .withIndex("by_list_and_user", (q) =>
@@ -1083,8 +1088,13 @@ export async function removeEventFromList(
     // Owner can always contribute
   } else if (contribution === "open") {
     // Open mode: anyone can contribute
+  } else if (contribution === "owner") {
+    // Owner mode: only the list owner can contribute
+    throw new ConvexError(
+      "Cannot remove event from list: contribution is restricted to owner only",
+    );
   } else {
-    // Restricted/owner modes: only members can contribute
+    // Restricted mode: only members can contribute
     const membership = await ctx.db
       .query("listMembers")
       .withIndex("by_list_and_user", (q) =>
