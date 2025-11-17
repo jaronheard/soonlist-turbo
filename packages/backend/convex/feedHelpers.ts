@@ -341,6 +341,26 @@ export const removeListEventsFromUserFeed = internalMutation({
     const followedListIds = new Set(userListFollows.map((f) => f.listId));
     followedListIds.delete(listId); // Exclude the list being unfollowed
 
+    // Precompute which events from this list are also in other followed lists
+    // This avoids querying eventToLists per event (O(n) queries -> O(m) queries where m = other lists)
+    const eventIdsInThisList = new Set(eventToLists.map((etl) => etl.eventId));
+    const eventsInOtherFollowedLists = new Set<string>();
+
+    if (followedListIds.size > 0 && eventIdsInThisList.size > 0) {
+      for (const otherListId of followedListIds) {
+        const otherEventToLists = await ctx.db
+          .query("eventToLists")
+          .withIndex("by_list", (q) => q.eq("listId", otherListId))
+          .collect();
+
+        for (const other of otherEventToLists) {
+          if (eventIdsInThisList.has(other.eventId)) {
+            eventsInOtherFollowedLists.add(other.eventId);
+          }
+        }
+      }
+    }
+
     for (const etl of eventToLists) {
       const event = await ctx.db
         .query("events")
@@ -351,18 +371,8 @@ export const removeListEventsFromUserFeed = internalMutation({
         continue;
       }
 
-      // Check if event is in another list the user follows
-      let isInOtherFollowedList = false;
-      if (followedListIds.size > 0) {
-        const otherEventToLists = await ctx.db
-          .query("eventToLists")
-          .withIndex("by_event", (q) => q.eq("eventId", etl.eventId))
-          .collect();
-
-        isInOtherFollowedList = otherEventToLists.some((otherEtl) =>
-          followedListIds.has(otherEtl.listId),
-        );
-      }
+      // Check if event is in another list the user follows (using precomputed set)
+      const isInOtherFollowedList = eventsInOtherFollowedLists.has(etl.eventId);
 
       // Remove from followedLists feed only if event is not in any other followed list
       if (!isInOtherFollowedList) {
