@@ -983,22 +983,53 @@ export async function unfollowEvent(
     .unique();
 
   if (existingFollow) {
-    // Remove from eventFollows aggregate before deleting
     await eventFollowsAggregate.deleteIfExists(ctx, existingFollow);
     await ctx.db.delete(existingFollow._id);
 
-    // Remove from user's feed
-    const feedId = `user_${userId}`;
-    const feedEntry = await ctx.db
-      .query("userFeeds")
-      .withIndex("by_feed_event", (q) =>
-        q.eq("feedId", feedId).eq("eventId", eventId),
-      )
-      .unique();
+    const event = await ctx.db
+      .query("events")
+      .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+      .first();
 
-    if (feedEntry) {
-      await userFeedsAggregate.deleteIfExists(ctx, feedEntry);
-      await ctx.db.delete(feedEntry._id);
+    if (event) {
+      const isCreator = event.userId === userId;
+      if (isCreator) {
+        return await getEventById(ctx, eventId);
+      }
+
+      const listFollows = await ctx.db
+        .query("listFollows")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect();
+
+      if (listFollows.length > 0) {
+        const followedListIds = new Set(listFollows.map((f) => f.listId));
+        const eventToLists = await ctx.db
+          .query("eventToLists")
+          .withIndex("by_event", (q) => q.eq("eventId", eventId))
+          .collect();
+
+        const isInFollowedList = eventToLists.some((etl) =>
+          followedListIds.has(etl.listId),
+        );
+
+        if (isInFollowedList) {
+          return await getEventById(ctx, eventId);
+        }
+      }
+
+      const feedId = `user_${userId}`;
+      const feedEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", feedId).eq("eventId", eventId),
+        )
+        .unique();
+
+      if (feedEntry) {
+        await userFeedsAggregate.deleteIfExists(ctx, feedEntry);
+        await ctx.db.delete(feedEntry._id);
+      }
     }
   }
 
