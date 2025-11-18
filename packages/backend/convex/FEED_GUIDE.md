@@ -23,7 +23,12 @@ userFeeds: {
 
 ### Feed Types
 
-- **Personal feeds**: `user_${userId}` - Shows user's own events + followed events
+- **Personal feeds**: `user_${userId}` - Shows user's own events + followed events + events from followed lists
+  - Events appear in personal feeds through a union of sources:
+    - Events created by the user (always present)
+    - Events directly followed by the user (via `eventFollows`)
+    - Events in lists the user follows (via `listFollows`)
+  - Removing one source (e.g., unfollowing an event) only removes the event if no other source still applies
 - **Discover feed**: `discover` - Shows all public events
 - **Future feeds**: `curated_${topic}`, `custom_${userId}_${name}` - Extensible design
 
@@ -101,7 +106,8 @@ npx convex run migrations/populateUserFeeds:populateUserFeeds
 1. **Event Creation** - Add `updateEventInFeeds` call in event creation workflow
 2. **Event Updates** - Update feeds when visibility or time changes
 3. **Follow Actions** - Add `addEventToUserFeed` when user follows event
-4. **Cron Jobs** - Update feeds in PlanetScale sync if events are created externally
+4. **Unfollow Actions** - When unfollowing an event, only remove from feed if event is not in any followed list and user is not the creator
+5. **Cron Jobs** - Update feeds in PlanetScale sync if events are created externally
 
 ## Benefits
 

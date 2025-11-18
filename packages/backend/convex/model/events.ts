@@ -640,14 +640,11 @@ export async function createEvent(
     });
   }
 
-  // Add to lists if provided
+  // Add to lists if provided, enforcing list contribution rules
   if (lists && lists.length > 0) {
     for (const list of lists) {
       if (list.value) {
-        await ctx.db.insert("eventToLists", {
-          eventId,
-          listId: list.value,
-        });
+        await addEventToList(ctx, eventId, list.value, userId);
       }
     }
   }
@@ -765,24 +762,33 @@ export async function updateEvent(
   }
 
   // Handle lists
-  const existingEventToLists = await ctx.db
-    .query("eventToLists")
-    .withIndex("by_event", (q) => q.eq("eventId", eventId))
-    .collect();
+  if (lists !== undefined) {
+    const existingEventToLists = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_event", (q) => q.eq("eventId", eventId))
+      .collect();
 
-  // Delete existing list associations
-  for (const etl of existingEventToLists) {
-    await ctx.db.delete(etl._id);
-  }
+    // Track which lists were removed and which were added
+    const existingListIds = new Set(
+      existingEventToLists.map((etl) => etl.listId),
+    );
+    const newListIds = new Set(
+      lists.filter((l) => l.value).map((l) => l.value),
+    );
 
-  // Add new list associations
-  if (lists && lists.length > 0) {
-    for (const list of lists) {
-      if (list.value) {
-        await ctx.db.insert("eventToLists", {
-          eventId,
-          listId: list.value,
-        });
+    // Delete existing list associations that are no longer in the new list
+    for (const etl of existingEventToLists) {
+      if (!newListIds.has(etl.listId)) {
+        await removeEventFromList(ctx, eventId, etl.listId, userId);
+      }
+    }
+
+    // Add new list associations
+    if (lists.length > 0) {
+      for (const list of lists) {
+        if (list.value && !existingListIds.has(list.value)) {
+          await addEventToList(ctx, eventId, list.value, userId);
+        }
       }
     }
   }
@@ -791,7 +797,8 @@ export async function updateEvent(
   const visibilityChanged =
     visibility && existingEvent.visibility !== visibility;
   const timeChanged =
-    existingEvent.startDateTime !== startDateTime.toISOString();
+    existingEvent.startDateTime !== startDateTime.toISOString() ||
+    existingEvent.endDateTime !== endDateTime.toISOString();
 
   if (visibilityChanged || timeChanged) {
     // If changing to private, remove from discover feed
@@ -810,6 +817,32 @@ export async function updateEvent(
       startDateTime: startDateTime.toISOString(),
       endDateTime: endDateTime.toISOString(),
     });
+
+    // If changing to public, fan out to list followers
+    if (visibility === "public" && existingEvent.visibility === "private") {
+      const eventToLists = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event", (q) => q.eq("eventId", eventId))
+        .collect();
+
+      for (const etl of eventToLists) {
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId,
+            listId: etl.listId,
+          },
+        );
+      }
+    }
+
+    if (timeChanged) {
+      await ctx.runMutation(internal.feedHelpers.updateEventTimesInAllFeeds, {
+        eventId,
+        startDateTime: startDateTime.toISOString(),
+        endDateTime: endDateTime.toISOString(),
+      });
+    }
   }
 
   return { id: eventId };
@@ -950,21 +983,53 @@ export async function unfollowEvent(
     .unique();
 
   if (existingFollow) {
-    // Remove from eventFollows aggregate before deleting
     await eventFollowsAggregate.deleteIfExists(ctx, existingFollow);
     await ctx.db.delete(existingFollow._id);
 
-    // Remove from user's feed
-    const feedId = `user_${userId}`;
-    const feedEntry = await ctx.db
-      .query("userFeeds")
-      .withIndex("by_feed_event", (q) =>
-        q.eq("feedId", feedId).eq("eventId", eventId),
-      )
-      .unique();
+    const event = await ctx.db
+      .query("events")
+      .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+      .first();
 
-    if (feedEntry) {
-      await ctx.db.delete(feedEntry._id);
+    if (event) {
+      const isCreator = event.userId === userId;
+      if (isCreator) {
+        return await getEventById(ctx, eventId);
+      }
+
+      const listFollows = await ctx.db
+        .query("listFollows")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect();
+
+      if (listFollows.length > 0) {
+        const followedListIds = new Set(listFollows.map((f) => f.listId));
+        const eventToLists = await ctx.db
+          .query("eventToLists")
+          .withIndex("by_event", (q) => q.eq("eventId", eventId))
+          .collect();
+
+        const isInFollowedList = eventToLists.some((etl) =>
+          followedListIds.has(etl.listId),
+        );
+
+        if (isInFollowedList) {
+          return await getEventById(ctx, eventId);
+        }
+      }
+
+      const feedId = `user_${userId}`;
+      const feedEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", feedId).eq("eventId", eventId),
+        )
+        .unique();
+
+      if (feedEntry) {
+        await userFeedsAggregate.deleteIfExists(ctx, feedEntry);
+        await ctx.db.delete(feedEntry._id);
+      }
     }
   }
 
@@ -978,7 +1043,44 @@ export async function addEventToList(
   ctx: MutationCtx,
   eventId: string,
   listId: string,
+  userId: string,
 ) {
+  const list = await ctx.db
+    .query("lists")
+    .withIndex("by_custom_id", (q) => q.eq("id", listId))
+    .first();
+
+  if (!list) {
+    throw new ConvexError("List not found");
+  }
+
+  const contribution = list.contribution ?? "open";
+
+  if (list.userId === userId) {
+    // Owner can always contribute
+  } else if (contribution === "open") {
+    // Open mode: anyone can contribute
+  } else if (contribution === "owner") {
+    // Owner mode: only the list owner can contribute
+    throw new ConvexError(
+      "Cannot add event to list: contribution is restricted to owner only",
+    );
+  } else {
+    // Restricted mode: only members can contribute
+    const membership = await ctx.db
+      .query("listMembers")
+      .withIndex("by_list_and_user", (q) =>
+        q.eq("listId", listId).eq("userId", userId),
+      )
+      .first();
+
+    if (!membership) {
+      throw new ConvexError(
+        "Cannot add event to list: contribution is restricted to members only",
+      );
+    }
+  }
+
   // Check if already in list
   const existing = await ctx.db
     .query("eventToLists")
@@ -992,6 +1094,12 @@ export async function addEventToList(
       eventId,
       listId,
     });
+
+    // Add event to followers' feeds
+    await ctx.runMutation(internal.feedHelpers.addEventToListFollowersFeeds, {
+      eventId,
+      listId,
+    });
   }
 }
 
@@ -1002,7 +1110,44 @@ export async function removeEventFromList(
   ctx: MutationCtx,
   eventId: string,
   listId: string,
+  userId: string,
 ) {
+  const list = await ctx.db
+    .query("lists")
+    .withIndex("by_custom_id", (q) => q.eq("id", listId))
+    .first();
+
+  if (!list) {
+    throw new ConvexError("List not found");
+  }
+
+  const contribution = list.contribution ?? "open";
+
+  if (list.userId === userId) {
+    // Owner can always contribute
+  } else if (contribution === "open") {
+    // Open mode: anyone can contribute
+  } else if (contribution === "owner") {
+    // Owner mode: only the list owner can contribute
+    throw new ConvexError(
+      "Cannot remove event from list: contribution is restricted to owner only",
+    );
+  } else {
+    // Restricted mode: only members can contribute
+    const membership = await ctx.db
+      .query("listMembers")
+      .withIndex("by_list_and_user", (q) =>
+        q.eq("listId", listId).eq("userId", userId),
+      )
+      .first();
+
+    if (!membership) {
+      throw new ConvexError(
+        "Cannot remove event from list: contribution is restricted to members only",
+      );
+    }
+  }
+
   const existing = await ctx.db
     .query("eventToLists")
     .withIndex("by_event_and_list", (q) =>
@@ -1012,6 +1157,15 @@ export async function removeEventFromList(
 
   if (existing) {
     await ctx.db.delete(existing._id);
+
+    // Remove event from followers' feeds
+    await ctx.runMutation(
+      internal.feedHelpers.removeEventFromListFollowersFeeds,
+      {
+        eventId,
+        listId,
+      },
+    );
   }
 }
 
@@ -1059,6 +1213,22 @@ export async function toggleEventVisibility(
         startDateTime: event.startDateTime,
         endDateTime: event.endDateTime,
       });
+
+      // Fan out to list followers when event becomes public
+      const eventToLists = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event", (q) => q.eq("eventId", eventId))
+        .collect();
+
+      for (const etl of eventToLists) {
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          {
+            eventId,
+            listId: etl.listId,
+          },
+        );
+      }
     }
   }
 

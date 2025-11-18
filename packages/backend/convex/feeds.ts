@@ -117,7 +117,25 @@ export const getMyFeed = query({
   },
 });
 
-// Helper query to get discover feed
+// Helper query to get followed lists feed
+export const getFollowedListsFeed = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
+  },
+  handler: async (ctx, { paginationOpts, filter = "upcoming" }) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      throw new ConvexError("Authentication required");
+    }
+
+    const feedId = `followedLists_${userId}`;
+
+    // Use the common query function
+    return queryFeed(ctx, feedId, paginationOpts, filter);
+  },
+});
+
 export const getDiscoverFeed = query({
   args: {
     paginationOpts: paginationOptsValidator,
@@ -125,8 +143,6 @@ export const getDiscoverFeed = query({
   },
   handler: async (ctx, { paginationOpts, filter = "upcoming" }) => {
     const feedId = "discover";
-
-    // Use the common query function
     return queryFeed(ctx, feedId, paginationOpts, filter);
   },
 });

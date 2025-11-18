@@ -126,12 +126,27 @@ export default defineSchema({
     userId: v.string(),
     name: v.string(),
     description: v.string(),
-    visibility: v.union(v.literal("public"), v.literal("private")),
+    visibility: v.union(
+      v.literal("public"),
+      v.literal("unlisted"),
+      v.literal("private"),
+    ),
+    contribution: v.optional(
+      v.union(v.literal("open"), v.literal("restricted"), v.literal("owner")),
+    ),
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null
   })
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"]),
+
+  listMembers: defineTable({
+    listId: v.string(),
+    userId: v.string(),
+  })
+    .index("by_list", ["listId"])
+    .index("by_user", ["userId"])
+    .index("by_list_and_user", ["listId", "userId"]),
 
   users: defineTable({
     id: v.string(), // keeping the custom id field
