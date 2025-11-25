@@ -10,6 +10,7 @@ export function useTimezoneAlert() {
   const { setUserTimezone, hasShownTimezoneAlert, setHasShownTimezoneAlert } =
     useAppStore();
   const prevUserTimezoneRef = useRef(userTimezone);
+  const isInitialMountRef = useRef(true);
 
   // Reset alert state when user timezone changes
   useEffect(() => {
@@ -22,6 +23,13 @@ export function useTimezoneAlert() {
   useEffect(() => {
     const checkTimezone = () => {
       const systemTimezone = getUserTimeZone();
+
+      // Skip showing alert on initial mount - the _layout.tsx will handle updating timezone
+      // Only show alert after initial mount when timezone actually changes
+      if (isInitialMountRef.current) {
+        isInitialMountRef.current = false;
+        return;
+      }
 
       if (
         userTimezone &&
