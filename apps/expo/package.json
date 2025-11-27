@@ -86,6 +86,7 @@
     "expo-secure-store": "catalog:",
     "expo-splash-screen": "catalog:",
     "expo-status-bar": "catalog:",
+    "expo-store-review": "^8.1.5",
     "expo-task-manager": "catalog:",
     "expo-updates": "catalog:",
     "expo-video": "catalog:",
