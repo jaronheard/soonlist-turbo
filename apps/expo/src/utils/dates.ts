@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
+import * as Localization from "expo-localization";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 
@@ -72,6 +73,16 @@ export interface DateInfo {
 }
 
 export function getUserTimeZone(): string {
+  try {
+    const calendars = Localization.getCalendars();
+    const expoTimeZone = calendars?.[0]?.timeZone;
+    if (expoTimeZone) {
+      return expoTimeZone;
+    }
+  } catch (e) {
+    // Fallback to Temporal if expo-localization fails
+    logError("Error getting timezone from expo-localization", e);
+  }
   return Temporal.Now.timeZoneId();
 }
 
