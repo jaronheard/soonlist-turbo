@@ -4,6 +4,7 @@ import { Webhook } from "svix";
 import { api, internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 import { DEFAULT_TIMEZONE } from "./constants";
+import * as Files from "./model/files";
 
 interface ClerkWebhookEvent {
   type: string;
@@ -313,6 +314,122 @@ http.route({
       return new Response(
         JSON.stringify({ ok: false, error: "Internal error" }),
         { status: 500, headers: { "Content-Type": "application/json" } },
+      );
+    }
+  }),
+});
+
+function parseVenueFromLocation(location: string | undefined): {
+  name: string;
+  address: string;
+} {
+  if (!location?.trim()) {
+    return { name: "", address: "Portland, OR" };
+  }
+
+  const trimmed = location.trim();
+  const portlandSuffix = /,?\s*Portland,?\s*OR\s*$/i;
+  const withoutPortland = trimmed.replace(portlandSuffix, "").trim();
+
+  if (!withoutPortland) {
+    return { name: "", address: "Portland, OR" };
+  }
+
+  const streetAddressPattern =
+    /\b(\d+\s+(?:N|S|E|W|NE|NW|SE|SW|North|South|East|West)?\s*\w+)/i;
+  const streetMatch = streetAddressPattern.exec(withoutPortland);
+
+  if (streetMatch) {
+    const streetIndex = streetMatch.index;
+
+    if (streetIndex === 0) {
+      return {
+        name: "",
+        address: `${withoutPortland}, Portland, OR`,
+      };
+    }
+
+    let venueName = withoutPortland.substring(0, streetIndex).trim();
+    venueName = venueName.replace(/,\s*$/, "").trim();
+    const streetAddress = withoutPortland.substring(streetIndex).trim();
+
+    return {
+      name: venueName,
+      address: `${streetAddress}, Portland, OR`,
+    };
+  }
+
+  const commaIndex = withoutPortland.indexOf(",");
+  if (commaIndex > 0) {
+    const beforeComma = withoutPortland.substring(0, commaIndex).trim();
+    const afterComma = withoutPortland.substring(commaIndex + 1).trim();
+
+    const hasAddressHints = /\d|NW|NE|SW|SE|North|South|East|West/i.test(
+      afterComma,
+    );
+
+    if (hasAddressHints && afterComma) {
+      return {
+        name: beforeComma,
+        address: `${afterComma}, Portland, OR`,
+      };
+    }
+  }
+
+  return {
+    name: withoutPortland,
+    address: "Portland, OR",
+  };
+}
+
+// FreakScene integration endpoint
+http.route({
+  path: "/api/freakscene",
+  method: "GET",
+  handler: httpAction(async (ctx) => {
+    try {
+      // Get discover feed events
+      const events = await ctx.runQuery(
+        internal.feeds.getDiscoverEventsForIntegration,
+        { limit: 500 },
+      );
+
+      const freakSceneEvents = events.map((event) => {
+        const venue = parseVenueFromLocation(event.location);
+        const sourceUrl = `https://soonlist.com/event/${event.id}`;
+        const brandedImageUrl = Files.buildBrandedImageUrl(event.image || null);
+
+        const description = event.description || "";
+        const capturedBy = event.userDisplayName
+          ? `${description}[br][br]Captured by ${event.userDisplayName} on [url=https://soonlist.com]Soonlist[/url]`
+          : description;
+
+        return {
+          id: event.id,
+          title: event.name || "",
+          date: event.startDate || "",
+          venue,
+          source_url: sourceUrl,
+          short_description: capturedBy,
+          image_url: brandedImageUrl || event.image || "",
+        };
+      });
+
+      return new Response(JSON.stringify({ events: freakSceneEvents }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("/api/freakscene error", error);
+      return new Response(
+        JSON.stringify({
+          error: "Internal server error",
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
       );
     }
   }),

@@ -51,3 +51,57 @@ export async function uploadImageToCDNFromBase64(
     return null;
   }
 }
+
+function extractFilePathFromBytescaleUrl(url: string): string | null {
+  if (!url) return null;
+
+  const match = /\/uploads\/\d{4}\/\d{2}\/\d{2}\/[^?]+/.exec(url);
+  if (match) {
+    return match[0];
+  }
+
+  const altMatch = /\/image\/(.+?)(?:\?|$)/.exec(url);
+  if (altMatch) {
+    return `/${altMatch[1]}`;
+  }
+
+  return null;
+}
+
+export function buildBrandedImageUrl(
+  originalImageUrl: string | null | undefined,
+): string {
+  if (!originalImageUrl) {
+    return "";
+  }
+
+  const filePath = extractFilePathFromBytescaleUrl(originalImageUrl);
+  if (!filePath) {
+    console.warn(
+      "Could not extract file path from Bytescale URL:",
+      originalImageUrl,
+    );
+    return originalImageUrl;
+  }
+
+  const accountId = "12a1yek";
+  const baseUrl = `https://upcdn.io/${accountId}/image${filePath}`;
+  const params = new URLSearchParams();
+
+  params.set("w", "500");
+  params.set("h", "500");
+  params.set("crop", "smart");
+
+  params.set("image", "/uploads/Soonlist/soonlist-logo.png");
+  params.set("layer-w", "80");
+  params.set("gravity", "bottom-left");
+  params.set("padding", "15");
+
+  params.set("text", "soonlist.com");
+  params.set("color", "ffffff");
+  params.set("font-size", "200");
+  params.set("gravity", "bottom-right");
+  params.set("padding", "15");
+
+  return `${baseUrl}?${params.toString()}`;
+}

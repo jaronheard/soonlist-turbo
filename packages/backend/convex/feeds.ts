@@ -4,7 +4,12 @@ import { ConvexError, v } from "convex/values";
 
 import type { QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { internalAction, internalMutation, query } from "./_generated/server";
+import {
+  internalAction,
+  internalMutation,
+  internalQuery,
+  query,
+} from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
 
 // Helper function to get the current user ID from auth
@@ -273,6 +278,62 @@ export const updateHasEndedFlagsBatch = internalMutation({
       nextCursor: result.continueCursor,
       isDone: result.isDone,
     };
+  },
+});
+
+// Internal query to get discover feed events without pagination (for external integrations)
+export const getDiscoverEventsForIntegration = internalQuery({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { limit = 100 }) => {
+    const feedId = "discover";
+    const hasEnded = false;
+
+    const feedQuery = ctx.db
+      .query("userFeeds")
+      .withIndex("by_feed_hasEnded_startTime", (q) =>
+        q.eq("feedId", feedId).eq("hasEnded", hasEnded),
+      )
+      .order("asc");
+
+    const feedEntries: {
+      eventId: string;
+      eventStartTime: number;
+    }[] = [];
+    for await (const entry of feedQuery) {
+      feedEntries.push({
+        eventId: entry.eventId,
+        eventStartTime: entry.eventStartTime,
+      });
+      if (feedEntries.length >= limit) {
+        break;
+      }
+    }
+
+    const events = await Promise.all(
+      feedEntries.map(async (entry) => {
+        const event = await ctx.db
+          .query("events")
+          .withIndex("by_custom_id", (q) => q.eq("id", entry.eventId))
+          .first();
+
+        if (!event) return null;
+
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
+          .first();
+
+        return {
+          ...event,
+          userDisplayName: user?.displayName || event.userName,
+        };
+      }),
+    );
+
+    // Filter out null events and return valid events
+    return events.filter((event) => event !== null);
   },
 });
 
