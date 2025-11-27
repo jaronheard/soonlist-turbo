@@ -312,9 +312,6 @@ catalogs:
     expo-status-bar:
       specifier: ~2.2.3
       version: 2.2.3
-    expo-store-review:
-      specifier: ~9.0.8
-      version: 9.0.8
     expo-task-manager:
       specifier: ~13.1.6
       version: 13.1.6
@@ -721,8 +718,8 @@ importers:
         specifier: 'catalog:'
         version: 2.2.3(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
       expo-store-review:
-        specifier: 'catalog:'
-        version: 9.0.8(expo@53.0.19(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))
+        specifier: ^8.1.5
+        version: 8.1.5(expo@53.0.19(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))
       expo-task-manager:
         specifier: 'catalog:'
         version: 13.1.6(expo@53.0.19(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))
@@ -6864,8 +6861,8 @@ packages:
       react: 19.0.0
       react-native: '*'
 
-  expo-store-review@9.0.8:
-    resolution: {integrity: sha512-S8ExQRqQBHHmZOX2gabEeRJDrgeAhzBf5FOtnhp5fMinpwT7umNOMHy+PwrTYJ/+AjnnKHgLoM1o/MDgcL3qCw==}
+  expo-store-review@8.1.5:
+    resolution: {integrity: sha512-PMNMIt6UrdMYyRzCCbmCmbIkwSgIXhGNQHsgmOgq9FgtYLW5Oo2FD3zwB0KU2u/MpTTt/XyuuADuFvxE+Vh9uw==}
     peerDependencies:
       expo: '*'
       react-native: '*'
@@ -16656,7 +16653,7 @@ snapshots:
       react-native-edge-to-edge: 1.6.0(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
       react-native-is-edge-to-edge: 1.1.7(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
 
-  expo-store-review@9.0.8(expo@53.0.19(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)):
+  expo-store-review@8.1.5(expo@53.0.19(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0))(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)):
     dependencies:
       expo: 53.0.19(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)))(babel-plugin-react-compiler@19.0.0-beta-af1b7da-20250417)(react-native@0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0))(react@19.0.0)
       react-native: 0.79.5(@babel/core@7.27.1)(@types/react@19.1.5)(react@19.0.0)
