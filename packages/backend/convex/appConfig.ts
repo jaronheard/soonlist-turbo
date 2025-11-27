@@ -14,3 +14,16 @@ export const getDemoVideoUrl = query({
     return config?.value || null;
   },
 });
+
+export const getMinimumIOSVersion = query({
+  args: {},
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx) => {
+    const config = await ctx.db
+      .query("appConfig")
+      .withIndex("by_key", (q) => q.eq("key", "minimumIOSVersion"))
+      .first();
+
+    return config?.value || null;
+  },
+});

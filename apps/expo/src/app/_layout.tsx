@@ -29,7 +29,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
+import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
+import { useForceUpdate } from "~/hooks/useForceUpdate";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { useQuickActions } from "~/hooks/useQuickActions";
@@ -297,6 +299,11 @@ function RootLayoutContent() {
   }, [pathname, params, posthog]);
 
   useTimezoneAlert();
+  const { needsUpdate } = useForceUpdate();
+
+  if (needsUpdate) {
+    return <ForceUpdateScreen />;
+  }
 
   return (
     <View style={{ flex: 1 }}>
