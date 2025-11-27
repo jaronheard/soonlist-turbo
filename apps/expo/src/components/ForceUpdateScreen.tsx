@@ -20,4 +20,3 @@ export function ForceUpdateScreen() {
     </View>
   );
 }
-
