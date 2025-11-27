@@ -14,6 +14,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
+import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useStableTimestamp } from "~/store";
@@ -89,6 +90,9 @@ function MyFeedContent() {
         lists: [],
       }));
   }, [events, stableTimestamp]);
+
+  // Trigger rating prompt when user has 3+ upcoming events
+  useRatingPrompt(enrichedEvents.length);
 
   return (
     <View className="flex-1 bg-white">

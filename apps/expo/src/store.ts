@@ -163,6 +163,10 @@ interface AppState {
   // Discover access override for immediate UI update
   discoverAccessOverride: boolean;
   setDiscoverAccessOverride: (enabled: boolean) => void;
+
+  // Rating prompt state
+  hasShownRatingPrompt: boolean;
+  markRatingPromptShown: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -388,6 +392,7 @@ export const useAppStore = create<AppState>()(
           workflowIds: [],
           totalEventViews: 0,
           lastPaywallShownAtView: 0,
+          hasShownRatingPrompt: false,
         }),
 
       // Reset for logout - preserves onboarding state
@@ -434,6 +439,7 @@ export const useAppStore = create<AppState>()(
           workflowIds: [],
           totalEventViews: 0,
           lastPaywallShownAtView: 0,
+          hasShownRatingPrompt: false,
         })),
 
       // Stable timestamp for query filtering
@@ -485,6 +491,10 @@ export const useAppStore = create<AppState>()(
           totalEventViews: 0,
           lastPaywallShownAtView: 0,
         }),
+
+      // Rating prompt state
+      hasShownRatingPrompt: false,
+      markRatingPromptShown: () => set({ hasShownRatingPrompt: true }),
     }),
     {
       name: "app-storage",
