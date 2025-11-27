@@ -95,13 +95,12 @@ export function buildBrandedImageUrl(
   params.set("image", "/uploads/Soonlist/soonlist-logo.png");
   params.set("layer-w", "80");
   params.set("gravity", "bottom-left");
-  params.set("padding", "15");
+  params.set("padding", "12");
 
-  params.set("text", "soonlist.com");
-  params.set("color", "ffffff");
-  params.set("font-size", "200");
-  params.set("gravity", "bottom-right");
-  params.set("padding", "15");
+  params.append("image", "/uploads/Soonlist/soonlist-link.png");
+  params.append("layer-w", "160");
+  params.append("gravity", "bottom-right");
+  params.append("padding", "12");
 
   return `${baseUrl}?${params.toString()}`;
 }
