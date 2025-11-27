@@ -585,10 +585,6 @@ export const useHasShownRatingPrompt = () =>
 export const useMarkRatingPromptShown = () =>
   useAppStore((state) => state.markRatingPromptShown);
 
-// Auto-generated selector pattern for stable action references
-// Note: Use the individual hook exports above instead of this pattern
-// to avoid rules-of-hooks violations
-
 // Calendar preference selectors
 export const usePreferredCalendarApp = () =>
   useAppStore((state) => state.preferredCalendarApp);
