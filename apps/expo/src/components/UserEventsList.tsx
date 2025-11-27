@@ -296,6 +296,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   contentPosition="top"
                   cachePolicy="disk"
                   transition={100}
+                  recyclingKey={event.id}
                 />
               ) : (
                 <View
@@ -449,6 +450,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
                     contentPosition="center"
                     cachePolicy="disk"
                     transition={100}
+                    recyclingKey={`${event.id}-user`}
                   />
                 ) : (
                   <User size={iconSize * 0.9} color="#627496" />
@@ -820,6 +822,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     <>
       <FlatList
         data={collapsedEvents}
+        keyExtractor={(item) => item.event.id}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
