@@ -1,11 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
 import { useMutation } from "convex/react";
 import { MapPin } from "lucide-react-native";
 
@@ -293,4 +287,3 @@ export function HomeLocationModal({
     </Modal>
   );
 }
-

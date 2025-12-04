@@ -1269,7 +1269,9 @@ export const updateUserLocation = mutation({
     }
 
     if (location.userId !== identity.subject) {
-      throw new ConvexError("Unauthorized: You can only update your own locations");
+      throw new ConvexError(
+        "Unauthorized: You can only update your own locations",
+      );
     }
 
     // If setting as default, unset any existing default
@@ -1327,7 +1329,9 @@ export const deleteUserLocation = mutation({
     }
 
     if (location.userId !== identity.subject) {
-      throw new ConvexError("Unauthorized: You can only delete your own locations");
+      throw new ConvexError(
+        "Unauthorized: You can only delete your own locations",
+      );
     }
 
     await ctx.db.delete(args.locationId);

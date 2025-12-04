@@ -1,0 +1,69 @@
+---
+description: Guidelines for installing dependencies in the monorepo, covering Expo-specific installation and pnpm catalog usage.
+globs: 
+alwaysApply: true
+---
+# Installing Dependencies
+
+## Expo Dependencies
+
+**Always** install Expo dependencies using `npx expo install` from the `apps/expo` directory:
+
+```bash
+cd apps/expo
+npx expo install <package-name>
+```
+
+This ensures Expo SDK compatibility and correct native module linking.
+
+## All Other Dependencies
+
+**Use pnpm** for all non-Expo dependency installations:
+
+```bash
+pnpm add <package-name>
+```
+
+Or from a specific workspace:
+
+```bash
+pnpm add <package-name> --filter <workspace-name>
+```
+
+**Never use npm or yarn** in this monorepo.
+
+## pnpm Catalog
+
+**All dependencies must use the pnpm catalog.** The catalog is defined in [pnpm-workspace.yaml](mdc:pnpm-workspace.yaml).
+
+### Adding a new dependency
+
+1. First, add the package and version to the `catalog:` section in `pnpm-workspace.yaml`:
+   ```yaml
+   catalog:
+     # ... existing entries
+     "new-package": ^1.0.0
+   ```
+
+2. Then reference it in the app's `package.json` using `catalog:`:
+   ```json
+   {
+     "dependencies": {
+       "new-package": "catalog:"
+     }
+   }
+   ```
+
+### For Expo packages
+
+1. Run `npx expo install <package-name>` from `apps/expo`
+2. Check the installed version in `apps/expo/package.json`
+3. Add that version to `pnpm-workspace.yaml` catalog
+4. Update `apps/expo/package.json` to use `"catalog:"` instead of the hardcoded version
+
+### Why use the catalog?
+
+- Ensures consistent versions across all packages in the monorepo
+- Single source of truth for dependency versions
+- Easier upgrades and version management
+- Prevents version conflicts between apps and packages
