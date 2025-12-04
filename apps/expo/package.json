@@ -78,6 +78,7 @@
     "expo-image-picker": "catalog:",
     "expo-linear-gradient": "catalog:",
     "expo-linking": "catalog:",
+    "expo-location": "catalog:",
     "expo-localization": "catalog:",
     "expo-media-library": "catalog:",
     "expo-notifications": "catalog:",

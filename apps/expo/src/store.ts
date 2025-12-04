@@ -167,6 +167,10 @@ interface AppState {
   // Rating prompt state
   hasShownRatingPrompt: boolean;
   markRatingPromptShown: () => void;
+
+  // Location setup state
+  hasCompletedLocationSetup: boolean;
+  setHasCompletedLocationSetup: (completed: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -393,6 +397,7 @@ export const useAppStore = create<AppState>()(
           totalEventViews: 0,
           lastPaywallShownAtView: 0,
           hasShownRatingPrompt: false,
+          hasCompletedLocationSetup: false,
         }),
 
       // Reset for logout - preserves onboarding state
@@ -440,6 +445,7 @@ export const useAppStore = create<AppState>()(
           totalEventViews: 0,
           lastPaywallShownAtView: 0,
           hasShownRatingPrompt: false,
+          hasCompletedLocationSetup: false,
         })),
 
       // Stable timestamp for query filtering
@@ -495,6 +501,11 @@ export const useAppStore = create<AppState>()(
       // Rating prompt state
       hasShownRatingPrompt: false,
       markRatingPromptShown: () => set({ hasShownRatingPrompt: true }),
+
+      // Location setup state
+      hasCompletedLocationSetup: false,
+      setHasCompletedLocationSetup: (completed) =>
+        set({ hasCompletedLocationSetup: completed }),
     }),
     {
       name: "app-storage",
@@ -590,3 +601,9 @@ export const usePreferredCalendarApp = () =>
   useAppStore((state) => state.preferredCalendarApp);
 export const useSetPreferredCalendarApp = () =>
   useAppStore((state) => state.setPreferredCalendarApp);
+
+// Location setup selectors
+export const useHasCompletedLocationSetup = () =>
+  useAppStore((state) => state.hasCompletedLocationSetup);
+export const useSetHasCompletedLocationSetup = () =>
+  useAppStore((state) => state.setHasCompletedLocationSetup);

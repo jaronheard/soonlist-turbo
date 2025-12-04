@@ -1135,7 +1135,203 @@ export const deleteUserAndCascade = internalMutation({
       await ctx.db.delete(follow._id);
     }
 
+    // Delete user locations
+    const userLocations = await ctx.db
+      .query("userLocations")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    for (const location of userLocations) {
+      await ctx.db.delete(location._id);
+    }
+
     // Finally, delete the user record
     await ctx.db.delete(user._id);
+  },
+});
+
+/**
+ * Save or update a user location
+ */
+export const saveUserLocation = mutation({
+  args: {
+    name: v.string(),
+    latitude: v.number(),
+    longitude: v.number(),
+    address: v.optional(v.string()),
+    isDefault: v.boolean(),
+  },
+  returns: v.id("userLocations"),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to save a location");
+    }
+
+    const userId = identity.subject;
+
+    // If this location is being set as default, unset any existing default
+    if (args.isDefault) {
+      const existingDefaults = await ctx.db
+        .query("userLocations")
+        .withIndex("by_user_and_default", (q) =>
+          q.eq("userId", userId).eq("isDefault", true),
+        )
+        .collect();
+
+      for (const existing of existingDefaults) {
+        await ctx.db.patch(existing._id, {
+          isDefault: false,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    }
+
+    // Insert the new location
+    const locationId = await ctx.db.insert("userLocations", {
+      userId,
+      name: args.name,
+      latitude: args.latitude,
+      longitude: args.longitude,
+      address: args.address,
+      isDefault: args.isDefault,
+      created_at: new Date().toISOString(),
+      updatedAt: null,
+    });
+
+    return locationId;
+  },
+});
+
+/**
+ * Get all locations for the current user
+ */
+export const getUserLocations = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const locations = await ctx.db
+      .query("userLocations")
+      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .collect();
+
+    return locations;
+  },
+});
+
+/**
+ * Get the default/home location for the current user
+ */
+export const getDefaultLocation = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+
+    const defaultLocation = await ctx.db
+      .query("userLocations")
+      .withIndex("by_user_and_default", (q) =>
+        q.eq("userId", identity.subject).eq("isDefault", true),
+      )
+      .first();
+
+    return defaultLocation;
+  },
+});
+
+/**
+ * Update an existing user location
+ */
+export const updateUserLocation = mutation({
+  args: {
+    locationId: v.id("userLocations"),
+    name: v.optional(v.string()),
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+    address: v.optional(v.string()),
+    isDefault: v.optional(v.boolean()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to update a location");
+    }
+
+    const location = await ctx.db.get(args.locationId);
+    if (!location) {
+      throw new ConvexError("Location not found");
+    }
+
+    if (location.userId !== identity.subject) {
+      throw new ConvexError("Unauthorized: You can only update your own locations");
+    }
+
+    // If setting as default, unset any existing default
+    if (args.isDefault) {
+      const existingDefaults = await ctx.db
+        .query("userLocations")
+        .withIndex("by_user_and_default", (q) =>
+          q.eq("userId", identity.subject).eq("isDefault", true),
+        )
+        .collect();
+
+      for (const existing of existingDefaults) {
+        if (existing._id !== args.locationId) {
+          await ctx.db.patch(existing._id, {
+            isDefault: false,
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
+    const updates: Record<string, string | number | boolean | undefined> = {
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (args.name !== undefined) updates.name = args.name;
+    if (args.latitude !== undefined) updates.latitude = args.latitude;
+    if (args.longitude !== undefined) updates.longitude = args.longitude;
+    if (args.address !== undefined) updates.address = args.address;
+    if (args.isDefault !== undefined) updates.isDefault = args.isDefault;
+
+    await ctx.db.patch(args.locationId, updates);
+
+    return null;
+  },
+});
+
+/**
+ * Delete a user location
+ */
+export const deleteUserLocation = mutation({
+  args: {
+    locationId: v.id("userLocations"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("User must be logged in to delete a location");
+    }
+
+    const location = await ctx.db.get(args.locationId);
+    if (!location) {
+      throw new ConvexError("Location not found");
+    }
+
+    if (location.userId !== identity.subject) {
+      throw new ConvexError("Unauthorized: You can only delete your own locations");
+    }
+
+    await ctx.db.delete(args.locationId);
+
+    return null;
   },
 });
