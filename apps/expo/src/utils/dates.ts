@@ -1,5 +1,5 @@
-import { Temporal } from "@js-temporal/polyfill";
 import * as Localization from "expo-localization";
+import { Temporal } from "@js-temporal/polyfill";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 
