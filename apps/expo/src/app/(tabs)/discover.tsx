@@ -105,16 +105,24 @@ function DiscoverContent() {
     return <Redirect href="/feed" />;
   }
 
-  function SaveShareButtonWrapper({ event }: { event: { id: string } }) {
+  function SaveShareButtonWrapper({
+    event,
+  }: {
+    event: { id: string; userId: string };
+  }) {
     // Only show save/share button for authenticated users
     if (!user) {
       return null;
     }
 
+    // User's own events should always show as saved
+    const isOwnEvent = event.userId === user.id;
+    const isSaved = isOwnEvent || savedEventIds.has(event.id);
+
     return (
       <SaveShareButton
         eventId={event.id}
-        isSaved={savedEventIds.has(event.id)}
+        isSaved={isSaved}
         source="discover_list"
       />
     );
