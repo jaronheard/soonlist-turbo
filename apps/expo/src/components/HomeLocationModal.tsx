@@ -15,6 +15,11 @@ interface HomeLocationModalProps {
 
 type ModalStep = "intro" | "loading" | "confirm" | "denied" | "error";
 
+interface LocationCoords {
+  latitude: number;
+  longitude: number;
+}
+
 export function HomeLocationModal({
   isVisible,
   onClose,
@@ -22,13 +27,12 @@ export function HomeLocationModal({
   const [step, setStep] = useState<ModalStep>("intro");
   const [address, setAddress] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedCoords, setSelectedCoords] = useState<LocationCoords | null>(
+    null,
+  );
 
-  const {
-    requestPermission,
-    getCurrentLocation,
-    currentLocation,
-    reverseGeocode,
-  } = useLocationPermission();
+  const { requestPermission, getCurrentLocation, reverseGeocode } =
+    useLocationPermission();
 
   const saveUserLocation = useMutation(api.users.saveUserLocation);
   const setHasCompletedLocationSetup = useSetHasCompletedLocationSetup();
@@ -38,6 +42,7 @@ export function HomeLocationModal({
     if (isVisible) {
       setStep("intro");
       setAddress(null);
+      setSelectedCoords(null);
     }
   }, [isVisible]);
 
@@ -60,6 +65,9 @@ export function HomeLocationModal({
       return;
     }
 
+    // Store coords in local state immediately before changing step
+    setSelectedCoords(coords);
+
     // Reverse geocode to get address
     const addressResult = await reverseGeocode(coords);
     setAddress(addressResult);
@@ -67,14 +75,14 @@ export function HomeLocationModal({
   }, [requestPermission, getCurrentLocation, reverseGeocode]);
 
   const handleConfirmLocation = useCallback(async () => {
-    if (!currentLocation) return;
+    if (!selectedCoords) return;
 
     setIsSaving(true);
     try {
       await saveUserLocation({
         name: "Home",
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
+        latitude: selectedCoords.latitude,
+        longitude: selectedCoords.longitude,
         address: address ?? undefined,
         isDefault: true,
       });
@@ -88,7 +96,7 @@ export function HomeLocationModal({
       setIsSaving(false);
     }
   }, [
-    currentLocation,
+    selectedCoords,
     address,
     saveUserLocation,
     setHasCompletedLocationSetup,

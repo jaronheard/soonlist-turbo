@@ -29,6 +29,7 @@ export function useLocationPermission() {
    * Check the current permission status without requesting
    */
   const checkPermission = useCallback(async () => {
+    setPermissionState((prev) => ({ ...prev, isLoading: true }));
     try {
       const { status } = await Location.getForegroundPermissionsAsync();
       const isGranted = status === Location.PermissionStatus.GRANTED;
