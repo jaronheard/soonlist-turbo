@@ -34,7 +34,7 @@ catalog:
   "@trpc/server": 11.0.0-rc.364
 
   # React & Next.js
-  next: 15.1.8
+  next: 15.1.9
   "server-only": ^0.0.1
 
   # Database
@@ -105,6 +105,7 @@ catalog:
   "expo-linear-gradient": ~14.1.5
   "expo-linking": ~7.1.7
   "expo-localization": ~16.1.6
+  "expo-location": ~18.1.6
   "expo-media-library": ~17.1.7
   "expo-notifications": ~0.31.4
   "expo-splash-screen": ~0.30.10
