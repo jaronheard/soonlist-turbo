@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -12,18 +12,32 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
+import { HomeLocationModal } from "~/components/HomeLocationModal";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
-import { useAppStore, useStableTimestamp } from "~/store";
+import {
+  useAppStore,
+  useHasCompletedLocationSetup,
+  useStableTimestamp,
+} from "~/store";
 
 function MyFeedContent() {
   const { user } = useUser();
   const { customerInfo } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
+
+  // Location setup modal state
+  const hasCompletedLocationSetup = useHasCompletedLocationSetup();
+  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
+
+  // Sync modal visibility with store value (handles rehydration and account switches)
+  useEffect(() => {
+    setIsLocationModalVisible(!hasCompletedLocationSetup);
+  }, [hasCompletedLocationSetup]);
 
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
@@ -111,6 +125,12 @@ function MyFeedContent() {
         />
         <AddEventButton stats={stats} showChevron={false} />
       </View>
+
+      {/* Home location setup modal - shown immediately on first visit */}
+      <HomeLocationModal
+        isVisible={isLocationModalVisible}
+        onClose={() => setIsLocationModalVisible(false)}
+      />
     </View>
   );
 }
