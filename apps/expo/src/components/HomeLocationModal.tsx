@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
 import { useMutation } from "convex/react";
-import { MapPin } from "lucide-react-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { MapPin } from "~/components/icons";
 import { useLocationPermission } from "~/hooks/useLocationPermission";
 import { useSetHasCompletedLocationSetup } from "~/store";
 
