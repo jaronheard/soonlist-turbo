@@ -2,7 +2,18 @@ import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
 import { internalAction, internalQuery } from "./_generated/server";
+import type { IdentifyUserParams } from "./model/posthog";
 import * as PostHog from "./model/posthog";
+
+interface UserStats {
+  userId: string;
+  upcoming_created_events_count: number;
+  upcoming_saved_events_count: number;
+  upcoming_events_count: number;
+  total_events_created: number;
+  next_event_date: string | null;
+  days_since_last_event_created: number | null;
+}
 
 const userStatsValidator = v.object({
   userId: v.string(),
@@ -28,7 +39,6 @@ export const getAllUsersWithStatsQuery = internalQuery({
 
     const userStats = await Promise.all(
       users.map(async (user) => {
-        // Get events created by user
         const createdEvents = await ctx.db
           .query("events")
           .withIndex("by_user", (q) => q.eq("userId", user.id))
@@ -41,7 +51,6 @@ export const getAllUsersWithStatsQuery = internalQuery({
         );
         const upcoming_created_events_count = upcomingCreatedEvents.length;
 
-        // Get saved/followed events
         const eventFollows = await ctx.db
           .query("eventFollows")
           .withIndex("by_user", (q) => q.eq("userId", user.id))
@@ -58,23 +67,23 @@ export const getAllUsersWithStatsQuery = internalQuery({
         );
 
         const upcomingSavedEvents = savedEvents.filter(
-          (event) => event && event.endDateTime > nowIso,
+          (event): event is NonNullable<typeof event> =>
+            event !== null && event.endDateTime > nowIso,
         );
         const upcoming_saved_events_count = upcomingSavedEvents.length;
 
         const upcoming_events_count =
           upcoming_created_events_count + upcoming_saved_events_count;
 
-        // Combine all upcoming events for next_event_date calculation
         const allUpcomingEvents = [
           ...upcomingCreatedEvents,
-          ...upcomingSavedEvents.filter(Boolean),
+          ...upcomingSavedEvents,
         ];
 
         let next_event_date: string | null = null;
         if (allUpcomingEvents.length > 0) {
           const sortedUpcoming = allUpcomingEvents.sort((a, b) =>
-            a!.startDateTime.localeCompare(b!.startDateTime),
+            a.startDateTime.localeCompare(b.startDateTime),
           );
           next_event_date = sortedUpcoming[0]?.startDateTime ?? null;
         }
@@ -123,7 +132,7 @@ export const syncUserPropertiesToPostHog = internalAction({
     error: v.optional(v.string()),
   }),
   handler: async (ctx) => {
-    const userStats = await ctx.runQuery(
+    const userStats: UserStats[] = await ctx.runQuery(
       internal.posthog.getAllUsersWithStatsQuery,
     );
 
@@ -136,7 +145,7 @@ export const syncUserPropertiesToPostHog = internalAction({
       };
     }
 
-    const usersToIdentify = userStats.map((stats) => ({
+    const usersToIdentify: IdentifyUserParams[] = userStats.map((stats) => ({
       userId: stats.userId,
       properties: {
         upcoming_created_events_count: stats.upcoming_created_events_count,
