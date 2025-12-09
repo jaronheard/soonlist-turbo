@@ -26,6 +26,103 @@ const userStatsValidator = v.object({
 });
 
 /**
+ * Debug query to check stats for a specific user by username
+ */
+export const debugUserStats = internalQuery({
+  args: { username: v.string() },
+  returns: v.union(userStatsValidator, v.null()),
+  handler: async (ctx, args) => {
+    const now = new Date();
+    const nowIso = now.toISOString();
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", args.username))
+      .unique();
+
+    if (!user) return null;
+
+    const createdEvents = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", user.id))
+      .collect();
+
+    console.log(`User ${args.username} (id: ${user.id})`);
+    console.log(`Total created events: ${createdEvents.length}`);
+    console.log(`Now ISO: ${nowIso}`);
+
+    const upcomingCreatedEvents = createdEvents.filter(
+      (event) => event.endDateTime > nowIso,
+    );
+    console.log(`Upcoming created events: ${upcomingCreatedEvents.length}`);
+
+    const eventFollows = await ctx.db
+      .query("eventFollows")
+      .withIndex("by_user", (q) => q.eq("userId", user.id))
+      .collect();
+    console.log(`Event follows: ${eventFollows.length}`);
+
+    const savedEventIds = eventFollows.map((f) => f.eventId);
+    const savedEvents = await Promise.all(
+      savedEventIds.map((eventId) =>
+        ctx.db
+          .query("events")
+          .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+          .first(),
+      ),
+    );
+
+    const upcomingSavedEvents = savedEvents.filter(
+      (event): event is NonNullable<typeof event> =>
+        event !== null && event.endDateTime > nowIso,
+    );
+    console.log(`Upcoming saved events: ${upcomingSavedEvents.length}`);
+
+    const upcoming_events_count =
+      upcomingCreatedEvents.length + upcomingSavedEvents.length;
+
+    const allUpcomingEvents = [
+      ...upcomingCreatedEvents,
+      ...upcomingSavedEvents,
+    ];
+
+    let next_event_date: string | null = null;
+    if (allUpcomingEvents.length > 0) {
+      const sortedUpcoming = allUpcomingEvents.sort((a, b) =>
+        a.startDateTime.localeCompare(b.startDateTime),
+      );
+      next_event_date = sortedUpcoming[0]?.startDateTime ?? null;
+    }
+
+    let days_since_last_event_created: number | null = null;
+    if (createdEvents.length > 0) {
+      const sortedByCreation = createdEvents.sort((a, b) =>
+        b.created_at.localeCompare(a.created_at),
+      );
+      const lastCreatedAt = sortedByCreation[0]?.created_at;
+      console.log(`Last created at: ${lastCreatedAt}`);
+      if (lastCreatedAt) {
+        const lastDate = new Date(lastCreatedAt);
+        const diffMs = now.getTime() - lastDate.getTime();
+        days_since_last_event_created = Math.floor(
+          diffMs / (1000 * 60 * 60 * 24),
+        );
+      }
+    }
+
+    return {
+      userId: user.id,
+      upcoming_created_events_count: upcomingCreatedEvents.length,
+      upcoming_saved_events_count: upcomingSavedEvents.length,
+      upcoming_events_count,
+      total_events_created: createdEvents.length,
+      next_event_date,
+      days_since_last_event_created,
+    };
+  },
+});
+
+/**
  * Fetch all users with computed stats for PostHog sync
  */
 export const getAllUsersWithStatsQuery = internalQuery({
