@@ -1,6 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useMutation } from "convex/react";
+import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -13,26 +21,21 @@ interface HomeLocationModalProps {
   onClose: () => void;
 }
 
-type ModalStep = "intro" | "loading" | "confirm" | "denied" | "error";
-
-interface LocationCoords {
-  latitude: number;
-  longitude: number;
-}
-
 export function HomeLocationModal({
   isVisible,
   onClose,
 }: HomeLocationModalProps): React.ReactElement {
-  const [step, setStep] = useState<ModalStep>("intro");
-  const [address, setAddress] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [selectedCoords, setSelectedCoords] = useState<LocationCoords | null>(
-    null,
-  );
+  const [manualLocation, setManualLocation] = useState("");
+  const [isLoadingAuto, setIsLoadingAuto] = useState(false);
+  const [isLoadingManual, setIsLoadingManual] = useState(false);
+  const [manualError, setManualError] = useState<string | null>(null);
 
-  const { requestPermission, getCurrentLocation, reverseGeocode } =
-    useLocationPermission();
+  const {
+    requestPermission,
+    getCurrentLocation,
+    reverseGeocode,
+    forwardGeocode,
+  } = useLocationPermission();
 
   const saveUserLocation = useMutation(api.users.saveUserLocation);
   const setHasCompletedLocationSetup = useSetHasCompletedLocationSetup();
@@ -40,20 +43,30 @@ export function HomeLocationModal({
   // Reset state when modal opens
   useEffect(() => {
     if (isVisible) {
-      setStep("intro");
-      setAddress(null);
-      setSelectedCoords(null);
+      setManualLocation("");
+      setIsLoadingAuto(false);
+      setIsLoadingManual(false);
+      setManualError(null);
     }
   }, [isVisible]);
 
-  const handleRequestLocation = useCallback(async () => {
-    setStep("loading");
+  const handleComplete = useCallback(() => {
+    setHasCompletedLocationSetup(true);
+    onClose();
+  }, [setHasCompletedLocationSetup, onClose]);
+
+  const handleUseMyLocation = useCallback(async () => {
+    setIsLoadingAuto(true);
+    setManualError(null);
 
     // Request permission
     const { isGranted } = await requestPermission();
 
     if (!isGranted) {
-      setStep("denied");
+      toast.error("Location access denied", {
+        description: "You can enter your location manually below.",
+      });
+      setIsLoadingAuto(false);
       return;
     }
 
@@ -61,235 +74,186 @@ export function HomeLocationModal({
     const coords = await getCurrentLocation();
 
     if (!coords) {
-      setStep("error");
+      toast.error("Couldn't get location", {
+        description: "Please try again or enter manually.",
+      });
+      setIsLoadingAuto(false);
       return;
     }
 
-    // Store coords in local state immediately before changing step
-    setSelectedCoords(coords);
-
     // Reverse geocode to get address
-    const addressResult = await reverseGeocode(coords);
-    setAddress(addressResult);
-    setStep("confirm");
-  }, [requestPermission, getCurrentLocation, reverseGeocode]);
+    const address = await reverseGeocode(coords);
 
-  const handleConfirmLocation = useCallback(async () => {
-    if (!selectedCoords) return;
-
-    setIsSaving(true);
     try {
       await saveUserLocation({
         name: "Home",
-        latitude: selectedCoords.latitude,
-        longitude: selectedCoords.longitude,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
         address: address ?? undefined,
         isDefault: true,
       });
 
-      setHasCompletedLocationSetup(true);
-      onClose();
+      handleComplete();
     } catch (error) {
       console.error("Failed to save location:", error);
-      setStep("error");
+      toast.error("Couldn't save location", {
+        description: "Please try again.",
+      });
     } finally {
-      setIsSaving(false);
+      setIsLoadingAuto(false);
     }
   }, [
-    selectedCoords,
-    address,
+    requestPermission,
+    getCurrentLocation,
+    reverseGeocode,
     saveUserLocation,
-    setHasCompletedLocationSetup,
-    onClose,
+    handleComplete,
   ]);
 
-  const handleSkip = useCallback(() => {
-    setHasCompletedLocationSetup(true);
-    onClose();
-  }, [setHasCompletedLocationSetup, onClose]);
+  const handleSaveManualLocation = useCallback(async () => {
+    if (!manualLocation.trim()) return;
 
-  const renderContent = () => {
-    switch (step) {
-      case "intro":
-        return (
-          <>
-            <View className="mb-4 items-center">
-              <View className="h-16 w-16 items-center justify-center rounded-full bg-violet-100">
-                <MapPin size={32} color="#5A32FB" />
-              </View>
-            </View>
-            <Text className="mb-2 text-center font-heading text-xl font-bold text-gray-900">
-              Set Your Home Location
-            </Text>
-            <Text className="mb-6 text-center text-base text-gray-600">
-              Help us locate events from your screenshots by setting your home
-              location. This improves event detection accuracy.
-            </Text>
-            <View className="gap-3">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Enable location"
-                onPress={() => void handleRequestLocation()}
-                className="w-full rounded-full bg-interactive-1 py-4"
-              >
-                <Text className="text-center font-semibold text-white">
-                  Enable Location
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Skip for now"
-                onPress={handleSkip}
-                className="w-full py-3"
-              >
-                <Text className="text-center font-medium text-gray-500">
-                  Skip for now
-                </Text>
-              </Pressable>
-            </View>
-          </>
-        );
+    setIsLoadingManual(true);
+    setManualError(null);
 
-      case "loading":
-        return (
-          <View className="items-center py-8">
-            <ActivityIndicator size="large" color="#5A32FB" />
-            <Text className="mt-4 text-center text-base text-gray-600">
-              Getting your location...
-            </Text>
-          </View>
-        );
+    // Forward geocode the entered location
+    const result = await forwardGeocode(manualLocation.trim());
 
-      case "confirm":
-        return (
-          <>
-            <View className="mb-4 items-center">
-              <View className="h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                <MapPin size={32} color="#22C55E" />
-              </View>
-            </View>
-            <Text className="mb-2 text-center font-heading text-xl font-bold text-gray-900">
-              Confirm Home Location
-            </Text>
-            {address ? (
-              <Text className="mb-2 text-center text-lg font-medium text-gray-700">
-                {address}
-              </Text>
-            ) : null}
-            <Text className="mb-6 text-center text-sm text-gray-500">
-              We&apos;ll use this location to better detect events from your
-              screenshots.
-            </Text>
-            <View className="gap-3">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Confirm this is my home"
-                onPress={() => void handleConfirmLocation()}
-                disabled={isSaving}
-                className={`w-full rounded-full py-4 ${
-                  isSaving ? "bg-gray-400" : "bg-interactive-1"
-                }`}
-              >
-                <Text className="text-center font-semibold text-white">
-                  {isSaving ? "Saving..." : "This is my home"}
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Try again"
-                onPress={() => void handleRequestLocation()}
-                disabled={isSaving}
-                className="w-full py-3"
-              >
-                <Text className="text-center font-medium text-gray-500">
-                  Try again
-                </Text>
-              </Pressable>
-            </View>
-          </>
-        );
-
-      case "denied":
-        return (
-          <>
-            <View className="mb-4 items-center">
-              <View className="h-16 w-16 items-center justify-center rounded-full bg-amber-100">
-                <MapPin size={32} color="#F59E0B" />
-              </View>
-            </View>
-            <Text className="mb-2 text-center font-heading text-xl font-bold text-gray-900">
-              Location Access Denied
-            </Text>
-            <Text className="mb-6 text-center text-base text-gray-600">
-              Without location access, we won&apos;t be able to automatically
-              detect event locations from screenshots. You can enable it later
-              in Settings.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Continue without location"
-              onPress={handleSkip}
-              className="w-full rounded-full bg-interactive-1 py-4"
-            >
-              <Text className="text-center font-semibold text-white">
-                Continue
-              </Text>
-            </Pressable>
-          </>
-        );
-
-      case "error":
-        return (
-          <>
-            <View className="mb-4 items-center">
-              <View className="h-16 w-16 items-center justify-center rounded-full bg-red-100">
-                <MapPin size={32} color="#EF4444" />
-              </View>
-            </View>
-            <Text className="mb-2 text-center font-heading text-xl font-bold text-gray-900">
-              Something Went Wrong
-            </Text>
-            <Text className="mb-6 text-center text-base text-gray-600">
-              We couldn&apos;t get your location. Please try again or skip for
-              now.
-            </Text>
-            <View className="gap-3">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Try again"
-                onPress={() => void handleRequestLocation()}
-                className="w-full rounded-full bg-interactive-1 py-4"
-              >
-                <Text className="text-center font-semibold text-white">
-                  Try Again
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Skip for now"
-                onPress={handleSkip}
-                className="w-full py-3"
-              >
-                <Text className="text-center font-medium text-gray-500">
-                  Skip for now
-                </Text>
-              </Pressable>
-            </View>
-          </>
-        );
+    if (!result) {
+      setManualError("Couldn't find that location. Try a different search.");
+      setIsLoadingManual(false);
+      return;
     }
-  };
+
+    try {
+      await saveUserLocation({
+        name: "Home",
+        latitude: result.coords.latitude,
+        longitude: result.coords.longitude,
+        address: result.formattedAddress,
+        isDefault: true,
+      });
+
+      handleComplete();
+    } catch (error) {
+      console.error("Failed to save location:", error);
+      setManualError("Couldn't save location. Please try again.");
+    } finally {
+      setIsLoadingManual(false);
+    }
+  }, [manualLocation, forwardGeocode, saveUserLocation, handleComplete]);
+
+  const isLoading = isLoadingAuto || isLoadingManual;
+  const hasManualInput = manualLocation.trim().length > 0;
 
   return (
     <Modal
       visible={isVisible}
       transparent={true}
       animationType="fade"
-      onRequestClose={handleSkip}
+      onRequestClose={handleComplete}
     >
       <View className="flex-1 items-center justify-center bg-black/50 px-4">
         <View className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lg">
-          {renderContent()}
+          {/* Header */}
+          <View className="mb-4 items-center">
+            <View className="h-14 w-14 items-center justify-center rounded-full bg-violet-100">
+              <MapPin size={28} color="#5A32FB" />
+            </View>
+          </View>
+
+          <Text className="mb-2 text-center font-heading text-xl font-bold text-gray-900">
+            Where are you based?
+          </Text>
+          <Text className="mb-6 text-center text-base text-gray-600">
+            We&apos;ll use this to improve event detection &amp; show you events
+            near you.
+          </Text>
+
+          {/* Use My Location Button */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Use my location"
+            onPress={() => void handleUseMyLocation()}
+            disabled={isLoading}
+            className={`mb-4 w-full flex-row items-center justify-center rounded-full py-4 ${
+              isLoading ? "bg-gray-400" : "bg-interactive-1"
+            }`}
+          >
+            {isLoadingAuto ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text className="text-center font-semibold text-white">
+                Use My Location
+              </Text>
+            )}
+          </Pressable>
+
+          {/* Divider */}
+          <View className="mb-4 flex-row items-center">
+            <View className="h-px flex-1 bg-gray-200" />
+            <Text className="mx-3 text-sm text-gray-400">or</Text>
+            <View className="h-px flex-1 bg-gray-200" />
+          </View>
+
+          {/* Manual Entry */}
+          <TextInput
+            className="mb-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base text-gray-900"
+            placeholder="Enter your city"
+            placeholderTextColor="#9CA3AF"
+            value={manualLocation}
+            onChangeText={(text) => {
+              setManualLocation(text);
+              if (manualError) setManualError(null);
+            }}
+            editable={!isLoading}
+            autoCapitalize="words"
+            autoCorrect={false}
+            returnKeyType="done"
+            onSubmitEditing={() => {
+              if (hasManualInput) void handleSaveManualLocation();
+            }}
+          />
+
+          {/* Error message */}
+          {manualError && (
+            <Text className="mb-2 text-center text-sm text-red-500">
+              {manualError}
+            </Text>
+          )}
+
+          {/* Dynamic action - subtle skip link OR Save button */}
+          {hasManualInput ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Save location"
+              onPress={() => void handleSaveManualLocation()}
+              disabled={isLoading}
+              className={`mt-4 w-full rounded-full py-4 ${
+                isLoading ? "bg-gray-400" : "bg-interactive-1"
+              }`}
+            >
+              {isLoadingManual ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text className="text-center font-semibold text-white">
+                  Save
+                </Text>
+              )}
+            </Pressable>
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Skip for now"
+              onPress={handleComplete}
+              disabled={isLoading}
+              className="mt-4 py-2"
+            >
+              <Text className="text-center text-sm text-gray-400">
+                skip for now
+              </Text>
+            </Pressable>
+          )}
         </View>
       </View>
     </Modal>

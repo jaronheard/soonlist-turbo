@@ -123,6 +123,44 @@ export function useLocationPermission() {
     [],
   );
 
+  /**
+   * Forward geocode an address string to get coordinates
+   */
+  const forwardGeocode = useCallback(
+    async (
+      address: string,
+    ): Promise<{
+      coords: LocationCoordinates;
+      formattedAddress: string;
+    } | null> => {
+      try {
+        const results = await Location.geocodeAsync(address);
+
+        if (results.length > 0) {
+          const result = results[0];
+          if (result) {
+            const coords: LocationCoordinates = {
+              latitude: result.latitude,
+              longitude: result.longitude,
+            };
+
+            // Also reverse geocode to get a properly formatted address
+            const formattedAddress = await reverseGeocode(coords);
+
+            return {
+              coords,
+              formattedAddress: formattedAddress || address,
+            };
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    },
+    [reverseGeocode],
+  );
+
   return {
     // Permission state
     permissionState,
@@ -137,5 +175,6 @@ export function useLocationPermission() {
 
     // Geocoding
     reverseGeocode,
+    forwardGeocode,
   };
 }
