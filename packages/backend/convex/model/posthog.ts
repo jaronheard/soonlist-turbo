@@ -21,9 +21,7 @@ export interface IdentifyUserParams {
 /**
  * Batch identify multiple users in PostHog using the /batch endpoint
  */
-export async function batchIdentifyUsers(
-  users: IdentifyUserParams[],
-): Promise<{
+export async function batchIdentifyUsers(users: IdentifyUserParams[]): Promise<{
   success: boolean;
   successCount: number;
   failureCount: number;
