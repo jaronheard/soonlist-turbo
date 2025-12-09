@@ -1,7 +1,7 @@
 "use node";
 
 const POSTHOG_API_URL = "https://app.posthog.com";
-const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+const POSTHOG_KEY = process.env.POSTHOG_KEY;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || POSTHOG_API_URL;
 
 // PostHog recommends keeping batches under ~1000 events
