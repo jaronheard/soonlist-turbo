@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 
+import type { IdentifyUserParams } from "./model/posthog";
 import { internal } from "./_generated/api";
 import { internalAction, internalQuery } from "./_generated/server";
-import type { IdentifyUserParams } from "./model/posthog";
 import * as PostHog from "./model/posthog";
 
 interface UserStats {
