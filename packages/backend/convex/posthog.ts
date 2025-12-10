@@ -6,7 +6,7 @@ import { internalAction, internalQuery } from "./_generated/server";
 import * as PostHog from "./model/posthog";
 
 interface UserStats {
-  userId: string;
+  visitorId: string; // email - used as distinct_id in PostHog
   upcoming_created_events_count: number;
   upcoming_saved_events_count: number;
   upcoming_events_count: number;
@@ -16,7 +16,7 @@ interface UserStats {
 }
 
 const userStatsValidator = v.object({
-  userId: v.string(),
+  visitorId: v.string(), // email - used as distinct_id in PostHog
   upcoming_created_events_count: v.number(),
   upcoming_saved_events_count: v.number(),
   upcoming_events_count: v.number(),
@@ -47,7 +47,7 @@ export const debugUserStats = internalQuery({
       .withIndex("by_user", (q) => q.eq("userId", user.id))
       .collect();
 
-    console.log(`User ${args.username} (id: ${user.id})`);
+    console.log(`User ${args.username} (email: ${user.email})`);
     console.log(`Total created events: ${createdEvents.length}`);
     console.log(`Now ISO: ${nowIso}`);
 
@@ -111,7 +111,7 @@ export const debugUserStats = internalQuery({
     }
 
     return {
-      userId: user.id,
+      visitorId: user.email,
       upcoming_created_events_count: upcomingCreatedEvents.length,
       upcoming_saved_events_count: upcomingSavedEvents.length,
       upcoming_events_count,
@@ -201,7 +201,7 @@ export const getAllUsersWithStatsQuery = internalQuery({
         }
 
         return {
-          userId: user.id,
+          visitorId: user.email,
           upcoming_created_events_count,
           upcoming_saved_events_count,
           upcoming_events_count,
@@ -243,7 +243,7 @@ export const syncUserPropertiesToPostHog = internalAction({
     }
 
     const usersToIdentify: IdentifyUserParams[] = userStats.map((stats) => ({
-      userId: stats.userId,
+      userId: stats.visitorId,
       properties: {
         upcoming_created_events_count: stats.upcoming_created_events_count,
         upcoming_saved_events_count: stats.upcoming_saved_events_count,
