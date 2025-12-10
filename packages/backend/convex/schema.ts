@@ -174,6 +174,19 @@ export default defineSchema({
     .index("by_email", ["email"])
     .index("by_custom_id", ["id"]),
 
+  userLocations: defineTable({
+    userId: v.string(),
+    name: v.string(), // e.g., "Home", "Work"
+    latitude: v.number(),
+    longitude: v.number(),
+    address: v.optional(v.string()), // Human-readable address
+    isDefault: v.boolean(), // Primary location for event detection
+    created_at: v.string(), // ISO date string
+    updatedAt: v.union(v.string(), v.null()), // ISO date string or null
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_default", ["userId", "isDefault"]),
+
   pushTokens: defineTable({
     userId: v.string(),
     expoPushToken: v.string(),
