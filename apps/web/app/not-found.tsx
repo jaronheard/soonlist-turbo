@@ -1,16 +1,11 @@
-"use client";
-
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Home, Search, ArrowLeft } from "lucide-react";
+import { Home } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
 import { Header } from "~/components/Header";
 import { Footer } from "~/components/Footer";
 
 export default function NotFound() {
-  const router = useRouter();
-
   return (
     <>
       <Header />
@@ -28,42 +23,16 @@ export default function NotFound() {
             Page not found
           </h2>
           <p className="mb-8 max-w-md text-lg leading-7 text-gray-400 md:text-xl">
-            The page you're looking for doesn't exist or has been moved. Let's
-            get you back on track.
+            The page you're looking for doesn't exist or has been moved.
           </p>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <Button asChild size="lg" className="bg-interactive-1 hover:bg-interactive-1/90">
-              <Link href="/">
-                <Home className="mr-2 size-5" />
-                Go Home
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="border-interactive-1 text-interactive-1 hover:bg-interactive-1/10"
-            >
-              <Link href="/explore">
-                <Search className="mr-2 size-5" />
-                Discover Events
-              </Link>
-            </Button>
-          </div>
-
-          {/* Back Button */}
-          <div className="mt-8">
-            <Button
-              variant="ghost"
-              className="text-neutral-2 hover:text-interactive-1"
-              onClick={() => router.back()}
-            >
-              <ArrowLeft className="mr-2 size-4" />
-              Go Back
-            </Button>
-          </div>
+          {/* Action Button */}
+          <Button asChild size="lg" className="bg-interactive-1 hover:bg-interactive-1/90">
+            <Link href="/">
+              <Home className="mr-2 size-5" />
+              Go Home
+            </Link>
+          </Button>
         </div>
       </main>
       <Footer />
