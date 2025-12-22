@@ -1,8 +1,9 @@
 "use client";
 
 import type { FunctionReturnType } from "convex/server";
+import Link from "next/link";
 import { usePaginatedQuery } from "convex/react";
-import { Globe2 } from "lucide-react";
+import { Globe2, Grid3X3, List } from "lucide-react";
 
 import type { Doc } from "@soonlist/backend/convex/_generated/dataModel";
 import type { User } from "@soonlist/db/types";
@@ -80,12 +81,29 @@ export default function Page() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-4 text-2xl font-bold text-interactive-1">
-        <div className="flex items-center gap-4">
-          <Globe2 className="size-6 text-interactive-1" />
-          Discover
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-interactive-1">
+          <div className="flex items-center gap-4">
+            <Globe2 className="size-6 text-interactive-1" />
+            Discover
+          </div>
+        </h1>
+        <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2 rounded-lg bg-interactive-2 px-3 py-2 text-interactive-1"
+            aria-label="List view (current)"
+          >
+            <List className="size-5" />
+          </div>
+          <Link
+            href="/explore/posters"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-neutral-2 transition-colors hover:bg-interactive-3 hover:text-neutral-1"
+            aria-label="Poster view"
+          >
+            <Grid3X3 className="size-5" />
+          </Link>
         </div>
-      </h1>
+      </div>
       <EventList
         currentEvents={currentEvents}
         futureEvents={futureEvents}
