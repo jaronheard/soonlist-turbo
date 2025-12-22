@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 
 import { Button } from "@soonlist/ui/button";
-import { Header } from "~/components/Header";
+
 import { Footer } from "~/components/Footer";
+import { Header } from "~/components/Header";
 
 export default function NotFound() {
   return (
@@ -27,7 +28,11 @@ export default function NotFound() {
           </p>
 
           {/* Action Button */}
-          <Button asChild size="lg" className="bg-interactive-1 hover:bg-interactive-1/90">
+          <Button
+            asChild
+            size="lg"
+            className="bg-interactive-1 hover:bg-interactive-1/90"
+          >
             <Link href="/">
               <Home className="mr-2 size-5" />
               Go Home
