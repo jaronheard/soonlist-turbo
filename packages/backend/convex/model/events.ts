@@ -444,10 +444,31 @@ export async function getEventById(ctx: QueryCtx, eventId: string) {
     .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
     .unique();
 
-  const eventFollows = await ctx.db
+  const eventFollowsRaw = await ctx.db
     .query("eventFollows")
     .withIndex("by_event", (q) => q.eq("eventId", eventId))
     .collect();
+
+  // Enrich eventFollows with user data for displaying who saved the event
+  const eventFollows = await Promise.all(
+    eventFollowsRaw.map(async (follow) => {
+      const follower = await ctx.db
+        .query("users")
+        .withIndex("by_custom_id", (q) => q.eq("id", follow.userId))
+        .unique();
+      return {
+        ...follow,
+        user: follower
+          ? {
+              id: follower.id,
+              username: follower.username,
+              displayName: follower.displayName,
+              userImage: follower.userImage,
+            }
+          : null,
+      };
+    }),
+  );
 
   const comments = await ctx.db
     .query("comments")

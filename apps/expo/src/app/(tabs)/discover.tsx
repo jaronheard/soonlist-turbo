@@ -89,10 +89,11 @@ function DiscoverContent() {
       })
       .map((event) => ({
         ...event,
-        eventFollows: [],
-        comments: [],
-        eventToLists: [],
-        lists: [],
+        // Preserve eventFollows from the query (includes user data for each saver)
+        eventFollows: event.eventFollows ?? [],
+        comments: event.comments ?? [],
+        eventToLists: event.eventToLists ?? [],
+        lists: event.lists ?? [],
       }));
   }, [events, stableTimestamp]);
 
