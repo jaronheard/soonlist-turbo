@@ -594,17 +594,6 @@ const SourceStickersRow = () => {
       icon: (
         <Image
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-          source={require("../assets/app-icons/messages.png")}
-          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
-        />
-      ),
-      label: "Messages",
-      deepLink: "sms:",
-    },
-    {
-      icon: (
-        <Image
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
           source={require("../assets/app-icons/instagram.png")}
           style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
         />
@@ -622,6 +611,17 @@ const SourceStickersRow = () => {
       ),
       label: "TikTok",
       deepLink: "tiktok://",
+    },
+    {
+      icon: (
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+          source={require("../assets/app-icons/messages.png")}
+          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
+        />
+      ),
+      label: "Messages",
+      deepLink: "sms:",
     },
     {
       icon: (
