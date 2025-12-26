@@ -3,6 +3,8 @@ import type { ViewStyle } from "react-native";
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
+  Image,
+  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -11,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
-import { Image } from "expo-image";
+import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 
@@ -25,7 +27,6 @@ import {
   EyeOff,
   Globe2,
   MoreVertical,
-  Plus,
   PlusIcon,
   ShareIcon,
   User,
@@ -277,7 +278,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               }}
             >
               {e.images?.[3] ? (
-                <Image
+                <ExpoImage
                   source={
                     typeof e.images[3] === "number"
                       ? e.images[3]
@@ -439,7 +440,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
             <View className="mx-auto mt-1 flex-row items-center gap-3">
               <UserProfileFlair username={eventUser.username} size="xs">
                 {eventUser.userImage ? (
-                  <Image
+                  <ExpoImage
                     source={{ uri: eventUser.userImage }}
                     style={{
                       width: iconSize * 0.9,
@@ -505,58 +506,205 @@ export function UserEventListItem(props: UserEventListItemProps) {
   );
 }
 
-function PromoCard({ type }: PromoCardProps) {
+interface SourceStickerProps {
+  icon: React.ReactNode;
+  label: string;
+  index: number;
+  deepLink?: string;
+}
+
+const SourceSticker = ({
+  icon,
+  label,
+  index,
+  deepLink,
+}: SourceStickerProps) => {
   const { fontScale } = useWindowDimensions();
-  const iconSize = 16 * fontScale;
+  const rotation = index % 2 === 0 ? "8deg" : "-8deg";
 
-  const { triggerAddEventFlow } = useAddEventFlow();
+  const handlePress = async () => {
+    if (!deepLink) return;
 
-  const handlePress = () => {
-    void triggerAddEventFlow();
+    try {
+      const canOpen = await Linking.canOpenURL(deepLink);
+      if (canOpen) {
+        await Linking.openURL(deepLink);
+      }
+    } catch {
+      // Silently fail if app can't be opened
+    }
   };
 
-  if (type === "addEvents") {
-    return (
-      <TouchableOpacity onPress={handlePress}>
+  const content = (
+    <View
+      style={{
+        transform: [{ rotate: rotation }],
+        shadowColor: "#5A32FB",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+      }}
+    >
+      <View
+        className="items-center rounded-xl bg-white px-3 py-2"
+        style={{
+          borderWidth: 2,
+          borderColor: "#E0D9FF",
+          minWidth: 70 * fontScale,
+        }}
+      >
         <View
-          className="mx-4 rounded-2xl bg-accent-yellow/80 p-4"
           style={{
-            borderWidth: 3,
-            borderColor: "white",
-            shadowColor: "#5A32FB",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.15,
-            shadowRadius: 2.5,
-            elevation: 2,
+            width: 24 * fontScale,
+            height: 24 * fontScale,
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <Text className="mb-1 text-lg font-semibold text-neutral-1">
-            Add more events
-          </Text>
-          <View className="flex-row items-center">
-            <Text className="text-base text-neutral-2">
-              Tap the{" "}
-              <View
-                className="inline-flex items-center justify-center rounded-full bg-interactive-1"
-                style={{
-                  width: iconSize * 1.5,
-                  height: iconSize * 1.5,
-                  marginHorizontal: 2,
-                  marginVertical: -2,
-                }}
-              >
-                <Plus size={iconSize} color="#FFFFFF" strokeWidth={3} />
-              </View>{" "}
-              button below to add more.
-            </Text>
-          </View>
+          {icon}
         </View>
+        <Text
+          className="mt-1 text-center text-xs font-medium text-neutral-2"
+          style={{ fontSize: 11 * fontScale }}
+        >
+          {label}
+        </Text>
+      </View>
+    </View>
+  );
+
+  if (deepLink) {
+    return (
+      <TouchableOpacity onPress={() => void handlePress()} activeOpacity={0.7}>
+        {content}
       </TouchableOpacity>
     );
   }
 
-  return null;
-}
+  return content;
+};
+
+const SourceStickersRow = () => {
+  const { fontScale } = useWindowDimensions();
+  const iconSize = 24 * fontScale;
+
+  const row1 = [
+    {
+      icon: (
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+          source={require("../assets/app-icons/instagram.png")}
+          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
+        />
+      ),
+      label: "Instagram",
+      deepLink: "instagram://",
+    },
+    {
+      icon: (
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+          source={require("../assets/app-icons/tiktok.png")}
+          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
+        />
+      ),
+      label: "TikTok",
+      deepLink: "tiktok://",
+    },
+    {
+      icon: (
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+          source={require("../assets/app-icons/messages.png")}
+          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
+        />
+      ),
+      label: "Messages",
+      deepLink: "sms:",
+    },
+    {
+      icon: (
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+          source={require("../assets/app-icons/partiful.png")}
+          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
+        />
+      ),
+      label: "Partiful",
+      deepLink: "partiful://",
+    },
+  ];
+
+  const row2 = [
+    {
+      icon: (
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+          source={require("../assets/app-icons/mail.png")}
+          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
+        />
+      ),
+      label: "Email",
+      deepLink: "mailto:",
+    },
+    {
+      icon: (
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+          source={require("../assets/app-icons/safari.png")}
+          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
+        />
+      ),
+      label: "Safari",
+      deepLink: "https://soonlist.com",
+    },
+    {
+      icon: (
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+          source={require("../assets/app-icons/posters.png")}
+          style={{ width: iconSize, height: iconSize, borderRadius: 5 }}
+        />
+      ),
+      label: "Posters",
+      // No deep link for physical posters
+    },
+  ];
+
+  return (
+    <View className="px-4">
+      <Text
+        className="mb-4 text-center text-base font-medium text-neutral-1"
+        style={{ fontSize: 16 * fontScale }}
+      >
+        Add events from screenshots or photos
+      </Text>
+      <View className="flex-row flex-wrap items-center justify-center gap-3">
+        {row1.map((source, index) => (
+          <SourceSticker
+            key={source.label}
+            icon={source.icon}
+            label={source.label}
+            index={index}
+            deepLink={source.deepLink}
+          />
+        ))}
+      </View>
+      <View className="mt-3 flex-row flex-wrap items-center justify-center gap-3">
+        {row2.map((source, index) => (
+          <SourceSticker
+            key={source.label}
+            icon={source.icon}
+            label={source.label}
+            index={index + 1}
+            deepLink={source.deepLink}
+          />
+        ))}
+      </View>
+    </View>
+  );
+};
 
 const GhostEventCard = ({ index }: { index: number }) => {
   const { fontScale } = useWindowDimensions();
@@ -793,11 +941,7 @@ export default function UserEventsList(props: UserEventsListProps) {
           <ActivityIndicator size="large" color="#5A32FB" />
         </View>
       ) : null}
-      {collapsedEvents.length >= 1 && promoCard ? (
-        <View className="mb-4 mt-2">
-          <PromoCard {...promoCard} />
-        </View>
-      ) : null}
+      {promoCard ? <SourceStickersRow /> : null}
     </>
   );
 
@@ -862,10 +1006,11 @@ export default function UserEventsList(props: UserEventsListProps) {
         contentContainerStyle={{
           paddingTop: stats ? 0 : 16,
           paddingBottom: 120,
-          flexGrow: collapsedEvents.length === 0 ? 1 : 0,
+          flexGrow: 1,
           backgroundColor: "#F4F1FF",
         }}
         ListFooterComponent={renderFooter()}
+        ListFooterComponentStyle={{ flex: 1, justifyContent: "center" }}
       />
     </>
   );
