@@ -32,32 +32,46 @@ async function forwardToConvex(
     env.NEXT_PUBLIC_CONVEX_SITE_URL_PROD ||
     env.NEXT_PUBLIC_CONVEX_URL.replace(/\.convex\.cloud$/, ".convex.site");
 
-  const response = await fetch(`${convexUrl}/clerk-webhook`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "svix-id": svixHeaders["svix-id"],
-      "svix-timestamp": svixHeaders["svix-timestamp"],
-      "svix-signature": svixHeaders["svix-signature"],
-    },
-    body: body,
-  });
+  try {
+    const response = await fetch(`${convexUrl}/clerk-webhook`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "svix-id": svixHeaders["svix-id"],
+        "svix-timestamp": svixHeaders["svix-timestamp"],
+        "svix-signature": svixHeaders["svix-signature"],
+      },
+      body: body,
+    });
 
-  const message = await response.text();
+    const message = await response.text();
 
-  if (!response.ok) {
-    console.error("Failed to sync to Convex:", {
+    if (!response.ok) {
+      console.error("Failed to sync to Convex:", {
+        status: response.status,
+        message,
+        convexUrl,
+      });
+    }
+
+    return {
+      ok: response.ok,
       status: response.status,
       message,
+    };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown network error";
+    console.error("Network error forwarding to Convex:", {
+      error: errorMessage,
       convexUrl,
     });
+    return {
+      ok: false,
+      status: 502,
+      message: `Network error: ${errorMessage}`,
+    };
   }
-
-  return {
-    ok: response.ok,
-    status: response.status,
-    message,
-  };
 }
 
 export async function POST(req: Request) {
