@@ -513,7 +513,12 @@ interface SourceStickerProps {
   deepLink?: string;
 }
 
-const SourceSticker = ({ icon, label, index, deepLink }: SourceStickerProps) => {
+const SourceSticker = ({
+  icon,
+  label,
+  index,
+  deepLink,
+}: SourceStickerProps) => {
   const { fontScale } = useWindowDimensions();
   const rotation = index % 2 === 0 ? "8deg" : "-8deg";
 
@@ -652,7 +657,7 @@ const SourceStickersRow = () => {
         />
       ),
       label: "Safari",
-      deepLink: "https://",
+      deepLink: "https://soonlist.com",
     },
     {
       icon: (
