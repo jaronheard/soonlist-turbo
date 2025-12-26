@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Image,
+  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -509,13 +510,27 @@ interface SourceStickerProps {
   icon: React.ReactNode;
   label: string;
   index: number;
+  deepLink?: string;
 }
 
-const SourceSticker = ({ icon, label, index }: SourceStickerProps) => {
+const SourceSticker = ({ icon, label, index, deepLink }: SourceStickerProps) => {
   const { fontScale } = useWindowDimensions();
   const rotation = index % 2 === 0 ? "8deg" : "-8deg";
 
-  return (
+  const handlePress = async () => {
+    if (!deepLink) return;
+
+    try {
+      const canOpen = await Linking.canOpenURL(deepLink);
+      if (canOpen) {
+        await Linking.openURL(deepLink);
+      }
+    } catch {
+      // Silently fail if app can't be opened
+    }
+  };
+
+  const content = (
     <View
       style={{
         transform: [{ rotate: rotation }],
@@ -553,6 +568,16 @@ const SourceSticker = ({ icon, label, index }: SourceStickerProps) => {
       </View>
     </View>
   );
+
+  if (deepLink) {
+    return (
+      <TouchableOpacity onPress={() => void handlePress()} activeOpacity={0.7}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return content;
 };
 
 const SourceStickersRow = () => {
@@ -569,6 +594,7 @@ const SourceStickersRow = () => {
         />
       ),
       label: "Messages",
+      deepLink: "sms:",
     },
     {
       icon: (
@@ -579,6 +605,7 @@ const SourceStickersRow = () => {
         />
       ),
       label: "Instagram",
+      deepLink: "instagram://",
     },
     {
       icon: (
@@ -589,6 +616,7 @@ const SourceStickersRow = () => {
         />
       ),
       label: "TikTok",
+      deepLink: "tiktok://",
     },
     {
       icon: (
@@ -599,6 +627,7 @@ const SourceStickersRow = () => {
         />
       ),
       label: "Partiful",
+      deepLink: "partiful://",
     },
   ];
 
@@ -612,6 +641,7 @@ const SourceStickersRow = () => {
         />
       ),
       label: "Email",
+      deepLink: "mailto:",
     },
     {
       icon: (
@@ -622,6 +652,7 @@ const SourceStickersRow = () => {
         />
       ),
       label: "Safari",
+      deepLink: "https://",
     },
     {
       icon: (
@@ -632,6 +663,7 @@ const SourceStickersRow = () => {
         />
       ),
       label: "Posters",
+      // No deep link for physical posters
     },
   ];
 
@@ -650,6 +682,7 @@ const SourceStickersRow = () => {
             icon={source.icon}
             label={source.label}
             index={index}
+            deepLink={source.deepLink}
           />
         ))}
       </View>
@@ -660,6 +693,7 @@ const SourceStickersRow = () => {
             icon={source.icon}
             label={source.label}
             index={index + 1}
+            deepLink={source.deepLink}
           />
         ))}
       </View>
