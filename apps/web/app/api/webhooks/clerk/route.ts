@@ -1,74 +1,80 @@
 import type { WebhookEvent } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
-import { eq } from "drizzle-orm";
 import { Webhook } from "svix";
-
-import { db } from "@soonlist/db";
-import {
-  comments,
-  eventFollows,
-  events,
-  listFollows,
-  lists,
-  userFollows,
-  users,
-} from "@soonlist/db/schema";
 
 import { env } from "~/env";
 
 export const dynamic = "force-dynamic";
 
-// Helper function to generate display name
-function generateDisplayName(
-  firstName?: string | null,
-  lastName?: string | null,
-): string {
-  if (!firstName && !lastName) return "anonymous";
-
-  const first = firstName || "";
-  const last = lastName || "";
-
-  if (first && last) return `${first} ${last}`;
-  return first || last;
-}
+/**
+ * Clerk Webhook Handler
+ *
+ * This route receives webhooks from Clerk and forwards them to Convex.
+ * The Convex backend handles all user creation/update/deletion logic.
+ *
+ * Flow:
+ * 1. Clerk sends webhook (user.created, user.updated, user.deleted)
+ * 2. This route verifies the webhook signature
+ * 3. Forwards the verified payload to Convex /clerk-webhook endpoint
+ * 4. Returns Convex's response status
+ */
 
 async function forwardToConvex(
   body: string,
-  headers: {
+  svixHeaders: {
     "svix-id": string;
     "svix-timestamp": string;
     "svix-signature": string;
   },
-) {
-  try {
-    // Use custom HTTP endpoint URL for production, otherwise use standard domain replacement
-    const convexUrl =
-      env.NEXT_PUBLIC_CONVEX_SITE_URL_PROD ||
-      env.NEXT_PUBLIC_CONVEX_URL.replace(/\.convex\.cloud$/, ".convex.site");
+): Promise<{ ok: boolean; status: number; message: string }> {
+  // Use custom HTTP endpoint URL for production, otherwise use standard domain replacement
+  const convexUrl =
+    env.NEXT_PUBLIC_CONVEX_SITE_URL_PROD ||
+    env.NEXT_PUBLIC_CONVEX_URL.replace(/\.convex\.cloud$/, ".convex.site");
 
+  try {
     const response = await fetch(`${convexUrl}/clerk-webhook`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "svix-id": headers["svix-id"],
-        "svix-timestamp": headers["svix-timestamp"],
-        "svix-signature": headers["svix-signature"],
+        "svix-id": svixHeaders["svix-id"],
+        "svix-timestamp": svixHeaders["svix-timestamp"],
+        "svix-signature": svixHeaders["svix-signature"],
       },
       body: body,
     });
 
+    const message = await response.text();
+
     if (!response.ok) {
-      console.error("Failed to sync to Convex:", await response.text());
+      console.error("Failed to sync to Convex:", {
+        status: response.status,
+        message,
+        convexUrl,
+      });
     }
+
+    return {
+      ok: response.ok,
+      status: response.status,
+      message,
+    };
   } catch (error) {
-    console.error("Error syncing to Convex:", error);
-    // Don't throw - we don't want to fail the MySQL sync if Convex sync fails
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown network error";
+    console.error("Network error forwarding to Convex:", {
+      error: errorMessage,
+      convexUrl,
+    });
+    return {
+      ok: false,
+      status: 502,
+      message: `Network error: ${errorMessage}`,
+    };
   }
 }
 
 export async function POST(req: Request) {
-  // You can find this in the Clerk Dashboard -> Webhooks -> choose the webhook
-  // different for each environment
   const WEBHOOK_SECRET = env.CLERK_WEBHOOK_SECRET;
 
   // Get the headers
@@ -79,7 +85,7 @@ export async function POST(req: Request) {
 
   // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response("Error occured -- no svix headers", {
+    return new Response("Error occurred -- no svix headers", {
       status: 400,
     });
   }
@@ -88,12 +94,10 @@ export async function POST(req: Request) {
   const payload = (await req.json()) as Record<string, unknown>;
   const body = JSON.stringify(payload);
 
-  // Create a new SVIX instance with your secret.
+  // Verify the webhook signature
   const wh = new Webhook(WEBHOOK_SECRET);
-
   let evt: WebhookEvent;
 
-  // Verify the payload with the headers
   try {
     evt = wh.verify(body, {
       "svix-id": svix_id,
@@ -102,126 +106,31 @@ export async function POST(req: Request) {
     }) as WebhookEvent;
   } catch (err) {
     console.error("Error verifying webhook:", err);
-    return new Response("Error occured", {
+    return new Response("Invalid webhook signature", {
       status: 400,
     });
   }
 
-  if (evt) {
-    // 👉 Parse the incoming event body into a ClerkWebhook object
-    try {
-      // 👉 `webhook.type` is a string value that describes what kind of event we need to handle
-
-      // 👉 If the type is "user.updated" the important values in the database will be updated in the users table
-      if (!evt.data.id) {
-        throw new Error("No user ID found in webhook data");
-      }
-
-      if (evt.type === "user.updated") {
-        const userId = evt.data.external_id || evt.data.id || "";
-
-        // Prepare update data
-        const updateData: {
-          displayName: string;
-          userImage: string;
-          email: string;
-          publicMetadata?: Record<string, unknown>;
-          username?: string;
-        } = {
-          displayName: generateDisplayName(
-            evt.data.first_name,
-            evt.data.last_name,
-          ),
-          userImage: evt.data.image_url,
-          email: evt.data.email_addresses[0]?.email_address || "",
-          publicMetadata: evt.data.public_metadata,
-        };
-
-        // Only update username if provided by Clerk
-        if (evt.data.username && evt.data.username.trim() !== "") {
-          updateData.username = evt.data.username;
-        }
-
-        await db.update(users).set(updateData).where(eq(users.id, userId));
-
-        // Forward to Convex after successful MySQL update
-        await forwardToConvex(body, {
-          "svix-id": svix_id,
-          "svix-timestamp": svix_timestamp,
-          "svix-signature": svix_signature,
-        });
-      }
-
-      // 👉 If the type is "user.created" create a record in the users table
-      if (evt.type === "user.created") {
-        const userId = evt.data.external_id || evt.data.id || "";
-
-        // Username must be set during signup - fail if missing
-        const username = evt.data.username;
-        if (!username || username.trim() === "") {
-          console.error(
-            `Missing username for user ${userId} during creation. Username must be set during signup.`,
-            {
-              userId,
-              email: evt.data.email_addresses[0]?.email_address,
-              firstName: evt.data.first_name,
-              lastName: evt.data.last_name,
-            },
-          );
-          return new Response("Username is required for user creation", {
-            status: 400,
-          });
-        }
-
-        await db.insert(users).values({
-          id: userId,
-          username,
-          displayName: generateDisplayName(
-            evt.data.first_name,
-            evt.data.last_name,
-          ),
-          userImage: evt.data.image_url,
-          email: evt.data.email_addresses[0]?.email_address || "",
-          publicMetadata: evt.data.public_metadata,
-        });
-
-        // Forward to Convex after successful MySQL insert
-        await forwardToConvex(body, {
-          "svix-id": svix_id,
-          "svix-timestamp": svix_timestamp,
-          "svix-signature": svix_signature,
-        });
-      }
-
-      // 👉 If the type is "user.deleted", delete the user record and associated blocks
-      if (evt.type === "user.deleted") {
-        const userId = evt.data.id; // doesn't exist for deleted users
-        await Promise.all([
-          db.delete(users).where(eq(users.id, userId)),
-          db.delete(comments).where(eq(comments.userId, userId)),
-          db.delete(events).where(eq(events.userId, userId)),
-          db.delete(eventFollows).where(eq(eventFollows.userId, userId)),
-          db.delete(lists).where(eq(lists.userId, userId)),
-          db.delete(listFollows).where(eq(listFollows.userId, userId)),
-          db.delete(userFollows).where(eq(userFollows.followerId, userId)),
-          db.delete(userFollows).where(eq(userFollows.followingId, userId)),
-          // TODO: doesn't delete eventToLists, but should
-        ]);
-
-        // Forward to Convex after successful MySQL deletes
-        await forwardToConvex(body, {
-          "svix-id": svix_id,
-          "svix-timestamp": svix_timestamp,
-          "svix-signature": svix_signature,
-        });
-      }
-
-      return new Response("", { status: 201 });
-    } catch (err) {
-      console.error(err);
-      return new Response("Error occured -- processing webhook data", {
-        status: 500,
-      });
-    }
+  // Validate event has required data
+  if (!evt.data.id) {
+    console.error("No user ID found in webhook data");
+    return new Response("No user ID found in webhook data", {
+      status: 400,
+    });
   }
+
+  // Forward to Convex and return its response
+  const result = await forwardToConvex(body, {
+    "svix-id": svix_id,
+    "svix-timestamp": svix_timestamp,
+    "svix-signature": svix_signature,
+  });
+
+  if (!result.ok) {
+    return new Response(`Convex sync failed: ${result.message}`, {
+      status: result.status,
+    });
+  }
+
+  return new Response("Webhook processed successfully", { status: 201 });
 }
