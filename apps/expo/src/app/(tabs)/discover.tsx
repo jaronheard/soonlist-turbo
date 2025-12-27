@@ -17,16 +17,12 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import SaveShareButton from "~/components/SaveShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useStableTimestamp } from "~/store";
 import { getPlanStatusFromUser } from "~/utils/plan";
 
 function DiscoverContent() {
   const { user } = useUser();
   const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
-  const { customerInfo } = useRevenueCat();
-  const hasUnlimited =
-    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   // Compute access early to skip queries if denied
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
@@ -140,7 +136,6 @@ function DiscoverContent() {
             isFetchingNextPage={status === "LoadingMore"}
             ActionButton={SaveShareButtonWrapper}
             showCreator="always"
-            hasUnlimited={hasUnlimited}
             hideDiscoverableButton={true}
             isDiscoverFeed={true}
             savedEventIds={savedEventIds}
