@@ -750,7 +750,23 @@ export const syncFromClerk = internalMutation({
     email: v.string(),
     displayName: v.string(),
     userImage: v.string(),
-    publicMetadata: v.optional(v.object({})),
+    publicMetadata: v.optional(
+      v.object({
+        showDiscover: v.optional(v.boolean()),
+        stripe: v.optional(
+          v.object({
+            customerId: v.optional(v.string()),
+          }),
+        ),
+        plan: v.optional(
+          v.object({
+            name: v.optional(v.string()),
+            status: v.optional(v.string()),
+            trialStartDate: v.optional(v.string()),
+          }),
+        ),
+      }),
+    ),
     firstName: v.optional(v.union(v.string(), v.null())),
     lastName: v.optional(v.union(v.string(), v.null())),
   },
