@@ -15,13 +15,9 @@ import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
 
 function PastEventsContent() {
   const { user } = useUser();
-  const { customerInfo } = useRevenueCat();
-  const hasUnlimited =
-    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   // Fetch user stats
   const stats = useQuery(
@@ -88,7 +84,7 @@ function PastEventsContent() {
             onEndReached={handleLoadMore}
             showCreator="savedFromOthers"
             isFetchingNextPage={status === "LoadingMore"}
-            hasUnlimited={hasUnlimited}
+            showSourceStickers
             savedEventIds={savedEventIds}
             source="past"
           />

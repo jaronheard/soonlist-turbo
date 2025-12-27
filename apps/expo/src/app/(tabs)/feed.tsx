@@ -16,14 +16,10 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
-import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useStableTimestamp } from "~/store";
 
 function MyFeedContent() {
   const { user } = useUser();
-  const { customerInfo } = useRevenueCat();
-  const hasUnlimited =
-    customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
@@ -104,8 +100,7 @@ function MyFeedContent() {
           isLoadingFirstPage={status === "LoadingFirstPage"}
           showCreator="savedFromOthers"
           stats={stats}
-          promoCard={{ type: "addEvents" }}
-          hasUnlimited={hasUnlimited}
+          showSourceStickers
           savedEventIds={savedEventIds}
           source="feed"
         />

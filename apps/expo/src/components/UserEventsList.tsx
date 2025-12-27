@@ -58,10 +58,6 @@ interface ActionButtonProps {
   event: Event;
 }
 
-interface PromoCardProps {
-  type: "addEvents";
-}
-
 interface UserEventListItemProps {
   event: Event;
   ActionButton?: React.ComponentType<ActionButtonProps>;
@@ -585,7 +581,7 @@ const SourceSticker = ({
   return content;
 };
 
-const SourceStickersRow = () => {
+const SourceStickersRow = ({ hideText = false }: { hideText?: boolean }) => {
   const { fontScale } = useWindowDimensions();
   const iconSize = 24 * fontScale;
 
@@ -673,13 +669,12 @@ const SourceStickersRow = () => {
   ];
 
   return (
-    <View className="px-4">
-      <Text
-        className="mb-4 text-center text-base font-medium text-neutral-1"
-        style={{ fontSize: 16 * fontScale }}
-      >
-        Add events from screenshots or photos
-      </Text>
+    <View className="mb-6 px-4">
+      {!hideText && (
+        <View className="mb-4">
+          <TapToAddText textSize={16} />
+        </View>
+      )}
       <View className="flex-row flex-wrap items-center justify-center gap-3">
         {row1.map((source, index) => (
           <SourceSticker
@@ -702,6 +697,33 @@ const SourceStickersRow = () => {
           />
         ))}
       </View>
+    </View>
+  );
+};
+
+const TapToAddText = ({ textSize = 16 }: { textSize?: number }) => {
+  const { fontScale } = useWindowDimensions();
+  const fontSize = textSize * fontScale;
+  const iconSize = 20 * fontScale;
+  const plusIconSize = 12 * fontScale;
+
+  return (
+    <View className="flex-row items-center justify-center">
+      <Text className="text-center text-neutral-2" style={{ fontSize }}>
+        Tap
+      </Text>
+      <View
+        className="mx-1.5 items-center justify-center rounded-full bg-interactive-1"
+        style={{
+          width: iconSize,
+          height: iconSize,
+        }}
+      >
+        <PlusIcon size={plusIconSize} color="#FFF" strokeWidth={3} />
+      </View>
+      <Text className="text-center text-neutral-2" style={{ fontSize }}>
+        to add from screenshots or photos
+      </Text>
     </View>
   );
 };
@@ -831,29 +853,7 @@ const EmptyStateHeader = () => {
       >
         Your events, <Text style={{ color: "#5A32FB" }}>all in one place</Text>
       </Text>
-      <View className="flex-row items-center justify-center">
-        <Text
-          className="text-center text-base text-neutral-2"
-          style={{ fontSize: 16 * fontScale }}
-        >
-          Tap
-        </Text>
-        <View
-          className="mx-1.5 items-center justify-center rounded-full bg-interactive-1"
-          style={{
-            width: 20 * fontScale,
-            height: 20 * fontScale,
-          }}
-        >
-          <PlusIcon size={12 * fontScale} color="#FFF" strokeWidth={3} />
-        </View>
-        <Text
-          className="text-center text-base text-neutral-2"
-          style={{ fontSize: 16 * fontScale }}
-        >
-          to add from screenshots
-        </Text>
-      </View>
+      <TapToAddText textSize={16} />
     </TouchableOpacity>
   );
 };
@@ -865,9 +865,8 @@ interface UserEventsListProps {
   onEndReached: () => void;
   isFetchingNextPage: boolean;
   isLoadingFirstPage?: boolean;
-  promoCard?: PromoCardProps;
+  showSourceStickers?: boolean;
   demoMode?: boolean;
-  hasUnlimited?: boolean;
   stats?: EventStatsData;
   hideDiscoverableButton?: boolean;
   isDiscoverFeed?: boolean;
@@ -884,7 +883,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     onEndReached,
     isFetchingNextPage,
     isLoadingFirstPage = false,
-    promoCard,
+    showSourceStickers = false,
     demoMode,
     stats,
     hideDiscoverableButton = false,
@@ -913,6 +912,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         showsVerticalScrollIndicator={false}
       >
         <EmptyStateHeader />
+        {showSourceStickers && <SourceStickersRow hideText />}
         <GhostEventCard index={0} />
         <GhostEventCard index={1} />
         <GhostEventCard index={2} />
@@ -941,7 +941,7 @@ export default function UserEventsList(props: UserEventsListProps) {
           <ActivityIndicator size="large" color="#5A32FB" />
         </View>
       ) : null}
-      {promoCard ? <SourceStickersRow /> : null}
+      {showSourceStickers ? <SourceStickersRow /> : null}
     </>
   );
 
