@@ -58,10 +58,10 @@ async function generateUniqueUsername(
   }
 
   // 2. Try firstname + lastname variations
+  // Only use characters allowed by username validation: letters, numbers, hyphens, underscores
   if (cleanFirst && cleanLast) {
     candidates.push(`${cleanFirst}${cleanLast}`); // johnsmith
     candidates.push(`${cleanFirst}-${cleanLast}`); // john-smith
-    candidates.push(`${cleanFirst}.${cleanLast}`); // john.smith
     candidates.push(`${cleanFirst}_${cleanLast}`); // john_smith
   }
 
