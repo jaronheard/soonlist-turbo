@@ -99,7 +99,7 @@ function EventSaversRow({
     if (currentUserId && user.id === currentUserId) {
       router.push("/settings/account");
     } else {
-      router.push(`/user/${user.username}`);
+      router.push(`/${user.username}`);
     }
   };
 
