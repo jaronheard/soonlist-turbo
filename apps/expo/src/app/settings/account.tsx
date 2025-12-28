@@ -6,6 +6,8 @@ import {
   Linking,
   Platform,
   ScrollView,
+  Share,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -23,12 +25,15 @@ import { z } from "zod";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
+import { ShareIcon } from "~/components/icons";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
+import Config from "~/utils/config";
 import { logError } from "../../utils/errorLogging";
+import { getPlanStatusFromUser } from "../../utils/plan";
 
 // Simplified schema - only keeping what we still need for form validation
 const profileSchema = z.object({
@@ -53,7 +58,7 @@ function SettingsSection({
   children: React.ReactNode;
 }) {
   return (
-    <View className="mb-8">
+    <View className="mt-8">
       <Text className="mb-3 text-lg font-semibold">{title}</Text>
       {children}
     </View>
@@ -132,6 +137,27 @@ export default function EditProfileScreen() {
 
   const updateProfile = useMutation(api.users.updateAdditionalInfo);
   const resetOnboardingMutation = useMutation(api.users.resetOnboarding);
+  const updatePublicListSettings = useMutation(
+    api.users.updatePublicListSettings,
+  );
+
+  // Public list state
+  const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
+  const [publicListEnabled, setPublicListEnabled] = useState(
+    userData?.publicListEnabled ?? false,
+  );
+  const [publicListName, setPublicListName] = useState(
+    userData?.publicListName ?? "",
+  );
+  const [isUpdatingList, setIsUpdatingList] = useState(false);
+
+  // Sync public list state when userData changes
+  useEffect(() => {
+    if (userData) {
+      setPublicListEnabled(userData.publicListEnabled ?? false);
+      setPublicListName(userData.publicListName ?? "");
+    }
+  }, [userData]);
 
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
@@ -283,6 +309,81 @@ export default function EditProfileScreen() {
     );
   }, [resetOnboardingMutation, resetOnboardingStore, user?.id, signOut]);
 
+  const handleTogglePublicList = useCallback(async () => {
+    if (!user?.id) return;
+
+    const newEnabled = !publicListEnabled;
+    setIsUpdatingList(true);
+
+    try {
+      const defaultName = `${userData?.displayName || user.username}'s events`;
+      const nameToSave = newEnabled ? publicListName || defaultName : undefined;
+
+      await updatePublicListSettings({
+        userId: user.id,
+        publicListEnabled: newEnabled,
+        publicListName: nameToSave,
+      });
+      setPublicListEnabled(newEnabled);
+      // Update local state with the name we just saved
+      if (newEnabled && !publicListName) {
+        setPublicListName(defaultName);
+      }
+      toast.success(
+        newEnabled ? "Public list enabled" : "Public list disabled",
+      );
+    } catch (error) {
+      logError("Error toggling public list", error);
+      toast.error("Failed to update public list settings");
+    } finally {
+      setIsUpdatingList(false);
+    }
+  }, [
+    user?.id,
+    user?.username,
+    userData?.displayName,
+    publicListEnabled,
+    publicListName,
+    updatePublicListSettings,
+  ]);
+
+  const handleUpdateListName = useCallback(async () => {
+    if (!user?.id || !publicListEnabled) return;
+
+    setIsUpdatingList(true);
+    try {
+      await updatePublicListSettings({
+        userId: user.id,
+        publicListName: publicListName.trim() || undefined,
+      });
+      toast.success("List name updated");
+    } catch (error) {
+      logError("Error updating list name", error);
+      toast.error("Failed to update list name");
+    } finally {
+      setIsUpdatingList(false);
+    }
+  }, [user?.id, publicListEnabled, publicListName, updatePublicListSettings]);
+
+  const getPublicListUrl = useCallback(() => {
+    if (!user?.username) return "";
+    return `${Config.apiBaseUrl}/${user.username}`;
+  }, [user?.username]);
+
+  const handleSharePublicList = useCallback(async () => {
+    const url = getPublicListUrl();
+    if (!url) return;
+
+    try {
+      await Share.share({
+        message: `Check out my events on Soonlist: ${url}`,
+        url,
+      });
+    } catch {
+      // Share can be cancelled, so don't show error toast
+    }
+  }, [getPublicListUrl]);
+
   // Redirect unauthenticated users to sign-in
   if (!isAuthenticated) {
     return <Redirect href="/sign-in" />;
@@ -384,6 +485,63 @@ export default function EditProfileScreen() {
               </Button>
             )}
           </View>
+
+          {!showDiscover && (
+            <SettingsSection title="Share Your Events">
+              <View className="mb-4 rounded-lg border border-gray-200 p-4">
+                <View className="mb-4 flex-row items-center justify-between">
+                  <View className="flex-1 pr-4">
+                    <Text className="mb-1 text-base font-semibold">
+                      Public List
+                    </Text>
+                    <Text className="text-sm text-gray-500">
+                      Share all your events with anyone via a public link
+                    </Text>
+                  </View>
+                  <Switch
+                    value={publicListEnabled}
+                    onValueChange={handleTogglePublicList}
+                    disabled={isUpdatingList}
+                  />
+                </View>
+
+                {publicListEnabled && (
+                  <View className="mt-4 border-t border-gray-100 pt-4">
+                    <Text className="mb-2 text-sm font-medium text-gray-700">
+                      List Name
+                    </Text>
+                    <TextInput
+                      className="mb-4 rounded-lg border border-neutral-300 bg-white px-4 py-3 text-base"
+                      placeholder="Enter list name"
+                      value={publicListName}
+                      onChangeText={setPublicListName}
+                      onBlur={handleUpdateListName}
+                      onSubmitEditing={handleUpdateListName}
+                      returnKeyType="done"
+                      maxLength={50}
+                    />
+
+                    <Text className="mb-2 text-sm font-medium text-gray-700">
+                      Your public link
+                    </Text>
+                    <TouchableOpacity
+                      onPress={handleSharePublicList}
+                      className="flex-row items-center justify-between rounded-lg border border-interactive-1 bg-interactive-1/5 px-4 py-3"
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        className="flex-1 text-base font-medium text-interactive-1"
+                        numberOfLines={1}
+                      >
+                        {getPublicListUrl().replace("https://", "")}
+                      </Text>
+                      <ShareIcon size={20} color="#5A32FB" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </SettingsSection>
+          )}
 
           <View className="mt-8">
             <Text className="text-lg font-semibold">Preferences</Text>

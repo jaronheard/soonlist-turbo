@@ -143,7 +143,7 @@ export default function PublicListClient({ params }: Props) {
   };
 
   const handleShareClick = async () => {
-    const url = `${window.location.origin}/${userName}/list`;
+    const url = `${window.location.origin}/${userName}`;
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- navigator.share may not exist in all browsers
     if (navigator.share) {
       try {
@@ -251,6 +251,9 @@ export default function PublicListClient({ params }: Props) {
   }
 
   // Show public list (either as owner or visitor)
+  const appStoreUrl =
+    "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216";
+
   return (
     <div className="mx-auto max-w-2xl">
       <UserInfo userName={userName} />
@@ -340,6 +343,23 @@ export default function PublicListClient({ params }: Props) {
           )}
         </div>
       </div>
+
+      {/* App Store CTA for visitors */}
+      {!isOwner && (
+        <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-xl bg-interactive-3 px-6 py-4 sm:flex-row">
+          <span className="text-lg font-bold text-interactive-1">
+            Save this list & stay up to date
+          </span>
+          <Button
+            onClick={() => {
+              window.open(appStoreUrl, "_blank");
+            }}
+            className="whitespace-nowrap"
+          >
+            Get the app
+          </Button>
+        </div>
+      )}
 
       <EventList
         currentEvents={currentEvents}

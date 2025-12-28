@@ -1,12 +1,13 @@
-import React, { useMemo } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useQuery } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { User } from "~/components/icons";
+import { Heart, User } from "~/components/icons";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
@@ -15,6 +16,7 @@ import { useStableTimestamp } from "~/store";
 export default function UserProfilePage() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const stableTimestamp = useStableTimestamp();
+  const [isFollowing, setIsFollowing] = useState(false);
 
   // Fetch user data by username
   const targetUser = useQuery(
@@ -62,6 +64,14 @@ export default function UserProfilePage() {
     }
   };
 
+  const handleFollow = () => {
+    const newFollowingState = !isFollowing;
+    setIsFollowing(newFollowingState);
+    console.log(
+      `Follow button pressed. New state: ${newFollowingState ? "Following" : "Not following"}`,
+    );
+  };
+
   // targetUser is undefined while loading, null if not found
   const isUserLoading = targetUser === undefined;
   const userNotFound = targetUser === null;
@@ -78,6 +88,7 @@ export default function UserProfilePage() {
             headerBackTitle: "Back",
             headerStyle: { backgroundColor: "#F4F1FF" },
             headerShadowVisible: false,
+            headerTintColor: "#5A32FB",
           }}
         />
         <View className="flex-1 items-center justify-center bg-interactive-3">
@@ -99,6 +110,7 @@ export default function UserProfilePage() {
             headerBackTitle: "Back",
             headerStyle: { backgroundColor: "#F4F1FF" },
             headerShadowVisible: false,
+            headerTintColor: "#5A32FB",
           }}
         />
         <View className="flex-1 items-center justify-center bg-white">
@@ -118,6 +130,7 @@ export default function UserProfilePage() {
           headerBackTitle: "Back",
           headerStyle: { backgroundColor: "#F4F1FF" },
           headerShadowVisible: false,
+          headerTintColor: "#5A32FB",
         }}
       />
       <View className="flex-1 bg-interactive-3">
@@ -126,20 +139,23 @@ export default function UserProfilePage() {
             <ActivityIndicator size="large" color="#5A32FB" />
           </View>
         ) : (
-          <UserEventsList
-            events={enrichedEvents}
-            onEndReached={handleLoadMore}
-            isFetchingNextPage={status === "LoadingMore"}
-            showCreator="never"
-            hideDiscoverableButton={true}
-            isDiscoverFeed={false}
-            HeaderComponent={() => (
-              <UserProfileHeader
-                user={targetUser}
-                eventCount={enrichedEvents.length}
-              />
-            )}
-          />
+          <>
+            <UserEventsList
+              events={enrichedEvents}
+              onEndReached={handleLoadMore}
+              isFetchingNextPage={status === "LoadingMore"}
+              showCreator="never"
+              hideDiscoverableButton={true}
+              isDiscoverFeed={false}
+              HeaderComponent={() => (
+                <UserProfileHeader
+                  user={targetUser}
+                  eventCount={enrichedEvents.length}
+                />
+              )}
+            />
+            <FollowButton isFollowing={isFollowing} onPress={handleFollow} />
+          </>
         )}
       </View>
     </>
@@ -186,11 +202,6 @@ function UserProfileHeader({ user, eventCount }: UserProfileHeaderProps) {
         {user.displayName || user.username}
       </Text>
 
-      {/* Username */}
-      {user.displayName && (
-        <Text className="text-sm text-neutral-2">@{user.username}</Text>
-      )}
-
       {/* Bio */}
       {user.bio && (
         <Text className="mt-2 text-center text-sm text-neutral-2">
@@ -204,6 +215,48 @@ function UserProfileHeader({ user, eventCount }: UserProfileHeaderProps) {
           {eventCount} upcoming {eventCount === 1 ? "event" : "events"}
         </Text>
       </View>
+    </View>
+  );
+}
+
+function FollowButton({
+  isFollowing,
+  onPress,
+}: {
+  isFollowing: boolean;
+  onPress: () => void;
+}) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View
+      className="absolute bottom-0 flex-row items-center justify-center self-center"
+      style={{
+        paddingBottom: insets.bottom + 16,
+        shadowColor: "#5A32FB",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 8,
+      }}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        accessibilityLabel={isFollowing ? "Unfollow" : "Follow"}
+        accessibilityRole="button"
+        activeOpacity={0.8}
+      >
+        <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
+          <Heart
+            size={28}
+            color="#FFFFFF"
+            fill={isFollowing ? "#FFFFFF" : "none"}
+          />
+          <Text className="text-xl font-bold text-white">
+            {isFollowing ? "Following" : "Follow"}
+          </Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 }
