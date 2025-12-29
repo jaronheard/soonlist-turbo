@@ -41,20 +41,136 @@ function filterDuplicates<T extends { id: string }>(items: T[]): T[] {
   });
 }
 
-// Helper used by paginated queries to hydrate events
+// Helper to batch-fetch users by IDs (avoids N+1 queries)
+async function batchGetUsersByIds(ctx: QueryCtx, userIds: string[]) {
+  const uniqueIds = [...new Set(userIds)];
+  const users = await Promise.all(
+    uniqueIds.map((id) =>
+      ctx.db
+        .query("users")
+        .withIndex("by_custom_id", (q) => q.eq("id", id))
+        .unique(),
+    ),
+  );
+  const userMap = new Map<string, Doc<"users"> | null>();
+  uniqueIds.forEach((id, i) => userMap.set(id, users[i] ?? null));
+  return userMap;
+}
+
+// Helper used by paginated queries to hydrate events (batch-optimized)
+// Accepts full event documents to avoid redundant re-fetching
 export async function enrichEventsAndFilterNulls(
   ctx: QueryCtx,
-  events: { id: string }[],
+  events: Doc<"events">[],
 ) {
-  const enrichedEventsWithNulls = await Promise.all(
-    events.map(async (event) => {
-      return await getEventById(ctx, event.id);
-    }),
-  );
+  if (events.length === 0) return [];
 
-  return enrichedEventsWithNulls.filter(
-    (event): event is NonNullable<typeof event> => event !== null,
-  );
+  // Use passed events directly - no need to re-fetch
+  const validEvents = events;
+
+  // Batch fetch all eventFollows, comments, and eventToLists in parallel
+  const [allEventFollows, allComments, allEventToLists] = await Promise.all([
+    Promise.all(
+      validEvents.map((event) =>
+        ctx.db
+          .query("eventFollows")
+          .withIndex("by_event", (q) => q.eq("eventId", event.id))
+          .collect(),
+      ),
+    ),
+    Promise.all(
+      validEvents.map((event) =>
+        ctx.db
+          .query("comments")
+          .withIndex("by_event", (q) => q.eq("eventId", event.id))
+          .collect(),
+      ),
+    ),
+    Promise.all(
+      validEvents.map((event) =>
+        ctx.db
+          .query("eventToLists")
+          .withIndex("by_event", (q) => q.eq("eventId", event.id))
+          .collect(),
+      ),
+    ),
+  ]);
+
+  // Collect all unique user IDs (event creators + followers)
+  const allUserIds: string[] = validEvents.map((e) => e.userId);
+  for (const follows of allEventFollows) {
+    for (const follow of follows) {
+      allUserIds.push(follow.userId);
+    }
+  }
+
+  // Collect all unique list IDs
+  const allListIds: string[] = [];
+  for (const etls of allEventToLists) {
+    for (const etl of etls) {
+      allListIds.push(etl.listId);
+    }
+  }
+
+  // Batch fetch all users and lists
+  const [userMap, listDocs] = await Promise.all([
+    batchGetUsersByIds(ctx, allUserIds),
+    Promise.all(
+      [...new Set(allListIds)].map((listId) =>
+        ctx.db
+          .query("lists")
+          .withIndex("by_custom_id", (q) => q.eq("id", listId))
+          .unique(),
+      ),
+    ),
+  ]);
+
+  // Build list map
+  const uniqueListIds = [...new Set(allListIds)];
+  const listMap = new Map<string, Doc<"lists">>();
+  uniqueListIds.forEach((listId, i) => {
+    const list = listDocs[i];
+    if (list) listMap.set(listId, list);
+  });
+
+  // Assemble enriched events
+  return validEvents.map((event, idx) => {
+    const user = userMap.get(event.userId) ?? null;
+    const eventFollowsRaw = allEventFollows[idx] ?? [];
+    const comments = allComments[idx] ?? [];
+    const eventToLists = allEventToLists[idx] ?? [];
+
+    // Enrich eventFollows with cached user data
+    const eventFollows = eventFollowsRaw.map((follow) => {
+      const follower = userMap.get(follow.userId);
+      return {
+        ...follow,
+        user: follower
+          ? {
+              id: follower.id,
+              username: follower.username,
+              displayName: follower.displayName,
+              userImage: follower.userImage,
+            }
+          : null,
+      };
+    });
+
+    // Map lists from cache
+    const lists: Doc<"lists">[] = [];
+    for (const etl of eventToLists) {
+      const list = listMap.get(etl.listId);
+      if (list) lists.push(list);
+    }
+
+    if (!user) {
+      console.warn(
+        `User not found for event ${event.id} with userId ${event.userId}`,
+      );
+    }
+
+    return { ...event, user, eventFollows, comments, eventToLists, lists };
+  });
 }
 
 // Helper function to parse date/time with timezone using Temporal
@@ -449,26 +565,25 @@ export async function getEventById(ctx: QueryCtx, eventId: string) {
     .withIndex("by_event", (q) => q.eq("eventId", eventId))
     .collect();
 
-  // Enrich eventFollows with user data for displaying who saved the event
-  const eventFollows = await Promise.all(
-    eventFollowsRaw.map(async (follow) => {
-      const follower = await ctx.db
-        .query("users")
-        .withIndex("by_custom_id", (q) => q.eq("id", follow.userId))
-        .unique();
-      return {
-        ...follow,
-        user: follower
-          ? {
-              id: follower.id,
-              username: follower.username,
-              displayName: follower.displayName,
-              userImage: follower.userImage,
-            }
-          : null,
-      };
-    }),
-  );
+  // Batch fetch all follower users (avoids N+1 queries)
+  const followerIds = eventFollowsRaw.map((f) => f.userId);
+  const followerMap = await batchGetUsersByIds(ctx, followerIds);
+
+  // Enrich eventFollows with user data
+  const eventFollows = eventFollowsRaw.map((follow) => {
+    const follower = followerMap.get(follow.userId);
+    return {
+      ...follow,
+      user: follower
+        ? {
+            id: follower.id,
+            username: follower.username,
+            displayName: follower.displayName,
+            userImage: follower.userImage,
+          }
+        : null,
+    };
+  });
 
   const comments = await ctx.db
     .query("comments")

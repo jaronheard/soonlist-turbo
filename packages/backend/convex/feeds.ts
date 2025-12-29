@@ -11,7 +11,7 @@ import {
   query,
 } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
-import { getEventById } from "./model/events";
+import { enrichEventsAndFilterNulls, getEventById } from "./model/events";
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -202,17 +202,8 @@ export const getUserCreatedEvents = query({
     // Paginate
     const results = await orderedQuery.paginate(paginationOpts);
 
-    // Fetch the user who created the events
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_custom_id", (q) => q.eq("id", userId))
-      .first();
-
-    // Enrich events with user data
-    const enrichedEvents = results.page.map((event) => ({
-      ...event,
-      user,
-    }));
+    // Enrich events with user, eventFollows, comments, and lists data
+    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, results.page);
 
     return {
       ...results,

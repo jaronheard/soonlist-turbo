@@ -40,22 +40,13 @@ export default function UserProfilePage() {
     { initialNumItems: 50 },
   );
 
-  // Enrich events with required properties for UserEventsList
-  const enrichedEvents = useMemo(() => {
+  // Filter events client-side as safety check (backend should handle this, but good fallback)
+  const filteredEvents = useMemo(() => {
     const currentTime = new Date(stableTimestamp).getTime();
-    return events
-      .filter((event) => {
-        // Client-side safety filter: hide events that have ended
-        const eventEndTime = new Date(event.endDateTime).getTime();
-        return eventEndTime >= currentTime;
-      })
-      .map((event) => ({
-        ...event,
-        eventFollows: [],
-        comments: [],
-        eventToLists: [],
-        lists: [],
-      }));
+    return events.filter((event) => {
+      const eventEndTime = new Date(event.endDateTime).getTime();
+      return eventEndTime >= currentTime;
+    });
   }, [events, stableTimestamp]);
 
   const handleLoadMore = () => {
@@ -141,7 +132,7 @@ export default function UserProfilePage() {
         ) : (
           <>
             <UserEventsList
-              events={enrichedEvents}
+              events={filteredEvents}
               onEndReached={handleLoadMore}
               isFetchingNextPage={status === "LoadingMore"}
               showCreator="never"
@@ -150,7 +141,7 @@ export default function UserProfilePage() {
               HeaderComponent={() => (
                 <UserProfileHeader
                   user={targetUser}
-                  eventCount={enrichedEvents.length}
+                  eventCount={filteredEvents.length}
                 />
               )}
             />
