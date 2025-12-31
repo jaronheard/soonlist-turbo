@@ -11,6 +11,7 @@ import {
   query,
 } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
+import { enrichEventsAndFilterNulls, getEventById } from "./model/events";
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -42,26 +43,11 @@ async function queryFeed(
   // Paginate
   const feedResults = await feedQuery.paginate(paginationOpts);
 
-  // Map feed entries to full events with users, preserving order
+  // Map feed entries to full events with users and eventFollows, preserving order
   const events = await Promise.all(
     feedResults.page.map(async (feedEntry) => {
-      const event = await ctx.db
-        .query("events")
-        .withIndex("by_custom_id", (q) => q.eq("id", feedEntry.eventId))
-        .first();
-
-      if (!event) return null;
-
-      // Fetch the user who created the event
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_custom_id", (q) => q.eq("id", event.userId))
-        .first();
-
-      return {
-        ...event,
-        user,
-      };
+      // Use getEventById for full enrichment including eventFollows with user data
+      return await getEventById(ctx, feedEntry.eventId);
     }),
   );
 
@@ -216,17 +202,8 @@ export const getUserCreatedEvents = query({
     // Paginate
     const results = await orderedQuery.paginate(paginationOpts);
 
-    // Fetch the user who created the events
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_custom_id", (q) => q.eq("id", userId))
-      .first();
-
-    // Enrich events with user data
-    const enrichedEvents = results.page.map((event) => ({
-      ...event,
-      user,
-    }));
+    // Enrich events with user, eventFollows, comments, and lists data
+    const enrichedEvents = await enrichEventsAndFilterNulls(ctx, results.page);
 
     return {
       ...results,

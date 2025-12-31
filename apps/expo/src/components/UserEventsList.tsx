@@ -49,6 +49,145 @@ import { UserProfileFlair } from "./UserProfileFlair";
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 
+// Type for enriched event follow with user data
+interface EnrichedEventFollow {
+  userId: string;
+  eventId: string;
+  user: {
+    id: string;
+    username: string;
+    displayName?: string | null;
+    userImage?: string | null;
+  } | null;
+}
+
+// Type for user display in stacked avatars
+interface UserForDisplay {
+  id: string;
+  username: string;
+  displayName?: string | null;
+  userImage?: string | null;
+}
+
+// Stacked avatars component for showing multiple users who saved an event
+function EventSaversRow({
+  creator,
+  savers,
+  iconSize,
+  eventId,
+  currentUserId,
+}: {
+  creator: UserForDisplay;
+  savers: UserForDisplay[];
+  iconSize: number;
+  eventId: string;
+  currentUserId?: string;
+}) {
+  // Combine creator with savers, deduplicate by id, and limit to first 2
+  const allUsers: UserForDisplay[] = [creator];
+  for (const saver of savers) {
+    if (!allUsers.some((u) => u.id === saver.id)) {
+      allUsers.push(saver);
+    }
+  }
+
+  const displayUsers = allUsers.slice(0, 2);
+  const remainingCount = allUsers.length - displayUsers.length;
+
+  const handleUserPress = (user: UserForDisplay) => {
+    // If clicking on yourself, go to account settings
+    if (currentUserId && user.id === currentUserId) {
+      router.push("/settings/account");
+    } else {
+      router.push(`/${user.username}`);
+    }
+  };
+
+  // Format names text
+  const getNamesText = () => {
+    const names = displayUsers.map(
+      (u) => u.displayName || u.username || "unknown",
+    );
+    if (names.length === 1) {
+      return names[0];
+    }
+    if (remainingCount > 0) {
+      return `${names.join(", ")} +${remainingCount} more`;
+    }
+    return names.join(", ");
+  };
+
+  const avatarSize = iconSize * 1.1;
+  const overlap = avatarSize * 0.3;
+
+  return (
+    <View className="mx-auto mt-1 flex-row items-center gap-2">
+      {/* Stacked avatars */}
+      <View
+        className="flex-row items-center"
+        style={{
+          width:
+            avatarSize + (displayUsers.length - 1) * (avatarSize - overlap),
+        }}
+      >
+        {displayUsers.map((user, index) => (
+          <Pressable
+            key={user.id}
+            onPress={() => handleUserPress(user)}
+            style={{
+              position: index === 0 ? "relative" : "absolute",
+              left: index * (avatarSize - overlap),
+              zIndex: displayUsers.length - index,
+            }}
+          >
+            <UserProfileFlair username={user.username} size="xs">
+              {user.userImage ? (
+                <ExpoImage
+                  source={{ uri: user.userImage }}
+                  style={{
+                    width: avatarSize,
+                    height: avatarSize,
+                    borderRadius: 9999,
+                    borderWidth: 2,
+                    borderColor: "white",
+                  }}
+                  contentFit="cover"
+                  contentPosition="center"
+                  cachePolicy="disk"
+                  transition={100}
+                  recyclingKey={`${eventId}-saver-${user.id}`}
+                />
+              ) : (
+                <View
+                  style={{
+                    width: avatarSize,
+                    height: avatarSize,
+                    borderRadius: 9999,
+                    borderWidth: 2,
+                    borderColor: "white",
+                    backgroundColor: "#E0D9FF",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <User size={avatarSize * 0.6} color="#627496" />
+                </View>
+              )}
+            </UserProfileFlair>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Names text */}
+      <Pressable
+        onPress={() => displayUsers[0] && handleUserPress(displayUsers[0])}
+      >
+        <Text className="text-xs text-neutral-2">{getNamesText()}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 // Define the type for the stats data based on the expected query output
 type EventStatsData = FunctionReturnType<typeof api.events.getStats>;
 
@@ -433,30 +572,33 @@ export function UserEventListItem(props: UserEventListItemProps) {
             </View>
           </View>
           {shouldShowCreator ? (
-            <View className="mx-auto mt-1 flex-row items-center gap-3">
-              <UserProfileFlair username={eventUser.username} size="xs">
-                {eventUser.userImage ? (
-                  <ExpoImage
-                    source={{ uri: eventUser.userImage }}
-                    style={{
-                      width: iconSize * 0.9,
-                      height: iconSize * 0.9,
-                      borderRadius: 9999,
-                    }}
-                    contentFit="cover"
-                    contentPosition="center"
-                    cachePolicy="disk"
-                    transition={100}
-                    recyclingKey={`${event.id}-user`}
-                  />
-                ) : (
-                  <User size={iconSize * 0.9} color="#627496" />
-                )}
-              </UserProfileFlair>
-              <Text className="text-xs text-neutral-2">
-                {eventUser.displayName || eventUser.username || "unknown"}
-              </Text>
-            </View>
+            <EventSaversRow
+              creator={{
+                id: eventUser.id,
+                username: eventUser.username,
+                displayName: eventUser.displayName,
+                userImage: eventUser.userImage,
+              }}
+              savers={
+                (event.eventFollows as EnrichedEventFollow[] | undefined)
+                  ?.filter(
+                    (
+                      f,
+                    ): f is EnrichedEventFollow & {
+                      user: NonNullable<EnrichedEventFollow["user"]>;
+                    } => f.user !== null,
+                  )
+                  .map((f) => ({
+                    id: f.user.id,
+                    username: f.user.username,
+                    displayName: f.user.displayName,
+                    userImage: f.user.userImage,
+                  })) ?? []
+              }
+              iconSize={iconSize}
+              eventId={event.id}
+              currentUserId={currentUser?.id}
+            />
           ) : null}
           <View className="absolute left-0 right-0 top-0 z-20 flex flex-row items-center justify-center space-x-2">
             {isRecent && (
