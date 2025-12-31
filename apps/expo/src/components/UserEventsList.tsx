@@ -123,9 +123,8 @@ function EventSaversRow({
   return (
     <View className="mx-auto mt-1 flex-row items-center gap-2">
       {/* Stacked avatars */}
-      <Pressable
+      <View
         className="flex-row items-center"
-        onPress={() => displayUsers[0] && handleUserPress(displayUsers[0])}
         style={{
           width:
             avatarSize + (displayUsers.length - 1) * (avatarSize - overlap),
@@ -177,7 +176,7 @@ function EventSaversRow({
             </UserProfileFlair>
           </Pressable>
         ))}
-      </Pressable>
+      </View>
 
       {/* Names text */}
       <Pressable

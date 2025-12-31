@@ -141,23 +141,18 @@ export default function EditProfileScreen() {
     api.users.updatePublicListSettings,
   );
 
-  // Public list state
+  // Public list state - read directly from userData, Convex reactivity handles updates
   const showDiscover = user ? getPlanStatusFromUser(user).showDiscover : false;
-  const [publicListEnabled, setPublicListEnabled] = useState(
-    userData?.publicListEnabled ?? false,
-  );
-  const [publicListName, setPublicListName] = useState(
-    userData?.publicListName ?? "",
-  );
+  const publicListEnabled = userData?.publicListEnabled ?? false;
+  const publicListName = userData?.publicListName ?? "";
+  // Local state only for TextInput (controlled component while typing)
+  const [publicListNameInput, setPublicListNameInput] = useState<string>("");
   const [isUpdatingList, setIsUpdatingList] = useState(false);
 
-  // Sync public list state when userData changes
+  // Sync TextInput value from userData when it changes
   useEffect(() => {
-    if (userData) {
-      setPublicListEnabled(userData.publicListEnabled ?? false);
-      setPublicListName(userData.publicListName ?? "");
-    }
-  }, [userData]);
+    setPublicListNameInput(userData?.publicListName ?? "");
+  }, [userData?.publicListName]);
 
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
@@ -317,18 +312,11 @@ export default function EditProfileScreen() {
 
     try {
       const defaultName = `${userData?.displayName || user.username}'s events`;
-      const nameToSave = newEnabled ? publicListName || defaultName : undefined;
-
       await updatePublicListSettings({
         userId: user.id,
         publicListEnabled: newEnabled,
-        publicListName: nameToSave,
+        publicListName: newEnabled ? publicListName || defaultName : undefined,
       });
-      setPublicListEnabled(newEnabled);
-      // Update local state with the name we just saved
-      if (newEnabled && !publicListName) {
-        setPublicListName(defaultName);
-      }
       toast.success(
         newEnabled ? "Public list enabled" : "Public list disabled",
       );
@@ -354,7 +342,7 @@ export default function EditProfileScreen() {
     try {
       await updatePublicListSettings({
         userId: user.id,
-        publicListName: publicListName.trim() || undefined,
+        publicListName: publicListNameInput.trim() || undefined,
       });
       toast.success("List name updated");
     } catch (error) {
@@ -363,7 +351,12 @@ export default function EditProfileScreen() {
     } finally {
       setIsUpdatingList(false);
     }
-  }, [user?.id, publicListEnabled, publicListName, updatePublicListSettings]);
+  }, [
+    user?.id,
+    publicListEnabled,
+    publicListNameInput,
+    updatePublicListSettings,
+  ]);
 
   const getPublicListUrl = useCallback(() => {
     if (!user?.username) return "";
@@ -502,6 +495,14 @@ export default function EditProfileScreen() {
                     value={publicListEnabled}
                     onValueChange={handleTogglePublicList}
                     disabled={isUpdatingList}
+                    accessibilityLabel="Public list enabled"
+                    accessibilityRole="switch"
+                    accessibilityState={{
+                      checked: publicListEnabled,
+                      disabled: isUpdatingList,
+                    }}
+                    testID="public-list-switch"
+                    accessibilityHint="Toggle to enable or disable sharing your events via a public link"
                   />
                 </View>
 
@@ -513,8 +514,8 @@ export default function EditProfileScreen() {
                     <TextInput
                       className="mb-4 rounded-lg border border-neutral-300 bg-white px-4 py-3 text-base"
                       placeholder="Enter list name"
-                      value={publicListName}
-                      onChangeText={setPublicListName}
+                      value={publicListNameInput}
+                      onChangeText={setPublicListNameInput}
                       onBlur={handleUpdateListName}
                       onSubmitEditing={handleUpdateListName}
                       returnKeyType="done"
@@ -528,6 +529,10 @@ export default function EditProfileScreen() {
                       onPress={handleSharePublicList}
                       className="flex-row items-center justify-between rounded-lg border border-interactive-1 bg-interactive-1/5 px-4 py-3"
                       activeOpacity={0.7}
+                      accessible={true}
+                      accessibilityRole="button"
+                      accessibilityLabel="Share public list link"
+                      accessibilityHint="Opens share sheet to copy or share your public list URL"
                     >
                       <Text
                         className="flex-1 text-base font-medium text-interactive-1"
@@ -535,7 +540,9 @@ export default function EditProfileScreen() {
                       >
                         {getPublicListUrl().replace("https://", "")}
                       </Text>
-                      <ShareIcon size={20} color="#5A32FB" />
+                      <View accessible={false}>
+                        <ShareIcon size={20} color="#5A32FB" />
+                      </View>
                     </TouchableOpacity>
                   </View>
                 )}
