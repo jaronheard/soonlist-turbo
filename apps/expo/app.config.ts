@@ -183,7 +183,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         "mailto",
       ],
     },
-    associatedDomains: ["applinks:www.soonlist.com", "applinks:soonlist.com"],
+    associatedDomains: [
+      "applinks:www.soonlist.com",
+      "applinks:soonlist.com",
+      "applinks:soonlist.onelink.me",
+    ],
   },
   android: {
     package: getUniqueIdentifier(),

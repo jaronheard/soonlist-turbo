@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { Stack, useLocalSearchParams } from "expo-router";
-import { useQuery } from "convex/react";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -12,17 +13,33 @@ import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useStableTimestamp } from "~/store";
+import { logError } from "~/utils/errorLogging";
 
 export default function UserProfilePage() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const stableTimestamp = useStableTimestamp();
-  const [isFollowing, setIsFollowing] = useState(false);
+  const router = useRouter();
+  const { isAuthenticated } = useConvexAuth();
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   // Fetch user data by username
   const targetUser = useQuery(
     api.users.getByUsername,
     username ? { userName: username } : "skip",
   );
+
+  // Get current user to check if viewing own profile
+  const currentUser = useQuery(api.users.getCurrentUser);
+
+  // Check if current user is following the target user
+  const isFollowing = useQuery(
+    api.users.isFollowingUser,
+    targetUser?.id ? { followingId: targetUser.id } : "skip",
+  );
+
+  // Follow/unfollow mutations
+  const followUserMutation = useMutation(api.users.followUser);
+  const unfollowUserMutation = useMutation(api.users.unfollowUser);
 
   // Fetch user's public events
   const {
@@ -55,17 +72,47 @@ export default function UserProfilePage() {
     }
   };
 
-  const handleFollow = () => {
-    const newFollowingState = !isFollowing;
-    setIsFollowing(newFollowingState);
-    console.log(
-      `Follow button pressed. New state: ${newFollowingState ? "Following" : "Not following"}`,
-    );
-  };
+  const handleFollow = useCallback(async () => {
+    if (!targetUser?.id) return;
+
+    // If not authenticated, redirect to sign-in
+    if (!isAuthenticated) {
+      router.push("/(auth)/sign-in");
+      return;
+    }
+
+    setIsFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await unfollowUserMutation({ followingId: targetUser.id });
+        toast.success(
+          `Unfollowed ${targetUser.displayName || targetUser.username}`,
+        );
+      } else {
+        await followUserMutation({ followingId: targetUser.id });
+        toast.success(
+          `Following ${targetUser.displayName || targetUser.username}`,
+        );
+      }
+    } catch (error) {
+      logError("Error following/unfollowing user", error);
+      toast.error(isFollowing ? "Failed to unfollow" : "Failed to follow");
+    } finally {
+      setIsFollowLoading(false);
+    }
+  }, [
+    targetUser,
+    isAuthenticated,
+    isFollowing,
+    followUserMutation,
+    unfollowUserMutation,
+    router,
+  ]);
 
   // targetUser is undefined while loading, null if not found
   const isUserLoading = targetUser === undefined;
   const userNotFound = targetUser === null;
+  const isOwnProfile = currentUser?.id === targetUser?.id;
 
   // Show loading state while user data is being fetched
   if (isUserLoading) {
@@ -145,7 +192,14 @@ export default function UserProfilePage() {
                 />
               )}
             />
-            <FollowButton isFollowing={isFollowing} onPress={handleFollow} />
+            {/* Don't show follow button on own profile */}
+            {!isOwnProfile && (
+              <FollowButton
+                isFollowing={isFollowing ?? false}
+                isLoading={isFollowLoading || isFollowing === undefined}
+                onPress={handleFollow}
+              />
+            )}
           </>
         )}
       </View>
@@ -212,9 +266,11 @@ function UserProfileHeader({ user, eventCount }: UserProfileHeaderProps) {
 
 function FollowButton({
   isFollowing,
+  isLoading,
   onPress,
 }: {
   isFollowing: boolean;
+  isLoading: boolean;
   onPress: () => void;
 }) {
   const insets = useSafeAreaInsets();
@@ -233,18 +289,27 @@ function FollowButton({
     >
       <TouchableOpacity
         onPress={onPress}
+        disabled={isLoading}
         accessibilityLabel={isFollowing ? "Unfollow" : "Follow"}
         accessibilityRole="button"
         activeOpacity={0.8}
       >
-        <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
-          <Heart
-            size={28}
-            color="#FFFFFF"
-            fill={isFollowing ? "#FFFFFF" : "none"}
-          />
+        <View
+          className={`flex-row items-center gap-4 rounded-full px-8 py-5 ${
+            isFollowing ? "bg-neutral-2" : "bg-interactive-1"
+          }`}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Heart
+              size={28}
+              color="#FFFFFF"
+              fill={isFollowing ? "#FFFFFF" : "none"}
+            />
+          )}
           <Text className="text-xl font-bold text-white">
-            {isFollowing ? "Following" : "Follow"}
+            {isLoading ? "Loading..." : isFollowing ? "Following" : "Follow"}
           </Text>
         </View>
       </TouchableOpacity>

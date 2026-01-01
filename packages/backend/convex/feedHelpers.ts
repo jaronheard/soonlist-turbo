@@ -640,3 +640,79 @@ export const removeEventFromListFollowersFeeds = internalMutation({
     }
   },
 });
+
+// Helper to add all public events from a followed user to the follower's "Following" feed
+export const addUserEventsToUserFeed = internalMutation({
+  args: {
+    userId: v.string(),
+    followedUserId: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { userId, followedUserId }) => {
+    // Get all public events from the followed user
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", followedUserId))
+      .collect();
+
+    const currentTime = Date.now();
+    const followedUsersFeedId = `followedUsers_${userId}`;
+
+    for (const event of events) {
+      // Only add public events
+      if (event.visibility !== "public") {
+        continue;
+      }
+
+      const eventStartTime = new Date(event.startDateTime).getTime();
+      const eventEndTime = new Date(event.endDateTime).getTime();
+
+      // Upsert into followedUsers feed (Following tab only)
+      await upsertFeedEntry(
+        ctx,
+        followedUsersFeedId,
+        event.id,
+        eventStartTime,
+        eventEndTime,
+        currentTime,
+      );
+    }
+
+    return null;
+  },
+});
+
+// Helper to remove all events from an unfollowed user from the follower's "Following" feed
+export const removeUserEventsFromUserFeed = internalMutation({
+  args: {
+    userId: v.string(),
+    unfollowedUserId: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { userId, unfollowedUserId }) => {
+    // Get all events from the unfollowed user
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", unfollowedUserId))
+      .collect();
+
+    const followedUsersFeedId = `followedUsers_${userId}`;
+
+    for (const event of events) {
+      // Remove from followedUsers feed (Following tab only)
+      const existingEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", followedUsersFeedId).eq("eventId", event.id),
+        )
+        .first();
+
+      if (existingEntry) {
+        await userFeedsAggregate.deleteIfExists(ctx, existingEntry);
+        await ctx.db.delete(existingEntry._id);
+      }
+    }
+
+    return null;
+  },
+});

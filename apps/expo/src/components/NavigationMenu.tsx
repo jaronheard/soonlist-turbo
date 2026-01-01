@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu-primitives";
 
-type RouteType = "upcoming" | "past" | "discover";
+type RouteType = "upcoming" | "past" | "following" | "discover";
 
 interface NavigationMenuProps {
   active?: RouteType;
@@ -27,6 +27,7 @@ interface NavigationMenuProps {
 
 const baseRoutes = [
   { label: "Upcoming", path: "/feed" },
+  { label: "Following", path: "/following" },
   { label: "Past", path: "/past" },
   { label: "Discover", path: "/discover" },
 ] as const;
@@ -47,7 +48,9 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
     (user ? getPlanStatusFromUser(user).showDiscover : false);
 
   const { routes, currentRoute } = useMemo(() => {
-    const routes = showDiscover ? baseRoutes : baseRoutes.slice(0, 2);
+    // Always show Upcoming, Following, Past (first 3 routes)
+    // Conditionally show Discover based on plan status
+    const routes = showDiscover ? baseRoutes : baseRoutes.slice(0, 3);
     const currentRoute =
       routes.find((r) => isRouteActive(r.path, active))?.label ?? "Upcoming";
 

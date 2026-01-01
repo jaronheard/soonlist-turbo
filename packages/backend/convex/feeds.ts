@@ -127,6 +127,25 @@ export const getFollowedListsFeed = query({
   },
 });
 
+// Helper query to get followed users feed (events from users you follow)
+export const getFollowedUsersFeed = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
+  },
+  handler: async (ctx, { paginationOpts, filter = "upcoming" }) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      throw new ConvexError("Authentication required");
+    }
+
+    const feedId = `followedUsers_${userId}`;
+
+    // Use the common query function
+    return queryFeed(ctx, feedId, paginationOpts, filter);
+  },
+});
+
 export const getDiscoverFeed = query({
   args: {
     paginationOpts: paginationOptsValidator,
