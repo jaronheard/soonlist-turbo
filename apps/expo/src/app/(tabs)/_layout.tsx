@@ -46,6 +46,20 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="following"
+          options={{
+            title: "Following",
+            headerTitle: () => (
+              <View className="flex-1 items-center justify-center">
+                <NavigationMenu active="following" />
+              </View>
+            ),
+            headerTitleAlign: "center",
+            headerLeft: () => <HeaderLogo />,
+            headerRight: () => <ProfileMenu />,
+          }}
+        />
+        <Tabs.Screen
           name="past"
           options={{
             title: "Past",
