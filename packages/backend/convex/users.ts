@@ -1163,6 +1163,7 @@ export const followUser = mutation({
   args: {
     followingId: v.string(),
   },
+  returns: v.object({ success: v.boolean(), alreadyFollowing: v.boolean() }),
   handler: async (ctx, { followingId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -1221,6 +1222,7 @@ export const unfollowUser = mutation({
   args: {
     followingId: v.string(),
   },
+  returns: v.object({ success: v.boolean(), wasFollowing: v.boolean() }),
   handler: async (ctx, { followingId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -1261,6 +1263,7 @@ export const isFollowingUser = query({
   args: {
     followingId: v.string(),
   },
+  returns: v.boolean(),
   handler: async (ctx, { followingId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {

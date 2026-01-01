@@ -10,6 +10,7 @@ import {
   useMutation,
   useQuery,
 } from "convex/react";
+import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -28,7 +29,12 @@ function FollowingHeader() {
   const userCount = followingUsers?.length ?? 0;
 
   const handleUnfollow = async (userId: string) => {
-    await unfollowUserMutation({ followingId: userId });
+    try {
+      await unfollowUserMutation({ followingId: userId });
+      toast.success("Unfollowed user");
+    } catch {
+      toast.error("Failed to unfollow user");
+    }
   };
 
   if (userCount === 0) {
@@ -227,7 +233,7 @@ function FollowingFeedContent() {
 }
 
 function FollowingFeed() {
-  const { hasSeenOnboarding } = useAppStore();
+  const hasSeenOnboarding = useAppStore((state) => state.hasSeenOnboarding);
 
   return (
     <>

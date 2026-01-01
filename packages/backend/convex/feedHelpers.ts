@@ -647,6 +647,7 @@ export const addUserEventsToUserFeed = internalMutation({
     userId: v.string(),
     followedUserId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, { userId, followedUserId }) => {
     // Get all public events from the followed user
     const events = await ctx.db
@@ -676,6 +677,8 @@ export const addUserEventsToUserFeed = internalMutation({
         currentTime,
       );
     }
+
+    return null;
   },
 });
 
@@ -685,6 +688,7 @@ export const removeUserEventsFromUserFeed = internalMutation({
     userId: v.string(),
     unfollowedUserId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, { userId, unfollowedUserId }) => {
     // Get all events from the unfollowed user
     const events = await ctx.db
@@ -708,5 +712,7 @@ export const removeUserEventsFromUserFeed = internalMutation({
         await ctx.db.delete(existingEntry._id);
       }
     }
+
+    return null;
   },
 });
