@@ -254,7 +254,7 @@ export default function PublicListClient({ params }: Props) {
   // AppsFlyer OneLink URL with deep link parameters for follow intent
   // When users download the app via this link, they'll be redirected to follow this user
   // Note: deep_link_value and deep_link_sub1 are passed to the app via AppsFlyer SDK
-  const getAppUrl = `https://soonlist.onelink.me/QM97?pid=soonlist_web&c=public_list_follow&deep_link_value=follow&deep_link_sub1=${userName}`;
+  const getAppUrl = `https://soonlist.onelink.me/QM97?pid=soonlist_web&c=public_list_follow&deep_link_value=follow&deep_link_sub1=${encodeURIComponent(userName)}`;
 
   return (
     <div className="mx-auto max-w-2xl">
