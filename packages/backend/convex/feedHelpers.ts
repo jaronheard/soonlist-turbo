@@ -640,3 +640,150 @@ export const removeEventFromListFollowersFeeds = internalMutation({
     }
   },
 });
+
+// Helper to add all public events from a followed user to the follower's feed
+export const addUserEventsToUserFeed = internalMutation({
+  args: {
+    userId: v.string(),
+    followedUserId: v.string(),
+  },
+  handler: async (ctx, { userId, followedUserId }) => {
+    // Get all public events from the followed user
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", followedUserId))
+      .collect();
+
+    const currentTime = Date.now();
+    const followedUsersFeedId = `followedUsers_${userId}`;
+    const personalFeedId = `user_${userId}`;
+
+    for (const event of events) {
+      // Only add public events
+      if (event.visibility !== "public") {
+        continue;
+      }
+
+      const eventStartTime = new Date(event.startDateTime).getTime();
+      const eventEndTime = new Date(event.endDateTime).getTime();
+
+      // Upsert into followedUsers feed
+      await upsertFeedEntry(
+        ctx,
+        followedUsersFeedId,
+        event.id,
+        eventStartTime,
+        eventEndTime,
+        currentTime,
+      );
+
+      // Upsert into personal feed
+      await upsertFeedEntry(
+        ctx,
+        personalFeedId,
+        event.id,
+        eventStartTime,
+        eventEndTime,
+        currentTime,
+      );
+    }
+  },
+});
+
+// Helper to remove all events from an unfollowed user from the follower's feed
+export const removeUserEventsFromUserFeed = internalMutation({
+  args: {
+    userId: v.string(),
+    unfollowedUserId: v.string(),
+  },
+  handler: async (ctx, { userId, unfollowedUserId }) => {
+    // Get all events from the unfollowed user
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", unfollowedUserId))
+      .collect();
+
+    const followedUsersFeedId = `followedUsers_${userId}`;
+    const personalFeedId = `user_${userId}`;
+
+    // Get all users the current user follows (excluding the one being unfollowed)
+    const userFollows = await ctx.db
+      .query("userFollows")
+      .withIndex("by_follower", (q) => q.eq("followerId", userId))
+      .collect();
+
+    const followedUserIds = new Set(userFollows.map((f) => f.followingId));
+    followedUserIds.delete(unfollowedUserId);
+
+    for (const event of events) {
+      // Remove from followedUsers feed
+      const existingFollowedUsersEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", followedUsersFeedId).eq("eventId", event.id),
+        )
+        .first();
+
+      if (existingFollowedUsersEntry) {
+        await userFeedsAggregate.deleteIfExists(ctx, existingFollowedUsersEntry);
+        await ctx.db.delete(existingFollowedUsersEntry._id);
+      }
+
+      // Check if event should remain in personal feed before removing
+      // Event should stay if:
+      // 1. User created the event
+      // 2. User follows the event directly (via eventFollows)
+      // 3. Event is from another user the current user follows
+      // 4. Event is in a list the user follows
+      const isCreator = event.userId === userId;
+      if (isCreator) {
+        continue;
+      }
+
+      // Check if user follows the event directly
+      const eventFollow = await ctx.db
+        .query("eventFollows")
+        .withIndex("by_user_and_event", (q) =>
+          q.eq("userId", userId).eq("eventId", event.id),
+        )
+        .first();
+
+      if (eventFollow) {
+        continue;
+      }
+
+      // Check if event is in a list the user follows
+      const eventToLists = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event", (q) => q.eq("eventId", event.id))
+        .collect();
+
+      const listFollows = await ctx.db
+        .query("listFollows")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect();
+
+      const followedListIds = new Set(listFollows.map((f) => f.listId));
+      const isInFollowedList = eventToLists.some((etl) =>
+        followedListIds.has(etl.listId),
+      );
+
+      if (isInFollowedList) {
+        continue;
+      }
+
+      // Safe to remove from personal feed
+      const existingPersonalEntry = await ctx.db
+        .query("userFeeds")
+        .withIndex("by_feed_event", (q) =>
+          q.eq("feedId", personalFeedId).eq("eventId", event.id),
+        )
+        .first();
+
+      if (existingPersonalEntry) {
+        await userFeedsAggregate.deleteIfExists(ctx, existingPersonalEntry);
+        await ctx.db.delete(existingPersonalEntry._id);
+      }
+    }
+  },
+});

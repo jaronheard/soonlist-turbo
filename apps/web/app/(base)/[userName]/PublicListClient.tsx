@@ -251,8 +251,10 @@ export default function PublicListClient({ params }: Props) {
   }
 
   // Show public list (either as owner or visitor)
-  const appStoreUrl =
-    "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216";
+  // AppsFlyer OneLink URL with deep link parameters for follow intent
+  // When users download the app via this link, they'll be redirected to follow this user
+  // Note: deep_link_value and deep_link_sub1 are passed to the app via AppsFlyer SDK
+  const getAppUrl = `https://soonlist.onelink.me/QM97?pid=soonlist_web&c=public_list_follow&deep_link_value=follow&deep_link_sub1=${userName}`;
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -344,15 +346,15 @@ export default function PublicListClient({ params }: Props) {
         </div>
       </div>
 
-      {/* App Store CTA for visitors */}
+      {/* App Store CTA for visitors with deep link to follow this user */}
       {!isOwner && (
         <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-xl bg-interactive-3 px-6 py-4 sm:flex-row">
           <span className="text-lg font-bold text-interactive-1">
-            Save this list & stay up to date
+            Follow {publicListData?.user.displayName || userName} in the app
           </span>
           <Button
             onClick={() => {
-              window.open(appStoreUrl, "_blank");
+              window.open(getAppUrl, "_blank");
             }}
             className="whitespace-nowrap"
           >

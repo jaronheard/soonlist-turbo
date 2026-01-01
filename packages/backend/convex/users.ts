@@ -1155,3 +1155,178 @@ export const deleteUserAndCascade = internalMutation({
     await ctx.db.delete(user._id);
   },
 });
+
+/**
+ * Follow a user - their public events will appear in the follower's feed
+ */
+export const followUser = mutation({
+  args: {
+    followingId: v.string(),
+  },
+  handler: async (ctx, { followingId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Authentication required");
+    }
+
+    const followerId = identity.subject;
+
+    // Can't follow yourself
+    if (followerId === followingId) {
+      throw new ConvexError("Cannot follow yourself");
+    }
+
+    // Check if target user exists
+    const targetUser = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", followingId))
+      .unique();
+
+    if (!targetUser) {
+      throw new ConvexError("User not found");
+    }
+
+    // Check if already following
+    const existingFollow = await ctx.db
+      .query("userFollows")
+      .withIndex("by_follower_and_following", (q) =>
+        q.eq("followerId", followerId).eq("followingId", followingId),
+      )
+      .first();
+
+    if (existingFollow) {
+      return { success: true, alreadyFollowing: true };
+    }
+
+    // Create the follow relationship
+    await ctx.db.insert("userFollows", {
+      followerId,
+      followingId,
+    });
+
+    // Add the followed user's events to the follower's feed
+    await ctx.runMutation(internal.feedHelpers.addUserEventsToUserFeed, {
+      userId: followerId,
+      followedUserId: followingId,
+    });
+
+    return { success: true, alreadyFollowing: false };
+  },
+});
+
+/**
+ * Unfollow a user - their events will be removed from the follower's feed
+ */
+export const unfollowUser = mutation({
+  args: {
+    followingId: v.string(),
+  },
+  handler: async (ctx, { followingId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Authentication required");
+    }
+
+    const followerId = identity.subject;
+
+    // Find the existing follow relationship
+    const existingFollow = await ctx.db
+      .query("userFollows")
+      .withIndex("by_follower_and_following", (q) =>
+        q.eq("followerId", followerId).eq("followingId", followingId),
+      )
+      .first();
+
+    if (!existingFollow) {
+      return { success: true, wasFollowing: false };
+    }
+
+    // Delete the follow relationship
+    await ctx.db.delete(existingFollow._id);
+
+    // Remove the unfollowed user's events from the follower's feed
+    await ctx.runMutation(internal.feedHelpers.removeUserEventsFromUserFeed, {
+      userId: followerId,
+      unfollowedUserId: followingId,
+    });
+
+    return { success: true, wasFollowing: true };
+  },
+});
+
+/**
+ * Check if the current user follows a specific user
+ */
+export const isFollowingUser = query({
+  args: {
+    followingId: v.string(),
+  },
+  handler: async (ctx, { followingId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return false;
+    }
+
+    const followerId = identity.subject;
+
+    const existingFollow = await ctx.db
+      .query("userFollows")
+      .withIndex("by_follower_and_following", (q) =>
+        q.eq("followerId", followerId).eq("followingId", followingId),
+      )
+      .first();
+
+    return !!existingFollow;
+  },
+});
+
+/**
+ * Get users that the current user is following
+ */
+export const getFollowingUsers = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const userId = identity.subject;
+
+    const follows = await ctx.db
+      .query("userFollows")
+      .withIndex("by_follower", (q) => q.eq("followerId", userId))
+      .collect();
+
+    const users = await Promise.all(
+      follows.map(async (follow) => {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_custom_id", (q) => q.eq("id", follow.followingId))
+          .first();
+        return user;
+      }),
+    );
+
+    return users.filter(
+      (user): user is NonNullable<typeof user> => user !== null,
+    );
+  },
+});
+
+/**
+ * Get the count of followers for a user
+ */
+export const getFollowerCount = query({
+  args: {
+    userId: v.string(),
+  },
+  handler: async (ctx, { userId }) => {
+    const follows = await ctx.db
+      .query("userFollows")
+      .withIndex("by_following", (q) => q.eq("followingId", userId))
+      .collect();
+
+    return follows.length;
+  },
+});

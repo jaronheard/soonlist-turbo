@@ -31,9 +31,11 @@ import { Toaster } from "sonner-native";
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
+import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
 import { useForceUpdate } from "~/hooks/useForceUpdate";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
+import { usePendingFollow } from "~/hooks/usePendingFollow";
 import { useQuickActions } from "~/hooks/useQuickActions";
 import { useTimezoneAlert } from "~/hooks/useTimezoneAlert";
 import { useAppStore } from "~/store";
@@ -282,6 +284,8 @@ const InitialLayout = () => {
 function RootLayoutContent() {
   useMediaPermissions();
   useQuickActions();
+  useAppsFlyerDeepLink();
+  usePendingFollow();
   const ref = useNavigationContainerRef();
   const pathname = usePathname();
   const params = useGlobalSearchParams();

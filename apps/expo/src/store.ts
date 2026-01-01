@@ -167,6 +167,10 @@ interface AppState {
   // Rating prompt state
   hasShownRatingPrompt: boolean;
   markRatingPromptShown: () => void;
+
+  // Pending follow from deep link (used when user is not authenticated yet)
+  pendingFollowUsername: string | null;
+  setPendingFollowUsername: (username: string | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -393,6 +397,7 @@ export const useAppStore = create<AppState>()(
           totalEventViews: 0,
           lastPaywallShownAtView: 0,
           hasShownRatingPrompt: false,
+          pendingFollowUsername: null,
         }),
 
       // Reset for logout - preserves onboarding state
@@ -440,6 +445,8 @@ export const useAppStore = create<AppState>()(
           totalEventViews: 0,
           lastPaywallShownAtView: 0,
           hasShownRatingPrompt: false,
+          // Keep pendingFollowUsername in case user is re-authenticating
+          pendingFollowUsername: state.pendingFollowUsername,
         })),
 
       // Stable timestamp for query filtering
@@ -495,6 +502,11 @@ export const useAppStore = create<AppState>()(
       // Rating prompt state
       hasShownRatingPrompt: false,
       markRatingPromptShown: () => set({ hasShownRatingPrompt: true }),
+
+      // Pending follow from deep link
+      pendingFollowUsername: null,
+      setPendingFollowUsername: (username) =>
+        set({ pendingFollowUsername: username }),
     }),
     {
       name: "app-storage",
@@ -590,3 +602,9 @@ export const usePreferredCalendarApp = () =>
   useAppStore((state) => state.preferredCalendarApp);
 export const useSetPreferredCalendarApp = () =>
   useAppStore((state) => state.setPreferredCalendarApp);
+
+// Pending follow selectors (for deferred deep link follow intent)
+export const usePendingFollowUsername = () =>
+  useAppStore((state) => state.pendingFollowUsername);
+export const useSetPendingFollowUsername = () =>
+  useAppStore((state) => state.setPendingFollowUsername);
