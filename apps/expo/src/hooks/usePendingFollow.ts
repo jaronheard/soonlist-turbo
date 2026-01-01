@@ -32,11 +32,7 @@ export function usePendingFollow() {
     // 1. User is authenticated
     // 2. There's a pending follow username
     // 3. We haven't already processed this
-    if (
-      isAuthenticated &&
-      pendingFollowUsername &&
-      !hasProcessed.current
-    ) {
+    if (isAuthenticated && pendingFollowUsername && !hasProcessed.current) {
       hasProcessed.current = true;
 
       logDebug("Processing pending follow", {
@@ -53,7 +49,12 @@ export function usePendingFollow() {
         router.push(`/${usernameToFollow}`);
       }, 500);
     }
-  }, [isAuthenticated, pendingFollowUsername, setPendingFollowUsername, router]);
+  }, [
+    isAuthenticated,
+    pendingFollowUsername,
+    setPendingFollowUsername,
+    router,
+  ]);
 
   // Reset the hasProcessed flag when pendingFollowUsername changes
   // This allows processing a new pending follow if one is set

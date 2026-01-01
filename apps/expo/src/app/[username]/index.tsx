@@ -85,10 +85,14 @@ export default function UserProfilePage() {
     try {
       if (isFollowing) {
         await unfollowUserMutation({ followingId: targetUser.id });
-        toast.success(`Unfollowed ${targetUser.displayName || targetUser.username}`);
+        toast.success(
+          `Unfollowed ${targetUser.displayName || targetUser.username}`,
+        );
       } else {
         await followUserMutation({ followingId: targetUser.id });
-        toast.success(`Following ${targetUser.displayName || targetUser.username}`);
+        toast.success(
+          `Following ${targetUser.displayName || targetUser.username}`,
+        );
       }
     } catch (error) {
       logError("Error following/unfollowing user", error);
@@ -305,11 +309,7 @@ function FollowButton({
             />
           )}
           <Text className="text-xl font-bold text-white">
-            {isLoading
-              ? "Loading..."
-              : isFollowing
-                ? "Following"
-                : "Follow"}
+            {isLoading ? "Loading..." : isFollowing ? "Following" : "Follow"}
           </Text>
         </View>
       </TouchableOpacity>
