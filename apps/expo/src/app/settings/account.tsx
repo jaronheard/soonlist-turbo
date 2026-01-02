@@ -369,7 +369,7 @@ export default function EditProfileScreen() {
 
     try {
       await Share.share({
-        message: `Check out my events on Soonlist: ${url}`,
+        message: "Check out my events on Soonlist:",
         url,
       });
     } catch {
