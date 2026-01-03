@@ -324,9 +324,7 @@ export function validateEvent(event: unknown) {
   ];
 
   // Use exact match (after trimming) instead of partial matching
-  const isInvalidName = invalidNames.some(
-    (invalid) => name.trim() === invalid,
-  );
+  const isInvalidName = invalidNames.some((invalid) => name.trim() === invalid);
 
   const isInvalidPattern = invalidPatterns.some(
     (invalid) => name.includes(invalid) || description.includes(invalid),
