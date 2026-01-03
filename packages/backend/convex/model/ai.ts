@@ -294,13 +294,16 @@ export function validateEvent(event: unknown) {
   const name = validatedEvent.name.toLowerCase() || "";
   const description = validatedEvent.description.toLowerCase() || "";
 
-  // Invalid names (exact matches)
+  // Invalid names - only reject if the entire name is one of these generic placeholders
   const invalidNames = [
     "title",
     "name",
     "event name",
     "event title",
     "event description",
+    "untitled",
+    "untitled event",
+    "new event",
   ];
 
   // Very specific patterns that indicate the AI made something up from error/test content
@@ -320,7 +323,8 @@ export function validateEvent(event: unknown) {
     "http error",
   ];
 
-  const isInvalidName = invalidNames.some((invalid) => name.includes(invalid));
+  // Use exact match (after trimming) instead of partial matching
+  const isInvalidName = invalidNames.some((invalid) => name.trim() === invalid);
 
   const isInvalidPattern = invalidPatterns.some(
     (invalid) => name.includes(invalid) || description.includes(invalid),
