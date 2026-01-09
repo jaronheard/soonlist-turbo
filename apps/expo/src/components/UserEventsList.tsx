@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useMemo } from "react";
+import React, { memo, useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -70,7 +70,7 @@ interface UserForDisplay {
 }
 
 // Stacked avatars component for showing multiple users who saved an event
-function EventSaversRow({
+const EventSaversRow = memo(function EventSaversRow({
   creator,
   savers,
   iconSize,
@@ -84,24 +84,30 @@ function EventSaversRow({
   currentUserId?: string;
 }) {
   // Combine creator with savers, deduplicate by id, and limit to first 2
-  const allUsers: UserForDisplay[] = [creator];
-  for (const saver of savers) {
-    if (!allUsers.some((u) => u.id === saver.id)) {
-      allUsers.push(saver);
+  const allUsers: UserForDisplay[] = useMemo(() => {
+    const users: UserForDisplay[] = [creator];
+    for (const saver of savers) {
+      if (!users.some((u) => u.id === saver.id)) {
+        users.push(saver);
+      }
     }
-  }
+    return users;
+  }, [creator, savers]);
 
-  const displayUsers = allUsers.slice(0, 2);
+  const displayUsers = useMemo(() => allUsers.slice(0, 2), [allUsers]);
   const remainingCount = allUsers.length - displayUsers.length;
 
-  const handleUserPress = (user: UserForDisplay) => {
-    // If clicking on yourself, go to account settings
-    if (currentUserId && user.id === currentUserId) {
-      router.push("/settings/account");
-    } else {
-      router.push(`/${user.username}`);
-    }
-  };
+  const handleUserPress = useCallback(
+    (user: UserForDisplay) => {
+      // If clicking on yourself, go to account settings
+      if (currentUserId && user.id === currentUserId) {
+        router.push("/settings/account");
+      } else {
+        router.push(`/${user.username}`);
+      }
+    },
+    [currentUserId],
+  );
 
   // Format names text
   const getNamesText = () => {
@@ -186,7 +192,7 @@ function EventSaversRow({
       </Pressable>
     </View>
   );
-}
+});
 
 // Define the type for the stats data based on the expected query output
 type EventStatsData = FunctionReturnType<typeof api.events.getStats>;
@@ -211,7 +217,9 @@ interface UserEventListItemProps {
   source?: string;
 }
 
-export function UserEventListItem(props: UserEventListItemProps) {
+export const UserEventListItem = memo(function UserEventListItem(
+  props: UserEventListItemProps,
+) {
   const {
     event,
     ActionButton,
@@ -642,7 +650,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
       </Pressable>
     </EventMenu>
   );
-}
+});
 
 interface SourceStickerProps {
   icon: React.ReactNode;
@@ -1041,7 +1049,12 @@ export default function UserEventsList(props: UserEventsListProps) {
     [events, user?.id],
   );
 
-  const renderEmptyState = () => {
+  const keyExtractor = useCallback(
+    (item: (typeof collapsedEvents)[0]) => item.event.id,
+    [],
+  );
+
+  const renderEmptyState = useCallback(() => {
     return (
       <ScrollView
         style={{ backgroundColor: "#F4F1FF" }}
@@ -1062,32 +1075,23 @@ export default function UserEventsList(props: UserEventsListProps) {
         <GhostEventCard index={4} />
       </ScrollView>
     );
-  };
+  }, [showSourceStickers]);
 
-  if (isLoadingFirstPage) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#5A32FB" />
-      </View>
-    );
-  }
-
-  if (collapsedEvents.length === 0) {
-    return renderEmptyState();
-  }
-
-  const renderFooter = () => (
-    <>
-      {isFetchingNextPage ? (
-        <View className="py-4">
-          <ActivityIndicator size="large" color="#5A32FB" />
-        </View>
-      ) : null}
-      {showSourceStickers ? <SourceStickersRow /> : null}
-    </>
+  const renderFooter = useCallback(
+    () => (
+      <>
+        {isFetchingNextPage ? (
+          <View className="py-4">
+            <ActivityIndicator size="large" color="#5A32FB" />
+          </View>
+        ) : null}
+        {showSourceStickers ? <SourceStickersRow /> : null}
+      </>
+    ),
+    [isFetchingNextPage, showSourceStickers],
   );
 
-  const renderHeader = () => {
+  const renderHeader = useCallback(() => {
     if (!HeaderComponent && !stats) return null;
     return (
       <View>
@@ -1102,58 +1106,86 @@ export default function UserEventsList(props: UserEventsListProps) {
         )}
       </View>
     );
-  };
+  }, [HeaderComponent, stats]);
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: (typeof collapsedEvents)[0]; index: number }) => {
+      const eventData = item.event;
+      // Use savedEventIds if provided, otherwise check eventFollows
+      const isSaved = savedEventIds
+        ? savedEventIds.has(eventData.id)
+        : (eventData.eventFollows?.some(
+            (follow) => follow.userId === user?.id,
+          ) ?? false);
+
+      const similarEventsCount = item.similarEvents.length;
+
+      return (
+        <UserEventListItem
+          event={eventData}
+          ActionButton={ActionButton}
+          showCreator={showCreator}
+          isSaved={isSaved}
+          savedAt={undefined}
+          similarEventsCount={
+            similarEventsCount > 0 ? similarEventsCount : undefined
+          }
+          demoMode={demoMode}
+          index={index}
+          hideDiscoverableButton={hideDiscoverableButton}
+          isDiscoverFeed={isDiscoverFeed}
+          source={source}
+        />
+      );
+    },
+    [
+      savedEventIds,
+      user?.id,
+      ActionButton,
+      showCreator,
+      demoMode,
+      hideDiscoverableButton,
+      isDiscoverFeed,
+      source,
+    ],
+  );
+
+  if (isLoadingFirstPage) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#5A32FB" />
+      </View>
+    );
+  }
+
+  if (collapsedEvents.length === 0) {
+    return renderEmptyState();
+  }
 
   return (
-    <>
-      <FlatList
-        data={collapsedEvents}
-        keyExtractor={(item) => item.event.id}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmptyState}
-        renderItem={({ item, index }) => {
-          const eventData = item.event;
-          // Use savedEventIds if provided, otherwise check eventFollows
-          const isSaved = savedEventIds
-            ? savedEventIds.has(eventData.id)
-            : (eventData.eventFollows?.some(
-                (follow) => follow.userId === user?.id,
-              ) ?? false);
-          // TODO: Add savedAt
-
-          const similarEventsCount = item.similarEvents.length;
-
-          return (
-            <UserEventListItem
-              event={eventData}
-              ActionButton={ActionButton}
-              showCreator={showCreator}
-              isSaved={isSaved}
-              // TODO: Add savedAt
-              savedAt={undefined}
-              similarEventsCount={
-                similarEventsCount > 0 ? similarEventsCount : undefined
-              }
-              demoMode={demoMode}
-              index={index}
-              hideDiscoverableButton={hideDiscoverableButton}
-              isDiscoverFeed={isDiscoverFeed}
-              source={source}
-            />
-          );
-        }}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.5}
-        style={{ backgroundColor: "#F4F1FF" }}
-        contentContainerStyle={{
-          paddingTop: stats ? 0 : 16,
-          paddingBottom: 120,
-          flexGrow: 1,
-          backgroundColor: "#F4F1FF",
-        }}
-        ListFooterComponent={renderFooter()}
-        ListFooterComponentStyle={{ flex: 1, justifyContent: "center" }}
-      />
-    </>
+    <FlatList
+      data={collapsedEvents}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
+      ListHeaderComponent={renderHeader}
+      ListEmptyComponent={renderEmptyState}
+      ListFooterComponent={renderFooter}
+      ListFooterComponentStyle={{ flex: 1, justifyContent: "center" }}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.5}
+      // Performance optimizations
+      windowSize={5}
+      maxToRenderPerBatch={8}
+      updateCellsBatchingPeriod={50}
+      initialNumToRender={6}
+      removeClippedSubviews={true}
+      style={{ backgroundColor: "#F4F1FF" }}
+      contentContainerStyle={{
+        paddingTop: stats ? 0 : 16,
+        paddingBottom: 120,
+        flexGrow: 1,
+        backgroundColor: "#F4F1FF",
+      }}
+    />
   );
 }
