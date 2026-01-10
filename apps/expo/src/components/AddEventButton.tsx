@@ -7,9 +7,9 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { GlassButton } from "~/components/GlassButton";
 import { ChevronDown, CloudOff, Lock, PlusIcon } from "~/components/icons";
 import { CircularSpinner } from "~/components/ui/CircularSpinner";
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
@@ -105,15 +105,8 @@ export default function AddEventButton({
    */
   return (
     <>
-      {/* Background gradients */}
+      {/* Background gradients - no blur for perf on scrolling content */}
       <View className="absolute bottom-0 left-0 right-0" pointerEvents="none">
-        <View className="absolute bottom-0 h-24 w-full">
-          <BlurView
-            intensity={10}
-            className="h-full w-full opacity-20"
-            tint="light"
-          />
-        </View>
         <View className="absolute bottom-0 h-40 w-full">
           <LinearGradient
             colors={["transparent", "#5A32FB"]}
@@ -163,44 +156,22 @@ export default function AddEventButton({
             </View>
           ) : canProceedWithAdd ? (
             <View className="relative">
-              <View
-                className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
-                style={{
-                  shadowColor: "#5A32FB",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 6,
-                  elevation: 8,
-                }}
-              >
+              <GlassButton size={70}>
                 <PlusIcon size={44} color="#FFF" strokeWidth={2} />
-              </View>
+              </GlassButton>
 
               {/* Spinner Overlay */}
               {isCapturing && (
-                <View className="absolute -left-[3.5px] -top-[3.5px] h-[72px] w-[72px] items-center justify-center">
-                  <CircularSpinner
-                    size={72} // Size = button diameter (68) + small margin
-                    strokeWidth={3}
-                    color="#5A32FB"
-                  />
+                <View className="absolute -left-[3.5px] -top-[3.5px] h-[77px] w-[77px] items-center justify-center">
+                  <CircularSpinner size={77} strokeWidth={3} color="#5A32FB" />
                 </View>
               )}
             </View>
           ) : (
             <View className="relative">
-              <View
-                className="relative flex-row items-center justify-center gap-2 rounded-full bg-interactive-1 p-3"
-                style={{
-                  shadowColor: "#5A32FB",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 6,
-                  elevation: 8,
-                }}
-              >
+              <GlassButton size={70}>
                 <PlusIcon size={44} color="#FFF" strokeWidth={2} />
-              </View>
+              </GlassButton>
               {/* Lock icon overlay */}
               <View className="absolute bottom-0 right-0 rounded-full bg-white p-2">
                 <Lock

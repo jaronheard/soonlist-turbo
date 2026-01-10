@@ -52,6 +52,7 @@ interface EventMenuProps {
   demoMode?: boolean;
   children?: React.ReactNode;
   onDelete?: () => Promise<void>;
+  iconColor?: string;
 }
 
 interface MenuItem {
@@ -82,6 +83,7 @@ export function EventMenu({
   demoMode = false,
   children,
   onDelete,
+  iconColor = "#FFF",
 }: EventMenuProps) {
   const {
     handleShare,
@@ -232,7 +234,7 @@ export function EventMenu({
           {children ?? (
             <TouchableOpacity activeOpacity={0.6}>
               <View className="rounded-full p-1">
-                <MoreVertical size={20} color="#FFF" />
+                <MoreVertical size={20} color={iconColor} />
               </View>
             </TouchableOpacity>
           )}
@@ -274,7 +276,7 @@ export function EventMenu({
         {children ?? (
           <TouchableOpacity activeOpacity={0.6}>
             <View className="rounded-full p-1">
-              <MoreVertical size={20} color="#FFF" />
+              <MoreVertical size={20} color={iconColor} />
             </View>
           </TouchableOpacity>
         )}

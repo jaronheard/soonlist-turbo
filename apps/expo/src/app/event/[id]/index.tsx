@@ -33,6 +33,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
 import { EventMenu } from "~/components/EventMenu";
+import { GlassPill } from "~/components/GlassButton";
 import { HeaderLogo } from "~/components/HeaderLogo";
 import {
   CalendarPlus,
@@ -229,6 +230,7 @@ export default function Page() {
           isSaved={isSaved}
           menuType="popup"
           onDelete={handleDeleteAndRedirect}
+          iconColor="#5A32FB"
         />
       </View>
     );
@@ -562,26 +564,17 @@ export default function Page() {
       </ScrollView>
 
       {/* Floating Action Buttons */}
-      <View
-        className="absolute bottom-8 flex-row items-center justify-center gap-4 self-center"
-        style={{
-          shadowColor: "#5A32FB",
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.3,
-          shadowRadius: 6,
-          elevation: 8,
-        }}
-      >
+      <View className="absolute bottom-8 flex-row items-center justify-center gap-4 self-center">
         <TouchableOpacity
           onPress={handleAddToCal}
           accessibilityLabel="Add to Calendar"
           accessibilityRole="button"
           activeOpacity={0.8}
         >
-          <View className="flex-row items-center gap-4 rounded-full bg-interactive-2 px-8 py-5">
+          <GlassPill tintColor="#E0D9FF">
             <CalendarPlus size={28} color="#5A32FB" />
             <Text className="text-xl font-bold text-interactive-1">Add</Text>
-          </View>
+          </GlassPill>
         </TouchableOpacity>
 
         {showSaveButton && (
@@ -591,10 +584,10 @@ export default function Page() {
             accessibilityRole="button"
             activeOpacity={0.8}
           >
-            <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
+            <GlassPill>
               <Heart size={28} color="#FFFFFF" />
               <Text className="text-xl font-bold text-white">Save</Text>
-            </View>
+            </GlassPill>
           </TouchableOpacity>
         )}
 
@@ -605,10 +598,10 @@ export default function Page() {
             accessibilityRole="button"
             activeOpacity={0.8}
           >
-            <View className="flex-row items-center gap-4 rounded-full bg-interactive-1 px-8 py-5">
+            <GlassPill>
               <ShareIcon size={28} color="#FFFFFF" />
               <Text className="text-xl font-bold text-white">Share</Text>
-            </View>
+            </GlassPill>
           </TouchableOpacity>
         )}
       </View>

@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -1035,6 +1036,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     source,
   } = props;
   const { user } = useUser();
+  const headerHeight = useHeaderHeight();
 
   const collapsedEvents = useMemo(
     () => collapseSimilarEvents(events, user?.id),
@@ -1046,7 +1048,7 @@ export default function UserEventsList(props: UserEventsListProps) {
       <ScrollView
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: 16,
+          paddingTop: headerHeight + 16,
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",
@@ -1146,7 +1148,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         onEndReachedThreshold={0.5}
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: stats ? 0 : 16,
+          paddingTop: headerHeight + (stats ? 0 : 16),
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",
