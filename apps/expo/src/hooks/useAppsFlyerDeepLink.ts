@@ -80,6 +80,10 @@ export function useAppsFlyerDeepLink() {
       (result: UnifiedDeepLinkData) => {
         logDebug("AppsFlyer onDeepLink", { result });
 
+        if (hasProcessedDeepLink.current) {
+          return;
+        }
+
         if (result.status === "failure") {
           logError("AppsFlyer deep link error", result);
           return;
@@ -89,7 +93,10 @@ export function useAppsFlyerDeepLink() {
           return;
         }
 
-        const data = result?.data as DeepLinkData | undefined;
+        const data =
+          result.data && typeof result.data === "object"
+            ? (result.data as DeepLinkData)
+            : undefined;
         if (!data) {
           return;
         }
@@ -100,6 +107,8 @@ export function useAppsFlyerDeepLink() {
           logDebug("AppsFlyer: Direct deep link follow intent", {
             usernameToFollow,
           });
+
+          hasProcessedDeepLink.current = true;
 
           if (isAuthenticated) {
             // User is authenticated, navigate directly to profile
