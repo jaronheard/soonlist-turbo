@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import appsFlyer from "react-native-appsflyer";
+import appsFlyer, { type UnifiedDeepLinkData } from "react-native-appsflyer";
 import { useRouter } from "expo-router";
 import { useConvexAuth } from "convex/react";
 
@@ -73,7 +73,7 @@ export function useAppsFlyerDeepLink() {
     );
 
     // Handle direct deep links (app already installed)
-    const onDeepLinkCanceller = appsFlyer.onDeepLink((result) => {
+    const onDeepLinkCanceller = appsFlyer.onDeepLink((result: UnifiedDeepLinkData) => {
       logDebug("AppsFlyer onDeepLink", { result });
 
       if (result.status === "failure") {

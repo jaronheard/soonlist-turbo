@@ -420,6 +420,9 @@ importers:
       '@turbo/gen':
         specifier: 'catalog:'
         version: 2.7.3(@types/node@25.0.5)(typescript@5.9.3)
+      '@types/minimatch':
+        specifier: ^6.0.0
+        version: 6.0.0
       dotenv-cli:
         specifier: 'catalog:'
         version: 7.4.4
@@ -14930,7 +14933,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 12.20.55
+      '@types/node': 25.0.5
 
   '@types/d3-array@3.2.2': {}
 
@@ -15004,7 +15007,7 @@ snapshots:
 
   '@types/minimatch@6.0.0':
     dependencies:
-      minimatch: 9.0.0
+      minimatch: 10.1.1
 
   '@types/mysql@2.15.26':
     dependencies:
@@ -15067,7 +15070,7 @@ snapshots:
 
   '@types/ws@7.4.7':
     dependencies:
-      '@types/node': 12.20.55
+      '@types/node': 25.0.5
 
   '@types/ws@8.18.1':
     dependencies:

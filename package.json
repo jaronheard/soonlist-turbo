@@ -37,6 +37,7 @@
   "devDependencies": {
     "@soonlist/prettier-config": "workspace:*",
     "@turbo/gen": "catalog:",
+    "@types/minimatch": "^6.0.0",
     "dotenv-cli": "catalog:",
     "prettier": "catalog:",
     "turbo": "catalog:",

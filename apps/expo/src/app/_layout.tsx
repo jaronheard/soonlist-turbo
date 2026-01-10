@@ -108,10 +108,10 @@ appsFlyer.initSdk(
     onDeepLinkListener: true, //Optional
     timeToWaitForATTUserAuthorization: 10,
   },
-  (result) => {
+  (result: Record<string, unknown>) => {
     logDebug("AppsFlyerSDK initialization result", result);
   },
-  (error) => {
+  (error: Error) => {
     logError("AppsFlyerSDK initialization error", error);
   },
 );
