@@ -46,15 +46,15 @@
   "pnpm": {
     "overrides": {
       "promise": "^8.3.0",
-      "react": "19.0.0",
-      "react-dom": "19.0.0",
-      "@types/react": "19.1.5",
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "@types/react": "^19.1.0",
       "ai": "3.1.22",
-      "ai>react": "19.0.0",
-      "use-sync-external-store>react": "19.0.0",
-      "@radix-ui/react-arrow>react": "19.0.0",
-      "@radix-ui/react-menu>react": "19.0.0",
-      "swr>react": "19.0.0",
+      "ai>react": "19.1.0",
+      "use-sync-external-store>react": "19.1.0",
+      "@radix-ui/react-arrow>react": "19.1.0",
+      "@radix-ui/react-menu>react": "19.1.0",
+      "swr>react": "19.1.0",
       "@radix-ui/react-slot": "1.2.3",
       "@radix-ui/react-accordion": "1.2.1",
       "@radix-ui/react-aspect-ratio": "1.1.0",
@@ -73,8 +73,7 @@
       "@radix-ui/react-visually-hidden": "1.2.4"
     },
     "patchedDependencies": {
-      "xcode@3.0.1": "patches/xcode@3.0.1.patch",
-      "expo-calendar@14.1.4": "patches/expo-calendar@14.1.4.patch"
+      "xcode@3.0.1": "patches/xcode@3.0.1.patch"
     },
     "onlyBuiltDependencies": [
       "@clerk/shared",
