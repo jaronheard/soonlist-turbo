@@ -11,7 +11,7 @@ catalog:
   typescript: ~5.9.2
 
   # Backend
-  convex: ^1.13.0
+  convex: 1.31.2
   "@convex-dev/migrations": ^0.2.9
   "@convex-dev/workflow": ^0.2.4
   "@convex-dev/workpool": ^0.2.10
@@ -55,7 +55,7 @@ catalog:
   "@sentry/react-native": ^6.10.0
   "posthog-js": ^1.240.5
   "posthog-node": ^4.17.1
-  "posthog-react-native": ^3.15.2
+  "posthog-react-native": ^4.17.3
   langfuse: ^3.11.0
 
   # Environment & Config
@@ -84,7 +84,7 @@ catalog:
   "react-native-safe-area-context": ~5.4.0
   "react-native-screens": ~4.11.1
   "react-native-svg": 15.11.2
-  nativewind: ~4.1.23
+  nativewind: ~4.2.1
 
   # Additional Expo packages
   "expo-apple-authentication": ~7.2.4
@@ -124,7 +124,7 @@ catalog:
   "react-native-onesignal": ^5.2.8
   "react-native-purchases-ui": ^8.9.1
   "react-native-qrcode-svg": ^6.3.0
-  "posthog-react-native-session-replay": ^1.0.6
+  "posthog-react-native-session-replay": ^1.2.3
 
   # Third-party integrations
   "@intercom/intercom-react-native": ^8.5.0

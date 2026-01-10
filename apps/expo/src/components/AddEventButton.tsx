@@ -178,15 +178,10 @@ export default function AddEventButton({
 
               {/* Spinner Overlay */}
               {isCapturing && (
-                <View
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{
-                    transform: [{ translateX: -5 }, { translateY: -5 }],
-                  }}
-                >
+                <View className="absolute -left-[3.5px] -top-[3.5px] h-[72px] w-[72px] items-center justify-center">
                   <CircularSpinner
-                    size={76} // Size = button diameter (68) + strokeWidth (4)
-                    strokeWidth={4}
+                    size={72} // Size = button diameter (68) + small margin
+                    strokeWidth={3}
                     color="#5A32FB"
                   />
                 </View>

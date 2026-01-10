@@ -1,5 +1,6 @@
+import type { UnifiedDeepLinkData } from "react-native-appsflyer";
 import { useEffect, useRef } from "react";
-import appsFlyer, { type UnifiedDeepLinkData } from "react-native-appsflyer";
+import appsFlyer from "react-native-appsflyer";
 import { useRouter } from "expo-router";
 import { useConvexAuth } from "convex/react";
 
@@ -38,6 +39,7 @@ export function useAppsFlyerDeepLink() {
 
   useEffect(() => {
     // Handle deferred deep links (new installs)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- appsFlyer is typed as any in library
     const onInstallConversionDataCanceller = appsFlyer.onInstallConversionData(
       (result: ConversionData) => {
         logDebug("AppsFlyer onInstallConversionData", { result });
@@ -73,39 +75,42 @@ export function useAppsFlyerDeepLink() {
     );
 
     // Handle direct deep links (app already installed)
-    const onDeepLinkCanceller = appsFlyer.onDeepLink((result: UnifiedDeepLinkData) => {
-      logDebug("AppsFlyer onDeepLink", { result });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- appsFlyer is typed as any in library
+    const onDeepLinkCanceller = appsFlyer.onDeepLink(
+      (result: UnifiedDeepLinkData) => {
+        logDebug("AppsFlyer onDeepLink", { result });
 
-      if (result.status === "failure") {
-        logError("AppsFlyer deep link error", result);
-        return;
-      }
-
-      if (result.status !== "success") {
-        return;
-      }
-
-      const data = result?.data as DeepLinkData | undefined;
-      if (!data) {
-        return;
-      }
-
-      // Check for follow intent
-      if (data.deep_link_value === "follow" && data.deep_link_sub1) {
-        const usernameToFollow = data.deep_link_sub1;
-        logDebug("AppsFlyer: Direct deep link follow intent", {
-          usernameToFollow,
-        });
-
-        if (isAuthenticated) {
-          // User is authenticated, navigate directly to profile
-          router.push(`/${usernameToFollow}`);
-        } else {
-          // User needs to authenticate first, store the pending follow
-          setPendingFollowUsername(usernameToFollow);
+        if (result.status === "failure") {
+          logError("AppsFlyer deep link error", result);
+          return;
         }
-      }
-    });
+
+        if (result.status !== "success") {
+          return;
+        }
+
+        const data = result?.data as DeepLinkData | undefined;
+        if (!data) {
+          return;
+        }
+
+        // Check for follow intent
+        if (data.deep_link_value === "follow" && data.deep_link_sub1) {
+          const usernameToFollow = data.deep_link_sub1;
+          logDebug("AppsFlyer: Direct deep link follow intent", {
+            usernameToFollow,
+          });
+
+          if (isAuthenticated) {
+            // User is authenticated, navigate directly to profile
+            router.push(`/${usernameToFollow}`);
+          } else {
+            // User needs to authenticate first, store the pending follow
+            setPendingFollowUsername(usernameToFollow);
+          }
+        }
+      },
+    );
 
     // Cleanup listeners
     return () => {

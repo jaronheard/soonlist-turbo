@@ -57,7 +57,7 @@ export const useSignOut = () => {
     const logoutResults = await Promise.allSettled([
       Intercom.logout(),
       revenueCatLogout(),
-      OneSignal.logout(),
+      Promise.resolve(OneSignal.logout()), // OneSignal.logout() returns void, wrap in Promise
     ]);
 
     logoutResults.forEach((result, index) => {
