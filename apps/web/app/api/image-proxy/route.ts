@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     const imageBuffer = await imageResponse.arrayBuffer();
 
-    return new Response(Buffer.from(imageBuffer), {
+    return new Response(imageBuffer, {
       status: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
