@@ -753,8 +753,9 @@ export async function uploadImageToCDNFromBase64(
 
     const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
 
-    // Convert base64 string to Buffer
+    // Convert base64 string to Uint8Array (BodyInit-compatible)
     const imageBuffer = Buffer.from(base64Data, "base64");
+    const imageBytes = new Uint8Array(imageBuffer);
 
     const response = await fetch(
       "https://api.bytescale.com/v2/accounts/12a1yek/uploads/binary",
@@ -764,7 +765,7 @@ export async function uploadImageToCDNFromBase64(
           "Content-Type": "image/webp", // Assuming optimizeImage always produces webp
           Authorization: "Bearer public_12a1yekATNiLj4VVnREZ8c7LM8V8",
         },
-        body: imageBuffer,
+        body: imageBytes,
       },
     );
 

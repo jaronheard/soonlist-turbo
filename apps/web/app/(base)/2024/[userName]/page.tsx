@@ -114,7 +114,7 @@ const Page = async (props: Props) => {
       )}
 
       {/* Case 2: Logged in, viewing own stats */}
-      {user && user.username === userName && (
+      {user?.username === userName && (
         <div className="flex flex-col items-center justify-center">
           <p className="mb-2 mt-4 max-w-[280px] px-4 text-center text-xl leading-tight text-gray-700 sm:my-6 sm:max-w-none sm:px-0 md:text-2xl">
             Here's how your stats look in 2024!

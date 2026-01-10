@@ -114,7 +114,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     ["expo-apple-authentication"],
     ["expo-localization"],
-    ["expo-av"],
     ["expo-video"],
     [
       "expo-media-library",
@@ -205,8 +204,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   experiments: {
     tsconfigPaths: true,
     typedRoutes: true,
+    reactCompiler: true,
   },
-  newArchEnabled: false,
+  newArchEnabled: true,
   // plugins: ["expo-router"],
   extra: {
     eas: {

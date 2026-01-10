@@ -37,8 +37,9 @@ userFeeds: {
 ### Reading Feeds
 
 ```typescript
-import { api } from "@soonlist/backend/convex/_generated/api";
 import { usePaginatedQuery } from "convex/react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 // Get user's personal feed (includes followed events)
 const { results, status } = usePaginatedQuery(

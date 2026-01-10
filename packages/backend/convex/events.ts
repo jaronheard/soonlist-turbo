@@ -63,7 +63,7 @@ export const getEventsByBatchId = query({
       .query("eventBatches")
       .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
       .unique();
-    if (!batch || batch.userId !== identity.subject) {
+    if (batch?.userId !== identity.subject) {
       throw new ConvexError("Batch not found or access denied");
     }
 
