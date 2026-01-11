@@ -318,11 +318,11 @@ The system using the output requires specific date and time formatting.
 
 - There are no all-day events. Always provide start and end times.
 - Events must be limited to a single time within a 24 hour period. Only the first event from multi-day events should be captured.
-- Dates MUST be in the format YYYY-MM-DD (e.g., 2024-03-15).
+- Dates MUST be in the format YYYY-MM-DD (e.g., 2026-03-15).
 - Times MUST be in 24-hour format HH:MM:SS (e.g., 14:30:00 for 2:30 PM).
 - Always include seconds in the time, even if they're 00.
 - Always provide both startTime and endTime.
-- When interpreting dates, assume they are in the future unless clearly stated otherwise.
+- When interpreting dates without an explicit year, use the CURRENT YEAR from the context date provided above. Only use the NEXT year if the month/day has already passed in the current year. For example: if today is 2026-01-11 and the input says "January 18" or "01/18", output 2026-01-18 (same year, date is upcoming). If the input says "January 5", output 2027-01-05 (next year, because January 5, 2026 already passed).
 - If start time is not explicitly stated, infer a reasonable start time based on the event type and context (e.g., 19:00:00 for an evening concert, 10:00:00 for a morning workshop).
 - If end time is not explicitly stated, infer a reasonable duration based on the event type and context (e.g., 2 hours for a movie, 3 hours for a concert, etc.).
 - Ensure the endDate is always provided and is either the same as or later than the startDate.
@@ -387,20 +387,20 @@ export const getPrompt = (
   return {
     text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2025.11.07.1", // Enforce strict JSON output format (no markdown code fences)
+    version: "v2026.01.11.1", // Fix year interpretation for dates without explicit year
   };
 };
 
 export const getSystemMessage = () => {
   return {
     text: systemMessage(),
-    version: "v2025.11.07.1", // Enforce strict JSON output format (no markdown code fences)
+    version: "v2026.01.11.1", // Fix year interpretation for dates without explicit year
   };
 };
 
 export const getSystemMessageMetadata = () => {
   return {
     text: systemMessage(eventMetadataSchemaAsText),
-    version: "v2025.11.07.1", // Enforce strict JSON output format (no markdown code fences)
+    version: "v2026.01.11.1", // Fix year interpretation for dates without explicit year
   };
 };
