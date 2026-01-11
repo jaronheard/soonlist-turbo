@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { Tabs } from "expo-router";
 
 import { HeaderLogo } from "~/components/HeaderLogo";
+import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import { NavigationMenu } from "~/components/NavigationMenu";
 import { ProfileMenu } from "~/components/ProfileMenu";
 
@@ -17,9 +18,8 @@ export default function TabsLayout() {
     <>
       <Tabs
         screenOptions={{
-          headerStyle: {
-            backgroundColor: "#5A32FB",
-          },
+          headerTransparent: true,
+          headerBackground: () => <LiquidGlassHeader />,
           headerTintColor: "#fff",
           headerTitleStyle: {
             fontWeight: "bold",

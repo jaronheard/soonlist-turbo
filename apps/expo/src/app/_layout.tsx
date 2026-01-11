@@ -30,6 +30,7 @@ import { Toaster } from "sonner-native";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
 import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
+import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
 import { useForceUpdate } from "~/hooks/useForceUpdate";
@@ -189,9 +190,8 @@ const InitialLayout = () => {
   return (
     <Stack
       screenOptions={{
-        headerStyle: {
-          backgroundColor: "#5A32FB",
-        },
+        headerTransparent: true,
+        headerBackground: () => <LiquidGlassHeader />,
         headerTintColor: "#fff",
         headerTitleStyle: {
           fontWeight: "bold",
@@ -226,11 +226,13 @@ const InitialLayout = () => {
       <Stack.Screen
         name="event/[id]/index"
         options={{
+          presentation: "modal",
           title: "Event Details",
           headerShown: true,
-          headerBackTitle: "Back",
-          headerBackVisible: true,
-          // Note: headerLeft is conditionally set in the component based on canGoBack
+          headerTransparent: false,
+          headerBackground: undefined,
+          headerStyle: { backgroundColor: "#E0D9FF" }, // interactive-2
+          headerTintColor: "#5A32FB", // interactive-1
         }}
       />
       <Stack.Screen
