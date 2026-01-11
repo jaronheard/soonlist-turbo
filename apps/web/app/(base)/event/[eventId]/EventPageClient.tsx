@@ -8,9 +8,11 @@ import type { EventMetadata } from "@soonlist/cal";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import type { User } from "@soonlist/db/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
+import { Skeleton } from "@soonlist/ui/skeleton";
 
 import { EventPage } from "~/components/EventDisplays";
 import { api as trpcApi } from "~/trpc/react";
+import { OpenInAppBanner } from "./OpenInAppBanner";
 
 const transformConvexUser = (user: Doc<"users">): User => {
   return {
@@ -55,7 +57,20 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
 
   // Loading state - useQuery returns undefined while loading
   if (event === undefined || (event === null && trpcLoading)) {
-    return null;
+    return (
+      <div className="flex flex-col gap-6">
+        <OpenInAppBanner eventId={eventId} />
+        {/* Event image skeleton */}
+        <Skeleton className="aspect-[9/16] w-full max-w-md rounded-2xl" />
+        {/* Event details skeleton */}
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-6 w-1/2" />
+          <Skeleton className="h-6 w-2/3" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+      </div>
+    );
   }
 
   // Try to use Convex event first, then fallback to tRPC event
@@ -88,6 +103,7 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
 
   return (
     <>
+      <OpenInAppBanner eventId={eventId} />
       <EventPage
         user={user}
         eventFollows={isConvexEvent ? [] : (eventData.eventFollows ?? [])}
