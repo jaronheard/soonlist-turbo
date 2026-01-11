@@ -2,6 +2,8 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { BlurView } from "expo-blur";
 
+import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
+
 interface GlassButtonProps {
   children: React.ReactNode;
   size?: number;
@@ -15,6 +17,8 @@ interface GlassButtonProps {
  * -----------
  * iOS 26 Liquid Glass icon button.
  * Specs: blur=60, opacity=0.8, shadow=18, circular shape
+ *
+ * Falls back to a solid background on devices without liquid glass support.
  */
 export function GlassButton({
   children,
@@ -31,15 +35,24 @@ export function GlassButton({
         style,
       ]}
     >
-      {/* iOS 26 blur: intensity 60 */}
-      <BlurView intensity={60} tint="light" style={styles.blur} />
-      {/* Color tint */}
-      <View
-        style={[
-          styles.tint,
-          { backgroundColor: tintColor, opacity: tintOpacity },
-        ]}
-      />
+      {SUPPORTS_LIQUID_GLASS ? (
+        <>
+          {/* iOS 26 blur: intensity 60 */}
+          <BlurView intensity={60} tint="light" style={styles.blur} />
+          {/* Color tint */}
+          <View
+            style={[
+              styles.tint,
+              { backgroundColor: tintColor, opacity: tintOpacity },
+            ]}
+          />
+        </>
+      ) : (
+        /* Fallback: solid background for devices without blur support */
+        <View
+          style={[styles.fallbackBackground, { backgroundColor: tintColor }]}
+        />
+      )}
       {/* Content */}
       <View style={styles.content}>{children}</View>
     </View>
@@ -51,6 +64,8 @@ export function GlassButton({
  * ---------
  * iOS 26 Liquid Glass primary button (pill shape).
  * Specs: blur=60, opacity=0.6, cornerRadius=28, shadow=18
+ *
+ * Falls back to a solid background on devices without liquid glass support.
  */
 export function GlassPill({
   children,
@@ -60,15 +75,24 @@ export function GlassPill({
 }: Omit<GlassButtonProps, "size">) {
   return (
     <View style={[styles.pillContainer, style]}>
-      {/* iOS 26 blur: intensity 60 */}
-      <BlurView intensity={60} tint="light" style={styles.blur} />
-      {/* Color tint */}
-      <View
-        style={[
-          styles.tint,
-          { backgroundColor: tintColor, opacity: tintOpacity },
-        ]}
-      />
+      {SUPPORTS_LIQUID_GLASS ? (
+        <>
+          {/* iOS 26 blur: intensity 60 */}
+          <BlurView intensity={60} tint="light" style={styles.blur} />
+          {/* Color tint */}
+          <View
+            style={[
+              styles.tint,
+              { backgroundColor: tintColor, opacity: tintOpacity },
+            ]}
+          />
+        </>
+      ) : (
+        /* Fallback: solid background for devices without blur support */
+        <View
+          style={[styles.fallbackBackground, { backgroundColor: tintColor }]}
+        />
+      )}
       {/* Content */}
       <View style={styles.pillContent}>{children}</View>
     </View>
@@ -89,6 +113,9 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   tint: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  fallbackBackground: {
     ...StyleSheet.absoluteFillObject,
   },
   content: {

@@ -2,6 +2,8 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { BlurView } from "expo-blur";
 
+import { SUPPORTS_LIQUID_GLASS } from "~/hooks/useLiquidGlass";
+
 /**
  * LiquidGlassHeader
  * -----------------
@@ -12,8 +14,15 @@ import { BlurView } from "expo-blur";
  * 2. Semi-transparent purple - tints the blurred content
  *
  * Brand purple: #5A32FB
+ *
+ * Falls back to a solid purple background on devices without liquid glass support.
  */
 export function LiquidGlassHeader() {
+  if (!SUPPORTS_LIQUID_GLASS) {
+    // Fallback: solid purple background for devices without blur support
+    return <View style={styles.fallbackContainer} />;
+  }
+
   return (
     <View style={styles.container}>
       {/* Blur layer - content behind shows through blurred */}
@@ -29,8 +38,12 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     overflow: "hidden",
   },
+  fallbackContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#5A32FB", // Solid brand purple
+  },
   purpleTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(90, 50, 251, 0.9)", // #5A32FB at 40% opacity
+    backgroundColor: "rgba(90, 50, 251, 0.9)", // #5A32FB at 90% opacity
   },
 });
