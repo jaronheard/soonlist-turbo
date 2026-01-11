@@ -22,6 +22,7 @@ import type * as files from "../files.js";
 import type * as guestOnboarding from "../guestOnboarding.js";
 import type * as http from "../http.js";
 import type * as lists from "../lists.js";
+import type * as migrations_backfillSimilarity from "../migrations/backfillSimilarity.js";
 import type * as migrations_initializeAggregates from "../migrations/initializeAggregates.js";
 import type * as migrations_initializeUserFeedsAggregate from "../migrations/initializeUserFeedsAggregate.js";
 import type * as migrations_userFeedsMigration from "../migrations/userFeedsMigration.js";
@@ -33,6 +34,7 @@ import type * as model_notificationHelpers from "../model/notificationHelpers.js
 import type * as model_notifications from "../model/notifications.js";
 import type * as model_oneSignal from "../model/oneSignal.js";
 import type * as model_posthog from "../model/posthog.js";
+import type * as model_similarityHelpers from "../model/similarityHelpers.js";
 import type * as model_utils_urlScheme from "../model/utils/urlScheme.js";
 import type * as notifications from "../notifications.js";
 import type * as planetscaleSync from "../planetscaleSync.js";
@@ -65,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   guestOnboarding: typeof guestOnboarding;
   http: typeof http;
   lists: typeof lists;
+  "migrations/backfillSimilarity": typeof migrations_backfillSimilarity;
   "migrations/initializeAggregates": typeof migrations_initializeAggregates;
   "migrations/initializeUserFeedsAggregate": typeof migrations_initializeUserFeedsAggregate;
   "migrations/userFeedsMigration": typeof migrations_userFeedsMigration;
@@ -76,6 +79,7 @@ declare const fullApi: ApiFromModules<{
   "model/notifications": typeof model_notifications;
   "model/oneSignal": typeof model_oneSignal;
   "model/posthog": typeof model_posthog;
+  "model/similarityHelpers": typeof model_similarityHelpers;
   "model/utils/urlScheme": typeof model_utils_urlScheme;
   notifications: typeof notifications;
   planetscaleSync: typeof planetscaleSync;

@@ -14,6 +14,7 @@ import {
 } from "../aggregates";
 import { DEFAULT_TIMEZONE } from "../constants";
 import { generateNumericId, generatePublicId } from "../utils";
+import { findSimilarEvent } from "./similarityHelpers";
 
 // Type for event data (based on AddToCalendarButtonProps)
 interface EventData {
@@ -731,6 +732,15 @@ export async function createEvent(
   const startDateTime = parseDateTime(eventData.startDate, startTime, timeZone);
   const endDateTime = parseDateTime(eventData.endDate, endTime, timeZone);
 
+  // Find similar events before inserting (for deduplication/grouping)
+  const similarToEventId = await findSimilarEvent(ctx, {
+    startDateTime: startDateTime.toISOString(),
+    endDateTime: endDateTime.toISOString(),
+    name: eventData.name,
+    description: eventData.description,
+    location: eventData.location,
+  });
+
   // Create the event
   const eventDocId = await ctx.db.insert("events", {
     id: eventId,
@@ -754,6 +764,8 @@ export async function createEvent(
     startTime,
     description: eventData.description,
     batchId,
+    // Similarity grouping
+    similarToEventId: similarToEventId ?? undefined,
   });
 
   // Sync with aggregates for efficient stats

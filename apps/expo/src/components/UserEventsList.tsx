@@ -43,7 +43,7 @@ import {
   isOver,
 } from "~/utils/dates";
 import { getEventEmoji } from "~/utils/eventEmoji";
-import { collapseSimilarEvents } from "~/utils/similarEvents";
+import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
@@ -1038,10 +1038,44 @@ export default function UserEventsList(props: UserEventsListProps) {
   const { user } = useUser();
   const headerHeight = useHeaderHeight();
 
-  const collapsedEvents = useMemo(
-    () => collapseSimilarEvents(events, user?.id),
-    [events, user?.id],
-  );
+  // O(n) grouping by pre-computed similarToEventId from backend
+  const collapsedEvents = useMemo((): EventWithSimilarity[] => {
+    // Group events by their similarToEventId (or own id if null/undefined)
+    const groups = new Map<string, Event[]>();
+
+    for (const event of events) {
+      // Events point to their canonical event via similarToEventId
+      // If null/undefined, the event itself is canonical
+      const groupId =
+        (event as Event & { similarToEventId?: string }).similarToEventId ??
+        event.id;
+      const group = groups.get(groupId) ?? [];
+      group.push(event);
+      groups.set(groupId, group);
+    }
+
+    // Convert to expected format, preferring user's own event as primary
+    return Array.from(groups.values()).map((group) => {
+      // Prefer the current user's version of the event if they have one
+      const userEvent = group.find((e) => e.userId === user?.id);
+      const primary = userEvent ?? group[0]!;
+      const others = group.filter((e) => e.id !== primary.id);
+      return {
+        event: primary,
+        similarEvents: others.map((e) => ({
+          event: e,
+          similarityDetails: {
+            isSimilar: true,
+            startTimeDifference: 0,
+            endTimeDifference: 0,
+            nameSimilarity: 1,
+            descriptionSimilarity: 1,
+            locationSimilarity: 1,
+          },
+        })),
+      };
+    });
+  }, [events, user?.id]);
 
   const renderEmptyState = () => {
     return (

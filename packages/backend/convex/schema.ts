@@ -79,6 +79,9 @@ export default defineSchema({
     description: v.optional(v.string()),
     // Batch tracking
     batchId: v.optional(v.string()),
+    // Similarity grouping - points to the canonical (earliest) similar event
+    // null/undefined means this event is canonical (no similar event found before it)
+    similarToEventId: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"])
