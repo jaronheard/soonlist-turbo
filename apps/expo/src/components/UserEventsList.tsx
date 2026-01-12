@@ -22,6 +22,7 @@ import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
+import type { EventWithSimilarity } from "~/utils/similarEvents";
 import {
   CalendarPlus,
   Copy,
@@ -43,7 +44,6 @@ import {
   isOver,
 } from "~/utils/dates";
 import { getEventEmoji } from "~/utils/eventEmoji";
-import type { EventWithSimilarity } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";

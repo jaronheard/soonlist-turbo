@@ -14,7 +14,10 @@ import {
 } from "../aggregates";
 import { DEFAULT_TIMEZONE } from "../constants";
 import { generateNumericId, generatePublicId } from "../utils";
-import { findSimilarEvent } from "./similarityHelpers";
+import {
+  findSimilarEvent,
+  findSimilarEventForUpdate,
+} from "./similarityHelpers";
 
 // Type for event data (based on AddToCalendarButtonProps)
 interface EventData {
@@ -853,6 +856,26 @@ export async function updateEvent(
   const startDateTime = parseDateTime(eventData.startDate, startTime, timeZone);
   const endDateTime = parseDateTime(eventData.endDate, endTime, timeZone);
 
+  // Check if similarity-relevant fields changed and recalculate if needed
+  const similarityFieldsChanged =
+    existingEvent.name !== eventData.name ||
+    existingEvent.description !== eventData.description ||
+    existingEvent.location !== eventData.location ||
+    existingEvent.startDateTime !== startDateTime.toISOString() ||
+    existingEvent.endDateTime !== endDateTime.toISOString();
+
+  let newSimilarToEventId: string | null | undefined = undefined;
+  if (similarityFieldsChanged) {
+    newSimilarToEventId = await findSimilarEventForUpdate(ctx, {
+      eventId: existingEvent.id,
+      startDateTime: startDateTime.toISOString(),
+      endDateTime: endDateTime.toISOString(),
+      name: eventData.name,
+      description: eventData.description,
+      location: eventData.location,
+    });
+  }
+
   // Update the event
   await ctx.db.patch(existingEvent._id, {
     event: eventData,
@@ -871,6 +894,10 @@ export async function updateEvent(
     startDate: eventData.startDate,
     startTime,
     description: eventData.description,
+    // Update similarity if relevant fields changed
+    ...(similarityFieldsChanged && {
+      similarToEventId: newSimilarToEventId ?? undefined,
+    }),
   });
 
   // Get updated event for aggregates
@@ -1016,6 +1043,19 @@ export async function deleteEvent(
 
   if (event.userId !== userId && !isAdmin) {
     throw new ConvexError("Unauthorized");
+  }
+
+  // Clear similarity references for events pointing to this canonical event
+  // This prevents dangling references when a canonical event is deleted
+  const dependentEvents = await ctx.db
+    .query("events")
+    .withIndex("by_similar_to_event", (q) => q.eq("similarToEventId", eventId))
+    .collect();
+
+  for (const dependent of dependentEvents) {
+    await ctx.db.patch(dependent._id, {
+      similarToEventId: undefined,
+    });
   }
 
   // Delete related records

@@ -1,5 +1,5 @@
-import type { QueryCtx } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
+import type { QueryCtx } from "../_generated/server";
 
 // Thresholds matching current client-side values exactly
 const THRESHOLDS = {
@@ -262,7 +262,93 @@ export async function findSimilarEventForBackfill(
       }
 
       // Otherwise, check if this is earlier than our current earliest
-      if (!earliestSimilar || candidateCreatedAt < new Date(earliestSimilar.created_at)) {
+      if (
+        !earliestSimilar ||
+        candidateCreatedAt < new Date(earliestSimilar.created_at)
+      ) {
+        earliestSimilar = candidate;
+      }
+    }
+  }
+
+  // Return the ID of the earliest similar event (canonical)
+  return earliestSimilar?.id ?? null;
+}
+
+/**
+ * Find a similar event when updating an existing event.
+ * Similar to findSimilarEvent but excludes the event being updated.
+ *
+ * @param ctx - Convex query context
+ * @param event - The updated event data to check for similarity
+ * @returns The ID of the canonical similar event, or null
+ */
+export async function findSimilarEventForUpdate(
+  ctx: QueryCtx,
+  event: {
+    eventId: string; // The ID of the event being updated (to exclude from candidates)
+    startDateTime: string;
+    endDateTime: string;
+    name?: string;
+    description?: string;
+    location?: string;
+  },
+): Promise<string | null> {
+  // Calculate time window for query (±60 minutes from start time)
+  const eventStartTime = new Date(event.startDateTime);
+  const minTime = new Date(
+    eventStartTime.getTime() - THRESHOLDS.startTimeMinutes * 60 * 1000,
+  ).toISOString();
+  const maxTime = new Date(
+    eventStartTime.getTime() + THRESHOLDS.startTimeMinutes * 60 * 1000,
+  ).toISOString();
+
+  // Query events within the time window using the startDateTime index
+  const candidates = await ctx.db
+    .query("events")
+    .withIndex("by_startDateTime", (q) =>
+      q.gte("startDateTime", minTime).lte("startDateTime", maxTime),
+    )
+    .collect();
+
+  // Find the earliest similar event (by created_at)
+  let earliestSimilar: Doc<"events"> | null = null;
+
+  for (const candidate of candidates) {
+    // Skip self
+    if (candidate.id === event.eventId) {
+      continue;
+    }
+
+    // Check if events are similar
+    const isSimilar = areEventsSimilar(
+      {
+        startDateTime: event.startDateTime,
+        endDateTime: event.endDateTime,
+        name: event.name,
+        description: event.description,
+        location: event.location,
+      },
+      {
+        startDateTime: candidate.startDateTime,
+        endDateTime: candidate.endDateTime,
+        name: candidate.name,
+        description: candidate.description,
+        location: candidate.location,
+      },
+    );
+
+    if (isSimilar) {
+      // If this candidate already points to a canonical event, use that
+      if (candidate.similarToEventId) {
+        return candidate.similarToEventId;
+      }
+
+      // Otherwise, check if this is earlier than our current earliest
+      if (
+        !earliestSimilar ||
+        new Date(candidate.created_at) < new Date(earliestSimilar.created_at)
+      ) {
         earliestSimilar = candidate;
       }
     }

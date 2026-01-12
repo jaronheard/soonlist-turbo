@@ -90,7 +90,8 @@ export default defineSchema({
     .index("by_visibility_and_startDateTime", ["visibility", "startDateTime"])
     .index("by_user_and_endDateTime", ["userId", "endDateTime"])
     .index("by_visibility_and_endDateTime", ["visibility", "endDateTime"])
-    .index("by_batch_id", ["batchId"]),
+    .index("by_batch_id", ["batchId"])
+    .index("by_similar_to_event", ["similarToEventId"]),
 
   eventToLists: defineTable({
     eventId: v.string(),
