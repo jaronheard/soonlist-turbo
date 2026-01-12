@@ -4,7 +4,30 @@
       {
         "appID": "GQ59Z4XZHZ.com.soonlist.app",
         "paths": [
-          "/event/*"
+          "/event/*",
+          "NOT /",
+          "NOT /api/*",
+          "NOT /_next/*",
+          "NOT /new",
+          "NOT /privacy",
+          "NOT /terms",
+          "NOT /terms-ios",
+          "NOT /contact",
+          "NOT /2024",
+          "NOT /2024/*",
+          "NOT /get-started",
+          "NOT /explore",
+          "NOT /explore/*",
+          "NOT /sign-in",
+          "NOT /sign-in/*",
+          "NOT /join",
+          "NOT /sign-up",
+          "NOT /sign-up/*",
+          "NOT /install",
+          "NOT /account",
+          "NOT /account/*",
+          "NOT /about",
+          "/*"
         ]
       }
     ]
