@@ -58,6 +58,12 @@ const queryClient = new QueryClient();
 // Export Expo Router's default error boundary
 export { ErrorBoundary } from "expo-router";
 
+// Anchor modals to tabs so deep links show the modal over the feed
+// See: https://docs.expo.dev/router/advanced/modals/#handle-deep-linked-modals
+export const unstable_settings = {
+  anchor: "(tabs)",
+};
+
 // This adds accessGroup support to Clerk's token cache: https://github.com/clerk/javascript/blob/main/packages/expo/src/token-cache/index.ts
 const tokenCache = {
   async getToken(key: string) {
