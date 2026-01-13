@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, Smartphone, X } from "lucide-react";
+import { Smartphone, X } from "lucide-react";
+import { toast } from "sonner";
 
+import { createDeepLink } from "@soonlist/api/utils/urlScheme";
 import { Button } from "@soonlist/ui/button";
 
 interface OpenInAppBannerProps {
@@ -64,27 +66,37 @@ export function OpenInAppBanner({ eventId }: OpenInAppBannerProps) {
     return null;
   }
 
-  const eventUrl = `https://www.soonlist.com/event/${eventId}`;
   const appStoreUrl =
     "https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216";
 
-  // Universal link that should open in the app if installed
-  const universalLink = eventUrl;
-
   const handleOpenInApp = () => {
-    // Try to open via universal link first
-    window.location.href = universalLink;
+    const isDev = process.env.NODE_ENV !== "production";
 
-    // Fallback to App Store after a delay if the app isn't installed
-    setTimeout(() => {
-      window.location.href = appStoreUrl;
-    }, 1500);
-  };
+    // Create environment-aware deep link
+    const deepLink = createDeepLink(`event/${eventId}`);
 
-  const handleOpenInSafari = () => {
-    // On iOS, this opens the URL in Safari instead of the in-app browser
-    // Using the special x-safari-https scheme
-    window.location.href = `x-safari-${eventUrl}`;
+    // Try to open via deep link first
+    window.location.href = deepLink;
+
+    // In development, don't redirect to App Store since we're using dev build
+    if (!isDev) {
+      // Fallback to App Store after a delay if the app isn't installed
+      // Only redirect if page is still visible (app didn't open)
+      setTimeout(() => {
+        if (!document.hidden) {
+          window.location.href = appStoreUrl;
+        }
+      }, 2000);
+    } else {
+      // In development, show a helpful message if app doesn't open
+      setTimeout(() => {
+        if (!document.hidden) {
+          toast(
+            "Deep link attempted. Make sure you have the development app installed.",
+          );
+        }
+      }, 2000);
+    }
   };
 
   return (
@@ -94,26 +106,15 @@ export function OpenInAppBanner({ eventId }: OpenInAppBannerProps) {
           <p className="mb-3 text-sm font-medium text-neutral-1">
             For the best experience, open this event in the Soonlist app
           </p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={handleOpenInApp}
-              size="sm"
-              className="gap-1.5"
-              variant="default"
-            >
-              <Smartphone className="size-4" />
-              Open in App
-            </Button>
-            <Button
-              onClick={handleOpenInSafari}
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-            >
-              <ExternalLink className="size-4" />
-              Open in Safari
-            </Button>
-          </div>
+          <Button
+            onClick={handleOpenInApp}
+            size="sm"
+            className="gap-1.5"
+            variant="default"
+          >
+            <Smartphone className="size-4" />
+            Open in App
+          </Button>
         </div>
         <button
           onClick={() => setDismissed(true)}
