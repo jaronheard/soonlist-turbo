@@ -41,6 +41,7 @@
     "@clerk/clerk-expo": "catalog:",
     "@expo/metro-runtime": "catalog:",
     "@intercom/intercom-react-native": "catalog:",
+    "@legendapp/list": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@react-native-community/datetimepicker": "catalog:",
     "@react-native-community/netinfo": "catalog:",

@@ -12,10 +12,10 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { FlatList } from "react-native-gesture-handler";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { LegendList } from "@legendapp/list";
 import { useHeaderHeight } from "@react-navigation/elements";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
@@ -1118,7 +1118,7 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   return (
     <>
-      <FlatList
+      <LegendList
         data={collapsedEvents}
         keyExtractor={(item) => item.event.id}
         ListHeaderComponent={renderHeader}
@@ -1164,7 +1164,8 @@ export default function UserEventsList(props: UserEventsListProps) {
           backgroundColor: "#F4F1FF",
         }}
         ListFooterComponent={renderFooter()}
-        ListFooterComponentStyle={{ flex: 1, justifyContent: "center" }}
+        recycleItems
+        estimatedItemSize={200}
       />
     </>
   );

@@ -153,6 +153,9 @@ catalog:
   # State Management
   zustand: 4.5.5
 
+  # List Performance
+  "@legendapp/list": ^2.0.4
+
   # Node Types
   "@types/node": 20.12.7
   "@types/uuid": ^9.0.8
