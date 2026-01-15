@@ -13,6 +13,10 @@ import {
   userFeedsAggregate,
 } from "../aggregates";
 import { DEFAULT_TIMEZONE } from "../constants";
+import {
+  findSimilarityGroup,
+  generateSimilarityGroupId,
+} from "./similarityHelpers";
 import { generateNumericId, generatePublicId } from "../utils";
 
 // Type for event data (based on AddToCalendarButtonProps)
@@ -731,6 +735,14 @@ export async function createEvent(
   const startDateTime = parseDateTime(eventData.startDate, startTime, timeZone);
   const endDateTime = parseDateTime(eventData.endDate, endTime, timeZone);
 
+  const similarityGroupId =
+    (await findSimilarityGroup(ctx, {
+      name: eventData.name,
+      location: eventData.location,
+      description: eventData.description,
+      startDateTime: startDateTime.toISOString(),
+    })) ?? generateSimilarityGroupId();
+
   // Create the event
   const eventDocId = await ctx.db.insert("events", {
     id: eventId,
@@ -754,6 +766,7 @@ export async function createEvent(
     startTime,
     description: eventData.description,
     batchId,
+    similarityGroupId,
   });
 
   // Sync with aggregates for efficient stats
@@ -792,6 +805,7 @@ export async function createEvent(
     visibility: visibility || "public",
     startDateTime: startDateTime.toISOString(),
     endDateTime: endDateTime.toISOString(),
+    similarityGroupId,
   });
 
   return { id: eventId };
@@ -952,6 +966,7 @@ export async function updateEvent(
       visibility: visibility || existingEvent.visibility,
       startDateTime: startDateTime.toISOString(),
       endDateTime: endDateTime.toISOString(),
+      similarityGroupId: existingEvent.similarityGroupId,
     });
 
     // If changing to public, fan out to list followers
@@ -1348,6 +1363,7 @@ export async function toggleEventVisibility(
         visibility,
         startDateTime: event.startDateTime,
         endDateTime: event.endDateTime,
+        similarityGroupId: event.similarityGroupId,
       });
 
       // Fan out to list followers when event becomes public

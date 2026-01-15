@@ -18,6 +18,10 @@ import {
   internalMutation,
   internalQuery,
 } from "./_generated/server";
+import {
+  findSimilarityGroup,
+  generateSimilarityGroupId,
+} from "./model/similarityHelpers";
 
 // Type for sync state
 type SyncState = {
@@ -534,8 +538,20 @@ export const upsertEvent = internalMutation({
       .first();
 
     if (existing) {
+      const similarityGroupId =
+        existing.similarityGroupId ??
+        (await findSimilarityGroup(ctx, {
+          name: args.name,
+          location: args.location,
+          description: args.description,
+          startDateTime: args.startDateTime,
+        })) ??
+        generateSimilarityGroupId();
       // Update existing event
-      await ctx.db.patch(existing._id, args);
+      await ctx.db.patch(existing._id, {
+        ...args,
+        similarityGroupId,
+      });
 
       // Update feeds if visibility or time changed
       const visibilityChanged = existing.visibility !== args.visibility;
@@ -557,11 +573,19 @@ export const upsertEvent = internalMutation({
           visibility: args.visibility,
           startDateTime: args.startDateTime,
           endDateTime: args.endDateTime,
+          similarityGroupId,
         });
       }
     } else {
+      const similarityGroupId =
+        (await findSimilarityGroup(ctx, {
+          name: args.name,
+          location: args.location,
+          description: args.description,
+          startDateTime: args.startDateTime,
+        })) ?? generateSimilarityGroupId();
       // Insert new event
-      await ctx.db.insert("events", args);
+      await ctx.db.insert("events", { ...args, similarityGroupId });
 
       // Add event to feeds
       await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
@@ -570,6 +594,7 @@ export const upsertEvent = internalMutation({
         visibility: args.visibility,
         startDateTime: args.startDateTime,
         endDateTime: args.endDateTime,
+        similarityGroupId,
       });
     }
     return null;

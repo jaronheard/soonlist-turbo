@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useMemo } from "react";
+import React from "react";
 import {
   ActivityIndicator,
   Image,
@@ -43,7 +43,6 @@ import {
   isOver,
 } from "~/utils/dates";
 import { getEventEmoji } from "~/utils/eventEmoji";
-import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
@@ -193,6 +192,7 @@ function EventSaversRow({
 type EventStatsData = FunctionReturnType<typeof api.events.getStats>;
 
 type Event = NonNullable<FunctionReturnType<typeof api.events.get>>;
+type EventWithSimilarCount = Event & { similarEventsCount?: number };
 
 interface ActionButtonProps {
   event: Event;
@@ -1002,7 +1002,7 @@ const EmptyStateHeader = () => {
 };
 
 interface UserEventsListProps {
-  events: Event[];
+  events: EventWithSimilarCount[];
   ActionButton?: React.ComponentType<ActionButtonProps>;
   showCreator: ShowCreatorOption;
   onEndReached: () => void;
@@ -1038,11 +1038,6 @@ export default function UserEventsList(props: UserEventsListProps) {
   const { user } = useUser();
   const headerHeight = useHeaderHeight();
 
-  const collapsedEvents = useMemo(
-    () => collapseSimilarEvents(events, user?.id),
-    [events, user?.id],
-  );
-
   const renderEmptyState = () => {
     return (
       <ScrollView
@@ -1074,7 +1069,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     );
   }
 
-  if (collapsedEvents.length === 0) {
+  if (events.length === 0) {
     return renderEmptyState();
   }
 
@@ -1109,12 +1104,12 @@ export default function UserEventsList(props: UserEventsListProps) {
   return (
     <>
       <FlatList
-        data={collapsedEvents}
-        keyExtractor={(item) => item.event.id}
+        data={events}
+        keyExtractor={(item) => item.id}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         renderItem={({ item, index }) => {
-          const eventData = item.event;
+          const eventData = item;
           // Use savedEventIds if provided, otherwise check eventFollows
           const isSaved = savedEventIds
             ? savedEventIds.has(eventData.id)
@@ -1123,7 +1118,7 @@ export default function UserEventsList(props: UserEventsListProps) {
               ) ?? false);
           // TODO: Add savedAt
 
-          const similarEventsCount = item.similarEvents.length;
+          const similarEventsCount = eventData.similarEventsCount ?? 0;
 
           return (
             <UserEventListItem

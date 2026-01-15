@@ -79,6 +79,8 @@ export default defineSchema({
     description: v.optional(v.string()),
     // Batch tracking
     batchId: v.optional(v.string()),
+    // Similarity group ID (set on creation; optional during migration)
+    similarityGroupId: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
     .index("by_custom_id", ["id"])
@@ -87,7 +89,8 @@ export default defineSchema({
     .index("by_visibility_and_startDateTime", ["visibility", "startDateTime"])
     .index("by_user_and_endDateTime", ["userId", "endDateTime"])
     .index("by_visibility_and_endDateTime", ["visibility", "endDateTime"])
-    .index("by_batch_id", ["batchId"]),
+    .index("by_batch_id", ["batchId"])
+    .index("by_similarity_group", ["similarityGroupId"]),
 
   eventToLists: defineTable({
     eventId: v.string(),
@@ -208,6 +211,7 @@ export default defineSchema({
     addedAt: v.number(), // When added to feed (timestamp)
     hasEnded: v.boolean(), // Pre-computed field: true if event has ended, false if ongoing/upcoming (now required)
     beforeThisDateTime: v.optional(v.string()), // Optional ISO date string for custom filtering
+    similarityGroupId: v.optional(v.string()),
   })
     .index("by_feed_hasEnded_startTime", [
       "feedId",
@@ -215,7 +219,25 @@ export default defineSchema({
       "eventStartTime",
     ]) // For efficient filtering and sorting
     .index("by_feed_event", ["feedId", "eventId"]) // For deduplication checks
-    .index("by_event", ["eventId"]), // For event removal across all feeds
+    .index("by_event", ["eventId"]) // For event removal across all feeds
+    .index("by_feed_group", ["feedId", "similarityGroupId"]),
+
+  userFeedGroups: defineTable({
+    feedId: v.string(),
+    similarityGroupId: v.string(),
+    primaryEventId: v.string(),
+    eventStartTime: v.number(),
+    eventEndTime: v.number(),
+    hasEnded: v.boolean(),
+    similarEventsCount: v.number(),
+  })
+    .index("by_feed_hasEnded_startTime", [
+      "feedId",
+      "hasEnded",
+      "eventStartTime",
+    ])
+    .index("by_feed_group", ["feedId", "similarityGroupId"])
+    .index("by_group", ["similarityGroupId"]),
 
   guestOnboardingData: defineTable({
     ownerToken: v.string(), // Guest user ID

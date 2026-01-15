@@ -190,6 +190,7 @@ interface EventListItemProps {
     event: EventWithUser;
     similarityDetails: SimilarityDetails;
   }[];
+  similarEventsCount?: number;
   filePath?: string;
   happeningNow?: boolean;
   lists?: List[]; // this is all lists that this event is a part of
@@ -677,6 +678,8 @@ export function EventListItem(props: EventListItemProps) {
   const isFollowing = !!eventFollows.find(
     (item) => item.userId === clerkUser?.id,
   );
+  const similarEventsCount =
+    props.similarEventsCount ?? props.similarEvents?.length ?? 0;
   const image =
     event.images?.[3] ||
     (filePath ? buildDefaultUrl(props.filePath || "") : undefined);
@@ -927,18 +930,16 @@ export function EventListItem(props: EventListItemProps) {
               <div className="flex items-center gap-1">
                 <p className="text-xs font-medium text-neutral-2">{dateText}</p>
               </div>
-              {isOwner &&
-                props.similarEvents &&
-                props.similarEvents.length > 0 && (
-                  <div className="flex items-center gap-1 opacity-60">
-                    <div className="flex items-center gap-1 rounded-full bg-neutral-4/70 px-2 py-0.5">
-                      <Copy className="size-3.5" />
-                      <span className="text-xs text-neutral-2">
-                        {props.similarEvents.length}
-                      </span>
-                    </div>
+              {isOwner && similarEventsCount > 0 && (
+                <div className="flex items-center gap-1 opacity-60">
+                  <div className="flex items-center gap-1 rounded-full bg-neutral-4/70 px-2 py-0.5">
+                    <Copy className="size-3.5" />
+                    <span className="text-xs text-neutral-2">
+                      {similarEventsCount}
+                    </span>
                   </div>
-                )}
+                </div>
+              )}
             </div>
 
             <h3 className="mb-1 truncate text-base font-bold text-neutral-1">
