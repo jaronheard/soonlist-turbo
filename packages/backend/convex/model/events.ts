@@ -17,6 +17,7 @@ import { generateNumericId, generatePublicId } from "../utils";
 import {
   findSimilarityGroup,
   generateSimilarityGroupId,
+  getOriginalEventInGroup,
 } from "./similarityHelpers";
 
 // Type for event data (based on AddToCalendarButtonProps)
@@ -736,14 +737,16 @@ export async function createEvent(
   const endDateTime = parseDateTime(eventData.endDate, endTime, timeZone);
 
   // Find or create similarity group
+  const existingSimilarityGroupId = await findSimilarityGroup(ctx, {
+    startDateTime: startDateTime.toISOString(),
+    endDateTime: endDateTime.toISOString(),
+    name: eventData.name,
+    description: eventData.description,
+    location: eventData.location,
+  });
+  const isJoiningExistingGroup = existingSimilarityGroupId !== null;
   const similarityGroupId =
-    (await findSimilarityGroup(ctx, {
-      startDateTime: startDateTime.toISOString(),
-      endDateTime: endDateTime.toISOString(),
-      name: eventData.name,
-      description: eventData.description,
-      location: eventData.location,
-    })) || generateSimilarityGroupId();
+    existingSimilarityGroupId || generateSimilarityGroupId();
 
   // Create the event with similarity group
   const eventDocId = await ctx.db.insert("events", {
@@ -810,6 +813,42 @@ export async function createEvent(
     endDateTime: endDateTime.toISOString(),
     similarityGroupId,
   });
+
+  // Schedule similarity match notification if joining an existing group
+  if (isJoiningExistingGroup) {
+    // Get the original event in the group
+    const originalEvent = await getOriginalEventInGroup(ctx, similarityGroupId);
+
+    if (originalEvent && originalEvent.userId !== userId) {
+      // Get both users' display names
+      const [newCapturerUser, originalCapturerUser] = await Promise.all([
+        ctx.db
+          .query("users")
+          .withIndex("by_custom_id", (q) => q.eq("id", userId))
+          .unique(),
+        ctx.db
+          .query("users")
+          .withIndex("by_custom_id", (q) => q.eq("id", originalEvent.userId))
+          .unique(),
+      ]);
+
+      if (newCapturerUser && originalCapturerUser) {
+        // Schedule the notification action
+        await ctx.scheduler.runAfter(
+          0,
+          internal.notifications.pushSimilarityMatch,
+          {
+            eventId,
+            newCapturerUserId: userId,
+            newCapturerDisplayName: newCapturerUser.displayName,
+            originalCapturerUserId: originalEvent.userId,
+            originalCapturerDisplayName: originalCapturerUser.displayName,
+            similarityGroupId,
+          },
+        );
+      }
+    }
+  }
 
   return { id: eventId };
 }

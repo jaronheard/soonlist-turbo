@@ -587,3 +587,86 @@ export const pushFailure = internalAction({
     };
   },
 });
+
+/**
+ * Send similarity match notifications when an event joins an existing group
+ * Notifies both the new capturer and the original capturer
+ */
+export const pushSimilarityMatch = internalAction({
+  args: {
+    eventId: v.string(),
+    newCapturerUserId: v.string(),
+    newCapturerDisplayName: v.string(),
+    originalCapturerUserId: v.string(),
+    originalCapturerDisplayName: v.string(),
+    similarityGroupId: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    newCapturerNotification: v.optional(
+      v.object({
+        success: v.boolean(),
+        id: v.optional(v.string()),
+        error: v.optional(v.string()),
+      }),
+    ),
+    originalCapturerNotification: v.optional(
+      v.object({
+        success: v.boolean(),
+        id: v.optional(v.string()),
+        error: v.optional(v.string()),
+      }),
+    ),
+  }),
+  handler: async (_ctx, args) => {
+    const {
+      eventId,
+      newCapturerUserId,
+      newCapturerDisplayName,
+      originalCapturerUserId,
+      originalCapturerDisplayName,
+    } = args;
+
+    // Don't send notifications if same user captured both events
+    if (newCapturerUserId === originalCapturerUserId) {
+      return { success: true };
+    }
+
+    // Create deep link to the event
+    const url = createDeepLink(`event/${eventId}`);
+
+    // Send notification to new capturer
+    const newCapturerResult = await OneSignal.sendNotification({
+      userId: newCapturerUserId,
+      title: "Same event captured! 💖",
+      body: `You and ${originalCapturerDisplayName} also captured the same event! Want to see them there?`,
+      url,
+      data: {
+        type: "similarity_match",
+        role: "new_capturer",
+      },
+      source: "similarity",
+      method: "match",
+    });
+
+    // Send notification to original capturer
+    const originalCapturerResult = await OneSignal.sendNotification({
+      userId: originalCapturerUserId,
+      title: "Same event captured! 💖",
+      body: `${newCapturerDisplayName} just captured the same event as you! Let them know!`,
+      url,
+      data: {
+        type: "similarity_match",
+        role: "original_capturer",
+      },
+      source: "similarity",
+      method: "match",
+    });
+
+    return {
+      success: newCapturerResult.success || originalCapturerResult.success,
+      newCapturerNotification: newCapturerResult,
+      originalCapturerNotification: originalCapturerResult,
+    };
+  },
+});

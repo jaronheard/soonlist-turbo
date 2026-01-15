@@ -313,3 +313,32 @@ export async function getGroupMemberCount(
 
   return membership.length;
 }
+
+/**
+ * Get the original (earliest) event in a similarity group
+ * Used to find the original capturer for notification purposes
+ */
+export async function getOriginalEventInGroup(
+  ctx: MutationCtx | QueryCtx,
+  similarityGroupId: string,
+): Promise<Doc<"events"> | null> {
+  // Query all events in this similarity group
+  const events = await ctx.db
+    .query("events")
+    .withIndex("by_similarity_group", (q) =>
+      q.eq("similarityGroupId", similarityGroupId),
+    )
+    .collect();
+
+  if (events.length === 0) {
+    return null;
+  }
+
+  // Sort by creation date to find the earliest (original) event
+  const sorted = events.sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
+
+  return sorted[0] ?? null;
+}
