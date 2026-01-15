@@ -14,6 +14,10 @@ import {
 } from "../aggregates";
 import { DEFAULT_TIMEZONE } from "../constants";
 import { generateNumericId, generatePublicId } from "../utils";
+import {
+  findSimilarityGroup,
+  generateSimilarityGroupId,
+} from "./similarityHelpers";
 
 // Type for event data (based on AddToCalendarButtonProps)
 interface EventData {
@@ -731,7 +735,17 @@ export async function createEvent(
   const startDateTime = parseDateTime(eventData.startDate, startTime, timeZone);
   const endDateTime = parseDateTime(eventData.endDate, endTime, timeZone);
 
-  // Create the event
+  // Find or create similarity group
+  const similarityGroupId =
+    (await findSimilarityGroup(ctx, {
+      startDateTime: startDateTime.toISOString(),
+      endDateTime: endDateTime.toISOString(),
+      name: eventData.name,
+      description: eventData.description,
+      location: eventData.location,
+    })) || generateSimilarityGroupId();
+
+  // Create the event with similarity group
   const eventDocId = await ctx.db.insert("events", {
     id: eventId,
     userId,
@@ -754,6 +768,8 @@ export async function createEvent(
     startTime,
     description: eventData.description,
     batchId,
+    // Similarity group for feed grouping
+    similarityGroupId,
   });
 
   // Sync with aggregates for efficient stats
@@ -785,13 +801,14 @@ export async function createEvent(
     }
   }
 
-  // Add event to feeds
+  // Add event to feeds (with similarity group for grouped feed support)
   await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
     eventId,
     userId,
     visibility: visibility || "public",
     startDateTime: startDateTime.toISOString(),
     endDateTime: endDateTime.toISOString(),
+    similarityGroupId,
   });
 
   return { id: eventId };
@@ -936,6 +953,9 @@ export async function updateEvent(
     existingEvent.startDateTime !== startDateTime.toISOString() ||
     existingEvent.endDateTime !== endDateTime.toISOString();
 
+  // Note: similarityGroupId is kept immutable per first rollout - we don't attempt to regroup
+  const similarityGroupId = existingEvent.similarityGroupId;
+
   if (visibilityChanged || timeChanged) {
     // If changing to private, remove from discover feed
     if (visibility === "private" && existingEvent.visibility === "public") {
@@ -945,13 +965,14 @@ export async function updateEvent(
       });
     }
 
-    // Update event in feeds with new visibility and/or time
+    // Update event in feeds with new visibility and/or time (pass similarityGroupId for grouped feed support)
     await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
       eventId,
       userId: existingEvent.userId,
       visibility: visibility || existingEvent.visibility,
       startDateTime: startDateTime.toISOString(),
       endDateTime: endDateTime.toISOString(),
+      similarityGroupId,
     });
 
     // If changing to public, fan out to list followers

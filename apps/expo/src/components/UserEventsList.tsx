@@ -22,6 +22,7 @@ import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { getTimezoneAbbreviation } from "@soonlist/cal";
 
+import type { EventWithSimilarity } from "~/utils/similarEvents";
 import {
   CalendarPlus,
   Copy,
@@ -1002,7 +1003,10 @@ const EmptyStateHeader = () => {
 };
 
 interface UserEventsListProps {
-  events: Event[];
+  // Either provide raw events (for backward compatibility with client-side grouping)
+  events?: Event[];
+  // Or provide pre-grouped events from server (for new server-side grouping)
+  groupedEvents?: EventWithSimilarity[];
   ActionButton?: React.ComponentType<ActionButtonProps>;
   showCreator: ShowCreatorOption;
   onEndReached: () => void;
@@ -1021,6 +1025,7 @@ interface UserEventsListProps {
 export default function UserEventsList(props: UserEventsListProps) {
   const {
     events,
+    groupedEvents,
     ActionButton,
     showCreator,
     onEndReached,
@@ -1038,10 +1043,15 @@ export default function UserEventsList(props: UserEventsListProps) {
   const { user } = useUser();
   const headerHeight = useHeaderHeight();
 
-  const collapsedEvents = useMemo(
-    () => collapseSimilarEvents(events, user?.id),
-    [events, user?.id],
-  );
+  // Use pre-grouped events if provided, otherwise collapse client-side
+  const collapsedEvents = useMemo(() => {
+    if (groupedEvents) {
+      // Server already grouped the events
+      return groupedEvents;
+    }
+    // Fallback: client-side grouping for backward compatibility
+    return events ? collapseSimilarEvents(events, user?.id) : [];
+  }, [groupedEvents, events, user?.id]);
 
   const renderEmptyState = () => {
     return (
@@ -1119,7 +1129,7 @@ export default function UserEventsList(props: UserEventsListProps) {
           const isSaved = savedEventIds
             ? savedEventIds.has(eventData.id)
             : (eventData.eventFollows?.some(
-                (follow) => follow.userId === user?.id,
+                (follow: { userId: string }) => follow.userId === user?.id,
               ) ?? false);
           // TODO: Add savedAt
 

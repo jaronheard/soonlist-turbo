@@ -11,6 +11,7 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import type { EventWithSimilarity } from "~/utils/similarEvents";
 import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
@@ -33,11 +34,11 @@ function PastEventsContent() {
   }, []);
 
   const {
-    results: events,
+    results: groupedEvents,
     status,
     loadMore,
     isLoading,
-  } = useStablePaginatedQuery(api.feeds.getMyFeed, queryArgs, {
+  } = useStablePaginatedQuery(api.feeds.getMyFeedGrouped, queryArgs, {
     initialNumItems: 50,
   });
 
@@ -62,16 +63,24 @@ function PastEventsContent() {
     savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
-  // Add missing properties that UserEventsList expects
-  const enrichedEvents = useMemo(() => {
-    return events.map((event) => ({
-      ...event,
-      eventFollows: [],
-      comments: [],
-      eventToLists: [],
-      lists: [],
+  // Transform grouped events into the format UserEventsList expects
+  // The server now handles similarity grouping
+  const enrichedEvents: EventWithSimilarity[] = useMemo(() => {
+    return groupedEvents.map((group) => ({
+      event: {
+        ...group.event,
+        eventFollows: [],
+        comments: [],
+        eventToLists: [],
+        lists: [],
+      },
+      // Server-computed count (already shows just similar events, not including primary)
+      similarEvents: Array(group.similarEventsCount).fill({
+        event: null,
+        similarityDetails: null,
+      }),
     }));
-  }, [events]);
+  }, [groupedEvents]);
 
   return (
     <View className="flex-1 bg-white">
@@ -80,7 +89,7 @@ function PastEventsContent() {
       ) : (
         <View className="flex-1">
           <UserEventsList
-            events={enrichedEvents}
+            groupedEvents={enrichedEvents}
             onEndReached={handleLoadMore}
             showCreator="savedFromOthers"
             isFetchingNextPage={status === "LoadingMore"}

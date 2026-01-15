@@ -16,6 +16,7 @@ import type * as constants from "../constants.js";
 import type * as crons from "../crons.js";
 import type * as eventBatches from "../eventBatches.js";
 import type * as events from "../events.js";
+import type * as feedGroupHelpers from "../feedGroupHelpers.js";
 import type * as feedHelpers from "../feedHelpers.js";
 import type * as feeds from "../feeds.js";
 import type * as files from "../files.js";
@@ -24,6 +25,7 @@ import type * as http from "../http.js";
 import type * as lists from "../lists.js";
 import type * as migrations_initializeAggregates from "../migrations/initializeAggregates.js";
 import type * as migrations_initializeUserFeedsAggregate from "../migrations/initializeUserFeedsAggregate.js";
+import type * as migrations_similarityGroupMigration from "../migrations/similarityGroupMigration.js";
 import type * as migrations_userFeedsMigration from "../migrations/userFeedsMigration.js";
 import type * as model_ai from "../model/ai.js";
 import type * as model_aiHelpers from "../model/aiHelpers.js";
@@ -33,6 +35,7 @@ import type * as model_notificationHelpers from "../model/notificationHelpers.js
 import type * as model_notifications from "../model/notifications.js";
 import type * as model_oneSignal from "../model/oneSignal.js";
 import type * as model_posthog from "../model/posthog.js";
+import type * as model_similarityHelpers from "../model/similarityHelpers.js";
 import type * as model_utils_urlScheme from "../model/utils/urlScheme.js";
 import type * as notifications from "../notifications.js";
 import type * as planetscaleSync from "../planetscaleSync.js";
@@ -59,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   eventBatches: typeof eventBatches;
   events: typeof events;
+  feedGroupHelpers: typeof feedGroupHelpers;
   feedHelpers: typeof feedHelpers;
   feeds: typeof feeds;
   files: typeof files;
@@ -67,6 +71,7 @@ declare const fullApi: ApiFromModules<{
   lists: typeof lists;
   "migrations/initializeAggregates": typeof migrations_initializeAggregates;
   "migrations/initializeUserFeedsAggregate": typeof migrations_initializeUserFeedsAggregate;
+  "migrations/similarityGroupMigration": typeof migrations_similarityGroupMigration;
   "migrations/userFeedsMigration": typeof migrations_userFeedsMigration;
   "model/ai": typeof model_ai;
   "model/aiHelpers": typeof model_aiHelpers;
@@ -76,6 +81,7 @@ declare const fullApi: ApiFromModules<{
   "model/notifications": typeof model_notifications;
   "model/oneSignal": typeof model_oneSignal;
   "model/posthog": typeof model_posthog;
+  "model/similarityHelpers": typeof model_similarityHelpers;
   "model/utils/urlScheme": typeof model_utils_urlScheme;
   notifications: typeof notifications;
   planetscaleSync: typeof planetscaleSync;

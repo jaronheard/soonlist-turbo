@@ -39,10 +39,10 @@ function MyFeedContent() {
   }, []);
 
   const {
-    results: events,
+    results: groupedEvents,
     status,
     loadMore,
-  } = useStablePaginatedQuery(api.feeds.getMyFeed, queryArgs, {
+  } = useStablePaginatedQuery(api.feeds.getMyFeedGrouped, queryArgs, {
     initialNumItems: 50,
   });
 
@@ -67,25 +67,33 @@ function MyFeedContent() {
     savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
-  // Add missing properties that UserEventsList expects and filter out ended events
+  // Transform grouped events into the format UserEventsList expects
+  // The server now handles similarity grouping, so we just enrich the events
   const enrichedEvents = useMemo(() => {
     // Use stableTimestamp instead of recalculating Date.now()
     const currentTime = new Date(stableTimestamp).getTime();
-    return events
-      .filter((event) => {
+    return groupedEvents
+      .filter((group) => {
         // Client-side safety filter: hide events that have ended
         // This prevents showing ended events if the cron job hasn't run recently
-        const eventEndTime = new Date(event.endDateTime).getTime();
+        const eventEndTime = new Date(group.event.endDateTime).getTime();
         return eventEndTime >= currentTime;
       })
-      .map((event) => ({
-        ...event,
-        eventFollows: [],
-        comments: [],
-        eventToLists: [],
-        lists: [],
+      .map((group) => ({
+        event: {
+          ...group.event,
+          eventFollows: [],
+          comments: [],
+          eventToLists: [],
+          lists: [],
+        },
+        // Server-computed count (already shows just similar events, not including primary)
+        similarEvents: Array(group.similarEventsCount).fill({
+          event: null,
+          similarityDetails: null,
+        }),
       }));
-  }, [events, stableTimestamp]);
+  }, [groupedEvents, stableTimestamp]);
 
   // Trigger rating prompt when user has 3+ upcoming events
   useRatingPrompt(enrichedEvents.length);
@@ -94,7 +102,7 @@ function MyFeedContent() {
     <View className="flex-1 bg-white">
       <View className="flex-1">
         <UserEventsList
-          events={enrichedEvents}
+          groupedEvents={enrichedEvents}
           onEndReached={handleLoadMore}
           isFetchingNextPage={status === "LoadingMore"}
           isLoadingFirstPage={status === "LoadingFirstPage"}
