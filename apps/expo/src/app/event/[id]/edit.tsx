@@ -27,7 +27,13 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
 import { DatePickerField, TimePickerField } from "~/components/date-picker";
-import { EyeOff, Globe2, Image as ImageIcon } from "~/components/icons";
+import {
+  Check,
+  EyeOff,
+  Globe2,
+  Image as ImageIcon,
+  X,
+} from "~/components/icons";
 import ImageUploadSpinner from "~/components/ImageUploadSpinner";
 import { InputTags } from "~/components/InputTags";
 import LoadingSpinner from "~/components/LoadingSpinner";
@@ -427,52 +433,32 @@ export default function EditEventScreen() {
     <>
       <Stack.Screen
         options={{
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => void handleSubmit(onSubmit)()}
-              disabled={
-                isSubmitting ||
-                isUploadingImage ||
-                (!isDirty &&
-                  !uploadedImageUrl &&
-                  selectedImage === originalImage) ||
-                !isValid
-              }
-              style={{ marginRight: 8 }}
-            >
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: "600",
-                  color:
-                    isSubmitting ||
-                    isUploadingImage ||
-                    (!isDirty &&
-                      !uploadedImageUrl &&
-                      selectedImage === originalImage) ||
-                    !isValid
-                      ? "rgba(255, 255, 255, 0.5)"
-                      : "#FFFFFF",
-                }}
+          headerRight: () => {
+            const isDisabled =
+              isSubmitting ||
+              isUploadingImage ||
+              (!isDirty &&
+                !uploadedImageUrl &&
+                selectedImage === originalImage) ||
+              !isValid;
+            return (
+              <TouchableOpacity
+                onPress={() => void handleSubmit(onSubmit)()}
+                disabled={isDisabled}
+                activeOpacity={0.6}
+                style={{ opacity: isDisabled ? 0.4 : 1 }}
               >
-                {isSubmitting ? "Saving..." : "Save"}
-              </Text>
-            </TouchableOpacity>
-          ),
+                <View className="rounded-full p-1">
+                  <Check size={20} color="#5A32FB" strokeWidth={2.5} />
+                </View>
+              </TouchableOpacity>
+            );
+          },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{ marginLeft: 8 }}
-            >
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: "600",
-                  color: "#FFFFFF",
-                }}
-              >
-                Cancel
-              </Text>
+            <TouchableOpacity onPress={() => router.back()} activeOpacity={0.6}>
+              <View className="rounded-full p-1">
+                <X size={20} color="#5A32FB" strokeWidth={2.5} />
+              </View>
             </TouchableOpacity>
           ),
         }}
@@ -488,6 +474,7 @@ export default function EditEventScreen() {
             padding: 16,
             paddingBottom: insets.bottom + 36,
           }}
+          contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
         >
           <View className="flex-col gap-4 space-y-6">
