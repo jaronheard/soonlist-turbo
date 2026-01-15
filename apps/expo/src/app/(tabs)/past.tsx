@@ -12,19 +12,12 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { EventWithSimilarity } from "~/utils/similarEvents";
-import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 
 function PastEventsContent() {
   const { user } = useUser();
-
-  // Fetch user stats
-  const stats = useQuery(
-    api.events.getStats,
-    user?.username ? { userName: user.username } : "skip",
-  );
 
   // Memoize query args to prevent unnecessary re-renders
   const queryArgs = useMemo(() => {
@@ -97,7 +90,6 @@ function PastEventsContent() {
             savedEventIds={savedEventIds}
             source="past"
           />
-          <AddEventButton showChevron={false} stats={stats} />
         </View>
       )}
     </View>
