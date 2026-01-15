@@ -68,7 +68,7 @@ export function cosineSimilarity(
 /**
  * Event data extracted for similarity comparison
  */
-interface EventSimilarityData {
+export interface EventSimilarityData {
   startDateTime: string;
   endDateTime: string;
   name?: string;
@@ -132,10 +132,12 @@ export function generateSimilarityGroupId(): string {
 /**
  * Find an existing similarity group among nearby events
  * Returns the similarityGroupId if found, or null if no similar events exist
+ * @param excludeEventId - Optional event ID to exclude from the search (used during regrouping)
  */
 export async function findSimilarityGroup(
   ctx: MutationCtx | QueryCtx,
   eventData: EventSimilarityData,
+  excludeEventId?: string,
 ): Promise<string | null> {
   const startDateTime = new Date(eventData.startDateTime);
 
@@ -158,6 +160,11 @@ export async function findSimilarityGroup(
   for (const candidate of candidateEvents) {
     // Skip events without a similarity group
     if (!candidate.similarityGroupId) {
+      continue;
+    }
+
+    // Skip the event being updated (to avoid matching itself during regrouping)
+    if (excludeEventId && candidate.id === excludeEventId) {
       continue;
     }
 
@@ -312,4 +319,103 @@ export async function getGroupMemberCount(
     .collect();
 
   return membership.length;
+}
+
+/**
+ * Determines if event changes warrant a regroup check
+ * Returns true if any similarity-affecting fields changed
+ */
+export function shouldRegroupEvent(
+  existingEvent: Doc<"events">,
+  newEventData: {
+    startDateTime: string;
+    endDateTime: string;
+    name?: string;
+    description?: string;
+    location?: string;
+  },
+): boolean {
+  const timeChanged =
+    existingEvent.startDateTime !== newEventData.startDateTime ||
+    existingEvent.endDateTime !== newEventData.endDateTime;
+
+  const nameChanged = existingEvent.name !== newEventData.name;
+  const descriptionChanged =
+    existingEvent.description !== newEventData.description;
+  const locationChanged = existingEvent.location !== newEventData.location;
+
+  return timeChanged || nameChanged || descriptionChanged || locationChanged;
+}
+
+/**
+ * Get one representative event from a similarity group (excluding a specific event)
+ * Used to check if an event still belongs to its current group
+ */
+export async function getRepresentativeGroupMember(
+  ctx: MutationCtx | QueryCtx,
+  similarityGroupId: string,
+  excludeEventId: string,
+): Promise<Doc<"events"> | null> {
+  const members = await ctx.db
+    .query("events")
+    .withIndex("by_similarity_group", (q) =>
+      q.eq("similarityGroupId", similarityGroupId),
+    )
+    .filter((q) => q.neq(q.field("id"), excludeEventId))
+    .take(1);
+
+  return members[0] ?? null;
+}
+
+/**
+ * Determine the new similarity group for an updated event
+ * Returns the new group ID and whether regrouping is needed
+ */
+export async function determineNewSimilarityGroup(
+  ctx: MutationCtx,
+  eventId: string,
+  currentGroupId: string,
+  eventData: EventSimilarityData,
+): Promise<{
+  newGroupId: string;
+  needsRegroup: boolean;
+}> {
+  // Step 1: Check if event still fits in current group
+  const currentGroupMember = await getRepresentativeGroupMember(
+    ctx,
+    currentGroupId,
+    eventId,
+  );
+
+  if (currentGroupMember) {
+    const stillSimilarToCurrentGroup = areEventsSimilar(eventData, {
+      startDateTime: currentGroupMember.startDateTime,
+      endDateTime: currentGroupMember.endDateTime,
+      name: currentGroupMember.name,
+      description: currentGroupMember.description,
+      location: currentGroupMember.location,
+    });
+
+    if (stillSimilarToCurrentGroup) {
+      // Still fits in current group, no regroup needed
+      return { newGroupId: currentGroupId, needsRegroup: false };
+    }
+  }
+
+  // Step 2: Event no longer fits current group. Search for a new group.
+  // Exclude the event being updated to avoid matching itself
+  const foundGroupId = await findSimilarityGroup(ctx, eventData, eventId);
+
+  if (foundGroupId && foundGroupId !== currentGroupId) {
+    // Found a different existing group
+    return { newGroupId: foundGroupId, needsRegroup: true };
+  }
+
+  if (!foundGroupId) {
+    // No similar events found - create a new unique group
+    return { newGroupId: generateSimilarityGroupId(), needsRegroup: true };
+  }
+
+  // Found same group (shouldn't normally happen after checking), no regroup needed
+  return { newGroupId: currentGroupId, needsRegroup: false };
 }
