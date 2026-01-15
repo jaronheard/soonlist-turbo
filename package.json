@@ -32,6 +32,7 @@
     "ngrok-josh": "ngrok tunnel --label edge=edghts_2l4iBdBfmIBuKuYyEBcftDOdBZ8 http://localhost:3000",
     "stripe:webhook": "stripe listen --forward-to http://localhost:3000/api/webhooks/stripe",
     "typecheck": "turbo typecheck",
+    "check": "turbo typecheck lint format --continue",
     "ui-add": "pnpm -F ui ui-add"
   },
   "devDependencies": {

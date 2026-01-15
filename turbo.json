@@ -60,7 +60,8 @@
         "dist/**",
         "*.tsbuildinfo",
         "convex/_generated/**"
-      ]
+      ],
+      "outputLogs": "errors-only"
     },
     "dev": {
       "persistent": true,
@@ -69,14 +70,16 @@
     "format": {
       "dependsOn": ["^topo", "^build"],
       "outputs": [".cache/.prettiercache"],
-      "outputLogs": "new-only"
+      "outputLogs": "errors-only"
     },
     "lint": {
       "dependsOn": ["^topo", "^build"],
-      "outputs": [".cache/.eslintcache"]
+      "outputs": [".cache/.eslintcache"],
+      "outputLogs": "errors-only"
     },
     "typecheck": {
-      "dependsOn": ["^topo", "^build"]
+      "dependsOn": ["^topo", "^build"],
+      "outputLogs": "errors-only"
     },
     "clean": {
       "cache": false
