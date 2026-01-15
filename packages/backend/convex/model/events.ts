@@ -15,8 +15,10 @@ import {
 import { DEFAULT_TIMEZONE } from "../constants";
 import { generateNumericId, generatePublicId } from "../utils";
 import {
+  determineNewSimilarityGroup,
   findSimilarityGroup,
   generateSimilarityGroupId,
+  shouldRegroupEvent,
 } from "./similarityHelpers";
 
 // Type for event data (based on AddToCalendarButtonProps)
@@ -815,6 +817,78 @@ export async function createEvent(
 }
 
 /**
+ * Regroup an event to a new similarity group
+ * Updates: events table, userFeeds table, userFeedGroups table
+ */
+async function regroupEvent(
+  ctx: MutationCtx,
+  eventId: string,
+  oldGroupId: string,
+  newGroupId: string,
+): Promise<void> {
+  // Step 1: Update the event's similarityGroupId
+  const event = await ctx.db
+    .query("events")
+    .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+    .unique();
+
+  if (!event) {
+    throw new ConvexError(`Event ${eventId} not found for regrouping`);
+  }
+
+  await ctx.db.patch(event._id, {
+    similarityGroupId: newGroupId,
+  });
+
+  // Step 2: Update all userFeeds entries for this event
+  const feedEntries = await ctx.db
+    .query("userFeeds")
+    .withIndex("by_event", (q) => q.eq("eventId", eventId))
+    .collect();
+
+  // Track affected feed+group pairs for userFeedGroups updates
+  const affectedOldGroups = new Set<string>();
+  const affectedNewGroups = new Set<string>();
+
+  for (const entry of feedEntries) {
+    // Track old group (for cleanup/re-election)
+    if (entry.similarityGroupId) {
+      affectedOldGroups.add(`${entry.feedId}:${entry.similarityGroupId}`);
+    }
+
+    // Update the feed entry
+    await ctx.db.patch(entry._id, {
+      similarityGroupId: newGroupId,
+    });
+
+    // Track new group (for creation/update)
+    affectedNewGroups.add(`${entry.feedId}:${newGroupId}`);
+  }
+
+  // Step 3: Update userFeedGroups for affected old groups
+  for (const pair of affectedOldGroups) {
+    const [feedId, groupId] = pair.split(":");
+    if (feedId && groupId) {
+      await ctx.runMutation(internal.feedGroupHelpers.upsertGroupedFeedEntry, {
+        feedId,
+        similarityGroupId: groupId,
+      });
+    }
+  }
+
+  // Step 4: Update userFeedGroups for affected new groups
+  for (const pair of affectedNewGroups) {
+    const [feedId, groupId] = pair.split(":");
+    if (feedId && groupId) {
+      await ctx.runMutation(internal.feedGroupHelpers.upsertGroupedFeedEntry, {
+        feedId,
+        similarityGroupId: groupId,
+      });
+    }
+  }
+}
+
+/**
  * Update an existing event
  */
 export async function updateEvent(
@@ -953,8 +1027,40 @@ export async function updateEvent(
     existingEvent.startDateTime !== startDateTime.toISOString() ||
     existingEvent.endDateTime !== endDateTime.toISOString();
 
-  // Note: similarityGroupId is kept immutable per first rollout - we don't attempt to regroup
-  const similarityGroupId = existingEvent.similarityGroupId;
+  // Check if regrouping is needed (when similarity-affecting fields change)
+  const newEventData = {
+    startDateTime: startDateTime.toISOString(),
+    endDateTime: endDateTime.toISOString(),
+    name: eventData.name,
+    description: eventData.description,
+    location: eventData.location,
+  };
+  const similarityFieldsChanged = shouldRegroupEvent(
+    existingEvent,
+    newEventData,
+  );
+
+  // Determine the similarity group ID (may change if regrouping)
+  let similarityGroupId = existingEvent.similarityGroupId;
+
+  if (similarityFieldsChanged && existingEvent.similarityGroupId) {
+    const { newGroupId, needsRegroup } = await determineNewSimilarityGroup(
+      ctx,
+      eventId,
+      existingEvent.similarityGroupId,
+      newEventData,
+    );
+
+    if (needsRegroup) {
+      await regroupEvent(
+        ctx,
+        eventId,
+        existingEvent.similarityGroupId,
+        newGroupId,
+      );
+      similarityGroupId = newGroupId;
+    }
+  }
 
   if (visibilityChanged || timeChanged) {
     // If changing to private, remove from discover feed
