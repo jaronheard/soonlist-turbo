@@ -34,6 +34,7 @@ export const populateUserFeeds = migrations.define({
             eventEndTime,
             addedAt: currentTime,
             hasEnded: eventEndTime < currentTime, // always set
+            similarityGroupId: event.similarityGroupId,
           });
           addedCount++;
         }
@@ -64,6 +65,7 @@ export const populateUserFeeds = migrations.define({
               eventEndTime,
               addedAt: currentTime,
               hasEnded: eventEndTime < currentTime, // always set
+              similarityGroupId: event.similarityGroupId,
             });
             addedCount++;
           }
@@ -101,6 +103,7 @@ export const populateUserFeeds = migrations.define({
                 eventEndTime,
                 addedAt: currentTime,
                 hasEnded: eventEndTime < currentTime, // always set
+                similarityGroupId: event.similarityGroupId,
               });
               addedCount++;
             }

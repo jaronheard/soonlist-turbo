@@ -18,6 +18,10 @@ import {
   internalMutation,
   internalQuery,
 } from "./_generated/server";
+import {
+  findSimilarityGroup,
+  generateSimilarityGroupId,
+} from "./model/similarityHelpers";
 
 // Type for sync state
 type SyncState = {
@@ -524,9 +528,21 @@ export const upsertEvent = internalMutation({
     startDate: v.optional(v.string()),
     startTime: v.optional(v.string()),
     description: v.optional(v.string()),
+    similarityGroupId: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const similarityGroupId =
+      args.similarityGroupId ??
+      (await findSimilarityGroup(ctx, {
+        startDateTime: args.startDateTime,
+        endDateTime: args.endDateTime,
+        name: args.name,
+        description: args.description,
+        location: args.location,
+      })) ??
+      generateSimilarityGroupId();
+
     // Check if event already exists
     const existing = await ctx.db
       .query("events")
@@ -535,7 +551,11 @@ export const upsertEvent = internalMutation({
 
     if (existing) {
       // Update existing event
-      await ctx.db.patch(existing._id, args);
+      await ctx.db.patch(existing._id, {
+        ...args,
+        similarityGroupId:
+          existing.similarityGroupId ?? args.similarityGroupId ?? similarityGroupId,
+      });
 
       // Update feeds if visibility or time changed
       const visibilityChanged = existing.visibility !== args.visibility;
@@ -557,11 +577,18 @@ export const upsertEvent = internalMutation({
           visibility: args.visibility,
           startDateTime: args.startDateTime,
           endDateTime: args.endDateTime,
+          similarityGroupId:
+            existing.similarityGroupId ??
+            args.similarityGroupId ??
+            similarityGroupId,
         });
       }
     } else {
       // Insert new event
-      await ctx.db.insert("events", args);
+      await ctx.db.insert("events", {
+        ...args,
+        similarityGroupId,
+      });
 
       // Add event to feeds
       await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
@@ -570,6 +597,7 @@ export const upsertEvent = internalMutation({
         visibility: args.visibility,
         startDateTime: args.startDateTime,
         endDateTime: args.endDateTime,
+        similarityGroupId,
       });
     }
     return null;

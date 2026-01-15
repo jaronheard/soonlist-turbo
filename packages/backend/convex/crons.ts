@@ -44,4 +44,12 @@ crons.cron(
   {},
 );
 
+// Update hasEnded flags for userFeedGroups every 15 minutes
+crons.cron(
+  "update grouped hasEnded flags",
+  "*/15 * * * *", // Every 15 minutes
+  internal.feeds.updateHasEndedFlagsForFeedGroupsAction,
+  {},
+);
+
 export default crons;

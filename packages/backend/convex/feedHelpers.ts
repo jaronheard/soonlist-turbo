@@ -3,6 +3,10 @@ import { v } from "convex/values";
 import type { MutationCtx } from "./_generated/server";
 import { internalMutation } from "./_generated/server";
 import { userFeedsAggregate } from "./aggregates";
+import {
+  syncGroupedFeedEntriesForEvent,
+  upsertGroupedFeedEntryFromMembership,
+} from "./feedGroupHelpers";
 
 // Helper to add an event to feeds when it's created or updated
 export const updateEventInFeeds = internalMutation({
@@ -12,10 +16,11 @@ export const updateEventInFeeds = internalMutation({
     visibility: v.union(v.literal("public"), v.literal("private")),
     startDateTime: v.string(),
     endDateTime: v.string(),
+    similarityGroupId: v.optional(v.string()),
   },
   handler: async (
     ctx,
-    { eventId, userId, visibility, startDateTime, endDateTime },
+    { eventId, userId, visibility, startDateTime, endDateTime, similarityGroupId },
   ) => {
     if (isNaN(new Date(startDateTime).getTime())) {
       throw new Error(`Invalid startDateTime: ${startDateTime}`);
@@ -46,6 +51,7 @@ export const updateEventInFeeds = internalMutation({
       eventStartTime,
       eventEndTime,
       currentTime,
+      similarityGroupId,
     );
 
     // 2. Add to discover feed if public AND user has showDiscover enabled
@@ -58,6 +64,7 @@ export const updateEventInFeeds = internalMutation({
         eventStartTime,
         eventEndTime,
         currentTime,
+        similarityGroupId,
       );
     } else if (visibility === "private" || !userShowDiscover) {
       // Remove from discover feed if event is now private or user no longer has showDiscover
@@ -72,6 +79,12 @@ export const updateEventInFeeds = internalMutation({
       if (existingDiscoverEntry) {
         await userFeedsAggregate.deleteIfExists(ctx, existingDiscoverEntry);
         await ctx.db.delete(existingDiscoverEntry._id);
+        if (existingDiscoverEntry.similarityGroupId) {
+          await upsertGroupedFeedEntryFromMembership(ctx, {
+            feedId: discoverFeedId,
+            similarityGroupId: existingDiscoverEntry.similarityGroupId,
+          });
+        }
       }
     }
 
@@ -90,6 +103,7 @@ export const updateEventInFeeds = internalMutation({
         eventStartTime,
         eventEndTime,
         currentTime,
+        similarityGroupId,
       );
     }
 
@@ -138,10 +152,17 @@ export const addEventToUserFeed = internalMutation({
         eventEndTime,
         addedAt: currentTime,
         hasEnded: eventEndTime < currentTime, // always set
+        similarityGroupId: event.similarityGroupId,
       };
       const id = await ctx.db.insert("userFeeds", doc);
       const insertedDoc = (await ctx.db.get(id))!;
       await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
+      if (event.similarityGroupId) {
+        await upsertGroupedFeedEntryFromMembership(ctx, {
+          feedId,
+          similarityGroupId: event.similarityGroupId,
+        });
+      }
     }
   },
 });
@@ -177,6 +198,12 @@ export const removeEventFromFeeds = internalMutation({
       // Delete all other entries (including discover and other user feeds)
       await userFeedsAggregate.deleteIfExists(ctx, entry);
       await ctx.db.delete(entry._id);
+      if (entry.similarityGroupId) {
+        await upsertGroupedFeedEntryFromMembership(ctx, {
+          feedId: entry.feedId,
+          similarityGroupId: entry.similarityGroupId,
+        });
+      }
     }
   },
 });
@@ -216,6 +243,8 @@ export const updateEventTimesInAllFeeds = internalMutation({
       const updatedDoc = (await ctx.db.get(entry._id))!;
       await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
     }
+
+    await syncGroupedFeedEntriesForEvent(ctx, { eventId });
   },
 });
 
@@ -258,6 +287,7 @@ async function upsertFeedEntry(
   eventStartTime: number,
   eventEndTime: number,
   addedAt: number,
+  similarityGroupId?: string,
 ): Promise<void> {
   const existingEntry = await ctx.db
     .query("userFeeds")
@@ -277,19 +307,33 @@ async function upsertFeedEntry(
       eventEndTime,
       addedAt,
       hasEnded,
+      similarityGroupId,
     };
     const id = await ctx.db.insert("userFeeds", doc);
     const insertedDoc = (await ctx.db.get(id))!;
     await userFeedsAggregate.replaceOrInsert(ctx, insertedDoc, insertedDoc);
+    if (similarityGroupId) {
+      await upsertGroupedFeedEntryFromMembership(ctx, {
+        feedId,
+        similarityGroupId,
+      });
+    }
   } else {
     const oldDoc = existingEntry;
     await ctx.db.patch(existingEntry._id, {
       eventStartTime,
       eventEndTime,
       hasEnded,
+      similarityGroupId,
     });
     const updatedDoc = (await ctx.db.get(existingEntry._id))!;
     await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
+    if (similarityGroupId) {
+      await upsertGroupedFeedEntryFromMembership(ctx, {
+        feedId,
+        similarityGroupId,
+      });
+    }
   }
 }
 
@@ -338,6 +382,7 @@ export const addListEventsToUserFeed = internalMutation({
         eventStartTime,
         eventEndTime,
         currentTime,
+        event.similarityGroupId,
       );
 
       // Upsert into personal feed
@@ -349,6 +394,7 @@ export const addListEventsToUserFeed = internalMutation({
         eventStartTime,
         eventEndTime,
         currentTime,
+        event.similarityGroupId,
       );
     }
   },
@@ -427,6 +473,12 @@ export const removeListEventsFromUserFeed = internalMutation({
             existingFollowedListsEntry,
           );
           await ctx.db.delete(existingFollowedListsEntry._id);
+          if (existingFollowedListsEntry.similarityGroupId) {
+            await upsertGroupedFeedEntryFromMembership(ctx, {
+              feedId: followedListsFeedId,
+              similarityGroupId: existingFollowedListsEntry.similarityGroupId,
+            });
+          }
         }
       }
 
@@ -471,6 +523,12 @@ export const removeListEventsFromUserFeed = internalMutation({
       if (existingPersonalEntry) {
         await userFeedsAggregate.deleteIfExists(ctx, existingPersonalEntry);
         await ctx.db.delete(existingPersonalEntry._id);
+        if (existingPersonalEntry.similarityGroupId) {
+          await upsertGroupedFeedEntryFromMembership(ctx, {
+            feedId: personalFeedId,
+            similarityGroupId: existingPersonalEntry.similarityGroupId,
+          });
+        }
       }
     }
   },
@@ -522,6 +580,7 @@ export const addEventToListFollowersFeeds = internalMutation({
         eventStartTime,
         eventEndTime,
         currentTime,
+        event.similarityGroupId,
       );
 
       // Upsert into personal feed
@@ -532,6 +591,7 @@ export const addEventToListFollowersFeeds = internalMutation({
         eventStartTime,
         eventEndTime,
         currentTime,
+        event.similarityGroupId,
       );
     }
   },
@@ -598,6 +658,12 @@ export const removeEventFromListFollowersFeeds = internalMutation({
             existingFollowedListsEntry,
           );
           await ctx.db.delete(existingFollowedListsEntry._id);
+          if (existingFollowedListsEntry.similarityGroupId) {
+            await upsertGroupedFeedEntryFromMembership(ctx, {
+              feedId: followedListsFeedId,
+              similarityGroupId: existingFollowedListsEntry.similarityGroupId,
+            });
+          }
         }
       }
 
@@ -636,6 +702,12 @@ export const removeEventFromListFollowersFeeds = internalMutation({
       if (existingPersonalEntry) {
         await userFeedsAggregate.deleteIfExists(ctx, existingPersonalEntry);
         await ctx.db.delete(existingPersonalEntry._id);
+        if (existingPersonalEntry.similarityGroupId) {
+          await upsertGroupedFeedEntryFromMembership(ctx, {
+            feedId: personalFeedId,
+            similarityGroupId: existingPersonalEntry.similarityGroupId,
+          });
+        }
       }
     }
   },
@@ -675,6 +747,7 @@ export const addUserEventsToUserFeed = internalMutation({
         eventStartTime,
         eventEndTime,
         currentTime,
+        event.similarityGroupId,
       );
     }
 
@@ -710,6 +783,12 @@ export const removeUserEventsFromUserFeed = internalMutation({
       if (existingEntry) {
         await userFeedsAggregate.deleteIfExists(ctx, existingEntry);
         await ctx.db.delete(existingEntry._id);
+        if (existingEntry.similarityGroupId) {
+          await upsertGroupedFeedEntryFromMembership(ctx, {
+            feedId: followedUsersFeedId,
+            similarityGroupId: existingEntry.similarityGroupId,
+          });
+        }
       }
     }
 
