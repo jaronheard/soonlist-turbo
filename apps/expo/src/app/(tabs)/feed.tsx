@@ -11,7 +11,6 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import AddEventButton from "~/components/AddEventButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
@@ -112,7 +111,6 @@ function MyFeedContent() {
           savedEventIds={savedEventIds}
           source="feed"
         />
-        <AddEventButton stats={stats} showChevron={false} />
       </View>
     </View>
   );
