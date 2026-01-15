@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Image,
