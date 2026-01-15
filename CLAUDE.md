@@ -39,9 +39,7 @@ If I send you a URL, you should consider fetching its contents if your environme
    - Use clear commit messages that describe what changed
    - Before committing, ALWAYS run:
      ```bash
-     pnpm lint:fix
-     pnpm format:fix
-     pnpm typecheck
+     pnpm lint:fix && pnpm format:fix && pnpm check
      ```
 
 3. **Create a PR when ready**
@@ -69,8 +67,10 @@ If I send you a URL, you should consider fetching its contents if your environme
 ```bash
 pnpm lint:fix           # Fix linting issues
 pnpm format:fix         # Fix formatting
-pnpm typecheck          # Check TypeScript types
+pnpm check              # Verify all checks pass (typecheck + lint + format)
 ```
+
+Note: These commands use `outputLogs: "errors-only"` so output is concise - only errors are shown.
 
 ### Starting Development - Not Run Unless Asked
 
