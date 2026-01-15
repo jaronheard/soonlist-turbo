@@ -72,6 +72,11 @@ pnpm check              # Verify all checks pass (typecheck + lint + format)
 
 Note: These commands use `outputLogs: "errors-only"` so output is concise - only errors are shown.
 
+**If output is truncated** (shows "Output too large" with a file path), check the exit code and the Failed: line:
+```bash
+tail -10 /path/to/saved/output.txt  # See summary and which tasks failed
+```
+
 ### Starting Development - Not Run Unless Asked
 
 ```bash
