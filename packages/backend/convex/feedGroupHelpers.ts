@@ -173,6 +173,7 @@ export const upsertGroupedFeedEntry = internalMutation({
     feedId: v.string(),
     similarityGroupId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await upsertGroupedFeedEntryFromMembershipInternal(ctx, args);
   },
@@ -183,6 +184,7 @@ export const removeGroupedFeedEntryIfNoMembers = internalMutation({
     feedId: v.string(),
     similarityGroupId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await removeGroupedFeedEntryIfNoMembersInternal(ctx, args);
   },
@@ -193,6 +195,7 @@ export const syncGroupedFeedEntriesForEvent = internalMutation({
     eventId: v.string(),
     similarityGroupId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await syncGroupedFeedEntriesForEventInternal(ctx, args);
   },

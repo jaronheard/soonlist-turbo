@@ -203,7 +203,9 @@ export const deriveUserFeedGroups = migrations.define({
         }),
       );
 
-      const validEvents = memberEvents.filter((e) => e !== null);
+      const validEvents = memberEvents.filter(
+        (e): e is NonNullable<(typeof memberEvents)[number]> => e !== null,
+      );
 
       if (validEvents.length === 0) {
         return;
