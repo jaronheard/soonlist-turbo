@@ -451,8 +451,8 @@ export default function EditEventScreen() {
                       !uploadedImageUrl &&
                       selectedImage === originalImage) ||
                     !isValid
-                      ? "rgba(255, 255, 255, 0.5)"
-                      : "#FFFFFF",
+                      ? "rgba(90, 50, 251, 0.5)"
+                      : "#5A32FB",
                 }}
               >
                 {isSubmitting ? "Saving..." : "Save"}
@@ -468,7 +468,7 @@ export default function EditEventScreen() {
                 style={{
                   fontSize: 17,
                   fontWeight: "600",
-                  color: "#FFFFFF",
+                  color: "#5A32FB",
                 }}
               >
                 Cancel

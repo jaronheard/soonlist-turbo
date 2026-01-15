@@ -255,6 +255,11 @@ const InitialLayout = () => {
         options={{
           presentation: "modal",
           title: "Edit Event",
+          headerShown: true,
+          headerTransparent: false,
+          headerBackground: undefined,
+          headerStyle: { backgroundColor: "#E0D9FF" }, // interactive-2
+          headerTintColor: "#5A32FB", // interactive-1
         }}
       />
       <Stack.Screen
