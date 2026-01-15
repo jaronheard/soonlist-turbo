@@ -60,6 +60,54 @@ async function queryFeed(
   };
 }
 
+// Helper function to query grouped feed using userFeedGroups table
+async function queryGroupedFeed(
+  ctx: QueryCtx,
+  feedId: string,
+  paginationOpts: PaginationOptions,
+  filter: "upcoming" | "past" = "upcoming",
+) {
+  const hasEnded = filter === "past";
+  const order = filter === "upcoming" ? "asc" : "desc";
+
+  // Query from the grouped feed table
+  const groupedQuery = ctx.db
+    .query("userFeedGroups")
+    .withIndex("by_feed_hasEnded_startTime", (q) =>
+      q.eq("feedId", feedId).eq("hasEnded", hasEnded),
+    )
+    .order(order);
+
+  // Paginate
+  const groupedResults = await groupedQuery.paginate(paginationOpts);
+
+  // Enrich each group entry with the primary event data
+  const enrichedGroups = await Promise.all(
+    groupedResults.page.map(async (groupEntry) => {
+      // Get the primary event with full enrichment
+      const event = await getEventById(ctx, groupEntry.primaryEventId);
+
+      if (!event) {
+        return null;
+      }
+
+      return {
+        event,
+        similarEventsCount: groupEntry.similarEventsCount,
+        similarityGroupId: groupEntry.similarityGroupId,
+      };
+    }),
+  );
+
+  // Filter out null entries (in case primary event was deleted)
+  const validGroups = enrichedGroups.filter((group) => group !== null);
+
+  return {
+    ...groupedResults,
+    page: validGroups,
+  };
+}
+
 // Main feed query that uses proper hasEnded-based filtering
 export const getFeed = query({
   args: {
@@ -105,6 +153,25 @@ export const getMyFeed = query({
 
     // Use the common query function
     return queryFeed(ctx, feedId, paginationOpts, filter);
+  },
+});
+
+// Helper query to get user's personal feed with grouped similar events
+export const getMyFeedGrouped = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
+  },
+  handler: async (ctx, { paginationOpts, filter = "upcoming" }) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      throw new ConvexError("Not authenticated");
+    }
+
+    const feedId = `user_${userId}`;
+
+    // Use the grouped query function
+    return queryGroupedFeed(ctx, feedId, paginationOpts, filter);
   },
 });
 
@@ -369,6 +436,97 @@ export const updateHasEndedFlagsAction = internalAction({
 
     console.log(
       `Updated hasEnded flags: ${totalUpdated} changed out of ${totalProcessed} processed`,
+    );
+
+    return {
+      totalProcessed,
+      totalUpdated,
+    };
+  },
+});
+
+// Internal mutation to update hasEndedFlags for a batch of userFeedGroups entries
+export const updateGroupedHasEndedFlagsBatch = internalMutation({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+    batchSize: v.number(),
+  },
+  returns: v.object({
+    processed: v.number(),
+    updated: v.number(),
+    nextCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, { cursor, batchSize }) => {
+    const currentTime = Date.now();
+    let updated = 0;
+
+    // Get a single batch with the provided cursor
+    const result = await ctx.db
+      .query("userFeedGroups")
+      .order("asc")
+      .paginate({ numItems: batchSize, cursor });
+
+    // Process each entry in the batch
+    for (const entry of result.page) {
+      const shouldHaveEnded = entry.eventEndTime < currentTime;
+
+      if (entry.hasEnded !== shouldHaveEnded) {
+        await ctx.db.patch(entry._id, {
+          hasEnded: shouldHaveEnded,
+        });
+        updated++;
+      }
+    }
+
+    return {
+      processed: result.page.length,
+      updated,
+      nextCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+// Internal action to orchestrate updating hasEnded flags across all userFeedGroups
+export const updateGroupedHasEndedFlagsAction = internalAction({
+  args: {},
+  returns: v.object({
+    totalProcessed: v.number(),
+    totalUpdated: v.number(),
+  }),
+  handler: async (ctx) => {
+    let totalProcessed = 0;
+    let totalUpdated = 0;
+    let cursor: string | null = null;
+    const batchSize = 2048;
+
+    // Process batches until no more data
+    while (true) {
+      const result: {
+        processed: number;
+        updated: number;
+        nextCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runMutation(
+        internal.feeds.updateGroupedHasEndedFlagsBatch,
+        {
+          cursor,
+          batchSize,
+        },
+      );
+
+      totalProcessed += result.processed;
+      totalUpdated += result.updated;
+
+      if (result.isDone) {
+        break;
+      }
+      cursor = result.nextCursor;
+    }
+
+    console.log(
+      `Updated grouped hasEnded flags: ${totalUpdated} changed out of ${totalProcessed} processed`,
     );
 
     return {
