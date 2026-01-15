@@ -21,7 +21,14 @@ export const updateEventInFeeds = internalMutation({
   },
   handler: async (
     ctx,
-    { eventId, userId, visibility, startDateTime, endDateTime, similarityGroupId },
+    {
+      eventId,
+      userId,
+      visibility,
+      startDateTime,
+      endDateTime,
+      similarityGroupId,
+    },
   ) => {
     if (isNaN(new Date(startDateTime).getTime())) {
       throw new Error(`Invalid startDateTime: ${startDateTime}`);

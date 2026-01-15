@@ -5,12 +5,12 @@ import { generatePublicId } from "../utils";
 const TIME_WINDOW_MS = 60 * 60 * 1000;
 const TEXT_SIMILARITY_THRESHOLD = 0.1;
 
-export type SimilarityEventInput = {
+export interface SimilarityEventInput {
   name?: string | null;
   location?: string | null;
   description?: string | null;
   startDateTime: string;
-};
+}
 
 type DbCtx = Pick<QueryCtx | MutationCtx, "db">;
 
@@ -60,7 +60,9 @@ export function cosineSimilarity(
 
 function buildSimilarityText(event: SimilarityEventInput): string {
   return [event.name, event.location, event.description]
-    .filter((value): value is string => Boolean(value && value.trim().length > 0))
+    .filter((value): value is string =>
+      Boolean(value && value.trim().length > 0),
+    )
     .join(" ");
 }
 
@@ -173,7 +175,9 @@ export async function findSimilarityGroupForBackfill(
       continue;
     }
 
-    if (areEventsSimilar(toSimilarityEvent(event), toSimilarityEvent(candidate))) {
+    if (
+      areEventsSimilar(toSimilarityEvent(event), toSimilarityEvent(candidate))
+    ) {
       return candidate.similarityGroupId;
     }
   }

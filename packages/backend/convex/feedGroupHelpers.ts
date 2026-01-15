@@ -1,15 +1,15 @@
-import type { MutationCtx, QueryCtx } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
 import { selectPrimaryEventForFeed } from "./model/similarityHelpers";
 
-type DbCtx = Pick<QueryCtx | MutationCtx, "db">;
+type MutationDbCtx = Pick<MutationCtx, "db">;
 
-type GroupKey = {
+interface GroupKey {
   feedId: string;
   similarityGroupId: string;
-};
+}
 
 export async function upsertGroupedFeedEntryFromMembership(
-  ctx: DbCtx,
+  ctx: MutationDbCtx,
   { feedId, similarityGroupId }: GroupKey,
 ): Promise<void> {
   const membership = await ctx.db
@@ -82,7 +82,7 @@ export async function upsertGroupedFeedEntryFromMembership(
 }
 
 export async function removeGroupedFeedEntryIfNoMembers(
-  ctx: DbCtx,
+  ctx: MutationDbCtx,
   { feedId, similarityGroupId }: GroupKey,
 ): Promise<void> {
   const membership = await ctx.db
@@ -109,7 +109,7 @@ export async function removeGroupedFeedEntryIfNoMembers(
 }
 
 export async function syncGroupedFeedEntriesForEvent(
-  ctx: DbCtx,
+  ctx: MutationDbCtx,
   { eventId }: { eventId: string },
 ): Promise<void> {
   const feedEntries = await ctx.db

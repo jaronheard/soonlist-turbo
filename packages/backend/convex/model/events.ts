@@ -13,11 +13,11 @@ import {
   userFeedsAggregate,
 } from "../aggregates";
 import { DEFAULT_TIMEZONE } from "../constants";
+import { generateNumericId, generatePublicId } from "../utils";
 import {
   findSimilarityGroup,
   generateSimilarityGroupId,
 } from "./similarityHelpers";
-import { generateNumericId, generatePublicId } from "../utils";
 
 // Type for event data (based on AddToCalendarButtonProps)
 interface EventData {
