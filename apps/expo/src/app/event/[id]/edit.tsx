@@ -488,6 +488,7 @@ export default function EditEventScreen() {
             padding: 16,
             paddingBottom: insets.bottom + 36,
           }}
+          contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
         >
           <View className="flex-col gap-4 space-y-6">
