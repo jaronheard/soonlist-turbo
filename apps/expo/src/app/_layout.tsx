@@ -97,15 +97,17 @@ Sentry.init({
   integrations: [
     routingInstrumentation,
     Sentry.httpClientIntegration(),
-    Sentry.mobileReplayIntegration(),
+    // Mobile replay disabled - causes significant scroll jank on iOS
+    // Sentry.mobileReplayIntegration(),
   ],
   attachStacktrace: true,
   debug: false,
   tracesSampleRate: 1.0,
   profilesSampleRate: 1.0,
   sendDefaultPii: true,
-  replaysSessionSampleRate: 1.0,
-  replaysOnErrorSampleRate: 1.0,
+  // Session replay disabled since mobileReplayIntegration causes scroll jank
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: 0,
 });
 
 appsFlyer.initSdk(
