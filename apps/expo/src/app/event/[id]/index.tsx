@@ -45,6 +45,7 @@ import {
   ShareIcon,
   User,
 } from "~/components/icons";
+import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
@@ -240,7 +241,13 @@ export default function Page() {
   if (!id || typeof id !== "string") {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            headerTransparent: true,
+            headerBackground: () => <LiquidGlassHeader />,
+            headerRight: () => null,
+          }}
+        />
         <View className="flex-1 bg-white">
           <Text>Invalid or missing event id</Text>
         </View>
@@ -252,7 +259,13 @@ export default function Page() {
   if (event === undefined) {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            headerTransparent: true,
+            headerBackground: () => <LiquidGlassHeader />,
+            headerRight: () => null,
+          }}
+        />
         <View className="flex-1 bg-white">
           <LoadingSpinner />
         </View>
@@ -264,7 +277,13 @@ export default function Page() {
   if (event === null) {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            headerTransparent: true,
+            headerBackground: () => <LiquidGlassHeader />,
+            headerRight: () => null,
+          }}
+        />
         <View className="flex-1 bg-white">
           <Text>Event not found</Text>
         </View>

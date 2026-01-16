@@ -238,9 +238,7 @@ const InitialLayout = () => {
           title: "Event Details",
           headerShown: true,
           headerTransparent: false,
-          headerBackground: undefined,
-          headerStyle: { backgroundColor: "#E0D9FF" }, // interactive-2
-          headerTintColor: "#5A32FB", // interactive-1
+          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <Stack.Screen
@@ -250,9 +248,7 @@ const InitialLayout = () => {
           title: "",
           headerShown: true,
           headerTransparent: false,
-          headerBackground: undefined,
-          headerStyle: { backgroundColor: "#E0D9FF" }, // interactive-2
-          headerTintColor: "#5A32FB", // interactive-1
+          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <Stack.Screen

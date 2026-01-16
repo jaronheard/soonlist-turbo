@@ -1,5 +1,4 @@
 import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Tabs } from "expo-router";
 
 import { HeaderLogo } from "~/components/HeaderLogo";
@@ -15,8 +14,6 @@ export const unstable_settings = {
 };
 
 export default function TabsLayout() {
-  const insets = useSafeAreaInsets();
-
   return (
     <>
       <Tabs
@@ -32,9 +29,6 @@ export default function TabsLayout() {
           },
           headerLeftContainerStyle: { paddingLeft: 16 },
           headerRightContainerStyle: { paddingRight: 16 },
-          sceneStyle: {
-            paddingTop: insets.top + 44, // safe area + standard header height
-          },
         }}
       >
         <Tabs.Screen

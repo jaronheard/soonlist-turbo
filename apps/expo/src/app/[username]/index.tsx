@@ -9,6 +9,7 @@ import { toast } from "sonner-native";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Heart, User } from "~/components/icons";
+import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
@@ -118,7 +119,13 @@ export default function UserProfilePage() {
   if (isUserLoading) {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            headerTransparent: true,
+            headerBackground: () => <LiquidGlassHeader />,
+            headerRight: () => null,
+          }}
+        />
         <View className="flex-1 items-center justify-center bg-interactive-3">
           <ActivityIndicator size="large" color="#5A32FB" />
         </View>
@@ -130,7 +137,13 @@ export default function UserProfilePage() {
   if (userNotFound) {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            headerTransparent: true,
+            headerBackground: () => <LiquidGlassHeader />,
+            headerRight: () => null,
+          }}
+        />
         <View className="flex-1 items-center justify-center bg-white">
           <Text className="text-lg text-neutral-2">User not found</Text>
         </View>
@@ -140,37 +153,36 @@ export default function UserProfilePage() {
 
   return (
     <>
-      <Stack.Screen options={{ headerRight: () => null }} />
+      <Stack.Screen
+        options={{
+          headerTransparent: true,
+          headerBackground: () => <LiquidGlassHeader />,
+          headerRight: () => null,
+        }}
+      />
       <View className="flex-1 bg-interactive-3">
-        {status === "LoadingFirstPage" ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#5A32FB" />
-          </View>
-        ) : (
-          <>
-            <UserEventsList
-              events={filteredEvents}
-              onEndReached={handleLoadMore}
-              isFetchingNextPage={status === "LoadingMore"}
-              showCreator="never"
-              hideDiscoverableButton={true}
-              isDiscoverFeed={false}
-              HeaderComponent={() => (
-                <UserProfileHeader
-                  user={targetUser}
-                  eventCount={filteredEvents.length}
-                />
-              )}
+        <UserEventsList
+          events={filteredEvents}
+          onEndReached={handleLoadMore}
+          isFetchingNextPage={status === "LoadingMore"}
+          isLoadingFirstPage={status === "LoadingFirstPage"}
+          showCreator="never"
+          hideDiscoverableButton={true}
+          isDiscoverFeed={false}
+          HeaderComponent={() => (
+            <UserProfileHeader
+              user={targetUser}
+              eventCount={filteredEvents.length}
             />
-            {/* Don't show follow button on own profile */}
-            {!isOwnProfile && (
-              <FollowButton
-                isFollowing={isFollowing ?? false}
-                isLoading={isFollowLoading || isFollowing === undefined}
-                onPress={handleFollow}
-              />
-            )}
-          </>
+          )}
+        />
+        {/* Don't show follow button on own profile */}
+        {!isOwnProfile && (
+          <FollowButton
+            isFollowing={isFollowing ?? false}
+            isLoading={isFollowLoading || isFollowing === undefined}
+            onPress={handleFollow}
+          />
         )}
       </View>
     </>
