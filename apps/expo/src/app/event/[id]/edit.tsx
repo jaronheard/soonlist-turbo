@@ -433,6 +433,12 @@ export default function EditEventScreen() {
     <>
       <Stack.Screen
         options={{
+          presentation: "modal",
+          title: "Edit Event",
+          headerTransparent: false,
+          headerBackground: undefined,
+          headerStyle: { backgroundColor: "#E0D9FF" },
+          headerTintColor: "#5A32FB",
           headerRight: () => {
             const isDisabled =
               isSubmitting ||

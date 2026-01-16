@@ -47,6 +47,7 @@ export default function RedirectScreen() {
       <Stack.Screen
         options={{
           headerShown: false,
+          presentation: "containedModal",
         }}
       />
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>

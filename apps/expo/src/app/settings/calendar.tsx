@@ -37,6 +37,10 @@ export default function CalendarSettingsScreen() {
         options={{
           title: "Calendar Settings",
           headerBackTitle: "Settings",
+          headerTransparent: false,
+          headerBackground: undefined,
+          headerStyle: { backgroundColor: "#F4F1FF" },
+          headerTintColor: "#5A32FB",
         }}
       />
 

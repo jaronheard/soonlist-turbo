@@ -100,20 +100,18 @@ function MyFeedContent() {
 
   return (
     <View className="flex-1 bg-white">
-      <View className="flex-1">
-        <UserEventsList
-          groupedEvents={enrichedEvents}
-          onEndReached={handleLoadMore}
-          isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={status === "LoadingFirstPage"}
-          showCreator="savedFromOthers"
-          stats={stats}
-          showSourceStickers
-          savedEventIds={savedEventIds}
-          source="feed"
-        />
-        <AddEventButton stats={stats} showChevron={false} />
-      </View>
+      <UserEventsList
+        groupedEvents={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={status === "LoadingFirstPage"}
+        showCreator="savedFromOthers"
+        stats={stats}
+        showSourceStickers
+        savedEventIds={savedEventIds}
+        source="feed"
+      />
+      <AddEventButton stats={stats} showChevron={false} />
     </View>
   );
 }

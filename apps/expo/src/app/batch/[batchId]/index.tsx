@@ -26,7 +26,9 @@ export default function BatchResultsPage() {
   if (!batchId) {
     return (
       <>
-        <Stack.Screen options={{ title: "Batch Results" }} />
+        <Stack.Screen
+          options={{ title: "Batch Results", headerBackTitle: "Back" }}
+        />
         <View className="flex-1 items-center justify-center bg-white">
           <Text className="text-lg text-neutral-2">No batch ID provided</Text>
         </View>
@@ -37,7 +39,9 @@ export default function BatchResultsPage() {
   if (events === undefined || batchStatus === undefined) {
     return (
       <>
-        <Stack.Screen options={{ title: "Loading..." }} />
+        <Stack.Screen
+          options={{ title: "Loading...", headerBackTitle: "Back" }}
+        />
         <View className="flex-1 bg-white">
           <LoadingSpinner />
         </View>

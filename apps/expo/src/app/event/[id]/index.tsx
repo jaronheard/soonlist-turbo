@@ -237,61 +237,39 @@ export default function Page() {
     );
   }, [event, isSaved, currentUser?.id, handleDeleteAndRedirect]);
 
-  // Early return if the 'id' is missing or invalid
-  if (!id || typeof id !== "string") {
+  const hasInvalidId = !id || typeof id !== "string";
+  const isLoading = event === undefined;
+  const isNotFound = event === null;
+
+  const baseHeaderOptions = {
+    presentation: "modal" as const,
+    title: "Event Details",
+    headerTransparent: false,
+    headerBackground: () => <LiquidGlassHeader />,
+  };
+
+  if (hasInvalidId || isLoading || isNotFound) {
+    const message = hasInvalidId
+      ? "Invalid or missing event id"
+      : isLoading
+        ? null
+        : "Event not found";
+
     return (
       <>
         <Stack.Screen
           options={{
-            headerTransparent: true,
-            headerBackground: () => <LiquidGlassHeader />,
+            ...baseHeaderOptions,
             headerRight: () => null,
           }}
         />
-        <View className="flex-1 bg-white">
-          <Text>Invalid or missing event id</Text>
+        <View className="flex-1 items-center justify-center bg-white">
+          {isLoading ? <LoadingSpinner /> : <Text>{message}</Text>}
         </View>
       </>
     );
   }
 
-  // Loading state
-  if (event === undefined) {
-    return (
-      <>
-        <Stack.Screen
-          options={{
-            headerTransparent: true,
-            headerBackground: () => <LiquidGlassHeader />,
-            headerRight: () => null,
-          }}
-        />
-        <View className="flex-1 bg-white">
-          <LoadingSpinner />
-        </View>
-      </>
-    );
-  }
-
-  // Not found or error
-  if (event === null) {
-    return (
-      <>
-        <Stack.Screen
-          options={{
-            headerTransparent: true,
-            headerBackground: () => <LiquidGlassHeader />,
-            headerRight: () => null,
-          }}
-        />
-        <View className="flex-1 bg-white">
-          <Text>Event not found</Text>
-        </View>
-      </>
-    );
-  }
-
-  // Normal render
   const eventData = event.event as AddToCalendarButtonPropsRestricted;
   const isCurrentUserEvent = currentUser?.id === event.userId;
 
@@ -332,6 +310,7 @@ export default function Page() {
     <>
       <Stack.Screen
         options={{
+          ...baseHeaderOptions,
           headerRight: HeaderRight,
           headerLeft: !canGoBack ? HeaderLeft : undefined,
         }}
@@ -587,7 +566,10 @@ export default function Page() {
       </ScrollView>
 
       {/* Floating Action Buttons */}
-      <View className="absolute bottom-8 flex-row items-center justify-center gap-4 self-center">
+      <View
+        className="absolute flex-row items-center justify-center gap-4 self-center"
+        style={{ bottom: Math.max(insets.bottom, 8) }}
+      >
         <TouchableOpacity
           onPress={handleAddToCal}
           accessibilityLabel="Add to Calendar"
