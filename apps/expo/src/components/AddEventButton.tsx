@@ -7,6 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { GlassButton } from "~/components/GlassButton";
@@ -27,6 +28,8 @@ interface EventStats {
 interface AddEventButtonProps {
   showChevron?: boolean;
   stats?: EventStats;
+  /** Additional bottom offset to account for tab bar */
+  bottomOffset?: number;
 }
 
 /**
@@ -41,9 +44,11 @@ interface AddEventButtonProps {
 export default function AddEventButton({
   showChevron = true,
   stats,
+  bottomOffset = 100,
 }: AddEventButtonProps) {
   const { isCapturing } = useInFlightEventStore();
   const isOnline = useNetworkStatus();
+  const insets = useSafeAreaInsets();
 
   const {
     customerInfo,
@@ -136,7 +141,8 @@ export default function AddEventButton({
         <TouchableOpacity
           onPress={handlePress}
           disabled={!isOnline}
-          className="absolute bottom-8 self-center"
+          className="absolute self-center"
+          style={{ bottom: bottomOffset + insets.bottom }}
         >
           {!isOnline ? (
             // Offline indicator - replaces button when offline

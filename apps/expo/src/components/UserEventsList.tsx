@@ -13,10 +13,10 @@ import {
   View,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useHeaderHeight } from "@react-navigation/elements";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -329,25 +329,16 @@ export function UserEventListItem(props: UserEventListItemProps) {
       currentBorderColor = "#FEEA9F";
     }
 
-    // Base style properties
+    // Base style properties - flat design with minimal shadows
     const style: ViewStyle = {
       paddingRight: imageWidth * 1.1,
       borderWidth: 3,
       borderColor: currentBorderColor,
-      shadowColor: "#5A32FB",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.15,
-      shadowRadius: 2.5,
-      elevation: 2,
       backgroundColor: "white",
     };
 
     if (isRecent) {
       style.borderColor = "#E0D9FF"; // Glow border color
-      style.shadowColor = "#5A32FB"; // Glow shadow color
-      style.shadowOpacity = 0.45; // Increased opacity for glow
-      style.shadowRadius = 8; // Increased radius for glow
-      style.elevation = 6; // Increased elevation for Android glow
     }
     return style;
   }, [isRecent, isHappeningNow, imageWidth]);
@@ -396,11 +387,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
               right: 10,
               top: -5,
               zIndex: 10,
-              shadowColor: "#5A32FB",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.3,
-              shadowRadius: 1.5,
-              elevation: 3,
               transform: [{ rotate: imageRotation }],
               backgroundColor: "transparent",
             }}
@@ -609,11 +595,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 style={{
                   borderWidth: 2,
                   borderColor: "white",
-                  shadowColor: "#5A32FB",
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 1,
-                  elevation: 1,
                   backgroundColor: "#E0D9FF",
                 }}
               >
@@ -626,11 +607,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
                 style={{
                   borderWidth: 2,
                   borderColor: "white",
-                  shadowColor: "#5A32FB",
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 1,
-                  elevation: 1,
                   backgroundColor: "#FEEA9F",
                 }}
               >
@@ -679,11 +655,6 @@ const SourceSticker = ({
     <View
       style={{
         transform: [{ rotate: rotation }],
-        shadowColor: "#5A32FB",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
       }}
     >
       <View
@@ -1041,7 +1012,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     source,
   } = props;
   const { user } = useUser();
-  const headerHeight = useHeaderHeight();
+  const insets = useSafeAreaInsets();
 
   // Use pre-grouped events if provided, otherwise collapse client-side
   const collapsedEvents = useMemo(() => {
@@ -1058,7 +1029,7 @@ export default function UserEventsList(props: UserEventsListProps) {
       <ScrollView
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: headerHeight + 16,
+          paddingTop: insets.top + 16,
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",
@@ -1158,7 +1129,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         onEndReachedThreshold={0.5}
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: headerHeight + (stats ? 0 : 16),
+          paddingTop: insets.top + (stats ? 8 : 16),
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",

@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
 import { View } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { Redirect, useFocusEffect, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
   Authenticated,
@@ -49,13 +49,19 @@ function AddEventContent() {
   }
 
   const handleAddEvent = useCallback(async () => {
-    if (canProceedWithAdd) {
-      await triggerAddEventFlow();
-    } else {
-      await showProPaywallIfNeeded();
+    try {
+      if (canProceedWithAdd) {
+        await triggerAddEventFlow();
+      } else {
+        await showProPaywallIfNeeded();
+      }
+    } finally {
+      // Always navigate back to feed after the flow completes (or is cancelled)
+      // Small delay to ensure the photo picker is fully dismissed before navigating
+      setTimeout(() => {
+        router.navigate("/feed");
+      }, 100);
     }
-    // Navigate back to feed after the flow completes
-    router.replace("/feed");
   }, [canProceedWithAdd, triggerAddEventFlow, showProPaywallIfNeeded, router]);
 
   // Trigger add event flow when screen comes into focus
@@ -82,8 +88,6 @@ function AddEventContent() {
 }
 
 export default function AddEventScreen() {
-  const router = useRouter();
-
   return (
     <>
       <AuthLoading>
@@ -93,11 +97,7 @@ export default function AddEventScreen() {
       </AuthLoading>
 
       <Unauthenticated>
-        {/* Redirect to sign-in if not authenticated */}
-        {(() => {
-          router.replace("/sign-in");
-          return null;
-        })()}
+        <Redirect href="/sign-in" />
       </Unauthenticated>
 
       <Authenticated>

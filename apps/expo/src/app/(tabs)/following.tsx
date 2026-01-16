@@ -14,6 +14,7 @@ import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { GlassToolbar } from "~/components/GlassToolbar";
 import { ChevronDown, ChevronUp, X } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
@@ -228,6 +229,7 @@ function FollowingFeedContent() {
           HeaderComponent={FollowingHeader}
         />
       </View>
+      <GlassToolbar />
     </View>
   );
 }

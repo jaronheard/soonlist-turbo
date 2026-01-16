@@ -1,4 +1,3 @@
-import { Platform } from "react-native";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { useUser } from "@clerk/clerk-expo";
 
@@ -22,7 +21,11 @@ export default function TabsLayout() {
     (user ? getPlanStatusFromUser(user).showDiscover : false);
 
   return (
-    <NativeTabs disableTransparentOnScrollEdge={Platform.OS === "ios"}>
+    <NativeTabs
+      tintColor="#5A32FB"
+      minimizeBehavior="onScrollDown"
+      blurEffect="systemChromeMaterialLight" /* interactive-1 */
+    >
       <NativeTabs.Trigger name="feed">
         <Label>Upcoming</Label>
         <Icon sf={{ default: "calendar", selected: "calendar" }} />
@@ -44,9 +47,10 @@ export default function TabsLayout() {
         <Label>Discover</Label>
         <Icon sf={{ default: "binoculars", selected: "binoculars.fill" }} />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="add" role="search">
+      {/* Add tab is hidden - using GlassToolbar instead */}
+      <NativeTabs.Trigger name="add" hidden>
         <Label hidden />
-        <Icon sf={{ default: "plus.circle", selected: "plus.circle.fill" }} />
+        <Icon sf={{ default: "plus.circle.fill", selected: "plus.circle.fill" }} />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

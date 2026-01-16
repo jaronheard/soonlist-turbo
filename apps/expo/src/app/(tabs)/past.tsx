@@ -12,6 +12,7 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import type { EventWithSimilarity } from "~/utils/similarEvents";
+import { GlassToolbar } from "~/components/GlassToolbar";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
@@ -92,6 +93,7 @@ function PastEventsContent() {
           />
         </View>
       )}
+      <GlassToolbar />
     </View>
   );
 }

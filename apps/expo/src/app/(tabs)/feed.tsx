@@ -11,11 +11,23 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { GlassToolbar } from "~/components/GlassToolbar";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { Logo } from "~/components/Logo";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
+
+function LogoHeader() {
+  return (
+    <View className="items-center pb-2 pt-1">
+      <View style={{ transform: [{ scale: 0.6 }] }}>
+        <Logo variant="hidePreview" />
+      </View>
+    </View>
+  );
+}
 
 function MyFeedContent() {
   const { user } = useUser();
@@ -110,8 +122,10 @@ function MyFeedContent() {
           showSourceStickers
           savedEventIds={savedEventIds}
           source="feed"
+          HeaderComponent={LogoHeader}
         />
       </View>
+      <GlassToolbar />
     </View>
   );
 }
