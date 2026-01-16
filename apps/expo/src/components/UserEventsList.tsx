@@ -16,7 +16,6 @@ import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { LegendList } from "@legendapp/list";
-import { useHeaderHeight } from "@react-navigation/elements";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -1041,7 +1040,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     source,
   } = props;
   const { user } = useUser();
-  const headerHeight = useHeaderHeight();
 
   // Use pre-grouped events if provided, otherwise collapse client-side
   const collapsedEvents = useMemo(() => {
@@ -1058,7 +1056,7 @@ export default function UserEventsList(props: UserEventsListProps) {
       <ScrollView
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: headerHeight + 16,
+          paddingTop: 16,
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",
@@ -1158,7 +1156,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         onEndReachedThreshold={0.5}
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: headerHeight + (stats ? 0 : 16),
+          paddingTop: stats ? 0 : 16,
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",

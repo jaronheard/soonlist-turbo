@@ -118,17 +118,7 @@ export default function UserProfilePage() {
   if (isUserLoading) {
     return (
       <>
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            headerTitle: "",
-            headerBackVisible: true,
-            headerBackTitle: "Back",
-            headerStyle: { backgroundColor: "#F4F1FF" },
-            headerShadowVisible: false,
-            headerTintColor: "#5A32FB",
-          }}
-        />
+        <Stack.Screen options={{ headerRight: () => null }} />
         <View className="flex-1 items-center justify-center bg-interactive-3">
           <ActivityIndicator size="large" color="#5A32FB" />
         </View>
@@ -140,17 +130,7 @@ export default function UserProfilePage() {
   if (userNotFound) {
     return (
       <>
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            headerTitle: "",
-            headerBackVisible: true,
-            headerBackTitle: "Back",
-            headerStyle: { backgroundColor: "#F4F1FF" },
-            headerShadowVisible: false,
-            headerTintColor: "#5A32FB",
-          }}
-        />
+        <Stack.Screen options={{ headerRight: () => null }} />
         <View className="flex-1 items-center justify-center bg-white">
           <Text className="text-lg text-neutral-2">User not found</Text>
         </View>
@@ -160,17 +140,7 @@ export default function UserProfilePage() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerTitle: "",
-          headerBackVisible: true,
-          headerBackTitle: "Back",
-          headerStyle: { backgroundColor: "#F4F1FF" },
-          headerShadowVisible: false,
-          headerTintColor: "#5A32FB",
-        }}
-      />
+      <Stack.Screen options={{ headerRight: () => null }} />
       <View className="flex-1 bg-interactive-3">
         {status === "LoadingFirstPage" ? (
           <View className="flex-1 items-center justify-center">

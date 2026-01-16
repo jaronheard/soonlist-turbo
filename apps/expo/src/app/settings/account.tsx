@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { Redirect, router, Stack } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -393,14 +393,6 @@ export default function EditProfileScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Stack.Screen
-          options={{
-            title: "Account",
-            headerBackTitle: "Back",
-            headerBackButtonMenuEnabled: true,
-          }}
-        />
-
         <View className="flex-col gap-4 space-y-6">
           <UserProfileFlair
             className="mx-auto h-24 w-24 items-center"

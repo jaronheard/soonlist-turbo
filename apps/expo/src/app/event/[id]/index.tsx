@@ -378,7 +378,11 @@ export default function Page() {
                     </Text>
                   </View>
                 ) : (
-                  <View className="flex-row items-center gap-2">
+                  <Pressable
+                    onPress={() => router.push(`/${event.user?.username}`)}
+                    className="-my-2 flex-row items-center gap-2 py-2"
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
                     <UserProfileFlair
                       username={event.user?.username || ""}
                       size="xs"
@@ -401,7 +405,7 @@ export default function Page() {
                         event.user?.username ||
                         "unknown"}
                     </Text>
-                  </View>
+                  </Pressable>
                 )}
               </>
             )}
