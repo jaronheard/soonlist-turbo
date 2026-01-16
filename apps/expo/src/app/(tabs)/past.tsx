@@ -87,7 +87,7 @@ function PastEventsContent() {
       {isLoading && status === "LoadingFirstPage" ? (
         <LoadingSpinner />
       ) : (
-        <View className="flex-1">
+        <>
           <UserEventsList
             groupedEvents={enrichedEvents}
             onEndReached={handleLoadMore}
@@ -98,7 +98,7 @@ function PastEventsContent() {
             source="past"
           />
           <AddEventButton showChevron={false} stats={stats} />
-        </View>
+        </>
       )}
     </View>
   );

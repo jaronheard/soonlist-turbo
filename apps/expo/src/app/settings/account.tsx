@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { Redirect, router } from "expo-router";
+import { Redirect, Stack, router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -388,6 +388,16 @@ export default function EditProfileScreen() {
       style={{ flex: 1 }}
       keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
     >
+      <Stack.Screen
+        options={{
+          title: "Account",
+          headerTransparent: false,
+          headerBackground: undefined,
+          headerStyle: { backgroundColor: "#F4F1FF" },
+          headerTintColor: "#5A32FB",
+          headerBackTitle: "Back",
+        }}
+      />
       <ScrollView
         className="flex-1 bg-white"
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}

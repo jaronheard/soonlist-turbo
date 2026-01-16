@@ -205,22 +205,20 @@ function FollowingFeedContent() {
 
   return (
     <View className="flex-1 bg-white">
-      <View className="flex-1">
-        <UserEventsList
-          events={enrichedEvents}
-          onEndReached={handleLoadMore}
-          isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={
-            status === "LoadingFirstPage" || followingUsers === undefined
-          }
-          showCreator="always"
-          showSourceStickers={false}
-          hideDiscoverableButton={true}
-          savedEventIds={savedEventIds}
-          source="following"
-          HeaderComponent={FollowingHeader}
-        />
-      </View>
+      <UserEventsList
+        events={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={
+          status === "LoadingFirstPage" || followingUsers === undefined
+        }
+        showCreator="always"
+        showSourceStickers={false}
+        hideDiscoverableButton={true}
+        savedEventIds={savedEventIds}
+        source="following"
+        HeaderComponent={FollowingHeader}
+      />
     </View>
   );
 }

@@ -1,7 +1,8 @@
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useQuery } from "convex/react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { AddToCalendarButtonProps } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -12,6 +13,7 @@ import Config from "~/utils/config";
 
 export default function QRModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
 
   const event = useQuery(api.events.get, { eventId: id });
 
@@ -24,6 +26,12 @@ export default function QRModal() {
 
   return (
     <View className="flex-1 bg-interactive-3">
+      <Stack.Screen
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
       {/* Background Image Container */}
       {eventImage && (
         <View className="absolute inset-0 h-full w-full overflow-hidden">
@@ -44,7 +52,8 @@ export default function QRModal() {
 
       <View className="flex-1 items-center justify-center p-4">
         <TouchableOpacity
-          className="absolute right-4 top-12 z-10 rounded-full bg-interactive-1 p-2"
+          className="absolute right-4 z-10 rounded-full bg-interactive-1 p-2"
+          style={{ top: insets.top + 12 }}
           onPress={() =>
             router.canGoBack() ? router.back() : router.navigate("/feed")
           }

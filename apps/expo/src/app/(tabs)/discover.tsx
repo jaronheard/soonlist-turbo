@@ -130,7 +130,7 @@ function DiscoverContent() {
       {isLoading && status === "LoadingFirstPage" ? (
         <LoadingSpinner />
       ) : (
-        <View className="flex-1">
+        <>
           <UserEventsList
             events={enrichedEvents}
             onEndReached={handleLoadMore}
@@ -143,7 +143,7 @@ function DiscoverContent() {
             HeaderComponent={DiscoverShareBanner}
           />
           {user && <AddEventButton showChevron={false} stats={stats} />}
-        </View>
+        </>
       )}
     </View>
   );

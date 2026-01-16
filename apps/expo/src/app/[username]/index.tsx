@@ -115,76 +115,52 @@ export default function UserProfilePage() {
   const userNotFound = targetUser === null;
   const isOwnProfile = currentUser?.id === targetUser?.id;
 
-  // Show loading state while user data is being fetched
-  if (isUserLoading) {
-    return (
-      <>
-        <Stack.Screen
-          options={{
-            headerTransparent: true,
-            headerBackground: () => <LiquidGlassHeader />,
-            headerRight: () => null,
-          }}
-        />
-        <View className="flex-1 items-center justify-center bg-interactive-3">
-          <ActivityIndicator size="large" color="#5A32FB" />
-        </View>
-      </>
-    );
-  }
-
-  // Show not found state if user doesn't exist
-  if (userNotFound) {
-    return (
-      <>
-        <Stack.Screen
-          options={{
-            headerTransparent: true,
-            headerBackground: () => <LiquidGlassHeader />,
-            headerRight: () => null,
-          }}
-        />
-        <View className="flex-1 items-center justify-center bg-white">
-          <Text className="text-lg text-neutral-2">User not found</Text>
-        </View>
-      </>
-    );
-  }
-
   return (
     <>
       <Stack.Screen
         options={{
-          headerTransparent: true,
+          presentation: "modal",
+          title: "",
+          headerTransparent: false,
           headerBackground: () => <LiquidGlassHeader />,
           headerRight: () => null,
         }}
       />
-      <View className="flex-1 bg-interactive-3">
-        <UserEventsList
-          events={filteredEvents}
-          onEndReached={handleLoadMore}
-          isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={status === "LoadingFirstPage"}
-          showCreator="never"
-          hideDiscoverableButton={true}
-          isDiscoverFeed={false}
-          HeaderComponent={() => (
-            <UserProfileHeader
-              user={targetUser}
-              eventCount={filteredEvents.length}
+      {isUserLoading ? (
+        <View className="flex-1 items-center justify-center bg-interactive-3">
+          <ActivityIndicator size="large" color="#5A32FB" />
+        </View>
+      ) : userNotFound ? (
+        <View className="flex-1 items-center justify-center bg-white">
+          <Text className="text-lg text-neutral-2">User not found</Text>
+        </View>
+      ) : (
+        <View className="flex-1 bg-interactive-3">
+          <UserEventsList
+            events={filteredEvents}
+            onEndReached={handleLoadMore}
+            isFetchingNextPage={status === "LoadingMore"}
+            isLoadingFirstPage={status === "LoadingFirstPage"}
+            showCreator="never"
+            hideDiscoverableButton={true}
+            isDiscoverFeed={false}
+            HeaderComponent={() => (
+              <UserProfileHeader
+                user={targetUser}
+                eventCount={filteredEvents.length}
+              />
+            )}
+          />
+          {/* Don't show follow button on own profile */}
+          {!isOwnProfile && (
+            <FollowButton
+              isFollowing={isFollowing ?? false}
+              isLoading={isFollowLoading || isFollowing === undefined}
+              onPress={handleFollow}
             />
           )}
-        />
-        {/* Don't show follow button on own profile */}
-        {!isOwnProfile && (
-          <FollowButton
-            isFollowing={isFollowing ?? false}
-            isLoading={isFollowLoading || isFollowing === undefined}
-            onPress={handleFollow}
-          />
-        )}
-      </View>
+        </View>
+      )}
     </>
   );
 }

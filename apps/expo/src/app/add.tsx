@@ -170,6 +170,7 @@ export default function AddEventModal() {
     <View className="h-full flex-1 bg-[#5A32FB]">
       <Stack.Screen
         options={{
+          presentation: "modal",
           title: "",
           headerShown: true,
           headerShadowVisible: false,
