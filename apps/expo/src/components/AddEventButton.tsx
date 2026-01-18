@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GlassButton } from "~/components/GlassButton";
 import { ChevronDown, CloudOff, Lock, PlusIcon } from "~/components/icons";
@@ -44,6 +45,7 @@ export default function AddEventButton({
 }: AddEventButtonProps) {
   const { isCapturing } = useInFlightEventStore();
   const isOnline = useNetworkStatus();
+  const insets = useSafeAreaInsets();
 
   const {
     customerInfo,
@@ -136,7 +138,8 @@ export default function AddEventButton({
         <TouchableOpacity
           onPress={handlePress}
           disabled={!isOnline}
-          className="absolute bottom-8 self-center"
+          style={{ bottom: insets.bottom + 32 }}
+          className="absolute self-center"
         >
           {!isOnline ? (
             // Offline indicator - replaces button when offline

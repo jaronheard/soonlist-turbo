@@ -243,7 +243,7 @@ export default function Page() {
       <>
         <Stack.Screen
           options={{
-            headerTransparent: true,
+            headerTransparent: false,
             headerBackground: () => <LiquidGlassHeader />,
             headerRight: () => null,
           }}
@@ -261,7 +261,7 @@ export default function Page() {
       <>
         <Stack.Screen
           options={{
-            headerTransparent: true,
+            headerTransparent: false,
             headerBackground: () => <LiquidGlassHeader />,
             headerRight: () => null,
           }}
@@ -279,7 +279,7 @@ export default function Page() {
       <>
         <Stack.Screen
           options={{
-            headerTransparent: true,
+            headerTransparent: false,
             headerBackground: () => <LiquidGlassHeader />,
             headerRight: () => null,
           }}
@@ -334,6 +334,8 @@ export default function Page() {
         options={{
           headerRight: HeaderRight,
           headerLeft: !canGoBack ? HeaderLeft : undefined,
+          headerTransparent: false,
+          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <ScrollView
