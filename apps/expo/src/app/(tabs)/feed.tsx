@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo } from "react";
-import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -8,6 +7,7 @@ import {
   Unauthenticated,
   useQuery,
 } from "convex/react";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -99,22 +99,20 @@ function MyFeedContent() {
   useRatingPrompt(enrichedEvents.length);
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-1">
-        <UserEventsList
-          groupedEvents={enrichedEvents}
-          onEndReached={handleLoadMore}
-          isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={status === "LoadingFirstPage"}
-          showCreator="savedFromOthers"
-          stats={stats}
-          showSourceStickers
-          savedEventIds={savedEventIds}
-          source="feed"
-        />
-        <AddEventButton stats={stats} showChevron={false} />
-      </View>
-    </View>
+    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+      <UserEventsList
+        groupedEvents={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={status === "LoadingFirstPage"}
+        showCreator="savedFromOthers"
+        stats={stats}
+        showSourceStickers
+        savedEventIds={savedEventIds}
+        source="feed"
+      />
+      <AddEventButton stats={stats} showChevron={false} />
+    </SafeAreaView>
   );
 }
 
@@ -124,9 +122,9 @@ function MyFeed() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
           <LoadingSpinner />
-        </View>
+        </SafeAreaView>
       </AuthLoading>
 
       <Unauthenticated>

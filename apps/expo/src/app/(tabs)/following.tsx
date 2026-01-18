@@ -10,6 +10,7 @@ import {
   useMutation,
   useQuery,
 } from "convex/react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -112,7 +113,10 @@ function EmptyFollowingState() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 items-center justify-center bg-white px-6">
+    <SafeAreaView
+      className="flex-1 items-center justify-center bg-white px-6"
+      edges={["bottom"]}
+    >
       <Text className="mb-2 text-center text-xl font-bold text-neutral-1">
         You&apos;re not following anyone yet
       </Text>
@@ -129,7 +133,7 @@ function EmptyFollowingState() {
           Explore Discover
         </Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -204,24 +208,22 @@ function FollowingFeedContent() {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-1">
-        <UserEventsList
-          events={enrichedEvents}
-          onEndReached={handleLoadMore}
-          isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={
-            status === "LoadingFirstPage" || followingUsers === undefined
-          }
-          showCreator="always"
-          showSourceStickers={false}
-          hideDiscoverableButton={true}
-          savedEventIds={savedEventIds}
-          source="following"
-          HeaderComponent={FollowingHeader}
-        />
-      </View>
-    </View>
+    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+      <UserEventsList
+        events={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={
+          status === "LoadingFirstPage" || followingUsers === undefined
+        }
+        showCreator="always"
+        showSourceStickers={false}
+        hideDiscoverableButton={true}
+        savedEventIds={savedEventIds}
+        source="following"
+        HeaderComponent={FollowingHeader}
+      />
+    </SafeAreaView>
   );
 }
 
@@ -231,9 +233,9 @@ function FollowingFeed() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
           <LoadingSpinner />
-        </View>
+        </SafeAreaView>
       </AuthLoading>
 
       <Unauthenticated>
