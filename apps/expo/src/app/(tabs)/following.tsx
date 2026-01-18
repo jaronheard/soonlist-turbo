@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Redirect, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -10,7 +11,6 @@ import {
   useMutation,
   useQuery,
 } from "convex/react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -208,7 +208,7 @@ function FollowingFeedContent() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+    <View className="flex-1 bg-white">
       <UserEventsList
         events={enrichedEvents}
         onEndReached={handleLoadMore}
@@ -223,7 +223,7 @@ function FollowingFeedContent() {
         source="following"
         HeaderComponent={FollowingHeader}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -233,9 +233,9 @@ function FollowingFeed() {
   return (
     <>
       <AuthLoading>
-        <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+        <View className="flex-1 bg-white">
           <LoadingSpinner />
-        </SafeAreaView>
+        </View>
       </AuthLoading>
 
       <Unauthenticated>

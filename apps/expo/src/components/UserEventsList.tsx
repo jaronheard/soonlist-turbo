@@ -48,6 +48,8 @@ import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
 
+const HEADER_HEIGHT_DEFAULT = 100;
+
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 
 // Type for enriched event follow with user data
@@ -1056,7 +1058,7 @@ export default function UserEventsList(props: UserEventsListProps) {
       <ScrollView
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: 16,
+          paddingTop: HEADER_HEIGHT_DEFAULT,
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",
@@ -1075,9 +1077,14 @@ export default function UserEventsList(props: UserEventsListProps) {
   };
 
   if (isLoadingFirstPage) {
+    // Calculate header height to match the loaded state
+    const headerHeight = HEADER_HEIGHT_DEFAULT;
     return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#5A32FB" />
+      <View style={{ flex: 1, backgroundColor: "#F4F1FF" }}>
+        <View style={{ height: headerHeight }} />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#5A32FB" />
+        </View>
       </View>
     );
   }
@@ -1098,10 +1105,14 @@ export default function UserEventsList(props: UserEventsListProps) {
   );
 
   const renderHeader = () => {
-    if (!HeaderComponent && !stats) return <View style={{ height: 104 }} />;
     return (
       <>
-        <View style={{ height: stats ? 104 : 96 }} />
+        <View
+          style={{
+            height: HEADER_HEIGHT_DEFAULT,
+          }}
+        />
+        {(HeaderComponent || stats) && <View style={{ height: 8 }} />}
         {HeaderComponent && <HeaderComponent />}
         {stats && (
           <EventStats
@@ -1111,6 +1122,8 @@ export default function UserEventsList(props: UserEventsListProps) {
             allTimeEvents={stats.allTimeEvents ?? 0}
           />
         )}
+        {/* when showing list items, add a bit of padding. not needed for empty state */}
+        <View style={{ height: 16 }} />
       </>
     );
   };
@@ -1156,7 +1169,6 @@ export default function UserEventsList(props: UserEventsListProps) {
       onEndReachedThreshold={0.5}
       style={{ backgroundColor: "#F4F1FF" }}
       contentContainerStyle={{
-        paddingTop: stats ? 0 : 16,
         paddingBottom: 120,
         backgroundColor: "#F4F1FF",
       }}

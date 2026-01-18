@@ -12,7 +12,7 @@ interface EventStatsProps {
 }
 
 function CircularProgress({ progress }: { progress: number }) {
-  const size = 24;
+  const size = 16;
   const strokeWidth = 2;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
@@ -61,14 +61,14 @@ export function EventStats({
   const progress = Math.min(capturesThisWeek / weeklyGoal, 1);
 
   return (
-    <View className="flex-row justify-around px-2 pb-6 pt-2">
+    <View className="flex-row justify-around px-2">
       <View
         className="flex-1 items-center p-3"
         style={{
           maxWidth: "30%",
         }}
       >
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center gap-1">
           <CircularProgress progress={progress} />
           <Text className="text-lg font-bold text-neutral-900">
             {capturesThisWeek}

@@ -207,7 +207,7 @@ function UserProfileHeader({ user, eventCount }: UserProfileHeaderProps) {
   if (!user) return null;
 
   return (
-    <View className="mb-4 items-center px-4 py-6">
+    <View className="items-center px-4 py-6">
       {/* Avatar */}
       <UserProfileFlair username={user.username} size="xl">
         {user.userImage ? (

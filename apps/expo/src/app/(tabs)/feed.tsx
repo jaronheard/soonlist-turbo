@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -7,7 +8,6 @@ import {
   Unauthenticated,
   useQuery,
 } from "convex/react";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -99,7 +99,7 @@ function MyFeedContent() {
   useRatingPrompt(enrichedEvents.length);
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+    <View className="flex-1 bg-white">
       <UserEventsList
         groupedEvents={enrichedEvents}
         onEndReached={handleLoadMore}
@@ -112,7 +112,7 @@ function MyFeedContent() {
         source="feed"
       />
       <AddEventButton stats={stats} showChevron={false} />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -122,9 +122,9 @@ function MyFeed() {
   return (
     <>
       <AuthLoading>
-        <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+        <View className="flex-1 bg-white">
           <LoadingSpinner />
-        </SafeAreaView>
+        </View>
       </AuthLoading>
 
       <Unauthenticated>

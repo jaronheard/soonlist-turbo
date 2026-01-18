@@ -7,8 +7,8 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { GlassButton } from "~/components/GlassButton";
 import { ChevronDown, CloudOff, Lock, PlusIcon } from "~/components/icons";
@@ -138,7 +138,7 @@ export default function AddEventButton({
         <TouchableOpacity
           onPress={handlePress}
           disabled={!isOnline}
-          style={{ bottom: insets.bottom + 32 }}
+          style={{ bottom: insets.bottom }}
           className="absolute self-center"
         >
           {!isOnline ? (

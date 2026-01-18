@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -7,7 +8,6 @@ import {
   Unauthenticated,
   useQuery,
 } from "convex/react";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -37,7 +37,6 @@ function PastEventsContent() {
     results: groupedEvents,
     status,
     loadMore,
-    isLoading,
   } = useStablePaginatedQuery(api.feeds.getMyFeedGrouped, queryArgs, {
     initialNumItems: 50,
   });
@@ -83,24 +82,19 @@ function PastEventsContent() {
   }, [groupedEvents]);
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
-      {isLoading && status === "LoadingFirstPage" ? (
-        <LoadingSpinner />
-      ) : (
-        <>
-          <UserEventsList
-            groupedEvents={enrichedEvents}
-            onEndReached={handleLoadMore}
-            showCreator="savedFromOthers"
-            isFetchingNextPage={status === "LoadingMore"}
-            showSourceStickers
-            savedEventIds={savedEventIds}
-            source="past"
-          />
-          <AddEventButton showChevron={false} stats={stats} />
-        </>
-      )}
-    </SafeAreaView>
+    <View className="flex-1 bg-white">
+      <UserEventsList
+        groupedEvents={enrichedEvents}
+        onEndReached={handleLoadMore}
+        showCreator="savedFromOthers"
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={status === "LoadingFirstPage"}
+        showSourceStickers
+        savedEventIds={savedEventIds}
+        source="past"
+      />
+      <AddEventButton showChevron={false} stats={stats} />
+    </View>
   );
 }
 
@@ -108,9 +102,9 @@ export default function PastEvents() {
   return (
     <>
       <AuthLoading>
-        <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+        <View className="flex-1 bg-white">
           <LoadingSpinner />
-        </SafeAreaView>
+        </View>
       </AuthLoading>
 
       <Unauthenticated>

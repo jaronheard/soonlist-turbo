@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
@@ -7,7 +8,6 @@ import {
   Unauthenticated,
   useQuery,
 } from "convex/react";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -42,7 +42,6 @@ function DiscoverContent() {
     results: events,
     status,
     loadMore,
-    isLoading,
   } = useStablePaginatedQuery(
     api.feeds.getDiscoverFeed,
     canAccessDiscover
@@ -126,26 +125,21 @@ function DiscoverContent() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
-      {isLoading && status === "LoadingFirstPage" ? (
-        <LoadingSpinner />
-      ) : (
-        <>
-          <UserEventsList
-            events={enrichedEvents}
-            onEndReached={handleLoadMore}
-            isFetchingNextPage={status === "LoadingMore"}
-            ActionButton={SaveShareButtonWrapper}
-            showCreator="always"
-            hideDiscoverableButton={true}
-            isDiscoverFeed={true}
-            savedEventIds={savedEventIds}
-            HeaderComponent={DiscoverShareBanner}
-          />
-          {user && <AddEventButton showChevron={false} stats={stats} />}
-        </>
-      )}
-    </SafeAreaView>
+    <View className="flex-1 bg-white">
+      <UserEventsList
+        events={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={status === "LoadingFirstPage"}
+        ActionButton={SaveShareButtonWrapper}
+        showCreator="always"
+        hideDiscoverableButton={true}
+        isDiscoverFeed={true}
+        savedEventIds={savedEventIds}
+        HeaderComponent={DiscoverShareBanner}
+      />
+      {user && <AddEventButton showChevron={false} stats={stats} />}
+    </View>
   );
 }
 
@@ -155,9 +149,9 @@ export default function Page() {
   return (
     <>
       <AuthLoading>
-        <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+        <View className="flex-1 bg-white">
           <LoadingSpinner />
-        </SafeAreaView>
+        </View>
       </AuthLoading>
 
       <Unauthenticated>
