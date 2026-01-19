@@ -8,7 +8,7 @@ import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { Heart, User } from "~/components/icons";
+import { Check, User } from "~/components/icons";
 import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
@@ -155,8 +155,20 @@ export default function UserProfilePage() {
     <>
       <Stack.Screen
         options={{
+          title: "Public List",
           headerTransparent: true,
-          headerBackground: () => <LiquidGlassHeader />,
+          headerBackground: () => (
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: "#E0D9FF", // interactive-2
+              }}
+            />
+          ),
+          headerTintColor: "#5A32FB", // interactive-1
+          headerTitleStyle: {
+            color: "#5A32FB", // interactive-1
+          },
           headerRight: () => null,
         }}
       />
@@ -207,7 +219,7 @@ function UserProfileHeader({ user, eventCount }: UserProfileHeaderProps) {
   if (!user) return null;
 
   return (
-    <View className="items-center px-4 py-6">
+    <View className="items-center px-4 pb-2">
       {/* Avatar */}
       <UserProfileFlair username={user.username} size="xl">
         {user.userImage ? (
@@ -225,23 +237,21 @@ function UserProfileHeader({ user, eventCount }: UserProfileHeaderProps) {
       </UserProfileFlair>
 
       {/* Name */}
-      <Text className="mt-3 text-xl font-bold text-neutral-1">
+      <Text className="mt-2 text-xl font-bold text-neutral-1">
         {user.displayName || user.username}
       </Text>
 
       {/* Bio */}
       {user.bio && (
-        <Text className="mt-2 text-center text-sm text-neutral-2">
+        <Text className="mt-1 text-center text-sm text-neutral-2">
           {user.bio}
         </Text>
       )}
 
       {/* Event count */}
-      <View className="mt-4 flex-row items-center gap-2">
-        <Text className="text-sm text-neutral-2">
-          {eventCount} upcoming {eventCount === 1 ? "event" : "events"}
-        </Text>
-      </View>
+      <Text className="mt-1 text-sm text-neutral-2">
+        {eventCount} upcoming {eventCount === 1 ? "event" : "events"}
+      </Text>
     </View>
   );
 }
@@ -272,26 +282,26 @@ function FollowButton({
       <TouchableOpacity
         onPress={onPress}
         disabled={isLoading}
-        accessibilityLabel={isFollowing ? "Unfollow" : "Follow"}
+        accessibilityLabel={isFollowing ? "Unfollow" : "Get Updates"}
         accessibilityRole="button"
         activeOpacity={0.8}
       >
         <View
-          className={`flex-row items-center gap-4 rounded-full px-8 py-5 ${
-            isFollowing ? "bg-neutral-2" : "bg-interactive-1"
+          className={`flex-row items-center rounded-full px-8 py-5 ${
+            isFollowing ? "gap-3 bg-neutral-2" : "bg-interactive-1"
           }`}
         >
           {isLoading ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Heart
-              size={28}
-              color="#FFFFFF"
-              fill={isFollowing ? "#FFFFFF" : "none"}
-            />
-          )}
+          ) : isFollowing ? (
+            <Check size={24} color="#FFFFFF" strokeWidth={3} />
+          ) : null}
           <Text className="text-xl font-bold text-white">
-            {isLoading ? "Loading..." : isFollowing ? "Following" : "Follow"}
+            {isLoading
+              ? "Loading..."
+              : isFollowing
+                ? "Following"
+                : "Get Updates"}
           </Text>
         </View>
       </TouchableOpacity>
