@@ -137,6 +137,7 @@ function EventSaversRow({
           <Pressable
             key={user.id}
             onPress={() => handleUserPress(user)}
+            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
             style={{
               position: index === 0 ? "relative" : "absolute",
               left: index * (avatarSize - overlap),
@@ -184,6 +185,7 @@ function EventSaversRow({
       {/* Names text */}
       <Pressable
         onPress={() => displayUsers[0] && handleUserPress(displayUsers[0])}
+        hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
       >
         <Text className="text-xs text-neutral-2">{getNamesText()}</Text>
       </Pressable>

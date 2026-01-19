@@ -3,6 +3,9 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
+import { useQuery } from "convex/react";
+
+import { api } from "@soonlist/backend/convex/_generated/api";
 
 import {
   Calendar,
@@ -57,20 +60,35 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
   const { user } = useUser();
   const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
 
+  // Check if user is following anyone
+  const followingUsers = useQuery(api.users.getFollowingUsers);
+  const hasFollowings = (followingUsers?.length ?? 0) > 0;
+
   // Derive showDiscover explicitly so changes to discoverAccessOverride or user metadata trigger recompute
   const showDiscover =
     discoverAccessOverride ||
     (user ? getPlanStatusFromUser(user).showDiscover : false);
 
   const { routes, currentRoute } = useMemo(() => {
-    // Always show Upcoming, Following, Past (first 3 routes)
-    // Conditionally show Discover based on plan status
-    const routes = showDiscover ? baseRoutes : baseRoutes.slice(0, 3);
-    const currentRoute =
-      routes.find((r) => isRouteActive(r.path, active))?.label ?? "Upcoming";
+    // Filter routes based on feature access and following status
+    let filteredRoutes = [...baseRoutes];
 
-    return { routes, currentRoute };
-  }, [showDiscover, active]);
+    // Hide Following tab if user isn't following anyone
+    if (!hasFollowings) {
+      filteredRoutes = filteredRoutes.filter((r) => r.path !== "/following");
+    }
+
+    // Hide Discover tab based on plan status
+    if (!showDiscover) {
+      filteredRoutes = filteredRoutes.filter((r) => r.path !== "/discover");
+    }
+
+    const currentRoute =
+      filteredRoutes.find((r) => isRouteActive(r.path, active))?.label ??
+      "Upcoming";
+
+    return { routes: filteredRoutes, currentRoute };
+  }, [showDiscover, hasFollowings, active]);
 
   const handleNavigation = (path: (typeof routes)[number]["path"]) => {
     setMenuOpen(false);

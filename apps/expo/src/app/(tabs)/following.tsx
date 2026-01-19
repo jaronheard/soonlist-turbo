@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Redirect, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -15,6 +14,7 @@ import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import FollowingFeedbackBanner from "~/components/FollowingFeedbackBanner";
 import { X } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
@@ -43,97 +43,74 @@ function FollowingHeader() {
   }
 
   return (
-    <View className="px-4 py-3">
-      <TouchableOpacity
-        onPress={() => setIsExpanded(!isExpanded)}
-        className="items-center"
-        activeOpacity={0.7}
-      >
-        <Text className="text-sm text-neutral-2">
-          Following{" "}
-          <Text className="text-interactive-1">
-            {userCount} {userCount === 1 ? "list" : "lists"}
+    <View>
+      <View className="py-3">
+        <FollowingFeedbackBanner />
+      </View>
+      <View className="px-4 pb-3">
+        <TouchableOpacity
+          onPress={() => setIsExpanded(!isExpanded)}
+          className="items-center"
+          activeOpacity={0.7}
+        >
+          <Text className="text-sm text-neutral-2">
+            Following{" "}
+            <Text className="text-interactive-1">
+              {userCount} {userCount === 1 ? "list" : "lists"}
+            </Text>
           </Text>
-        </Text>
-      </TouchableOpacity>
+        </TouchableOpacity>
 
-      {isExpanded && followingUsers && (
-        <View className="mt-3 space-y-2">
-          {followingUsers.map((user) => (
-            <View
-              key={user.id}
-              className="flex-row items-center justify-between py-2"
-            >
-              <TouchableOpacity
-                onPress={() => router.push(`/${user.username}`)}
-                className="flex-1 flex-row items-center"
-                activeOpacity={0.7}
+        {isExpanded && followingUsers && (
+          <View className="mt-3 space-y-2">
+            {followingUsers.map((user) => (
+              <View
+                key={user.id}
+                className="flex-row items-center justify-between py-2"
               >
-                {user.userImage ? (
-                  <Image
-                    source={{ uri: user.userImage }}
-                    className="size-8 rounded-full"
-                  />
-                ) : (
-                  <View className="size-8 items-center justify-center rounded-full bg-neutral-4">
-                    <Text className="text-sm font-medium text-neutral-2">
-                      {user.displayName?.charAt(0).toUpperCase() ?? "?"}
+                <TouchableOpacity
+                  onPress={() => router.push(`/${user.username}`)}
+                  className="flex-1 flex-row items-center"
+                  activeOpacity={0.7}
+                >
+                  {user.userImage ? (
+                    <Image
+                      source={{ uri: user.userImage }}
+                      className="size-8 rounded-full"
+                    />
+                  ) : (
+                    <View className="size-8 items-center justify-center rounded-full bg-neutral-4">
+                      <Text className="text-sm font-medium text-neutral-2">
+                        {user.displayName?.charAt(0).toUpperCase() ?? "?"}
+                      </Text>
+                    </View>
+                  )}
+                  <View className="ml-3 flex-1">
+                    <Text
+                      className="text-base font-medium text-neutral-1"
+                      numberOfLines={1}
+                    >
+                      {user.publicListName ??
+                        `${user.displayName ?? user.username}'s events`}
+                    </Text>
+                    <Text className="text-sm text-neutral-2" numberOfLines={1}>
+                      {user.displayName ?? user.username}
                     </Text>
                   </View>
-                )}
-                <View className="ml-3 flex-1">
-                  <Text
-                    className="text-base font-medium text-neutral-1"
-                    numberOfLines={1}
-                  >
-                    {user.publicListName ??
-                      `${user.displayName ?? user.username}'s events`}
-                  </Text>
-                  <Text className="text-sm text-neutral-2" numberOfLines={1}>
-                    {user.displayName ?? user.username}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleUnfollow(user.id)}
-                className="ml-2 rounded-full bg-neutral-4 p-2"
-                activeOpacity={0.7}
-              >
-                <X size={16} color="#666" />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleUnfollow(user.id)}
+                  className="ml-2 rounded-full bg-neutral-4 p-2"
+                  activeOpacity={0.7}
+                >
+                  <X size={16} color="#666" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
     </View>
-  );
-}
-
-function EmptyFollowingState() {
-  const router = useRouter();
-
-  return (
-    <SafeAreaView
-      className="flex-1 items-center justify-center bg-white px-6"
-      edges={["bottom"]}
-    >
-      <Text className="mb-2 text-center text-xl font-bold text-neutral-1">
-        You&apos;re not following anyone yet
-      </Text>
-      <Text className="mb-6 text-center text-base text-neutral-2">
-        Follow users to see their events here. Discover interesting people in
-        the Discover feed.
-      </Text>
-      <TouchableOpacity
-        onPress={() => router.push("/discover")}
-        className="rounded-full bg-interactive-1 px-6 py-3"
-        activeOpacity={0.7}
-      >
-        <Text className="text-base font-semibold text-white">
-          Explore Discover
-        </Text>
-      </TouchableOpacity>
-    </SafeAreaView>
   );
 }
 
@@ -202,9 +179,9 @@ function FollowingFeedContent() {
       }));
   }, [events, stableTimestamp]);
 
-  // Show empty state if not following anyone
+  // Redirect to feed if not following anyone
   if (followingUsers !== undefined && !hasFollowings) {
-    return <EmptyFollowingState />;
+    return <Redirect href="/feed" />;
   }
 
   return (
