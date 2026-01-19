@@ -1,4 +1,3 @@
-import { View } from "react-native";
 import { Tabs } from "expo-router";
 
 import { HeaderLogo } from "~/components/HeaderLogo";
@@ -13,11 +12,21 @@ export const unstable_settings = {
   initialRouteName: "feed",
 };
 
+const tabHeaderConfig = {
+  feed: { title: "Upcoming", active: "upcoming" },
+  following: { title: "Following", active: "following" },
+  past: { title: "Past", active: "past" },
+  discover: { title: "Discover", active: "discover" },
+} as const;
+
+type TabRouteName = keyof typeof tabHeaderConfig;
+
 export default function TabsLayout() {
   return (
-    <>
-      <Tabs
-        screenOptions={{
+    <Tabs
+      screenOptions={({ route }) => {
+        const config = tabHeaderConfig[route.name as TabRouteName];
+        return {
           headerTransparent: true,
           headerBackground: () => <LiquidGlassHeader />,
           headerTintColor: "#fff",
@@ -29,65 +38,22 @@ export default function TabsLayout() {
           },
           headerLeftContainerStyle: { paddingLeft: 16 },
           headerRightContainerStyle: { paddingRight: 16 },
-        }}
-      >
-        <Tabs.Screen
-          name="feed"
-          options={{
-            title: "Upcoming",
-            headerTitle: () => (
-              <View className="flex-1 items-center justify-center">
-                <NavigationMenu active="upcoming" />
-              </View>
-            ),
-            headerTitleAlign: "center",
-            headerLeft: () => <HeaderLogo />,
-            headerRight: () => <ProfileMenu />,
-          }}
-        />
-        <Tabs.Screen
-          name="following"
-          options={{
-            title: "Following",
-            headerTitle: () => (
-              <View className="flex-1 items-center justify-center">
-                <NavigationMenu active="following" />
-              </View>
-            ),
-            headerTitleAlign: "center",
-            headerLeft: () => <HeaderLogo />,
-            headerRight: () => <ProfileMenu />,
-          }}
-        />
-        <Tabs.Screen
-          name="past"
-          options={{
-            title: "Past",
-            headerTitle: () => (
-              <View className="flex-1 items-center justify-center">
-                <NavigationMenu active="past" />
-              </View>
-            ),
-            headerTitleAlign: "center",
-            headerLeft: () => <HeaderLogo />,
-            headerRight: () => <ProfileMenu />,
-          }}
-        />
-        <Tabs.Screen
-          name="discover"
-          options={{
-            title: "Discover",
-            headerTitle: () => (
-              <View className="flex-1 items-center justify-center">
-                <NavigationMenu active="discover" />
-              </View>
-            ),
-            headerTitleAlign: "center",
-            headerLeft: () => <HeaderLogo />,
-            headerRight: () => <ProfileMenu />,
-          }}
-        />
-      </Tabs>
-    </>
+          headerTitleAlign: "center",
+          headerLeft: () => <HeaderLogo />,
+          headerRight: () => <ProfileMenu />,
+          ...(config
+            ? {
+                title: config.title,
+                headerTitle: () => <NavigationMenu active={config.active} />,
+              }
+            : null),
+        };
+      }}
+    >
+      <Tabs.Screen name="feed" />
+      <Tabs.Screen name="following" />
+      <Tabs.Screen name="past" />
+      <Tabs.Screen name="discover" />
+    </Tabs>
   );
 }

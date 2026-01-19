@@ -4,7 +4,15 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 
-import { Check, ChevronDown, MessageSquare } from "~/components/icons";
+import {
+  Calendar,
+  Check,
+  ChevronDown,
+  Globe2,
+  Heart,
+  History,
+  MessageSquare,
+} from "~/components/icons";
 import { useAppStore } from "~/store";
 import { logError } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
@@ -24,6 +32,13 @@ type RouteType = "upcoming" | "past" | "following" | "discover";
 interface NavigationMenuProps {
   active?: RouteType;
 }
+
+const routeIcons = {
+  "/feed": { Icon: Calendar, iosIcon: "calendar" },
+  "/following": { Icon: Heart, iosIcon: "heart" },
+  "/past": { Icon: History, iosIcon: "clock.arrow.circlepath" },
+  "/discover": { Icon: Globe2, iosIcon: "globe" },
+} as const;
 
 const baseRoutes = [
   { label: "Upcoming", path: "/feed" },
@@ -88,6 +103,8 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
         <DropdownMenuContent side="bottom" align="center">
           {routes.map((route) => {
             const isActive = isRouteActive(route.path, active);
+            const iconConfig = routeIcons[route.path];
+            const IconComponent = iconConfig.Icon;
 
             return (
               <DropdownMenuCheckboxItem
@@ -100,6 +117,9 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
                   }
                 }}
               >
+                <DropdownMenuItemIcon ios={{ name: iconConfig.iosIcon }}>
+                  <IconComponent size={20} color="#000000" />
+                </DropdownMenuItemIcon>
                 <DropdownMenuItemTitle>
                   <Text
                     className={`text-xl ${

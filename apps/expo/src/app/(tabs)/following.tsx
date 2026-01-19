@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Redirect, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -14,7 +15,7 @@ import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { ChevronDown, ChevronUp, X } from "~/components/icons";
+import { X } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
@@ -42,20 +43,18 @@ function FollowingHeader() {
   }
 
   return (
-    <View className="border-b border-neutral-4 bg-white px-4 py-3">
+    <View className="px-4 py-3">
       <TouchableOpacity
         onPress={() => setIsExpanded(!isExpanded)}
-        className="flex-row items-center justify-between"
+        className="items-center"
         activeOpacity={0.7}
       >
-        <Text className="text-base font-semibold text-neutral-1">
-          Following {userCount} {userCount === 1 ? "user" : "users"}
+        <Text className="text-sm text-neutral-2">
+          Following{" "}
+          <Text className="text-interactive-1">
+            {userCount} {userCount === 1 ? "list" : "lists"}
+          </Text>
         </Text>
-        {isExpanded ? (
-          <ChevronUp size={20} color="#5A32FB" />
-        ) : (
-          <ChevronDown size={20} color="#5A32FB" />
-        )}
       </TouchableOpacity>
 
       {isExpanded && followingUsers && (
@@ -87,10 +86,11 @@ function FollowingHeader() {
                     className="text-base font-medium text-neutral-1"
                     numberOfLines={1}
                   >
-                    {user.displayName ?? user.username}
+                    {user.publicListName ??
+                      `${user.displayName ?? user.username}'s events`}
                   </Text>
                   <Text className="text-sm text-neutral-2" numberOfLines={1}>
-                    @{user.username}
+                    {user.displayName ?? user.username}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -113,7 +113,10 @@ function EmptyFollowingState() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 items-center justify-center bg-white px-6">
+    <SafeAreaView
+      className="flex-1 items-center justify-center bg-white px-6"
+      edges={["bottom"]}
+    >
       <Text className="mb-2 text-center text-xl font-bold text-neutral-1">
         You&apos;re not following anyone yet
       </Text>
@@ -130,7 +133,7 @@ function EmptyFollowingState() {
           Explore Discover
         </Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -141,12 +144,6 @@ function FollowingFeedContent() {
   // Check if user is following anyone
   const followingUsers = useQuery(api.users.getFollowingUsers);
   const hasFollowings = (followingUsers?.length ?? 0) > 0;
-
-  // Fetch user stats
-  const stats = useQuery(
-    api.events.getStats,
-    user?.username ? { userName: user.username } : "skip",
-  );
 
   // Memoize query args
   const queryArgs = useMemo(() => {
@@ -212,22 +209,20 @@ function FollowingFeedContent() {
 
   return (
     <View className="flex-1 bg-white">
-      <View className="flex-1">
-        <UserEventsList
-          events={enrichedEvents}
-          onEndReached={handleLoadMore}
-          isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={
-            status === "LoadingFirstPage" || followingUsers === undefined
-          }
-          showCreator="always"
-          stats={stats}
-          showSourceStickers
-          savedEventIds={savedEventIds}
-          source="following"
-          HeaderComponent={FollowingHeader}
-        />
-      </View>
+      <UserEventsList
+        events={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={
+          status === "LoadingFirstPage" || followingUsers === undefined
+        }
+        showCreator="always"
+        showSourceStickers={false}
+        hideDiscoverableButton={true}
+        savedEventIds={savedEventIds}
+        source="following"
+        HeaderComponent={FollowingHeader}
+      />
     </View>
   );
 }

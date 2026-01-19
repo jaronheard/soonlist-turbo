@@ -45,6 +45,7 @@ import {
   ShareIcon,
   User,
 } from "~/components/icons";
+import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
@@ -240,7 +241,13 @@ export default function Page() {
   if (!id || typeof id !== "string") {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            headerTransparent: false,
+            headerBackground: () => <LiquidGlassHeader />,
+            headerRight: () => null,
+          }}
+        />
         <View className="flex-1 bg-white">
           <Text>Invalid or missing event id</Text>
         </View>
@@ -252,7 +259,13 @@ export default function Page() {
   if (event === undefined) {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            headerTransparent: false,
+            headerBackground: () => <LiquidGlassHeader />,
+            headerRight: () => null,
+          }}
+        />
         <View className="flex-1 bg-white">
           <LoadingSpinner />
         </View>
@@ -264,7 +277,13 @@ export default function Page() {
   if (event === null) {
     return (
       <>
-        <Stack.Screen options={{ headerRight: () => null }} />
+        <Stack.Screen
+          options={{
+            headerTransparent: false,
+            headerBackground: () => <LiquidGlassHeader />,
+            headerRight: () => null,
+          }}
+        />
         <View className="flex-1 bg-white">
           <Text>Event not found</Text>
         </View>
@@ -315,6 +334,8 @@ export default function Page() {
         options={{
           headerRight: HeaderRight,
           headerLeft: !canGoBack ? HeaderLeft : undefined,
+          headerTransparent: false,
+          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <ScrollView
@@ -378,7 +399,11 @@ export default function Page() {
                     </Text>
                   </View>
                 ) : (
-                  <View className="flex-row items-center gap-2">
+                  <Pressable
+                    onPress={() => router.push(`/${event.user?.username}`)}
+                    className="-my-2 flex-row items-center gap-2 py-2"
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
                     <UserProfileFlair
                       username={event.user?.username || ""}
                       size="xs"
@@ -401,7 +426,7 @@ export default function Page() {
                         event.user?.username ||
                         "unknown"}
                     </Text>
-                  </View>
+                  </Pressable>
                 )}
               </>
             )}

@@ -238,9 +238,17 @@ const InitialLayout = () => {
           title: "Event Details",
           headerShown: true,
           headerTransparent: false,
-          headerBackground: undefined,
-          headerStyle: { backgroundColor: "#E0D9FF" }, // interactive-2
-          headerTintColor: "#5A32FB", // interactive-1
+          headerBackground: () => <LiquidGlassHeader />,
+        }}
+      />
+      <Stack.Screen
+        name="[username]/index"
+        options={{
+          presentation: "modal",
+          title: "",
+          headerShown: true,
+          headerTransparent: false,
+          headerBackground: () => <LiquidGlassHeader />,
         }}
       />
       <Stack.Screen
@@ -292,6 +300,30 @@ const InitialLayout = () => {
         options={{
           headerShown: false,
           presentation: "containedModal",
+        }}
+      />
+      <Stack.Screen
+        name="settings/account"
+        options={{
+          title: "Account",
+          headerShown: true,
+          headerTransparent: false,
+          headerBackground: undefined,
+          headerStyle: { backgroundColor: "#F4F1FF" },
+          headerTintColor: "#5A32FB",
+          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="settings/calendar"
+        options={{
+          title: "Calendar Settings",
+          headerShown: true,
+          headerTransparent: false,
+          headerBackground: undefined,
+          headerStyle: { backgroundColor: "#F4F1FF" },
+          headerTintColor: "#5A32FB",
+          headerBackTitle: "Back",
         }}
       />
     </Stack>

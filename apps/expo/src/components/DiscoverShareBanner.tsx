@@ -53,7 +53,7 @@ Use code DISCOVER to join the Portland-only, invite-only Discover list with even
   };
 
   return (
-    <View className="mb-3 mt-2">
+    <View>
       <TouchableOpacity
         onPress={handleShare}
         accessibilityRole="button"

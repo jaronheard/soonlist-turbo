@@ -37,7 +37,6 @@ function PastEventsContent() {
     results: groupedEvents,
     status,
     loadMore,
-    isLoading,
   } = useStablePaginatedQuery(api.feeds.getMyFeedGrouped, queryArgs, {
     initialNumItems: 50,
   });
@@ -84,22 +83,17 @@ function PastEventsContent() {
 
   return (
     <View className="flex-1 bg-white">
-      {isLoading && status === "LoadingFirstPage" ? (
-        <LoadingSpinner />
-      ) : (
-        <View className="flex-1">
-          <UserEventsList
-            groupedEvents={enrichedEvents}
-            onEndReached={handleLoadMore}
-            showCreator="savedFromOthers"
-            isFetchingNextPage={status === "LoadingMore"}
-            showSourceStickers
-            savedEventIds={savedEventIds}
-            source="past"
-          />
-          <AddEventButton showChevron={false} stats={stats} />
-        </View>
-      )}
+      <UserEventsList
+        groupedEvents={enrichedEvents}
+        onEndReached={handleLoadMore}
+        showCreator="savedFromOthers"
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={status === "LoadingFirstPage"}
+        showSourceStickers
+        savedEventIds={savedEventIds}
+        source="past"
+      />
+      <AddEventButton showChevron={false} stats={stats} />
     </View>
   );
 }

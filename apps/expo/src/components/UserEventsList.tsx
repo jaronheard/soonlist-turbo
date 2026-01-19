@@ -16,7 +16,6 @@ import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { LegendList } from "@legendapp/list";
-import { useHeaderHeight } from "@react-navigation/elements";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -48,6 +47,8 @@ import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
+
+const HEADER_HEIGHT_DEFAULT = 100;
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 
@@ -1041,7 +1042,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     source,
   } = props;
   const { user } = useUser();
-  const headerHeight = useHeaderHeight();
 
   // Use pre-grouped events if provided, otherwise collapse client-side
   const collapsedEvents = useMemo(() => {
@@ -1058,7 +1058,7 @@ export default function UserEventsList(props: UserEventsListProps) {
       <ScrollView
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: headerHeight + 16,
+          paddingTop: HEADER_HEIGHT_DEFAULT,
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",
@@ -1077,9 +1077,14 @@ export default function UserEventsList(props: UserEventsListProps) {
   };
 
   if (isLoadingFirstPage) {
+    // Calculate header height to match the loaded state
+    const headerHeight = HEADER_HEIGHT_DEFAULT;
     return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#5A32FB" />
+      <View style={{ flex: 1, backgroundColor: "#F4F1FF" }}>
+        <View style={{ height: headerHeight }} />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#5A32FB" />
+        </View>
       </View>
     );
   }
@@ -1100,9 +1105,14 @@ export default function UserEventsList(props: UserEventsListProps) {
   );
 
   const renderHeader = () => {
-    if (!HeaderComponent && !stats) return null;
     return (
-      <View>
+      <>
+        <View
+          style={{
+            height: HEADER_HEIGHT_DEFAULT,
+          }}
+        />
+        {(HeaderComponent || stats) && <View style={{ height: 8 }} />}
         {HeaderComponent && <HeaderComponent />}
         {stats && (
           <EventStats
@@ -1112,61 +1122,59 @@ export default function UserEventsList(props: UserEventsListProps) {
             allTimeEvents={stats.allTimeEvents ?? 0}
           />
         )}
-      </View>
+        {/* when showing list items, add a bit of padding. not needed for empty state */}
+        <View style={{ height: 16 }} />
+      </>
     );
   };
 
   return (
-    <>
-      <LegendList
-        data={collapsedEvents}
-        keyExtractor={(item) => item.event.id}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmptyState}
-        renderItem={({ item, index }) => {
-          const eventData = item.event;
-          // Use savedEventIds if provided, otherwise check eventFollows
-          const isSaved = savedEventIds
-            ? savedEventIds.has(eventData.id)
-            : (eventData.eventFollows?.some(
-                (follow: { userId: string }) => follow.userId === user?.id,
-              ) ?? false);
-          // TODO: Add savedAt
+    <LegendList
+      data={collapsedEvents}
+      keyExtractor={(item) => item.event.id}
+      ListHeaderComponent={renderHeader}
+      ListEmptyComponent={renderEmptyState}
+      renderItem={({ item, index }) => {
+        const eventData = item.event;
+        // Use savedEventIds if provided, otherwise check eventFollows
+        const isSaved = savedEventIds
+          ? savedEventIds.has(eventData.id)
+          : (eventData.eventFollows?.some(
+              (follow: { userId: string }) => follow.userId === user?.id,
+            ) ?? false);
+        // TODO: Add savedAt
 
-          const similarEventsCount = item.similarEvents.length;
+        const similarEventsCount = item.similarEvents.length;
 
-          return (
-            <UserEventListItem
-              event={eventData}
-              ActionButton={ActionButton}
-              showCreator={showCreator}
-              isSaved={isSaved}
-              // TODO: Add savedAt
-              savedAt={undefined}
-              similarEventsCount={
-                similarEventsCount > 0 ? similarEventsCount : undefined
-              }
-              demoMode={demoMode}
-              index={index}
-              hideDiscoverableButton={hideDiscoverableButton}
-              isDiscoverFeed={isDiscoverFeed}
-              source={source}
-            />
-          );
-        }}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.5}
-        style={{ backgroundColor: "#F4F1FF" }}
-        contentContainerStyle={{
-          paddingTop: headerHeight + (stats ? 0 : 16),
-          paddingBottom: 120,
-          flexGrow: 1,
-          backgroundColor: "#F4F1FF",
-        }}
-        ListFooterComponent={renderFooter()}
-        recycleItems
-        estimatedItemSize={200}
-      />
-    </>
+        return (
+          <UserEventListItem
+            event={eventData}
+            ActionButton={ActionButton}
+            showCreator={showCreator}
+            isSaved={isSaved}
+            // TODO: Add savedAt
+            savedAt={undefined}
+            similarEventsCount={
+              similarEventsCount > 0 ? similarEventsCount : undefined
+            }
+            demoMode={demoMode}
+            index={index}
+            hideDiscoverableButton={hideDiscoverableButton}
+            isDiscoverFeed={isDiscoverFeed}
+            source={source}
+          />
+        );
+      }}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.5}
+      style={{ backgroundColor: "#F4F1FF" }}
+      contentContainerStyle={{
+        paddingBottom: 120,
+        backgroundColor: "#F4F1FF",
+      }}
+      ListFooterComponent={renderFooter()}
+      recycleItems
+      estimatedItemSize={200}
+    />
   );
 }

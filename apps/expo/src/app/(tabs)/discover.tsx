@@ -42,7 +42,6 @@ function DiscoverContent() {
     results: events,
     status,
     loadMore,
-    isLoading,
   } = useStablePaginatedQuery(
     api.feeds.getDiscoverFeed,
     canAccessDiscover
@@ -127,24 +126,19 @@ function DiscoverContent() {
 
   return (
     <View className="flex-1 bg-white">
-      {isLoading && status === "LoadingFirstPage" ? (
-        <LoadingSpinner />
-      ) : (
-        <View className="flex-1">
-          <UserEventsList
-            events={enrichedEvents}
-            onEndReached={handleLoadMore}
-            isFetchingNextPage={status === "LoadingMore"}
-            ActionButton={SaveShareButtonWrapper}
-            showCreator="always"
-            hideDiscoverableButton={true}
-            isDiscoverFeed={true}
-            savedEventIds={savedEventIds}
-            HeaderComponent={DiscoverShareBanner}
-          />
-          {user && <AddEventButton showChevron={false} stats={stats} />}
-        </View>
-      )}
+      <UserEventsList
+        events={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={status === "LoadingFirstPage"}
+        ActionButton={SaveShareButtonWrapper}
+        showCreator="always"
+        hideDiscoverableButton={true}
+        isDiscoverFeed={true}
+        savedEventIds={savedEventIds}
+        HeaderComponent={DiscoverShareBanner}
+      />
+      {user && <AddEventButton showChevron={false} stats={stats} />}
     </View>
   );
 }
