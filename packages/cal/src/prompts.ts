@@ -323,6 +323,7 @@ The system using the output requires specific date and time formatting.
 - Always include seconds in the time, even if they're 00.
 - Always provide both startTime and endTime.
 - When interpreting dates without an explicit year, use the CURRENT YEAR from the context date provided above. Only use the NEXT year if the month/day has already passed in the current year. For example: if today is 2026-01-11 and the input says "January 18" or "01/18", output 2026-01-18 (same year, date is upcoming). If the input says "January 5", output 2027-01-05 (next year, because January 5, 2026 already passed).
+- **CRITICAL FUTURE DATE LIMIT:** NEVER output a date more than 1 year from the current date UNLESS the year is EXPLICITLY and CLEARLY stated in the input (e.g., "2027", "January 2028", "March 15, 2027"). If only a month/day is provided without an explicit year, and applying the above rule would result in a date more than 1 year in the future, use the CURRENT year instead. When in doubt, prefer dates closer to the present. This prevents accidental far-future dates from ambiguous inputs.
 - If start time is not explicitly stated, infer a reasonable start time based on the event type and context (e.g., 19:00:00 for an evening concert, 10:00:00 for a morning workshop).
 - If end time is not explicitly stated, infer a reasonable duration based on the event type and context (e.g., 2 hours for a movie, 3 hours for a concert, etc.).
 - Ensure the endDate is always provided and is either the same as or later than the startDate.
@@ -387,20 +388,20 @@ export const getPrompt = (
   return {
     text: getText(date, timezoneIANA),
     textMetadata: getTextMetadata(date, timezoneIANA),
-    version: "v2026.01.11.1", // Fix year interpretation for dates without explicit year
+    version: "v2026.01.19.1", // Add 1-year future date limit unless year explicitly stated
   };
 };
 
 export const getSystemMessage = () => {
   return {
     text: systemMessage(),
-    version: "v2026.01.11.1", // Fix year interpretation for dates without explicit year
+    version: "v2026.01.19.1", // Add 1-year future date limit unless year explicitly stated
   };
 };
 
 export const getSystemMessageMetadata = () => {
   return {
     text: systemMessage(eventMetadataSchemaAsText),
-    version: "v2026.01.11.1", // Fix year interpretation for dates without explicit year
+    version: "v2026.01.19.1", // Add 1-year future date limit unless year explicitly stated
   };
 };
