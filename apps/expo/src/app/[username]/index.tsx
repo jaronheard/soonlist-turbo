@@ -86,14 +86,10 @@ export default function UserProfilePage() {
     try {
       if (isFollowing) {
         await unfollowUserMutation({ followingId: targetUser.id });
-        toast.success(
-          `Unfollowed ${targetUser.displayName || targetUser.username}`,
-        );
+        toast.success("Unfollowed list");
       } else {
         await followUserMutation({ followingId: targetUser.id });
-        toast.success(
-          `Following ${targetUser.displayName || targetUser.username}`,
-        );
+        toast.success("Followed list");
       }
     } catch (error) {
       logError("Error following/unfollowing user", error);
@@ -288,7 +284,11 @@ function FollowButton({
       >
         <View
           className={`flex-row items-center rounded-full px-8 py-5 ${
-            isFollowing ? "gap-3 bg-neutral-2" : "bg-interactive-1"
+            isFollowing
+              ? "gap-3 bg-neutral-2"
+              : isLoading
+                ? "gap-3 bg-interactive-1"
+                : "bg-interactive-1"
           }`}
         >
           {isLoading ? (
