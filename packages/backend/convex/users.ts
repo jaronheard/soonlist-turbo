@@ -906,7 +906,63 @@ export const updatePublicListSettings = mutation({
 
     await ctx.db.patch(user._id, updates);
 
+    // If publicListEnabled changed, bulk update all user's events to match
+    if (
+      args.publicListEnabled !== undefined &&
+      args.publicListEnabled !== user.publicListEnabled
+    ) {
+      await ctx.runMutation(internal.users.bulkUpdateEventVisibility, {
+        userId: args.userId,
+        visibility: args.publicListEnabled ? "public" : "private",
+      });
+    }
+
     return null;
+  },
+});
+
+/**
+ * Bulk update all events for a user to match visibility setting
+ * Called when publicListEnabled is toggled
+ */
+export const bulkUpdateEventVisibility = internalMutation({
+  args: {
+    userId: v.string(),
+    visibility: v.union(v.literal("public"), v.literal("private")),
+  },
+  handler: async (ctx, { userId, visibility }) => {
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const event of events) {
+      // Skip if already has the desired visibility
+      if (event.visibility === visibility) continue;
+
+      await ctx.db.patch(event._id, {
+        visibility,
+        updatedAt: new Date().toISOString(),
+      });
+
+      if (visibility === "private") {
+        // Remove from follower feeds but keep in creator's feed
+        await ctx.runMutation(internal.feedHelpers.removeEventFromFeeds, {
+          eventId: event.id,
+          keepCreatorFeed: true,
+        });
+      } else {
+        // Add back to follower feeds
+        await ctx.runMutation(internal.feedHelpers.updateEventInFeeds, {
+          eventId: event.id,
+          userId: event.userId,
+          visibility,
+          startDateTime: event.startDateTime,
+          endDateTime: event.endDateTime,
+          similarityGroupId: event.similarityGroupId,
+        });
+      }
+    }
   },
 });
 

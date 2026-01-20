@@ -224,7 +224,7 @@ export const getDiscoverFeed = query({
   },
 });
 
-// Helper query to get a user's public feed (when publicListEnabled is true)
+// Helper query to get a user's public feed (public events only)
 export const getPublicUserFeed = query({
   args: {
     username: v.string(),
@@ -242,15 +242,22 @@ export const getPublicUserFeed = query({
       throw new ConvexError("User not found");
     }
 
-    // Check if the user has enabled public list sharing
-    if (!user.publicListEnabled) {
-      throw new ConvexError("User has not enabled public list sharing");
-    }
+    // Profile is always accessible - just show public events (empty if none)
 
     const feedId = `user_${user.id}`;
 
-    // Use the common query function
-    return queryFeed(ctx, feedId, paginationOpts, filter);
+    // Query feed and filter to only public events
+    const result = await queryFeed(ctx, feedId, paginationOpts, filter);
+
+    // Filter to only public events
+    const publicEvents = result.page.filter(
+      (event) => event.visibility === "public",
+    );
+
+    return {
+      ...result,
+      page: publicEvents,
+    };
   },
 });
 

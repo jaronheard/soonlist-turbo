@@ -42,16 +42,16 @@ export default function UserProfilePage() {
   const followUserMutation = useMutation(api.users.followUser);
   const unfollowUserMutation = useMutation(api.users.unfollowUser);
 
-  // Fetch user's public events
+  // Fetch user's public events (only public events are shown on profile)
   const {
     results: events,
     status,
     loadMore,
   } = useStablePaginatedQuery(
-    api.feeds.getUserCreatedEvents,
-    targetUser
+    api.feeds.getPublicUserFeed,
+    targetUser?.username
       ? {
-          userId: targetUser.id,
+          username: targetUser.username,
           filter: "upcoming" as const,
         }
       : "skip",
