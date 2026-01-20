@@ -89,7 +89,7 @@ export default function UserProfilePage() {
         toast.success("Unfollowed list");
       } else {
         await followUserMutation({ followingId: targetUser.id });
-        toast.success("Following list");
+        toast.success("Followed list");
       }
     } catch (error) {
       logError("Error following/unfollowing user", error);
