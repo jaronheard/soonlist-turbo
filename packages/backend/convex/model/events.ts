@@ -747,13 +747,14 @@ export async function createEvent(
       location: eventData.location,
     })) || generateSimilarityGroupId();
 
-  // Determine effective visibility based on user's publicListEnabled setting
+  // Determine effective visibility based on user's publicListEnabled setting if not specified
   let effectiveVisibility = visibility;
   if (effectiveVisibility === undefined) {
     const user = await ctx.db
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", userId))
       .first();
+    // Default to user's publicListEnabled setting, or "public" if not set
     effectiveVisibility = user?.publicListEnabled ? "public" : "private";
   }
 

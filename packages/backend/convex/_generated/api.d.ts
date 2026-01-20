@@ -23,6 +23,7 @@ import type * as files from "../files.js";
 import type * as guestOnboarding from "../guestOnboarding.js";
 import type * as http from "../http.js";
 import type * as lists from "../lists.js";
+import type * as migrations_backfillUserFeedVisibility from "../migrations/backfillUserFeedVisibility.js";
 import type * as migrations_fix2027Dates from "../migrations/fix2027Dates.js";
 import type * as migrations_initializeAggregates from "../migrations/initializeAggregates.js";
 import type * as migrations_initializeUserFeedsAggregate from "../migrations/initializeUserFeedsAggregate.js";
@@ -70,6 +71,7 @@ declare const fullApi: ApiFromModules<{
   guestOnboarding: typeof guestOnboarding;
   http: typeof http;
   lists: typeof lists;
+  "migrations/backfillUserFeedVisibility": typeof migrations_backfillUserFeedVisibility;
   "migrations/fix2027Dates": typeof migrations_fix2027Dates;
   "migrations/initializeAggregates": typeof migrations_initializeAggregates;
   "migrations/initializeUserFeedsAggregate": typeof migrations_initializeUserFeedsAggregate;

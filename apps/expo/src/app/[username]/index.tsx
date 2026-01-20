@@ -42,23 +42,24 @@ export default function UserProfilePage() {
   const followUserMutation = useMutation(api.users.followUser);
   const unfollowUserMutation = useMutation(api.users.unfollowUser);
 
-  // Fetch user's public events (only public events are shown on profile)
+  // Fetch user's public feed (uses visibility index for proper pagination)
   const {
     results: events,
     status,
     loadMore,
   } = useStablePaginatedQuery(
     api.feeds.getPublicUserFeed,
-    targetUser?.username
+    username
       ? {
-          username: targetUser.username,
+          username: username,
           filter: "upcoming" as const,
         }
       : "skip",
     { initialNumItems: 50 },
   );
 
-  // Filter events client-side as safety check (backend should handle this, but good fallback)
+  // Events are already filtered by visibility at the database level
+  // No client-side filtering needed
   const filteredEvents = useMemo(() => {
     const currentTime = new Date(stableTimestamp).getTime();
     return events.filter((event) => {
