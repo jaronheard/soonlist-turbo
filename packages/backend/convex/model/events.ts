@@ -754,7 +754,7 @@ export async function createEvent(
       .query("users")
       .withIndex("by_custom_id", (q) => q.eq("id", userId))
       .first();
-    // Default to user's publicListEnabled setting, or "public" if not set
+    // Default to user's publicListEnabled setting, or "private" if not set
     effectiveVisibility = user?.publicListEnabled ? "public" : "private";
   }
 

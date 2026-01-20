@@ -178,11 +178,15 @@ export const updateEventVisibilityInFeeds = internalMutation({
     eventId: v.string(),
     visibility: v.union(v.literal("public"), v.literal("private")),
   },
+  returns: v.null(),
   handler: async (ctx, { eventId, visibility }) => {
     const feedEntries = await ctx.db
       .query("userFeeds")
       .withIndex("by_event", (q) => q.eq("eventId", eventId))
       .collect();
+
+    // Track affected (feedId, similarityGroupId) pairs for grouped feed updates
+    const affectedGroups = new Set<string>();
 
     for (const entry of feedEntries) {
       if (entry.eventVisibility !== visibility) {
@@ -190,8 +194,26 @@ export const updateEventVisibilityInFeeds = internalMutation({
         await ctx.db.patch(entry._id, { eventVisibility: visibility });
         const updatedDoc = (await ctx.db.get(entry._id))!;
         await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
+
+        // Track the group for later update
+        if (entry.similarityGroupId) {
+          affectedGroups.add(`${entry.feedId}:${entry.similarityGroupId}`);
+        }
       }
     }
+
+    // Update grouped feed entries for affected groups
+    for (const pair of affectedGroups) {
+      const [feedId, similarityGroupId] = pair.split(":");
+      if (feedId && similarityGroupId) {
+        await ctx.runMutation(
+          internal.feedGroupHelpers.upsertGroupedFeedEntry,
+          { feedId, similarityGroupId },
+        );
+      }
+    }
+
+    return null;
   },
 });
 
