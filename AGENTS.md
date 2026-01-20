@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 Soonlist is a Turborepo monorepo with an Expo iOS app and Next.js web app that lets users save events by parsing them with AI.
 

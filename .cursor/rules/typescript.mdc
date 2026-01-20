@@ -1,0 +1,34 @@
+---
+description: TypeScript conventions and patterns for this codebase
+globs: "**/*.ts,**/*.tsx"
+alwaysApply: false
+---
+# TypeScript Conventions
+
+Strict mode is enabled project-wide.
+
+## Types
+
+- Avoid `any` - figure out proper types instead
+- Prefer interfaces over type aliases
+- Avoid enums; use literal types or maps
+- Use `Id<"tableName">` for Convex document IDs, not `string`
+- Type assertions (`as`) are acceptable when necessary
+
+## Naming
+
+- Use descriptive names with auxiliary verbs: `isLoading`, `hasError`, `canSubmit`
+- Directory names: lowercase-dash (e.g., `components/auth-wizard`)
+
+## Functions
+
+- Use `function` keyword for pure functions
+- Always specify types for props and return values
+- Use async/await for asynchronous code
+
+## Code Quality
+
+When writing code, match the existing style. Avoid:
+- Extra comments inconsistent with the file
+- Unnecessary defensive checks or try/catch
+- Casts to `any` to work around type issues
