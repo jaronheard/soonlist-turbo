@@ -26,17 +26,22 @@ function fixYearOptional(dateStr: string | undefined): string | undefined {
 export const dryRun = internalQuery({
   args: {},
   handler: async (ctx) => {
-    // Find all events with 2027 in their dates
-    const allEvents = await ctx.db.query("events").collect();
-
-    const affectedEvents = allEvents.filter((event) => {
-      const has2027 =
-        event.startDateTime.includes("2027") ||
-        event.endDateTime.includes("2027") ||
-        event.startDate?.includes("2027") ||
-        event.endDate?.includes("2027");
-      return has2027;
-    });
+    // Find all events with 2027 in their dates (ISO strings, so range query works)
+    const affectedEvents = await ctx.db
+      .query("events")
+      .filter((q) =>
+        q.or(
+          q.and(
+            q.gte(q.field("startDateTime"), "2027-01-01"),
+            q.lt(q.field("startDateTime"), "2028-01-01"),
+          ),
+          q.and(
+            q.gte(q.field("endDateTime"), "2027-01-01"),
+            q.lt(q.field("endDateTime"), "2028-01-01"),
+          ),
+        ),
+      )
+      .collect();
 
     const changes = affectedEvents.map((event) => ({
       _id: event._id,
@@ -73,17 +78,22 @@ export const migrate = internalMutation({
   handler: async (ctx, args) => {
     const isDryRun = args.dryRun ?? false;
 
-    // Find all events with 2027 in their dates
-    const allEvents = await ctx.db.query("events").collect();
-
-    const affectedEvents = allEvents.filter((event) => {
-      const has2027 =
-        event.startDateTime.includes("2027") ||
-        event.endDateTime.includes("2027") ||
-        event.startDate?.includes("2027") ||
-        event.endDate?.includes("2027");
-      return has2027;
-    });
+    // Find all events with 2027 in their dates (ISO strings, so range query works)
+    const affectedEvents = await ctx.db
+      .query("events")
+      .filter((q) =>
+        q.or(
+          q.and(
+            q.gte(q.field("startDateTime"), "2027-01-01"),
+            q.lt(q.field("startDateTime"), "2028-01-01"),
+          ),
+          q.and(
+            q.gte(q.field("endDateTime"), "2027-01-01"),
+            q.lt(q.field("endDateTime"), "2028-01-01"),
+          ),
+        ),
+      )
+      .collect();
 
     const results = [];
 
