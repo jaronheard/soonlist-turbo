@@ -288,7 +288,11 @@ function FollowButton({
       >
         <View
           className={`flex-row items-center rounded-full px-8 py-5 ${
-            isFollowing ? "gap-3 bg-neutral-2" : "bg-interactive-1"
+            isFollowing
+              ? "gap-3 bg-neutral-2"
+              : isLoading
+                ? "gap-3 bg-interactive-1"
+                : "bg-interactive-1"
           }`}
         >
           {isLoading ? (
