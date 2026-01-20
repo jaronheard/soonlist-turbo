@@ -48,10 +48,10 @@ export default function UserProfilePage() {
     status,
     loadMore,
   } = useStablePaginatedQuery(
-    api.feeds.getUserCreatedEvents,
+    api.feeds.getPublicUserFeed,
     targetUser
       ? {
-          userId: targetUser.id,
+          username: targetUser.username,
           filter: "upcoming" as const,
         }
       : "skip",

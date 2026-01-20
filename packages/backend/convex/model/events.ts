@@ -747,6 +747,16 @@ export async function createEvent(
       location: eventData.location,
     })) || generateSimilarityGroupId();
 
+  // Determine effective visibility: use provided value, or look up user's publicListEnabled setting
+  let effectiveVisibility = visibility;
+  if (effectiveVisibility === undefined) {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_custom_id", (q) => q.eq("id", userId))
+      .first();
+    effectiveVisibility = user?.publicListEnabled ? "public" : "private";
+  }
+
   // Create the event with similarity group
   const eventDocId = await ctx.db.insert("events", {
     id: eventId,
@@ -756,7 +766,7 @@ export async function createEvent(
     eventMetadata,
     startDateTime: startDateTime.toISOString(),
     endDateTime: endDateTime.toISOString(),
-    visibility: visibility || "public",
+    visibility: effectiveVisibility,
     created_at: new Date().toISOString(),
     updatedAt: null,
     // Extract fields for easier querying
