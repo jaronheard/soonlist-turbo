@@ -243,11 +243,6 @@ export const getPublicUserFeed = query({
       throw new ConvexError("User not found");
     }
 
-    // Check if the user has enabled public list sharing
-    if (!user.publicListEnabled) {
-      throw new ConvexError("User has not enabled public list sharing");
-    }
-
     const feedId = `user_${user.id}`;
     const hasEnded = filter === "past";
     const order = filter === "upcoming" ? "asc" : "desc";
