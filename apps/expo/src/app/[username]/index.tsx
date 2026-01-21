@@ -42,23 +42,24 @@ export default function UserProfilePage() {
   const followUserMutation = useMutation(api.users.followUser);
   const unfollowUserMutation = useMutation(api.users.unfollowUser);
 
-  // Fetch user's public events
+  // Fetch user's public feed (uses visibility index for proper pagination)
   const {
     results: events,
     status,
     loadMore,
   } = useStablePaginatedQuery(
-    api.feeds.getUserCreatedEvents,
-    targetUser
+    api.feeds.getPublicUserFeed,
+    username
       ? {
-          userId: targetUser.id,
+          username: username,
           filter: "upcoming" as const,
         }
       : "skip",
     { initialNumItems: 50 },
   );
 
-  // Filter events client-side as safety check (backend should handle this, but good fallback)
+  // Client-side safety filter: hide events that have ended
+  // This prevents showing ended events if the cron job hasn't run recently
   const filteredEvents = useMemo(() => {
     const currentTime = new Date(stableTimestamp).getTime();
     return events.filter((event) => {

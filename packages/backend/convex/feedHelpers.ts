@@ -56,6 +56,7 @@ export const updateEventInFeeds = internalMutation({
       eventEndTime,
       currentTime,
       similarityGroupId,
+      visibility,
     );
 
     // 2. Add to discover feed if public AND user has showDiscover enabled
@@ -69,6 +70,7 @@ export const updateEventInFeeds = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        visibility,
       );
     } else if (visibility === "private" || !userShowDiscover) {
       // Remove from discover feed if event is now private or user no longer has showDiscover
@@ -102,6 +104,7 @@ export const updateEventInFeeds = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        visibility,
       );
     }
 
@@ -152,6 +155,7 @@ export const addEventToUserFeed = internalMutation({
         addedAt: currentTime,
         hasEnded: eventEndTime < currentTime,
         similarityGroupId,
+        eventVisibility: event.visibility,
       };
       const id = await ctx.db.insert("userFeeds", doc);
       const insertedDoc = (await ctx.db.get(id))!;
@@ -165,6 +169,51 @@ export const addEventToUserFeed = internalMutation({
         );
       }
     }
+  },
+});
+
+// Helper to update event visibility across all feed entries for an event
+export const updateEventVisibilityInFeeds = internalMutation({
+  args: {
+    eventId: v.string(),
+    visibility: v.union(v.literal("public"), v.literal("private")),
+  },
+  returns: v.null(),
+  handler: async (ctx, { eventId, visibility }) => {
+    const feedEntries = await ctx.db
+      .query("userFeeds")
+      .withIndex("by_event", (q) => q.eq("eventId", eventId))
+      .collect();
+
+    // Track affected (feedId, similarityGroupId) pairs for grouped feed updates
+    const affectedGroups: { feedId: string; similarityGroupId: string }[] = [];
+
+    for (const entry of feedEntries) {
+      if (entry.eventVisibility !== visibility) {
+        const oldDoc = entry;
+        await ctx.db.patch(entry._id, { eventVisibility: visibility });
+        const updatedDoc = (await ctx.db.get(entry._id))!;
+        await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
+
+        // Track the group for later update
+        if (entry.similarityGroupId) {
+          affectedGroups.push({
+            feedId: entry.feedId,
+            similarityGroupId: entry.similarityGroupId,
+          });
+        }
+      }
+    }
+
+    // Update grouped feed entries for affected groups
+    for (const { feedId, similarityGroupId } of affectedGroups) {
+      await ctx.runMutation(internal.feedGroupHelpers.upsertGroupedFeedEntry, {
+        feedId,
+        similarityGroupId,
+      });
+    }
+
+    return null;
   },
 });
 
@@ -319,6 +368,7 @@ async function upsertFeedEntry(
   eventEndTime: number,
   addedAt: number,
   similarityGroupId?: string,
+  eventVisibility?: "public" | "private",
 ): Promise<void> {
   const existingEntry = await ctx.db
     .query("userFeeds")
@@ -339,6 +389,7 @@ async function upsertFeedEntry(
       addedAt,
       hasEnded,
       similarityGroupId,
+      eventVisibility,
     };
     const id = await ctx.db.insert("userFeeds", doc);
     const insertedDoc = (await ctx.db.get(id))!;
@@ -353,12 +404,13 @@ async function upsertFeedEntry(
     }
   } else {
     const oldDoc = existingEntry;
-    // Also update similarityGroupId if provided (for migration scenarios)
+    // Also update similarityGroupId and eventVisibility if provided (for migration scenarios)
     await ctx.db.patch(existingEntry._id, {
       eventStartTime,
       eventEndTime,
       hasEnded,
       ...(similarityGroupId && { similarityGroupId }),
+      ...(eventVisibility && { eventVisibility }),
     });
     const updatedDoc = (await ctx.db.get(existingEntry._id))!;
     await userFeedsAggregate.replaceOrInsert(ctx, oldDoc, updatedDoc);
@@ -422,6 +474,7 @@ export const addListEventsToUserFeed = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        event.visibility,
       );
 
       // Upsert into personal feed
@@ -434,6 +487,7 @@ export const addListEventsToUserFeed = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        event.visibility,
       );
     }
   },
@@ -628,6 +682,7 @@ export const addEventToListFollowersFeeds = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        event.visibility,
       );
 
       // Upsert into personal feed
@@ -639,6 +694,7 @@ export const addEventToListFollowersFeeds = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        event.visibility,
       );
     }
   },
@@ -803,6 +859,7 @@ export const addUserEventsToUserFeed = internalMutation({
         eventEndTime,
         currentTime,
         similarityGroupId,
+        event.visibility,
       );
     }
 
