@@ -1301,8 +1301,17 @@ export async function unfollowEvent(
         .unique();
 
       if (feedEntry) {
+        const similarityGroupId = feedEntry.similarityGroupId;
         await userFeedsAggregate.deleteIfExists(ctx, feedEntry);
         await ctx.db.delete(feedEntry._id);
+
+        // Sync grouped feed entry (removes group if empty, or updates primary/count)
+        if (similarityGroupId) {
+          await ctx.runMutation(
+            internal.feedGroupHelpers.upsertGroupedFeedEntry,
+            { feedId, similarityGroupId },
+          );
+        }
       }
     }
   }
