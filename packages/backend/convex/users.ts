@@ -1355,6 +1355,7 @@ export const bulkUpdateEventVisibility = internalMutation({
     userId: v.string(),
     visibility: v.union(v.literal("public"), v.literal("private")),
   },
+  returns: v.null(),
   handler: async (ctx, { userId, visibility }) => {
     const events = await ctx.db
       .query("events")
@@ -1395,5 +1396,7 @@ export const bulkUpdateEventVisibility = internalMutation({
         });
       }
     }
+
+    return null;
   },
 });

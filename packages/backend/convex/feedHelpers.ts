@@ -186,7 +186,7 @@ export const updateEventVisibilityInFeeds = internalMutation({
       .collect();
 
     // Track affected (feedId, similarityGroupId) pairs for grouped feed updates
-    const affectedGroups = new Set<string>();
+    const affectedGroups: { feedId: string; similarityGroupId: string }[] = [];
 
     for (const entry of feedEntries) {
       if (entry.eventVisibility !== visibility) {
@@ -197,20 +197,20 @@ export const updateEventVisibilityInFeeds = internalMutation({
 
         // Track the group for later update
         if (entry.similarityGroupId) {
-          affectedGroups.add(`${entry.feedId}:${entry.similarityGroupId}`);
+          affectedGroups.push({
+            feedId: entry.feedId,
+            similarityGroupId: entry.similarityGroupId,
+          });
         }
       }
     }
 
     // Update grouped feed entries for affected groups
-    for (const pair of affectedGroups) {
-      const [feedId, similarityGroupId] = pair.split(":");
-      if (feedId && similarityGroupId) {
-        await ctx.runMutation(
-          internal.feedGroupHelpers.upsertGroupedFeedEntry,
-          { feedId, similarityGroupId },
-        );
-      }
+    for (const { feedId, similarityGroupId } of affectedGroups) {
+      await ctx.runMutation(internal.feedGroupHelpers.upsertGroupedFeedEntry, {
+        feedId,
+        similarityGroupId,
+      });
     }
 
     return null;

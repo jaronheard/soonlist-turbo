@@ -58,8 +58,8 @@ export default function UserProfilePage() {
     { initialNumItems: 50 },
   );
 
-  // Events are already filtered by visibility at the database level
-  // No client-side filtering needed
+  // Client-side safety filter: hide events that have ended
+  // This prevents showing ended events if the cron job hasn't run recently
   const filteredEvents = useMemo(() => {
     const currentTime = new Date(stableTimestamp).getTime();
     return events.filter((event) => {
