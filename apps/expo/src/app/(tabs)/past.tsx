@@ -102,7 +102,8 @@ export default function PastEvents() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-interactive-3">
+          <View className="h-[100px]" />
           <LoadingSpinner />
         </View>
       </AuthLoading>
