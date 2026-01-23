@@ -10,6 +10,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Check, User } from "~/components/icons";
 import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
+import SaveShareButton from "~/components/SaveShareButton";
 import UserEventsList from "~/components/UserEventsList";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
@@ -41,6 +42,18 @@ export default function UserProfilePage() {
   // Follow/unfollow mutations
   const followUserMutation = useMutation(api.users.followUser);
   const unfollowUserMutation = useMutation(api.users.unfollowUser);
+
+  // Query to get current user's saved event IDs
+  const savedEventIdsQuery = useQuery(
+    api.events.getSavedIdsForUser,
+    isAuthenticated && currentUser?.username
+      ? { userName: currentUser.username }
+      : "skip",
+  );
+
+  const savedEventIds = new Set(
+    savedEventIdsQuery?.map((event) => event.id) ?? [],
+  );
 
   // Fetch user's public feed (uses visibility index for proper pagination)
   const {
@@ -148,6 +161,24 @@ export default function UserProfilePage() {
     );
   }
 
+  function ProfileSaveShareButtonWrapper({
+    event,
+  }: {
+    event: { id: string; userId: string };
+  }) {
+    if (!isAuthenticated || !currentUser) {
+      return null;
+    }
+    const isSaved = savedEventIds.has(event.id);
+    return (
+      <SaveShareButton
+        eventId={event.id}
+        isSaved={isSaved}
+        source="user_profile"
+      />
+    );
+  }
+
   return (
     <>
       <Stack.Screen
@@ -178,6 +209,10 @@ export default function UserProfilePage() {
           showCreator="never"
           hideDiscoverableButton={true}
           isDiscoverFeed={false}
+          ActionButton={
+            !isOwnProfile ? ProfileSaveShareButtonWrapper : undefined
+          }
+          savedEventIds={savedEventIds}
           HeaderComponent={() => (
             <UserProfileHeader
               user={targetUser}
