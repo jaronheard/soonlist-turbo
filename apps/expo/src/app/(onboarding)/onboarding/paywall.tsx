@@ -14,6 +14,7 @@ import { router } from "expo-router";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useSetHasSeenOnboarding } from "~/store";
+import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { isSimulator, shouldMockPaywall } from "~/utils/deviceInfo";
 
 export default function PaywallScreen() {
@@ -90,6 +91,7 @@ export default function PaywallScreen() {
         case PAYWALL_RESULT.CANCELLED:
         case PAYWALL_RESULT.ERROR:
           // User cancelled or error occurred - enter trial mode
+          trackAFEvent(AF_EVENTS.START_TRIAL, {});
           setOnboardingData({
             subscribed: false,
             trialMode: true,
@@ -166,6 +168,8 @@ export default function PaywallScreen() {
     if (!showMockPaywall) {
       // Paywall will dismiss automatically
     }
+
+    trackAFEvent(AF_EVENTS.START_TRIAL, {});
 
     // Save that they're in trial mode
     setOnboardingData({

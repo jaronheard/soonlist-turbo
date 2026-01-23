@@ -161,6 +161,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       UIBackgroundModes: ["fetch"],
       NSLocationWhenInUseUsageDescription:
         "Soonlist uses your location for notifications and locating events.",
+      // AppsFlyer SKAN & AdAttributionKit postback copies
+      NSAdvertisingAttributionReportEndpoint:
+        "https://appsflyer-skadnetwork.com/",
+      AdAttributionKitPostbackCopyURL: "https://appsflyer-skadnetwork.com/",
       CFBundleURLTypes: [
         {
           CFBundleURLName: "Soonlist Schemes",

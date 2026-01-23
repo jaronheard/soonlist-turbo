@@ -14,6 +14,7 @@ import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useStableTimestamp } from "~/store";
+import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
@@ -186,6 +187,10 @@ export function useEventActions({
           source: source ?? "event_detail",
           is_owner: Boolean(isOwner),
           is_saved: Boolean(isSaved),
+        });
+        trackAFEvent(AF_EVENTS.SHARE, {
+          af_content_id: event.id,
+          af_content_type: "event",
         });
       } else if (result.action === Share.dismissedAction) {
         posthog.capture("share_event_dismissed", {
