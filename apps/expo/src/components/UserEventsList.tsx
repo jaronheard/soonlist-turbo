@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -86,6 +86,8 @@ function EventSaversRow({
   eventId: string;
   currentUserId?: string;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   // Combine creator with savers, deduplicate by id, and limit to first 2
   const allUsers: UserForDisplay[] = [creator];
   for (const saver of savers) {
@@ -106,43 +108,127 @@ function EventSaversRow({
     }
   };
 
-  // Format names text
-  const getNamesText = () => {
-    const names = displayUsers.map(
-      (u) => u.displayName || u.username || "unknown",
-    );
-    if (names.length === 1) {
-      return names[0];
-    }
-    if (remainingCount > 0) {
-      return `${names.join(", ")} +${remainingCount} more`;
-    }
-    return names.join(", ");
-  };
-
   const avatarSize = iconSize * 1.1;
   const overlap = avatarSize * 0.3;
 
-  return (
-    <View className="mx-auto mt-1 flex-row items-center gap-2">
-      {/* Stacked avatars */}
-      <View
-        className="flex-row items-center"
-        style={{
-          width:
-            avatarSize + (displayUsers.length - 1) * (avatarSize - overlap),
-        }}
+  // Render individual tappable name
+  const renderTappableName = (user: UserForDisplay, isLast: boolean) => {
+    const displayName = user.displayName || user.username || "unknown";
+    return (
+      <Pressable
+        key={user.id}
+        onPress={() => handleUserPress(user)}
+        hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
       >
-        {displayUsers.map((user, index) => (
-          <Pressable
+        <Text className="text-xs text-neutral-2">
+          {displayName}
+          {!isLast && ", "}
+        </Text>
+      </Pressable>
+    );
+  };
+
+  // Collapsed view
+  if (!isExpanded) {
+    return (
+      <View className="mx-auto mt-1 flex-row items-center gap-2">
+        {/* Stacked avatars */}
+        <View
+          className="flex-row items-center"
+          style={{
+            width:
+              avatarSize + (displayUsers.length - 1) * (avatarSize - overlap),
+          }}
+        >
+          {displayUsers.map((user, index) => (
+            <Pressable
+              key={user.id}
+              onPress={() => handleUserPress(user)}
+              hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+              style={{
+                position: index === 0 ? "relative" : "absolute",
+                left: index * (avatarSize - overlap),
+                zIndex: displayUsers.length - index,
+              }}
+            >
+              <UserProfileFlair username={user.username} size="xs">
+                {user.userImage ? (
+                  <ExpoImage
+                    source={{ uri: user.userImage }}
+                    style={{
+                      width: avatarSize,
+                      height: avatarSize,
+                      borderRadius: 9999,
+                      borderWidth: 2,
+                      borderColor: "white",
+                    }}
+                    contentFit="cover"
+                    contentPosition="center"
+                    cachePolicy="disk"
+                    transition={100}
+                    recyclingKey={`${eventId}-saver-${user.id}`}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: avatarSize,
+                      height: avatarSize,
+                      borderRadius: 9999,
+                      borderWidth: 2,
+                      borderColor: "white",
+                      backgroundColor: "#E0D9FF",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <User size={avatarSize * 0.6} color="#627496" />
+                  </View>
+                )}
+              </UserProfileFlair>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Names text - individually tappable */}
+        <View className="flex-row flex-wrap items-center">
+          {displayUsers.map((user, index) =>
+            renderTappableName(
+              user,
+              index === displayUsers.length - 1 && remainingCount === 0,
+            ),
+          )}
+          {remainingCount > 0 && (
+            <Pressable
+              onPress={() => setIsExpanded(true)}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
+              <Text className="text-xs text-interactive-1">
+                +{remainingCount} more
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  // Expanded view - show all users in a vertical list
+  return (
+    <View className="mx-auto mt-1">
+      <TouchableOpacity
+        onPress={() => setIsExpanded(false)}
+        className="mb-2 items-center"
+        activeOpacity={0.7}
+      >
+        <Text className="text-xs text-interactive-1">Hide</Text>
+      </TouchableOpacity>
+      <View className="space-y-2">
+        {allUsers.map((user) => (
+          <TouchableOpacity
             key={user.id}
             onPress={() => handleUserPress(user)}
-            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-            style={{
-              position: index === 0 ? "relative" : "absolute",
-              left: index * (avatarSize - overlap),
-              zIndex: displayUsers.length - index,
-            }}
+            className="flex-row items-center py-1"
+            activeOpacity={0.7}
           >
             <UserProfileFlair username={user.username} size="xs">
               {user.userImage ? (
@@ -159,7 +245,7 @@ function EventSaversRow({
                   contentPosition="center"
                   cachePolicy="disk"
                   transition={100}
-                  recyclingKey={`${eventId}-saver-${user.id}`}
+                  recyclingKey={`${eventId}-saver-expanded-${user.id}`}
                 />
               ) : (
                 <View
@@ -178,17 +264,12 @@ function EventSaversRow({
                 </View>
               )}
             </UserProfileFlair>
-          </Pressable>
+            <Text className="ml-2 text-xs text-neutral-2">
+              {user.displayName || user.username}
+            </Text>
+          </TouchableOpacity>
         ))}
       </View>
-
-      {/* Names text */}
-      <Pressable
-        onPress={() => displayUsers[0] && handleUserPress(displayUsers[0])}
-        hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-      >
-        <Text className="text-xs text-neutral-2">{getNamesText()}</Text>
-      </Pressable>
     </View>
   );
 }
