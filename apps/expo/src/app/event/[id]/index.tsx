@@ -56,6 +56,7 @@ import {
   useShouldShowViewPaywall,
   useUserTimezone,
 } from "~/store";
+import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { formatEventDateRange } from "~/utils/dates";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { logError } from "../../../utils/errorLogging";
@@ -140,6 +141,10 @@ export default function Page() {
       hasCountedViewRef.current = true;
 
       incrementEventView();
+      trackAFEvent(AF_EVENTS.CONTENT_VIEW, {
+        af_content_id: id,
+        af_content_type: "event",
+      });
 
       if (shouldShowViewPaywall()) {
         void showProPaywallIfNeeded()

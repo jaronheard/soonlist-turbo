@@ -13,6 +13,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Logo } from "~/components/Logo";
 import { useAppStore } from "~/store";
+import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { logError } from "~/utils/errorLogging";
 import { transferGuestData } from "~/utils/guestDataTransfer";
 import { redeemStoredDiscoverCode } from "~/utils/redeemStoredDiscoverCode";
@@ -74,6 +75,9 @@ const VerifyEmail = () => {
         posthog.identify(completeSignUp.emailAddress ?? "", {
           email: completeSignUp.emailAddress,
           username: completeSignUp.username,
+        });
+        trackAFEvent(AF_EVENTS.COMPLETE_REGISTRATION, {
+          af_registration_method: "email",
         });
 
         // Transfer guest data after successful sign up

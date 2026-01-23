@@ -24,6 +24,7 @@ import { X } from "~/components/icons";
 import { useGuestUser } from "~/hooks/useGuestUser";
 import { useAppStore } from "~/store";
 import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
+import { AF_EVENTS, trackAFEvent } from "../utils/appsflyerEvents";
 import { logError } from "../utils/errorLogging";
 import { transferGuestData } from "../utils/guestDataTransfer";
 import { redeemStoredDiscoverCode } from "../utils/redeemStoredDiscoverCode";
@@ -134,6 +135,10 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
               await setActiveSignUp({ session: res.createdSessionId });
               await Intercom.loginUnidentifiedUser();
               setOauthError(null);
+              trackAFEvent(AF_EVENTS.COMPLETE_REGISTRATION, {
+                af_registration_method:
+                  strategy === "oauth_google" ? "google" : "apple",
+              });
 
               // Transfer guest data after successful sign up
               const session = Clerk.session;
@@ -223,6 +228,10 @@ const SignInWithOAuth = ({ banner }: SignInWithOAuthProps) => {
       if (result.createdSessionId) {
         if (result.signIn?.status === "complete") {
           await setActiveSignIn({ session: result.createdSessionId });
+          trackAFEvent(AF_EVENTS.LOGIN, {
+            af_registration_method:
+              strategy === "oauth_google" ? "google" : "apple",
+          });
 
           // Wait a bit for the session to be fully initialized
           await new Promise((resolve) => setTimeout(resolve, 100));
