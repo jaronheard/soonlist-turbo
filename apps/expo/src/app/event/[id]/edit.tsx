@@ -186,7 +186,7 @@ export default function EditEventScreen() {
     try {
       let fileUri = localUri;
       if (localUri.startsWith("ph://")) {
-        const assetId = localUri.replace("ph://", "").split("/")[0];
+        const assetId = localUri.replace("ph://", "");
         if (!assetId) {
           throw new Error("Invalid photo library asset ID");
         }
