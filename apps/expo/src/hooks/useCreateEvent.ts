@@ -97,7 +97,7 @@ export function useCreateEvent() {
           // Convert photo library URI to file URI if needed
           let fileUri = imageUri;
           if (imageUri.startsWith("ph://")) {
-            const assetId = imageUri.replace("ph://", "").split("/")[0];
+            const assetId = imageUri.replace("ph://", "");
             if (!assetId) {
               throw new Error("Invalid photo library asset ID");
             }
@@ -234,7 +234,7 @@ export function useCreateEvent() {
           // Convert photo library URI to file URI if needed
           let fileUri = task.imageUri;
           if (task.imageUri.startsWith("ph://")) {
-            const assetId = task.imageUri.replace("ph://", "").split("/")[0];
+            const assetId = task.imageUri.replace("ph://", "");
             if (!assetId) {
               throw new Error("Invalid photo library asset ID");
             }
