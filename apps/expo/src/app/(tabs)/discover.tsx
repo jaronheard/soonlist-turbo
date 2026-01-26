@@ -111,14 +111,14 @@ function DiscoverContent() {
       return null;
     }
 
-    // User's own events should always show as saved
     const isOwnEvent = event.userId === user.id;
-    const isSaved = isOwnEvent || savedEventIds.has(event.id);
+    const isSaved = savedEventIds.has(event.id);
 
     return (
       <SaveShareButton
         eventId={event.id}
         isSaved={isSaved}
+        isOwnEvent={isOwnEvent}
         source="discover_list"
       />
     );

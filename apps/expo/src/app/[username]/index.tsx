@@ -169,11 +169,13 @@ export default function UserProfilePage() {
     if (!isAuthenticated || !currentUser) {
       return null;
     }
+    const isOwnEvent = event.userId === currentUser.id;
     const isSaved = savedEventIds.has(event.id);
     return (
       <SaveShareButton
         eventId={event.id}
         isSaved={isSaved}
+        isOwnEvent={isOwnEvent}
         source="user_profile"
       />
     );
@@ -209,9 +211,7 @@ export default function UserProfilePage() {
           showCreator="never"
           hideDiscoverableButton={true}
           isDiscoverFeed={false}
-          ActionButton={
-            !isOwnProfile ? ProfileSaveShareButtonWrapper : undefined
-          }
+          ActionButton={ProfileSaveShareButtonWrapper}
           savedEventIds={savedEventIds}
           HeaderComponent={() => (
             <UserProfileHeader
