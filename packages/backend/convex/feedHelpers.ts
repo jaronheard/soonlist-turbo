@@ -840,7 +840,6 @@ export const addUserEventsToUserFeedBatch = internalMutation({
   }),
   handler: async (ctx, { userId, followedUserId, cursor, batchSize }) => {
     const currentTime = Date.now();
-    const currentTimeISO = new Date().toISOString();
     const followedUsersFeedId = `followedUsers_${userId}`;
 
     // Query events with pagination
@@ -857,13 +856,14 @@ export const addUserEventsToUserFeedBatch = internalMutation({
         continue;
       }
 
+      const eventStartTime = new Date(event.startDateTime).getTime();
+      const eventEndTime = new Date(event.endDateTime).getTime();
+
       // Skip past events (endDateTime < now)
-      if (event.endDateTime < currentTimeISO) {
+      if (eventEndTime < currentTime) {
         continue;
       }
 
-      const eventStartTime = new Date(event.startDateTime).getTime();
-      const eventEndTime = new Date(event.endDateTime).getTime();
       const similarityGroupId = event.similarityGroupId;
 
       // Check if already in feed
@@ -932,12 +932,15 @@ export const addUserEventsToUserFeedAction = internalAction({
         added: number;
         nextCursor: string | null;
         isDone: boolean;
-      } = await ctx.runMutation(internal.feedHelpers.addUserEventsToUserFeedBatch, {
-        userId,
-        followedUserId,
-        cursor,
-        batchSize,
-      });
+      } = await ctx.runMutation(
+        internal.feedHelpers.addUserEventsToUserFeedBatch,
+        {
+          userId,
+          followedUserId,
+          cursor,
+          batchSize,
+        },
+      );
 
       totalProcessed += result.processed;
       totalAdded += result.added;
@@ -968,10 +971,14 @@ export const addUserEventsToUserFeed = internalMutation({
   returns: v.null(),
   handler: async (ctx, { userId, followedUserId }) => {
     // Schedule the action to run immediately
-    await ctx.scheduler.runAfter(0, internal.feedHelpers.addUserEventsToUserFeedAction, {
-      userId,
-      followedUserId,
-    });
+    await ctx.scheduler.runAfter(
+      0,
+      internal.feedHelpers.addUserEventsToUserFeedAction,
+      {
+        userId,
+        followedUserId,
+      },
+    );
     return null;
   },
 });
