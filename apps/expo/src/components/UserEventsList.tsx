@@ -589,7 +589,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
             <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
               {ActionButton && <ActionButton event={event} />}
 
-              {!isDiscoverFeed && (
+              {!isDiscoverFeed && !ActionButton && (
                 <TouchableOpacity
                   className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
                   style={{ borderRadius: 16 }}
