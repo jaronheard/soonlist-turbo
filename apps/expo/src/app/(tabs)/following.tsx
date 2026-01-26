@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Image } from "expo-image";
 import { Redirect, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -114,6 +114,30 @@ function FollowingHeader() {
   );
 }
 
+function FollowingEmptyState() {
+  return (
+    <ScrollView
+      style={{ backgroundColor: "#F4F1FF" }}
+      contentContainerStyle={{
+        paddingTop: 100,
+        paddingBottom: 120,
+        flexGrow: 1,
+      }}
+      showsVerticalScrollIndicator={false}
+    >
+      <FollowingHeader />
+      <View className="items-center px-6 py-8">
+        <Text className="text-center text-lg text-neutral-2">
+          No upcoming events from people you follow
+        </Text>
+        <Text className="mt-2 text-center text-base text-neutral-3">
+          Check back later for new events
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
 function FollowingFeedContent() {
   const { user } = useUser();
   const stableTimestamp = useStableTimestamp();
@@ -199,6 +223,7 @@ function FollowingFeedContent() {
         savedEventIds={savedEventIds}
         source="following"
         HeaderComponent={FollowingHeader}
+        EmptyStateComponent={FollowingEmptyState}
       />
     </View>
   );
