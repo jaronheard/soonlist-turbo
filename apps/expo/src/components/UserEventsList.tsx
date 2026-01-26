@@ -1103,6 +1103,7 @@ interface UserEventsListProps {
   isDiscoverFeed?: boolean;
   savedEventIds?: Set<string>;
   HeaderComponent?: React.ComponentType<Record<string, never>>;
+  EmptyStateComponent?: React.ComponentType<Record<string, never>>;
   source?: string;
 }
 
@@ -1122,6 +1123,7 @@ export default function UserEventsList(props: UserEventsListProps) {
     isDiscoverFeed = false,
     savedEventIds,
     HeaderComponent,
+    EmptyStateComponent,
     source,
   } = props;
   const { user } = useUser();
@@ -1173,6 +1175,9 @@ export default function UserEventsList(props: UserEventsListProps) {
   }
 
   if (collapsedEvents.length === 0) {
+    if (EmptyStateComponent) {
+      return <EmptyStateComponent />;
+    }
     return renderEmptyState();
   }
 
