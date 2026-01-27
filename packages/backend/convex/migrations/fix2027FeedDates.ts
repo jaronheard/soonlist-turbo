@@ -29,7 +29,7 @@ export const dryRun = internalQuery({
     const affectedUserFeeds = allUserFeeds.filter(
       (f) =>
         f.eventStartTime >= YEAR_2027_START_MS &&
-        f.eventStartTime < YEAR_2028_START_MS
+        f.eventStartTime < YEAR_2028_START_MS,
     );
 
     // Find all userFeedGroups entries with eventStartTime in 2027
@@ -37,7 +37,7 @@ export const dryRun = internalQuery({
     const affectedUserFeedGroups = allUserFeedGroups.filter(
       (f) =>
         f.eventStartTime >= YEAR_2027_START_MS &&
-        f.eventStartTime < YEAR_2028_START_MS
+        f.eventStartTime < YEAR_2028_START_MS,
     );
 
     // Build a map of event IDs to their correct timestamps
@@ -155,7 +155,8 @@ export const dryRun = internalQuery({
       summary: {
         userFeeds: {
           total: affectedUserFeeds.length,
-          withErrors: userFeedsChanges.filter((c) => c.proposed === null).length,
+          withErrors: userFeedsChanges.filter((c) => c.proposed === null)
+            .length,
         },
         userFeedGroups: {
           total: affectedUserFeedGroups.length,
@@ -184,7 +185,7 @@ export const migrate = internalMutation({
     const affectedUserFeeds = allUserFeeds.filter(
       (f) =>
         f.eventStartTime >= YEAR_2027_START_MS &&
-        f.eventStartTime < YEAR_2028_START_MS
+        f.eventStartTime < YEAR_2028_START_MS,
     );
 
     // Find all userFeedGroups entries with eventStartTime in 2027
@@ -192,7 +193,7 @@ export const migrate = internalMutation({
     const affectedUserFeedGroups = allUserFeedGroups.filter(
       (f) =>
         f.eventStartTime >= YEAR_2027_START_MS &&
-        f.eventStartTime < YEAR_2028_START_MS
+        f.eventStartTime < YEAR_2028_START_MS,
     );
 
     // Build a map of event IDs to their correct timestamps
@@ -219,18 +220,18 @@ export const migrate = internalMutation({
     }
 
     const results = {
-      userFeeds: [] as Array<{
+      userFeeds: [] as {
         _id: string;
         eventId: string;
         status: string;
         changes?: Record<string, unknown>;
-      }>,
-      userFeedGroups: [] as Array<{
+      }[],
+      userFeedGroups: [] as {
         _id: string;
         primaryEventId: string;
         status: string;
         changes?: Record<string, unknown>;
-      }>,
+      }[],
     };
 
     // Fix userFeeds
@@ -315,16 +316,16 @@ export const migrate = internalMutation({
       mode: isDryRun ? "DRY RUN" : "MIGRATED",
       summary: {
         userFeedsUpdated: results.userFeeds.filter(
-          (r) => r.status === "UPDATED" || r.status === "WOULD UPDATE"
+          (r) => r.status === "UPDATED" || r.status === "WOULD UPDATE",
         ).length,
         userFeedsSkipped: results.userFeeds.filter((r) =>
-          r.status.includes("SKIPPED")
+          r.status.includes("SKIPPED"),
         ).length,
         userFeedGroupsUpdated: results.userFeedGroups.filter(
-          (r) => r.status === "UPDATED" || r.status === "WOULD UPDATE"
+          (r) => r.status === "UPDATED" || r.status === "WOULD UPDATE",
         ).length,
         userFeedGroupsSkipped: results.userFeedGroups.filter((r) =>
-          r.status.includes("SKIPPED")
+          r.status.includes("SKIPPED"),
         ).length,
       },
       results,
