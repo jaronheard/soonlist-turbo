@@ -25,6 +25,7 @@ import type * as http from "../http.js";
 import type * as lists from "../lists.js";
 import type * as migrations_backfillUserFeedVisibility from "../migrations/backfillUserFeedVisibility.js";
 import type * as migrations_fix2027Dates from "../migrations/fix2027Dates.js";
+import type * as migrations_fix2027FeedDates from "../migrations/fix2027FeedDates.js";
 import type * as migrations_initializeAggregates from "../migrations/initializeAggregates.js";
 import type * as migrations_initializeUserFeedsAggregate from "../migrations/initializeUserFeedsAggregate.js";
 import type * as migrations_similarityGroupMigration from "../migrations/similarityGroupMigration.js";
@@ -73,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   lists: typeof lists;
   "migrations/backfillUserFeedVisibility": typeof migrations_backfillUserFeedVisibility;
   "migrations/fix2027Dates": typeof migrations_fix2027Dates;
+  "migrations/fix2027FeedDates": typeof migrations_fix2027FeedDates;
   "migrations/initializeAggregates": typeof migrations_initializeAggregates;
   "migrations/initializeUserFeedsAggregate": typeof migrations_initializeUserFeedsAggregate;
   "migrations/similarityGroupMigration": typeof migrations_similarityGroupMigration;
