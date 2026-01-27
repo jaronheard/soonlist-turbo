@@ -9,7 +9,7 @@ This project uses pnpm workspaces.
 ## Before Committing
 
 ```bash
-pnpm lint:fix && pnpm format:fix && pnpm check
+pnpm lint:fix && pnpm format:fix && pnpm check && git diff --stat
 ```
 
 ## Quick Reference
