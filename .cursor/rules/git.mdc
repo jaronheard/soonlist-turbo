@@ -9,6 +9,7 @@ alwaysApply: false
 
 - Never commit to main
 - Never push to origin/main
+- Never rebase or force push
 - Create descriptive branch names (e.g., `add-event-sharing`, `fix-screenshot-parsing`)
 - Pull latest main before creating a new branch
 
