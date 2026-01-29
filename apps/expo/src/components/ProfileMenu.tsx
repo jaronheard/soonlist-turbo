@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Share, View } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
@@ -9,6 +9,7 @@ import * as DropdownMenu from "zeego/dropdown-menu";
 
 import { LogOut, MessageSquare, ShareIcon, User } from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
+import { useMenuStore } from "~/store/menuStore";
 import { toast } from "~/utils/feedback";
 import { logError } from "../utils/errorLogging";
 import { UserProfileFlair } from "./UserProfileFlair";
@@ -17,6 +18,18 @@ export function ProfileMenu() {
   const { user } = useUser();
   const { isAuthenticated } = useConvexAuth();
   const signOut = useSignOut();
+  const { menuOpened, menuClosed } = useMenuStore();
+
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) {
+        menuOpened();
+      } else {
+        menuClosed();
+      }
+    },
+    [menuOpened, menuClosed],
+  );
 
   const handleSignOut = () => {
     signOut().catch((error) => {
@@ -80,7 +93,7 @@ export function ProfileMenu() {
   );
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root onOpenChange={handleOpenChange}>
       <DropdownMenu.Trigger>
         {user?.username && isAuthenticated ? (
           <UserProfileFlair username={user.username} size="sm">

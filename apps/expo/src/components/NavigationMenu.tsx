@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -17,6 +17,7 @@ import {
   MessageSquare,
 } from "~/components/icons";
 import { useAppStore } from "~/store";
+import { useMenuStore } from "~/store/menuStore";
 import { logError } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import {
@@ -59,6 +60,19 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useUser();
   const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
+  const { menuOpened, menuClosed } = useMenuStore();
+
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      setMenuOpen(open);
+      if (open) {
+        menuOpened();
+      } else {
+        menuClosed();
+      }
+    },
+    [menuOpened, menuClosed],
+  );
 
   // Check if user is following anyone
   const followingUsers = useQuery(api.users.getFollowingUsers);
@@ -106,7 +120,7 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
 
   return (
     <View className="flex-1 items-center justify-center">
-      <DropdownMenuRoot open={menuOpen} onOpenChange={setMenuOpen}>
+      <DropdownMenuRoot open={menuOpen} onOpenChange={handleOpenChange}>
         <DropdownMenuTrigger>
           <TouchableOpacity activeOpacity={0.6}>
             <View className="flex-row items-center space-x-1">

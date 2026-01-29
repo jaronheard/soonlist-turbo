@@ -1,5 +1,5 @@
 import type { FunctionReturnType } from "convex/server";
-import React from "react";
+import React, { useCallback } from "react";
 import { Dimensions, TouchableOpacity, View } from "react-native";
 import Intercom from "@intercom/intercom-react-native";
 
@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu-primitives";
 import { useEventActions } from "~/hooks/useEventActions";
+import { useMenuStore } from "~/store/menuStore";
 import { logError } from "~/utils/errorLogging";
 import { hapticSuccess, toast } from "~/utils/feedback";
 
@@ -96,6 +97,19 @@ export function EventMenu({
     handleShowQR,
     showDiscover,
   } = useEventActions({ event, isSaved, demoMode, onDelete });
+
+  const { menuOpened, menuClosed } = useMenuStore();
+
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) {
+        menuOpened();
+      } else {
+        menuClosed();
+      }
+    },
+    [menuOpened, menuClosed],
+  );
 
   const presentIntercom = async () => {
     try {
@@ -228,7 +242,7 @@ export function EventMenu({
 
   if (menuType === "context") {
     return (
-      <ContextMenuRoot>
+      <ContextMenuRoot onOpenChange={handleOpenChange}>
         <ContextMenuTrigger asChild>
           {children ?? (
             <TouchableOpacity activeOpacity={0.6}>
@@ -270,7 +284,7 @@ export function EventMenu({
   }
 
   return (
-    <DropdownMenuRoot>
+    <DropdownMenuRoot onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         {children ?? (
           <TouchableOpacity activeOpacity={0.6}>

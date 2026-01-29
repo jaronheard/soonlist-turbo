@@ -35,6 +35,7 @@ import {
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 import { useEventActions } from "~/hooks/useEventActions";
 import { useUserTimezone } from "~/store";
+import { useMenuStore } from "~/store/menuStore";
 import { cn } from "~/utils/cn";
 import {
   formatEventDateRange,
@@ -314,6 +315,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const { fontScale } = useWindowDimensions();
   const { handleAddToCal, handleToggleVisibility, handleShare, showDiscover } =
     useEventActions({ event, isSaved, demoMode, source });
+  const { shouldIgnoreTap } = useMenuStore();
   const id = event.id;
   const e = event.event as AddToCalendarButtonPropsRestricted;
   const userTimezone = useUserTimezone();
@@ -461,6 +463,10 @@ export function UserEventListItem(props: UserEventListItemProps) {
       <Pressable
         className="relative"
         onPress={() => {
+          // Ignore taps that came from dismissing a menu to prevent tap-through
+          if (shouldIgnoreTap()) {
+            return;
+          }
           const isDemoEvent = id.startsWith("demo-");
           if (isDemoEvent) {
             router.navigate(`/onboarding/demo-event/${id}`);
