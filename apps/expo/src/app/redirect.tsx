@@ -2,9 +2,9 @@ import { useCallback } from "react";
 import { ActivityIndicator, Linking, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { toast } from "sonner-native";
 
 import { logError } from "~/utils/errorLogging";
+import { toast } from "~/utils/feedback";
 
 export default function RedirectScreen() {
   const { url } = useLocalSearchParams<{ url: string }>();
@@ -19,15 +19,11 @@ export default function RedirectScreen() {
           if (canOpen) {
             await Linking.openURL(url);
           } else {
-            toast.error("Cannot redirect to URL", {
-              description: "The URL provided is not valid or cannot be opened",
-            });
+            toast.error("Cannot redirect to URL", "The URL is not valid");
           }
         } catch (error) {
           logError("Error redirecting to URL", error);
-          toast.error("Error redirecting to URL", {
-            description: "Please try again later",
-          });
+          toast.error("Error redirecting to URL", "Please try again later");
         }
 
         // Always navigate back or to home, regardless of success or error

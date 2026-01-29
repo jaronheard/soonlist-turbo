@@ -232,7 +232,8 @@ catalog:
   "sonner": ^1.4.41
   "tailwind-merge": ^2.2.2
   "vaul": ^0.9.1
-  "sonner-native": ^0.16.2
+  burnt: ^0.13.0
+  "react-native-notifier": ^2.0.0
   "zeego": ^2.0.4
 
   # API & AI

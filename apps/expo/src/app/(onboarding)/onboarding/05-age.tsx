@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { toast } from "sonner-native";
 
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { QuestionOption } from "~/components/QuestionOption";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useAppStore } from "~/store";
 import { logError } from "~/utils/errorLogging";
+import { toast } from "~/utils/feedback";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 const ageRanges = [
@@ -33,9 +33,7 @@ export default function AgeScreen() {
       saveStep("age", { ageRange: age }, "/(onboarding)/onboarding/06-source");
     } catch (error) {
       logError("Failed to save age", error);
-      toast.error("Something went wrong", {
-        description: "Please try again",
-      });
+      toast.error("Something went wrong", "Please try again");
     } finally {
       setIsLoading(false);
     }

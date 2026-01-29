@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { ActionSheetIOS, Linking, Platform } from "react-native";
 import * as Calendar from "expo-calendar";
 import { Temporal } from "@js-temporal/polyfill";
-import { toast } from "sonner-native";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
@@ -16,6 +15,7 @@ import {
 } from "~/utils/calendarAppDetection";
 import Config from "~/utils/config";
 import { logError } from "~/utils/errorLogging";
+import { hapticSuccess, toast } from "~/utils/feedback";
 
 export function useCalendar() {
   const preferredCalendarApp = usePreferredCalendarApp();
@@ -145,21 +145,19 @@ export function useCalendar() {
           const canOpen = await Linking.canOpenURL(googleCalendarUrl);
           if (canOpen) {
             await Linking.openURL(googleCalendarUrl);
-            toast.success("Opening Google Calendar");
+            hapticSuccess();
             return;
           } else {
             // Fall back to system calendar if Google Calendar URL can't be opened
-            toast.error(
-              "Couldn't open Google Calendar, falling back to Apple Calendar",
+            toast.warning(
+              "Couldn't open Google Calendar, using Apple Calendar",
             );
             setPreferredCalendarApp("apple");
             currentPreferred = "apple";
           }
         } else {
           // Google Calendar was preferred but is no longer installed
-          toast.error(
-            "Google Calendar is not installed, falling back to Apple Calendar",
-          );
+          toast.warning("Google Calendar not installed, using Apple Calendar");
           setPreferredCalendarApp("apple");
           currentPreferred = "apple";
         }
@@ -174,14 +172,7 @@ export function useCalendar() {
       if (needsPermissionCheck) {
         const { status } = await Calendar.requestCalendarPermissionsAsync();
         if (status !== Calendar.PermissionStatus.GRANTED) {
-          toast.error("Calendar permission required", {
-            action: {
-              label: "Settings",
-              onClick: () => {
-                void Linking.openSettings();
-              },
-            },
-          });
+          toast.error("Calendar permission required", "Enable in Settings");
           return;
         }
       }
@@ -273,14 +264,14 @@ export function useCalendar() {
       const result = await Calendar.createEventInCalendarAsync(eventDetails);
 
       if (result.action !== Calendar.CalendarDialogResultActions.canceled) {
-        toast.success("Event successfully added to calendar");
+        hapticSuccess();
       }
     } catch (error) {
       logError(
         "Error adding event to calendar",
         error instanceof Error ? error : new Error(String(error)),
       );
-      toast.error("Failed to add event to calendar. Please try again.");
+      toast.error("Failed to add to calendar", "Please try again");
     }
   };
 

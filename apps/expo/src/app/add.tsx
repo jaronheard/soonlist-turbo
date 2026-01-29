@@ -5,7 +5,6 @@ import Animated from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
 import { router, Stack } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { toast } from "sonner-native";
 
 import type { ImageSource } from "~/utils/images";
 import { CaptureEventButton } from "~/components/CaptureEventButton";
@@ -17,6 +16,7 @@ import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useKeyboardHeight } from "~/hooks/useKeyboardHeight";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore } from "~/store";
+import { toast } from "~/utils/feedback";
 import { logError } from "../utils/errorLogging";
 
 export default function AddEventModal() {
@@ -79,14 +79,7 @@ export default function AddEventModal() {
   const handleCameraCapture = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== ImagePicker.PermissionStatus.GRANTED) {
-      toast.error("Camera permission required", {
-        action: {
-          label: "Settings",
-          onClick: () => {
-            void Linking.openSettings();
-          },
-        },
-      });
+      toast.error("Camera permission required", "Enable in Settings");
       return;
     }
 
@@ -127,21 +120,11 @@ export default function AddEventModal() {
     resetAddEventState();
 
     try {
-      const eventId = await createEvent(eventData);
-      if (!hasNotificationPermission && eventId) {
-        toast.success("Captured successfully!", {
-          action: {
-            label: "View event",
-            onClick: () => {
-              toast.dismiss();
-              router.navigate(`/event/${eventId}`);
-            },
-          },
-        });
-      }
+      await createEvent(eventData);
+      // Success notification is handled via push notifications or EventCaptureBanner
     } catch (error) {
       logError("Error creating event", error);
-      toast.error("Failed to create event. Please try again.");
+      toast.error("Failed to create event", "Please try again");
     }
   };
 

@@ -19,7 +19,6 @@ import { useUser } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner-native";
 import { z } from "zod";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
@@ -32,6 +31,7 @@ import { useSignOut } from "~/hooks/useSignOut";
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore } from "~/store";
 import Config from "~/utils/config";
+import { hapticSuccess, toast } from "~/utils/feedback";
 import { logError } from "../../utils/errorLogging";
 import { getPlanStatusFromUser } from "../../utils/plan";
 
@@ -156,7 +156,6 @@ export default function EditProfileScreen() {
 
   const onSubmit = useCallback(
     async (data: ProfileFormData) => {
-      const loadingToastId = toast.loading("Updating profile...");
       setIsSubmitting(true);
       try {
         if (data.username !== user?.username) {
@@ -168,8 +167,7 @@ export default function EditProfileScreen() {
             displayName: data.displayName,
           });
         }
-        toast.dismiss(loadingToastId);
-        toast.success("Profile updated successfully");
+        hapticSuccess();
         if (router.canGoBack()) {
           router.back();
         } else {
@@ -177,7 +175,6 @@ export default function EditProfileScreen() {
         }
       } catch (error) {
         logError("Error updating profile", error);
-        toast.dismiss(loadingToastId);
         toast.error("An unexpected error occurred");
       } finally {
         setIsSubmitting(false);
@@ -187,7 +184,6 @@ export default function EditProfileScreen() {
   );
 
   const pickImage = useCallback(async () => {
-    const loadingToastId = toast.loading("Updating profile image...");
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -198,13 +194,11 @@ export default function EditProfileScreen() {
       });
 
       if (result.canceled) {
-        toast.dismiss(loadingToastId);
         return;
       }
 
       const asset = result.assets[0];
       if (!asset) {
-        toast.dismiss(loadingToastId);
         throw new Error("No image asset selected");
       }
 
@@ -212,7 +206,6 @@ export default function EditProfileScreen() {
       const base64 = asset.base64;
       const mimeType = asset.mimeType;
       if (!base64 || !mimeType) {
-        toast.dismiss(loadingToastId);
         throw new Error("Image data is incomplete");
       }
 
@@ -221,12 +214,10 @@ export default function EditProfileScreen() {
       await user?.setProfileImage({
         file: image,
       });
-      toast.dismiss(loadingToastId);
-      toast.success("Profile image updated successfully");
+      hapticSuccess();
     } catch (error) {
-      toast.dismiss(loadingToastId);
       logError("Error in pickImage", error);
-      toast.error("Failed to pick image");
+      toast.error("Failed to update image");
       // Revert to the previous image if the update fails
       setProfileImage(user?.imageUrl ?? null);
     }
@@ -245,16 +236,13 @@ export default function EditProfileScreen() {
           text: "Delete Account",
           style: "destructive",
           onPress: () => {
-            const loadingToastId = toast.loading("Deleting account...");
             void (async () => {
               try {
                 await signOut({ shouldDeleteAccount: true });
-                toast.dismiss(loadingToastId);
-                toast.success("Account deleted successfully");
+                hapticSuccess();
                 // No manual navigation needed - Convex auth components will handle the transition
               } catch (error) {
                 logError("Error deleting account", error);
-                toast.dismiss(loadingToastId);
                 toast.error("Failed to delete account");
               }
             })();
@@ -277,7 +265,6 @@ export default function EditProfileScreen() {
           text: "Restart",
           style: "destructive",
           onPress: () => {
-            const loadingToastId = toast.loading("Restarting onboarding...");
             void (async () => {
               try {
                 if (user?.id) {
@@ -289,12 +276,9 @@ export default function EditProfileScreen() {
                 // Sign out the user to land on the welcome screen
                 await signOut();
 
-                // Only show success toast after signOut completes successfully
-                toast.dismiss(loadingToastId);
-                toast.success("Onboarding reset successfully");
+                hapticSuccess();
               } catch (error) {
                 logError("Error restarting onboarding", error);
-                toast.dismiss(loadingToastId);
                 toast.error("Failed to restart onboarding");
               }
             })();
@@ -317,9 +301,7 @@ export default function EditProfileScreen() {
         publicListEnabled: newEnabled,
         publicListName: newEnabled ? publicListName || defaultName : undefined,
       });
-      toast.success(
-        newEnabled ? "Public list enabled" : "Public list disabled",
-      );
+      hapticSuccess();
     } catch (error) {
       logError("Error toggling public list", error);
       toast.error("Failed to update public list settings");
@@ -344,7 +326,7 @@ export default function EditProfileScreen() {
         userId: user.id,
         publicListName: publicListNameInput.trim() || undefined,
       });
-      toast.success("List name updated");
+      hapticSuccess();
     } catch (error) {
       logError("Error updating list name", error);
       toast.error("Failed to update list name");

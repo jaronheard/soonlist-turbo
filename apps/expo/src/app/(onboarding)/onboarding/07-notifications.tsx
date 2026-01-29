@@ -8,13 +8,13 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { router } from "expo-router";
-import { toast } from "sonner-native";
 
 import { ChevronUp } from "~/components/icons";
 import { QuestionContainer } from "~/components/QuestionContainer";
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { useOneSignal } from "~/providers/OneSignalProvider";
 import { logError } from "~/utils/errorLogging";
+import { toast } from "~/utils/feedback";
 import { TOTAL_ONBOARDING_STEPS } from "../_layout";
 
 export default function NotificationsScreen() {
@@ -70,9 +70,7 @@ export default function NotificationsScreen() {
       );
     } catch (error) {
       logError("Failed to save notifications", error);
-      toast.error("Something went wrong", {
-        description: "Please try again",
-      });
+      toast.error("Something went wrong", "Please try again");
     } finally {
       setIsLoading(false);
     }

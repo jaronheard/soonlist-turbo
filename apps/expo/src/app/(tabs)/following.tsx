@@ -10,7 +10,6 @@ import {
   useMutation,
   useQuery,
 } from "convex/react";
-import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -20,6 +19,7 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
+import { hapticSuccess, toast } from "~/utils/feedback";
 
 function FollowingHeader() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -32,7 +32,7 @@ function FollowingHeader() {
   const handleUnfollow = async (userId: string) => {
     try {
       await unfollowUserMutation({ followingId: userId });
-      toast.success("Unfollowed user");
+      hapticSuccess();
     } catch {
       toast.error("Failed to unfollow user");
     }
