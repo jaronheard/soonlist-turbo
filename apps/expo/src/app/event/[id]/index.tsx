@@ -44,7 +44,6 @@ import {
   ShareIcon,
   User,
 } from "~/components/icons";
-import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useEventActions } from "~/hooks/useEventActions";
@@ -248,7 +247,11 @@ export default function Page() {
         <Stack.Screen
           options={{
             headerTransparent: false,
-            headerBackground: () => <LiquidGlassHeader />,
+            headerBackground: () => (
+              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
+            ),
+            headerTintColor: "#5A32FB",
+            headerTitleStyle: { color: "#5A32FB" },
             headerRight: () => null,
           }}
         />
@@ -266,7 +269,11 @@ export default function Page() {
         <Stack.Screen
           options={{
             headerTransparent: false,
-            headerBackground: () => <LiquidGlassHeader />,
+            headerBackground: () => (
+              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
+            ),
+            headerTintColor: "#5A32FB",
+            headerTitleStyle: { color: "#5A32FB" },
             headerRight: () => null,
           }}
         />
@@ -284,7 +291,11 @@ export default function Page() {
         <Stack.Screen
           options={{
             headerTransparent: false,
-            headerBackground: () => <LiquidGlassHeader />,
+            headerBackground: () => (
+              <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
+            ),
+            headerTintColor: "#5A32FB",
+            headerTitleStyle: { color: "#5A32FB" },
             headerRight: () => null,
           }}
         />
@@ -339,7 +350,11 @@ export default function Page() {
           headerRight: HeaderRight,
           headerLeft: !canGoBack ? HeaderLeft : undefined,
           headerTransparent: false,
-          headerBackground: () => <LiquidGlassHeader />,
+          headerBackground: () => (
+            <View style={{ flex: 1, backgroundColor: "#E0D9FF" }} />
+          ),
+          headerTintColor: "#5A32FB",
+          headerTitleStyle: { color: "#5A32FB" },
         }}
       />
       <ScrollView
