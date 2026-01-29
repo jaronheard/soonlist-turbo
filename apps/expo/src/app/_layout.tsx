@@ -33,6 +33,7 @@ import { ForceUpdateScreen } from "~/components/ForceUpdateScreen";
 import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
 import { PostHogIdentityTracker } from "~/components/PostHogIdentityTracker";
 import { useAppsFlyerDeepLink } from "~/hooks/useAppsFlyerDeepLink";
+import { useCaptureCompletionFeedback } from "~/hooks/useCaptureCompletionFeedback";
 import { useForceUpdate } from "~/hooks/useForceUpdate";
 import { useMediaPermissions } from "~/hooks/useMediaPermissions";
 import { useOTAUpdates } from "~/hooks/useOTAUpdates";
@@ -337,6 +338,7 @@ function RootLayoutContent() {
   useQuickActions();
   useAppsFlyerDeepLink();
   usePendingFollow();
+  useCaptureCompletionFeedback();
   const ref = useNavigationContainerRef();
   const pathname = usePathname();
   const params = useGlobalSearchParams();
