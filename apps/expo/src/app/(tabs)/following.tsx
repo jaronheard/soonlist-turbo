@@ -32,7 +32,7 @@ function FollowingHeader() {
   const handleUnfollow = async (userId: string) => {
     try {
       await unfollowUserMutation({ followingId: userId });
-      hapticSuccess();
+      void hapticSuccess();
     } catch {
       toast.error("Failed to unfollow user");
     }

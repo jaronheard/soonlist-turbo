@@ -145,7 +145,7 @@ export function useCalendar() {
           const canOpen = await Linking.canOpenURL(googleCalendarUrl);
           if (canOpen) {
             await Linking.openURL(googleCalendarUrl);
-            hapticSuccess();
+            void hapticSuccess();
             return;
           } else {
             // Fall back to system calendar if Google Calendar URL can't be opened
@@ -264,7 +264,7 @@ export function useCalendar() {
       const result = await Calendar.createEventInCalendarAsync(eventDetails);
 
       if (result.action !== Calendar.CalendarDialogResultActions.canceled) {
-        hapticSuccess();
+        void hapticSuccess();
       }
     } catch (error) {
       logError(

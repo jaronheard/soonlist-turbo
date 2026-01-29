@@ -25,7 +25,7 @@ export default function AgeScreen() {
   const { saveStep } = useOnboarding();
   const { onboardingData } = useAppStore();
 
-  const handleAgeSelect = async (age: AgeRange) => {
+  const handleAgeSelect = (age: AgeRange) => {
     if (isLoading) return;
     setIsLoading(true);
 

@@ -1,6 +1,6 @@
 // src/app/add.tsx
 import React, { useCallback } from "react";
-import { Linking, View } from "react-native";
+import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
 import { router, Stack } from "expo-router";
@@ -21,7 +21,7 @@ import { logError } from "../utils/errorLogging";
 
 export default function AddEventModal() {
   const { style: keyboardStyle } = useKeyboardHeight(32);
-  const { hasNotificationPermission } = useOneSignal();
+  useOneSignal();
   const { user } = useUser();
   const { createEvent } = useCreateEvent();
   const {

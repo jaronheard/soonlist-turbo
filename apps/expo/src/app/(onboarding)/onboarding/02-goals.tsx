@@ -34,7 +34,7 @@ export default function GoalsScreen() {
     });
   };
 
-  const handleContinue = async () => {
+  const handleContinue = () => {
     if (selectedGoals.length === 0) {
       toast.error("Please select at least one goal");
       return;

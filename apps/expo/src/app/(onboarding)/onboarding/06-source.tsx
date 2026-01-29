@@ -26,7 +26,7 @@ export default function SourceScreen() {
   const { saveStep } = useOnboarding();
   const { onboardingData } = useAppStore();
 
-  const handleSourceSelect = async (source: Source) => {
+  const handleSourceSelect = (source: Source) => {
     if (isLoading) return;
     setIsLoading(true);
 

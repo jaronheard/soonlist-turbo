@@ -288,7 +288,7 @@ export default function EditEventScreen() {
         try {
           const remoteUrl = await uploadImage(localUri);
           setUploadedImageUrl(remoteUrl);
-          hapticSuccess();
+          void hapticSuccess();
         } catch (error) {
           logError("Error uploading image", error);
           toast.error(
@@ -377,7 +377,7 @@ export default function EditEventScreen() {
 
         await updateEventMutation(updatedData);
 
-        hapticSuccess();
+        void hapticSuccess();
         router.back();
       } catch (error) {
         logError("Error updating event", error);
@@ -660,7 +660,7 @@ export default function EditEventScreen() {
                         onPress={() => {
                           setSelectedImage(null);
                           setUploadedImageUrl(null);
-                          hapticSuccess();
+                          void hapticSuccess();
                         }}
                         variant="destructive"
                         className="flex-1"

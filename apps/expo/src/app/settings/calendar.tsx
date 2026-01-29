@@ -25,7 +25,7 @@ export default function CalendarSettingsScreen() {
     // Type guard to ensure the appId is valid
     if (appId === "google" || appId === "apple") {
       setPreferredCalendarApp(appId);
-      hapticSuccess();
+      void hapticSuccess();
     } else {
       console.error("Invalid calendar app ID:", appId);
     }

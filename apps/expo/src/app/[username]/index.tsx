@@ -103,7 +103,7 @@ export default function UserProfilePage() {
       } else {
         await followUserMutation({ followingId: targetUser.id });
       }
-      hapticSuccess();
+      void hapticSuccess();
     } catch (error) {
       logError("Error following/unfollowing user", error);
       toast.error(isFollowing ? "Failed to unfollow" : "Failed to follow");

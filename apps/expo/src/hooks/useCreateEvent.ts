@@ -175,7 +175,7 @@ export function useCreateEvent() {
         throw new Error("No image, URL, or text provided for event creation");
       } catch (error) {
         logError("Error processing event", error);
-        hapticError();
+        void hapticError();
         throw error; // Rethrow to trigger mutation's onError
       } finally {
         // Reset loading state for both routes
@@ -282,7 +282,7 @@ export function useCreateEvent() {
       } catch (error) {
         logError("Error creating events batch", error);
         toast.error("Failed to process images", "Please try again");
-        hapticError();
+        void hapticError();
       } finally {
         setIsCapturing(false);
         setIsImageLoading(false, "add");

@@ -17,7 +17,7 @@ export default function ScreenshotScreen() {
   const { saveStep } = useOnboarding();
   const { onboardingData } = useAppStore();
 
-  const handleOptionSelect = async (option: Option) => {
+  const handleOptionSelect = (option: Option) => {
     if (isLoading) return;
     setIsLoading(true);
 

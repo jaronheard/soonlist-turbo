@@ -167,7 +167,7 @@ export default function EditProfileScreen() {
             displayName: data.displayName,
           });
         }
-        hapticSuccess();
+        void hapticSuccess();
         if (router.canGoBack()) {
           router.back();
         } else {
@@ -214,7 +214,7 @@ export default function EditProfileScreen() {
       await user?.setProfileImage({
         file: image,
       });
-      hapticSuccess();
+      void hapticSuccess();
     } catch (error) {
       logError("Error in pickImage", error);
       toast.error("Failed to update image");
@@ -239,7 +239,7 @@ export default function EditProfileScreen() {
             void (async () => {
               try {
                 await signOut({ shouldDeleteAccount: true });
-                hapticSuccess();
+                void hapticSuccess();
                 // No manual navigation needed - Convex auth components will handle the transition
               } catch (error) {
                 logError("Error deleting account", error);
@@ -276,7 +276,7 @@ export default function EditProfileScreen() {
                 // Sign out the user to land on the welcome screen
                 await signOut();
 
-                hapticSuccess();
+                void hapticSuccess();
               } catch (error) {
                 logError("Error restarting onboarding", error);
                 toast.error("Failed to restart onboarding");
@@ -301,7 +301,7 @@ export default function EditProfileScreen() {
         publicListEnabled: newEnabled,
         publicListName: newEnabled ? publicListName || defaultName : undefined,
       });
-      hapticSuccess();
+      void hapticSuccess();
     } catch (error) {
       logError("Error toggling public list", error);
       toast.error("Failed to update public list settings");
@@ -326,7 +326,7 @@ export default function EditProfileScreen() {
         userId: user.id,
         publicListName: publicListNameInput.trim() || undefined,
       });
-      hapticSuccess();
+      void hapticSuccess();
     } catch (error) {
       logError("Error updating list name", error);
       toast.error("Failed to update list name");

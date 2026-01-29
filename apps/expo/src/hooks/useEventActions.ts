@@ -155,7 +155,7 @@ export function useEventActions({
 
   const handleShare = async () => {
     if (!event || checkDemoMode()) return;
-    hapticSuccess();
+    void hapticSuccess();
 
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
 
@@ -208,7 +208,7 @@ export function useEventActions({
 
   const handleDirections = () => {
     if (!event || checkDemoMode()) return;
-    hapticSuccess();
+    void hapticSuccess();
     const eventData = event.event as AddToCalendarButtonPropsRestricted;
     if (eventData.location) {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
@@ -225,7 +225,7 @@ export function useEventActions({
 
   const handleAddToCal = async () => {
     if (!event || checkDemoMode()) return;
-    hapticSuccess();
+    void hapticSuccess();
     await addToCalendar(event);
   };
 
@@ -233,7 +233,7 @@ export function useEventActions({
     newVisibility: "public" | "private",
   ) => {
     if (!event || checkDemoMode() || !isOwner) return;
-    hapticSuccess();
+    void hapticSuccess();
     try {
       await toggleVisibilityMutation({
         id: event.id,
@@ -246,13 +246,13 @@ export function useEventActions({
 
   const handleEdit = () => {
     if (!event || checkDemoMode() || !isOwner) return;
-    hapticSuccess();
+    void hapticSuccess();
     router.navigate(`/event/${event.id}/edit`);
   };
 
   const handleDelete = async () => {
     if (!event || checkDemoMode() || !isOwner) return;
-    hapticSuccess();
+    void hapticSuccess();
     try {
       if (onDelete) {
         await onDelete();
@@ -266,7 +266,7 @@ export function useEventActions({
 
   const handleFollow = async () => {
     if (!event || checkDemoMode() || isOwner || isSaved) return;
-    hapticSuccess();
+    void hapticSuccess();
     try {
       await followEventMutation({ id: event.id });
     } catch (error) {
@@ -276,7 +276,7 @@ export function useEventActions({
 
   const handleUnfollow = async () => {
     if (!event || checkDemoMode() || isOwner || !isSaved) return;
-    hapticSuccess();
+    void hapticSuccess();
     try {
       await unfollowEventMutation({ id: event.id });
     } catch (error) {
@@ -286,7 +286,7 @@ export function useEventActions({
 
   const handleShowQR = () => {
     if (!event || checkDemoMode()) return;
-    hapticSuccess();
+    void hapticSuccess();
     router.navigate(`/event/${event.id}/qr`);
   };
 
@@ -376,7 +376,7 @@ export function useEventSaveActions(
 
   const handleFollow = async () => {
     if (checkDemoMode() || isSaved) return;
-    hapticSuccess();
+    void hapticSuccess();
     try {
       await followEventMutation({ id: eventId });
     } catch (error) {
@@ -386,7 +386,7 @@ export function useEventSaveActions(
 
   const handleUnfollow = async () => {
     if (checkDemoMode() || !isSaved) return;
-    hapticSuccess();
+    void hapticSuccess();
     try {
       await unfollowEventMutation({ id: eventId });
     } catch (error) {

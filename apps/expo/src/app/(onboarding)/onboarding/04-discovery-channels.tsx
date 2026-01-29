@@ -25,7 +25,7 @@ export default function DiscoveryScreen() {
   const { saveStep } = useOnboarding();
   const { onboardingData } = useAppStore();
 
-  const handleMethodSelect = async (method: DiscoveryMethod) => {
+  const handleMethodSelect = (method: DiscoveryMethod) => {
     if (isLoading) return;
     setIsLoading(true);
 
