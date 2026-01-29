@@ -1,8 +1,8 @@
 import React from "react";
 import { Pressable, Share, Text, View } from "react-native";
+import { Notifier } from "react-native-notifier";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { toast } from "sonner-native";
 
 import type { AddToCalendarButtonPropsRestricted } from "@soonlist/cal/types";
 
@@ -10,16 +10,21 @@ import { Globe2, ShareIcon } from "~/components/icons";
 import Config from "~/utils/config";
 import { formatEventDateRangeCompact } from "~/utils/dates";
 import { logError } from "~/utils/errorLogging";
+import { hapticSuccess, toast } from "~/utils/feedback";
 
-interface EventCaptureToastProps {
+interface EventCaptureBannerProps {
   event: {
     id: string;
     event: AddToCalendarButtonPropsRestricted;
     visibility: "public" | "private";
   };
+  hideNotification?: () => void;
 }
 
-export function EventCaptureToast({ event }: EventCaptureToastProps) {
+export function EventCaptureBanner({
+  event,
+  hideNotification,
+}: EventCaptureBannerProps) {
   const { id, event: e, visibility } = event;
   const dateString = formatEventDateRangeCompact(
     e.startDate || "",
@@ -33,20 +38,20 @@ export function EventCaptureToast({ event }: EventCaptureToastProps) {
       await Share.share({
         url: `${Config.apiBaseUrl}/event/${id}`,
       });
-      toast.dismiss();
+      hideNotification?.();
     } catch (error) {
       logError("Error sharing event", error);
-      toast.error("Failed to share event. Please try again.");
+      toast.error("Failed to share event", "Please try again.");
     }
   };
 
   const handleView = () => {
-    toast.dismiss();
+    hideNotification?.();
     void router.navigate(`/event/${id}`);
   };
 
   return (
-    <View className="w-full px-4">
+    <View className="w-full px-4 pt-2">
       <Pressable onPress={handleView}>
         <View
           className="w-full overflow-hidden rounded-3xl bg-interactive-2 p-4"
@@ -142,10 +147,17 @@ export function EventCaptureToast({ event }: EventCaptureToastProps) {
   );
 }
 
-export function showEventCaptureToast(event: EventCaptureToastProps["event"]) {
-  return toast.custom(<EventCaptureToast event={event} />, {
+export function showEventCaptureBanner(
+  event: EventCaptureBannerProps["event"],
+) {
+  void hapticSuccess();
+  Notifier.showNotification({
     duration: 8000,
-    dismissible: true,
-    position: "top-center",
+    showAnimationDuration: 300,
+    hideAnimationDuration: 300,
+    swipeEnabled: true,
+    Component: ({ hideNotification }: { hideNotification: () => void }) => (
+      <EventCaptureBanner event={event} hideNotification={hideNotification} />
+    ),
   });
 }

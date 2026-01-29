@@ -1,17 +1,16 @@
 import type { PropsWithChildren } from "react";
 import type { CustomerInfo } from "react-native-purchases";
 import { createContext, useCallback, useContext, useState } from "react";
-import { Linking } from "react-native";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { useAuth } from "@clerk/clerk-expo";
 import { useConvexAuth } from "convex/react";
 import { usePostHog } from "posthog-react-native";
-import { toast } from "sonner-native";
 
 import { useMountEffect } from "~/hooks/useMountEffect";
 import { initializeRevenueCat, setPostHogUserId } from "~/lib/revenue-cat";
 import { logError, logMessage } from "~/utils/errorLogging";
+import { hapticSuccess, toast } from "~/utils/feedback";
 import { useOneSignal } from "./OneSignalProvider";
 
 interface RevenueCatContextType {
@@ -178,26 +177,16 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
           }
 
           // Send welcome notification if notifications are enabled
+          void hapticSuccess();
           if (hasNotificationPermission) {
-            // Using OneSignal for notifications
-            // The server will handle sending to all of the user's devices
             toast.success(
-              "Welcome to Soonlist Unlimited! 🎉\n\nThanks for subscribing!",
-              {
-                duration: 5000,
-              },
+              "Welcome to Soonlist Unlimited!",
+              "Thanks for subscribing!",
             );
           } else {
-            toast.info(
-              "Welcome to Soonlist Unlimited! 🎉\n\n Enable notifications to get reminders before your trial ends",
-              {
-                action: {
-                  label: "Settings",
-                  onClick: () => {
-                    void Linking.openSettings();
-                  },
-                },
-              },
+            toast.warning(
+              "Welcome to Soonlist Unlimited!",
+              "Enable notifications for reminders",
             );
           }
           break;

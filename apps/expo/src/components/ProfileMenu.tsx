@@ -5,11 +5,11 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { useConvexAuth } from "convex/react";
-import { toast } from "sonner-native";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
 import { LogOut, MessageSquare, ShareIcon, User } from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
+import { toast } from "~/utils/feedback";
 import { logError } from "../utils/errorLogging";
 import { UserProfileFlair } from "./UserProfileFlair";
 

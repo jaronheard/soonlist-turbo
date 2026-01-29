@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -16,6 +15,7 @@ import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useStableTimestamp } from "~/store";
 import { logError } from "~/utils/errorLogging";
+import { hapticSuccess, toast } from "~/utils/feedback";
 
 export default function UserProfilePage() {
   const { username } = useLocalSearchParams<{ username: string }>();
@@ -100,11 +100,10 @@ export default function UserProfilePage() {
     try {
       if (isFollowing) {
         await unfollowUserMutation({ followingId: targetUser.id });
-        toast.success("Unfollowed list");
       } else {
         await followUserMutation({ followingId: targetUser.id });
-        toast.success("Followed list");
       }
+      void hapticSuccess();
     } catch (error) {
       logError("Error following/unfollowing user", error);
       toast.error(isFollowing ? "Failed to unfollow" : "Failed to follow");

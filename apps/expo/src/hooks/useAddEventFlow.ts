@@ -2,11 +2,11 @@ import { useCallback } from "react";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useUser } from "@clerk/clerk-expo";
-import { toast } from "sonner-native";
 
 import { useCreateEvent } from "~/hooks/useCreateEvent";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
+import { toast } from "~/utils/feedback";
 
 /**
  * Hook to manage the flow of adding new events via the image picker.
@@ -67,7 +67,7 @@ export function useAddEventFlow() {
         } catch (err) {
           // Handle potential errors during event creation
           logError("Failed to create events", err, { userId, username });
-          toast.error("Failed to start adding events. Please try again.");
+          toast.error("Failed to add events", "Please try again");
         } finally {
           setIsCapturing(false);
         }
@@ -78,7 +78,7 @@ export function useAddEventFlow() {
     } catch (err) {
       // Permissions shouldn't be an issue here, but we'll log it
       logError("Error in triggerAddEventFlow photo picker", err);
-      toast.error("Failed to open photo picker. Please try again.");
+      toast.error("Failed to open photo picker", "Please try again");
       setIsCapturing(false);
     }
   }, [user, createMultipleEvents, setIsCapturing]);

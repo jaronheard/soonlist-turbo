@@ -1,9 +1,7 @@
 import { useCallback } from "react";
-import * as Haptics from "expo-haptics";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
 import { useMutation } from "convex/react";
-import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -12,6 +10,7 @@ import { useOneSignal } from "~/providers/OneSignalProvider";
 import { useAppStore, useUserTimezone } from "~/store";
 import { useInFlightEventStore } from "~/store/useInFlightEventStore";
 import { logError } from "~/utils/errorLogging";
+import { hapticError, toast } from "~/utils/feedback";
 
 // Generate a simple batch ID without external dependencies
 function generateBatchId(): string {
@@ -176,7 +175,7 @@ export function useCreateEvent() {
         throw new Error("No image, URL, or text provided for event creation");
       } catch (error) {
         logError("Error processing event", error);
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        void hapticError();
         throw error; // Rethrow to trigger mutation's onError
       } finally {
         // Reset loading state for both routes
@@ -282,8 +281,8 @@ export function useCreateEvent() {
         // Note: Actual success/failure will be communicated via push notification
       } catch (error) {
         logError("Error creating events batch", error);
-        toast.error("Failed to process images. Please try again.");
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        toast.error("Failed to process images", "Please try again");
+        void hapticError();
       } finally {
         setIsCapturing(false);
         setIsImageLoading(false, "add");

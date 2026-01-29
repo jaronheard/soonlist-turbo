@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Pressable, Text } from "react-native";
 import { useRouter } from "expo-router";
-import { toast } from "sonner-native";
 
 import { useOnboarding } from "~/hooks/useOnboarding";
 import { logError } from "~/utils/errorLogging";
+import { toast } from "~/utils/feedback";
 
 interface FinishDemoButtonProps {
   text?: string;
@@ -29,9 +29,7 @@ export function FinishDemoButton({
       router.navigate("/feed");
     } catch (error) {
       logError("Failed to complete onboarding", error);
-      toast.error("Something went wrong", {
-        description: "Please try again",
-      });
+      toast.error("Something went wrong", "Please try again");
     } finally {
       setIsLoading(false);
     }

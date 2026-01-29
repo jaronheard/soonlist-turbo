@@ -1,9 +1,7 @@
 import type { FunctionReturnType } from "convex/server";
 import React from "react";
 import { Dimensions, TouchableOpacity, View } from "react-native";
-import * as Haptics from "expo-haptics";
 import Intercom from "@intercom/intercom-react-native";
-import { toast } from "sonner-native";
 
 import type { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -40,6 +38,7 @@ import {
 } from "~/components/ui/dropdown-menu-primitives";
 import { useEventActions } from "~/hooks/useEventActions";
 import { logError } from "~/utils/errorLogging";
+import { hapticSuccess, toast } from "~/utils/feedback";
 
 const screenWidth = Dimensions.get("window").width;
 const menuMinWidth = screenWidth * 0.6;
@@ -185,10 +184,10 @@ export function EventMenu({
 
   const handleMenuSelect = (title: string) => {
     if (demoMode) {
-      toast("Demo mode: action disabled");
+      toast.warning("Demo mode: action disabled");
       return;
     }
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    void hapticSuccess();
     switch (title) {
       case "Share":
         void handleShare();
