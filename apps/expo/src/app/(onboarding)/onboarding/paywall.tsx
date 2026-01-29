@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
@@ -14,7 +15,7 @@ import { router } from "expo-router";
 
 import { useRevenueCat } from "~/providers/RevenueCatProvider";
 import { useAppStore, useSetHasSeenOnboarding } from "~/store";
-import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
+import { AF_EVENTS, trackAFEvent, trackPurchaseEvent } from "~/utils/appsflyerEvents";
 import { isSimulator, shouldMockPaywall } from "~/utils/deviceInfo";
 
 export default function PaywallScreen() {
@@ -55,6 +56,13 @@ export default function PaywallScreen() {
       switch (paywallResult) {
         case PAYWALL_RESULT.PURCHASED:
         case PAYWALL_RESULT.RESTORED:
+          // Track purchase event to AppsFlyer
+          try {
+            const updatedCustomerInfo = await Purchases.getCustomerInfo();
+            void trackPurchaseEvent(updatedCustomerInfo);
+          } catch {
+            // Continue even if tracking fails
+          }
           // User subscribed successfully
           setOnboardingData({
             subscribed: true,

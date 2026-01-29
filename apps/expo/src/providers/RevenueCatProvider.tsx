@@ -11,6 +11,7 @@ import { toast } from "sonner-native";
 
 import { useMountEffect } from "~/hooks/useMountEffect";
 import { initializeRevenueCat, setPostHogUserId } from "~/lib/revenue-cat";
+import { trackPurchaseEvent } from "~/utils/appsflyerEvents";
 import { logError, logMessage } from "~/utils/errorLogging";
 import { useOneSignal } from "./OneSignalProvider";
 
@@ -173,6 +174,9 @@ export function RevenueCatProvider({ children }: PropsWithChildren) {
           try {
             const updatedCustomerInfo = await Purchases.getCustomerInfo();
             setCustomerInfo(updatedCustomerInfo);
+
+            // Track purchase event to AppsFlyer
+            void trackPurchaseEvent(updatedCustomerInfo);
           } catch (error) {
             logError("Error refreshing customer info after purchase", error);
           }

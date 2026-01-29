@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
 import { useAppStore } from "~/store";
+import { trackPurchaseEvent } from "~/utils/appsflyerEvents";
 import { shouldMockPaywall } from "~/utils/deviceInfo";
 
 export default function PaywallReminderScreen() {
@@ -32,6 +34,13 @@ export default function PaywallReminderScreen() {
         paywallResult === PAYWALL_RESULT.PURCHASED ||
         paywallResult === PAYWALL_RESULT.RESTORED
       ) {
+        // Track purchase event to AppsFlyer
+        try {
+          const updatedCustomerInfo = await Purchases.getCustomerInfo();
+          void trackPurchaseEvent(updatedCustomerInfo);
+        } catch {
+          // Continue even if tracking fails
+        }
         // User subscribed successfully
         setOnboardingData({
           subscribed: true,
