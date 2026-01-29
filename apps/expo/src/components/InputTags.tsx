@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { Plus, X } from "~/components/icons";
+import { hapticLight } from "~/utils/feedback";
 
 interface InputTagsProps {
   value: string[];
@@ -32,6 +33,7 @@ export function InputTags({
   };
 
   const removeItem = (itemToRemove: string) => {
+    void hapticLight();
     onChange(value.filter((item) => item !== itemToRemove));
   };
 
@@ -84,9 +86,10 @@ export function InputTags({
               <Text className="text-sm text-gray-800">{item}</Text>
               <TouchableOpacity
                 onPress={() => removeItem(item)}
-                className="ml-2"
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 12 }}
+                className="-mr-1 ml-1 p-1"
               >
-                <X size={14} color="#6B7280" />
+                <X size={16} color="#6B7280" />
               </TouchableOpacity>
             </View>
           ))}
