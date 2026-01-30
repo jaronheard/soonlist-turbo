@@ -37,7 +37,7 @@ export function showBatchSummaryBanner(props: {
 }) {
   void hapticSuccess();
   Notifier.showNotification({
-    duration: 8000,
+    duration: 5000,
     showAnimationDuration: 300,
     hideAnimationDuration: 300,
     swipeEnabled: true,
