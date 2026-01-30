@@ -1,4 +1,10 @@
-import { Platform, StyleSheet, Text, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import appsFlyer from "react-native-appsflyer";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
@@ -40,7 +46,7 @@ import { useOTAUpdates } from "~/hooks/useOTAUpdates";
 import { usePendingFollow } from "~/hooks/usePendingFollow";
 import { useQuickActions } from "~/hooks/useQuickActions";
 import { useTimezoneAlert } from "~/hooks/useTimezoneAlert";
-import { useAppStore } from "~/store";
+import { useAppStore, useIsMenuOpen } from "~/store";
 import Config from "~/utils/config";
 import { getUserTimeZone } from "~/utils/dates";
 import { logDebug, logError } from "~/utils/errorLogging";
@@ -357,6 +363,7 @@ function RootLayoutContent() {
 
   useTimezoneAlert();
   const { needsUpdate } = useForceUpdate();
+  const isMenuOpen = useIsMenuOpen();
 
   if (needsUpdate) {
     return <ForceUpdateScreen />;
@@ -365,6 +372,14 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <InitialLayout />
+      {isMenuOpen && (
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={() => {
+            // Swallow tap to prevent passthrough to underlying content
+          }}
+        />
+      )}
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
     </View>
   );

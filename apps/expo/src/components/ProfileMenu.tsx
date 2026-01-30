@@ -9,6 +9,7 @@ import * as DropdownMenu from "zeego/dropdown-menu";
 
 import { LogOut, MessageSquare, ShareIcon, User } from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
+import { useSetIsMenuOpen } from "~/store";
 import { toast } from "~/utils/feedback";
 import { logError } from "../utils/errorLogging";
 import { UserProfileFlair } from "./UserProfileFlair";
@@ -17,6 +18,7 @@ export function ProfileMenu() {
   const { user } = useUser();
   const { isAuthenticated } = useConvexAuth();
   const signOut = useSignOut();
+  const setIsMenuOpen = useSetIsMenuOpen();
 
   const handleSignOut = () => {
     signOut().catch((error) => {
@@ -80,7 +82,7 @@ export function ProfileMenu() {
   );
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root onOpenChange={setIsMenuOpen}>
       <DropdownMenu.Trigger>
         {user?.username && isAuthenticated ? (
           <UserProfileFlair username={user.username} size="sm">

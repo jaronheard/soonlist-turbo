@@ -119,8 +119,8 @@ catalog:
   "@react-native-community/datetimepicker": ~8.4.4
   "@react-native-community/netinfo": ^11.4.1
   "react-native-appsflyer": ^6.15.3
-  "react-native-ios-context-menu": ^3.1.0
-  "react-native-ios-utilities": ^5.1.0
+  "react-native-ios-context-menu": 3.1.0
+  "react-native-ios-utilities": 5.1.2
   "react-native-keyboard-controller": ^1.18.5
   "react-native-modal": 14.0.0-rc.1
   "react-native-onesignal": ^5.2.8
@@ -234,7 +234,7 @@ catalog:
   "vaul": ^0.9.1
   burnt: ^0.13.0
   "react-native-notifier": ^2.0.0
-  "zeego": ^2.0.4
+  "zeego": ^3.0.6
 
   # API & AI
   "@ai-sdk/anthropic": ^0.0.50

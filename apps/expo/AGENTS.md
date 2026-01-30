@@ -33,6 +33,14 @@ Expo Router provides typed file-based navigation.
 - E2E tests use Maestro (`.maestro/` directory)
 - Run tests: `pnpm test`
 
+## Menus (Zeego)
+
+Zeego context/dropdown menus cause tap passthrough to underlying content due to iOS `UIContextMenuInteraction` not coordinating with React Native's touch system. A global overlay fix is in place:
+
+- `store.ts` has `isMenuOpen` / `setIsMenuOpen` state
+- `_layout.tsx` renders a `Pressable` overlay that swallows stray taps when a menu is open
+- **Any new menu component must call `setIsMenuOpen` via `onOpenChange`** — everything else is protected automatically
+
 ## Push Notifications
 
 OneSignal handles push notifications.

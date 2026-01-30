@@ -171,6 +171,10 @@ interface AppState {
   // Pending follow from deep link (used when user is not authenticated yet)
   pendingFollowUsername: string | null;
   setPendingFollowUsername: (username: string | null) => void;
+
+  // Menu open state (for blocking tap passthrough)
+  isMenuOpen: boolean;
+  setIsMenuOpen: (open: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -507,6 +511,10 @@ export const useAppStore = create<AppState>()(
       pendingFollowUsername: null,
       setPendingFollowUsername: (username) =>
         set({ pendingFollowUsername: username }),
+
+      // Menu open state
+      isMenuOpen: false,
+      setIsMenuOpen: (open) => set({ isMenuOpen: open }),
     }),
     {
       name: "app-storage",
@@ -514,7 +522,7 @@ export const useAppStore = create<AppState>()(
       // Do not persist ephemeral flags like discoverAccessOverride
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { discoverAccessOverride, ...rest } = state;
+        const { discoverAccessOverride, isMenuOpen, ...rest } = state;
         return rest;
       },
     },
@@ -602,6 +610,11 @@ export const usePreferredCalendarApp = () =>
   useAppStore((state) => state.preferredCalendarApp);
 export const useSetPreferredCalendarApp = () =>
   useAppStore((state) => state.setPreferredCalendarApp);
+
+// Menu state selectors (for blocking tap passthrough)
+export const useIsMenuOpen = () => useAppStore((state) => state.isMenuOpen);
+export const useSetIsMenuOpen = () =>
+  useAppStore((state) => state.setIsMenuOpen);
 
 // Pending follow selectors (for deferred deep link follow intent)
 export const usePendingFollowUsername = () =>

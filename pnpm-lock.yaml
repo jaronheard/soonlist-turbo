@@ -400,11 +400,11 @@ catalogs:
       specifier: ^2.28.0
       version: 2.30.0
     react-native-ios-context-menu:
-      specifier: ^3.1.0
-      version: 3.2.1
+      specifier: 3.1.0
+      version: 3.1.0
     react-native-ios-utilities:
-      specifier: ^5.1.0
-      version: 5.2.0
+      specifier: 5.1.2
+      version: 5.1.2
     react-native-keyboard-controller:
       specifier: ^1.18.5
       version: 1.20.4
@@ -493,8 +493,8 @@ catalogs:
       specifier: ^3.21.7
       version: 3.28.0
     zeego:
-      specifier: ^2.0.4
-      version: 2.0.4
+      specifier: ^3.0.6
+      version: 3.0.6
     zod:
       specifier: ^3.23.0
       version: 3.25.76
@@ -770,10 +770,10 @@ importers:
         version: 2.30.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
       react-native-ios-context-menu:
         specifier: 'catalog:'
-        version: 3.2.1(react-native-ios-utilities@5.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
+        version: 3.1.0(react-native-ios-utilities@5.1.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
       react-native-ios-utilities:
         specifier: 'catalog:'
-        version: 5.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
+        version: 5.1.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
       react-native-keyboard-controller:
         specifier: 'catalog:'
         version: 1.20.4(react-native-reanimated@4.2.1(react-native-worklets@0.7.1(@babel/core@7.28.5)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
@@ -812,7 +812,7 @@ importers:
         version: 2.2.1
       zeego:
         specifier: 'catalog:'
-        version: 2.0.4(@react-native-menu/menu@2.0.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.1.0(react@19.1.0))(react-native-ios-context-menu@3.2.1(react-native-ios-utilities@5.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
+        version: 3.0.6(@react-native-menu/menu@2.0.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.1.0(react@19.1.0))(react-native-ios-context-menu@3.1.0(react-native-ios-utilities@5.1.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native-ios-utilities@5.1.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
       zustand:
         specifier: 'catalog:'
         version: 4.5.5(@types/react@19.2.7)(react@19.1.0)
@@ -9398,15 +9398,15 @@ packages:
       react: 19.1.0
       react-native: '*'
 
-  react-native-ios-context-menu@3.2.1:
-    resolution: {integrity: sha512-OBQbb3I/VUx2wQgz4cqN614kt3nJ+qx5wxEdtGN1Aj4nYYL1orp7VLFkV6axof6DgOyv0YD6af2RUTok6a2xDQ==}
+  react-native-ios-context-menu@3.1.0:
+    resolution: {integrity: sha512-qdPSXMKUp5lDgmZeUPdv5sgBFhkFrIqma+zsnqJQYOvekb6Qs17yJy1Rqhrj0bJrwuduHzZX0aYbaA8whxqpDw==}
     peerDependencies:
       react: 19.1.0
       react-native: '*'
       react-native-ios-utilities: '*'
 
-  react-native-ios-utilities@5.2.0:
-    resolution: {integrity: sha512-RTw1Gk8rQhBL43+U80I+Nu8T7mLTNkj5RaG8vTs3ETEDqphS3L0Mrzk79RX0Jmm64HMad70GXHctXFlW1n0V8w==}
+  react-native-ios-utilities@5.1.2:
+    resolution: {integrity: sha512-H566MdgC1x0vW6D8EKweno1yRj/gQHeWiK0cRmyRexnUSk7oIecy7l2uyxXLYWFs+yvB/YIdLm+s2c19lKGfaw==}
     peerDependencies:
       react: 19.1.0
       react-native: '*'
@@ -10929,13 +10929,14 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zeego@2.0.4:
-    resolution: {integrity: sha512-mkKfUJmgcSGCTqWXW7ccqap8d8z6guQoLF5/mWlH17Jckd0BaFLVZ74y/uWvfBGaC9OawYVt/1MchPnQ8ieSxg==}
+  zeego@3.0.6:
+    resolution: {integrity: sha512-vg0GCMPYg6or/J91bwRnUpIYwz7QnhkyeKOdd3FjvICg+Gzq2D5QhD8k5RUSv1B+048LpNmNYdLm8qJVIbBONw==}
     peerDependencies:
-      '@react-native-menu/menu': '*'
+      '@react-native-menu/menu': 1.2.2
       react: 19.1.0
       react-native: '*'
-      react-native-ios-context-menu: ~2.5.1
+      react-native-ios-context-menu: 3.1.0
+      react-native-ios-utilities: 5.1.2
 
   zod-to-json-schema@3.22.5:
     resolution: {integrity: sha512-+akaPo6a0zpVCCseDed504KBJUQpEW5QZw7RMneNmKw+fGaML1Z9tUNLnHHAC8x6dzVRO1eB2oEMyZRnuBZg7Q==}
@@ -14351,7 +14352,7 @@ snapshots:
       debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-config: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-config: 0.83.3
       metro-core: 0.83.3
       semver: 7.7.3
     transitivePeerDependencies:
@@ -18963,6 +18964,19 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  metro-config@0.83.3:
+    dependencies:
+      connect: 3.7.0
+      flow-enums-runtime: 0.0.6
+      jest-validate: 29.7.0
+      metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-cache: 0.83.3
+      metro-core: 0.83.3
+      metro-runtime: 0.83.3
+      yaml: 2.8.2
+    transitivePeerDependencies:
+      - supports-color
+
   metro-config@0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10):
     dependencies:
       connect: 3.7.0
@@ -19955,14 +19969,14 @@ snapshots:
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10)
 
-  react-native-ios-context-menu@3.2.1(react-native-ios-utilities@5.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0):
+  react-native-ios-context-menu@3.1.0(react-native-ios-utilities@5.1.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0):
     dependencies:
       '@dominicstop/ts-event-emitter': 1.1.0
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10)
-      react-native-ios-utilities: 5.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
+      react-native-ios-utilities: 5.1.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
 
-  react-native-ios-utilities@5.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0):
+  react-native-ios-utilities@5.1.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0):
     dependencies:
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10)
@@ -21645,14 +21659,15 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zeego@2.0.4(@react-native-menu/menu@2.0.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.1.0(react@19.1.0))(react-native-ios-context-menu@3.2.1(react-native-ios-utilities@5.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0):
+  zeego@3.0.6(@react-native-menu/menu@2.0.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.1.0(react@19.1.0))(react-native-ios-context-menu@3.1.0(react-native-ios-utilities@5.1.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native-ios-utilities@5.1.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0):
     dependencies:
       '@radix-ui/react-context-menu': 2.2.16(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-dropdown-menu': 2.1.2(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@react-native-menu/menu': 2.0.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10)
-      react-native-ios-context-menu: 3.2.1(react-native-ios-utilities@5.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
+      react-native-ios-context-menu: 3.1.0(react-native-ios-utilities@5.1.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
+      react-native-ios-utilities: 5.1.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
       sf-symbols-typescript: 2.2.0
     transitivePeerDependencies:
       - '@types/react'

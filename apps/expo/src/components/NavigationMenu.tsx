@@ -16,7 +16,7 @@ import {
   History,
   MessageSquare,
 } from "~/components/icons";
-import { useAppStore } from "~/store";
+import { useAppStore, useSetIsMenuOpen } from "~/store";
 import { logError } from "~/utils/errorLogging";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import {
@@ -57,7 +57,13 @@ function isRouteActive(routePath: string, active?: RouteType) {
 
 export function NavigationMenu({ active }: NavigationMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const setIsMenuOpen = useSetIsMenuOpen();
   const { user } = useUser();
+
+  const handleOpenChange = (open: boolean) => {
+    setMenuOpen(open);
+    setIsMenuOpen(open);
+  };
   const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
 
   // Check if user is following anyone
@@ -106,7 +112,7 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
 
   return (
     <View className="flex-1 items-center justify-center">
-      <DropdownMenuRoot open={menuOpen} onOpenChange={setMenuOpen}>
+      <DropdownMenuRoot open={menuOpen} onOpenChange={handleOpenChange}>
         <DropdownMenuTrigger>
           <TouchableOpacity activeOpacity={0.6}>
             <View className="flex-row items-center space-x-1">

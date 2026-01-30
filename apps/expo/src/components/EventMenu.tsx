@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu-primitives";
 import { useEventActions } from "~/hooks/useEventActions";
+import { useSetIsMenuOpen } from "~/store";
 import { logError } from "~/utils/errorLogging";
 import { hapticSuccess, toast } from "~/utils/feedback";
 
@@ -52,6 +53,7 @@ interface EventMenuProps {
   children?: React.ReactNode;
   onDelete?: () => Promise<void>;
   iconColor?: string;
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface MenuItem {
@@ -83,7 +85,9 @@ export function EventMenu({
   children,
   onDelete,
   iconColor = "#FFF",
+  onOpenChange,
 }: EventMenuProps) {
+  const setIsMenuOpen = useSetIsMenuOpen();
   const {
     handleShare,
     handleDirections,
@@ -96,6 +100,11 @@ export function EventMenu({
     handleShowQR,
     showDiscover,
   } = useEventActions({ event, isSaved, demoMode, onDelete });
+
+  const handleOpenChange = (open: boolean) => {
+    setIsMenuOpen(open);
+    onOpenChange?.(open);
+  };
 
   const presentIntercom = async () => {
     try {
@@ -228,7 +237,7 @@ export function EventMenu({
 
   if (menuType === "context") {
     return (
-      <ContextMenuRoot>
+      <ContextMenuRoot modal={true} onOpenChange={handleOpenChange}>
         <ContextMenuTrigger asChild>
           {children ?? (
             <TouchableOpacity activeOpacity={0.6}>
@@ -270,7 +279,7 @@ export function EventMenu({
   }
 
   return (
-    <DropdownMenuRoot>
+    <DropdownMenuRoot modal={true} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         {children ?? (
           <TouchableOpacity activeOpacity={0.6}>
