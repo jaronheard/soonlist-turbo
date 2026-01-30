@@ -55,7 +55,8 @@ async function optimizeImage(uri: string): Promise<string> {
 
 export function useCreateEvent() {
   const { setIsImageLoading, addWorkflowId } = useAppStore();
-  const { setIsCapturing, addPendingBatchId } = useInFlightEventStore();
+  const setIsCapturing = useInFlightEventStore((s) => s.setIsCapturing);
+  const addPendingBatchId = useInFlightEventStore((s) => s.addPendingBatchId);
   const { hasNotificationPermission } = useOneSignal();
   const userTimezone = useUserTimezone();
 

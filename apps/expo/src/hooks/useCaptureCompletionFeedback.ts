@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
+import { shallow } from "zustand/shallow";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
@@ -16,7 +17,13 @@ import { useInFlightEventStore } from "~/store/useInFlightEventStore";
  * - 2+ events: Single BatchSummaryBanner with batch summary content
  */
 export function useCaptureCompletionFeedback() {
-  const { pendingBatchIds, removePendingBatchId } = useInFlightEventStore();
+  const pendingBatchIds = useInFlightEventStore(
+    (s) => s.pendingBatchIds,
+    shallow,
+  );
+  const removePendingBatchId = useInFlightEventStore(
+    (s) => s.removePendingBatchId,
+  );
 
   // Track which batches we've already shown feedback for
   const shownBatchIds = useRef<Set<string>>(new Set());

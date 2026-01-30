@@ -8,7 +8,7 @@ import {
   internalQuery,
   query,
 } from "./_generated/server";
-import { DEFAULT_VISIBILITY } from "./constants";
+import { DEFAULT_TIMEZONE, DEFAULT_VISIBILITY } from "./constants";
 import { getNotificationContent } from "./model/notificationHelpers";
 
 // Batch tracking schema
@@ -440,12 +440,11 @@ export const getBatchStatus = query({
         .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
         .collect();
 
-      // Get today's event count for this user (for notification content)
-      const now = new Date();
-      const startOfDay = new Date(now);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(now);
-      endOfDay.setHours(23, 59, 59, 999);
+      // Get today's event count for this user (for notification content).
+      // Compute day boundaries in the batch's timezone so daily counts
+      // are accurate regardless of where the server is located.
+      const tz = batch.timezone ?? DEFAULT_TIMEZONE;
+      const { startOfDay, endOfDay } = getDayBoundsForTimezone(tz);
 
       const todayEvents = await ctx.db
         .query("events")
@@ -531,3 +530,57 @@ export const getBatchStatus = query({
     };
   },
 });
+
+/**
+ * Get the start and end of "today" as Date objects in UTC,
+ * where "today" is determined by the given IANA timezone.
+ *
+ * For example, at 2024-03-15T02:00:00Z:
+ * - In "America/New_York" (UTC-4), it's still March 14, so this returns
+ *   March 14 00:00 ET -> March 14 04:00 UTC  to  March 14 23:59:59.999 ET -> March 15 03:59:59.999 UTC
+ * - In "Asia/Tokyo" (UTC+9), it's already March 15, so this returns
+ *   March 15 00:00 JST -> March 14 15:00 UTC  to  March 15 23:59:59.999 JST -> March 15 14:59:59.999 UTC
+ */
+function getDayBoundsForTimezone(tz: string): {
+  startOfDay: Date;
+  endOfDay: Date;
+} {
+  const now = new Date();
+
+  // Use Intl to get the current date parts in the target timezone
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0);
+
+  const year = get("year");
+  const month = get("month"); // 1-based
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+  const second = get("second");
+
+  // Compute the UTC offset for this timezone at this instant.
+  // We build a Date from the wall-clock parts (interpreted as UTC) and
+  // compare it to the real UTC instant (`now`).
+  const wallAsUtc = Date.UTC(year, month - 1, day, hour, minute, second);
+  const offsetMs = wallAsUtc - now.getTime();
+
+  // Build midnight and end-of-day in the target timezone as UTC timestamps
+  const midnightWallUtc = Date.UTC(year, month - 1, day, 0, 0, 0, 0);
+  const endWallUtc = Date.UTC(year, month - 1, day, 23, 59, 59, 999);
+
+  return {
+    startOfDay: new Date(midnightWallUtc - offsetMs),
+    endOfDay: new Date(endWallUtc - offsetMs),
+  };
+}
