@@ -376,7 +376,7 @@ export const getBatchStatus = query({
     firstEventId: v.union(v.string(), v.null()),
     // Events with notification content for banners (only when completed)
     events: v.array(eventInfoValidator),
-    // Summary content for batch summary banner (4+ events)
+    // Summary content for batch summary banner (2+ events)
     batchSummaryContent: v.union(
       v.object({
         title: v.string(),
@@ -460,8 +460,8 @@ export const getBatchStatus = query({
 
       const totalTodayCount = todayEvents.length;
 
-      // For 1-3 events, provide individual event info with notification content
-      if (batch.totalCount <= 3) {
+      // For 1 event, provide individual event info with notification content
+      if (batch.totalCount <= 1) {
         // Calculate position for each event
         const countBeforeBatch = Math.max(
           0,
