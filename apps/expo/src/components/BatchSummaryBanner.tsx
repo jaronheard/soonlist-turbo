@@ -5,8 +5,8 @@ import { router } from "expo-router";
 import { NotificationBanner } from "~/components/NotificationBanner";
 import { hapticSuccess } from "~/utils/feedback";
 
-interface EventCaptureBannerProps {
-  eventId: string;
+interface BatchSummaryBannerProps {
+  batchId: string;
   notificationContent: {
     title: string;
     subtitle: string;
@@ -15,24 +15,24 @@ interface EventCaptureBannerProps {
   hideNotification?: () => void;
 }
 
-export function EventCaptureBanner({
-  eventId,
+export function BatchSummaryBanner({
+  batchId,
   notificationContent,
   hideNotification,
-}: EventCaptureBannerProps) {
+}: BatchSummaryBannerProps) {
   return (
     <NotificationBanner
       title={notificationContent.title}
       subtitle={notificationContent.subtitle}
       body={notificationContent.body}
-      onPress={() => void router.navigate(`/event/${eventId}`)}
+      onPress={() => void router.navigate(`/batch/${batchId}`)}
       hideNotification={hideNotification}
     />
   );
 }
 
-export function showEventCaptureBanner(props: {
-  eventId: string;
+export function showBatchSummaryBanner(props: {
+  batchId: string;
   notificationContent: { title: string; subtitle: string; body: string };
 }) {
   void hapticSuccess();
@@ -42,7 +42,7 @@ export function showEventCaptureBanner(props: {
     hideAnimationDuration: 300,
     swipeEnabled: true,
     Component: ({ hideNotification }: { hideNotification: () => void }) => (
-      <EventCaptureBanner {...props} hideNotification={hideNotification} />
+      <BatchSummaryBanner {...props} hideNotification={hideNotification} />
     ),
   });
 }

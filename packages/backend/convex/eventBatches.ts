@@ -8,7 +8,8 @@ import {
   internalQuery,
   query,
 } from "./_generated/server";
-import { DEFAULT_VISIBILITY } from "./constants";
+import { DEFAULT_TIMEZONE, DEFAULT_VISIBILITY } from "./constants";
+import { getNotificationContent } from "./model/notificationHelpers";
 
 // Batch tracking schema
 export const batchStatusValidator = v.union(
@@ -337,8 +338,29 @@ export const getEventsForBatch = internalQuery({
   },
 });
 
+// Notification content for individual events in a batch
+const notificationContentValidator = v.object({
+  title: v.string(),
+  subtitle: v.string(),
+  body: v.string(),
+});
+
+// Event info for banners
+const eventInfoValidator = v.object({
+  id: v.string(),
+  name: v.string(),
+  startDate: v.union(v.string(), v.null()),
+  startTime: v.union(v.string(), v.null()),
+  endTime: v.union(v.string(), v.null()),
+  timeZone: v.union(v.string(), v.null()),
+  image: v.union(v.string(), v.null()),
+  visibility: v.union(v.literal("public"), v.literal("private")),
+  notificationContent: notificationContentValidator,
+});
+
 /**
  * Get batch status for client polling
+ * Includes notification content for completion feedback
  */
 export const getBatchStatus = query({
   args: {
@@ -352,6 +374,17 @@ export const getBatchStatus = query({
     failureCount: v.number(),
     progress: v.number(),
     firstEventId: v.union(v.string(), v.null()),
+    // Events with notification content for banners (only when completed)
+    events: v.array(eventInfoValidator),
+    // Summary content for batch summary banner (2+ events)
+    batchSummaryContent: v.union(
+      v.object({
+        title: v.string(),
+        subtitle: v.string(),
+        body: v.string(),
+      }),
+      v.null(),
+    ),
   }),
   handler: async (ctx, args) => {
     const batch = await ctx.db
@@ -382,6 +415,108 @@ export const getBatchStatus = query({
       firstEventId = firstEvent?.id ?? null;
     }
 
+    // Get events with notification content when batch is completed
+    let events: {
+      id: string;
+      name: string;
+      startDate: string | null;
+      startTime: string | null;
+      endTime: string | null;
+      timeZone: string | null;
+      image: string | null;
+      visibility: "public" | "private";
+      notificationContent: { title: string; subtitle: string; body: string };
+    }[] = [];
+    let batchSummaryContent: {
+      title: string;
+      subtitle: string;
+      body: string;
+    } | null = null;
+
+    if (batch.status === "completed" || batch.status === "failed") {
+      // Get events for this batch
+      const batchEvents = await ctx.db
+        .query("events")
+        .withIndex("by_batch_id", (q) => q.eq("batchId", args.batchId))
+        .collect();
+
+      // Get today's event count for this user (for notification content).
+      // Compute day boundaries in the batch's timezone so daily counts
+      // are accurate regardless of where the server is located.
+      const tz = batch.timezone ?? DEFAULT_TIMEZONE;
+      const { startOfDay, endOfDay } = getDayBoundsForTimezone(tz);
+
+      const todayEvents = await ctx.db
+        .query("events")
+        .withIndex("by_user", (q) => q.eq("userId", batch.userId))
+        .filter((q) =>
+          q.and(
+            q.gte(q.field("created_at"), startOfDay.toISOString()),
+            q.lte(q.field("created_at"), endOfDay.toISOString()),
+          ),
+        )
+        .collect();
+
+      const totalTodayCount = todayEvents.length;
+
+      // For 1 event, provide individual event info with notification content
+      if (batch.totalCount <= 1) {
+        // Calculate position for each event
+        const countBeforeBatch = Math.max(
+          0,
+          totalTodayCount - batchEvents.length,
+        );
+
+        events = batchEvents.map((event, index) => {
+          const position = countBeforeBatch + index + 1;
+          const content = getNotificationContent(event.name ?? "", position);
+          // Extract event data safely - the event field contains the calendar event JSON
+          const eventData = event.event as
+            | {
+                startDate?: string;
+                startTime?: string;
+                endTime?: string;
+                timeZone?: string;
+                images?: (string | null)[];
+              }
+            | undefined;
+          return {
+            id: event.id,
+            name: event.name ?? "",
+            startDate: eventData?.startDate ?? null,
+            startTime: eventData?.startTime ?? null,
+            endTime: eventData?.endTime ?? null,
+            timeZone: eventData?.timeZone ?? null,
+            image: eventData?.images?.[3] ?? null,
+            visibility: event.visibility,
+            notificationContent: content,
+          };
+        });
+      } else {
+        // For 4+ events, provide batch summary content
+        if (batch.failureCount === 0) {
+          batchSummaryContent = {
+            title: "Events captured ✨",
+            subtitle: `Successfully captured ${batch.successCount} events`,
+            body:
+              totalTodayCount === batch.successCount && totalTodayCount === 1
+                ? "First capture today! 🤔 What's next?"
+                : totalTodayCount === 2
+                  ? "2 captures today! ✌️ Keep 'em coming!"
+                  : totalTodayCount === 3
+                    ? "3 captures today! 🔥 You're on fire!"
+                    : `${totalTodayCount} captures today! 🌌 The sky's the limit!`,
+          };
+        } else {
+          batchSummaryContent = {
+            title: "Event batch completed",
+            subtitle: `Captured ${batch.successCount} of ${batch.totalCount} events`,
+            body: `${batch.failureCount} image${batch.failureCount > 1 ? "s" : ""} failed to process`,
+          };
+        }
+      }
+    }
+
     return {
       batchId: batch.batchId,
       status: batch.status,
@@ -390,6 +525,62 @@ export const getBatchStatus = query({
       failureCount: batch.failureCount,
       progress,
       firstEventId,
+      events,
+      batchSummaryContent,
     };
   },
 });
+
+/**
+ * Get the start and end of "today" as Date objects in UTC,
+ * where "today" is determined by the given IANA timezone.
+ *
+ * For example, at 2024-03-15T02:00:00Z:
+ * - In "America/New_York" (UTC-4), it's still March 14, so this returns
+ *   March 14 00:00 ET -> March 14 04:00 UTC  to  March 14 23:59:59.999 ET -> March 15 03:59:59.999 UTC
+ * - In "Asia/Tokyo" (UTC+9), it's already March 15, so this returns
+ *   March 15 00:00 JST -> March 14 15:00 UTC  to  March 15 23:59:59.999 JST -> March 15 14:59:59.999 UTC
+ */
+function getDayBoundsForTimezone(tz: string): {
+  startOfDay: Date;
+  endOfDay: Date;
+} {
+  const now = new Date();
+
+  // Use Intl to get the current date parts in the target timezone
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0);
+
+  const year = get("year");
+  const month = get("month"); // 1-based
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+  const second = get("second");
+
+  // Compute the UTC offset for this timezone at this instant.
+  // We build a Date from the wall-clock parts (interpreted as UTC) and
+  // compare it to the real UTC instant (`now`).
+  const wallAsUtc = Date.UTC(year, month - 1, day, hour, minute, second);
+  const offsetMs = wallAsUtc - now.getTime();
+
+  // Build midnight and end-of-day in the target timezone as UTC timestamps
+  const midnightWallUtc = Date.UTC(year, month - 1, day, 0, 0, 0, 0);
+  const endWallUtc = Date.UTC(year, month - 1, day, 23, 59, 59, 999);
+
+  return {
+    startOfDay: new Date(midnightWallUtc - offsetMs),
+    endOfDay: new Date(endWallUtc - offsetMs),
+  };
+}
