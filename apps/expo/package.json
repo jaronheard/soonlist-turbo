@@ -41,6 +41,7 @@
     "@clerk/clerk-expo": "catalog:",
     "@expo/metro-runtime": "catalog:",
     "@expo/ui": "~0.2.0-beta.9",
+    "@gorhom/portal": "^1.0.14",
     "@intercom/intercom-react-native": "catalog:",
     "@legendapp/list": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",

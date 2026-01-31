@@ -26,6 +26,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { NotifierWrapper } from "react-native-notifier";
 import Constants, { AppOwnership } from "expo-constants";
+import { PortalProvider } from "@gorhom/portal";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import AuthAndTokenSync from "~/components/AuthAndTokenSync";
@@ -149,47 +150,49 @@ function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <NotifierWrapper>
-        <KeyboardProvider>
-          <ClerkProvider
-            publishableKey={clerkPublishableKey}
-            tokenCache={tokenCache}
-            __experimental_resourceCache={resourceCache}
-          >
-            {/* eslint-disable-next-line react-compiler/react-compiler */}
-            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-              <QueryClientProvider client={queryClient}>
-                <SafeAreaProvider>
-                  <PostHogProvider
-                    apiKey={Config.posthogApiKey}
-                    options={{
-                      host: "https://us.i.posthog.com",
-                      disabled: isDev,
-                      enableSessionReplay: !isDev,
-                      sessionReplayConfig: {
-                        maskAllTextInputs: false,
-                        maskAllImages: false,
-                        captureLog: false,
-                        captureNetworkTelemetry: true,
-                        androidDebouncerDelayMs: 500,
-                        iOSdebouncerDelayMs: 1000,
-                      },
-                    }}
-                  >
-                    <PostHogIdentityTracker />
-                    <OneSignalProvider>
-                      <RevenueCatProvider>
-                        <AuthAndTokenSync />
-                        <RootLayoutContent />
-                      </RevenueCatProvider>
-                    </OneSignalProvider>
-                  </PostHogProvider>
-                </SafeAreaProvider>
-              </QueryClientProvider>
-            </ConvexProviderWithClerk>
-          </ClerkProvider>
-        </KeyboardProvider>
-      </NotifierWrapper>
+      <PortalProvider>
+        <NotifierWrapper>
+          <KeyboardProvider>
+            <ClerkProvider
+              publishableKey={clerkPublishableKey}
+              tokenCache={tokenCache}
+              __experimental_resourceCache={resourceCache}
+            >
+              {/* eslint-disable-next-line react-compiler/react-compiler */}
+              <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+                <QueryClientProvider client={queryClient}>
+                  <SafeAreaProvider>
+                    <PostHogProvider
+                      apiKey={Config.posthogApiKey}
+                      options={{
+                        host: "https://us.i.posthog.com",
+                        disabled: isDev,
+                        enableSessionReplay: !isDev,
+                        sessionReplayConfig: {
+                          maskAllTextInputs: false,
+                          maskAllImages: false,
+                          captureLog: false,
+                          captureNetworkTelemetry: true,
+                          androidDebouncerDelayMs: 500,
+                          iOSdebouncerDelayMs: 1000,
+                        },
+                      }}
+                    >
+                      <PostHogIdentityTracker />
+                      <OneSignalProvider>
+                        <RevenueCatProvider>
+                          <AuthAndTokenSync />
+                          <RootLayoutContent />
+                        </RevenueCatProvider>
+                      </OneSignalProvider>
+                    </PostHogProvider>
+                  </SafeAreaProvider>
+                </QueryClientProvider>
+              </ConvexProviderWithClerk>
+            </ClerkProvider>
+          </KeyboardProvider>
+        </NotifierWrapper>
+      </PortalProvider>
     </GestureHandlerRootView>
   );
 }

@@ -5,7 +5,14 @@ import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { useConvexAuth } from "convex/react";
-import * as DropdownMenu from "zeego/dropdown-menu";
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuItemIcon,
+  DropdownMenuItemTitle,
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu-primitives";
 
 import { LogOut, MessageSquare, ShareIcon, User } from "~/components/icons";
 import { useSignOut } from "~/hooks/useSignOut";
@@ -80,8 +87,8 @@ export function ProfileMenu() {
   );
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger>
+    <DropdownMenuRoot>
+      <DropdownMenuTrigger>
         {user?.username && isAuthenticated ? (
           <UserProfileFlair username={user.username} size="sm">
             {profileImage}
@@ -89,32 +96,32 @@ export function ProfileMenu() {
         ) : (
           profileImage
         )}
-      </DropdownMenu.Trigger>
+      </DropdownMenuTrigger>
 
-      <DropdownMenu.Content>
-        <DropdownMenu.Item key="share-app" onSelect={handleShareApp}>
-          <DropdownMenu.ItemIcon ios={{ name: "square.and.arrow.up" }}>
+      <DropdownMenuContent>
+        <DropdownMenuItem key="share-app" onSelect={handleShareApp}>
+          <DropdownMenuItemIcon ios={{ name: "square.and.arrow.up" }}>
             <ShareIcon />
-          </DropdownMenu.ItemIcon>
-          <DropdownMenu.ItemTitle>Share App</DropdownMenu.ItemTitle>
-        </DropdownMenu.Item>
+          </DropdownMenuItemIcon>
+          <DropdownMenuItemTitle>Share App</DropdownMenuItemTitle>
+        </DropdownMenuItem>
 
-        <DropdownMenu.Item key="profile" onSelect={handleEditProfile}>
-          <DropdownMenu.ItemIcon ios={{ name: "person.circle" }}>
+        <DropdownMenuItem key="profile" onSelect={handleEditProfile}>
+          <DropdownMenuItemIcon ios={{ name: "person.circle" }}>
             <User />
-          </DropdownMenu.ItemIcon>
-          <DropdownMenu.ItemTitle>Account</DropdownMenu.ItemTitle>
-        </DropdownMenu.Item>
+          </DropdownMenuItemIcon>
+          <DropdownMenuItemTitle>Account</DropdownMenuItemTitle>
+        </DropdownMenuItem>
 
-        <DropdownMenu.Item key="feedback" onSelect={presentIntercom}>
-          <DropdownMenu.ItemIcon ios={{ name: "message" }}>
+        <DropdownMenuItem key="feedback" onSelect={presentIntercom}>
+          <DropdownMenuItemIcon ios={{ name: "message" }}>
             <MessageSquare />
-          </DropdownMenu.ItemIcon>
-          <DropdownMenu.ItemTitle>Feedback</DropdownMenu.ItemTitle>
-        </DropdownMenu.Item>
+          </DropdownMenuItemIcon>
+          <DropdownMenuItemTitle>Feedback</DropdownMenuItemTitle>
+        </DropdownMenuItem>
 
-        <DropdownMenu.Item key="sign-out" onSelect={handleSignOut} destructive>
-          <DropdownMenu.ItemIcon
+        <DropdownMenuItem key="sign-out" onSelect={handleSignOut} destructive>
+          <DropdownMenuItemIcon
             ios={{
               name: "rectangle.portrait.and.arrow.right",
               hierarchicalColor: {
@@ -124,10 +131,10 @@ export function ProfileMenu() {
             }}
           >
             <LogOut />
-          </DropdownMenu.ItemIcon>
-          <DropdownMenu.ItemTitle>Sign out</DropdownMenu.ItemTitle>
-        </DropdownMenu.Item>
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+          </DropdownMenuItemIcon>
+          <DropdownMenuItemTitle>Sign out</DropdownMenuItemTitle>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenuRoot>
   );
 }

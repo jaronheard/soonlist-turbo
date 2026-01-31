@@ -585,6 +585,9 @@ importers:
       '@expo/ui':
         specifier: ~0.2.0-beta.9
         version: 0.2.0-beta.9(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
+      '@gorhom/portal':
+        specifier: ^1.0.14
+        version: 1.0.14(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
       '@intercom/intercom-react-native':
         specifier: 'catalog:'
         version: 8.8.0(encoding@0.1.13)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
@@ -3133,6 +3136,12 @@ packages:
 
   '@formkit/auto-animate@0.8.4':
     resolution: {integrity: sha512-DHHC01EJ1p70Q0z/ZFRBIY8NDnmfKccQoyoM84Tgb6omLMat6jivCdf272Y8k3nf4Lzdin/Y4R9q8uFtU0GbnA==}
+
+  '@gorhom/portal@1.0.14':
+    resolution: {integrity: sha512-MXyL4xvCjmgaORr/rtryDNFy3kU4qUbKlwtQqqsygd0xX3mhKjOLn6mQK8wfu0RkoE0pBE0nAasRoHua+/QZ7A==}
+    peerDependencies:
+      react: 19.1.0
+      react-native: '*'
 
   '@hookform/resolvers@3.10.0':
     resolution: {integrity: sha512-79Dv+3mDF7i+2ajj7SkypSKHhl1cbln1OGavqrsF7p6mbUv11xpqpacPsGDCTRvCSjEEIez2ef1NveSVL3b0Ag==}
@@ -12905,6 +12914,12 @@ snapshots:
 
   '@formkit/auto-animate@0.8.4': {}
 
+  '@gorhom/portal@1.0.14(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)':
+    dependencies:
+      nanoid: 3.3.11
+      react: 19.1.0
+      react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10)
+
   '@hookform/resolvers@3.10.0(react-hook-form@7.70.0(react@19.1.0))':
     dependencies:
       react-hook-form: 7.70.0(react@19.1.0)
@@ -14351,7 +14366,7 @@ snapshots:
       debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-config: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-config: 0.83.3
       metro-core: 0.83.3
       semver: 7.7.3
     transitivePeerDependencies:
@@ -18960,6 +18975,19 @@ snapshots:
       flow-enums-runtime: 0.0.6
       https-proxy-agent: 7.0.6
       metro-core: 0.83.3
+    transitivePeerDependencies:
+      - supports-color
+
+  metro-config@0.83.3:
+    dependencies:
+      connect: 3.7.0
+      flow-enums-runtime: 0.0.6
+      jest-validate: 29.7.0
+      metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-cache: 0.83.3
+      metro-core: 0.83.3
+      metro-runtime: 0.83.3
+      yaml: 2.8.2
     transitivePeerDependencies:
       - supports-color
 
