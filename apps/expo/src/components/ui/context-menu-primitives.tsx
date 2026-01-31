@@ -1,6 +1,6 @@
 import type { ViewStyle } from "react-native";
 import { useState } from "react";
-import { Dimensions, Pressable } from "react-native";
+import { Pressable } from "react-native";
 import { Portal } from "@gorhom/portal";
 import * as ContextMenu from "zeego/context-menu";
 
@@ -28,14 +28,12 @@ function ContextMenuRootWithOverlay(props: ContextMenuRootProps) {
   );
 }
 
-const screenSize = Dimensions.get("screen");
-
 const overlayStyle: ViewStyle = {
   position: "absolute",
   top: 0,
   left: 0,
-  width: screenSize.width,
-  height: screenSize.height,
+  right: 0,
+  bottom: 0,
   zIndex: 999,
 };
 

@@ -115,6 +115,7 @@ catalog:
   "expo-quick-actions": ~6.0.0
 
   # React Native Additional packages
+  "@gorhom/portal": ^1.0.14
   "@react-native-async-storage/async-storage": ~2.2.0
   "@react-native-community/datetimepicker": ~8.4.4
   "@react-native-community/netinfo": ^11.4.1

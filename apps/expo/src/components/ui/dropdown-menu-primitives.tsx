@@ -1,6 +1,6 @@
 import type { ViewStyle } from "react-native";
-import { useState } from "react";
-import { Dimensions, Pressable } from "react-native";
+import { useEffect, useState } from "react";
+import { Pressable } from "react-native";
 import { Portal } from "@gorhom/portal";
 import * as DropdownMenu from "zeego/dropdown-menu";
 
@@ -8,6 +8,13 @@ type DropdownMenuRootProps = React.ComponentProps<typeof DropdownMenu.Root>;
 
 function DropdownMenuRootWithOverlay(props: DropdownMenuRootProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Sync overlay with controlled open prop
+  useEffect(() => {
+    if (props.open !== undefined) {
+      setIsOpen(props.open);
+    }
+  }, [props.open]);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -28,14 +35,12 @@ function DropdownMenuRootWithOverlay(props: DropdownMenuRootProps) {
   );
 }
 
-const screenSize = Dimensions.get("screen");
-
 const overlayStyle: ViewStyle = {
   position: "absolute",
   top: 0,
   left: 0,
-  width: screenSize.width,
-  height: screenSize.height,
+  right: 0,
+  bottom: 0,
   zIndex: 999,
 };
 
