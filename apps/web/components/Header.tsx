@@ -4,15 +4,8 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  useClerk,
-  useUser,
-} from "@clerk/nextjs";
-import { CalendarHeart, CalendarPlus, Globe2Icon, Menu } from "lucide-react";
-import { toast } from "sonner";
+import { SignedIn, SignedOut, useClerk, useUser } from "@clerk/nextjs";
+import { CalendarHeart, CalendarPlus, Globe2Icon } from "lucide-react";
 
 import { Button, buttonVariants } from "@soonlist/ui/button";
 import {
@@ -22,15 +15,6 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@soonlist/ui/navigation-menu";
-import { ScrollArea } from "@soonlist/ui/scroll-area";
-import { Separator } from "@soonlist/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@soonlist/ui/sheet";
-import { VisuallyHidden } from "@soonlist/ui/visually-hidden";
 
 import { cn } from "~/lib/utils";
 import {
@@ -53,13 +37,12 @@ export function Header() {
 
   if (hideMenu) {
     return (
-      <div className="sticky top-0 z-50 bg-interactive-3">
-        <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
-          <div className="flex items-center sm:grow sm:gap-0">
+      <div className="sticky top-0 z-50 hidden bg-interactive-3 lg:block">
+        <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 pb-7 pt-5">
+          <div className="flex grow items-center gap-0">
             <NavigationMenu>
               <Link href="/" className="relative flex items-center">
-                <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
+                <Logo variant="hidePreview" />
               </Link>
             </NavigationMenu>
           </div>
@@ -69,34 +52,31 @@ export function Header() {
   }
 
   return (
-    <div className="sticky top-0 z-50 bg-interactive-3">
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
-        <div className="flex items-center sm:grow sm:gap-0">
+    <div className="sticky top-0 z-50 hidden bg-interactive-3 lg:block">
+      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 pb-7 pt-5">
+        <div className="flex grow items-center gap-0">
           <NavigationMenu>
             <SignedIn>
               <Link
                 href={`/${user?.username}/upcoming`}
                 className="relative flex items-center"
               >
-                <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
+                <Logo variant="hidePreview" />
               </Link>
             </SignedIn>
             <SignedOut>
               <Link href="/" className="relative flex items-center">
-                <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
+                <Logo variant="hidePreview" />
               </Link>
             </SignedOut>
           </NavigationMenu>
         </div>
-        <div className="flex shrink-0 sm:gap-5">
+        <div className="flex shrink-0 gap-5">
           <Nav />
           <NavigationMenu>
             <SignedIn>
               <UserMenu />
             </SignedIn>
-            <MobileNav />
           </NavigationMenu>
         </div>
       </header>
@@ -113,7 +93,7 @@ export function Nav() {
     <NavigationMenu>
       <NavigationMenuList className="flex gap-3">
         <SignedIn>
-          <NavigationMenuItem className="hidden lg:block">
+          <NavigationMenuItem>
             <Link href={`/${user?.username}/upcoming`} legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 <CalendarHeart className="mr-2 size-4" />
@@ -123,7 +103,7 @@ export function Nav() {
           </NavigationMenuItem>
         </SignedIn>
         <SignedIn>
-          <NavigationMenuItem className="hidden lg:block">
+          <NavigationMenuItem>
             <Link href={`/explore`} legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 <Globe2Icon className="mr-2 size-4" />
@@ -133,7 +113,7 @@ export function Nav() {
           </NavigationMenuItem>
         </SignedIn>
         <SignedOut>
-          <NavigationMenuItem className="hidden lg:block">
+          <NavigationMenuItem>
             <Link href="/sign-in" legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 Log in
@@ -233,7 +213,7 @@ const UserMenu = () => {
 
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger className="hidden py-2 lg:block">
+      <DropdownMenuTrigger className="py-2">
         <UserProfileFlair username={user.username ?? ""}>
           <Image
             alt={"User"}
@@ -316,174 +296,6 @@ const sideNav = () => [
   },
 ];
 
-export function MobileNav() {
-  const [open, setOpen] = React.useState(false);
-  const { user } = useUser();
-  const { signOut, openUserProfile } = useClerk();
-
-  const plan = user?.publicMetadata.plan as { name?: string } | undefined;
-  const planName = plan?.name;
-
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" className="block lg:hidden">
-          <Menu className="size-6 text-interactive-1" />
-          <span className="sr-only">Toggle Menu</span>
-        </Button>
-      </SheetTrigger>
-      <SheetContent
-        size="xl"
-        position="right"
-        className="bg-interactive-3 pl-0 pt-2"
-      >
-        <VisuallyHidden>
-          <SheetTitle>Navigation Menu</SheetTitle>
-        </VisuallyHidden>
-        <MobileLink href="/" className="" onOpenChange={setOpen}>
-          <Logo className="scale-75" variant="hidePreview" />
-        </MobileLink>
-        <ScrollArea className="h-full pl-6">
-          <div className="px-1 pt-2">
-            <TimezoneSelect />
-          </div>
-          <SignedIn>
-            <Separator className="my-3" />
-            <button
-              className="flex items-center gap-2"
-              onClick={() => openUserProfile()}
-            >
-              {user?.imageUrl ? (
-                <UserProfileFlair username={user.username ?? ""}>
-                  <Image
-                    alt={"User"}
-                    src={user.imageUrl}
-                    width={32}
-                    height={32}
-                    className="size-8 rounded-full object-cover object-center"
-                  />
-                </UserProfileFlair>
-              ) : (
-                <div className="size-8 rounded-full bg-gray-100"></div>
-              )}
-              <div className="text-lg font-medium text-neutral-2">
-                @{user?.username}
-              </div>
-            </button>
-            <div className="pt-3">
-              {planName ? (
-                <MobileLink
-                  key={"user-nav-plans"}
-                  href="/account/plans"
-                  onOpenChange={setOpen}
-                  className="w-full justify-start py-0 pl-0 text-neutral-2"
-                >
-                  Founding Member
-                </MobileLink>
-              ) : (
-                <MobileLink
-                  key={"user-nav-upgrade"}
-                  href="https://apps.apple.com/us/app/soonlist/id6670222216"
-                  onOpenChange={setOpen}
-                  className="w-full justify-start py-0 pl-0 text-neutral-2"
-                  target="_blank"
-                >
-                  Download iOS app
-                </MobileLink>
-              )}
-            </div>
-          </SignedIn>
-          <Separator className="my-3" />
-          <div className="flex flex-col space-y-3">
-            <MobileLink
-              key="user-nav-my-feed"
-              href={`/${user?.username}/upcoming`}
-              onOpenChange={setOpen}
-              signedInOnly
-              className="flex items-center gap-2 text-interactive-1"
-            >
-              <CalendarHeart className="size-4" />
-              My Feed
-            </MobileLink>
-            <MobileLink
-              key={"user-nav-explore"}
-              href={"/explore"}
-              onOpenChange={setOpen}
-              signedInOnly
-              className="flex items-center gap-2 text-interactive-1"
-            >
-              <Globe2Icon className="size-4" />
-              Discover
-            </MobileLink>
-          </div>
-          <SignedIn>
-            <div className="p-1.5"></div>
-            <div className="flex flex-col space-y-2">
-              {sideNav().map((item, index) => (
-                <div key={index} className="flex flex-col space-y-3">
-                  {item.items.length &&
-                    item.items.map((item) => (
-                      <React.Fragment key={item.href}>
-                        {item.href ? (
-                          <MobileLink href={item.href} onOpenChange={setOpen}>
-                            {item.title}
-                          </MobileLink>
-                        ) : (
-                          item.title
-                        )}
-                      </React.Fragment>
-                    ))}
-                </div>
-              ))}
-            </div>
-          </SignedIn>
-          <SignedOut>
-            {/* <Separator className="my-3" /> */}
-            {/* <SignUpButton>
-              <Button
-                className="w-full"
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Sign Up
-              </Button>
-            </SignUpButton>
-            <div className="my-3"></div> */}
-            <SignInButton>
-              <Button
-                variant={"secondary"}
-                className="w-full"
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Log In
-              </Button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <Separator className="my-3" />
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={() => {
-                setOpen(false);
-                return signOut().then(() => {
-                  toast("Logged out");
-                });
-              }}
-            >
-              Log out
-            </Button>
-          </SignedIn>
-          <div className="pb-16"></div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
 interface MobileLinkProps {
   href: string;
   onOpenChange?: (open: boolean) => void;
@@ -557,25 +369,3 @@ function MobileLink({
     </Link>
   );
 }
-
-// function MobileButton({
-//   onOpenChange,
-//   className,
-//   children,
-//   onClick,
-//   ...props
-// }: MobileLinkProps & { onClick: () => void }) {
-//   return (
-//     <Button
-//       onClick={() => {
-//         onClick();
-//         onOpenChange?.(false);
-//       }}
-//       variant={"ghost"}
-//       className={cn(className, "text-lg font-medium text-neutral-1")}
-//       {...props}
-//     >
-//       {children}
-//     </Button>
-//   );
-// }
