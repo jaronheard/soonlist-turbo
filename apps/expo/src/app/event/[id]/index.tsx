@@ -560,13 +560,26 @@ export default function Page() {
             </>
           )}
 
-          {/* Main Event Image */}
-          {imageUri && (
+          {/* Hidden probe to detect image dimensions without layout shift */}
+          {imageUri && !imageAspectRatio && (
+            <ExpoImage
+              source={{ uri: imageUri }}
+              style={{ position: "absolute", width: 1, height: 1, opacity: 0 }}
+              onLoad={(e) => {
+                setImageAspectRatio(e.source.width / e.source.height);
+              }}
+              cachePolicy="memory-disk"
+              priority="high"
+            />
+          )}
+
+          {/* Main Event Image - only rendered once we know the real aspect ratio */}
+          {imageUri && imageAspectRatio && (
             <View
               className="mb-4 overflow-hidden"
               style={{
                 width: width - 32,
-                aspectRatio: imageAspectRatio ?? 4 / 3,
+                aspectRatio: imageAspectRatio,
               }}
             >
               <ExpoImage
@@ -579,9 +592,6 @@ export default function Page() {
                 transition={200}
                 cachePolicy="memory-disk"
                 priority="high"
-                onLoad={(e) => {
-                  setImageAspectRatio(e.source.width / e.source.height);
-                }}
               />
             </View>
           )}
