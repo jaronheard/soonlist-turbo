@@ -97,6 +97,13 @@ function getPlatformUrl(
 
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
+
+  // key={id} ensures React unmounts/remounts EventDetail when id changes,
+  // automatically resetting all state and refs without a useEffect.
+  return <EventDetail key={id} id={id} />;
+}
+
+function EventDetail({ id }: { id: string }) {
   const { width } = Dimensions.get("window");
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
@@ -125,12 +132,6 @@ export default function Page() {
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
-
-  // Reset view count tracking and image dimensions when event ID changes
-  useEffect(() => {
-    hasCountedViewRef.current = false;
-    setImageAspectRatio(null);
-  }, [id]);
 
   const incrementEventView = useIncrementEventView();
   const shouldShowViewPaywall = useShouldShowViewPaywall();
