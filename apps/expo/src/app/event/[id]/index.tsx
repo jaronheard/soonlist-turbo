@@ -126,9 +126,10 @@ export default function Page() {
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
 
-  // Reset view count tracking when event ID changes
+  // Reset view count tracking and image dimensions when event ID changes
   useEffect(() => {
     hasCountedViewRef.current = false;
+    setImageAspectRatio(null);
   }, [id]);
 
   const incrementEventView = useIncrementEventView();
