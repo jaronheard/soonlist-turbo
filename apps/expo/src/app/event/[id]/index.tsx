@@ -572,7 +572,14 @@ export default function Page() {
               source={{ uri: imageUri }}
               style={{ position: "absolute", width: 1, height: 1, opacity: 0 }}
               onLoad={(e) => {
-                setImageAspectRatio(e.source.width / e.source.height);
+                setImageAspectRatio(
+                  e.source.height > 0
+                    ? e.source.width / e.source.height
+                    : 4 / 3,
+                );
+              }}
+              onError={() => {
+                setImageAspectRatio(4 / 3);
               }}
               cachePolicy="memory-disk"
               priority="high"
