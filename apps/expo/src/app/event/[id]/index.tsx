@@ -9,7 +9,6 @@ import {
   Dimensions,
   Linking,
   Pressable,
-  Image as RNImage,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -57,7 +56,6 @@ import {
 import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { formatEventDateRange } from "~/utils/dates";
 import { getPlanStatusFromUser } from "~/utils/plan";
-import { logError } from "../../../utils/errorLogging";
 import { formatUrlForDisplay } from "../../../utils/links";
 
 // Helper to get platform URL for mentions
@@ -174,7 +172,7 @@ export default function Page() {
     router.replace("/");
   }, [handleDelete]);
 
-  // Pre-calculate the aspect ratio of the event image, if it exists
+  // Pre-calculate the image URI for the event image
   const imageUri = useMemo(() => {
     if (!event?.event) return null;
 
@@ -183,34 +181,8 @@ export default function Page() {
     if (!eventImage) {
       return null;
     }
-    return `${eventImage}?max-w=1284&fit=cover&f=webp&q=80`;
+    return `${eventImage}?max-w=1284&fit=contain&f=webp&q=80`;
   }, [event?.event?.images]);
-
-  useEffect(() => {
-    if (!imageUri) {
-      setImageAspectRatio(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    // Use RNImage to get actual width/height of the remote image
-    RNImage.getSize(
-      imageUri,
-      (naturalWidth, naturalHeight) => {
-        if (cancelled) return;
-        setImageAspectRatio(naturalWidth / naturalHeight);
-      },
-      (err) => {
-        if (cancelled) return;
-        logError("Failed to get image size", err);
-      },
-    );
-
-    return () => {
-      cancelled = true;
-    };
-  }, [imageUri]);
 
   // Build the header-left UI if we can't go back
   const HeaderLeft = useCallback(() => {
@@ -580,26 +552,26 @@ export default function Page() {
             </>
           )}
 
-          {/* Main Event Image if it exists and aspect ratio is known */}
-          {eventData.images?.[3] && imageAspectRatio && (
+          {/* Main Event Image */}
+          {imageUri && (
             <View
-              className="mb-4 overflow-hidden bg-muted/10"
+              className="mb-4 overflow-hidden"
               style={{
                 width: width - 32,
-                // Maintain the original aspect ratio at the full width
-                aspectRatio: imageAspectRatio,
+                aspectRatio: imageAspectRatio ?? 4 / 3,
               }}
             >
               <ExpoImage
-                source={{
-                  uri: `${eventData.images[3]}?max-w=1284&fit=contain&f=webp&q=80`,
-                }}
+                source={{ uri: imageUri }}
                 style={{ width: "100%", height: "100%" }}
                 contentFit="contain"
                 contentPosition="center"
-                transition={200}
+                transition={isImageLoaded ? 0 : 200}
                 cachePolicy="memory-disk"
-                onLoadEnd={() => setIsImageLoaded(true)}
+                onLoad={(e) => {
+                  setImageAspectRatio(e.source.width / e.source.height);
+                  setIsImageLoaded(true);
+                }}
                 className={isImageLoaded ? "opacity-100" : "opacity-0"}
               />
             </View>
