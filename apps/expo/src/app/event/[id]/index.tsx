@@ -109,8 +109,6 @@ export default function Page() {
 
   // Store the aspect ratio for the main event image
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
-  // Track whether the image is fully loaded (for a fade-in)
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
   // Track if we've already counted this event view to prevent multiple increments
   const hasCountedViewRef = useRef(false);
 
@@ -182,6 +180,16 @@ export default function Page() {
       return null;
     }
     return `${eventImage}?max-w=1284&fit=contain&f=webp&q=80`;
+  }, [event?.event?.images]);
+
+  // Thumbnail URI matching what the list items cache (used as a placeholder)
+  const thumbnailUri = useMemo(() => {
+    if (!event?.event) return null;
+
+    const eventData = event.event as AddToCalendarButtonPropsRestricted;
+    const eventImage = eventData?.images?.[3];
+    if (!eventImage) return null;
+    return `${eventImage}?w=160&h=160&fit=cover&f=webp&q=80`;
   }, [event?.event?.images]);
 
   // Build the header-left UI if we can't go back
@@ -563,16 +571,17 @@ export default function Page() {
             >
               <ExpoImage
                 source={{ uri: imageUri }}
+                placeholder={thumbnailUri ? { uri: thumbnailUri } : undefined}
+                placeholderContentFit="cover"
                 style={{ width: "100%", height: "100%" }}
                 contentFit="contain"
                 contentPosition="center"
-                transition={isImageLoaded ? 0 : 200}
+                transition={200}
                 cachePolicy="memory-disk"
+                priority="high"
                 onLoad={(e) => {
                   setImageAspectRatio(e.source.width / e.source.height);
-                  setIsImageLoaded(true);
                 }}
-                className={isImageLoaded ? "opacity-100" : "opacity-0"}
               />
             </View>
           )}
