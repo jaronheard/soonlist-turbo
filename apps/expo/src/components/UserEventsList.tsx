@@ -42,6 +42,7 @@ import {
   getDateTimeInfo,
   isOver,
 } from "~/utils/dates";
+import { setEventCache } from "~/utils/eventCache";
 import { getEventEmoji } from "~/utils/eventEmoji";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
@@ -473,6 +474,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
           if (isDemoEvent) {
             router.navigate(`/onboarding/demo-event/${id}`);
           } else {
+            setEventCache(id, event);
             router.navigate(`/event/${id}`);
           }
         }}

@@ -55,6 +55,7 @@ import {
 } from "~/store";
 import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { formatEventDateRange } from "~/utils/dates";
+import { getEventCache } from "~/utils/eventCache";
 import { getPlanStatusFromUser } from "~/utils/plan";
 import { formatUrlForDisplay } from "../../../utils/links";
 
@@ -112,7 +113,12 @@ export default function Page() {
   // Track if we've already counted this event view to prevent multiple increments
   const hasCountedViewRef = useRef(false);
 
-  const event = useQuery(api.events.get, { eventId: id });
+  const queryEvent = useQuery(api.events.get, { eventId: id });
+  // Use cached event data from the list for instant rendering while Convex loads
+  const cachedEvent = useMemo(() => (id ? getEventCache(id) : undefined), [id]);
+  // Only fall back to cache while query is loading (undefined), not when query
+  // returned null (event not found)
+  const event = queryEvent !== undefined ? queryEvent : cachedEvent;
   const userTimezone = useUserTimezone();
 
   // Event view tracking
