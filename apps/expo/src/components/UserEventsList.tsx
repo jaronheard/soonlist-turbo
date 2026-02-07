@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { ViewStyle } from "react-native";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -42,6 +42,7 @@ import {
   getDateTimeInfo,
   isOver,
 } from "~/utils/dates";
+import { setEventCache } from "~/utils/eventCache";
 import { getEventEmoji } from "~/utils/eventEmoji";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
@@ -375,6 +376,14 @@ export function UserEventListItem(props: UserEventListItemProps) {
   const { user: currentUser } = useUser();
   const eventUser = event.user;
 
+  // Prefetch the full-size image for the detail screen so it loads instantly
+  useEffect(() => {
+    const imageUrl = e.images?.[3];
+    if (imageUrl && typeof imageUrl === "string") {
+      void ExpoImage.prefetch(`${imageUrl}?max-w=1284&fit=contain&f=webp&q=80`);
+    }
+  }, [e.images]);
+
   const isRecent = useMemo(() => {
     const threeHoursAgoTimestamp = Date.now() - 3 * 60 * 60 * 1000;
 
@@ -465,6 +474,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
           if (isDemoEvent) {
             router.navigate(`/onboarding/demo-event/${id}`);
           } else {
+            setEventCache(id, event);
             router.navigate(`/event/${id}`);
           }
         }}

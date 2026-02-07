@@ -9,7 +9,6 @@ import {
   Dimensions,
   Linking,
   Pressable,
-  Image as RNImage,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -56,8 +55,8 @@ import {
 } from "~/store";
 import { AF_EVENTS, trackAFEvent } from "~/utils/appsflyerEvents";
 import { formatEventDateRange } from "~/utils/dates";
+import { getEventCache } from "~/utils/eventCache";
 import { getPlanStatusFromUser } from "~/utils/plan";
-import { logError } from "../../../utils/errorLogging";
 import { formatUrlForDisplay } from "../../../utils/links";
 
 // Helper to get platform URL for mentions
@@ -98,6 +97,13 @@ function getPlatformUrl(
 
 export default function Page() {
   const { id } = useLocalSearchParams<{ id: string }>();
+
+  // key={id} ensures React unmounts/remounts EventDetail when id changes,
+  // automatically resetting all state and refs without a useEffect.
+  return <EventDetail key={id} id={id} />;
+}
+
+function EventDetail({ id }: { id: string }) {
   const { width } = Dimensions.get("window");
   const insets = useSafeAreaInsets();
   const { user: currentUser } = useUser();
@@ -111,23 +117,21 @@ export default function Page() {
 
   // Store the aspect ratio for the main event image
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
-  // Track whether the image is fully loaded (for a fade-in)
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
   // Track if we've already counted this event view to prevent multiple increments
   const hasCountedViewRef = useRef(false);
 
-  const event = useQuery(api.events.get, { eventId: id });
+  const queryEvent = useQuery(api.events.get, { eventId: id });
+  // Use cached event data from the list for instant rendering while Convex loads
+  const cachedEvent = useMemo(() => (id ? getEventCache(id) : undefined), [id]);
+  // Only fall back to cache while query is loading (undefined), not when query
+  // returned null (event not found)
+  const event = queryEvent !== undefined ? queryEvent : cachedEvent;
   const userTimezone = useUserTimezone();
 
   // Event view tracking
   const { customerInfo, showProPaywallIfNeeded } = useRevenueCat();
   const hasUnlimited =
     customerInfo?.entitlements.active.unlimited?.isActive ?? false;
-
-  // Reset view count tracking when event ID changes
-  useEffect(() => {
-    hasCountedViewRef.current = false;
-  }, [id]);
 
   const incrementEventView = useIncrementEventView();
   const shouldShowViewPaywall = useShouldShowViewPaywall();
@@ -174,7 +178,7 @@ export default function Page() {
     router.replace("/");
   }, [handleDelete]);
 
-  // Pre-calculate the aspect ratio of the event image, if it exists
+  // Pre-calculate the image URI for the event image
   const imageUri = useMemo(() => {
     if (!event?.event) return null;
 
@@ -183,34 +187,18 @@ export default function Page() {
     if (!eventImage) {
       return null;
     }
-    return `${eventImage}?max-w=1284&fit=cover&f=webp&q=80`;
+    return `${eventImage}?max-w=1284&fit=contain&f=webp&q=80`;
   }, [event?.event?.images]);
 
-  useEffect(() => {
-    if (!imageUri) {
-      setImageAspectRatio(null);
-      return;
-    }
+  // Thumbnail URI matching what the list items cache (used as a placeholder)
+  const thumbnailUri = useMemo(() => {
+    if (!event?.event) return null;
 
-    let cancelled = false;
-
-    // Use RNImage to get actual width/height of the remote image
-    RNImage.getSize(
-      imageUri,
-      (naturalWidth, naturalHeight) => {
-        if (cancelled) return;
-        setImageAspectRatio(naturalWidth / naturalHeight);
-      },
-      (err) => {
-        if (cancelled) return;
-        logError("Failed to get image size", err);
-      },
-    );
-
-    return () => {
-      cancelled = true;
-    };
-  }, [imageUri]);
+    const eventData = event.event as AddToCalendarButtonPropsRestricted;
+    const eventImage = eventData?.images?.[3];
+    if (!eventImage) return null;
+    return `${eventImage}?w=160&h=160&fit=cover&f=webp&q=80`;
+  }, [event?.event?.images]);
 
   // Build the header-left UI if we can't go back
   const HeaderLeft = useCallback(() => {
@@ -580,27 +568,45 @@ export default function Page() {
             </>
           )}
 
-          {/* Main Event Image if it exists and aspect ratio is known */}
-          {eventData.images?.[3] && imageAspectRatio && (
+          {/* Hidden probe to detect image dimensions without layout shift */}
+          {imageUri && !imageAspectRatio && (
+            <ExpoImage
+              source={{ uri: imageUri }}
+              style={{ position: "absolute", width: 1, height: 1, opacity: 0 }}
+              onLoad={(e) => {
+                setImageAspectRatio(
+                  e.source.height > 0
+                    ? e.source.width / e.source.height
+                    : 4 / 3,
+                );
+              }}
+              onError={() => {
+                setImageAspectRatio(4 / 3);
+              }}
+              cachePolicy="memory-disk"
+              priority="high"
+            />
+          )}
+
+          {/* Main Event Image - only rendered once we know the real aspect ratio */}
+          {imageUri && imageAspectRatio && (
             <View
-              className="mb-4 overflow-hidden bg-muted/10"
+              className="mb-4 overflow-hidden"
               style={{
                 width: width - 32,
-                // Maintain the original aspect ratio at the full width
                 aspectRatio: imageAspectRatio,
               }}
             >
               <ExpoImage
-                source={{
-                  uri: `${eventData.images[3]}?max-w=1284&fit=contain&f=webp&q=80`,
-                }}
+                source={{ uri: imageUri }}
+                placeholder={thumbnailUri ? { uri: thumbnailUri } : undefined}
+                placeholderContentFit="cover"
                 style={{ width: "100%", height: "100%" }}
                 contentFit="contain"
                 contentPosition="center"
                 transition={200}
                 cachePolicy="memory-disk"
-                onLoadEnd={() => setIsImageLoaded(true)}
-                className={isImageLoaded ? "opacity-100" : "opacity-0"}
+                priority="high"
               />
             </View>
           )}
