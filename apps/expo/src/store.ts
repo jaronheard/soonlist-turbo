@@ -168,6 +168,10 @@ interface AppState {
   hasShownRatingPrompt: boolean;
   markRatingPromptShown: () => void;
 
+  // Location setup state
+  hasCompletedLocationSetup: boolean;
+  setHasCompletedLocationSetup: (completed: boolean) => void;
+
   // Pending follow from deep link (used when user is not authenticated yet)
   pendingFollowUsername: string | null;
   setPendingFollowUsername: (username: string | null) => void;
@@ -397,6 +401,7 @@ export const useAppStore = create<AppState>()(
           totalEventViews: 0,
           lastPaywallShownAtView: 0,
           hasShownRatingPrompt: false,
+          hasCompletedLocationSetup: false,
           pendingFollowUsername: null,
         }),
 
@@ -445,6 +450,7 @@ export const useAppStore = create<AppState>()(
           totalEventViews: 0,
           lastPaywallShownAtView: 0,
           hasShownRatingPrompt: false,
+          hasCompletedLocationSetup: false,
           // Keep pendingFollowUsername in case user is re-authenticating
           pendingFollowUsername: state.pendingFollowUsername,
         })),
@@ -502,6 +508,11 @@ export const useAppStore = create<AppState>()(
       // Rating prompt state
       hasShownRatingPrompt: false,
       markRatingPromptShown: () => set({ hasShownRatingPrompt: true }),
+
+      // Location setup state
+      hasCompletedLocationSetup: false,
+      setHasCompletedLocationSetup: (completed) =>
+        set({ hasCompletedLocationSetup: completed }),
 
       // Pending follow from deep link
       pendingFollowUsername: null,
@@ -602,6 +613,12 @@ export const usePreferredCalendarApp = () =>
   useAppStore((state) => state.preferredCalendarApp);
 export const useSetPreferredCalendarApp = () =>
   useAppStore((state) => state.setPreferredCalendarApp);
+
+// Location setup selectors
+export const useHasCompletedLocationSetup = () =>
+  useAppStore((state) => state.hasCompletedLocationSetup);
+export const useSetHasCompletedLocationSetup = () =>
+  useAppStore((state) => state.setHasCompletedLocationSetup);
 
 // Pending follow selectors (for deferred deep link follow intent)
 export const usePendingFollowUsername = () =>

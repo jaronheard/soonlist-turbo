@@ -114,6 +114,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     ["expo-apple-authentication"],
     ["expo-localization"],
+    [
+      "expo-location",
+      {
+        locationWhenInUsePermission:
+          "Soonlist uses your location to help locate events from screenshots.",
+      },
+    ],
     ["expo-video"],
     [
       "expo-media-library",
