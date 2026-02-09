@@ -75,7 +75,7 @@ export function Header() {
           <NavigationMenu>
             <SignedIn>
               <Link
-                href={`/${user?.username}/upcoming`}
+                href={user?.username ? `/${user.username}/upcoming` : "/"}
                 className="relative flex items-center"
                 aria-label="Soonlist"
               >
@@ -140,7 +140,11 @@ export function Nav() {
       <NavigationMenuList className="flex gap-2">
         <SignedIn>
           <NavigationMenuItem className="hidden lg:block">
-            <Link href={`/${user?.username}/upcoming`} legacyBehavior passHref>
+            <Link
+              href={user?.username ? `/${user.username}/upcoming` : "/"}
+              legacyBehavior
+              passHref
+            >
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 <CalendarHeart className="mr-2 size-4" />
                 My Feed
@@ -419,7 +423,7 @@ export function MobileNav() {
           <div className="flex flex-col space-y-3">
             <MobileLink
               key="user-nav-my-feed"
-              href={`/${user?.username}/upcoming`}
+              href={user?.username ? `/${user.username}/upcoming` : "/"}
               onOpenChange={setOpen}
               signedInOnly
               className="flex items-center gap-2 text-interactive-1"
