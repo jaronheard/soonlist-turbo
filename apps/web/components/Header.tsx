@@ -53,51 +53,71 @@ export function Header() {
 
   if (hideMenu) {
     return (
-      <div className="sticky top-0 z-50 bg-interactive-3">
-        <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
-          <div className="flex items-center sm:grow sm:gap-0">
-            <NavigationMenu>
-              <Link href="/" className="relative flex items-center">
-                <Logo variant="hidePreview" className="block sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
-              </Link>
-            </NavigationMenu>
-          </div>
+      <div className="fixed inset-x-0 top-0 z-50 border-b border-white/20 bg-white/70 shadow-[0_1px_0_0_rgba(255,255,255,0.5)_inset] backdrop-blur-xl backdrop-saturate-150 sm:border-0 sm:bg-interactive-3 sm:bg-opacity-100 sm:shadow-none sm:backdrop-blur-none sm:backdrop-saturate-100">
+        <header className="mx-auto flex h-14 w-full max-w-7xl items-center justify-center px-4 sm:h-auto sm:justify-start sm:pb-7 sm:pt-5">
+          <Link
+            href="/"
+            className="relative flex items-center"
+            aria-label="Soonlist"
+          >
+            <Logo variant="mark" className="size-8 sm:hidden" />
+            <Logo variant="hidePreview" className="hidden sm:block" />
+          </Link>
         </header>
       </div>
     );
   }
 
   return (
-    <div className="sticky top-0 z-50 bg-interactive-3">
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-4 pl-2 pt-3 sm:px-4 sm:pb-7 sm:pt-5">
+    <div className="fixed inset-x-0 top-0 z-50 border-b border-white/20 bg-white/70 shadow-[0_1px_0_0_rgba(255,255,255,0.5)_inset] backdrop-blur-xl backdrop-saturate-150 sm:border-0 sm:bg-interactive-3 sm:bg-opacity-100 sm:shadow-none sm:backdrop-blur-none sm:backdrop-saturate-100">
+      <header className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4 sm:h-auto sm:pb-7 sm:pt-5">
         <div className="flex items-center sm:grow sm:gap-0">
           <NavigationMenu>
             <SignedIn>
               <Link
                 href={`/${user?.username}/upcoming`}
                 className="relative flex items-center"
+                aria-label="Soonlist"
               >
-                <Logo variant="hidePreview" className="block sm:hidden" />
+                <Logo variant="mark" className="size-8 sm:hidden" />
                 <Logo variant="hidePreview" className="hidden sm:block" />
               </Link>
             </SignedIn>
             <SignedOut>
-              <Link href="/" className="relative flex items-center">
-                <Logo variant="hidePreview" className="block sm:hidden" />
+              <Link
+                href="/"
+                className="relative flex items-center"
+                aria-label="Soonlist"
+              >
+                <Logo variant="mark" className="size-8 sm:hidden" />
                 <Logo variant="hidePreview" className="hidden sm:block" />
               </Link>
             </SignedOut>
           </NavigationMenu>
         </div>
-        <div className="flex shrink-0 sm:gap-5">
-          <Nav />
-          <NavigationMenu>
-            <SignedIn>
+        <div className="flex shrink-0 items-center gap-3 sm:gap-5">
+          <SignedIn>
+            <Nav />
+            <NavigationMenu>
               <UserMenu />
-            </SignedIn>
+            </NavigationMenu>
             <MobileNav />
-          </NavigationMenu>
+          </SignedIn>
+          <SignedOut>
+            <Link
+              href="/sign-in"
+              className="text-base font-medium text-neutral-2 transition-colors hover:text-neutral-1"
+            >
+              Log in
+            </Link>
+            {pathname !== "/join" && (
+              <Button asChild size="sm" className="text-base">
+                <Link href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216">
+                  Get the app
+                </Link>
+              </Button>
+            )}
+          </SignedOut>
         </div>
       </header>
     </div>
@@ -154,7 +174,7 @@ export function Nav() {
           </SignedIn>
           <SignedOut>
             {!isJoinPage && (
-              <Button asChild>
+              <Button asChild size="sm">
                 <Link href="https://apps.apple.com/us/app/soonlist-save-events-instantly/id6670222216">
                   Get the app
                 </Link>
@@ -327,16 +347,12 @@ export function MobileNav() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" className="block lg:hidden">
-          <Menu className="size-6 text-interactive-1" />
+        <Button variant="ghost" className="block text-neutral-1 lg:hidden">
+          <Menu className="size-6" />
           <span className="sr-only">Toggle Menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent
-        size="xl"
-        position="right"
-        className="bg-interactive-3 pl-0 pt-2"
-      >
+      <SheetContent size="xl" position="right" className="bg-white pl-0 pt-2">
         <VisuallyHidden>
           <SheetTitle>Navigation Menu</SheetTitle>
         </VisuallyHidden>
