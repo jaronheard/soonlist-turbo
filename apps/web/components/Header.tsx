@@ -53,15 +53,15 @@ export function Header() {
 
   if (hideMenu) {
     return (
-      <div className="fixed inset-x-0 top-0 z-50 border-b border-white/20 bg-white/70 shadow-[0_1px_0_0_rgba(255,255,255,0.5)_inset] backdrop-blur-xl backdrop-saturate-150 sm:border-0 sm:bg-interactive-3 sm:bg-opacity-100 sm:shadow-none sm:backdrop-blur-none sm:backdrop-saturate-100">
-        <header className="mx-auto flex h-14 w-full max-w-7xl items-center justify-center px-4 sm:h-auto sm:justify-start sm:pb-7 sm:pt-5">
+      <div className="fixed inset-x-0 top-0 z-50 border-b border-white/20 bg-white/70 shadow-[0_1px_0_0_rgba(255,255,255,0.5)_inset] backdrop-blur-xl backdrop-saturate-150">
+        <header className="mx-auto flex h-14 w-full max-w-7xl items-center justify-center px-4">
           <Link
             href="/"
             className="relative flex items-center"
             aria-label="Soonlist"
           >
-            <Logo variant="mark" className="size-8 sm:hidden" />
-            <Logo variant="hidePreview" className="hidden sm:block" />
+            <Logo variant="mark" className="size-7 sm:hidden" />
+            <Logo variant="hidePreview" className="hidden scale-75 sm:block" />
           </Link>
         </header>
       </div>
@@ -69,8 +69,8 @@ export function Header() {
   }
 
   return (
-    <div className="fixed inset-x-0 top-0 z-50 border-b border-white/20 bg-white/70 shadow-[0_1px_0_0_rgba(255,255,255,0.5)_inset] backdrop-blur-xl backdrop-saturate-150 sm:border-0 sm:bg-interactive-3 sm:bg-opacity-100 sm:shadow-none sm:backdrop-blur-none sm:backdrop-saturate-100">
-      <header className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4 sm:h-auto sm:pb-7 sm:pt-5">
+    <div className="fixed inset-x-0 top-0 z-50 border-b border-white/20 bg-white/70 shadow-[0_1px_0_0_rgba(255,255,255,0.5)_inset] backdrop-blur-xl backdrop-saturate-150">
+      <header className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4">
         <div className="flex items-center sm:grow sm:gap-0">
           <NavigationMenu>
             <SignedIn>
@@ -79,8 +79,11 @@ export function Header() {
                 className="relative flex items-center"
                 aria-label="Soonlist"
               >
-                <Logo variant="mark" className="size-8 sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
+                <Logo variant="mark" className="size-7 sm:hidden" />
+                <Logo
+                  variant="hidePreview"
+                  className="hidden scale-75 sm:block"
+                />
               </Link>
             </SignedIn>
             <SignedOut>
@@ -89,13 +92,16 @@ export function Header() {
                 className="relative flex items-center"
                 aria-label="Soonlist"
               >
-                <Logo variant="mark" className="size-8 sm:hidden" />
-                <Logo variant="hidePreview" className="hidden sm:block" />
+                <Logo variant="mark" className="size-7 sm:hidden" />
+                <Logo
+                  variant="hidePreview"
+                  className="hidden scale-75 sm:block"
+                />
               </Link>
             </SignedOut>
           </NavigationMenu>
         </div>
-        <div className="flex shrink-0 items-center gap-3 sm:gap-5">
+        <div className="flex shrink-0 items-center gap-3">
           <SignedIn>
             <Nav />
             <NavigationMenu>
@@ -131,7 +137,7 @@ export function Nav() {
 
   return (
     <NavigationMenu>
-      <NavigationMenuList className="flex gap-3">
+      <NavigationMenuList className="flex gap-2">
         <SignedIn>
           <NavigationMenuItem className="hidden lg:block">
             <Link href={`/${user?.username}/upcoming`} legacyBehavior passHref>
@@ -165,7 +171,7 @@ export function Nav() {
           <SignedIn>
             <Link href="/new" legacyBehavior passHref scroll={false}>
               <NavigationMenuLink
-                className={buttonVariants({ variant: "default" })}
+                className={buttonVariants({ variant: "default", size: "sm" })}
               >
                 <CalendarPlus className="mr-2 size-4"></CalendarPlus>
                 Add<span className="inline">&nbsp;event</span>
