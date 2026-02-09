@@ -10,6 +10,7 @@ export default function NotFound() {
   return (
     <>
       <Header />
+      <div className="h-14" aria-hidden />
       <main className="mx-auto flex min-h-[calc(100vh-4.5rem)] w-full max-w-2xl flex-col items-center justify-center px-6 pb-16 pt-6 sm:min-h-[calc(100vh-5.75rem)] lg:px-8 lg:py-24">
         <div className="flex w-full flex-col items-center justify-center text-center">
           {/* 404 Number */}
