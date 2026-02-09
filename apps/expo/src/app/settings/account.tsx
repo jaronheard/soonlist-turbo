@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
 import { Redirect, router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -24,7 +25,7 @@ import { z } from "zod";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { Button } from "~/components/Button";
-import { ShareIcon } from "~/components/icons";
+import { Copy, ShareIcon } from "~/components/icons";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
 import { UserProfileFlair } from "~/components/UserProfileFlair";
 import { useSignOut } from "~/hooks/useSignOut";
@@ -350,13 +351,19 @@ export default function EditProfileScreen() {
     if (!url) return;
 
     try {
-      await Share.share({
-        message: "Check out my events on Soonlist:",
-        url,
-      });
+      await Share.share({ url });
     } catch {
       // Share can be cancelled, so don't show error toast
     }
+  }, [getPublicListUrl]);
+
+  const handleCopyLink = useCallback(async () => {
+    const url = getPublicListUrl();
+    if (!url) return;
+
+    await Clipboard.setStringAsync(url);
+    void hapticSuccess();
+    toast.success("Link copied");
   }, [getPublicListUrl]);
 
   // Redirect unauthenticated users to sign-in
@@ -499,25 +506,38 @@ export default function EditProfileScreen() {
                     <Text className="mb-2 text-sm font-medium text-gray-700">
                       Your public link
                     </Text>
-                    <TouchableOpacity
-                      onPress={handleSharePublicList}
-                      className="flex-row items-center justify-between rounded-lg border border-interactive-1 bg-interactive-1/5 px-4 py-3"
-                      activeOpacity={0.7}
-                      accessible={true}
-                      accessibilityRole="button"
-                      accessibilityLabel="Share public list link"
-                      accessibilityHint="Opens share sheet to copy or share your public list URL"
-                    >
-                      <Text
-                        className="flex-1 text-base font-medium text-interactive-1"
-                        numberOfLines={1}
-                      >
-                        {getPublicListUrl().replace("https://", "")}
-                      </Text>
-                      <View accessible={false}>
-                        <ShareIcon size={20} color="#5A32FB" />
+                    <View className="flex-row items-center gap-2">
+                      <View className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                        <Text
+                          className="text-base text-gray-700"
+                          numberOfLines={1}
+                        >
+                          {getPublicListUrl().replace("https://", "")}
+                        </Text>
                       </View>
-                    </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={handleCopyLink}
+                        className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
+                        activeOpacity={0.7}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Copy link"
+                        accessibilityHint="Copies your public list URL to the clipboard"
+                      >
+                        <Copy size={20} color="#5A32FB" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={handleSharePublicList}
+                        className="items-center justify-center rounded-lg border border-interactive-1 bg-interactive-1/5 p-3"
+                        activeOpacity={0.7}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Share link"
+                        accessibilityHint="Opens share sheet to share your public list URL"
+                      >
+                        <ShareIcon size={20} color="#5A32FB" />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 )}
               </View>
