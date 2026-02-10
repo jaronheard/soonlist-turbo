@@ -350,7 +350,7 @@ export default function PublicListClient({ params }: Props) {
       {!isOwner && (
         <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-xl bg-interactive-3 px-6 py-4 sm:flex-row">
           <span className="text-lg font-bold text-interactive-1">
-            Follow {publicListData?.user.displayName || userName} in the app
+            You're missing what's next
           </span>
           <Button
             onClick={() => {
@@ -358,7 +358,7 @@ export default function PublicListClient({ params }: Props) {
             }}
             className="whitespace-nowrap"
           >
-            Get the app
+            Unlock live list
           </Button>
         </div>
       )}
