@@ -61,13 +61,13 @@ export default function EventPageClient({ eventId }: { eventId: string }) {
       <div className="flex flex-col gap-6">
         <OpenInAppBanner eventId={eventId} />
         {/* Event image skeleton */}
-        <Skeleton className="aspect-[9/16] w-full max-w-md rounded-2xl" />
+        <Skeleton className="aspect-[9/16] w-full max-w-md rounded-2xl bg-neutral-4" />
         {/* Event details skeleton */}
         <div className="flex flex-col gap-4">
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-6 w-1/2" />
-          <Skeleton className="h-6 w-2/3" />
-          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-8 w-3/4 bg-neutral-4" />
+          <Skeleton className="h-6 w-1/2 bg-neutral-4" />
+          <Skeleton className="h-6 w-2/3 bg-neutral-4" />
+          <Skeleton className="h-24 w-full bg-neutral-4" />
         </div>
       </div>
     );
