@@ -21,6 +21,7 @@ import {
 import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
 import { FullPageLoadingSpinner } from "~/components/FullPageLoadingSpinner";
+import { UserAvatarMini } from "~/components/UserAvatarMini";
 import { UserInfo } from "~/components/UserInfo";
 import { useStableTimestamp } from "~/hooks/useStableQuery";
 
@@ -258,11 +259,8 @@ export default function PublicListClient({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <UserInfo userName={userName} />
-      <div className="p-2"></div>
-
-      <div className="mb-6">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="mb-0">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-interactive-1">
               {publicListData?.user.publicListName ||
@@ -345,6 +343,16 @@ export default function PublicListClient({ params }: Props) {
           )}
         </div>
       </div>
+
+      {publicListData?.user && (
+        <div className="mb-4">
+          <UserAvatarMini
+            username={publicListData.user.username}
+            displayName={publicListData.user.displayName ?? undefined}
+            userImage={publicListData.user.userImage ?? ""}
+          />
+        </div>
+      )}
 
       {/* App Store CTA for visitors with deep link to follow this user */}
       {!isOwner && (
