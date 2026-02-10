@@ -8,7 +8,7 @@ import { ResetNewEventContext } from "~/context/ResetNewEventContext";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-interactive-3">
+    <div>
       <ResetNewEventContext />
       <Header />
       <div className="h-14" aria-hidden />
