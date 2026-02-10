@@ -75,7 +75,7 @@ export default function RootLayout({
       className={`!overflow-x-hidden ${kalam.variable} ${plex_sans.variable}`}
     >
       <PHProvider>
-        <body className="overflow-x-hidden bg-interactive-3">
+        <body className="overflow-x-hidden">
           <TRPCReactProvider>
             <Providers>
               <PostHogClient />
