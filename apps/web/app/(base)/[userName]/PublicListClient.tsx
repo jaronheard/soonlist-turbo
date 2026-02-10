@@ -1,7 +1,7 @@
 "use client";
 
 import type { FunctionReturnType } from "convex/server";
-import { use, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { Globe, Lock, Pencil, Share, Share2 } from "lucide-react";
 import { toast } from "sonner";
@@ -17,6 +17,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@soonlist/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from "@soonlist/ui/sheet";
 
 import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
@@ -74,6 +80,9 @@ export default function PublicListClient({ params }: Props) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [newListName, setNewListName] = useState("");
 
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetDismissed, setSheetDismissed] = useState(false);
+
   const currentUser = useQuery(api.users.getCurrentUser);
   const publicListData = useQuery(api.users.getPublicList, {
     username: userName,
@@ -82,6 +91,24 @@ export default function PublicListClient({ params }: Props) {
 
   const isOwner = currentUser?.username === userName;
   const isPublicListEnabled = publicListData?.user.publicListEnabled;
+
+  const handleSheetClose = useCallback(() => {
+    setSheetOpen(false);
+    setSheetDismissed(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOwner || sheetDismissed) return;
+
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setSheetOpen(true);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isOwner, sheetDismissed]);
 
   // Use the new getPublicUserFeed when publicListEnabled is true
   // This shows the user's full feed (created + followed events) instead of just created events
@@ -262,7 +289,7 @@ export default function PublicListClient({ params }: Props) {
       <div className="mb-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-interactive-1">
+            <h1 className="text-2xl font-bold text-black">
               {publicListData?.user.publicListName ||
                 `${publicListData?.user.displayName}'s events`}
             </h1>
@@ -354,23 +381,6 @@ export default function PublicListClient({ params }: Props) {
         </div>
       )}
 
-      {/* App Store CTA for visitors with deep link to follow this user */}
-      {!isOwner && (
-        <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-xl bg-interactive-3 px-6 py-4 sm:flex-row">
-          <span className="text-lg font-bold text-interactive-1">
-            You're missing what's next
-          </span>
-          <Button
-            onClick={() => {
-              window.open(getAppUrl, "_blank");
-            }}
-            className="whitespace-nowrap"
-          >
-            Unlock live list
-          </Button>
-        </div>
-      )}
-
       <EventList
         currentEvents={currentEvents}
         pastEvents={[]}
@@ -381,6 +391,40 @@ export default function PublicListClient({ params }: Props) {
         variant="future-minimal"
         isLoading={isLoading}
       />
+
+      {/* Bottom sheet CTA for visitors */}
+      {!isOwner && (
+        <Sheet
+          open={sheetOpen}
+          onOpenChange={(open) => {
+            if (!open) handleSheetClose();
+          }}
+        >
+          <SheetContent
+            position="bottom"
+            size="content"
+            className="rounded-t-xl"
+          >
+            <SheetTitle className="sr-only">Unlock live list</SheetTitle>
+            <SheetDescription className="sr-only">
+              Get the app to unlock live list updates
+            </SheetDescription>
+            <div className="flex flex-col items-center justify-between gap-4 px-6 py-4 sm:flex-row">
+              <span className="text-lg font-bold text-interactive-1">
+                You&apos;re missing what&apos;s next
+              </span>
+              <Button
+                onClick={() => {
+                  window.open(getAppUrl, "_blank");
+                }}
+                className="whitespace-nowrap"
+              >
+                Unlock live list
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }
