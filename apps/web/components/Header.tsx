@@ -47,7 +47,7 @@ import { UserProfileFlair } from "./UserProfileFlair";
 const excludedMenuRoutes = ["/install"];
 
 export function Header() {
-  const { user } = useUser();
+  const { isLoaded, user } = useUser();
   const pathname = usePathname();
   const hideMenu = excludedMenuRoutes.includes(pathname);
 
@@ -73,6 +73,19 @@ export function Header() {
       <header className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4">
         <div className="flex items-center sm:grow sm:gap-0">
           <NavigationMenu>
+            {!isLoaded && (
+              <Link
+                href="/"
+                className="relative flex items-center"
+                aria-label="Soonlist"
+              >
+                <Logo variant="mark" className="size-7 sm:hidden" />
+                <Logo
+                  variant="hidePreview"
+                  className="hidden scale-75 sm:block"
+                />
+              </Link>
+            )}
             <SignedIn>
               <Link
                 href={`/${user?.username}/upcoming`}
@@ -102,6 +115,17 @@ export function Header() {
           </NavigationMenu>
         </div>
         <div className="flex shrink-0 items-center gap-3">
+          {!isLoaded && (
+            <>
+              {/* Desktop skeleton: approximate size of Add event button + avatar */}
+              <div className="hidden items-center gap-3 lg:flex">
+                <div className="h-9 w-24 animate-pulse rounded-md bg-gray-100" />
+                <div className="size-9 animate-pulse rounded-full bg-gray-100" />
+              </div>
+              {/* Mobile skeleton: approximate size of hamburger menu */}
+              <div className="size-9 animate-pulse rounded-md bg-gray-100 lg:hidden" />
+            </>
+          )}
           <SignedIn>
             <Nav />
             <NavigationMenu>

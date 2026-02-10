@@ -17,10 +17,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@soonlist/ui/dialog";
+import { Skeleton } from "@soonlist/ui/skeleton";
 
 import type { EventWithUser } from "~/components/EventList";
 import { EventList } from "~/components/EventList";
-import { FullPageLoadingSpinner } from "~/components/FullPageLoadingSpinner";
 import { UserInfo } from "~/components/UserInfo";
 import { useStableTimestamp } from "~/hooks/useStableQuery";
 
@@ -174,9 +174,29 @@ export default function PublicListClient({ params }: Props) {
     }
   };
 
-  // Show full page spinner until all data is loaded
+  // Show skeleton until all data is loaded
   if (currentUser === undefined || publicListData === undefined) {
-    return <FullPageLoadingSpinner />;
+    return (
+      <div className="mx-auto max-w-2xl">
+        {/* User info skeleton */}
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-12 rounded-full" />
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
+        <div className="p-2" />
+        {/* List title skeleton */}
+        <Skeleton className="mb-6 h-8 w-48" />
+        {/* Event list skeletons */}
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-20 w-full rounded-xl" />
+          <Skeleton className="h-20 w-full rounded-xl" />
+          <Skeleton className="h-20 w-full rounded-xl" />
+        </div>
+      </div>
+    );
   }
 
   // If user is the owner and public list is not enabled, show setup
