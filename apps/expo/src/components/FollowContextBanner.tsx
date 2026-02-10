@@ -39,7 +39,8 @@ export function FollowContextBanner() {
         </View>
       )}
       <Text className="ml-3 flex-1 text-base font-semibold text-neutral-1">
-        You're here to follow {displayName}'s list
+        You're here to follow {displayName}
+        {displayName.endsWith("s") ? "'" : "'s"} list
       </Text>
     </View>
   );
