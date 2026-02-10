@@ -351,7 +351,7 @@ export default function EditProfileScreen() {
     if (!url) return;
 
     try {
-      await Share.share({ url });
+      await Share.share(Platform.OS === "ios" ? { url } : { message: url });
     } catch {
       // Share can be cancelled, so don't show error toast
     }
@@ -361,9 +361,13 @@ export default function EditProfileScreen() {
     const url = getPublicListUrl();
     if (!url) return;
 
-    await Clipboard.setStringAsync(url);
-    void hapticSuccess();
-    toast.success("Link copied");
+    try {
+      await Clipboard.setStringAsync(url);
+      void hapticSuccess();
+      toast.success("Link copied");
+    } catch {
+      toast.error("Failed to copy link");
+    }
   }, [getPublicListUrl]);
 
   // Redirect unauthenticated users to sign-in
@@ -512,7 +516,7 @@ export default function EditProfileScreen() {
                           className="text-base text-gray-700"
                           numberOfLines={1}
                         >
-                          {getPublicListUrl().replace("https://", "")}
+                          {(getPublicListUrl() || "").replace("https://", "")}
                         </Text>
                       </View>
                       <TouchableOpacity
