@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@soonlist/ui/select";
+import { Stepper, StepStatus } from "@soonlist/ui/stepper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@soonlist/ui/tabs";
 import { Textarea } from "@soonlist/ui/textarea";
 
@@ -52,6 +53,21 @@ import {
   UploadImageForProcessingDropzone,
 } from "./uploadImages";
 
+function getStepStatus(stepStatus: Status, currentStatus: Status): StepStatus {
+  const allStatuses = Object.values(Status);
+  const stepIndex = allStatuses.indexOf(stepStatus);
+  const currentIndex = allStatuses.indexOf(currentStatus);
+  // Treat Publish as still being on the Preview step
+  const effectiveIndex =
+    currentStatus === Status.Publish
+      ? allStatuses.indexOf(Status.Preview)
+      : currentIndex;
+
+  if (stepIndex < effectiveIndex) return StepStatus.Complete;
+  if (stepIndex === effectiveIndex) return StepStatus.Current;
+  return StepStatus.Upcoming;
+}
+
 function ProgressStagesWrapper({
   children,
 }: {
@@ -59,6 +75,33 @@ function ProgressStagesWrapper({
   children: JSX.Element;
 }) {
   const { user } = useUser();
+  const { status, isShortcut, goToStatus } = useNewEventProgressContext();
+
+  const steps = [
+    {
+      name: "Add",
+      href: "#",
+      status: getStepStatus(Status.Upload, status),
+      onClick: () => goToStatus(Status.Upload),
+      disabled: status === Status.Publish,
+    },
+    {
+      name: "Organize",
+      href: "#",
+      status: getStepStatus(Status.Organize, status),
+      onClick: () => goToStatus(Status.Organize),
+      disabled: status === Status.Publish,
+    },
+    {
+      name: "Review",
+      href: "#",
+      status: getStepStatus(Status.Preview, status),
+      onClick: () => goToStatus(Status.Preview),
+      disabled:
+        status === Status.Publish ||
+        getStepStatus(Status.Preview, status) === StepStatus.Upcoming,
+    },
+  ];
 
   return (
     <>
@@ -79,6 +122,7 @@ function ProgressStagesWrapper({
           <h1 className="text-xl font-semibold text-neutral-2">
             Create an event
           </h1>
+          {!isShortcut && <Stepper steps={steps} />}
         </div>
         {children}
         {/* Footer should be included in children */}
