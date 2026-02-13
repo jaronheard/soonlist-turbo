@@ -163,9 +163,9 @@ function MyFeedContent() {
     return (
       <View className="flex-row items-center justify-between px-4 pb-2 pt-3">
         <ProfileMenu />
-        <View className="mx-3">
+        <View className="mx-3" style={{ width: 200 }}>
           {Platform.OS === "ios" ? (
-            <Host>
+            <Host matchContents>
               <Picker
                 options={["Upcoming", "Past"]}
                 selectedIndex={selectedSegment === "upcoming" ? 0 : 1}
