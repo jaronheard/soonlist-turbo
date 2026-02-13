@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { Picker } from "@expo/ui/swift-ui";
+import { Host, Picker } from "@expo/ui/swift-ui";
 import {
   Authenticated,
   AuthLoading,
@@ -12,7 +12,6 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { GlassToolbar } from "~/components/GlassToolbar";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { Logo } from "~/components/Logo";
 import UserEventsList from "~/components/UserEventsList";
@@ -158,16 +157,18 @@ function MyFeedContent() {
         </View>
         {Platform.OS === "ios" ? (
           <View className="mx-4 mb-2">
-            <Picker
-              options={["Upcoming", "Past"]}
-              selectedIndex={selectedSegment === "upcoming" ? 0 : 1}
-              onOptionSelected={(event) => {
-                handleSegmentChange(
-                  event.nativeEvent.index === 0 ? "upcoming" : "past",
-                );
-              }}
-              variant="segmented"
-            />
+            <Host>
+              <Picker
+                options={["Upcoming", "Past"]}
+                selectedIndex={selectedSegment === "upcoming" ? 0 : 1}
+                onOptionSelected={(event) => {
+                  handleSegmentChange(
+                    event.nativeEvent.index === 0 ? "upcoming" : "past",
+                  );
+                }}
+                variant="segmented"
+              />
+            </Host>
           </View>
         ) : (
           <SegmentedControlFallback
@@ -181,20 +182,17 @@ function MyFeedContent() {
 
   return (
     <View className="flex-1 bg-white">
-      <View className="flex-1">
-        <UserEventsList
-          groupedEvents={enrichedEvents}
-          onEndReached={handleLoadMore}
-          isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={status === "LoadingFirstPage"}
-          showCreator="savedFromOthers"
-          showSourceStickers
-          savedEventIds={savedEventIds}
-          source={selectedSegment === "upcoming" ? "feed" : "past"}
-          HeaderComponent={HeaderComponent}
-        />
-      </View>
-      <GlassToolbar />
+      <UserEventsList
+        groupedEvents={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={status === "LoadingFirstPage"}
+        showCreator="savedFromOthers"
+        showSourceStickers
+        savedEventIds={savedEventIds}
+        source={selectedSegment === "upcoming" ? "feed" : "past"}
+        HeaderComponent={HeaderComponent}
+      />
     </View>
   );
 }

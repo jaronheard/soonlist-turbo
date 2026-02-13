@@ -27,9 +27,9 @@ export default function TabsLayout() {
         <Label hidden />
         <Icon sf={{ default: "binoculars", selected: "binoculars.fill" }} />
       </NativeTabs.Trigger>
-      {/* Add tab is hidden - using GlassToolbar instead */}
-      <NativeTabs.Trigger name="add" hidden>
-        <Label hidden />
+      {/* Add tab in search position (top-right on iOS Liquid Glass) */}
+      <NativeTabs.Trigger name="add" role="search">
+        <Label>Capture</Label>
         <Icon
           sf={{ default: "plus.circle.fill", selected: "plus.circle.fill" }}
         />

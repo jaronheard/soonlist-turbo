@@ -14,7 +14,6 @@ import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { GlassToolbar } from "~/components/GlassToolbar";
 import { ChevronDown, ChevronUp, X } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
@@ -213,23 +212,20 @@ function FollowingFeedContent() {
 
   return (
     <View className="flex-1 bg-white">
-      <View className="flex-1">
-        <UserEventsList
-          events={enrichedEvents}
-          onEndReached={handleLoadMore}
-          isFetchingNextPage={status === "LoadingMore"}
-          isLoadingFirstPage={
-            status === "LoadingFirstPage" || followingUsers === undefined
-          }
-          showCreator="always"
-          stats={stats}
-          showSourceStickers
-          savedEventIds={savedEventIds}
-          source="following"
-          HeaderComponent={FollowingHeader}
-        />
-      </View>
-      <GlassToolbar />
+      <UserEventsList
+        events={enrichedEvents}
+        onEndReached={handleLoadMore}
+        isFetchingNextPage={status === "LoadingMore"}
+        isLoadingFirstPage={
+          status === "LoadingFirstPage" || followingUsers === undefined
+        }
+        showCreator="always"
+        stats={stats}
+        showSourceStickers
+        savedEventIds={savedEventIds}
+        source="following"
+        HeaderComponent={FollowingHeader}
+      />
     </View>
   );
 }
