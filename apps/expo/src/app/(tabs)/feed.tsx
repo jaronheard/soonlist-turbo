@@ -32,9 +32,9 @@ function SegmentedControlFallback({
   onSegmentChange: (segment: Segment) => void;
 }) {
   return (
-    <View className="mx-4 mb-2 flex-row rounded-lg bg-gray-100 p-1">
+    <View className="flex-row rounded-lg bg-gray-100 p-1">
       <TouchableOpacity
-        className={`flex-1 items-center rounded-md py-2 ${
+        className={`items-center rounded-md px-4 py-2 ${
           selectedSegment === "upcoming" ? "bg-white shadow-sm" : ""
         }`}
         onPress={() => onSegmentChange("upcoming")}
@@ -50,7 +50,7 @@ function SegmentedControlFallback({
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
-        className={`flex-1 items-center rounded-md py-2 ${
+        className={`items-center rounded-md px-4 py-2 ${
           selectedSegment === "past" ? "bg-white shadow-sm" : ""
         }`}
         onPress={() => onSegmentChange("past")}
@@ -161,9 +161,9 @@ function MyFeedContent() {
 
   const HeaderComponent = useCallback(() => {
     return (
-      <View className="flex-row items-center px-4 pb-2 pt-3">
+      <View className="flex-row items-center justify-between px-4 pb-2 pt-3">
         <ProfileMenu />
-        <View className="mx-3 flex-1">
+        <View className="mx-3">
           {Platform.OS === "ios" ? (
             <Host>
               <Picker
