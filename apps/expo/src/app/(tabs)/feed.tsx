@@ -184,8 +184,13 @@ function MyFeedContent() {
             />
           )}
         </View>
-        <TouchableOpacity onPress={handleShareEvents} hitSlop={8}>
-          <ShareIcon size={24} color="#5A32FB" />
+        <TouchableOpacity
+          onPress={handleShareEvents}
+          className="flex-row items-center rounded-full bg-interactive-1 px-4 py-2"
+          activeOpacity={0.8}
+        >
+          <ShareIcon size={18} color="#FFF" />
+          <Text className="ml-2 text-base font-semibold text-white">Share</Text>
         </TouchableOpacity>
       </View>
     );
