@@ -88,6 +88,13 @@ export const updateEventInFeeds = internalMutation({
       }
     }
 
+    if (visibility === "public") {
+      await ctx.runMutation(internal.feedHelpers.addEventToContributorLists, {
+        userId,
+        eventId,
+      });
+    }
+
     // 3. Add to feeds of users who follow this event
     const eventFollows = await ctx.db
       .query("eventFollows")
@@ -112,6 +119,27 @@ export const updateEventInFeeds = internalMutation({
     // - createEvent: after inserting into eventToLists
     // - addEventToList: when adding event to a list
     // - toggleEventVisibility/updateEvent: when visibility changes to public
+  },
+});
+
+export const addEventToContributorLists = internalMutation({
+  args: {
+    userId: v.string(),
+    eventId: v.string(),
+  },
+  handler: async (ctx, { userId, eventId }) => {
+    const contributorEntries = await ctx.db
+      .query("listContributors")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const contributorEntry of contributorEntries) {
+      await ctx.runMutation(internal.events.addEventToListInternal, {
+        eventId,
+        listId: contributorEntry.listId,
+        userId,
+      });
+    }
   },
 });
 

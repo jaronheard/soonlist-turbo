@@ -158,12 +158,6 @@ interface AppState {
   markPaywallShown: () => void;
   resetEventViews: () => void;
 
-  // Ephemeral discover flag to bridge UI until Clerk metadata updates
-
-  // Discover access override for immediate UI update
-  discoverAccessOverride: boolean;
-  setDiscoverAccessOverride: (enabled: boolean) => void;
-
   // Rating prompt state
   hasShownRatingPrompt: boolean;
   markRatingPromptShown: () => void;
@@ -185,13 +179,6 @@ export const useAppStore = create<AppState>()(
       // Calendar preferences
       preferredCalendarApp: null,
       setPreferredCalendarApp: (app) => set({ preferredCalendarApp: app }),
-
-      // No ephemeral discover flag; UI listens to Clerk user metadata
-
-      // Discover override default state
-      discoverAccessOverride: false,
-      setDiscoverAccessOverride: (enabled) =>
-        set((s) => ({ ...s, discoverAccessOverride: enabled })),
 
       setFilter: (filter) => set({ filter }),
       setIntentParams: (params) => set({ intentParams: params }),
@@ -360,7 +347,6 @@ export const useAppStore = create<AppState>()(
           intentParams: null,
           preferredCalendarApp: null,
           // Ensure discover override never persists across global reset
-          discoverAccessOverride: false,
           addEventState: {
             input: "",
             imagePreview: null,
@@ -407,7 +393,6 @@ export const useAppStore = create<AppState>()(
           intentParams: null,
           preferredCalendarApp: null,
           // Ensure discover override never persists across logout
-          discoverAccessOverride: false,
           addEventState: {
             input: "",
             imagePreview: null,
@@ -511,11 +496,8 @@ export const useAppStore = create<AppState>()(
     {
       name: "app-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      // Do not persist ephemeral flags like discoverAccessOverride
       partialize: (state) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { discoverAccessOverride, ...rest } = state;
-        return rest;
+        return state;
       },
     },
   ),

@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { Layout } from "react-native-reanimated";
 import { Image as ExpoImage } from "expo-image";
 import { router, Stack } from "expo-router";
 
-import { CodeEntryModal } from "~/components/CodeEntryModal";
 import { FollowContextBanner } from "~/components/FollowContextBanner";
 import { Logo } from "~/components/Logo";
 import { useSetHasSeenOnboarding } from "~/store";
@@ -12,28 +11,15 @@ import { useSetHasSeenOnboarding } from "~/store";
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 export default function WelcomeScreen() {
-  const [isCodeModalVisible, setIsCodeModalVisible] = useState(false);
+  const setHasSeenOnboarding = useSetHasSeenOnboarding();
 
   const handleGetStarted = () => {
     router.navigate("/(onboarding)/onboarding/01-intro");
   };
 
-  const setHasSeenOnboarding = useSetHasSeenOnboarding();
-
   const handleSignIn = () => {
-    // Mark as seen onboarding so they skip it after sign-in
     setHasSeenOnboarding(true);
-
-    // Navigate to sign-in screen
     router.navigate("/sign-in");
-  };
-
-  const handleCodeEntry = () => {
-    setIsCodeModalVisible(true);
-  };
-
-  const handleCodeModalClose = () => {
-    setIsCodeModalVisible(false);
   };
 
   return (
@@ -82,7 +68,6 @@ export default function WelcomeScreen() {
             className="relative w-full shrink-0"
             layout={Layout.duration(400)}
           >
-            {/* Get Started Button */}
             <Pressable
               onPress={handleGetStarted}
               className="mb-3 rounded-full bg-interactive-1 py-4"
@@ -92,7 +77,6 @@ export default function WelcomeScreen() {
               </Text>
             </Pressable>
 
-            {/* Simple sign in link */}
             <Pressable onPress={handleSignIn} className="py-3">
               <Text className="text-center text-sm text-gray-600">
                 Already have an account?{" "}
@@ -101,29 +85,9 @@ export default function WelcomeScreen() {
                 </Text>
               </Text>
             </Pressable>
-
-            {/* Code entry link */}
-            <Pressable
-              onPress={handleCodeEntry}
-              className="py-2"
-              accessibilityRole="button"
-              accessibilityLabel="Enter a discover access code"
-            >
-              <Text className="text-center text-sm text-gray-600">
-                🎟 Got a code?{" "}
-                <Text className="font-semibold text-interactive-1">
-                  Enter it here
-                </Text>
-              </Text>
-            </Pressable>
           </AnimatedView>
         </AnimatedView>
       </View>
-
-      <CodeEntryModal
-        isVisible={isCodeModalVisible}
-        onClose={handleCodeModalClose}
-      />
     </View>
   );
 }

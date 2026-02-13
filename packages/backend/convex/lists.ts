@@ -3,7 +3,8 @@ import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
+import { enrichEventsAndFilterNulls } from "./model/events";
 
 // Helper function to get the current user ID from auth
 async function getUserId(ctx: QueryCtx): Promise<string | null> {
@@ -390,5 +391,188 @@ export const removeListMember = mutation({
     }
 
     return { success: true };
+  },
+});
+
+export const getSystemLists = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("lists")
+      .withIndex("by_system_type", (q) => q.eq("isSystemList", true))
+      .collect();
+  },
+});
+
+export const followSystemList = internalMutation({
+  args: {
+    userId: v.string(),
+    listId: v.string(),
+  },
+  handler: async (ctx, { userId, listId }) => {
+    const existingFollow = await ctx.db
+      .query("listFollows")
+      .withIndex("by_user_and_list", (q) =>
+        q.eq("userId", userId).eq("listId", listId),
+      )
+      .first();
+
+    if (!existingFollow) {
+      await ctx.db.insert("listFollows", {
+        userId,
+        listId,
+      });
+    }
+
+    await ctx.runMutation(internal.feedHelpers.addListEventsToUserFeed, {
+      userId,
+      listId,
+    });
+
+    return { success: true };
+  },
+});
+
+export const addContributor = mutation({
+  args: {
+    listId: v.string(),
+    contributorUserId: v.string(),
+  },
+  handler: async (ctx, { listId, contributorUserId }) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      throw new ConvexError("Authentication required");
+    }
+
+    const list = await ctx.db
+      .query("lists")
+      .withIndex("by_custom_id", (q) => q.eq("id", listId))
+      .first();
+
+    if (!list) {
+      throw new ConvexError("List not found");
+    }
+
+    if (list.userId !== userId) {
+      throw new ConvexError("Only the list owner can add contributors");
+    }
+
+    const existingContributor = await ctx.db
+      .query("listContributors")
+      .withIndex("by_list_and_user", (q) =>
+        q.eq("listId", listId).eq("userId", contributorUserId),
+      )
+      .first();
+
+    if (!existingContributor) {
+      await ctx.db.insert("listContributors", {
+        listId,
+        userId: contributorUserId,
+        addedAt: new Date().toISOString(),
+        addedBy: userId,
+      });
+    }
+
+    const contributorPublicEvents = await ctx.db
+      .query("events")
+      .withIndex("by_user", (q) => q.eq("userId", contributorUserId))
+      .filter((q) => q.eq(q.field("visibility"), "public"))
+      .collect();
+
+    for (const event of contributorPublicEvents) {
+      await ctx.runMutation(internal.events.addEventToListInternal, {
+        eventId: event.id,
+        listId,
+        userId: contributorUserId,
+      });
+    }
+
+    return { success: true };
+  },
+});
+
+export const removeContributor = mutation({
+  args: {
+    listId: v.string(),
+    contributorUserId: v.string(),
+  },
+  handler: async (ctx, { listId, contributorUserId }) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      throw new ConvexError("Authentication required");
+    }
+
+    const list = await ctx.db
+      .query("lists")
+      .withIndex("by_custom_id", (q) => q.eq("id", listId))
+      .first();
+
+    if (!list) {
+      throw new ConvexError("List not found");
+    }
+
+    if (list.userId !== userId) {
+      throw new ConvexError("Only the list owner can remove contributors");
+    }
+
+    const existingContributor = await ctx.db
+      .query("listContributors")
+      .withIndex("by_list_and_user", (q) =>
+        q.eq("listId", listId).eq("userId", contributorUserId),
+      )
+      .first();
+
+    if (existingContributor) {
+      await ctx.db.delete(existingContributor._id);
+    }
+
+    return { success: true };
+  },
+});
+
+export const getListById = query({
+  args: { listId: v.string() },
+  handler: async (ctx, { listId }) => {
+    const userId = await getUserId(ctx);
+    const accessResult = await checkListAccess(ctx, listId, userId);
+
+    if (accessResult.status !== "ok") {
+      return null;
+    }
+
+    return accessResult.list;
+  },
+});
+
+export const getListEvents = query({
+  args: { listId: v.string() },
+  handler: async (ctx, { listId }) => {
+    const userId = await getUserId(ctx);
+    const accessResult = await checkListAccess(ctx, listId, userId);
+
+    if (accessResult.status !== "ok") {
+      return [];
+    }
+
+    const eventToLists = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_list", (q) => q.eq("listId", listId))
+      .collect();
+
+    const events = await Promise.all(
+      eventToLists.map((eventToList) =>
+        ctx.db
+          .query("events")
+          .withIndex("by_custom_id", (q) => q.eq("id", eventToList.eventId))
+          .first(),
+      ),
+    );
+
+    const visibleEvents = events.filter(
+      (event): event is NonNullable<typeof event> =>
+        event !== null && event.visibility === "public",
+    );
+
+    return await enrichEventsAndFilterNulls(ctx, visibleEvents);
   },
 });

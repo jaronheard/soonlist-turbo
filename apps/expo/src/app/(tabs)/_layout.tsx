@@ -16,7 +16,6 @@ const tabHeaderConfig = {
   feed: { title: "Upcoming", active: "upcoming" },
   following: { title: "Following", active: "following" },
   past: { title: "Past", active: "past" },
-  discover: { title: "Discover", active: "discover" },
 } as const;
 
 type TabRouteName = keyof typeof tabHeaderConfig;
@@ -53,7 +52,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="feed" />
       <Tabs.Screen name="following" />
       <Tabs.Screen name="past" />
-      <Tabs.Screen name="discover" />
     </Tabs>
   );
 }

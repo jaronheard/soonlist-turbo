@@ -138,11 +138,27 @@ export default defineSchema({
     contribution: v.optional(
       v.union(v.literal("open"), v.literal("restricted"), v.literal("owner")),
     ),
+    listType: v.optional(
+      v.union(v.literal("standard"), v.literal("contributor")),
+    ),
+    isSystemList: v.optional(v.boolean()),
+    systemListType: v.optional(v.string()),
     created_at: v.string(), // ISO date string
     updatedAt: v.union(v.string(), v.null()), // ISO date string or null
   })
     .index("by_user", ["userId"])
-    .index("by_custom_id", ["id"]),
+    .index("by_custom_id", ["id"])
+    .index("by_system_type", ["isSystemList", "systemListType"]),
+
+  listContributors: defineTable({
+    listId: v.string(),
+    userId: v.string(),
+    addedAt: v.string(),
+    addedBy: v.string(),
+  })
+    .index("by_list", ["listId"])
+    .index("by_user", ["userId"])
+    .index("by_list_and_user", ["listId", "userId"]),
 
   listMembers: defineTable({
     listId: v.string(),

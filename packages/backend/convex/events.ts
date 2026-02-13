@@ -611,3 +611,15 @@ export const getTodayEventsCount = internalQuery({
     return events.map((event) => ({ id: event.id }));
   },
 });
+
+export const addEventToListInternal = internalMutation({
+  args: {
+    eventId: v.string(),
+    listId: v.string(),
+    userId: v.string(),
+  },
+  handler: async (ctx, { eventId, listId, userId }) => {
+    await Events.addEventToList(ctx, eventId, listId, userId);
+    return { success: true };
+  },
+});
