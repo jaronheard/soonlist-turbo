@@ -15,7 +15,7 @@ export default function TabsLayout() {
       blurEffect="systemChromeMaterialLight" /* interactive-1 */
     >
       <NativeTabs.Trigger name="feed">
-        <Label>My Events</Label>
+        <Label>My List</Label>
         <Icon sf={{ default: "calendar", selected: "calendar" }} />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="following">
