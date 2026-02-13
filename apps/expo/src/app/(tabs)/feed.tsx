@@ -161,7 +161,7 @@ function MyFeedContent() {
 
   const HeaderComponent = useCallback(() => {
     return (
-      <View className="flex-row items-center justify-between pb-2 pl-4 pr-2 pt-3">
+      <View className="flex-row items-center justify-between pb-2 pl-3 pr-2 pt-3">
         <ProfileMenu />
         <View className="mx-2" style={{ width: 200 }}>
           {Platform.OS === "ios" ? (
