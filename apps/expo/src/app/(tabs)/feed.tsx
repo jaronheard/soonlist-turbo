@@ -161,9 +161,9 @@ function MyFeedContent() {
 
   const HeaderComponent = useCallback(() => {
     return (
-      <View className="flex-row items-center justify-between px-4 pb-2 pt-3">
+      <View className="flex-row items-center justify-between px-2 pb-2 pt-3">
         <ProfileMenu />
-        <View className="mx-3" style={{ width: 200 }}>
+        <View className="mx-2" style={{ width: 200 }}>
           {Platform.OS === "ios" ? (
             <Host matchContents>
               <Picker
