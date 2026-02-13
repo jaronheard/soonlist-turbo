@@ -1,12 +1,7 @@
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  Button,
-  GlassEffectContainer,
-  Host,
-  Image,
-} from "@expo/ui/swift-ui";
+import { Button, GlassEffectContainer, Host, Image } from "@expo/ui/swift-ui";
 import { frame, glassEffect, padding } from "@expo/ui/swift-ui/modifiers";
 
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
@@ -31,10 +26,7 @@ export function GlassToolbar({ bottomOffset = 100 }: GlassToolbarProps) {
 
   return (
     <View
-      style={[
-        styles.container,
-        { bottom: bottomOffset + insets.bottom },
-      ]}
+      style={[styles.container, { bottom: bottomOffset + insets.bottom }]}
       pointerEvents="box-none"
     >
       <Host matchContents>

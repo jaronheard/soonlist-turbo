@@ -1,7 +1,8 @@
-import React, { useCallback, useMemo } from "react";
-import { View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
+import { Picker } from "@expo/ui/swift-ui";
 import {
   Authenticated,
   AuthLoading,
@@ -19,35 +20,67 @@ import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 
-function LogoHeader() {
+type Segment = "upcoming" | "past";
+
+function SegmentedControlFallback({
+  selectedSegment,
+  onSegmentChange,
+}: {
+  selectedSegment: Segment;
+  onSegmentChange: (segment: Segment) => void;
+}) {
   return (
-    <View className="items-center pb-2 pt-1">
-      <View style={{ transform: [{ scale: 0.6 }] }}>
-        <Logo variant="hidePreview" />
-      </View>
+    <View className="mx-4 mb-2 flex-row rounded-lg bg-gray-100 p-1">
+      <TouchableOpacity
+        className={`flex-1 items-center rounded-md py-2 ${
+          selectedSegment === "upcoming" ? "bg-white shadow-sm" : ""
+        }`}
+        onPress={() => onSegmentChange("upcoming")}
+      >
+        <Text
+          className={
+            selectedSegment === "upcoming"
+              ? "font-semibold text-gray-900"
+              : "text-gray-500"
+          }
+        >
+          Upcoming
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        className={`flex-1 items-center rounded-md py-2 ${
+          selectedSegment === "past" ? "bg-white shadow-sm" : ""
+        }`}
+        onPress={() => onSegmentChange("past")}
+      >
+        <Text
+          className={
+            selectedSegment === "past"
+              ? "font-semibold text-gray-900"
+              : "text-gray-500"
+          }
+        >
+          Past
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 function MyFeedContent() {
   const { user } = useUser();
+  const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
 
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
   const stableTimestamp = useStableTimestamp();
 
-  // Fetch user stats
-  const stats = useQuery(
-    api.events.getStats,
-    user?.username ? { userName: user.username } : "skip",
-  );
-
-  // Memoize query args to prevent unnecessary re-renders
+  // Memoize query args - changes when segment changes, triggering refetch
   const queryArgs = useMemo(() => {
     return {
-      filter: "upcoming" as const,
+      filter: selectedSegment,
     };
-  }, []);
+  }, [selectedSegment]);
 
   const {
     results: groupedEvents,
@@ -81,33 +114,70 @@ function MyFeedContent() {
   // Transform grouped events into the format UserEventsList expects
   // The server now handles similarity grouping, so we just enrich the events
   const enrichedEvents = useMemo(() => {
-    // Use stableTimestamp instead of recalculating Date.now()
-    const currentTime = new Date(stableTimestamp).getTime();
-    return groupedEvents
-      .filter((group) => {
-        // Client-side safety filter: hide events that have ended
-        // This prevents showing ended events if the cron job hasn't run recently
-        const eventEndTime = new Date(group.event.endDateTime).getTime();
+    const events = groupedEvents.map((group) => ({
+      event: {
+        ...group.event,
+        eventFollows: [],
+        comments: [],
+        eventToLists: [],
+        lists: [],
+      },
+      // Server-computed count (already shows just similar events, not including primary)
+      similarEvents: Array(group.similarEventsCount).fill({
+        event: null,
+        similarityDetails: null,
+      }),
+    }));
+
+    // Client-side safety filter: hide events that have ended (upcoming only)
+    if (selectedSegment === "upcoming") {
+      const currentTime = new Date(stableTimestamp).getTime();
+      return events.filter((item) => {
+        const eventEndTime = new Date(item.event.endDateTime).getTime();
         return eventEndTime >= currentTime;
-      })
-      .map((group) => ({
-        event: {
-          ...group.event,
-          eventFollows: [],
-          comments: [],
-          eventToLists: [],
-          lists: [],
-        },
-        // Server-computed count (already shows just similar events, not including primary)
-        similarEvents: Array(group.similarEventsCount).fill({
-          event: null,
-          similarityDetails: null,
-        }),
-      }));
-  }, [groupedEvents, stableTimestamp]);
+      });
+    }
+
+    return events;
+  }, [groupedEvents, stableTimestamp, selectedSegment]);
 
   // Trigger rating prompt when user has 3+ upcoming events
-  useRatingPrompt(enrichedEvents.length);
+  useRatingPrompt(selectedSegment === "upcoming" ? enrichedEvents.length : 0);
+
+  const handleSegmentChange = useCallback((segment: Segment) => {
+    setSelectedSegment(segment);
+  }, []);
+
+  const HeaderComponent = useCallback(() => {
+    return (
+      <View>
+        <View className="items-center pb-2 pt-1">
+          <View style={{ transform: [{ scale: 0.6 }] }}>
+            <Logo variant="hidePreview" />
+          </View>
+        </View>
+        {Platform.OS === "ios" ? (
+          <View className="mx-4 mb-2">
+            <Picker
+              options={["Upcoming", "Past"]}
+              selectedIndex={selectedSegment === "upcoming" ? 0 : 1}
+              onOptionSelected={(event) => {
+                handleSegmentChange(
+                  event.nativeEvent.index === 0 ? "upcoming" : "past",
+                );
+              }}
+              variant="segmented"
+            />
+          </View>
+        ) : (
+          <SegmentedControlFallback
+            selectedSegment={selectedSegment}
+            onSegmentChange={handleSegmentChange}
+          />
+        )}
+      </View>
+    );
+  }, [selectedSegment, handleSegmentChange]);
 
   return (
     <View className="flex-1 bg-white">
@@ -118,11 +188,10 @@ function MyFeedContent() {
           isFetchingNextPage={status === "LoadingMore"}
           isLoadingFirstPage={status === "LoadingFirstPage"}
           showCreator="savedFromOthers"
-          stats={stats}
           showSourceStickers
           savedEventIds={savedEventIds}
-          source="feed"
-          HeaderComponent={LogoHeader}
+          source={selectedSegment === "upcoming" ? "feed" : "past"}
+          HeaderComponent={HeaderComponent}
         />
       </View>
       <GlassToolbar />
