@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Platform, Text, TouchableOpacity, View } from "react-native";
+import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { Host, Picker } from "@expo/ui/swift-ui";
@@ -12,12 +12,15 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { ShareIcon } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { Logo } from "~/components/Logo";
+import { ProfileMenu } from "~/components/ProfileMenu";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
+import Config from "~/utils/config";
+import { logError } from "~/utils/errorLogging";
 
 type Segment = "upcoming" | "past";
 
@@ -147,16 +150,21 @@ function MyFeedContent() {
     setSelectedSegment(segment);
   }, []);
 
+  const handleShareEvents = useCallback(async () => {
+    const shareUrl = `${Config.apiBaseUrl}/${user?.username ?? ""}`;
+    try {
+      await Share.share({ url: shareUrl });
+    } catch (error) {
+      logError("Error sharing events", error);
+    }
+  }, [user?.username]);
+
   const HeaderComponent = useCallback(() => {
     return (
-      <View>
-        <View className="items-center pb-2 pt-1">
-          <View style={{ transform: [{ scale: 0.6 }] }}>
-            <Logo variant="hidePreview" />
-          </View>
-        </View>
-        {Platform.OS === "ios" ? (
-          <View className="mx-4 mb-2">
+      <View className="flex-row items-center px-4 pb-2 pt-3">
+        <ProfileMenu />
+        <View className="mx-3 flex-1">
+          {Platform.OS === "ios" ? (
             <Host>
               <Picker
                 options={["Upcoming", "Past"]}
@@ -169,16 +177,19 @@ function MyFeedContent() {
                 variant="segmented"
               />
             </Host>
-          </View>
-        ) : (
-          <SegmentedControlFallback
-            selectedSegment={selectedSegment}
-            onSegmentChange={handleSegmentChange}
-          />
-        )}
+          ) : (
+            <SegmentedControlFallback
+              selectedSegment={selectedSegment}
+              onSegmentChange={handleSegmentChange}
+            />
+          )}
+        </View>
+        <TouchableOpacity onPress={handleShareEvents} hitSlop={8}>
+          <ShareIcon size={24} color="#5A32FB" />
+        </TouchableOpacity>
       </View>
     );
-  }, [selectedSegment, handleSegmentChange]);
+  }, [selectedSegment, handleSegmentChange, handleShareEvents]);
 
   return (
     <View className="flex-1 bg-white">
