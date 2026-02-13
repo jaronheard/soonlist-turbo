@@ -163,7 +163,7 @@ function MyFeedContent() {
     return (
       <View className="flex-row items-center justify-between pb-2 pl-3 pr-2 pt-3">
         <ProfileMenu />
-        <View className="mx-2" style={{ width: 170 }}>
+        <View className="mx-2" style={{ width: 180 }}>
           {Platform.OS === "ios" ? (
             <Host matchContents>
               <Picker
