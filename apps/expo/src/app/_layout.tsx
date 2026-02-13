@@ -324,7 +324,7 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <InitialLayout />
-      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+      <StatusBar style="dark" />
       <Toaster
         position="top-center"
         offset={100}

@@ -29,7 +29,7 @@ import {
   EyeOff,
   Globe2,
   MoreVertical,
-  PlusIcon,
+  PlusViewfinder,
   ShareIcon,
   User,
 } from "~/components/icons";
@@ -491,19 +491,26 @@ export function UserEventListItem(props: UserEventListItemProps) {
             <View className="-mb-2 mt-1.5 flex-row items-center justify-start gap-3">
               {ActionButton && <ActionButton event={event} />}
 
+              <TouchableOpacity
+                className="-mb-0.5 -ml-2.5 flex-row items-center gap-1 pl-4 pr-1 py-2.5"
+                onPress={handleAddToCal}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
+                <Text className="text-base font-bold text-interactive-1">
+                  Add
+                </Text>
+              </TouchableOpacity>
+
               {!isDiscoverFeed && (
                 <TouchableOpacity
-                  className="-mb-0.5 -ml-2.5 flex-row items-center gap-2 bg-interactive-2 px-4 py-2.5"
-                  style={{ borderRadius: 16 }}
+                  className="rounded-full p-2.5"
                   onPress={handleShare}
                   accessibilityLabel="Share"
                   accessibilityRole="button"
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <ShareIcon size={iconSize * 1.1} color="#5A32FB" />
-                  <Text className="text-base font-bold text-interactive-1">
-                    Share
-                  </Text>
                 </TouchableOpacity>
               )}
 
@@ -514,6 +521,7 @@ export function UserEventListItem(props: UserEventListItemProps) {
               >
                 <MapPinned size={iconSize} color="#5A32FB" />
               </TouchableOpacity> */}
+
               {showDiscover && !hideDiscoverableButton && (
                 <TouchableOpacity
                   className="rounded-full p-2.5"
@@ -531,14 +539,6 @@ export function UserEventListItem(props: UserEventListItemProps) {
                   )}
                 </TouchableOpacity>
               )}
-
-              <TouchableOpacity
-                className="rounded-full p-2.5"
-                onPress={handleAddToCal}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <CalendarPlus size={iconSize * 1.1} color="#5A32FB" />
-              </TouchableOpacity>
 
               <EventMenu
                 event={event}
@@ -820,24 +820,28 @@ const TapToAddText = ({ textSize = 16 }: { textSize?: number }) => {
   const { fontScale } = useWindowDimensions();
   const fontSize = textSize * fontScale;
   const iconSize = 20 * fontScale;
-  const plusIconSize = 12 * fontScale;
 
   return (
     <View className="flex-row items-center justify-center">
       <Text className="text-center text-neutral-2" style={{ fontSize }}>
-        Tap
+        Tap{" "}
       </Text>
       <View
-        className="mx-1.5 items-center justify-center rounded-full bg-interactive-1"
+        className="items-center justify-center rounded-full bg-white"
         style={{
-          width: iconSize,
-          height: iconSize,
+          width: iconSize + 14,
+          height: iconSize + 14,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+          elevation: 2,
         }}
       >
-        <PlusIcon size={plusIconSize} color="#FFF" strokeWidth={3} />
+        <PlusViewfinder size={iconSize} color="#1C1C1E" />
       </View>
       <Text className="text-center text-neutral-2" style={{ fontSize }}>
-        to add from screenshots or photos
+        {" "}to add from screenshots or photos
       </Text>
     </View>
   );
@@ -1024,12 +1028,12 @@ export default function UserEventsList(props: UserEventsListProps) {
     return events ? collapseSimilarEvents(events, user?.id) : [];
   }, [groupedEvents, events, user?.id]);
 
-  const renderEmptyState = () => {
+  const renderEmptyState = (inline = false) => {
     return (
       <ScrollView
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: insets.top + 16,
+          paddingTop: inline ? 8 : insets.top + 16,
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",
@@ -1055,20 +1059,23 @@ export default function UserEventsList(props: UserEventsListProps) {
     );
   }
 
-  if (collapsedEvents.length === 0) {
+  if (collapsedEvents.length === 0 && !HeaderComponent) {
     return renderEmptyState();
   }
 
-  const renderFooter = () => (
-    <>
-      {isFetchingNextPage ? (
-        <View className="py-4">
-          <ActivityIndicator size="large" color="#5A32FB" />
-        </View>
-      ) : null}
-      {showSourceStickers ? <SourceStickersRow /> : null}
-    </>
-  );
+  const renderFooter = () => {
+    if (collapsedEvents.length === 0) return null;
+    return (
+      <>
+        {isFetchingNextPage ? (
+          <View className="py-4">
+            <ActivityIndicator size="large" color="#5A32FB" />
+          </View>
+        ) : null}
+        {showSourceStickers ? <SourceStickersRow /> : null}
+      </>
+    );
+  };
 
   const renderHeader = () => {
     if (!HeaderComponent && !stats) return null;
@@ -1093,7 +1100,7 @@ export default function UserEventsList(props: UserEventsListProps) {
         data={collapsedEvents}
         keyExtractor={(item) => item.event.id}
         ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmptyState}
+        ListEmptyComponent={() => renderEmptyState(true)}
         renderItem={({ item, index }) => {
           const eventData = item.event;
           // Use savedEventIds if provided, otherwise check eventFollows

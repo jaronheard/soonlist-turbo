@@ -1,110 +1,67 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import { Image } from "expo-image";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
 import { Redirect, useRouter } from "expo-router";
+import { Host, Picker } from "@expo/ui/swift-ui";
 import { useUser } from "@clerk/clerk-expo";
 import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
-  useMutation,
   useQuery,
 } from "convex/react";
-import { toast } from "sonner-native";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { ChevronDown, ChevronUp, X } from "~/components/icons";
+import { ShareIcon } from "~/components/icons";
+import { ProfileMenu } from "~/components/ProfileMenu";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 
-function FollowingHeader() {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const router = useRouter();
-  const followingUsers = useQuery(api.users.getFollowingUsers);
-  const unfollowUserMutation = useMutation(api.users.unfollowUser);
+type Segment = "upcoming" | "past";
 
-  const userCount = followingUsers?.length ?? 0;
-
-  const handleUnfollow = async (userId: string) => {
-    try {
-      await unfollowUserMutation({ followingId: userId });
-      toast.success("Unfollowed user");
-    } catch {
-      toast.error("Failed to unfollow user");
-    }
-  };
-
-  if (userCount === 0) {
-    return null;
-  }
-
+function SegmentedControlFallback({
+  selectedSegment,
+  onSegmentChange,
+}: {
+  selectedSegment: Segment;
+  onSegmentChange: (segment: Segment) => void;
+}) {
   return (
-    <View className="border-b border-neutral-4 bg-white px-4 py-3">
+    <View className="flex-row rounded-lg bg-gray-100 p-1">
       <TouchableOpacity
-        onPress={() => setIsExpanded(!isExpanded)}
-        className="flex-row items-center justify-between"
-        activeOpacity={0.7}
+        className={`items-center rounded-md px-4 py-2 ${
+          selectedSegment === "upcoming" ? "bg-white shadow-sm" : ""
+        }`}
+        onPress={() => onSegmentChange("upcoming")}
       >
-        <Text className="text-base font-semibold text-neutral-1">
-          Following {userCount} {userCount === 1 ? "user" : "users"}
+        <Text
+          className={
+            selectedSegment === "upcoming"
+              ? "font-semibold text-gray-900"
+              : "text-gray-500"
+          }
+        >
+          Upcoming
         </Text>
-        {isExpanded ? (
-          <ChevronUp size={20} color="#5A32FB" />
-        ) : (
-          <ChevronDown size={20} color="#5A32FB" />
-        )}
       </TouchableOpacity>
-
-      {isExpanded && followingUsers && (
-        <View className="mt-3 space-y-2">
-          {followingUsers.map((user) => (
-            <View
-              key={user.id}
-              className="flex-row items-center justify-between py-2"
-            >
-              <TouchableOpacity
-                onPress={() => router.push(`/${user.username}`)}
-                className="flex-1 flex-row items-center"
-                activeOpacity={0.7}
-              >
-                {user.userImage ? (
-                  <Image
-                    source={{ uri: user.userImage }}
-                    className="size-8 rounded-full"
-                  />
-                ) : (
-                  <View className="size-8 items-center justify-center rounded-full bg-neutral-4">
-                    <Text className="text-sm font-medium text-neutral-2">
-                      {user.displayName?.charAt(0).toUpperCase() ?? "?"}
-                    </Text>
-                  </View>
-                )}
-                <View className="ml-3 flex-1">
-                  <Text
-                    className="text-base font-medium text-neutral-1"
-                    numberOfLines={1}
-                  >
-                    {user.displayName ?? user.username}
-                  </Text>
-                  <Text className="text-sm text-neutral-2" numberOfLines={1}>
-                    @{user.username}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleUnfollow(user.id)}
-                className="ml-2 rounded-full bg-neutral-4 p-2"
-                activeOpacity={0.7}
-              >
-                <X size={16} color="#666" />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      )}
+      <TouchableOpacity
+        className={`items-center rounded-md px-4 py-2 ${
+          selectedSegment === "past" ? "bg-white shadow-sm" : ""
+        }`}
+        onPress={() => onSegmentChange("past")}
+      >
+        <Text
+          className={
+            selectedSegment === "past"
+              ? "font-semibold text-gray-900"
+              : "text-gray-500"
+          }
+        >
+          Past
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -136,24 +93,31 @@ function EmptyFollowingState() {
 
 function FollowingFeedContent() {
   const { user } = useUser();
+  const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
   const stableTimestamp = useStableTimestamp();
 
   // Check if user is following anyone
   const followingUsers = useQuery(api.users.getFollowingUsers);
   const hasFollowings = (followingUsers?.length ?? 0) > 0;
 
-  // Fetch user stats
-  const stats = useQuery(
-    api.events.getStats,
-    user?.username ? { userName: user.username } : "skip",
-  );
+  const handleSegmentChange = useCallback((segment: Segment) => {
+    setSelectedSegment(segment);
+  }, []);
+
+  const handleShare = useCallback(async () => {
+    try {
+      await Share.share({ url: `https://soonlist.com/${user?.username ?? ""}` });
+    } catch {
+      // ignore
+    }
+  }, [user?.username]);
 
   // Memoize query args
   const queryArgs = useMemo(() => {
     return {
-      filter: "upcoming" as const,
+      filter: selectedSegment,
     };
-  }, []);
+  }, [selectedSegment]);
 
   const {
     results: events,
@@ -188,13 +152,15 @@ function FollowingFeedContent() {
     savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
-  // Filter out ended events client-side
+  // Filter events client-side
   const enrichedEvents = useMemo(() => {
     const currentTime = new Date(stableTimestamp).getTime();
     return events
       .filter((event) => {
         const eventEndTime = new Date(event.endDateTime).getTime();
-        return eventEndTime >= currentTime;
+        return selectedSegment === "upcoming"
+          ? eventEndTime >= currentTime
+          : eventEndTime < currentTime;
       })
       .map((event) => ({
         ...event,
@@ -203,7 +169,66 @@ function FollowingFeedContent() {
         eventToLists: [],
         lists: [],
       }));
-  }, [events, stableTimestamp]);
+  }, [events, stableTimestamp, selectedSegment]);
+
+  // Update tab badge count based on upcoming events
+  const setCommunityBadgeCount = useAppStore((s) => s.setCommunityBadgeCount);
+  useEffect(() => {
+    if (selectedSegment === "upcoming") {
+      setCommunityBadgeCount(enrichedEvents.length);
+    }
+  }, [enrichedEvents.length, selectedSegment, setCommunityBadgeCount]);
+
+  const HeaderComponent = useCallback(() => {
+    return (
+      <View className="pb-2 pl-3 pr-2 pt-3">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-2">
+            <ProfileMenu />
+            <View>
+              <Text className="text-2xl font-semibold text-gray-900">
+                Community Soonlist
+              </Text>
+              <Text className="-mt-1 text-xs text-gray-400">
+                Share to get your community link
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            onPress={handleShare}
+            className="flex-row items-center rounded-full bg-interactive-1 px-4 py-2"
+            activeOpacity={0.8}
+          >
+            <ShareIcon size={18} color="#FFF" />
+            <Text className="ml-2 text-base font-semibold text-white">
+              Share
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View className="mt-3" style={{ width: 260 }}>
+          {Platform.OS === "ios" ? (
+            <Host matchContents>
+              <Picker
+                options={[`Upcoming (${enrichedEvents.length})`, "Past (69)"]}
+                selectedIndex={selectedSegment === "upcoming" ? 0 : 1}
+                onOptionSelected={(event) => {
+                  handleSegmentChange(
+                    event.nativeEvent.index === 0 ? "upcoming" : "past",
+                  );
+                }}
+                variant="segmented"
+              />
+            </Host>
+          ) : (
+            <SegmentedControlFallback
+              selectedSegment={selectedSegment}
+              onSegmentChange={handleSegmentChange}
+            />
+          )}
+        </View>
+      </View>
+    );
+  }, [selectedSegment, handleSegmentChange, handleShare, user?.fullName, user?.username, enrichedEvents.length]);
 
   // Show empty state if not following anyone
   if (followingUsers !== undefined && !hasFollowings) {
@@ -220,11 +245,10 @@ function FollowingFeedContent() {
           status === "LoadingFirstPage" || followingUsers === undefined
         }
         showCreator="always"
-        stats={stats}
         showSourceStickers
         savedEventIds={savedEventIds}
         source="following"
-        HeaderComponent={FollowingHeader}
+        HeaderComponent={HeaderComponent}
       />
     </View>
   );

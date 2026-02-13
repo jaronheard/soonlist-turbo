@@ -1,4 +1,6 @@
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
+import { Badge, Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
+
+import { useAppStore } from "~/store";
 
 // Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
@@ -8,6 +10,9 @@ export const unstable_settings = {
 };
 
 export default function TabsLayout() {
+  const myListBadgeCount = useAppStore((s) => s.myListBadgeCount);
+  const communityBadgeCount = useAppStore((s) => s.communityBadgeCount);
+
   return (
     <NativeTabs
       tintColor="#5A32FB"
@@ -17,10 +22,12 @@ export default function TabsLayout() {
       <NativeTabs.Trigger name="feed">
         <Label>My List</Label>
         <Icon sf={{ default: "calendar", selected: "calendar" }} />
+        {myListBadgeCount > 0 ? <Badge>{String(myListBadgeCount)}</Badge> : <Badge hidden />}
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="following">
-        <Label>Following</Label>
+        <Label>Community</Label>
         <Icon sf={{ default: "person.2", selected: "person.2.fill" }} />
+        {communityBadgeCount > 0 ? <Badge>{String(communityBadgeCount)}</Badge> : <Badge hidden />}
       </NativeTabs.Trigger>
       {/* Discover tab hidden */}
       <NativeTabs.Trigger name="discover" hidden>
@@ -31,7 +38,7 @@ export default function TabsLayout() {
       <NativeTabs.Trigger name="add" role="search">
         <Label>Capture</Label>
         <Icon
-          sf={{ default: "plus.circle.fill", selected: "plus.circle.fill" }}
+          sf={{ default: "plus.viewfinder", selected: "plus.viewfinder" }}
         />
       </NativeTabs.Trigger>
     </NativeTabs>

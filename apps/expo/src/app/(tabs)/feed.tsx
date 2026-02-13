@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -12,7 +12,7 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { ShareIcon } from "~/components/icons";
+import { LinkIcon, ShareIcon } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import UserEventsList from "~/components/UserEventsList";
@@ -72,6 +72,7 @@ function SegmentedControlFallback({
 function MyFeedContent() {
   const { user } = useUser();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
+  const [hasShared, setHasShared] = useState(false);
 
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
@@ -146,6 +147,14 @@ function MyFeedContent() {
   // Trigger rating prompt when user has 3+ upcoming events
   useRatingPrompt(selectedSegment === "upcoming" ? enrichedEvents.length : 0);
 
+  // Update tab badge count based on upcoming events
+  const setMyListBadgeCount = useAppStore((s) => s.setMyListBadgeCount);
+  useEffect(() => {
+    if (selectedSegment === "upcoming") {
+      setMyListBadgeCount(enrichedEvents.length);
+    }
+  }, [enrichedEvents.length, selectedSegment, setMyListBadgeCount]);
+
   const handleSegmentChange = useCallback((segment: Segment) => {
     setSelectedSegment(segment);
   }, []);
@@ -154,6 +163,7 @@ function MyFeedContent() {
     const shareUrl = `${Config.apiBaseUrl}/${user?.username ?? ""}`;
     try {
       await Share.share({ url: shareUrl });
+      setHasShared(true);
     } catch (error) {
       logError("Error sharing events", error);
     }
@@ -161,9 +171,38 @@ function MyFeedContent() {
 
   const HeaderComponent = useCallback(() => {
     return (
-      <View className="flex-row items-center justify-between pb-2 pl-3 pr-2 pt-3">
-        <ProfileMenu />
-        <View className="mx-2" style={{ width: 180 }}>
+      <View className="pb-2 pl-3 pr-2 pt-3">
+        {/* Top row: Avatar, Name, Share */}
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-2">
+            <ProfileMenu />
+            <View>
+              <Text className="text-2xl font-semibold text-gray-900">
+                Amy's Soonlist
+              </Text>
+              <View className="-mt-1 flex-row items-center gap-1">
+                {hasShared && <LinkIcon size={10} color="#9CA3AF" />}
+                <Text className="text-xs text-gray-400">
+                  {hasShared
+                    ? `soonlist.com/${user?.username ?? ""}`
+                    : "Share to get your link"}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <TouchableOpacity
+            onPress={handleShareEvents}
+            className="flex-row items-center rounded-full bg-interactive-1 px-4 py-2"
+            activeOpacity={0.8}
+          >
+            <ShareIcon size={18} color="#FFF" />
+            <Text className="ml-2 text-base font-semibold text-white">
+              Share
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {/* Second row: Filter */}
+        <View className="mt-3" style={{ width: 260 }}>
           {Platform.OS === "ios" ? (
             <Host matchContents>
               <Picker
@@ -184,17 +223,9 @@ function MyFeedContent() {
             />
           )}
         </View>
-        <TouchableOpacity
-          onPress={handleShareEvents}
-          className="flex-row items-center rounded-full bg-interactive-1 px-4 py-2"
-          activeOpacity={0.8}
-        >
-          <ShareIcon size={18} color="#FFF" />
-          <Text className="ml-2 text-base font-semibold text-white">Share</Text>
-        </TouchableOpacity>
       </View>
     );
-  }, [selectedSegment, handleSegmentChange, handleShareEvents]);
+  }, [selectedSegment, handleSegmentChange, handleShareEvents, user?.username, hasShared]);
 
   return (
     <View className="flex-1 bg-white">
@@ -202,7 +233,7 @@ function MyFeedContent() {
         groupedEvents={enrichedEvents}
         onEndReached={handleLoadMore}
         isFetchingNextPage={status === "LoadingMore"}
-        isLoadingFirstPage={status === "LoadingFirstPage"}
+        isLoadingFirstPage={false}
         showCreator="savedFromOthers"
         showSourceStickers
         savedEventIds={savedEventIds}
