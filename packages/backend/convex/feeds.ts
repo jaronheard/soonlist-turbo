@@ -224,6 +224,92 @@ export const getDiscoverFeed = query({
   },
 });
 
+// Helper query to get a list's public events
+export const getListFeed = query({
+  args: {
+    listId: v.string(),
+    paginationOpts: paginationOptsValidator,
+    filter: v.optional(v.union(v.literal("upcoming"), v.literal("past"))),
+  },
+  handler: async (ctx, { listId, paginationOpts, filter = "upcoming" }) => {
+    // Verify list exists and is accessible
+    const list = await ctx.db
+      .query("lists")
+      .withIndex("by_custom_id", (q) => q.eq("id", listId))
+      .first();
+
+    if (!list) {
+      throw new ConvexError("List not found");
+    }
+
+    if (list.visibility === "private") {
+      const userId = await getUserId(ctx);
+      if (!userId || list.userId !== userId) {
+        throw new ConvexError("List not found");
+      }
+    }
+
+    // Get all eventToLists for this list
+    const eventToLists = await ctx.db
+      .query("eventToLists")
+      .withIndex("by_list", (q) => q.eq("listId", listId))
+      .collect();
+
+    const eventIds = eventToLists.map((etl) => etl.eventId);
+
+    // Get events and filter by upcoming/past
+    const currentTime = Date.now();
+    const events = await Promise.all(
+      eventIds.map(async (eventId) => {
+        const event = await ctx.db
+          .query("events")
+          .withIndex("by_custom_id", (q) => q.eq("id", eventId))
+          .first();
+        return event;
+      }),
+    );
+
+    const validEvents = events
+      .filter((e) => e !== null)
+      .filter((e) => e.visibility === "public")
+      .filter((e) => {
+        const endTime = new Date(e.endDateTime).getTime();
+        return filter === "upcoming"
+          ? endTime >= currentTime
+          : endTime < currentTime;
+      })
+      .sort((a, b) => {
+        const aTime = new Date(a.startDateTime).getTime();
+        const bTime = new Date(b.startDateTime).getTime();
+        return filter === "upcoming" ? aTime - bTime : bTime - aTime;
+      });
+
+    // Manual pagination
+    const cursor = paginationOpts.cursor;
+    const numItems = paginationOpts.numItems;
+    let startIndex = 0;
+
+    if (cursor) {
+      // cursor is the index as string
+      startIndex = parseInt(cursor, 10);
+      if (isNaN(startIndex)) startIndex = 0;
+    }
+
+    const page = validEvents.slice(startIndex, startIndex + numItems);
+    const nextIndex = startIndex + numItems;
+    const isDone = nextIndex >= validEvents.length;
+
+    // Enrich events
+    const enrichedPage = await enrichEventsAndFilterNulls(ctx, page);
+
+    return {
+      page: enrichedPage,
+      continueCursor: isDone ? "" : String(nextIndex),
+      isDone,
+    };
+  },
+});
+
 // Helper query to get a user's public feed (when publicListEnabled is true)
 // Uses the visibility index to filter at database level BEFORE pagination
 export const getPublicUserFeed = query({

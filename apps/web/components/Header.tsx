@@ -154,10 +154,10 @@ export function Nav() {
         </SignedIn>
         <SignedIn>
           <NavigationMenuItem className="hidden lg:block">
-            <Link href={`/explore`} legacyBehavior passHref>
+            <Link href={`/list/pdx-discover`} legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 <Globe2Icon className="mr-2 size-4" />
-                Discover
+                PDX Discover
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
@@ -432,14 +432,14 @@ export function MobileNav() {
               My Feed
             </MobileLink>
             <MobileLink
-              key={"user-nav-explore"}
-              href={"/explore"}
+              key={"user-nav-pdx-discover"}
+              href={"/list/pdx-discover"}
               onOpenChange={setOpen}
               signedInOnly
               className="flex items-center gap-2 text-interactive-1"
             >
               <Globe2Icon className="size-4" />
-              Discover
+              PDX Discover
             </MobileLink>
           </div>
           <SignedIn>
