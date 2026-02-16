@@ -88,6 +88,14 @@ export const updateEventInFeeds = internalMutation({
       }
     }
 
+    // 2b. Add to contributor lists if public
+    if (visibility === "public") {
+      await ctx.runMutation(internal.feedHelpers.addEventToContributorLists, {
+        eventId,
+        userId,
+      });
+    }
+
     // 3. Add to feeds of users who follow this event
     const eventFollows = await ctx.db
       .query("eventFollows")
@@ -1024,5 +1032,42 @@ export const removeUserEventsFromUserFeed = internalMutation({
     }
 
     return null;
+  },
+});
+
+// Helper to add an event to all contributor lists the user belongs to
+export const addEventToContributorLists = internalMutation({
+  args: {
+    eventId: v.string(),
+    userId: v.string(),
+  },
+  handler: async (ctx, { eventId, userId }) => {
+    // Find all contributor lists this user belongs to
+    const contributions = await ctx.db
+      .query("listContributors")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const contribution of contributions) {
+      const listId = contribution.listId;
+
+      // Check if event is already in this list
+      const existing = await ctx.db
+        .query("eventToLists")
+        .withIndex("by_event_and_list", (q) =>
+          q.eq("eventId", eventId).eq("listId", listId),
+        )
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("eventToLists", { eventId, listId });
+
+        // Fan out to list followers' feeds
+        await ctx.runMutation(
+          internal.feedHelpers.addEventToListFollowersFeeds,
+          { eventId, listId },
+        );
+      }
+    }
   },
 });

@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
 import Intercom from "@intercom/intercom-react-native";
 import { useQuery } from "convex/react";
 
@@ -11,14 +10,11 @@ import {
   Calendar,
   Check,
   ChevronDown,
-  Globe2,
   Heart,
   History,
   MessageSquare,
 } from "~/components/icons";
-import { useAppStore } from "~/store";
 import { logError } from "~/utils/errorLogging";
-import { getPlanStatusFromUser } from "~/utils/plan";
 import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -30,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu-primitives";
 
-type RouteType = "upcoming" | "past" | "following" | "discover";
+type RouteType = "upcoming" | "past" | "following";
 
 interface NavigationMenuProps {
   active?: RouteType;
@@ -40,14 +36,12 @@ const routeIcons = {
   "/feed": { Icon: Calendar, iosIcon: "calendar" },
   "/following": { Icon: Heart, iosIcon: "heart" },
   "/past": { Icon: History, iosIcon: "clock.arrow.circlepath" },
-  "/discover": { Icon: Globe2, iosIcon: "globe" },
 } as const;
 
 const baseRoutes = [
   { label: "Upcoming", path: "/feed" },
   { label: "Following", path: "/following" },
   { label: "Past", path: "/past" },
-  { label: "Discover", path: "/discover" },
 ] as const;
 
 function isRouteActive(routePath: string, active?: RouteType) {
@@ -57,20 +51,13 @@ function isRouteActive(routePath: string, active?: RouteType) {
 
 export function NavigationMenu({ active }: NavigationMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user } = useUser();
-  const discoverAccessOverride = useAppStore((s) => s.discoverAccessOverride);
 
   // Check if user is following anyone
   const followingUsers = useQuery(api.users.getFollowingUsers);
   const hasFollowings = (followingUsers?.length ?? 0) > 0;
 
-  // Derive showDiscover explicitly so changes to discoverAccessOverride or user metadata trigger recompute
-  const showDiscover =
-    discoverAccessOverride ||
-    (user ? getPlanStatusFromUser(user).showDiscover : false);
-
   const { routes, currentRoute } = useMemo(() => {
-    // Filter routes based on feature access and following status
+    // Filter routes based on following status
     let filteredRoutes = [...baseRoutes];
 
     // Hide Following tab if user isn't following anyone
@@ -78,17 +65,12 @@ export function NavigationMenu({ active }: NavigationMenuProps) {
       filteredRoutes = filteredRoutes.filter((r) => r.path !== "/following");
     }
 
-    // Hide Discover tab based on plan status
-    if (!showDiscover) {
-      filteredRoutes = filteredRoutes.filter((r) => r.path !== "/discover");
-    }
-
     const currentRoute =
       filteredRoutes.find((r) => isRouteActive(r.path, active))?.label ??
       "Upcoming";
 
     return { routes: filteredRoutes, currentRoute };
-  }, [showDiscover, hasFollowings, active]);
+  }, [hasFollowings, active]);
 
   const handleNavigation = (path: (typeof routes)[number]["path"]) => {
     setMenuOpen(false);
