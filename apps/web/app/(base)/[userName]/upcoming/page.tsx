@@ -49,9 +49,12 @@ function transformConvexEvents(
     visibility: event.visibility,
     createdAt: new Date(event._creationTime),
     user: transformConvexUser(event.user!),
-    eventFollows: [],
-    comments: [],
-    eventToLists: [],
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+    eventFollows: (event.eventFollows ?? []) as any,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+    comments: (event.comments ?? []) as any,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+    eventToLists: (event.eventToLists ?? []) as any,
   }));
 }
 
