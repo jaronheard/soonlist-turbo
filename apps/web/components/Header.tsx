@@ -134,6 +134,9 @@ export function Nav() {
   const { user } = useUser();
   const pathname = usePathname();
   const isJoinPage = pathname === "/join";
+  const showDiscover = (
+    user?.publicMetadata as { showDiscover?: boolean } | undefined
+  )?.showDiscover;
 
   return (
     <NavigationMenu>
@@ -152,16 +155,18 @@ export function Nav() {
             </Link>
           </NavigationMenuItem>
         </SignedIn>
-        <SignedIn>
-          <NavigationMenuItem className="hidden lg:block">
-            <Link href={`/explore`} legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                <Globe2Icon className="mr-2 size-4" />
-                Discover
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-        </SignedIn>
+        {showDiscover && (
+          <SignedIn>
+            <NavigationMenuItem className="hidden lg:block">
+              <Link href={`/explore`} legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  <Globe2Icon className="mr-2 size-4" />
+                  Discover
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+          </SignedIn>
+        )}
         <SignedOut>
           <NavigationMenuItem className="hidden lg:block">
             <Link href="/sign-in" legacyBehavior passHref>
@@ -353,6 +358,9 @@ export function MobileNav() {
 
   const plan = user?.publicMetadata.plan as { name?: string } | undefined;
   const planName = plan?.name;
+  const showDiscover = (
+    user?.publicMetadata as { showDiscover?: boolean } | undefined
+  )?.showDiscover;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -431,16 +439,18 @@ export function MobileNav() {
               <CalendarHeart className="size-4" />
               My Feed
             </MobileLink>
-            <MobileLink
-              key={"user-nav-explore"}
-              href={"/explore"}
-              onOpenChange={setOpen}
-              signedInOnly
-              className="flex items-center gap-2 text-interactive-1"
-            >
-              <Globe2Icon className="size-4" />
-              Discover
-            </MobileLink>
+            {showDiscover && (
+              <MobileLink
+                key={"user-nav-explore"}
+                href={"/explore"}
+                onOpenChange={setOpen}
+                signedInOnly
+                className="flex items-center gap-2 text-interactive-1"
+              >
+                <Globe2Icon className="size-4" />
+                Discover
+              </MobileLink>
+            )}
           </div>
           <SignedIn>
             <div className="p-1.5"></div>
