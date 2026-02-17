@@ -46,7 +46,6 @@ import { setEventCache } from "~/utils/eventCache";
 import { getEventEmoji } from "~/utils/eventEmoji";
 import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
-import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
 
 const HEADER_HEIGHT_DEFAULT = 100;
@@ -274,9 +273,6 @@ function EventSaversRow({
     </View>
   );
 }
-
-// Define the type for the stats data based on the expected query output
-type EventStatsData = FunctionReturnType<typeof api.events.getStats>;
 
 type Event = NonNullable<FunctionReturnType<typeof api.events.get>>;
 
@@ -1108,7 +1104,6 @@ interface UserEventsListProps {
   isLoadingFirstPage?: boolean;
   showSourceStickers?: boolean;
   demoMode?: boolean;
-  stats?: EventStatsData;
   hideDiscoverableButton?: boolean;
   isDiscoverFeed?: boolean;
   savedEventIds?: Set<string>;
@@ -1128,7 +1123,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     isLoadingFirstPage = false,
     showSourceStickers = false,
     demoMode,
-    stats,
     hideDiscoverableButton = false,
     isDiscoverFeed = false,
     savedEventIds,
@@ -1210,16 +1204,8 @@ export default function UserEventsList(props: UserEventsListProps) {
             height: HEADER_HEIGHT_DEFAULT,
           }}
         />
-        {(HeaderComponent || stats) && <View style={{ height: 8 }} />}
+        {HeaderComponent && <View style={{ height: 8 }} />}
         {HeaderComponent && <HeaderComponent />}
-        {stats && (
-          <EventStats
-            capturesThisWeek={stats.capturesThisWeek ?? 0}
-            weeklyGoal={stats.weeklyGoal ?? 0}
-            upcomingEvents={stats.upcomingEvents ?? 0}
-            allTimeEvents={stats.allTimeEvents ?? 0}
-          />
-        )}
         {/* when showing list items, add a bit of padding. not needed for empty state */}
         <View style={{ height: 16 }} />
       </>

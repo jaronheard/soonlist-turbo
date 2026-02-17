@@ -1,9 +1,12 @@
-import { Tabs } from "expo-router";
+import { DynamicColorIOS } from "react-native";
+import {
+  Badge,
+  Icon,
+  Label,
+  NativeTabs,
+} from "expo-router/unstable-native-tabs";
 
-import { HeaderLogo } from "~/components/HeaderLogo";
-import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
-import { NavigationMenu } from "~/components/NavigationMenu";
-import { ProfileMenu } from "~/components/ProfileMenu";
+import { useAppStore } from "~/store";
 
 // Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
@@ -12,48 +15,47 @@ export const unstable_settings = {
   initialRouteName: "feed",
 };
 
-const tabHeaderConfig = {
-  feed: { title: "Upcoming", active: "upcoming" },
-  following: { title: "Following", active: "following" },
-  past: { title: "Past", active: "past" },
-  discover: { title: "Discover", active: "discover" },
-} as const;
-
-type TabRouteName = keyof typeof tabHeaderConfig;
+const tintColor = DynamicColorIOS({
+  light: "#5A32FB",
+  dark: "#8B6FFF",
+});
 
 export default function TabsLayout() {
+  const myListBadgeCount = useAppStore((s) => s.myListBadgeCount);
+  const communityBadgeCount = useAppStore((s) => s.communityBadgeCount);
+
   return (
-    <Tabs
-      screenOptions={({ route }) => {
-        const config = tabHeaderConfig[route.name as TabRouteName];
-        return {
-          headerTransparent: true,
-          headerBackground: () => <LiquidGlassHeader />,
-          headerTintColor: "#fff",
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
-          tabBarStyle: {
-            display: "none", // Hide the default tab bar
-          },
-          headerLeftContainerStyle: { paddingLeft: 16 },
-          headerRightContainerStyle: { paddingRight: 16 },
-          headerTitleAlign: "center",
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => <ProfileMenu />,
-          ...(config
-            ? {
-                title: config.title,
-                headerTitle: () => <NavigationMenu active={config.active} />,
-              }
-            : null),
-        };
-      }}
-    >
-      <Tabs.Screen name="feed" />
-      <Tabs.Screen name="following" />
-      <Tabs.Screen name="past" />
-      <Tabs.Screen name="discover" />
-    </Tabs>
+    <NativeTabs tintColor={tintColor} minimizeBehavior="onScrollDown">
+      <NativeTabs.Trigger name="feed">
+        <Label>My List</Label>
+        <Icon sf={{ default: "list.bullet", selected: "list.bullet" }} />
+        {myListBadgeCount > 0 ? (
+          <Badge>{String(myListBadgeCount)}</Badge>
+        ) : (
+          <Badge hidden />
+        )}
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="following">
+        <Label>Board</Label>
+        <Icon sf={{ default: "person.2", selected: "person.2.fill" }} />
+        {communityBadgeCount > 0 ? (
+          <Badge>{String(communityBadgeCount)}</Badge>
+        ) : (
+          <Badge hidden />
+        )}
+      </NativeTabs.Trigger>
+      {/* Discover tab hidden - still functional for deep links */}
+      <NativeTabs.Trigger name="discover" hidden>
+        <Label hidden />
+        <Icon sf={{ default: "binoculars", selected: "binoculars.fill" }} />
+      </NativeTabs.Trigger>
+      {/* Capture button in search position (top-right on iOS Liquid Glass) */}
+      <NativeTabs.Trigger name="add" role="search">
+        <Label>Capture</Label>
+        <Icon
+          sf={{ default: "plus.viewfinder", selected: "plus.viewfinder" }}
+        />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

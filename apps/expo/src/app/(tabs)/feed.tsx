@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -11,32 +11,27 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import AddEventButton from "~/components/AddEventButton";
+import type { Segment } from "~/components/TabHeader";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { TabHeader } from "~/components/TabHeader";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
+import Config from "~/utils/config";
 
 function MyFeedContent() {
   const { user } = useUser();
+  const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
 
-  // Use the stable timestamp from the store that updates every 15 minutes
-  // This prevents InvalidCursor errors while still filtering for upcoming events
   const stableTimestamp = useStableTimestamp();
 
-  // Fetch user stats
-  const stats = useQuery(
-    api.events.getStats,
-    user?.username ? { userName: user.username } : "skip",
-  );
-
-  // Memoize query args to prevent unnecessary re-renders
+  // Query args change when segment changes, triggering refetch
   const queryArgs = useMemo(() => {
     return {
-      filter: "upcoming" as const,
+      filter: selectedSegment,
     };
-  }, []);
+  }, [selectedSegment]);
 
   const {
     results: groupedEvents,
@@ -46,7 +41,6 @@ function MyFeedContent() {
     initialNumItems: 50,
   });
 
-  // Memoize saved events query args to prevent unnecessary re-renders
   const savedEventsQueryArgs = useMemo(() => {
     if (!user?.username) return "skip";
     return { userName: user.username };
@@ -68,50 +62,88 @@ function MyFeedContent() {
   );
 
   // Transform grouped events into the format UserEventsList expects
-  // The server now handles similarity grouping, so we just enrich the events
   const enrichedEvents = useMemo(() => {
-    // Use stableTimestamp instead of recalculating Date.now()
-    const currentTime = new Date(stableTimestamp).getTime();
-    return groupedEvents
-      .filter((group) => {
-        // Client-side safety filter: hide events that have ended
-        // This prevents showing ended events if the cron job hasn't run recently
-        const eventEndTime = new Date(group.event.endDateTime).getTime();
+    const events = groupedEvents.map((group) => ({
+      event: {
+        ...group.event,
+        eventFollows: [],
+        comments: [],
+        eventToLists: [],
+        lists: [],
+      },
+      similarEvents: Array(group.similarEventsCount).fill({
+        event: null,
+        similarityDetails: null,
+      }),
+    }));
+
+    // Client-side safety filter: hide events that have ended (upcoming only)
+    if (selectedSegment === "upcoming") {
+      const currentTime = new Date(stableTimestamp).getTime();
+      return events.filter((item) => {
+        const eventEndTime = new Date(item.event.endDateTime).getTime();
         return eventEndTime >= currentTime;
-      })
-      .map((group) => ({
-        event: {
-          ...group.event,
-          eventFollows: [],
-          comments: [],
-          eventToLists: [],
-          lists: [],
-        },
-        // Server-computed count (already shows just similar events, not including primary)
-        similarEvents: Array(group.similarEventsCount).fill({
-          event: null,
-          similarityDetails: null,
-        }),
-      }));
-  }, [groupedEvents, stableTimestamp]);
+      });
+    }
+
+    return events;
+  }, [groupedEvents, stableTimestamp, selectedSegment]);
 
   // Trigger rating prompt when user has 3+ upcoming events
-  useRatingPrompt(enrichedEvents.length);
+  useRatingPrompt(selectedSegment === "upcoming" ? enrichedEvents.length : 0);
+
+  // Update tab badge count based on upcoming events
+  const setMyListBadgeCount = useAppStore((s) => s.setMyListBadgeCount);
+  useEffect(() => {
+    if (selectedSegment === "upcoming") {
+      setMyListBadgeCount(enrichedEvents.length);
+    }
+  }, [enrichedEvents.length, selectedSegment, setMyListBadgeCount]);
+
+  const handleSegmentChange = useCallback((segment: Segment) => {
+    setSelectedSegment(segment);
+  }, []);
+
+  // Dynamic user data
+  const displayName = user?.firstName ?? user?.fullName ?? "My";
+  const username = user?.username ?? "";
+  const shareUrl = `${Config.apiBaseUrl}/${username}`;
+
+  const HeaderComponent = useCallback(() => {
+    return (
+      <TabHeader
+        title={`${displayName}'s Soonlist`}
+        subtitle={`soonlist.com/${username}`}
+        shareUrl={shareUrl}
+        selectedSegment={selectedSegment}
+        onSegmentChange={handleSegmentChange}
+        upcomingCount={
+          selectedSegment === "upcoming" ? enrichedEvents.length : undefined
+        }
+      />
+    );
+  }, [
+    displayName,
+    username,
+    shareUrl,
+    selectedSegment,
+    handleSegmentChange,
+    enrichedEvents.length,
+  ]);
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={{ flex: 1, backgroundColor: "white" }}>
       <UserEventsList
         groupedEvents={enrichedEvents}
         onEndReached={handleLoadMore}
         isFetchingNextPage={status === "LoadingMore"}
         isLoadingFirstPage={status === "LoadingFirstPage"}
         showCreator="savedFromOthers"
-        stats={stats}
         showSourceStickers
         savedEventIds={savedEventIds}
-        source="feed"
+        source={selectedSegment === "upcoming" ? "feed" : "past"}
+        HeaderComponent={HeaderComponent}
       />
-      <AddEventButton stats={stats} showChevron={false} />
     </View>
   );
 }
@@ -122,14 +154,12 @@ function MyFeed() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-interactive-3">
-          <View className="h-[100px]" />
+        <View style={{ flex: 1, backgroundColor: "white" }}>
           <LoadingSpinner />
         </View>
       </AuthLoading>
 
       <Unauthenticated>
-        {/* For guest users, check if they've seen onboarding */}
         {!hasSeenOnboarding ? (
           <Redirect href="/(onboarding)/onboarding" />
         ) : (
