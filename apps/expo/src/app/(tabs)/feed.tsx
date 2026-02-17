@@ -72,7 +72,6 @@ function SegmentedControlFallback({
 function MyFeedContent() {
   const { user } = useUser();
   const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
-  const [hasShared, setHasShared] = useState(false);
 
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
@@ -163,7 +162,6 @@ function MyFeedContent() {
     const shareUrl = `${Config.apiBaseUrl}/${user?.username ?? ""}`;
     try {
       await Share.share({ url: shareUrl });
-      setHasShared(true);
     } catch (error) {
       logError("Error sharing events", error);
     }
@@ -181,11 +179,9 @@ function MyFeedContent() {
                 Amy's Soonlist
               </Text>
               <View className="-mt-1 flex-row items-center gap-1">
-                {hasShared && <LinkIcon size={10} color="#9CA3AF" />}
+                <LinkIcon size={10} color="#9CA3AF" />
                 <Text className="text-xs text-gray-400">
-                  {hasShared
-                    ? `soonlist.com/${user?.username ?? ""}`
-                    : "Share to get your link"}
+                  soonlist.com/amy
                 </Text>
               </View>
             </View>
@@ -225,7 +221,7 @@ function MyFeedContent() {
         </View>
       </View>
     );
-  }, [selectedSegment, handleSegmentChange, handleShareEvents, user?.username, hasShared]);
+  }, [selectedSegment, handleSegmentChange, handleShareEvents, user?.username]);
 
   return (
     <View className="flex-1 bg-white">

@@ -12,7 +12,7 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import { ShareIcon } from "~/components/icons";
+import { LinkIcon, ShareIcon } from "~/components/icons";
 import { ProfileMenu } from "~/components/ProfileMenu";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
@@ -106,7 +106,7 @@ function FollowingFeedContent() {
 
   const handleShare = useCallback(async () => {
     try {
-      await Share.share({ url: `https://soonlist.com/${user?.username ?? ""}` });
+      await Share.share({ url: `https://soonlist.com/${user?.username ?? ""}/scene` });
     } catch {
       // ignore
     }
@@ -187,11 +187,14 @@ function FollowingFeedContent() {
             <ProfileMenu />
             <View>
               <Text className="text-2xl font-semibold text-gray-900">
-                Community Soonlist
+                Amy's Board
               </Text>
-              <Text className="-mt-1 text-xs text-gray-400">
-                Share to get your community link
-              </Text>
+              <View className="-mt-1 flex-row items-center gap-1">
+                <LinkIcon size={10} color="#9CA3AF" />
+                <Text className="text-xs text-gray-400">
+                  soonlist.com/amy/board
+                </Text>
+              </View>
             </View>
           </View>
           <TouchableOpacity
@@ -209,7 +212,7 @@ function FollowingFeedContent() {
           {Platform.OS === "ios" ? (
             <Host matchContents>
               <Picker
-                options={[`Upcoming (${enrichedEvents.length})`, "Past (69)"]}
+                options={[`Upcoming · ${enrichedEvents.length}`, "Past"]}
                 selectedIndex={selectedSegment === "upcoming" ? 0 : 1}
                 onOptionSelected={(event) => {
                   handleSegmentChange(

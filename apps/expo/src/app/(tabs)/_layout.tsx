@@ -21,11 +21,11 @@ export default function TabsLayout() {
     >
       <NativeTabs.Trigger name="feed">
         <Label>My List</Label>
-        <Icon sf={{ default: "calendar", selected: "calendar" }} />
+        <Icon sf={{ default: "list.bullet", selected: "list.bullet" }} />
         {myListBadgeCount > 0 ? <Badge>{String(myListBadgeCount)}</Badge> : <Badge hidden />}
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="following">
-        <Label>Community</Label>
+        <Label>Board</Label>
         <Icon sf={{ default: "person.2", selected: "person.2.fill" }} />
         {communityBadgeCount > 0 ? <Badge>{String(communityBadgeCount)}</Badge> : <Badge hidden />}
       </NativeTabs.Trigger>
