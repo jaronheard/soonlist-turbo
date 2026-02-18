@@ -9,6 +9,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { buildDefaultUrl } from "~/components/ImageUpload";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
+import { DEFAULT_VISIBILITY } from "~/lib/constants";
 import { optimizeImageToBase64 } from "~/lib/imageOptimization";
 
 // Maximum base64 size to prevent journal overflow (900KB to be safe with 1MB limit)
@@ -87,7 +88,7 @@ export function EventsFromImage({
         userId: currentUser.id,
         username: currentUser.username || currentUser.id,
         sendNotification: false, // Web doesn't have push notifications
-        visibility: "public",
+        visibility: DEFAULT_VISIBILITY,
         lists: [],
       });
 

@@ -14,6 +14,7 @@ import {
   MAX_BATCH_SIZE,
   validateImageCount,
 } from "~/lib/batchUtils";
+import { DEFAULT_VISIBILITY } from "~/lib/constants";
 import { optimizeFileToBase64 } from "~/lib/imageOptimization";
 import {
   extractFilesFromDataTransfer,
@@ -248,7 +249,7 @@ export function useDragAndDropHandler(
           userId: currentUser.id,
           username: currentUser.username || currentUser.id,
           sendNotification: false,
-          visibility: "public",
+          visibility: DEFAULT_VISIBILITY,
           lists: [],
         });
 

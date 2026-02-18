@@ -10,6 +10,7 @@ import { Button } from "@soonlist/ui/button";
 
 import { TimezoneContext } from "~/context/TimezoneContext";
 import { useWorkflowStore } from "~/hooks/useWorkflowStore";
+import { DEFAULT_VISIBILITY } from "~/lib/constants";
 import { optimizeFileToBase64 } from "~/lib/imageOptimization";
 
 export const UploadImageForProcessingDropzone = () => {
@@ -42,7 +43,7 @@ export const UploadImageForProcessingDropzone = () => {
         userId: currentUser.id,
         username: currentUser.username || currentUser.id,
         sendNotification: false,
-        visibility: "public",
+        visibility: DEFAULT_VISIBILITY,
         lists: [],
       });
 
@@ -138,7 +139,7 @@ export const UploadImageForProcessingButton = () => {
         userId: currentUser.id,
         username: currentUser.username || currentUser.id,
         sendNotification: false,
-        visibility: "public",
+        visibility: DEFAULT_VISIBILITY,
         lists: [],
       });
 

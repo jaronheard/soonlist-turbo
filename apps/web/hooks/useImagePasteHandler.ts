@@ -13,6 +13,7 @@ import {
   generateTempId,
   validateImageCount,
 } from "~/lib/batchUtils";
+import { DEFAULT_VISIBILITY } from "~/lib/constants";
 import { optimizeFileToBase64 } from "~/lib/imageOptimization";
 import {
   extractFilesFromClipboard,
@@ -176,7 +177,7 @@ export function useImagePasteHandler(
           userId: currentUser.id,
           username: currentUser.username || currentUser.id,
           sendNotification: false,
-          visibility: "public",
+          visibility: DEFAULT_VISIBILITY,
           lists: [],
         });
 

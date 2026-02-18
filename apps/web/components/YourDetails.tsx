@@ -28,6 +28,7 @@ import {
 import { Textarea } from "@soonlist/ui/textarea";
 
 import { useNewEventContext } from "~/context/NewEventContext";
+import { DEFAULT_VISIBILITY } from "~/lib/constants";
 
 export const organizeFormSchema = z.object({
   notes: z.string().optional(),
@@ -57,7 +58,7 @@ export function YourDetails({
     resolver: zodResolver(organizeFormSchema),
     defaultValues: {
       notes: comment || "",
-      visibility: visibility || "public",
+      visibility: visibility || DEFAULT_VISIBILITY,
       lists: eventListOptions || [],
     },
   });
