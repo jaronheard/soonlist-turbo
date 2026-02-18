@@ -35,7 +35,7 @@ export const NewEventProvider = ({ children }: { children: ReactNode }) => {
     NewEventContextState["organizeData"]
   >({
     notes: "",
-    visibility: "public",
+    visibility: DEFAULT_VISIBILITY,
     lists: [],
   });
   const [eventData, setEventData] =
