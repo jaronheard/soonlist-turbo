@@ -136,8 +136,8 @@ export function hasFiles(dataTransfer: DataTransfer): boolean {
  * Checks if the current pathname is a target page for image paste handling
  */
 export function isTargetPage(pathname: string): boolean {
-  // /new page
-  if (pathname === "/new") return true;
+  // /new and /add pages
+  if (pathname === "/new" || pathname === "/add") return true;
 
   // Event list pages: /[userName]/upcoming
   if (/^\/[^/]+\/upcoming$/.exec(pathname)) return true;
@@ -154,7 +154,7 @@ export function isTargetPage(pathname: string): boolean {
 export function getPageContext(
   pathname: string,
 ): "new" | "eventList" | "eventPage" | "other" {
-  if (pathname === "/new") return "new";
+  if (pathname === "/new" || pathname === "/add") return "new";
   if (/^\/[^/]+\/upcoming$/.exec(pathname)) return "eventList";
   if (/^\/event\/[^/]+$/.exec(pathname)) return "eventPage";
   return "other";
