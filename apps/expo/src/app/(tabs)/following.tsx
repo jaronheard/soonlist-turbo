@@ -6,6 +6,7 @@ import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
+  usePaginatedQuery,
   useQuery,
 } from "convex/react";
 
@@ -15,7 +16,6 @@ import type { Segment } from "~/components/TabHeader";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { TabHeader } from "~/components/TabHeader";
 import UserEventsList from "~/components/UserEventsList";
-import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 import Config from "~/utils/config";
 
@@ -96,7 +96,7 @@ function FollowingFeedContent() {
     results: events,
     status,
     loadMore,
-  } = useStablePaginatedQuery(
+  } = usePaginatedQuery(
     api.feeds.getFollowedUsersFeed,
     hasFollowings ? queryArgs : "skip",
     {

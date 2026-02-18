@@ -8,6 +8,7 @@ import {
   usePathname,
 } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { resourceCache } from "@clerk/clerk-expo/resource-cache";
@@ -92,6 +93,9 @@ const tokenCache = {
 const routingInstrumentation = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: Constants.appOwnership !== AppOwnership.Expo, // Only in native builds, not in Expo Go.
 });
+
+// Keep the splash screen visible until the app is ready
+void SplashScreen.preventAutoHideAsync();
 
 Sentry.init({
   dsn: "https://35d541c34f3a87134429ac75e6513a16@o4503934125998080.ingest.us.sentry.io/4506458761396224",
@@ -347,6 +351,11 @@ function RootLayoutContent() {
   useEffect(() => {
     routingInstrumentation.registerNavigationContainer(ref);
   }, [ref]);
+
+  // Hide the splash screen once the root layout is mounted and ready
+  useEffect(() => {
+    void SplashScreen.hideAsync();
+  }, []);
 
   // Enable automatic PostHog screen tracking
   useEffect(() => {

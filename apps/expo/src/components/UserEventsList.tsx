@@ -1142,18 +1142,50 @@ export default function UserEventsList(props: UserEventsListProps) {
     return events ? collapseSimilarEvents(events, user?.id) : [];
   }, [groupedEvents, events, user?.id]);
 
-  const renderEmptyState = () => {
+  if (isLoadingFirstPage) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#F4F1FF" }}>
+        <View style={{ height: HEADER_HEIGHT_DEFAULT }} />
+        {HeaderComponent && <View style={{ height: 8 }} />}
+        {HeaderComponent && <HeaderComponent />}
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        >
+          <ActivityIndicator size="large" color="#5A32FB" />
+        </View>
+      </View>
+    );
+  }
+
+  if (collapsedEvents.length === 0) {
+    if (EmptyStateComponent) {
+      return (
+        <ScrollView
+          style={{ flex: 1, backgroundColor: "#F4F1FF" }}
+          contentContainerStyle={{ paddingBottom: 120, flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={{ height: HEADER_HEIGHT_DEFAULT }} />
+          {HeaderComponent && <View style={{ height: 8 }} />}
+          {HeaderComponent && <HeaderComponent />}
+          <EmptyStateComponent />
+        </ScrollView>
+      );
+    }
     return (
       <ScrollView
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: HEADER_HEIGHT_DEFAULT,
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",
         }}
         showsVerticalScrollIndicator={false}
       >
+        <View style={{ height: HEADER_HEIGHT_DEFAULT }} />
+        {HeaderComponent && <View style={{ height: 8 }} />}
+        {HeaderComponent && <HeaderComponent />}
+        <View style={{ height: 16 }} />
         <EmptyStateHeader />
         {showSourceStickers && <SourceStickersRow hideText />}
         <GhostEventCard index={0} />
@@ -1163,26 +1195,6 @@ export default function UserEventsList(props: UserEventsListProps) {
         <GhostEventCard index={4} />
       </ScrollView>
     );
-  };
-
-  if (isLoadingFirstPage) {
-    // Calculate header height to match the loaded state
-    const headerHeight = HEADER_HEIGHT_DEFAULT;
-    return (
-      <View style={{ flex: 1, backgroundColor: "#F4F1FF" }}>
-        <View style={{ height: headerHeight }} />
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#5A32FB" />
-        </View>
-      </View>
-    );
-  }
-
-  if (collapsedEvents.length === 0) {
-    if (EmptyStateComponent) {
-      return <EmptyStateComponent />;
-    }
-    return renderEmptyState();
   }
 
   const renderFooter = () => (
@@ -1217,7 +1229,7 @@ export default function UserEventsList(props: UserEventsListProps) {
       data={collapsedEvents}
       keyExtractor={(item) => item.event.id}
       ListHeaderComponent={renderHeader}
-      ListEmptyComponent={renderEmptyState}
+      ListEmptyComponent={null}
       renderItem={({ item, index }) => {
         const eventData = item.event;
         // Use savedEventIds if provided, otherwise check eventFollows

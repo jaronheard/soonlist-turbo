@@ -6,6 +6,7 @@ import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
+  usePaginatedQuery,
   useQuery,
 } from "convex/react";
 
@@ -16,7 +17,6 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { TabHeader } from "~/components/TabHeader";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
-import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
 import Config from "~/utils/config";
 
@@ -37,7 +37,7 @@ function MyFeedContent() {
     results: groupedEvents,
     status,
     loadMore,
-  } = useStablePaginatedQuery(api.feeds.getMyFeedGrouped, queryArgs, {
+  } = usePaginatedQuery(api.feeds.getMyFeedGrouped, queryArgs, {
     initialNumItems: 50,
   });
 
