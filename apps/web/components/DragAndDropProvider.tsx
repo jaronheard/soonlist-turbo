@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { ImagePlus, X } from "lucide-react";
@@ -9,6 +10,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useBatchProgress } from "~/hooks/useBatchProgress";
 import { useDragAndDropHandler } from "~/hooks/useDragAndDropHandler";
+import { PENDING_BATCH_ID_KEY } from "~/lib/batchUtils";
 import { isTargetPage } from "~/lib/pasteEventUtils";
 
 interface DragAndDropProviderProps {
@@ -18,6 +20,15 @@ interface DragAndDropProviderProps {
 export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
   const pathname = usePathname();
   const currentUser = useQuery(api.users.getCurrentUser);
+
+  // Read any persisted batchId from sessionStorage (survives cross-layout navigation)
+  const [persistedBatchId] = useState<string | null>(() => {
+    try {
+      return sessionStorage.getItem(PENDING_BATCH_ID_KEY);
+    } catch {
+      return null;
+    }
+  });
 
   // Only enable the drag and drop handler on target pages and when user is authenticated
   const shouldEnable = isTargetPage(pathname) && !!currentUser;
@@ -33,8 +44,10 @@ export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
     });
 
   // Track batch progress with toast notifications
+  // Use currentBatchId from this session's drop, or fall back to persisted batchId
+  // from a previous layout (e.g., /new -> /upcoming cross-layout navigation)
   useBatchProgress({
-    batchId: currentBatchId,
+    batchId: currentBatchId ?? persistedBatchId,
   });
 
   return (

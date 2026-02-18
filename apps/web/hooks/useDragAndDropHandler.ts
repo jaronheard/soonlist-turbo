@@ -12,6 +12,7 @@ import {
   generateBatchId,
   generateTempId,
   MAX_BATCH_SIZE,
+  PENDING_BATCH_ID_KEY,
   validateImageCount,
 } from "~/lib/batchUtils";
 import { optimizeFileToBase64 } from "~/lib/imageOptimization";
@@ -255,6 +256,13 @@ export function useDragAndDropHandler(
         if (result.batchId) {
           // Store the batchId for progress tracking
           setCurrentBatchId(result.batchId);
+
+          // Persist to sessionStorage so it survives cross-layout navigation
+          try {
+            sessionStorage.setItem(PENDING_BATCH_ID_KEY, result.batchId);
+          } catch {
+            // sessionStorage may not be available
+          }
 
           // For multi-image batches, we don't get a single workflowId
           // The backend processes them asynchronously

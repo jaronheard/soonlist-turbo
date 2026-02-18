@@ -8,6 +8,8 @@ import { toast } from "sonner";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import { PENDING_BATCH_ID_KEY } from "~/lib/batchUtils";
+
 interface UseBatchProgressOptions {
   batchId: string | null;
 }
@@ -53,6 +55,13 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
     ) {
       hasShownCompletionRef.current = true;
 
+      // Clear persisted batchId since the batch is done
+      try {
+        sessionStorage.removeItem(PENDING_BATCH_ID_KEY);
+      } catch {
+        // sessionStorage may not be available
+      }
+
       const hasErrors = batchStatus.failureCount > 0;
 
       if (hasErrors) {
@@ -90,13 +99,21 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
     }
   }, [batchStatus]);
 
-  // Cleanup: dismiss toast when component unmounts or batchId changes
+  // Cleanup: dismiss toast when component unmounts or batchId changes,
+  // but NOT during cross-layout navigation (when a pending batch is in sessionStorage)
   useEffect(() => {
     return () => {
-      if (toastIdRef.current) {
-        toast.dismiss(toastIdRef.current);
-        toastIdRef.current = null;
+      let hasPendingBatch = false;
+      try {
+        hasPendingBatch = !!sessionStorage.getItem(PENDING_BATCH_ID_KEY);
+      } catch {
+        // sessionStorage may not be available
       }
+
+      if (toastIdRef.current && !hasPendingBatch) {
+        toast.dismiss(toastIdRef.current);
+      }
+      toastIdRef.current = null;
       hasShownCompletionRef.current = false;
     };
   }, [batchId]);

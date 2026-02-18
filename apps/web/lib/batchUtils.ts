@@ -8,6 +8,14 @@
 export const MAX_BATCH_SIZE = 20;
 
 /**
+ * SessionStorage key for persisting batchId across layout transitions.
+ * When navigating from /new (minimal layout) to /upcoming (base layout),
+ * the DragAndDropProvider unmounts and remounts, losing in-memory state.
+ * This key allows the new provider instance to pick up the pending batchId.
+ */
+export const PENDING_BATCH_ID_KEY = "soonlist:pendingBatchId";
+
+/**
  * Generates a unique batch ID for tracking batch operations
  */
 export function generateBatchId(): string {
