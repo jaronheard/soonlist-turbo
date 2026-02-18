@@ -1,10 +1,5 @@
 import { DynamicColorIOS } from "react-native";
-import {
-  Badge,
-  Icon,
-  Label,
-  NativeTabs,
-} from "expo-router/unstable-native-tabs";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 
 import { useAppStore } from "~/store";
 
@@ -27,32 +22,42 @@ export default function TabsLayout() {
   return (
     <NativeTabs tintColor={tintColor} minimizeBehavior="onScrollDown">
       <NativeTabs.Trigger name="feed">
-        <Label>My List</Label>
-        <Icon sf={{ default: "list.bullet", selected: "list.bullet" }} />
+        <NativeTabs.Trigger.Label>My List</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "list.bullet", selected: "list.bullet" }}
+        />
         {myListBadgeCount > 0 ? (
-          <Badge>{String(myListBadgeCount)}</Badge>
+          <NativeTabs.Trigger.Badge>
+            {String(myListBadgeCount)}
+          </NativeTabs.Trigger.Badge>
         ) : (
-          <Badge hidden />
+          <NativeTabs.Trigger.Badge hidden />
         )}
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="following">
-        <Label>Board</Label>
-        <Icon sf={{ default: "person.2", selected: "person.2.fill" }} />
+        <NativeTabs.Trigger.Label>Board</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "person.2", selected: "person.2.fill" }}
+        />
         {communityBadgeCount > 0 ? (
-          <Badge>{String(communityBadgeCount)}</Badge>
+          <NativeTabs.Trigger.Badge>
+            {String(communityBadgeCount)}
+          </NativeTabs.Trigger.Badge>
         ) : (
-          <Badge hidden />
+          <NativeTabs.Trigger.Badge hidden />
         )}
       </NativeTabs.Trigger>
       {/* Discover tab hidden - still functional for deep links */}
       <NativeTabs.Trigger name="discover" hidden>
-        <Label hidden />
-        <Icon sf={{ default: "binoculars", selected: "binoculars.fill" }} />
+        <NativeTabs.Trigger.Label hidden />
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "binoculars", selected: "binoculars.fill" }}
+        />
       </NativeTabs.Trigger>
       {/* Capture button in search position (top-right on iOS Liquid Glass) */}
       <NativeTabs.Trigger name="add" role="search">
-        <Label>Capture</Label>
-        <Icon
+        <NativeTabs.Trigger.Label>Capture</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
           sf={{ default: "plus.viewfinder", selected: "plus.viewfinder" }}
         />
       </NativeTabs.Trigger>

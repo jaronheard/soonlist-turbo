@@ -22,7 +22,6 @@ function VideoPlayer({ videoUrl }: { videoUrl: string }) {
       player={player}
       style={styles.video}
       contentFit="contain"
-      allowsFullscreen
       allowsPictureInPicture
     />
   );
