@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { TimezoneContext } from "~/context/TimezoneContext";
+import { useBatchProgressStore } from "~/hooks/useBatchProgressStore";
 import {
   generateBatchId,
   generateTempId,
@@ -65,6 +66,9 @@ export function useDragAndDropHandler(
   const isProcessingRef = useRef(false);
 
   const createEventBatch = useMutation(api.ai.createEventBatch);
+  const setPendingBatchId = useBatchProgressStore(
+    (state) => state.setPendingBatchId,
+  );
 
   // Handle drag enter
   const handleDragEnter = useCallback(
@@ -255,6 +259,7 @@ export function useDragAndDropHandler(
         if (result.batchId) {
           // Store the batchId for progress tracking
           setCurrentBatchId(result.batchId);
+          setPendingBatchId(result.batchId);
 
           // For multi-image batches, we don't get a single workflowId
           // The backend processes them asynchronously

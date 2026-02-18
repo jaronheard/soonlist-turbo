@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { useBatchProgress } from "~/hooks/useBatchProgress";
+import { useBatchProgressStore } from "~/hooks/useBatchProgressStore";
 import { useDragAndDropHandler } from "~/hooks/useDragAndDropHandler";
 import { isTargetPage } from "~/lib/pasteEventUtils";
 
@@ -18,6 +19,10 @@ interface DragAndDropProviderProps {
 export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
   const pathname = usePathname();
   const currentUser = useQuery(api.users.getCurrentUser);
+  const pendingBatchId = useBatchProgressStore((state) => state.pendingBatchId);
+  const clearPendingBatchId = useBatchProgressStore(
+    (state) => state.clearPendingBatchId,
+  );
 
   // Only enable the drag and drop handler on target pages and when user is authenticated
   const shouldEnable = isTargetPage(pathname) && !!currentUser;
@@ -32,9 +37,12 @@ export function DragAndDropProvider({ children }: DragAndDropProviderProps) {
       },
     });
 
+  const activeBatchId = currentBatchId ?? pendingBatchId;
+
   // Track batch progress with toast notifications
   useBatchProgress({
-    batchId: currentBatchId,
+    batchId: activeBatchId,
+    onSettled: clearPendingBatchId,
   });
 
   return (

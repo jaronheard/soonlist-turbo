@@ -10,13 +10,17 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 
 interface UseBatchProgressOptions {
   batchId: string | null;
+  onSettled?: () => void;
 }
 
 /**
  * Hook to track batch upload progress with updating toast
  * Updates the same toast from loading to success/error state
  */
-export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
+export function useBatchProgress({
+  batchId,
+  onSettled,
+}: UseBatchProgressOptions): void {
   const router = useRouter();
   const toastIdRef = useRef<string | number | null>(null);
   const hasShownCompletionRef = useRef(false);
@@ -87,8 +91,9 @@ export function useBatchProgress({ batchId }: UseBatchProgressOptions): void {
 
       // Clear the ref since the toast is now handled
       toastIdRef.current = null;
+      onSettled?.();
     }
-  }, [batchStatus]);
+  }, [batchStatus, onSettled, router]);
 
   // Cleanup: dismiss toast when component unmounts or batchId changes
   useEffect(() => {
