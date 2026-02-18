@@ -1,59 +1,41 @@
-import { Tabs } from "expo-router";
+import React from "react";
+import { DynamicColorIOS } from "react-native";
+import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 
-import { HeaderLogo } from "~/components/HeaderLogo";
-import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
-import { NavigationMenu } from "~/components/NavigationMenu";
-import { ProfileMenu } from "~/components/ProfileMenu";
-
-// Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
   initialRouteName: "feed",
 };
 
-const tabHeaderConfig = {
-  feed: { title: "Upcoming", active: "upcoming" },
-  following: { title: "Following", active: "following" },
-  past: { title: "Past", active: "past" },
-  discover: { title: "Discover", active: "discover" },
-} as const;
-
-type TabRouteName = keyof typeof tabHeaderConfig;
-
 export default function TabsLayout() {
   return (
-    <Tabs
-      screenOptions={({ route }) => {
-        const config = tabHeaderConfig[route.name as TabRouteName];
-        return {
-          headerTransparent: true,
-          headerBackground: () => <LiquidGlassHeader />,
-          headerTintColor: "#fff",
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
-          tabBarStyle: {
-            display: "none", // Hide the default tab bar
-          },
-          headerLeftContainerStyle: { paddingLeft: 16 },
-          headerRightContainerStyle: { paddingRight: 16 },
-          headerTitleAlign: "center",
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => <ProfileMenu />,
-          ...(config
-            ? {
-                title: config.title,
-                headerTitle: () => <NavigationMenu active={config.active} />,
-              }
-            : null),
-        };
-      }}
+    <NativeTabs
+      tintColor={DynamicColorIOS({ light: "#5A32FB", dark: "#B39DFF" })}
+      iconColor={DynamicColorIOS({ light: "#8E8E93", dark: "#A1A1AA" })}
+      blurEffect="systemChromeMaterial"
     >
-      <Tabs.Screen name="feed" />
-      <Tabs.Screen name="following" />
-      <Tabs.Screen name="past" />
-      <Tabs.Screen name="discover" />
-    </Tabs>
+      <NativeTabs.Trigger name="feed">
+        <Icon sf={{ default: "list.bullet", selected: "list.bullet" }} />
+        <Label>My List</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="following">
+        <Icon sf={{ default: "person.2", selected: "person.2.fill" }} />
+        <Label>Board</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="add" role="search">
+        <Icon
+          sf={{ default: "plus.viewfinder", selected: "plus.viewfinder" }}
+        />
+        <Label hidden>Add</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="discover" hidden>
+        <Icon sf="globe" />
+        <Label>Discover</Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

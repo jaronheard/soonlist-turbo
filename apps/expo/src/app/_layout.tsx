@@ -365,7 +365,7 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <InitialLayout />
-      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+      <StatusBar style={Platform.OS === "ios" ? "dark" : "auto"} />
     </View>
   );
 }
