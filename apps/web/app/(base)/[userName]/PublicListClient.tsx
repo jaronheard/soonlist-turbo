@@ -63,7 +63,7 @@ function transformConvexEventsAsPublic(
       createdAt: new Date(event._creationTime),
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user is guaranteed to exist after filter
       user: transformConvexUser(event.user!),
-      eventFollows: [],
+      eventFollows: event.eventFollows,
       comments: [],
       eventToLists: [],
     }));

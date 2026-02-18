@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { atcb_action } from "add-to-calendar-button-react";
+import { useQuery } from "convex/react";
 import { Copy, Earth, EyeOff, Instagram, MapPin } from "lucide-react";
 
 import type { DateInfo, EventMetadata, SimilarityDetails } from "@soonlist/cal";
@@ -13,6 +14,7 @@ import type {
   ATCBActionEventConfig,
 } from "@soonlist/cal/types";
 import type { Comment, EventFollow, List, User } from "@soonlist/db/types";
+import { api } from "@soonlist/backend/convex/_generated/api";
 import {
   eventTimesAreDefined,
   formatRelativeTime,
@@ -669,13 +671,15 @@ function EventActionButtons({
 
 export function EventListItem(props: EventListItemProps) {
   const { user: clerkUser } = useUser();
+  const currentUser = useQuery(api.users.getCurrentUser);
   const { user, eventFollows, id, event, filePath, visibility } = props;
   const { timezone: userTimezone } = useContext(TimezoneContext);
   const roles = clerkUser?.unsafeMetadata.roles as string[] | undefined;
-  const isSelf = clerkUser?.id === user?.id;
+  const viewerUserId = currentUser?.id ?? clerkUser?.id;
+  const isSelf = viewerUserId === user?.id;
   const isOwner = isSelf || roles?.includes("admin");
   const isFollowing = !!eventFollows.find(
-    (item) => item.userId === clerkUser?.id,
+    (item) => item.userId === viewerUserId,
   );
   const image =
     event.images?.[3] ||
