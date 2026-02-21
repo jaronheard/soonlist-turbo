@@ -32,6 +32,7 @@ Expo Router provides typed file-based navigation.
 - Each developer needs a personal ngrok edge (see root README.md)
 - E2E tests use Maestro (`.maestro/` directory)
 - Run tests: `pnpm test`
+- For Expo package additions/upgrades, run `npx expo install <package>` in `apps/expo` first to select the SDK-compatible version, then keep `apps/expo/package.json` on `catalog:` specs.
 
 ## Push Notifications
 

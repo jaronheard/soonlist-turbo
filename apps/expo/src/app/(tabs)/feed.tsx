@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -12,14 +12,26 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import AddEventButton from "~/components/AddEventButton";
+import { HomeLocationModal } from "~/components/HomeLocationModal";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
-import { useAppStore, useStableTimestamp } from "~/store";
+import {
+  useAppStore,
+  useHasCompletedLocationSetup,
+  useStableTimestamp,
+} from "~/store";
 
 function MyFeedContent() {
   const { user } = useUser();
+  const hasCompletedLocationSetup = useHasCompletedLocationSetup();
+  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
+
+  // Sync local modal visibility with persisted setup completion state.
+  useEffect(() => {
+    setIsLocationModalVisible(!hasCompletedLocationSetup);
+  }, [hasCompletedLocationSetup]);
 
   // Use the stable timestamp from the store that updates every 15 minutes
   // This prevents InvalidCursor errors while still filtering for upcoming events
@@ -112,6 +124,11 @@ function MyFeedContent() {
         source="feed"
       />
       <AddEventButton stats={stats} showChevron={false} />
+
+      <HomeLocationModal
+        isVisible={isLocationModalVisible}
+        onClose={() => setIsLocationModalVisible(false)}
+      />
     </View>
   );
 }

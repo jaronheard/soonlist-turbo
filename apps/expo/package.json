@@ -82,6 +82,7 @@
     "expo-linear-gradient": "catalog:",
     "expo-linking": "catalog:",
     "expo-localization": "catalog:",
+    "expo-location": "catalog:",
     "expo-media-library": "catalog:",
     "expo-notifications": "catalog:",
     "expo-quick-actions": "catalog:",
