@@ -70,6 +70,7 @@ catalog:
   cmdk: ^0.2.0
 
   # Expo & React Native Core
+  "@expo/ngrok": ^4.1.0
   expo: 55.0.0-preview.12
   "expo-router": 55.0.0-preview.9
   "expo-constants": ~55.0.6
