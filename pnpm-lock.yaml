@@ -447,6 +447,9 @@ catalogs:
     react-native-svg:
       specifier: 15.15.3
       version: 15.15.3
+    react-native-worklets:
+      specifier: ~0.7.1
+      version: 0.7.1
     react-qr-code:
       specifier: ^2.0.15
       version: 2.0.18
@@ -822,6 +825,9 @@ importers:
       react-native-svg:
         specifier: 'catalog:'
         version: 15.15.3(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
+      react-native-worklets:
+        specifier: 'catalog:'
+        version: 0.7.1(@babel/core@7.28.5)(react-native@0.83.2(@babel/core@7.28.5)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
       superjson:
         specifier: 'catalog:'
         version: 2.2.1
@@ -14579,7 +14585,7 @@ snapshots:
       debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-config: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-config: 0.83.3
       metro-core: 0.83.3
       semver: 7.7.3
     transitivePeerDependencies:
@@ -19214,6 +19220,19 @@ snapshots:
       flow-enums-runtime: 0.0.6
       https-proxy-agent: 7.0.6
       metro-core: 0.83.3
+    transitivePeerDependencies:
+      - supports-color
+
+  metro-config@0.83.3:
+    dependencies:
+      connect: 3.7.0
+      flow-enums-runtime: 0.0.6
+      jest-validate: 29.7.0
+      metro: 0.83.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-cache: 0.83.3
+      metro-core: 0.83.3
+      metro-runtime: 0.83.3
+      yaml: 2.8.2
     transitivePeerDependencies:
       - supports-color
 

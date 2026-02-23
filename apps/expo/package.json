@@ -114,6 +114,7 @@
     "react-native-purchases-ui": "catalog:",
     "react-native-qrcode-svg": "catalog:",
     "react-native-reanimated": "catalog:",
+    "react-native-worklets": "catalog:",
     "react-native-safe-area-context": "catalog:",
     "react-native-screens": "catalog:",
     "react-native-svg": "catalog:",
