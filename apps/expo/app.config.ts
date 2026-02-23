@@ -210,7 +210,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     typedRoutes: true,
     reactCompiler: true,
   },
-  newArchEnabled: true,
   // plugins: ["expo-router"],
   extra: {
     eas: {
