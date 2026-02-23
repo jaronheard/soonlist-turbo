@@ -18,13 +18,7 @@ function VideoPlayer({ videoUrl }: { videoUrl: string }) {
   });
 
   return (
-    <VideoView
-      player={player}
-      style={styles.video}
-      contentFit="contain"
-      allowsFullscreen
-      allowsPictureInPicture
-    />
+    <VideoView player={player} style={styles.video} contentFit="contain" />
   );
 }
 
