@@ -47,6 +47,7 @@
     "@react-native-community/datetimepicker": "catalog:",
     "@react-native-community/netinfo": "catalog:",
     "@react-native-menu/menu": "catalog:",
+    "@react-native-segmented-control/segmented-control": "^2.5.2",
     "@sentry/react-native": "catalog:",
     "@soonlist/api": "workspace:*",
     "@soonlist/backend": "workspace:*",

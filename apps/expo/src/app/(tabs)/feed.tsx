@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -11,8 +11,9 @@ import {
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import AddEventButton from "~/components/AddEventButton";
+import type { EventWithSimilarity } from "~/utils/similarEvents";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { TabHeader } from "~/components/TabHeader";
 import UserEventsList from "~/components/UserEventsList";
 import { useRatingPrompt } from "~/hooks/useRatingPrompt";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
@@ -20,10 +21,12 @@ import { useAppStore, useStableTimestamp } from "~/store";
 
 function MyFeedContent() {
   const { user } = useUser();
+  const [selectedSegment, setSelectedSegment] = useState(0);
+  const filter: "upcoming" | "past" =
+    selectedSegment === 0 ? "upcoming" : "past";
 
-  // Use the stable timestamp from the store that updates every 15 minutes
-  // This prevents InvalidCursor errors while still filtering for upcoming events
   const stableTimestamp = useStableTimestamp();
+  const setMyListBadgeCount = useAppStore((s) => s.setMyListBadgeCount);
 
   // Fetch user stats
   const stats = useQuery(
@@ -31,12 +34,11 @@ function MyFeedContent() {
     user?.username ? { userName: user.username } : "skip",
   );
 
-  // Memoize query args to prevent unnecessary re-renders
   const queryArgs = useMemo(() => {
     return {
-      filter: "upcoming" as const,
+      filter,
     };
-  }, []);
+  }, [filter]);
 
   const {
     results: groupedEvents,
@@ -46,7 +48,6 @@ function MyFeedContent() {
     initialNumItems: 50,
   });
 
-  // Memoize saved events query args to prevent unnecessary re-renders
   const savedEventsQueryArgs = useMemo(() => {
     if (!user?.username) return "skip";
     return { userName: user.username };
@@ -67,39 +68,67 @@ function MyFeedContent() {
     savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
-  // Transform grouped events into the format UserEventsList expects
-  // The server now handles similarity grouping, so we just enrich the events
-  const enrichedEvents = useMemo(() => {
-    // Use stableTimestamp instead of recalculating Date.now()
-    const currentTime = new Date(stableTimestamp).getTime();
-    return groupedEvents
-      .filter((group) => {
-        // Client-side safety filter: hide events that have ended
-        // This prevents showing ended events if the cron job hasn't run recently
-        const eventEndTime = new Date(group.event.endDateTime).getTime();
-        return eventEndTime >= currentTime;
-      })
-      .map((group) => ({
-        event: {
-          ...group.event,
-          eventFollows: [],
-          comments: [],
-          eventToLists: [],
-          lists: [],
-        },
-        // Server-computed count (already shows just similar events, not including primary)
-        similarEvents: Array(group.similarEventsCount).fill({
-          event: null,
-          similarityDetails: null,
-        }),
-      }));
-  }, [groupedEvents, stableTimestamp]);
+  const enrichedEvents: EventWithSimilarity[] = useMemo(() => {
+    if (filter === "upcoming") {
+      const currentTime = new Date(stableTimestamp).getTime();
+      return groupedEvents
+        .filter((group) => {
+          const eventEndTime = new Date(group.event.endDateTime).getTime();
+          return eventEndTime >= currentTime;
+        })
+        .map((group) => ({
+          event: {
+            ...group.event,
+            eventFollows: [],
+            comments: [],
+            eventToLists: [],
+            lists: [],
+          },
+          similarEvents: Array(group.similarEventsCount).fill({
+            event: null,
+            similarityDetails: null,
+          }),
+        }));
+    }
+    // Past events - no client-side time filtering
+    return groupedEvents.map((group) => ({
+      event: {
+        ...group.event,
+        eventFollows: [],
+        comments: [],
+        eventToLists: [],
+        lists: [],
+      },
+      similarEvents: Array(group.similarEventsCount).fill({
+        event: null,
+        similarityDetails: null,
+      }),
+    }));
+  }, [groupedEvents, stableTimestamp, filter]);
+
+  // Update badge count based on upcoming events
+  useEffect(() => {
+    if (filter === "upcoming") {
+      setMyListBadgeCount(enrichedEvents.length);
+    }
+  }, [enrichedEvents.length, filter, setMyListBadgeCount]);
 
   // Trigger rating prompt when user has 3+ upcoming events
-  useRatingPrompt(enrichedEvents.length);
+  useRatingPrompt(filter === "upcoming" ? enrichedEvents.length : 0);
+
+  const HeaderComponent = useCallback(
+    () => (
+      <TabHeader
+        variant="mylist"
+        selectedSegmentIndex={selectedSegment}
+        onSegmentChange={setSelectedSegment}
+      />
+    ),
+    [selectedSegment],
+  );
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={{ flex: 1, backgroundColor: "white" }}>
       <UserEventsList
         groupedEvents={enrichedEvents}
         onEndReached={handleLoadMore}
@@ -110,8 +139,8 @@ function MyFeedContent() {
         showSourceStickers
         savedEventIds={savedEventIds}
         source="feed"
+        HeaderComponent={HeaderComponent}
       />
-      <AddEventButton stats={stats} showChevron={false} />
     </View>
   );
 }
@@ -122,14 +151,12 @@ function MyFeed() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-interactive-3">
-          <View className="h-[100px]" />
+        <View style={{ flex: 1, backgroundColor: "#F4F1FF" }}>
           <LoadingSpinner />
         </View>
       </AuthLoading>
 
       <Unauthenticated>
-        {/* For guest users, check if they've seen onboarding */}
         {!hasSeenOnboarding ? (
           <Redirect href="/(onboarding)/onboarding" />
         ) : (

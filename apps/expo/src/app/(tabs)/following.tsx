@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Image } from "expo-image";
 import { Redirect, useRouter } from "expo-router";
@@ -16,6 +16,7 @@ import { api } from "@soonlist/backend/convex/_generated/api";
 import FollowingFeedbackBanner from "~/components/FollowingFeedbackBanner";
 import { X } from "~/components/icons";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { TabHeader } from "~/components/TabHeader";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
@@ -44,63 +45,99 @@ function FollowingHeader() {
 
   return (
     <View>
-      <View className="py-3">
+      <View style={{ paddingVertical: 12 }}>
         <FollowingFeedbackBanner />
       </View>
-      <View className="px-4 pb-3">
+      <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
         <TouchableOpacity
           onPress={() => setIsExpanded(!isExpanded)}
-          className="items-center"
+          style={{ alignItems: "center" }}
           activeOpacity={0.7}
         >
-          <Text className="text-sm text-neutral-2">
+          <Text style={{ fontSize: 14, color: "#627496" }}>
             Following{" "}
-            <Text className="text-interactive-1">
+            <Text style={{ color: "#5A32FB" }}>
               {userCount} {userCount === 1 ? "list" : "lists"}
             </Text>
           </Text>
         </TouchableOpacity>
 
         {isExpanded && followingUsers && (
-          <View className="mt-3 space-y-2">
+          <View style={{ marginTop: 12, gap: 8 }}>
             {followingUsers.map((user) => (
               <View
                 key={user.id}
-                className="flex-row items-center justify-between py-2"
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingVertical: 8,
+                }}
               >
                 <TouchableOpacity
                   onPress={() => router.push(`/${user.username}`)}
-                  className="flex-1 flex-row items-center"
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
                   activeOpacity={0.7}
                 >
                   {user.userImage ? (
                     <Image
                       source={{ uri: user.userImage }}
-                      className="size-8 rounded-full"
+                      style={{ width: 32, height: 32, borderRadius: 9999 }}
                     />
                   ) : (
-                    <View className="size-8 items-center justify-center rounded-full bg-neutral-4">
-                      <Text className="text-sm font-medium text-neutral-2">
+                    <View
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 9999,
+                        backgroundColor: "#E8E8E8",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "500",
+                          color: "#627496",
+                        }}
+                      >
                         {user.displayName?.charAt(0).toUpperCase() ?? "?"}
                       </Text>
                     </View>
                   )}
-                  <View className="ml-3 flex-1">
+                  <View style={{ marginLeft: 12, flex: 1 }}>
                     <Text
-                      className="text-base font-medium text-neutral-1"
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "500",
+                        color: "#1A1A2E",
+                      }}
                       numberOfLines={1}
                     >
                       {user.publicListName ??
                         `${user.displayName ?? user.username}'s events`}
                     </Text>
-                    <Text className="text-sm text-neutral-2" numberOfLines={1}>
+                    <Text
+                      style={{ fontSize: 14, color: "#627496" }}
+                      numberOfLines={1}
+                    >
                       {user.displayName ?? user.username}
                     </Text>
                   </View>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => handleUnfollow(user.id)}
-                  className="ml-2 rounded-full bg-neutral-4 p-2"
+                  style={{
+                    marginLeft: 8,
+                    borderRadius: 9999,
+                    backgroundColor: "#E8E8E8",
+                    padding: 8,
+                  }}
                   activeOpacity={0.7}
                 >
                   <X size={16} color="#666" />
@@ -119,18 +156,30 @@ function FollowingEmptyState() {
     <ScrollView
       style={{ backgroundColor: "#F4F1FF" }}
       contentContainerStyle={{
-        paddingTop: 100,
         paddingBottom: 120,
         flexGrow: 1,
       }}
       showsVerticalScrollIndicator={false}
     >
       <FollowingHeader />
-      <View className="items-center px-6 py-8">
-        <Text className="text-center text-lg text-neutral-2">
+      <View
+        style={{
+          alignItems: "center",
+          paddingHorizontal: 24,
+          paddingVertical: 32,
+        }}
+      >
+        <Text style={{ textAlign: "center", fontSize: 18, color: "#627496" }}>
           No upcoming events from people you follow
         </Text>
-        <Text className="mt-2 text-center text-base text-neutral-3">
+        <Text
+          style={{
+            marginTop: 8,
+            textAlign: "center",
+            fontSize: 16,
+            color: "#9CA3AF",
+          }}
+        >
           Check back later for new events
         </Text>
       </View>
@@ -140,18 +189,22 @@ function FollowingEmptyState() {
 
 function FollowingFeedContent() {
   const { user } = useUser();
+  const [selectedSegment, setSelectedSegment] = useState(0);
+  const filter: "upcoming" | "past" =
+    selectedSegment === 0 ? "upcoming" : "past";
+
   const stableTimestamp = useStableTimestamp();
+  const setBoardBadgeCount = useAppStore((s) => s.setBoardBadgeCount);
 
   // Check if user is following anyone
   const followingUsers = useQuery(api.users.getFollowingUsers);
   const hasFollowings = (followingUsers?.length ?? 0) > 0;
 
-  // Memoize query args
   const queryArgs = useMemo(() => {
     return {
-      filter: "upcoming" as const,
+      filter,
     };
-  }, []);
+  }, [filter]);
 
   const {
     results: events,
@@ -165,7 +218,6 @@ function FollowingFeedContent() {
     },
   );
 
-  // Memoize saved events query args
   const savedEventsQueryArgs = useMemo(() => {
     if (!user?.username) return "skip";
     return { userName: user.username };
@@ -186,22 +238,52 @@ function FollowingFeedContent() {
     savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
-  // Filter out ended events client-side
   const enrichedEvents = useMemo(() => {
-    const currentTime = new Date(stableTimestamp).getTime();
-    return events
-      .filter((event) => {
-        const eventEndTime = new Date(event.endDateTime).getTime();
-        return eventEndTime >= currentTime;
-      })
-      .map((event) => ({
-        ...event,
-        eventFollows: [],
-        comments: [],
-        eventToLists: [],
-        lists: [],
-      }));
-  }, [events, stableTimestamp]);
+    if (filter === "upcoming") {
+      const currentTime = new Date(stableTimestamp).getTime();
+      return events
+        .filter((event) => {
+          const eventEndTime = new Date(event.endDateTime).getTime();
+          return eventEndTime >= currentTime;
+        })
+        .map((event) => ({
+          ...event,
+          eventFollows: [],
+          comments: [],
+          eventToLists: [],
+          lists: [],
+        }));
+    }
+    // Past events - no client-side time filtering
+    return events.map((event) => ({
+      ...event,
+      eventFollows: [],
+      comments: [],
+      eventToLists: [],
+      lists: [],
+    }));
+  }, [events, stableTimestamp, filter]);
+
+  // Update badge count based on upcoming events
+  useEffect(() => {
+    if (filter === "upcoming") {
+      setBoardBadgeCount(enrichedEvents.length);
+    }
+  }, [enrichedEvents.length, filter, setBoardBadgeCount]);
+
+  const HeaderWithSegment = useCallback(
+    () => (
+      <View>
+        <TabHeader
+          variant="board"
+          selectedSegmentIndex={selectedSegment}
+          onSegmentChange={setSelectedSegment}
+        />
+        <FollowingHeader />
+      </View>
+    ),
+    [selectedSegment],
+  );
 
   // Redirect to feed if not following anyone
   if (followingUsers !== undefined && !hasFollowings) {
@@ -209,7 +291,7 @@ function FollowingFeedContent() {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={{ flex: 1, backgroundColor: "white" }}>
       <UserEventsList
         events={enrichedEvents}
         onEndReached={handleLoadMore}
@@ -222,7 +304,7 @@ function FollowingFeedContent() {
         hideDiscoverableButton={true}
         savedEventIds={savedEventIds}
         source="following"
-        HeaderComponent={FollowingHeader}
+        HeaderComponent={HeaderWithSegment}
         EmptyStateComponent={FollowingEmptyState}
       />
     </View>
@@ -235,8 +317,7 @@ function FollowingFeed() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-interactive-3">
-          <View className="h-[100px]" />
+        <View style={{ flex: 1, backgroundColor: "#F4F1FF" }}>
           <LoadingSpinner />
         </View>
       </AuthLoading>

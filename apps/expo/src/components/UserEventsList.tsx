@@ -49,7 +49,8 @@ import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
 
-const HEADER_HEIGHT_DEFAULT = 100;
+// NativeTabs handles safe area insets automatically, so we only need minimal spacing
+const HEADER_HEIGHT_DEFAULT = 8;
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 

@@ -171,6 +171,12 @@ interface AppState {
   // Pending follow from deep link (used when user is not authenticated yet)
   pendingFollowUsername: string | null;
   setPendingFollowUsername: (username: string | null) => void;
+
+  // Tab badge counts
+  myListBadgeCount: number;
+  setMyListBadgeCount: (count: number) => void;
+  boardBadgeCount: number;
+  setBoardBadgeCount: (count: number) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -398,6 +404,8 @@ export const useAppStore = create<AppState>()(
           lastPaywallShownAtView: 0,
           hasShownRatingPrompt: false,
           pendingFollowUsername: null,
+          myListBadgeCount: 0,
+          boardBadgeCount: 0,
         }),
 
       // Reset for logout - preserves onboarding state
@@ -447,6 +455,8 @@ export const useAppStore = create<AppState>()(
           hasShownRatingPrompt: false,
           // Keep pendingFollowUsername in case user is re-authenticating
           pendingFollowUsername: state.pendingFollowUsername,
+          myListBadgeCount: 0,
+          boardBadgeCount: 0,
         })),
 
       // Stable timestamp for query filtering
@@ -507,14 +517,24 @@ export const useAppStore = create<AppState>()(
       pendingFollowUsername: null,
       setPendingFollowUsername: (username) =>
         set({ pendingFollowUsername: username }),
+
+      // Tab badge counts
+      myListBadgeCount: 0,
+      setMyListBadgeCount: (count) => set({ myListBadgeCount: count }),
+      boardBadgeCount: 0,
+      setBoardBadgeCount: (count) => set({ boardBadgeCount: count }),
     }),
     {
       name: "app-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      // Do not persist ephemeral flags like discoverAccessOverride
+      // Do not persist ephemeral flags like discoverAccessOverride and badge counts
       partialize: (state) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { discoverAccessOverride, ...rest } = state;
+        const {
+          discoverAccessOverride: _discoverAccessOverride,
+          myListBadgeCount: _myListBadgeCount,
+          boardBadgeCount: _boardBadgeCount,
+          ...rest
+        } = state;
         return rest;
       },
     },

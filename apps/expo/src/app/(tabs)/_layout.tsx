@@ -1,59 +1,59 @@
-import { Tabs } from "expo-router";
+import { Platform } from "react-native";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 
-import { HeaderLogo } from "~/components/HeaderLogo";
-import { LiquidGlassHeader } from "~/components/LiquidGlassHeader";
-import { NavigationMenu } from "~/components/NavigationMenu";
-import { ProfileMenu } from "~/components/ProfileMenu";
+import { useAppStore } from "~/store";
 
 // Export Expo Router's error boundary
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
-  initialRouteName: "feed",
+  anchor: "feed",
 };
 
-const tabHeaderConfig = {
-  feed: { title: "Upcoming", active: "upcoming" },
-  following: { title: "Following", active: "following" },
-  past: { title: "Past", active: "past" },
-  discover: { title: "Discover", active: "discover" },
-} as const;
-
-type TabRouteName = keyof typeof tabHeaderConfig;
-
 export default function TabsLayout() {
+  const myListBadgeCount = useAppStore((s) => s.myListBadgeCount);
+  const boardBadgeCount = useAppStore((s) => s.boardBadgeCount);
+
+  // Use platform-appropriate tint color
+  const tintColor = Platform.OS === "ios" ? "#5A32FB" : "#5A32FB";
+
   return (
-    <Tabs
-      screenOptions={({ route }) => {
-        const config = tabHeaderConfig[route.name as TabRouteName];
-        return {
-          headerTransparent: true,
-          headerBackground: () => <LiquidGlassHeader />,
-          headerTintColor: "#fff",
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
-          tabBarStyle: {
-            display: "none", // Hide the default tab bar
-          },
-          headerLeftContainerStyle: { paddingLeft: 16 },
-          headerRightContainerStyle: { paddingRight: 16 },
-          headerTitleAlign: "center",
-          headerLeft: () => <HeaderLogo />,
-          headerRight: () => <ProfileMenu />,
-          ...(config
-            ? {
-                title: config.title,
-                headerTitle: () => <NavigationMenu active={config.active} />,
-              }
-            : null),
-        };
-      }}
-    >
-      <Tabs.Screen name="feed" />
-      <Tabs.Screen name="following" />
-      <Tabs.Screen name="past" />
-      <Tabs.Screen name="discover" />
-    </Tabs>
+    <NativeTabs tintColor={tintColor} minimizeBehavior="onScrollDown">
+      <NativeTabs.Trigger name="feed">
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "list.bullet", selected: "list.bullet" }}
+          md="list"
+        />
+        <NativeTabs.Trigger.Label>My List</NativeTabs.Trigger.Label>
+        {myListBadgeCount > 0 && (
+          <NativeTabs.Trigger.Badge>
+            {String(myListBadgeCount)}
+          </NativeTabs.Trigger.Badge>
+        )}
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="following">
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "person.2", selected: "person.2.fill" }}
+          md="group"
+        />
+        <NativeTabs.Trigger.Label>Board</NativeTabs.Trigger.Label>
+        {boardBadgeCount > 0 && (
+          <NativeTabs.Trigger.Badge>
+            {String(boardBadgeCount)}
+          </NativeTabs.Trigger.Badge>
+        )}
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="discover" hidden>
+        <NativeTabs.Trigger.Icon sf="globe" md="explore" />
+        <NativeTabs.Trigger.Label>Discover</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="add" role="search">
+        <NativeTabs.Trigger.Icon sf="plus.viewfinder" md="add_a_photo" />
+        <NativeTabs.Trigger.Label>Capture</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }
