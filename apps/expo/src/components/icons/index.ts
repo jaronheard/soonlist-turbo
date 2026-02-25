@@ -41,6 +41,7 @@ export { default as Phone } from "./Phone";
 export { default as Plus } from "./Plus";
 export { default as PlusCircle } from "./PlusCircle";
 export { default as PlusIcon } from "./PlusIcon";
+export { default as PlusViewfinder } from "./PlusViewfinder";
 export { default as QrCode } from "./QrCode";
 export { default as RefreshCw } from "./RefreshCw";
 export { default as Search } from "./Search";

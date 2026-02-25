@@ -1,157 +1,65 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { Image } from "expo-image";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 import { Redirect, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
-  useMutation,
   useQuery,
 } from "convex/react";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
-import FollowingFeedbackBanner from "~/components/FollowingFeedbackBanner";
-import { X } from "~/components/icons";
+import type { Segment } from "~/components/SegmentedControl";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { TabHeader } from "~/components/TabHeader";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
-import { hapticSuccess, toast } from "~/utils/feedback";
+import Config from "~/utils/config";
 
-function FollowingHeader() {
-  const [isExpanded, setIsExpanded] = useState(false);
+function EmptyFollowingState() {
   const router = useRouter();
-  const followingUsers = useQuery(api.users.getFollowingUsers);
-  const unfollowUserMutation = useMutation(api.users.unfollowUser);
-
-  const userCount = followingUsers?.length ?? 0;
-
-  const handleUnfollow = async (userId: string) => {
-    try {
-      await unfollowUserMutation({ followingId: userId });
-      void hapticSuccess();
-    } catch {
-      toast.error("Failed to unfollow user");
-    }
-  };
-
-  if (userCount === 0) {
-    return null;
-  }
 
   return (
-    <View>
-      <View className="py-3">
-        <FollowingFeedbackBanner />
-      </View>
-      <View className="px-4 pb-3">
-        <TouchableOpacity
-          onPress={() => setIsExpanded(!isExpanded)}
-          className="items-center"
-          activeOpacity={0.7}
-        >
-          <Text className="text-sm text-neutral-2">
-            Following{" "}
-            <Text className="text-interactive-1">
-              {userCount} {userCount === 1 ? "list" : "lists"}
-            </Text>
-          </Text>
-        </TouchableOpacity>
-
-        {isExpanded && followingUsers && (
-          <View className="mt-3 space-y-2">
-            {followingUsers.map((user) => (
-              <View
-                key={user.id}
-                className="flex-row items-center justify-between py-2"
-              >
-                <TouchableOpacity
-                  onPress={() => router.push(`/${user.username}`)}
-                  className="flex-1 flex-row items-center"
-                  activeOpacity={0.7}
-                >
-                  {user.userImage ? (
-                    <Image
-                      source={{ uri: user.userImage }}
-                      className="size-8 rounded-full"
-                    />
-                  ) : (
-                    <View className="size-8 items-center justify-center rounded-full bg-neutral-4">
-                      <Text className="text-sm font-medium text-neutral-2">
-                        {user.displayName?.charAt(0).toUpperCase() ?? "?"}
-                      </Text>
-                    </View>
-                  )}
-                  <View className="ml-3 flex-1">
-                    <Text
-                      className="text-base font-medium text-neutral-1"
-                      numberOfLines={1}
-                    >
-                      {user.publicListName ??
-                        `${user.displayName ?? user.username}'s events`}
-                    </Text>
-                    <Text className="text-sm text-neutral-2" numberOfLines={1}>
-                      {user.displayName ?? user.username}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleUnfollow(user.id)}
-                  className="ml-2 rounded-full bg-neutral-4 p-2"
-                  activeOpacity={0.7}
-                >
-                  <X size={16} color="#666" />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
+    <View className="flex-1 items-center justify-center bg-white px-6">
+      <Text className="mb-2 text-center text-xl font-bold text-neutral-1">
+        You&apos;re not following anyone yet
+      </Text>
+      <Text className="mb-6 text-center text-base text-neutral-2">
+        Follow users to see their events here. Discover interesting people in
+        the Discover feed.
+      </Text>
+      <TouchableOpacity
+        onPress={() => router.push("/discover")}
+        className="rounded-full bg-interactive-1 px-6 py-3"
+        activeOpacity={0.7}
+      >
+        <Text className="text-base font-semibold text-white">
+          Explore Discover
+        </Text>
+      </TouchableOpacity>
     </View>
-  );
-}
-
-function FollowingEmptyState() {
-  return (
-    <ScrollView
-      style={{ backgroundColor: "#F4F1FF" }}
-      contentContainerStyle={{
-        paddingTop: 100,
-        paddingBottom: 120,
-        flexGrow: 1,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      <FollowingHeader />
-      <View className="items-center px-6 py-8">
-        <Text className="text-center text-lg text-neutral-2">
-          No upcoming events from people you follow
-        </Text>
-        <Text className="mt-2 text-center text-base text-neutral-3">
-          Check back later for new events
-        </Text>
-      </View>
-    </ScrollView>
   );
 }
 
 function FollowingFeedContent() {
   const { user } = useUser();
+  const [selectedSegment, setSelectedSegment] = useState<Segment>("upcoming");
   const stableTimestamp = useStableTimestamp();
 
-  // Check if user is following anyone
   const followingUsers = useQuery(api.users.getFollowingUsers);
   const hasFollowings = (followingUsers?.length ?? 0) > 0;
 
-  // Memoize query args
-  const queryArgs = useMemo(() => {
-    return {
-      filter: "upcoming" as const,
-    };
+  const handleSegmentChange = useCallback((segment: Segment) => {
+    setSelectedSegment(segment);
   }, []);
+
+  const queryArgs = useMemo(
+    () => ({ filter: selectedSegment }),
+    [selectedSegment],
+  );
 
   const {
     results: events,
@@ -165,7 +73,6 @@ function FollowingFeedContent() {
     },
   );
 
-  // Memoize saved events query args
   const savedEventsQueryArgs = useMemo(() => {
     if (!user?.username) return "skip";
     return { userName: user.username };
@@ -186,13 +93,14 @@ function FollowingFeedContent() {
     savedEventIdsQuery?.map((event) => event.id) ?? [],
   );
 
-  // Filter out ended events client-side
   const enrichedEvents = useMemo(() => {
     const currentTime = new Date(stableTimestamp).getTime();
     return events
       .filter((event) => {
         const eventEndTime = new Date(event.endDateTime).getTime();
-        return eventEndTime >= currentTime;
+        return selectedSegment === "upcoming"
+          ? eventEndTime >= currentTime
+          : eventEndTime < currentTime;
       })
       .map((event) => ({
         ...event,
@@ -201,11 +109,38 @@ function FollowingFeedContent() {
         eventToLists: [],
         lists: [],
       }));
-  }, [events, stableTimestamp]);
+  }, [events, stableTimestamp, selectedSegment]);
 
-  // Redirect to feed if not following anyone
+  // Update tab badge count based on upcoming events
+  const setCommunityBadgeCount = useAppStore((s) => s.setCommunityBadgeCount);
+  useEffect(() => {
+    if (selectedSegment === "upcoming") {
+      setCommunityBadgeCount(enrichedEvents.length);
+    }
+  }, [enrichedEvents.length, selectedSegment, setCommunityBadgeCount]);
+
+  const displayName = user?.firstName ?? user?.username ?? "My";
+  const username = user?.username ?? "";
+  const title = `${displayName}'s Board`;
+  const shareUrl = `${Config.apiBaseUrl}/${username}/scene`;
+  const displayUrl = `soonlist.com/${username}/board`;
+
+  const HeaderComponent = useCallback(
+    () => (
+      <TabHeader
+        title={title}
+        shareUrl={shareUrl}
+        displayUrl={displayUrl}
+        selectedSegment={selectedSegment}
+        onSegmentChange={handleSegmentChange}
+      />
+    ),
+    [title, shareUrl, displayUrl, selectedSegment, handleSegmentChange],
+  );
+
+  // Show empty state if not following anyone
   if (followingUsers !== undefined && !hasFollowings) {
-    return <Redirect href="/feed" />;
+    return <EmptyFollowingState />;
   }
 
   return (
@@ -218,12 +153,10 @@ function FollowingFeedContent() {
           status === "LoadingFirstPage" || followingUsers === undefined
         }
         showCreator="always"
-        showSourceStickers={false}
-        hideDiscoverableButton={true}
+        showSourceStickers
         savedEventIds={savedEventIds}
         source="following"
-        HeaderComponent={FollowingHeader}
-        EmptyStateComponent={FollowingEmptyState}
+        HeaderComponent={HeaderComponent}
       />
     </View>
   );
@@ -235,8 +168,7 @@ function FollowingFeed() {
   return (
     <>
       <AuthLoading>
-        <View className="flex-1 bg-interactive-3">
-          <View className="h-[100px]" />
+        <View className="flex-1 bg-white">
           <LoadingSpinner />
         </View>
       </AuthLoading>
