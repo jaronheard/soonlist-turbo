@@ -146,6 +146,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ["expo-asset"],
     ["expo-web-browser"],
     ["expo-background-task"],
+    "@react-native-segmented-control/segmented-control",
   ],
   ios: {
     supportsTablet: false,
