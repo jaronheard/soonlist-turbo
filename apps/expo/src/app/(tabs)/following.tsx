@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
-import { Host, Picker } from "@expo/ui/swift-ui";
 import { useUser } from "@clerk/clerk-expo";
+import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
+import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
 import {
   Authenticated,
   AuthLoading,
@@ -13,12 +14,11 @@ import {
 import { api } from "@soonlist/backend/convex/_generated/api";
 
 import { LinkIcon, ShareIcon } from "~/components/icons";
-import { ProfileMenu } from "~/components/ProfileMenu";
 import LoadingSpinner from "~/components/LoadingSpinner";
+import { ProfileMenu } from "~/components/ProfileMenu";
 import UserEventsList from "~/components/UserEventsList";
 import { useStablePaginatedQuery } from "~/hooks/useStableQuery";
 import { useAppStore, useStableTimestamp } from "~/store";
-import { hapticSuccess, toast } from "~/utils/feedback";
 
 type Segment = "upcoming" | "past";
 
@@ -82,7 +82,9 @@ function FollowingFeedContent() {
 
   const handleShare = useCallback(async () => {
     try {
-      await Share.share({ url: `https://soonlist.com/${user?.username ?? ""}/scene` });
+      await Share.share({
+        url: `https://soonlist.com/${user?.username ?? ""}/scene`,
+      });
     } catch {
       // ignore
     }
@@ -163,12 +165,12 @@ function FollowingFeedContent() {
             <ProfileMenu />
             <View>
               <Text className="text-2xl font-semibold text-gray-900">
-                Amy's Board
+                {user?.firstName ? `${user.firstName}'s Board` : "My Board"}
               </Text>
               <View className="-mt-1 flex-row items-center gap-1">
                 <LinkIcon size={10} color="#9CA3AF" />
                 <Text className="text-xs text-gray-400">
-                  soonlist.com/amy/board
+                  {`soonlist.com/${user?.username ?? ""}/board`}
                 </Text>
               </View>
             </View>
@@ -188,15 +190,17 @@ function FollowingFeedContent() {
           {Platform.OS === "ios" ? (
             <Host matchContents>
               <Picker
-                options={[`Upcoming · ${enrichedEvents.length}`, "Past"]}
-                selectedIndex={selectedSegment === "upcoming" ? 0 : 1}
-                onOptionSelected={(event) => {
-                  handleSegmentChange(
-                    event.nativeEvent.index === 0 ? "upcoming" : "past",
-                  );
+                selection={selectedSegment}
+                onSelectionChange={(value) => {
+                  handleSegmentChange(value as Segment);
                 }}
-                variant="segmented"
-              />
+                modifiers={[pickerStyle("segmented")]}
+              >
+                <SwiftUIText modifiers={[tag("upcoming")]}>
+                  {`Upcoming · ${enrichedEvents.length}`}
+                </SwiftUIText>
+                <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
+              </Picker>
             </Host>
           ) : (
             <SegmentedControlFallback
@@ -207,7 +211,14 @@ function FollowingFeedContent() {
         </View>
       </View>
     );
-  }, [selectedSegment, handleSegmentChange, handleShare, user?.fullName, user?.username, enrichedEvents.length]);
+  }, [
+    selectedSegment,
+    handleSegmentChange,
+    handleShare,
+    user?.firstName,
+    user?.username,
+    enrichedEvents.length,
+  ]);
 
   // Redirect to feed if not following anyone
   if (followingUsers !== undefined && !hasFollowings) {
@@ -220,9 +231,7 @@ function FollowingFeedContent() {
         events={enrichedEvents}
         onEndReached={handleLoadMore}
         isFetchingNextPage={status === "LoadingMore"}
-        isLoadingFirstPage={
-          status === "LoadingFirstPage" || followingUsers === undefined
-        }
+        isLoadingFirstPage={followingUsers === undefined}
         showCreator="always"
         showSourceStickers
         savedEventIds={savedEventIds}

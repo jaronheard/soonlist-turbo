@@ -2,7 +2,12 @@ import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, GlassEffectContainer, Host, Image } from "@expo/ui/swift-ui";
-import { frame, glassEffect, padding } from "@expo/ui/swift-ui/modifiers";
+import {
+  buttonStyle,
+  frame,
+  glassEffect,
+  padding,
+} from "@expo/ui/swift-ui/modifiers";
 
 import { useAddEventFlow } from "~/hooks/useAddEventFlow";
 
@@ -39,14 +44,14 @@ export function GlassToolbar({ bottomOffset = 100 }: GlassToolbarProps) {
           ]}
         >
           <Button
-            variant="plain"
             modifiers={[
+              buttonStyle("plain"),
               frame({ height: 56, minWidth: 56 }),
               padding({ horizontal: 16 }),
             ]}
             onPress={() => void triggerAddEventFlow()}
           >
-            <Image systemName="plus" size={28} tint="#5A32FB" />
+            <Image systemName="plus" size={28} color="#5A32FB" />
           </Button>
         </GlassEffectContainer>
       </Host>

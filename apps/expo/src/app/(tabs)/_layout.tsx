@@ -1,4 +1,4 @@
-import { Badge, Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 
 import { useAppStore } from "~/store";
 
@@ -8,15 +8,6 @@ export { ErrorBoundary } from "expo-router";
 export const unstable_settings = {
   initialRouteName: "feed",
 };
-
-const tabHeaderConfig = {
-  feed: { title: "Upcoming", active: "upcoming" },
-  following: { title: "Following", active: "following" },
-  past: { title: "Past", active: "past" },
-  discover: { title: "Discover", active: "discover" },
-} as const;
-
-type TabRouteName = keyof typeof tabHeaderConfig;
 
 export default function TabsLayout() {
   const myListBadgeCount = useAppStore((s) => s.myListBadgeCount);
@@ -29,24 +20,42 @@ export default function TabsLayout() {
       blurEffect="systemChromeMaterialLight" /* interactive-1 */
     >
       <NativeTabs.Trigger name="feed">
-        <Label>My List</Label>
-        <Icon sf={{ default: "list.bullet", selected: "list.bullet" }} />
-        {myListBadgeCount > 0 ? <Badge>{String(myListBadgeCount)}</Badge> : <Badge hidden />}
+        <NativeTabs.Trigger.Label>My List</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "list.bullet", selected: "list.bullet" }}
+        />
+        {myListBadgeCount > 0 ? (
+          <NativeTabs.Trigger.Badge>
+            {String(myListBadgeCount)}
+          </NativeTabs.Trigger.Badge>
+        ) : (
+          <NativeTabs.Trigger.Badge hidden />
+        )}
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="following">
-        <Label>Board</Label>
-        <Icon sf={{ default: "person.2", selected: "person.2.fill" }} />
-        {communityBadgeCount > 0 ? <Badge>{String(communityBadgeCount)}</Badge> : <Badge hidden />}
+        <NativeTabs.Trigger.Label>Board</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "person.2", selected: "person.2.fill" }}
+        />
+        {communityBadgeCount > 0 ? (
+          <NativeTabs.Trigger.Badge>
+            {String(communityBadgeCount)}
+          </NativeTabs.Trigger.Badge>
+        ) : (
+          <NativeTabs.Trigger.Badge hidden />
+        )}
       </NativeTabs.Trigger>
       {/* Discover tab hidden */}
       <NativeTabs.Trigger name="discover" hidden>
-        <Label hidden />
-        <Icon sf={{ default: "binoculars", selected: "binoculars.fill" }} />
+        <NativeTabs.Trigger.Label hidden />
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "binoculars", selected: "binoculars.fill" }}
+        />
       </NativeTabs.Trigger>
       {/* Add tab in search position (top-right on iOS Liquid Glass) */}
       <NativeTabs.Trigger name="add" role="search">
-        <Label>Capture</Label>
-        <Icon
+        <NativeTabs.Trigger.Label>Capture</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
           sf={{ default: "plus.viewfinder", selected: "plus.viewfinder" }}
         />
       </NativeTabs.Trigger>

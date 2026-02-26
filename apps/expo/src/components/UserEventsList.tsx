@@ -936,7 +936,8 @@ const TapToAddText = ({ textSize = 16 }: { textSize?: number }) => {
         <PlusViewfinder size={iconSize} color="#1C1C1E" />
       </View>
       <Text className="text-center text-neutral-2" style={{ fontSize }}>
-        {" "}to add from screenshots or photos
+        {" "}
+        to add from screenshots or photos
       </Text>
     </View>
   );

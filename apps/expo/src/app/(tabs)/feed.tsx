@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Platform, Share, Text, TouchableOpacity, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { Host, Picker } from "@expo/ui/swift-ui";
+import { Host, Picker, Text as SwiftUIText } from "@expo/ui/swift-ui";
+import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
 import {
   Authenticated,
   AuthLoading,
@@ -176,12 +177,14 @@ function MyFeedContent() {
             <ProfileMenu />
             <View>
               <Text className="text-2xl font-semibold text-gray-900">
-                Amy's Soonlist
+                {user?.firstName
+                  ? `${user.firstName}'s Soonlist`
+                  : "My Soonlist"}
               </Text>
               <View className="-mt-1 flex-row items-center gap-1">
                 <LinkIcon size={10} color="#9CA3AF" />
                 <Text className="text-xs text-gray-400">
-                  soonlist.com/amy
+                  {`soonlist.com/${user?.username ?? ""}`}
                 </Text>
               </View>
             </View>
@@ -202,15 +205,17 @@ function MyFeedContent() {
           {Platform.OS === "ios" ? (
             <Host matchContents>
               <Picker
-                options={["Upcoming", "Past"]}
-                selectedIndex={selectedSegment === "upcoming" ? 0 : 1}
-                onOptionSelected={(event) => {
-                  handleSegmentChange(
-                    event.nativeEvent.index === 0 ? "upcoming" : "past",
-                  );
+                selection={selectedSegment}
+                onSelectionChange={(value) => {
+                  handleSegmentChange(value as Segment);
                 }}
-                variant="segmented"
-              />
+                modifiers={[pickerStyle("segmented")]}
+              >
+                <SwiftUIText modifiers={[tag("upcoming")]}>
+                  Upcoming
+                </SwiftUIText>
+                <SwiftUIText modifiers={[tag("past")]}>Past</SwiftUIText>
+              </Picker>
             </Host>
           ) : (
             <SegmentedControlFallback
@@ -221,7 +226,13 @@ function MyFeedContent() {
         </View>
       </View>
     );
-  }, [selectedSegment, handleSegmentChange, handleShareEvents, user?.username]);
+  }, [
+    selectedSegment,
+    handleSegmentChange,
+    handleShareEvents,
+    user?.firstName,
+    user?.username,
+  ]);
 
   return (
     <View className="flex-1 bg-white">
