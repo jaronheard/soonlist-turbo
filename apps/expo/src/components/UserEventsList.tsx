@@ -13,7 +13,6 @@ import {
   View,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
@@ -49,8 +48,6 @@ import { collapseSimilarEvents } from "~/utils/similarEvents";
 import { EventMenu } from "./EventMenu";
 import { EventStats } from "./EventStats";
 import { UserProfileFlair } from "./UserProfileFlair";
-
-const HEADER_HEIGHT_DEFAULT = 100;
 
 type ShowCreatorOption = "always" | "otherUsers" | "never" | "savedFromOthers";
 
@@ -1114,8 +1111,6 @@ export default function UserEventsList(props: UserEventsListProps) {
     source,
   } = props;
   const { user } = useUser();
-  const insets = useSafeAreaInsets();
-
   // Use pre-grouped events if provided, otherwise collapse client-side
   const collapsedEvents = useMemo(() => {
     if (groupedEvents) {
@@ -1131,7 +1126,7 @@ export default function UserEventsList(props: UserEventsListProps) {
       <ScrollView
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: inline ? 8 : insets.top + 16,
+          paddingTop: inline ? 8 : 16,
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",
@@ -1150,11 +1145,8 @@ export default function UserEventsList(props: UserEventsListProps) {
   };
 
   if (isLoadingFirstPage) {
-    // Calculate header height to match the loaded state
-    const headerHeight = HEADER_HEIGHT_DEFAULT;
     return (
       <View style={{ flex: 1, backgroundColor: "#F4F1FF" }}>
-        <View style={{ height: headerHeight }} />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#5A32FB" />
         </View>
@@ -1188,12 +1180,6 @@ export default function UserEventsList(props: UserEventsListProps) {
   const renderHeader = () => {
     return (
       <>
-        <View
-          style={{
-            height: HEADER_HEIGHT_DEFAULT,
-          }}
-        />
-        {(HeaderComponent || stats) && <View style={{ height: 8 }} />}
         {HeaderComponent && <HeaderComponent />}
         {stats && (
           <EventStats
@@ -1251,7 +1237,6 @@ export default function UserEventsList(props: UserEventsListProps) {
         onEndReachedThreshold={0.5}
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
-          paddingTop: insets.top + (stats ? 8 : 16),
           paddingBottom: 120,
           flexGrow: 1,
           backgroundColor: "#F4F1FF",
