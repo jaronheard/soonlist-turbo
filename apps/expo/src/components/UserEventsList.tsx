@@ -1124,6 +1124,7 @@ export default function UserEventsList(props: UserEventsListProps) {
   const renderEmptyState = (inline = false) => {
     return (
       <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
         style={{ backgroundColor: "#F4F1FF" }}
         contentContainerStyle={{
           paddingTop: inline ? 8 : 16,
@@ -1146,11 +1147,17 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   if (isLoadingFirstPage) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#F4F1FF" }}>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#5A32FB" />
-        </View>
-      </View>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        style={{ flex: 1, backgroundColor: "#F4F1FF" }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator size="large" color="#5A32FB" />
+      </ScrollView>
     );
   }
 
@@ -1197,6 +1204,7 @@ export default function UserEventsList(props: UserEventsListProps) {
 
   return (
     <FlatList
+      contentInsetAdjustmentBehavior="automatic"
       data={collapsedEvents}
       keyExtractor={(item) => item.event.id}
       ListHeaderComponent={renderHeader}
@@ -1241,7 +1249,6 @@ export default function UserEventsList(props: UserEventsListProps) {
         backgroundColor: "#F4F1FF",
       }}
       ListFooterComponent={renderFooter()}
-      ListFooterComponentStyle={{ flex: 1, justifyContent: "center" }}
     />
   );
 }

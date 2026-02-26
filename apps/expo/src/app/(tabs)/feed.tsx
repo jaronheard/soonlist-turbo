@@ -168,6 +168,25 @@ function MyFeedContent() {
     }
   }, [user?.username]);
 
+  const myListLabel = useAppStore((s) => s.myListLabel);
+  const headerStyle = useAppStore((s) => s.headerStyle);
+
+  // Strip "My " prefix to get the base noun: "My List" → "List", "My Soonlist" → "Soonlist"
+  const baseNoun = myListLabel.replace(/^My\s+/, "");
+
+  const headerTitle = (() => {
+    switch (headerStyle) {
+      case "possessive":
+        return user?.firstName
+          ? `${user.firstName}'s ${baseNoun}`
+          : `My ${baseNoun}`;
+      case "your":
+        return `Your ${baseNoun}`;
+      case "plain":
+        return baseNoun;
+    }
+  })();
+
   const HeaderComponent = useCallback(() => {
     return (
       <View className="pb-2 pl-3 pr-2 pt-3">
@@ -177,9 +196,7 @@ function MyFeedContent() {
             <ProfileMenu />
             <View>
               <Text className="text-2xl font-semibold text-gray-900">
-                {user?.firstName
-                  ? `${user.firstName}'s Soonlist`
-                  : "My Soonlist"}
+                {headerTitle}
               </Text>
               <View className="-mt-1 flex-row items-center gap-1">
                 <LinkIcon size={10} color="#9CA3AF" />
@@ -230,7 +247,7 @@ function MyFeedContent() {
     selectedSegment,
     handleSegmentChange,
     handleShareEvents,
-    user?.firstName,
+    headerTitle,
     user?.username,
   ]);
 

@@ -24,6 +24,13 @@ import { z } from "zod";
 
 import { api } from "@soonlist/backend/convex/_generated/api";
 
+import type {
+  BoardIcon,
+  BoardLabel,
+  HeaderStyle,
+  MyListIcon,
+  MyListLabel,
+} from "~/store";
 import { Button } from "~/components/Button";
 import { Copy, ShareIcon } from "~/components/icons";
 import { TimezoneSelectNative } from "~/components/TimezoneSelectNative";
@@ -89,6 +96,51 @@ function SettingsOption({
   );
 }
 
+// Radio group for preference selection
+function PreferenceRadioGroup<T extends string>({
+  label,
+  description,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  description?: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <View className="mt-4">
+      <Text className="mb-1 text-base font-medium">{label}</Text>
+      {description && (
+        <Text className="mb-2 text-sm text-neutral-500">{description}</Text>
+      )}
+      <View className="flex-row flex-wrap gap-2">
+        {options.map((option) => (
+          <TouchableOpacity
+            key={option.value}
+            onPress={() => onChange(option.value)}
+            className={`rounded-full border px-4 py-2 ${
+              value === option.value
+                ? "border-interactive-1 bg-interactive-1/10"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <Text
+              className={`text-sm font-medium ${
+                value === option.value ? "text-interactive-1" : "text-gray-700"
+              }`}
+            >
+              {option.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 export default function EditProfileScreen() {
   const { isAuthenticated } = useConvexAuth();
   const { user } = useUser();
@@ -108,6 +160,18 @@ export default function EditProfileScreen() {
     resetOnboarding: resetOnboardingStore,
     userTimezone,
     setUserTimezone,
+    myListLabel,
+    setMyListLabel,
+    boardLabel,
+    setBoardLabel,
+    headerStyle,
+    setHeaderStyle,
+    myListIcon,
+    setMyListIcon,
+    boardIcon,
+    setBoardIcon,
+    shortenMyListTab,
+    setShortenMyListTab,
   } = useAppStore();
 
   const {
@@ -563,6 +627,85 @@ export default function EditProfileScreen() {
                 placeholder="Select a timezone"
               />
             </View>
+            <PreferenceRadioGroup<MyListLabel>
+              label="My List Tab Name"
+              description="Label for your personal events tab"
+              options={[
+                { value: "My List", label: "My List" },
+                { value: "My Soonlist", label: "My Soonlist" },
+                { value: "My Events", label: "My Events" },
+              ]}
+              value={myListLabel}
+              onChange={setMyListLabel}
+            />
+            {myListLabel !== "My List" && (
+              <View className="mt-3 flex-row items-center justify-between">
+                <View className="flex-1 pr-4">
+                  <Text className="text-sm font-medium text-gray-700">
+                    Shorten tab label
+                  </Text>
+                  <Text className="text-xs text-gray-400">
+                    {`"${myListLabel}" → "${myListLabel.replace("Soonlist", "List")}"`}
+                  </Text>
+                </View>
+                <Switch
+                  value={shortenMyListTab}
+                  onValueChange={setShortenMyListTab}
+                />
+              </View>
+            )}
+            <PreferenceRadioGroup<MyListIcon>
+              label="My List Tab Icon"
+              options={[
+                { value: "list.bullet", label: "List" },
+                { value: "clock", label: "Clock" },
+                { value: "calendar", label: "Calendar" },
+                { value: "star", label: "Star" },
+                { value: "bookmark", label: "Bookmark" },
+                { value: "heart", label: "Heart" },
+              ]}
+              value={myListIcon}
+              onChange={setMyListIcon}
+            />
+            <PreferenceRadioGroup<BoardLabel>
+              label="Board Tab Name"
+              description="Label for the community tab"
+              options={[
+                { value: "Board", label: "Board" },
+                { value: "Community Board", label: "Community Board" },
+                { value: "Radar", label: "Radar" },
+                { value: "Scene", label: "Scene" },
+              ]}
+              value={boardLabel}
+              onChange={setBoardLabel}
+            />
+            <PreferenceRadioGroup<BoardIcon>
+              label="Board Tab Icon"
+              options={[
+                { value: "person.2", label: "People" },
+                { value: "person.3", label: "Group" },
+                {
+                  value: "dot.radiowaves.left.and.right",
+                  label: "Radar",
+                },
+                { value: "theatermasks", label: "Theater" },
+                { value: "globe", label: "Globe" },
+                { value: "sparkles", label: "Sparkles" },
+              ]}
+              value={boardIcon}
+              onChange={setBoardIcon}
+            />
+            <PreferenceRadioGroup<HeaderStyle>
+              label="Header Title Style"
+              description="How the header above each tab renders"
+              options={[
+                { value: "possessive", label: "Jaron's Board" },
+                { value: "your", label: "Your Board" },
+                { value: "plain", label: "Board" },
+              ]}
+              value={headerStyle}
+              onChange={setHeaderStyle}
+            />
           </View>
 
           <SettingsSection title="App Settings">

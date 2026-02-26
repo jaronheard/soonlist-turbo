@@ -76,6 +76,12 @@ function FollowingFeedContent() {
   const followingUsers = useQuery(api.users.getFollowingUsers);
   const hasFollowings = (followingUsers?.length ?? 0) > 0;
 
+  const boardLabel = useAppStore((s) => s.boardLabel);
+  const headerStyle = useAppStore((s) => s.headerStyle);
+
+  // URL path matches the board label
+  const boardUrlPath = boardLabel.toLowerCase().replace(/\s+/g, "-");
+
   const handleSegmentChange = useCallback((segment: Segment) => {
     setSelectedSegment(segment);
   }, []);
@@ -83,12 +89,12 @@ function FollowingFeedContent() {
   const handleShare = useCallback(async () => {
     try {
       await Share.share({
-        url: `https://soonlist.com/${user?.username ?? ""}/scene`,
+        url: `https://soonlist.com/${user?.username ?? ""}/${boardUrlPath}`,
       });
     } catch {
       // ignore
     }
-  }, [user?.username]);
+  }, [user?.username, boardUrlPath]);
 
   // Memoize query args
   const queryArgs = useMemo(() => {
@@ -157,6 +163,19 @@ function FollowingFeedContent() {
     }
   }, [enrichedEvents.length, selectedSegment, setCommunityBadgeCount]);
 
+  const headerTitle = (() => {
+    switch (headerStyle) {
+      case "possessive":
+        return user?.firstName
+          ? `${user.firstName}'s ${boardLabel}`
+          : `My ${boardLabel}`;
+      case "your":
+        return `Your ${boardLabel}`;
+      case "plain":
+        return boardLabel;
+    }
+  })();
+
   const HeaderComponent = useCallback(() => {
     return (
       <View className="pb-2 pl-3 pr-2 pt-3">
@@ -165,12 +184,12 @@ function FollowingFeedContent() {
             <ProfileMenu />
             <View>
               <Text className="text-2xl font-semibold text-gray-900">
-                {user?.firstName ? `${user.firstName}'s Board` : "My Board"}
+                {headerTitle}
               </Text>
               <View className="-mt-1 flex-row items-center gap-1">
                 <LinkIcon size={10} color="#9CA3AF" />
                 <Text className="text-xs text-gray-400">
-                  {`soonlist.com/${user?.username ?? ""}/board`}
+                  {`soonlist.com/${user?.username ?? ""}/${boardUrlPath}`}
                 </Text>
               </View>
             </View>
@@ -215,7 +234,7 @@ function FollowingFeedContent() {
     selectedSegment,
     handleSegmentChange,
     handleShare,
-    user?.firstName,
+    headerTitle,
     user?.username,
     enrichedEvents.length,
   ]);
