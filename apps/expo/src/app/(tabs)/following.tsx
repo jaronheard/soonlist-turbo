@@ -226,19 +226,17 @@ function FollowingFeedContent() {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <UserEventsList
-        events={enrichedEvents}
-        onEndReached={handleLoadMore}
-        isFetchingNextPage={status === "LoadingMore"}
-        isLoadingFirstPage={followingUsers === undefined}
-        showCreator="always"
-        showSourceStickers
-        savedEventIds={savedEventIds}
-        source="following"
-        HeaderComponent={HeaderComponent}
-      />
-    </View>
+    <UserEventsList
+      events={enrichedEvents}
+      onEndReached={handleLoadMore}
+      isFetchingNextPage={status === "LoadingMore"}
+      isLoadingFirstPage={followingUsers === undefined}
+      showCreator="always"
+      showSourceStickers
+      savedEventIds={savedEventIds}
+      source="following"
+      HeaderComponent={HeaderComponent}
+    />
   );
 }
 

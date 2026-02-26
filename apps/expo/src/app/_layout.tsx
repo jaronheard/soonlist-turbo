@@ -1,4 +1,4 @@
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import appsFlyer from "react-native-appsflyer";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
@@ -365,7 +365,7 @@ function RootLayoutContent() {
   return (
     <View style={{ flex: 1 }}>
       <InitialLayout />
-      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+      <StatusBar style="dark" />
     </View>
   );
 }

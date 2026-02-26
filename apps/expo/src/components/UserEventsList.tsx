@@ -1196,54 +1196,52 @@ export default function UserEventsList(props: UserEventsListProps) {
   };
 
   return (
-    <>
-      <FlatList
-        data={collapsedEvents}
-        keyExtractor={(item) => item.event.id}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={() => renderEmptyState(true)}
-        renderItem={({ item, index }) => {
-          const eventData = item.event;
-          // Use savedEventIds if provided, otherwise check eventFollows
-          const isSaved = savedEventIds
-            ? savedEventIds.has(eventData.id)
-            : (eventData.eventFollows?.some(
-                (follow: { userId: string }) => follow.userId === user?.id,
-              ) ?? false);
-          // TODO: Add savedAt
+    <FlatList
+      data={collapsedEvents}
+      keyExtractor={(item) => item.event.id}
+      ListHeaderComponent={renderHeader}
+      ListEmptyComponent={() => renderEmptyState(true)}
+      renderItem={({ item, index }) => {
+        const eventData = item.event;
+        // Use savedEventIds if provided, otherwise check eventFollows
+        const isSaved = savedEventIds
+          ? savedEventIds.has(eventData.id)
+          : (eventData.eventFollows?.some(
+              (follow: { userId: string }) => follow.userId === user?.id,
+            ) ?? false);
+        // TODO: Add savedAt
 
-          const similarEventsCount = item.similarEvents.length;
+        const similarEventsCount = item.similarEvents.length;
 
-          return (
-            <UserEventListItem
-              event={eventData}
-              ActionButton={ActionButton}
-              showCreator={showCreator}
-              isSaved={isSaved}
-              // TODO: Add savedAt
-              savedAt={undefined}
-              similarEventsCount={
-                similarEventsCount > 0 ? similarEventsCount : undefined
-              }
-              demoMode={demoMode}
-              index={index}
-              hideDiscoverableButton={hideDiscoverableButton}
-              isDiscoverFeed={isDiscoverFeed}
-              source={source}
-            />
-          );
-        }}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.5}
-        style={{ backgroundColor: "#F4F1FF" }}
-        contentContainerStyle={{
-          paddingBottom: 120,
-          flexGrow: 1,
-          backgroundColor: "#F4F1FF",
-        }}
-        ListFooterComponent={renderFooter()}
-        ListFooterComponentStyle={{ flex: 1, justifyContent: "center" }}
-      />
-    </>
+        return (
+          <UserEventListItem
+            event={eventData}
+            ActionButton={ActionButton}
+            showCreator={showCreator}
+            isSaved={isSaved}
+            // TODO: Add savedAt
+            savedAt={undefined}
+            similarEventsCount={
+              similarEventsCount > 0 ? similarEventsCount : undefined
+            }
+            demoMode={demoMode}
+            index={index}
+            hideDiscoverableButton={hideDiscoverableButton}
+            isDiscoverFeed={isDiscoverFeed}
+            source={source}
+          />
+        );
+      }}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.5}
+      style={{ backgroundColor: "#F4F1FF" }}
+      contentContainerStyle={{
+        paddingBottom: 120,
+        flexGrow: 1,
+        backgroundColor: "#F4F1FF",
+      }}
+      ListFooterComponent={renderFooter()}
+      ListFooterComponentStyle={{ flex: 1, justifyContent: "center" }}
+    />
   );
 }

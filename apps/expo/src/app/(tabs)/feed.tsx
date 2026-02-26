@@ -235,19 +235,17 @@ function MyFeedContent() {
   ]);
 
   return (
-    <View className="flex-1 bg-white">
-      <UserEventsList
-        groupedEvents={enrichedEvents}
-        onEndReached={handleLoadMore}
-        isFetchingNextPage={status === "LoadingMore"}
-        isLoadingFirstPage={false}
-        showCreator="savedFromOthers"
-        showSourceStickers
-        savedEventIds={savedEventIds}
-        source={selectedSegment === "upcoming" ? "feed" : "past"}
-        HeaderComponent={HeaderComponent}
-      />
-    </View>
+    <UserEventsList
+      groupedEvents={enrichedEvents}
+      onEndReached={handleLoadMore}
+      isFetchingNextPage={status === "LoadingMore"}
+      isLoadingFirstPage={false}
+      showCreator="savedFromOthers"
+      showSourceStickers
+      savedEventIds={savedEventIds}
+      source={selectedSegment === "upcoming" ? "feed" : "past"}
+      HeaderComponent={HeaderComponent}
+    />
   );
 }
 

@@ -118,20 +118,18 @@ function DiscoverContent() {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <UserEventsList
-        events={enrichedEvents}
-        onEndReached={handleLoadMore}
-        isFetchingNextPage={status === "LoadingMore"}
-        isLoadingFirstPage={status === "LoadingFirstPage"}
-        ActionButton={SaveShareButtonWrapper}
-        showCreator="always"
-        hideDiscoverableButton={true}
-        isDiscoverFeed={true}
-        savedEventIds={savedEventIds}
-        HeaderComponent={DiscoverShareBanner}
-      />
-    </View>
+    <UserEventsList
+      events={enrichedEvents}
+      onEndReached={handleLoadMore}
+      isFetchingNextPage={status === "LoadingMore"}
+      isLoadingFirstPage={status === "LoadingFirstPage"}
+      ActionButton={SaveShareButtonWrapper}
+      showCreator="always"
+      hideDiscoverableButton={true}
+      isDiscoverFeed={true}
+      savedEventIds={savedEventIds}
+      HeaderComponent={DiscoverShareBanner}
+    />
   );
 }
 
